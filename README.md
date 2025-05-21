@@ -25,6 +25,7 @@ In order to include any change in this repository, we need to follow these steps
 - Send PR link in smart contract working group channel
 - Approve PR by admin users
 - Merge PR (by the user that created the PR) (\*)
+- Remove the branch
 
 > IssueId: This ID represents the [project](https://github.com/orgs/alastria/projects/21) issue related to the changes you are applying.
 
