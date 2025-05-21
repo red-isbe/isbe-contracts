@@ -19,11 +19,15 @@ In order to include any change in this repository, we need to follow these steps
     - docs/[IssueId]-XXX
     - release/[IssueId]-XXX
 - Commits must be signed to be pushed.
-- Create pull request to merge into main branch
-- Send pull resquest link in smart contract working group channel
-- Approve pull request by admin users
+- Create pull request (PR) to merge into main branch
+- Send PR link in smart contract working group channel
+- Approve PR by admin users
+- Merge PR (by the user that created the PR) (*)
 
 > IssueId: This ID represents the [project](https://github.com/orgs/alastria/projects/21) issue related to the changes you are applying.
+
+(*) Any commit pushed after the PR was approved must be approved as well before merging.
+
 ## Code best practices
 
 - Testing coverage 100% (lines and branches).
