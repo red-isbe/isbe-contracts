@@ -1,0 +1,75 @@
+{
+    "name": "isbe-contracts",
+    "version": "0.0.1",
+    "description": "Repository of certified and audited utilities for use in the ISBE network",
+    "main": "index.js",
+    "scripts": {
+        "compile": "npx hardhat compile",
+        "compile:traces": "npx hardhat --show-stack-traces compile",
+        "compile:force": "npx hardhat compile --force",
+        "typechain": "npx hardhat typechain",
+        "clean": "npm run clean:cache && npm run clean:build && npm run clean:node_modules",
+        "clean:cache": "npx hardhat clean",
+        "clean:build": "npx -y rimraf build typechain-types artifacts",
+        "clean:node_modules": "npx -y rimraf node_modules",
+        "size": "npx hardhat size-contracts",
+        "test": "npx hardhat test",
+        "test:parallel": "npx hardhat test --parallel",
+        "test:coverage": "npx hardhat coverage",
+        "lint:sol": "solhint 'contracts/**/*.sol'",
+        "lint:ts": "npx -y eslint .",
+        "lint": "npm run lint:sol && npm run lint:ts",
+        "prettier": "npm run prettier:write",
+        "prettier:write": "npx -y prettier . --write",
+        "prettier:check": "npx -y prettier . --check",
+        "pre-commit:lint-staged": "npm run prettier && npm run lint",
+        "pre-commit": "npm run prettier && npm run lint && npm test",
+        "prepare": "husky",
+        "slither:analysis": "docker run -t --rm -v /var/run/docker.sock:/var/run/docker.sock -v \"$(pwd)\":\"/home/ethsec/contracts\" -w \"/home/ethsec/contracts\" -u 0:0 trailofbits/eth-security-toolbox /bin/sh -c \"solc-select install 0.8.28  && solc-select use 0.8.28  && slither . --solc-remaps @=node_modules/@\"",
+        "slither:storageLayout": "docker run -t --rm -v /var/run/docker.sock:/var/run/docker.sock -v \"$(pwd)\":\"/home/ethsec/contracts\" -w \"/home/ethsec/contracts\" -u 0:0 trailofbits/eth-security-toolbox /bin/sh -c \"solc-select install 0.8.28  && solc-select use 0.8.28  && slither . --print variable-order --solc-remaps @=node_modules/@\"",
+        "slither:inheritance": "docker run -t --rm -v /var/run/docker.sock:/var/run/docker.sock -v \"$(pwd)\":\"/home/ethsec/contracts\" -w \"/home/ethsec/contracts\" -u 0:0 trailofbits/eth-security-toolbox /bin/sh -c \"solc-select install 0.8.28  && solc-select use 0.8.28  && slither . --print inheritance --solc-remaps @=node_modules/@\"",
+        "slither:summary": "docker run -t --rm -v /var/run/docker.sock:/var/run/docker.sock -v \"$(pwd)\":\"/home/ethsec/contracts\" -w \"/home/ethsec/contracts\" -u 0:0 trailofbits/eth-security-toolbox /bin/sh -c \"solc-select install 0.8.28  && solc-select use 0.8.28  && slither . --print human-summary --solc-remaps @=node_modules/@\"",
+        "slither": "npm run slither:summary && npm run slither:storageLayout && npm run slither:inheritance && npm run slither:analysis"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/alastria/isbe-contracts.git"
+    },
+    "keywords": [
+        "ISBE",
+        "Alastria",
+        "Solidity",
+        "Smart",
+        "Contracts"
+    ],
+    "author": "ISBE",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/alastria/isbe-contracts/issues"
+    },
+    "homepage": "https://github.com/alastria/isbe-contracts#readme",
+    "devDependencies": {
+        "@commitlint/cli": "^19.8.0",
+        "@commitlint/config-conventional": "^19.8.0",
+        "@eslint/js": "^9.25.1",
+        "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+        "eslint": "^9.25.1",
+        "hardhat": "^2.23.0",
+        "hardhat-contract-sizer": "^2.10.0",
+        "husky": "^9.1.7",
+        "lint-staged": "^15.5.1",
+        "prettier": "^3.5.3",
+        "prettier-plugin-solidity": "^2.0.0",
+        "solhint": "^5.0.5",
+        "solhint-plugin-prettier": "^0.1.0",
+        "solidity-coverage": "^0.8.15",
+        "typescript-eslint": "^8.31.1"
+    },
+    "overrides": {
+        "solhint-plugin-prettier": "^0.1.0",
+        "prettier-plugin-solidity": "^2.0.0"
+    },
+    "lint-staged": {
+        "*": "npm run pre-commit:lint-staged"
+    }
+}
