@@ -20,7 +20,7 @@ describe('ERC20', function () {
     }
 
     describe('Deployment', function () {
-        it('GIVEN non deployed ERC20 WHEN it is deployed THEN name, symbol and decimals was set', async function () {
+        it('GIVEN an ERC20 WHEN it is deployed THEN name, symbol and decimals can be retrieved', async function () {
             const { erc20 } = await loadFixture(deployOneYearLockFixture)
 
             expect(await erc20.decimals()).to.equal(decimals)
