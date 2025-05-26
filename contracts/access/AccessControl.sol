@@ -13,10 +13,7 @@ contract AccessControl is IAccessControl, AccessControlInternal {
         _grantRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
-    /// @notice Grants a role to an account
-    /// @dev Caller must have the admin role for the given role
-    /// @param role The role identifier (bytes32 hash)
-    /// @param account The address to which the role is granted
+    /// @inheritdoc IAccessControl
     function grantRole(
         bytes32 role,
         address account
@@ -24,10 +21,7 @@ contract AccessControl is IAccessControl, AccessControlInternal {
         _grantRole(role, account);
     }
 
-    /// @notice Revokes a role from an account
-    /// @dev Caller must have the admin role for the given role
-    /// @param role The role identifier (bytes32 hash)
-    /// @param account The address from which the role is revoked
+    /// @inheritdoc IAccessControl
     function revokeRole(
         bytes32 role,
         address account
@@ -35,10 +29,7 @@ contract AccessControl is IAccessControl, AccessControlInternal {
         _revokeRole(role, account);
     }
 
-    /// @notice Changes the admin role of a given role
-    /// @dev Caller must have the current admin role for the role
-    /// @param role The role whose admin role is being changed
-    /// @param adminRole The new admin role to assign
+    /// @inheritdoc IAccessControl
     function setRoleAdmin(
         bytes32 role,
         bytes32 adminRole
@@ -46,17 +37,12 @@ contract AccessControl is IAccessControl, AccessControlInternal {
         _setRoleAdmin(role, adminRole);
     }
 
-    /// @notice Allows the caller to renounce a role they hold
-    /// @dev Can only be called by the account itself to renounce its own role
-    /// @param role The role to renounce
+    /// @inheritdoc IAccessControl
     function renounceRole(bytes32 role) external virtual override {
         _revokeRole(role, _msgSender());
     }
 
-    /// @notice Checks if an account has a specific role
-    /// @param role The role identifier (bytes32 hash)
-    /// @param account The address to check
-    /// @return True if the account has the role, false otherwise
+    /// @inheritdoc IAccessControl
     function hasRole(
         bytes32 role,
         address account
@@ -64,9 +50,7 @@ contract AccessControl is IAccessControl, AccessControlInternal {
         return _hasRole(role, account);
     }
 
-    /// @notice Returns the admin role associated with a specific role
-    /// @param role The role to query
-    /// @return The admin role that controls the given role
+    /// @inheritdoc IAccessControl
     function getRoleAdmin(
         bytes32 role
     ) external view virtual override returns (bytes32) {

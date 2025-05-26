@@ -167,7 +167,7 @@ describe('Access Control', function () {
 
             await expect(accessControl.setRoleAdmin(ROLE_1, ROLE_2))
                 .to.emit(accessControl, 'RoleAdminChanged')
-                .withArgs(ROLE_1, DEFAULT_ADMIN_ROLE, ROLE_2)
+                .withArgs(ROLE_1, DEFAULT_ADMIN_ROLE, ROLE_2, adminAccount)
 
             expect(await accessControl.getRoleAdmin(ROLE_1)).to.equal(ROLE_2)
         })
