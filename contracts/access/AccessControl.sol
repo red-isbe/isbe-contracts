@@ -3,14 +3,26 @@ pragma solidity ^0.8.28;
 
 import {IAccessControl} from './IAccessControl.sol';
 import {AccessControlInternal} from './AccessControlInternal.sol';
+import {Common} from '../core/Common.sol';
+import {_ACCESS_CONTROL_RESOLVER_KEY} from '../constants/resolverKeys.sol';
 
 /// @title AccessControl
 /// @notice Implements role-based access control mechanisms
 /// @dev Inherits from IAccessControl and AccessControlInternal, providing external role management functions
-contract AccessControl is IAccessControl, AccessControlInternal {
+contract AccessControl is IAccessControl, AccessControlInternal, Common {
     /// @notice Constructor that assigns the deployer as the default admin
     constructor() {
-        _grantRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _disableInitializers(_ACCESS_CONTROL_RESOLVER_KEY);
+    }
+
+    function initialize(
+        address admin
+    )
+        external
+        initializer(_ACCESS_CONTROL_RESOLVER_KEY)
+        addressIsNotZero(admin)
+    {
+        _grantRole(DEFAULT_ADMIN_ROLE, admin);
     }
 
     function grantRole(

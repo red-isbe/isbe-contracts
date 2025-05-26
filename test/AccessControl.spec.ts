@@ -18,12 +18,19 @@ describe('Access Control', function () {
 
     async function deploy() {
         ;[adminAccount, account_2] = await ethers.getSigners()
-        const adminAccountAddress = await adminAccount.getAddress()
 
         const AccessControl = await ethers.getContractFactory('AccessControl')
-        accessControl = await AccessControl.deploy({
-            from: adminAccountAddress,
-        })
+        const accessControlImplementation = await AccessControl.deploy()
+
+        const Proxy = await ethers.getContractFactory('DumbProxy')
+        const proxy = await Proxy.deploy(accessControlImplementation)
+        await proxy.waitForDeployment()
+
+        accessControl = (await AccessControl.attach(
+            await proxy.getAddress()
+        )) as AccessControl
+
+        await accessControl.initialize(adminAccount)
     }
 
     describe('Reading roles and role admins', function () {
