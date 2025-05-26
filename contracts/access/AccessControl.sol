@@ -13,7 +13,6 @@ contract AccessControl is IAccessControl, AccessControlInternal {
         _grantRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
-    /// @inheritdoc IAccessControl
     function grantRole(
         bytes32 role,
         address account
@@ -21,7 +20,6 @@ contract AccessControl is IAccessControl, AccessControlInternal {
         _grantRole(role, account);
     }
 
-    /// @inheritdoc IAccessControl
     function revokeRole(
         bytes32 role,
         address account
@@ -29,7 +27,6 @@ contract AccessControl is IAccessControl, AccessControlInternal {
         _revokeRole(role, account);
     }
 
-    /// @inheritdoc IAccessControl
     function setRoleAdmin(
         bytes32 role,
         bytes32 adminRole
@@ -37,12 +34,10 @@ contract AccessControl is IAccessControl, AccessControlInternal {
         _setRoleAdmin(role, adminRole);
     }
 
-    /// @inheritdoc IAccessControl
     function renounceRole(bytes32 role) external virtual override {
         _revokeRole(role, _msgSender());
     }
 
-    /// @inheritdoc IAccessControl
     function hasRole(
         bytes32 role,
         address account
@@ -50,7 +45,6 @@ contract AccessControl is IAccessControl, AccessControlInternal {
         return _hasRole(role, account);
     }
 
-    /// @inheritdoc IAccessControl
     function getRoleAdmin(
         bytes32 role
     ) external view virtual override returns (bytes32) {
