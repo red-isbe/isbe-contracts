@@ -4,7 +4,11 @@ pragma solidity ^0.8.28;
 import {IAccessControl} from './IAccessControl.sol';
 import {AccessControlInternal} from './AccessControlInternal.sol';
 
-abstract contract AccessControl is IAccessControl, AccessControlInternal {
+contract AccessControl is IAccessControl, AccessControlInternal {
+    constructor() {
+        _grantRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    }
+
     function grantRole(
         bytes32 role,
         address account
@@ -19,13 +23,15 @@ abstract contract AccessControl is IAccessControl, AccessControlInternal {
         _revokeRole(role, account);
     }
 
-    function renounceRole(
+    function setRoleAdmin(
         bytes32 role,
-        address account
-    ) external virtual override {
-        if (account != _msgSender()) revert CallerNotRoleHolder(_msgSender());
+        bytes32 adminRole
+    ) external virtual override onlyRole(_getRoleAdmin(role)) {
+        _setRoleAdmin(role, adminRole);
+    }
 
-        _revokeRole(role, account);
+    function renounceRole(bytes32 role) external virtual override {
+        _revokeRole(role, _msgSender());
     }
 
     function hasRole(

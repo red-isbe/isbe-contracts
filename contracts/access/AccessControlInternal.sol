@@ -24,12 +24,9 @@ abstract contract AccessControlInternal is Context {
         _;
     }
 
-    function _setupRole(bytes32 role, address account) internal virtual {
-        _grantRole(role, account);
-    }
-
     function _setRoleAdmin(bytes32 role, bytes32 adminRole) internal virtual {
         bytes32 previousAdminRole = _getRoleAdmin(role);
+        if (previousAdminRole == adminRole) return;
         _accessControlStorage().roles[role].adminRole = adminRole;
         emit IAccessControl.RoleAdminChanged(
             role,
@@ -39,17 +36,17 @@ abstract contract AccessControlInternal is Context {
     }
 
     function _grantRole(bytes32 role, address account) internal virtual {
-        if (!_hasRole(role, account)) {
-            _accessControlStorage().roles[role].members[account] = true;
-            emit IAccessControl.RoleGranted(role, account, _msgSender());
-        }
+        if (_hasRole(role, account)) return;
+
+        _accessControlStorage().roles[role].members[account] = true;
+        emit IAccessControl.RoleGranted(role, account, _msgSender());
     }
 
     function _revokeRole(bytes32 role, address account) internal virtual {
-        if (_hasRole(role, account)) {
-            _accessControlStorage().roles[role].members[account] = false;
-            emit IAccessControl.RoleRevoked(role, account, _msgSender());
-        }
+        if (!_hasRole(role, account)) return;
+
+        _accessControlStorage().roles[role].members[account] = false;
+        emit IAccessControl.RoleRevoked(role, account, _msgSender());
     }
 
     function _hasRole(

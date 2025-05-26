@@ -20,15 +20,15 @@ interface IAccessControl {
         address indexed sender
     );
 
-    error CallerNotRoleHolder(address caller);
-
     error AccountHasNoRole(address account, bytes32 role);
 
     function grantRole(bytes32 role, address account) external;
 
     function revokeRole(bytes32 role, address account) external;
 
-    function renounceRole(bytes32 role, address account) external;
+    function renounceRole(bytes32 role) external;
+
+    function setRoleAdmin(bytes32 role, bytes32 adminRole) external;
 
     function hasRole(
         bytes32 role,
