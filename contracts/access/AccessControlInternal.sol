@@ -5,9 +5,9 @@ import {
     _ACCESS_CONTROL_STORAGE_POSITION
 } from '../constants/storagePositions.sol';
 import {IAccessControl} from './IAccessControl.sol';
-import {Context} from '../utils/Context.sol';
+import {ISBEContext} from '../utils/ISBEContext.sol';
 
-abstract contract AccessControlInternal is Context {
+abstract contract AccessControlInternal is ISBEContext {
     struct AccessControlStorage {
         mapping(bytes32 => RoleData) roles;
     }
