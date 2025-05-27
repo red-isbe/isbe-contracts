@@ -156,10 +156,6 @@ contract ERC20 is ERC20Internal {
     function mint(address account, uint256 amount) public {
         _mint(account, amount);
     }
-
-    function burn(address account, uint256 amount) public {
-        _burn(account, amount);
-    }
     /// **********************************************************
 
     function decimals() public view virtual override returns (uint8) {

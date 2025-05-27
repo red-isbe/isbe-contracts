@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
-import { ERC20 } from '../typechain-types/index.js'
+import { ERC20TestWrapper } from '../typechain-types/index.js'
 
 describe('ERC20', function () {
     const decimals = 2
@@ -13,14 +13,14 @@ describe('ERC20', function () {
         // Contracts are deployed using the first signer/account by default
         const [owner, otherAccount] = await ethers.getSigners()
 
-        const ERC20 = await ethers.getContractFactory('ERC20')
+        const ERC20 = await ethers.getContractFactory('ERC20TestWrapper')
         const erc20Implementation = await ERC20.deploy()
 
         const Proxy = await ethers.getContractFactory('DumbProxy')
         const proxy = await Proxy.deploy(erc20Implementation)
         await proxy.waitForDeployment()
 
-        const erc20 = ERC20.attach(await proxy.getAddress()) as ERC20
+        const erc20 = ERC20.attach(await proxy.getAddress()) as ERC20TestWrapper
 
         if (initialize) await erc20.initializeErc20(name, symbol, decimals)
 
@@ -174,30 +174,65 @@ describe('ERC20', function () {
             return { erc20, owner, otherAccount }
         }
 
-        it('GIVEN an ERC20 initialized WHEN try to use address(0) THEN it fails', async () => {
-            const { erc20 } = await deploy(true)
-            await expect(
-                erc20.burn(ethers.ZeroAddress, 100)
-            ).to.be.revertedWithCustomError(erc20, 'AddressZero')
-        })
-
         it('GIVEN an ERC20 initialized WHEN try to burn without enough balance THEN it fails', async () => {
-            const { erc20, implementation, owner } = await deploy(true)
-            expect(implementation).not.to.be.undefined
-            await expect(
-                erc20.burn(owner.address, 100)
-            ).to.be.revertedWithCustomError(erc20, 'BurnAmountExceedsBalance')
+            const { erc20 } = await deploy(true)
+            await expect(erc20.burn(100)).to.be.revertedWithCustomError(
+                erc20,
+                'BurnAmountExceedsBalance'
+            )
         })
 
         it('GIVEN an ERC20 WHEN it is prepared THEN a burn can be made', async () => {
             const { erc20, owner, otherAccount } = await prepare()
-            await expect(erc20.burn(owner.address, 100))
+            await expect(erc20.burn(100))
                 .to.emit(erc20, 'Transfer')
                 .withArgs(owner.address, ethers.ZeroAddress, 100)
 
             expect(await erc20.totalSupply()).to.be.equal(0)
             expect(await erc20.balanceOf(owner.address)).to.be.equal(0)
             expect(await erc20.balanceOf(otherAccount.address)).to.be.equal(0)
+        })
+    })
+
+    describe('BurFrom', () => {
+        const prepare = async () => {
+            const { erc20, implementation, owner, otherAccount } =
+                await deploy(true)
+            expect(implementation).not.to.be.undefined
+            await erc20.mint(otherAccount.address, 50)
+            await erc20.connect(otherAccount).approve(owner.address, 100)
+            return { erc20, owner, otherAccount }
+        }
+
+        it('GIVEN an ERC20 initialized WHEN try to use address(0) THEN it fails', async () => {
+            const { erc20 } = await deploy(true)
+            await expect(
+                erc20.burnFrom(ethers.ZeroAddress, 0)
+            ).to.be.revertedWithCustomError(erc20, 'AddressZero')
+        })
+
+        it('GIVEN an ERC20 initialized WHEN try to burn without enough balance THEN it fails', async () => {
+            const { erc20, owner, otherAccount } = await prepare()
+            expect(owner).not.to.be.undefined
+            await expect(
+                erc20.burnFrom(otherAccount.address, 100)
+            ).to.be.revertedWithCustomError(erc20, 'BurnAmountExceedsBalance')
+        })
+
+        it('GIVEN an ERC20 WHEN it is prepared THEN a burn can be made', async () => {
+            const { erc20, owner, otherAccount } = await prepare()
+            await expect(erc20.burnFrom(otherAccount.address, 25))
+                .to.emit(erc20, 'Transfer')
+                .withArgs(otherAccount.address, ethers.ZeroAddress, 25)
+                .to.emit(erc20, 'Approval')
+                .withArgs(otherAccount.address, owner.address, 75)
+
+            expect(await erc20.totalSupply()).to.be.equal(25)
+            expect(await erc20.balanceOf(owner.address)).to.be.equal(0)
+            expect(await erc20.balanceOf(otherAccount.address)).to.be.equal(25)
+            expect(
+                await erc20.allowance(otherAccount.address, owner.address)
+            ).to.be.equal(75)
         })
     })
 
