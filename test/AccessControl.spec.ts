@@ -8,19 +8,20 @@ describe('Access Control', function () {
         '0x0000000000000000000000000000000000000000000000000000000000000000'
     const ROLE_1 =
         '0x0000000000000000000000000000000000000000000000000000000000000001'
-
     const ROLE_2 =
         '0x0000000000000000000000000000000000000000000000000000000000000002'
+    const ADDRESS_0 = '0x0000000000000000000000000000000000000000'
 
     let adminAccount: Signer
     let account_2: Signer
+    let accessControlImplementation: AccessControl
     let accessControl: AccessControl
 
-    async function deploy() {
+    async function deploy(initialize: boolean = true) {
         ;[adminAccount, account_2] = await ethers.getSigners()
 
         const AccessControl = await ethers.getContractFactory('AccessControl')
-        const accessControlImplementation = await AccessControl.deploy()
+        accessControlImplementation = await AccessControl.deploy()
 
         const Proxy = await ethers.getContractFactory('DumbProxy')
         const proxy = await Proxy.deploy(accessControlImplementation)
@@ -30,8 +31,40 @@ describe('Access Control', function () {
             await proxy.getAddress()
         )) as AccessControl
 
-        await accessControl.initialize(adminAccount)
+        if (initialize) await accessControl.initialize(adminAccount)
     }
+
+    describe('Testing initialization and constructor', function () {
+        it('GIVEN an Access Control WHEN initializing it THEN fails', async function () {
+            await deploy()
+
+            await expect(
+                accessControlImplementation.initialize(account_2)
+            ).to.be.revertedWithCustomError(
+                accessControlImplementation,
+                'ContractIsAlreadyInitialized'
+            )
+        })
+
+        it('GIVEN a Proxy pointing to an Access Control WHEN initializing it THEN fails', async function () {
+            await deploy()
+
+            await expect(
+                accessControl.initialize(account_2)
+            ).to.be.revertedWithCustomError(
+                accessControl,
+                'ContractIsAlreadyInitialized'
+            )
+        })
+
+        it('GIVEN a new Proxy pointing to an Access Control WHEN initializing it to address 0 THEN fails', async function () {
+            await deploy(false)
+
+            await expect(
+                accessControl.initialize(ADDRESS_0)
+            ).to.be.revertedWithCustomError(accessControl, 'AddressZero')
+        })
+    })
 
     describe('Reading roles and role admins', function () {
         it('GIVEN an Access Control WHEN reading roles THEN succeeds', async function () {
