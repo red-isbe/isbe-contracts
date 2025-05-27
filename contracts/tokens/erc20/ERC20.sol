@@ -4,6 +4,14 @@ pragma solidity ^0.8.28;
 import {ERC20Internal} from './ERC20Internal.sol';
 import {_ERC20_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
 
+/**
+ * @title ERC20 Token Contract
+ * @notice This contract implements the standard ERC20 token functionality, including initialization,
+ *         token transfers, allowances, and balance queries.
+ * @dev This contract extends from `ERC20Internal` and adheres to the ERC20 standard defined in the
+ *      OpenZeppelin interfaces. It includes additional helper functions such as `increaseAllowance` and
+ *      `decreaseAllowance` for more granular control over token allowances.
+ */
 contract ERC20 is ERC20Internal {
     /// @notice Constructor that assigns the deployer as the default admin
     constructor() {

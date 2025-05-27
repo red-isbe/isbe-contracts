@@ -6,6 +6,14 @@ import {
     IERC20Metadata
 } from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
 
+/**
+ * @title ERC20 Token Interface
+ * @notice This interface defines the standard functions, events, and errors for an ERC20 token,
+ *         extending the standard ERC20 and ERC20Metadata interfaces.
+ * @dev This interface introduces the `initializeErc20` function and custom errors specific to
+ *      this implementation. It serves as a blueprint for implementing contract functionality while
+ *      adhering to the ERC20 specification.
+ */
 interface IERC20Isbe is IERC20, IERC20Metadata {
     /**
      * @notice Emitted when the ERC20 token is initialized with a name, symbol, and decimals.

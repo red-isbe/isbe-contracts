@@ -5,6 +5,13 @@ import {Common} from '../../core/Common.sol';
 import {IERC20Isbe} from './IERC20Isbe.sol';
 import {_ERC20_STORAGE_POSITION} from '../../constants/storagePositions.sol';
 
+/**
+ * @notice Abstract contract providing internal functionality for ERC20 tokens.
+ *         Contains common mechanisms for transferring, minting, burning, and managing allowances.
+ *         This is not a deployable contract but serves as a helper for extending ERC20 logic.
+ * @dev This contract defines internal functions that form the backbone of ERC20 token operations.
+ *      It adheres to the ERC20 standard and provides reusable methods for advanced token management.
+ */
 abstract contract ERC20Internal is IERC20Isbe, Common {
     struct ERC20Storage {
         mapping(address account => uint256) balances;
