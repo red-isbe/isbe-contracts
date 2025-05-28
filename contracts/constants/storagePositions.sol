@@ -7,6 +7,9 @@ bytes32 constant _ERC20_STORAGE_POSITION = 0xd93ac5c223af8b55b10aca6a04761f02117
 // keccak256('isbe.contracts.erc20.capped.storage');
 bytes32 constant _ERC20_CAPPED_STORAGE_POSITION = 0x856c4e5ce77b898d0ed139a2efc3542d6f10ce029e0a2516ae963aa6a9348766;
 
+// keccak256('isbe.contracts.erc20.snapshot.storage');
+bytes32 constant _ERC20_SNAPSHOT_STORAGE_POSITION = 0xb5fc73bdf919f4c6d15cfcce0ee95d44907358bab2cefd8e48d4fa87bd01ed74;
+
 // keccak256('isbe.contracts.access.control.storage');
 bytes32 constant _ACCESS_CONTROL_STORAGE_POSITION = 0xb335729b1c9d0dd5cb00f5400f21de5f6cbacc7f26b7f1d63701569692e3b8ee;
 
