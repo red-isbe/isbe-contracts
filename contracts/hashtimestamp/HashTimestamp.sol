@@ -10,19 +10,17 @@ import {HashTimestampInternal} from './HashTimestampInternal.sol';
 contract HashTimestamp is IHashTimestamp, HashTimestampInternal {
     function timestampHash(
         bytes32 hash
-    ) external virtual override onlyNonExistentHash(hash) {
+    ) external override onlyNonExistentHash(hash) {
         _timestampHash(hash);
     }
 
-    function exists(
-        bytes32 hash
-    ) external view virtual override returns (bool) {
+    function exists(bytes32 hash) external view override returns (bool) {
         return _exists(hash);
     }
 
     function getTimestamp(
         bytes32 hash
-    ) external view virtual override returns (uint256) {
+    ) external view override returns (uint256) {
         return _getTimestamp(hash);
     }
 }

@@ -210,12 +210,14 @@ abstract contract ERC20Internal is IERC20Isbe, Common {
     function _erc20Storage()
         internal
         pure
-        returns (ERC20Storage storage erc20Storage_)
+        returns (ERC20Storage storage storage_)
     {
         bytes32 position = _ERC20_STORAGE_POSITION;
+        // slither-disable-start assembly
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            erc20Storage_.slot := position
+            storage_.slot := position
         }
+        // slither-disable-end assembly
     }
 }

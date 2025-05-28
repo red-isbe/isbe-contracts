@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
-import { ERC20TestWrapper } from '../typechain-types/index.js'
+import { ERC20TestWrapper } from '../typechain-types'
 
 describe('ERC20', function () {
     const decimals = 2
@@ -22,7 +22,10 @@ describe('ERC20', function () {
 
         const erc20 = ERC20.attach(await proxy.getAddress()) as ERC20TestWrapper
 
-        if (initialize) await erc20.initializeErc20(name, symbol, decimals)
+        if (initialize) {
+            await erc20.initializeErc20(name, symbol, decimals)
+            await erc20.initializeCap(1000)
+        }
 
         return {
             erc20: erc20,
@@ -149,15 +152,53 @@ describe('ERC20', function () {
         })
     })
 
+    describe('Cap', () => {
+        it('GIVEN an ERC20 WHEN initializeCap with Zero THEN it fails', async () => {
+            const { erc20, implementation } = await deploy()
+            expect(implementation).not.to.be.undefined
+            await expect(erc20.initializeCap(0)).to.be.revertedWithCustomError(
+                erc20,
+                'CapIsZero'
+            )
+        })
+
+        it('GIVEN an ERC20 WHEN cap is initialized THEN it can be retrieved', async () => {
+            const { erc20, implementation } = await deploy()
+            expect(implementation).not.to.be.undefined
+            await expect(erc20.initializeCap(1000))
+                .to.emit(erc20, 'CapInitialized')
+                .withArgs(1000)
+            await expect(erc20.initializeCap(1))
+                .to.be.revertedWithCustomError(
+                    erc20,
+                    'ContractIsAlreadyInitialized'
+                )
+                .withArgs(
+                    '0x94ece6781e9aebbdab29d2bbc0301c80b7bcb1194c5c3efc08e3d35c7f6d741b'
+                )
+
+            expect(await erc20.cap()).to.equal(1000)
+        })
+
+        it('GIVEN an initialized ERC20 WHEN mint over cap THEN it fails', async () => {
+            const { erc20, implementation, owner } = await deploy(true)
+            expect(implementation).not.to.be.undefined
+            expect(await erc20.cap()).to.equal(1000)
+            await expect(
+                erc20.mint(owner.address, 1001)
+            ).revertedWithCustomError(erc20, 'CapExceeded')
+        })
+    })
+
     describe('Mint', () => {
         it('GIVEN an initialized ERC20 WHEN mint to zero address THEN fails', async () => {
-            const { erc20 } = await deploy()
+            const { erc20 } = await deploy(true)
             await expect(
                 erc20.mint(ethers.ZeroAddress, 100)
             ).to.revertedWithCustomError(erc20, 'AddressZero')
         })
         it('GIVEN an ERC20 WHEN it is initialized THEN mint can be made', async () => {
-            const { erc20, implementation, owner } = await deploy()
+            const { erc20, implementation, owner } = await deploy(true)
             expect(implementation).not.to.be.undefined
             await expect(erc20.mint(owner.address, 100))
                 .to.emit(erc20, 'Transfer')
