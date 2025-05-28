@@ -14,7 +14,7 @@ contract AccessControl is IAccessControl, Common {
         _disableInitializers(_ACCESS_CONTROL_RESOLVER_KEY);
     }
 
-    function initialize(
+    function initializeAccessControl(
         address admin
     )
         external

@@ -25,6 +25,10 @@ abstract contract PauseInternalCommon {
         return _pauseStorage().pause;
     }
 
+    function _authorityLevel() internal view virtual returns (uint256) {
+        return _pauseStorage().authorityLevel;
+    }
+
     function _requireNotPaused() internal view virtual {
         if (_paused()) revert IPause.IsPaused();
     }

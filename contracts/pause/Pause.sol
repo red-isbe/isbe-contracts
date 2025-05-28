@@ -11,7 +11,7 @@ abstract contract Pause is IPause, PauseInternal {
         _disableInitializers(_PAUSE_RESOLVER_KEY);
     }
 
-    function initialize(
+    function initializePause(
         bool _paused
     ) external virtual initializer(_PAUSE_RESOLVER_KEY) {
         if (_paused) _pause();
@@ -19,11 +19,15 @@ abstract contract Pause is IPause, PauseInternal {
     }
 
     function pause() external virtual whenNotPaused {
+        _checkPauserRoles();
+
         _pause();
         emit Paused(_msgSender());
     }
 
     function unpause() external virtual whenPaused checkAuthorityLevel {
+        _checkPauserRoles();
+
         _unpause();
         emit Unpaused(_msgSender());
     }
@@ -31,4 +35,10 @@ abstract contract Pause is IPause, PauseInternal {
     function paused() external view virtual returns (bool) {
         return _paused();
     }
+
+    function authorityLevel() external view virtual returns (uint256) {
+        return _authorityLevel();
+    }
+
+    function _checkPauserRoles() internal view virtual;
 }

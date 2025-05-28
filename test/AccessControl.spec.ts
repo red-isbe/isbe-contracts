@@ -10,13 +10,15 @@ describe('Access Control', function () {
     let accessControlImplementation: AccessControl
     let accessControl: AccessControl
 
-    async function deploy(initialize: boolean = true) {
+    before(async () => {
         ;[adminAccount, account_2] = await ethers.getSigners()
+    })
 
+    async function deploy(initialize: boolean = true) {
         const AccessControl = await ethers.getContractFactory('AccessControl')
         accessControlImplementation = await AccessControl.deploy()
 
-        const Proxy = await ethers.getContractFactory('DumbProxy')
+        const Proxy = await ethers.getContractFactory('DummyProxy')
         const proxy = await Proxy.deploy(accessControlImplementation)
         await proxy.waitForDeployment()
 
@@ -24,7 +26,8 @@ describe('Access Control', function () {
             await proxy.getAddress()
         )) as AccessControl
 
-        if (initialize) await accessControl.initialize(adminAccount)
+        if (initialize)
+            await accessControl.initializeAccessControl(adminAccount)
     }
 
     describe('Testing initialization and constructor', function () {
@@ -32,7 +35,7 @@ describe('Access Control', function () {
             await deploy()
 
             await expect(
-                accessControlImplementation.initialize(account_2)
+                accessControlImplementation.initializeAccessControl(account_2)
             ).to.be.revertedWithCustomError(
                 accessControlImplementation,
                 'ContractIsAlreadyInitialized'
@@ -43,7 +46,7 @@ describe('Access Control', function () {
             await deploy()
 
             await expect(
-                accessControl.initialize(account_2)
+                accessControl.initializeAccessControl(account_2)
             ).to.be.revertedWithCustomError(
                 accessControl,
                 'ContractIsAlreadyInitialized'
@@ -54,7 +57,7 @@ describe('Access Control', function () {
             await deploy(false)
 
             await expect(
-                accessControl.initialize(ADDRESS_0)
+                accessControl.initializeAccessControl(ADDRESS_0)
             ).to.be.revertedWithCustomError(accessControl, 'AddressZero')
         })
     })

@@ -13,9 +13,13 @@ interface IPause {
     error IsPaused();
     error IsNotPaused();
 
+    function initializePause(bool _paused) external;
+
     function pause() external;
 
     function unpause() external;
 
     function paused() external view returns (bool);
+
+    function authorityLevel() external view returns (uint256);
 }

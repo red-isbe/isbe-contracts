@@ -5,6 +5,6 @@ import {
     ERC1967Proxy
 } from '@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol';
 
-contract DumbProxy is ERC1967Proxy {
+contract DummyProxy is ERC1967Proxy {
     constructor(address _logic) payable ERC1967Proxy(_logic, '') {}
 }
