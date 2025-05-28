@@ -9,9 +9,9 @@ import {_PAUSER_ROLE, _ISBE_ROLE} from '../constants/roles.sol';
 contract ISBEPause is Pause, AccessControl {
     uint256 private constant _DEFAULT_AUTHORIZATION_LEVEL = 0;
 
-    uint256 private constant _PAUSER_AUTHORIZATION_LEVEL = 1;
+    uint256 private constant _PAUSER_AUTHORIZATION_LEVEL = 1000;
 
-    uint256 private constant _ISBE_AUTHORIZATION_LEVEL = 2;
+    uint256 private constant _ISBE_AUTHORIZATION_LEVEL = type(uint256).max;
 
     function _getAuthorityLevel(
         address _account
