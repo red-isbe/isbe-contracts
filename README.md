@@ -2,6 +2,10 @@
 
 Repository of certified and audited utilities for use in the ISBE network
 
+## Requirements
+
+- Node version 20.X.X
+
 ## User Roles
 
 In this repository we can find two different users:
@@ -37,3 +41,4 @@ In order to include any change in this repository, we need to follow these steps
 - Runs Slither without critical vulnerabilities.
 - Run Prettier and Linter before committing changes.
 - Run Npm Audit before committing changes.
+- Include NatSpec documentation in interface contract (also in implementation contracts if something not defined in interface)
