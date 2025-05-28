@@ -23,7 +23,6 @@
         "prettier": "npm run prettier:write",
         "prettier:write": "npx -y prettier . --write",
         "prettier:check": "npx -y prettier . --check",
-        "pre-commit:lint-staged": "npm run prettier && npm run lint",
         "pre-commit": "npm run prettier && npm run lint && npm test",
         "prepare": "husky",
         "slither:analysis": "docker run -t --rm -v /var/run/docker.sock:/var/run/docker.sock -v \"$(pwd)\":\"/home/ethsec/contracts\" -w \"/home/ethsec/contracts\" -u 0:0 trailofbits/eth-security-toolbox /bin/sh -c \"solc-select install 0.8.28  && solc-select use 0.8.28  && slither . --solc-remaps @=node_modules/@\"",
@@ -72,6 +71,20 @@
         "prettier-plugin-solidity": "^2.0.0"
     },
     "lint-staged": {
-        "*": "npm run pre-commit:lint-staged"
+        "contracts/**/*.sol": [
+            "solhint --fix",
+            "prettier --write"
+        ],
+        "*.ts": [
+            "eslint --fix",
+            "prettier --write"
+        ],
+        "*.js": [
+            "eslint --fix",
+            "prettier --write"
+        ],
+        "*.{json,md}": [
+            "prettier --write"
+        ]
     }
 }
