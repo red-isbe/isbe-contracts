@@ -6,7 +6,7 @@ import {PauseInternal} from './PauseInternal.sol';
 import {IPause} from './IPause.sol';
 import {_PAUSE_RESOLVER_KEY} from '../constants/resolverKeys.sol';
 
-contract Pause is IPause, PauseInternal {
+abstract contract Pause is IPause, PauseInternal {
     constructor() {
         _disableInitializers(_PAUSE_RESOLVER_KEY);
     }

@@ -2,11 +2,21 @@
 pragma solidity ^0.8.28;
 
 import {Initializable} from './Initializable.sol';
-import {ISBEContext} from '../utils/ISBEContext.sol';
+import {AccessControlInternal} from '../access/AccessControlInternal.sol';
+import {PauseInternalCommon} from '../pause/PauseInternalCommon.sol';
 
-import {ICommon} from './ICommon.sol';
+abstract contract Common is
+    Initializable,
+    AccessControlInternal,
+    PauseInternalCommon
+{
+    /**
+     * @dev Emitted when the provided `addr` is 0
+     *
+     * @param addr The address to check
+     */
+    error AddressZero(address addr);
 
-abstract contract Common is ICommon, Initializable, ISBEContext {
     /**
      * @dev Checks if an address equals to zero address
      *
