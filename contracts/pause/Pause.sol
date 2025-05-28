@@ -11,8 +11,11 @@ abstract contract Pause is IPause, PauseInternal {
         _disableInitializers(_PAUSE_RESOLVER_KEY);
     }
 
-    function initialize() external initializer(_PAUSE_RESOLVER_KEY) {
-        _unpause();
+    function initialize(
+        bool _paused
+    ) external virtual initializer(_PAUSE_RESOLVER_KEY) {
+        if (_paused) _pause();
+        else _unpause();
     }
 
     function pause() external virtual whenNotPaused {

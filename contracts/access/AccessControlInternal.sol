@@ -81,6 +81,26 @@ abstract contract AccessControlInternal is ISBEContext {
         }
     }
 
+    function _checkRoles(bytes32[] memory roles) internal view virtual {
+        _checkRoles(roles, _msgSender());
+    }
+
+    function _checkRoles(
+        bytes32[] memory roles,
+        address account
+    ) internal view virtual {
+        bool rolesOK = false;
+
+        for (uint256 index = 0; index < roles.length; ++index) {
+            if (_hasRole(roles[index], account)) {
+                rolesOK = true;
+                break;
+            }
+        }
+
+        if (!rolesOK) revert IAccessControl.AccountHasNoRoles(account, roles);
+    }
+
     /// @notice Returns the storage slot for access control
     /// @dev Uses inline assembly to return storage struct at predefined slot
     /// @return accessControlStorage_ The access control storage struct

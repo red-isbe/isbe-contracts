@@ -44,7 +44,7 @@ abstract contract PauseInternal is Common {
     function _compareAuthorityLevels(
         uint256 _newLevel,
         uint256 _previousLevel
-    ) internal pure returns (bool) {
+    ) internal pure virtual returns (bool) {
         if (_newLevel < _previousLevel) return false;
         return true;
     }

@@ -2,16 +2,9 @@ import { expect } from 'chai'
 import { Signer } from 'ethers'
 import { ethers } from 'hardhat'
 import { AccessControl } from '../typechain-types/index.js'
+import { DEFAULT_ADMIN_ROLE, ROLE_1, ROLE_2, ADDRESS_0 } from './constants'
 
 describe('Access Control', function () {
-    const DEFAULT_ADMIN_ROLE =
-        '0x0000000000000000000000000000000000000000000000000000000000000000'
-    const ROLE_1 =
-        '0x0000000000000000000000000000000000000000000000000000000000000001'
-    const ROLE_2 =
-        '0x0000000000000000000000000000000000000000000000000000000000000002'
-    const ADDRESS_0 = '0x0000000000000000000000000000000000000000'
-
     let adminAccount: Signer
     let account_2: Signer
     let accessControlImplementation: AccessControl
