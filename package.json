@@ -72,6 +72,20 @@
         "prettier-plugin-solidity": "^2.0.0"
     },
     "lint-staged": {
-        "*": "npm run pre-commit:lint-staged"
+        "contracts/**/*.sol": [
+            "solhint --fix",
+            "prettier --write"
+        ],
+        "*.ts": [
+            "eslint --fix",
+            "prettier --write"
+        ],
+        "*.js": [
+            "eslint --fix",
+            "prettier --write"
+        ],
+        "*.{json,md}": [
+            "prettier --write"
+        ]
     }
 }
