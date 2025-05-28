@@ -22,7 +22,7 @@ abstract contract Common is ICommon, Initializable, ISBEContext {
      *
      * @param addr The address to check
      */
-    function _addressIsNotZero(address addr) private pure {
+    function _addressIsNotZero(address addr) internal pure {
         if (addr == address(0)) revert AddressZero(addr);
     }
 }
