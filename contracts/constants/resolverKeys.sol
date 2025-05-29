@@ -9,3 +9,6 @@ bytes32 constant _ERC20_RESOLVER_KEY = 0x2428f215905ecd05cc26794e218b9fad455e6ae
 
 // keccak256('isbe.contracts.erc20.capped.resolver.key');
 bytes32 constant _ERC20_CAPPED_RESOLVER_KEY = 0x94ece6781e9aebbdab29d2bbc0301c80b7bcb1194c5c3efc08e3d35c7f6d741b;
+
+// keccak256('isbe.contracts.pause.resolver.key');
+bytes32 constant _PAUSE_RESOLVER_KEY = 0x7fabf0f3ed655fa26f86c82ae5da60e0ade03a5d35a9ff2985709278942966d3;

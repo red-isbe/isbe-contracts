@@ -17,6 +17,7 @@
         "test:parallel": "npx hardhat test --parallel",
         "test:coverage": "npx hardhat coverage",
         "test:accessControl": "npx hardhat test test/AccessControl.spec.ts",
+        "test:pause": "npx hardhat test test/Pause.spec.ts",
         "lint:sol": "solhint 'contracts/**/*.sol'",
         "lint:ts": "npx -y eslint .",
         "lint": "npm run lint:sol && npm run lint:ts",

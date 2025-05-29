@@ -2,28 +2,23 @@ import { expect } from 'chai'
 import { Signer } from 'ethers'
 import { ethers } from 'hardhat'
 import { AccessControl } from '../typechain-types/index.js'
+import { DEFAULT_ADMIN_ROLE, ROLE_1, ROLE_2, ADDRESS_0 } from './constants'
 
 describe('Access Control', function () {
-    const DEFAULT_ADMIN_ROLE =
-        '0x0000000000000000000000000000000000000000000000000000000000000000'
-    const ROLE_1 =
-        '0x0000000000000000000000000000000000000000000000000000000000000001'
-    const ROLE_2 =
-        '0x0000000000000000000000000000000000000000000000000000000000000002'
-    const ADDRESS_0 = '0x0000000000000000000000000000000000000000'
-
     let adminAccount: Signer
     let account_2: Signer
     let accessControlImplementation: AccessControl
     let accessControl: AccessControl
 
-    async function deploy(initialize: boolean = true) {
+    before(async () => {
         ;[adminAccount, account_2] = await ethers.getSigners()
+    })
 
+    async function deploy(initialize: boolean = true) {
         const AccessControl = await ethers.getContractFactory('AccessControl')
         accessControlImplementation = await AccessControl.deploy()
 
-        const Proxy = await ethers.getContractFactory('DumbProxy')
+        const Proxy = await ethers.getContractFactory('DummyProxy')
         const proxy = await Proxy.deploy(accessControlImplementation)
         await proxy.waitForDeployment()
 
@@ -31,7 +26,8 @@ describe('Access Control', function () {
             await proxy.getAddress()
         ) as AccessControl
 
-        if (initialize) await accessControl.initialize(adminAccount)
+        if (initialize)
+            await accessControl.initializeAccessControl(adminAccount)
     }
 
     describe('Testing initialization and constructor', function () {
@@ -39,7 +35,7 @@ describe('Access Control', function () {
             await deploy()
 
             await expect(
-                accessControlImplementation.initialize(account_2)
+                accessControlImplementation.initializeAccessControl(account_2)
             ).to.be.revertedWithCustomError(
                 accessControlImplementation,
                 'ContractIsAlreadyInitialized'
@@ -50,7 +46,7 @@ describe('Access Control', function () {
             await deploy()
 
             await expect(
-                accessControl.initialize(account_2)
+                accessControl.initializeAccessControl(account_2)
             ).to.be.revertedWithCustomError(
                 accessControl,
                 'ContractIsAlreadyInitialized'
@@ -61,7 +57,7 @@ describe('Access Control', function () {
             await deploy(false)
 
             await expect(
-                accessControl.initialize(ADDRESS_0)
+                accessControl.initializeAccessControl(ADDRESS_0)
             ).to.be.revertedWithCustomError(accessControl, 'AddressZero')
         })
     })
