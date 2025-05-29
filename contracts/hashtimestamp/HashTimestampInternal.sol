@@ -23,19 +23,17 @@ abstract contract HashTimestampInternal is Common {
         _;
     }
 
-    function _timestampHash(bytes32 hash) internal virtual {
+    function _timestampHash(bytes32 hash) internal {
         uint256 timestamp = _blockTimestamp();
         _hashTimestampStorage().hashTimestamps[hash] = timestamp;
         emit IHashTimestamp.HashTimestamped(hash, msg.sender, timestamp);
     }
 
-    function _exists(bytes32 hash) internal view virtual returns (bool) {
+    function _exists(bytes32 hash) internal view returns (bool) {
         return _getTimestamp(hash) != 0;
     }
 
-    function _getTimestamp(
-        bytes32 hash
-    ) internal view virtual returns (uint256) {
+    function _getTimestamp(bytes32 hash) internal view returns (uint256) {
         return _hashTimestampStorage().hashTimestamps[hash];
     }
 
@@ -45,16 +43,18 @@ abstract contract HashTimestampInternal is Common {
 
     /// @notice Returns the storage slot for hash timestamp
     /// @dev Uses inline assembly to return storage struct at predefined slot
-    /// @return hashTimestampStorage_ The hash timestamp storage struct
+    /// @return storage_ The hash timestamp storage struct
     function _hashTimestampStorage()
         internal
         pure
-        returns (HashTimestampStorage storage hashTimestampStorage_)
+        returns (HashTimestampStorage storage storage_)
     {
         bytes32 position = _HASH_TIMESTAMP_STORAGE_POSITION;
+        // slither-disable-start assembly
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            hashTimestampStorage_.slot := position
+            storage_.slot := position
         }
+        // slither-disable-end assembly
     }
 }

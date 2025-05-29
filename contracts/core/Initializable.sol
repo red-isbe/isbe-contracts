@@ -64,12 +64,14 @@ abstract contract Initializable {
     function _initializableStorage()
         private
         pure
-        returns (InitializableStorage storage initializableStorage_)
+        returns (InitializableStorage storage storage_)
     {
         bytes32 position = _INITIALIZABLE_STORAGE_POSITION;
+        // slither-disable-start assembly
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            initializableStorage_.slot := position
+            storage_.slot := position
         }
+        // slither-disable-end assembly
     }
 }

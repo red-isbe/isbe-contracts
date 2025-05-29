@@ -32,7 +32,7 @@ abstract contract AccessControlInternal is ISBEContext {
         _;
     }
 
-    function _setRoleAdmin(bytes32 role, bytes32 adminRole) internal virtual {
+    function _setRoleAdmin(bytes32 role, bytes32 adminRole) internal {
         bytes32 previousAdminRole = _getRoleAdmin(role);
         if (previousAdminRole == adminRole) return;
         _accessControlStorage().roles[role].adminRole = adminRole;
@@ -44,7 +44,7 @@ abstract contract AccessControlInternal is ISBEContext {
         );
     }
 
-    function _grantRole(bytes32 role, address account) internal virtual {
+    function _grantRole(bytes32 role, address account) internal {
         if (_hasRole(role, account)) return;
 
         _accessControlStorage().roles[role].members[account] = true;
@@ -61,17 +61,15 @@ abstract contract AccessControlInternal is ISBEContext {
     function _hasRole(
         bytes32 role,
         address account
-    ) internal view virtual returns (bool) {
+    ) internal view returns (bool) {
         return _accessControlStorage().roles[role].members[account];
     }
 
-    function _getRoleAdmin(
-        bytes32 role
-    ) internal view virtual returns (bytes32) {
+    function _getRoleAdmin(bytes32 role) internal view returns (bytes32) {
         return _accessControlStorage().roles[role].adminRole;
     }
 
-    function _checkRole(bytes32 role) internal view virtual {
+    function _checkRole(bytes32 role) internal view {
         _checkRole(role, _msgSender());
     }
 
@@ -104,16 +102,18 @@ abstract contract AccessControlInternal is ISBEContext {
 
     /// @notice Returns the storage slot for access control
     /// @dev Uses inline assembly to return storage struct at predefined slot
-    /// @return accessControlStorage_ The access control storage struct
+    /// @return storage_ The access control storage struct
     function _accessControlStorage()
         internal
         pure
-        returns (AccessControlStorage storage accessControlStorage_)
+        returns (AccessControlStorage storage storage_)
     {
         bytes32 position = _ACCESS_CONTROL_STORAGE_POSITION;
+        // slither-disable-start assembly
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            accessControlStorage_.slot := position
+            storage_.slot := position
         }
+        // slither-disable-end assembly
     }
 }

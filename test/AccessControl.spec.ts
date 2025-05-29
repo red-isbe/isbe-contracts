@@ -22,9 +22,9 @@ describe('Access Control', function () {
         const proxy = await Proxy.deploy(accessControlImplementation)
         await proxy.waitForDeployment()
 
-        accessControl = (await AccessControl.attach(
+        accessControl = AccessControl.attach(
             await proxy.getAddress()
-        )) as AccessControl
+        ) as AccessControl
 
         if (initialize)
             await accessControl.initializeAccessControl(adminAccount)

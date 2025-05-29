@@ -22,8 +22,8 @@ interface IHashTimestamp {
 
     /// @notice Checks whether a hash has been timestamped
     /// @param hash The hash to check
-    /// @return exists True if the hash has been recorded, false in other case
-    function exists(bytes32 hash) external view returns (bool exists);
+    /// @return exists_ True if the hash has been recorded, false in other case
+    function exists(bytes32 hash) external view returns (bool exists_);
 
     /// @notice Returns the timestamp when a hash was recorded
     /// @param hash The hash to query
