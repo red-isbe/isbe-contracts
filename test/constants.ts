@@ -17,5 +17,6 @@ export const DEFAULT_AUTHORIZATION_LEVEL = 0
 export const PAUSER_AUTHORIZATION_LEVEL = 1000
 
 // 2 ** 256 - 1
-export const ISBE_AUTHORIZATION_LEVEL =
-    '115792089237316195423570985008687907853269984665640564039457584007913129639935'
+export const ISBE_AUTHORIZATION_LEVEL = BigInt(
+    '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
+)
