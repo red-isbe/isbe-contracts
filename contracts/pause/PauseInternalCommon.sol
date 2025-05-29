@@ -35,11 +35,11 @@ abstract contract PauseInternalCommon {
     }
 
     function _requireNotPaused() internal view virtual {
-        if (_paused()) revert IPause.IsPaused();
+        require(!_paused(), IPause.IsPaused());
     }
 
     function _requirePaused() internal view virtual {
-        if (!_paused()) revert IPause.IsNotPaused();
+        require(_paused(), IPause.IsNotPaused());
     }
 
     /// @notice Returns the storage slot for pause

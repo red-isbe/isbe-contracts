@@ -55,8 +55,10 @@ abstract contract Initializable {
     }
 
     function _preInitializer(bytes32 _facetKey) private view {
-        if (_isInitialized(_facetKey))
-            revert ContractIsAlreadyInitialized(_facetKey);
+        require(
+            !_isInitialized(_facetKey),
+            ContractIsAlreadyInitialized(_facetKey)
+        );
     }
 
     function _initializableStorage()

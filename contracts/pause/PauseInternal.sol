@@ -15,16 +15,16 @@ abstract contract PauseInternal is Common {
         uint256 senderAuthorityLevel = _getAuthorityLevel(_msgSender());
         uint256 requiredAuthorityLevel = _pauseStorage().authorityLevel;
 
-        if (
-            !_compareAuthorityLevels(
+        require(
+            _compareAuthorityLevels(
+                senderAuthorityLevel,
+                requiredAuthorityLevel
+            ),
+            IPause.InsufficientAuthorityLevel(
                 senderAuthorityLevel,
                 requiredAuthorityLevel
             )
-        )
-            revert IPause.InsufficientAuthorityLevel(
-                senderAuthorityLevel,
-                requiredAuthorityLevel
-            );
+        );
         _;
     }
 

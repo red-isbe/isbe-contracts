@@ -40,9 +40,7 @@ abstract contract HashTimestampInternal is Common {
     }
 
     function _checkHash(bytes32 hash) internal view virtual {
-        if (_exists(hash)) {
-            revert IHashTimestamp.HashAlreadyExists(hash);
-        }
+        require(!_exists(hash), IHashTimestamp.HashAlreadyExists(hash));
     }
 
     /// @notice Returns the storage slot for hash timestamp

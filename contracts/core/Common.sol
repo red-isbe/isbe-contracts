@@ -33,6 +33,6 @@ abstract contract Common is
      * @param addr The address to check
      */
     function _addressIsNotZero(address addr) internal pure {
-        if (addr == address(0)) revert AddressZero(addr);
+        require(addr != address(0), AddressZero(addr));
     }
 }

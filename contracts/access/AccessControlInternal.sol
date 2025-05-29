@@ -76,9 +76,10 @@ abstract contract AccessControlInternal is ISBEContext {
     }
 
     function _checkRole(bytes32 role, address account) internal view virtual {
-        if (!_hasRole(role, account)) {
-            revert IAccessControl.AccountHasNoRole(account, role);
-        }
+        require(
+            _hasRole(role, account),
+            IAccessControl.AccountHasNoRole(account, role)
+        );
     }
 
     function _checkRoles(bytes32[] memory roles) internal view virtual {
@@ -98,7 +99,7 @@ abstract contract AccessControlInternal is ISBEContext {
             }
         }
 
-        if (!rolesOK) revert IAccessControl.AccountHasNoRoles(account, roles);
+        require(rolesOK, IAccessControl.AccountHasNoRoles(account, roles));
     }
 
     /// @notice Returns the storage slot for access control
