@@ -101,16 +101,18 @@ abstract contract AssetEventTrackerInternal is Common {
 
     /// @notice Returns the storage slot for asset event tracker
     /// @dev Uses inline assembly to return storage struct at predefined slot
-    /// @return assetEventTrackerStorage_ The asset event tracker storage struct
+    /// @return storage_ The asset event tracker storage struct
     function _assetEventTrackerStorage()
         internal
         pure
-        returns (AssetEventTrackerStorage storage assetEventTrackerStorage_)
+        returns (AssetEventTrackerStorage storage storage_)
     {
         bytes32 position = _ASSET_EVENT_TRACKER_STORAGE_POSITION;
+        // slither-disable-start assembly
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            assetEventTrackerStorage_.slot := position
+            storage_.slot := position
         }
+        // slither-disable-end assembly
     }
 }

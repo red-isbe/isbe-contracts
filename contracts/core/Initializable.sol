@@ -37,7 +37,7 @@ abstract contract Initializable {
      *
      * Emits an {Initialized} event the first time it is successfully executed.
      */
-    function _disableInitializers(bytes32 _facetKey) internal virtual {
+    function _disableInitializers(bytes32 _facetKey) internal {
         _checkInitialized(_facetKey);
         _postInitializer(_facetKey);
     }
@@ -67,12 +67,14 @@ abstract contract Initializable {
     function _initializableStorage()
         private
         pure
-        returns (InitializableStorage storage initializableStorage_)
+        returns (InitializableStorage storage storage_)
     {
         bytes32 position = _INITIALIZABLE_STORAGE_POSITION;
+        // slither-disable-start assembly
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            initializableStorage_.slot := position
+            storage_.slot := position
         }
+        // slither-disable-end assembly
     }
 }

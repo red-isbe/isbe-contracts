@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { Signer } from 'ethers'
 import { ethers } from 'hardhat'
-import { AssetEventTrackerTestWrapper } from '../typechain-types/index.js'
+import { AssetEventTrackerTestWrapper } from '../typechain-types'
 
 describe('Asset Event Tracker', function () {
     const STATE_1 = 1
