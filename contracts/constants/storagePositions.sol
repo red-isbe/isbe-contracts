@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
+// solhint-disable max-line-length
 
 // keccak256('isbe.contracts.erc20.storage');
 bytes32 constant _ERC20_STORAGE_POSITION = 0xd93ac5c223af8b55b10aca6a04761f021176cb4baf866e7484f3c8d7325c3a93;
@@ -12,3 +13,8 @@ bytes32 constant _INITIALIZABLE_STORAGE_POSITION = 0xcfff96098fae8df9a4c6ae59e43
 
 // keccak256('isbe.contracts.hash.timestamp.storage');
 bytes32 constant _HASH_TIMESTAMP_STORAGE_POSITION = 0x9461e6f53daf5c3d0aa4d10025e40b84fad06da43fb4fab1a98f3e6b3a58d616;
+
+// keccak256('isbe.contracts.asset.event.tracker.storage');
+bytes32 constant _ASSET_EVENT_TRACKER_STORAGE_POSITION = 0xb13a0c12204f114e7a8e799996dabff59f106350c92089a46344d8deff3164b3;
+
+// solhint-enable max-line-length

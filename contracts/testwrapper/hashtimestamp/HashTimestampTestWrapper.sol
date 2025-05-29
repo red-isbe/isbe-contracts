@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {HashTimestamp} from '../hashtimestamp/HashTimestamp.sol';
+import {HashTimestamp} from '../../hashtimestamp/HashTimestamp.sol';
 
 /// @title HashTimestampTestWrapper
 /// @notice Implements timestamp for hashes (only for test)
