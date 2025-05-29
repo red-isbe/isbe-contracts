@@ -7,9 +7,9 @@ import {_ACCESS_CONTROL_RESOLVER_KEY} from '../constants/resolverKeys.sol';
 
 /// @title AccessControl
 /// @notice Implements role-based access control mechanisms
-/// @dev Inherits from IAccessControl and AccessControlInternal, providing external role management functions
+/// @dev Inherits from IAccessControl and Common, providing external role management functions
 contract AccessControl is IAccessControl, Common {
-    /// @notice Constructor that assigns the deployer as the default admin
+    /// @notice Constructor that disables the initializer
     constructor() {
         _disableInitializers(_ACCESS_CONTROL_RESOLVER_KEY);
     }

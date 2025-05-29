@@ -6,7 +6,11 @@ import {_PAUSE_STORAGE_POSITION} from '../constants/storagePositions.sol';
 import {Common} from '../core/Common.sol';
 import {IPause} from './IPause.sol';
 
+/// @title PauseInternal
+/// @notice Internal logic for pausing mechanism
 abstract contract PauseInternal is Common {
+    /// @notice Modifier to restrict function to accounts with an authority level high enough
+    /// @dev Reverts with `InsufficientAuthorityLevel` error if the authority level is not high enough
     modifier checkAuthorityLevel() {
         uint256 senderAuthorityLevel = _getAuthorityLevel(_msgSender());
         uint256 requiredAuthorityLevel = _pauseStorage().authorityLevel;
@@ -36,7 +40,11 @@ abstract contract PauseInternal is Common {
         pauseStorage.authorityLevel = 0;
     }
 
-    // THIS METHOD MUST BE EXTENDED WITH THE ACTUAL LOGIC DETERMINING THE AUTHORITY LEVEL OF AN ACCOUNT
+    /// @notice Retrieves the authority level of a specific account
+    /// @dev This function must be overridden in derived contracts to provide the actual logic
+    ///      for determining an account's authority level
+    /// @param _account The address of the account whose authority level is being queried
+    /// @return The authority level of the given account
     function _getAuthorityLevel(
         address _account
     ) internal view virtual returns (uint256);

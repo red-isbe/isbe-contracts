@@ -6,16 +6,21 @@ import {_PAUSE_STORAGE_POSITION} from '../constants/storagePositions.sol';
 import {IPause} from './IPause.sol';
 
 abstract contract PauseInternalCommon {
+    /// @notice Structure for storing pause state and authority level
     struct PauseStorage {
         bool pause;
         uint256 authorityLevel;
     }
 
+    /// @notice Modifier to allow function execution only when the contract is not paused
+    /// @dev Reverts with `IsPaused` error if the contract is currently paused
     modifier whenNotPaused() {
         _requireNotPaused();
         _;
     }
 
+    /// @notice Modifier to allow function execution only when the contract is paused
+    /// @dev Reverts with `IsNotPaused` error if the contract is not currently paused
     modifier whenPaused() {
         _requirePaused();
         _;
@@ -37,6 +42,9 @@ abstract contract PauseInternalCommon {
         if (!_paused()) revert IPause.IsNotPaused();
     }
 
+    /// @notice Returns the storage slot for pause
+    /// @dev Uses inline assembly to return storage struct at predefined slot
+    /// @return pauseStorage_ The pause storage struct
     function _pauseStorage()
         internal
         pure

@@ -9,7 +9,6 @@ import {ISBEContext} from '../utils/ISBEContext.sol';
 
 /// @title AccessControlInternal
 /// @notice Internal logic for role-based access control
-/// @dev Meant to be used only by contracts extending AccessControl
 abstract contract AccessControlInternal is ISBEContext {
     /// @notice Struct storing all roles and their data
     struct AccessControlStorage {
@@ -27,6 +26,7 @@ abstract contract AccessControlInternal is ISBEContext {
 
     /// @notice Modifier to restrict function to accounts with a specific role
     /// @param role The required role
+    /// @dev Reverts with `AccountHasNoRole` error if the account does not have the specific role
     modifier onlyRole(bytes32 role) {
         _checkRole(role);
         _;
