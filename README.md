@@ -42,3 +42,7 @@ In order to include any change in this repository, we need to follow these steps
 - Run Prettier and Linter before committing changes.
 - Run Npm Audit before committing changes.
 - Include NatSpec documentation in interface contract (also in implementation contracts if something not defined in interface)
+
+## Install package
+
+In order to use the smart contracts implemented in this repository as an npm dependency in your poject, please follow these [instructions](https://github.com/alastria/isbe-contracts/pkgs/npm/isbe-contracts)
