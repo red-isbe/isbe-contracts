@@ -41,6 +41,15 @@ interface IAccessControl {
     /// @param role The role required
     error AccountHasNoRole(address account, bytes32 role);
 
+    /// @notice Error indicating an account does not hold any of the required roles
+    /// @param account The account being checked
+    /// @param roles The roles required
+    error AccountHasNoRoles(address account, bytes32[] roles);
+
+    /// @notice Initializes the Access Control contrl grating admin right to an account
+    /// @param admin The address to grant the admin role to
+    function initializeAccessControl(address admin) external;
+
     /// @notice Grants a role to an account
     /// @param role The role identifier
     /// @param account The address to grant the role to

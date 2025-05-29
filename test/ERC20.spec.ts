@@ -16,7 +16,7 @@ describe('ERC20', function () {
         const ERC20 = await ethers.getContractFactory('ERC20TestWrapper')
         const erc20Implementation = await ERC20.deploy()
 
-        const Proxy = await ethers.getContractFactory('DumbProxy')
+        const Proxy = await ethers.getContractFactory('DummyProxy')
         const proxy = await Proxy.deploy(erc20Implementation)
         await proxy.waitForDeployment()
 

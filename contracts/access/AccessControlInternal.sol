@@ -9,7 +9,6 @@ import {ISBEContext} from '../utils/ISBEContext.sol';
 
 /// @title AccessControlInternal
 /// @notice Internal logic for role-based access control
-/// @dev Meant to be used only by contracts extending AccessControl
 abstract contract AccessControlInternal is ISBEContext {
     /// @notice Struct storing all roles and their data
     struct AccessControlStorage {
@@ -27,6 +26,7 @@ abstract contract AccessControlInternal is ISBEContext {
 
     /// @notice Modifier to restrict function to accounts with a specific role
     /// @param role The required role
+    /// @dev Reverts with `AccountHasNoRole` error if the account does not have the specific role
     modifier onlyRole(bytes32 role) {
         _checkRole(role);
         _;
@@ -73,10 +73,31 @@ abstract contract AccessControlInternal is ISBEContext {
         _checkRole(role, _msgSender());
     }
 
-    function _checkRole(bytes32 role, address account) internal view {
-        if (!_hasRole(role, account)) {
-            revert IAccessControl.AccountHasNoRole(account, role);
+    function _checkRole(bytes32 role, address account) internal view virtual {
+        require(
+            _hasRole(role, account),
+            IAccessControl.AccountHasNoRole(account, role)
+        );
+    }
+
+    function _checkRoles(bytes32[] memory roles) internal view virtual {
+        _checkRoles(roles, _msgSender());
+    }
+
+    function _checkRoles(
+        bytes32[] memory roles,
+        address account
+    ) internal view virtual {
+        bool rolesOK = false;
+
+        for (uint256 index = 0; index < roles.length; ++index) {
+            if (_hasRole(roles[index], account)) {
+                rolesOK = true;
+                break;
+            }
         }
+
+        require(rolesOK, IAccessControl.AccountHasNoRoles(account, roles));
     }
 
     /// @notice Returns the storage slot for access control

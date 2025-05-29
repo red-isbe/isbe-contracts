@@ -21,3 +21,6 @@ bytes32 constant _HASH_TIMESTAMP_STORAGE_POSITION = 0x9461e6f53daf5c3d0aa4d10025
 bytes32 constant _ASSET_EVENT_TRACKER_STORAGE_POSITION = 0xb13a0c12204f114e7a8e799996dabff59f106350c92089a46344d8deff3164b3;
 
 // solhint-enable max-line-length
+
+// keccak256('isbe.contracts.pause.storage');
+bytes32 constant _PAUSE_STORAGE_POSITION = 0x1d1f84ff22b88aba71617485b5278dbc9110b6bf91b86a247efd1071e92d099a;

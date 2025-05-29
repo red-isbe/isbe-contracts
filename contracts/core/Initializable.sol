@@ -37,8 +37,8 @@ abstract contract Initializable {
      *
      * Emits an {Initialized} event the first time it is successfully executed.
      */
-    function _disableInitializers(bytes32 _facetKey) internal {
-        _checkInitialized(_facetKey);
+    function _disableInitializers(bytes32 _facetKey) internal virtual {
+        _preInitializer(_facetKey);
         _postInitializer(_facetKey);
     }
 
@@ -55,13 +55,10 @@ abstract contract Initializable {
     }
 
     function _preInitializer(bytes32 _facetKey) private view {
-        if (_isInitialized(_facetKey))
-            revert ContractIsAlreadyInitialized(_facetKey);
-    }
-
-    function _checkInitialized(bytes32 _facetKey) private view {
-        if (_isInitialized(_facetKey))
-            revert ContractIsAlreadyInitialized(_facetKey);
+        require(
+            !_isInitialized(_facetKey),
+            ContractIsAlreadyInitialized(_facetKey)
+        );
     }
 
     function _initializableStorage()
