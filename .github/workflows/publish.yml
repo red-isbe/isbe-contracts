@@ -13,13 +13,8 @@ jobs:
             packages: write
 
         steps:
-            - name: Checkout repo
-              uses: actions/checkout@v4
-
-            - name: Setup Node.js
-              uses: actions/setup-node@v4
+            - uses: ./.github/actions/init
               with:
-                  node-version: '20'
                   registry-url: 'https://npm.pkg.github.com/'
                   scope: '@alastria'
 
@@ -27,9 +22,6 @@ jobs:
               run: |
                   echo "//npm.pkg.github.com/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
                   echo "@alastria:registry=https://npm.pkg.github.com/" >> ~/.npmrc
-
-            - name: Install dependencies
-              run: npm ci
 
             - name: Compile contracts
               run: npm run compile
