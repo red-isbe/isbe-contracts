@@ -2,11 +2,17 @@
 pragma solidity ^0.8.28;
 
 import {AssetEventTracker} from '../../assetevent/AssetEventTracker.sol';
+import {AccessControl} from '../../access/AccessControl.sol';
+import {ISBEPause} from '../../pause/ISBEPause.sol';
 
 /// @title AssetEventTrackerTestWrapper
 /// @notice Implements asset event tracker (only for test)
 /// @dev Inherits from AssetEventTracker, providing access to block timestamp and check state change functions
-contract AssetEventTrackerTestWrapper is AssetEventTracker {
+contract AssetEventTrackerTestWrapper is
+    AssetEventTracker,
+    AccessControl,
+    ISBEPause
+{
     uint256 private _mockedTimestamp;
 
     function setMockedTimestamp(uint256 ts) external {

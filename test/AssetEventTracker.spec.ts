@@ -2,6 +2,7 @@ import { expect } from 'chai'
 import { Signer } from 'ethers'
 import { ethers } from 'hardhat'
 import { AssetEventTrackerTestWrapper } from '../typechain-types'
+import { ASSET_EVENT_TRACKER_ROLE, PAUSER_ROLE } from './constants'
 
 describe('Asset Event Tracker', function () {
     const STATE_1 = 1
@@ -10,6 +11,7 @@ describe('Asset Event Tracker', function () {
 
     let adminAccount: Signer
     let assetEventTracker: AssetEventTrackerTestWrapper
+    let assetEventTrackerImplementation: AssetEventTrackerTestWrapper
 
     async function deploy() {
         ;[adminAccount] = await ethers.getSigners()
@@ -18,9 +20,28 @@ describe('Asset Event Tracker', function () {
         const AssetEventTracker = await ethers.getContractFactory(
             'AssetEventTrackerTestWrapper'
         )
-        assetEventTracker = await AssetEventTracker.deploy({
+        assetEventTrackerImplementation = await AssetEventTracker.deploy({
             from: adminAccountAddress,
         })
+
+        const Proxy = await ethers.getContractFactory('DummyProxy')
+        const proxy = await Proxy.deploy(assetEventTrackerImplementation)
+        await proxy.waitForDeployment()
+
+        assetEventTracker = (await AssetEventTracker.attach(
+            await proxy.getAddress()
+        )) as AssetEventTrackerTestWrapper
+
+        await assetEventTracker.initializeAccessControl(adminAccountAddress)
+
+        assetEventTracker = assetEventTracker.connect(adminAccount)
+        await assetEventTracker.grantRole(
+            ASSET_EVENT_TRACKER_ROLE,
+            adminAccountAddress
+        )
+        await assetEventTracker.grantRole(PAUSER_ROLE, adminAccountAddress)
+
+        await assetEventTracker.initializePause(false)
     }
 
     describe('Recording states', function () {
@@ -74,6 +95,34 @@ describe('Asset Event Tracker', function () {
             ).to.be.revertedWithCustomError(
                 assetEventTracker,
                 'StateChangeNotAllowed'
+            )
+        })
+
+        it('GIVEN a Asset Event Tracker WHEN contract is paused THEN fails', async function () {
+            await deploy()
+
+            assetEventTracker = assetEventTracker.connect(adminAccount)
+            await assetEventTracker.pause()
+
+            await expect(
+                assetEventTracker.recordState(STATE_1)
+            ).to.be.revertedWithCustomError(assetEventTracker, 'IsPaused')
+        })
+
+        it('GIVEN a Asset Event Tracker WHEN account has no roles THEN fails', async function () {
+            await deploy()
+
+            assetEventTracker = assetEventTracker.connect(adminAccount)
+            await assetEventTracker.revokeRole(
+                ASSET_EVENT_TRACKER_ROLE,
+                adminAccount.getAddress()
+            )
+
+            await expect(
+                assetEventTracker.recordState(STATE_1)
+            ).to.be.revertedWithCustomError(
+                assetEventTracker,
+                'AccountHasNoRole'
             )
         })
     })

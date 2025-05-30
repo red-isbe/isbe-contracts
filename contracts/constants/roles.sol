@@ -11,3 +11,6 @@ bytes32 constant _PAUSER_ROLE = 0x8c911f4537972e7549dbbd37a96b929a4b480f4fb156fc
 
 // keccak256('isbe.contracts.role.isbe');
 bytes32 constant _ISBE_ROLE = 0xe02d3eaf0b5fb24a2d637286804770bf2618aa6d3b40cbf443b93f6cd1aac239;
+
+// keccak256('isbe.contracts.role.asset.event.tracker');
+bytes32 constant _ASSET_EVENT_TRACKER_ROLE = 0x46ffae7721ce7c213dfc98101d48d6a7f58e3c12f2945ae1fb4f2e2862a44ff1;

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
+import {_ASSET_EVENT_TRACKER_ROLE} from '../constants/roles.sol';
 import {IAssetEventTracker} from './IAssetEventTracker.sol';
 import {AssetEventTrackerInternal} from './AssetEventTrackerInternal.sol';
 
@@ -10,12 +11,6 @@ abstract contract AssetEventTracker is
     IAssetEventTracker,
     AssetEventTrackerInternal
 {
-    function recordState(
-        uint256 newState
-    ) external virtual override onlyAllowedStateChange(newState) {
-        _recordState(newState);
-    }
-
     function getAssetEvents(
         uint256 pageNumber,
         uint256 resultsPerPage
@@ -40,5 +35,18 @@ abstract contract AssetEventTracker is
         uint256 newState
     ) external view returns (bool) {
         return _isStateChangeAllowed(_getCurrentState(), newState);
+    }
+
+    function recordState(
+        uint256 newState
+    )
+        public
+        virtual
+        override
+        onlyAllowedStateChange(newState)
+        whenNotPaused
+        onlyRole(_ASSET_EVENT_TRACKER_ROLE)
+    {
+        _recordState(newState);
     }
 }
