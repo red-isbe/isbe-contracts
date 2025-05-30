@@ -6,21 +6,20 @@ on:
             - main
 
 jobs:
-    pre-commit-check:
+    code-quality:
+        name: Code Quality Checks
         runs-on: ubuntu-latest
         steps:
             - uses: ./.github/actions/init
+
             - name: Run pre-commit
               run: npm run pre-commit
 
-    slither-analysis:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: ./.github/actions/init
             - name: Install Slither & solc
               run: |
                   pip install slither-analyzer solc-select
                   solc-select install 0.8.28
                   solc-select use 0.8.28
+
             - name: Run Slither Analysis
               run: npm run slither:analysis
