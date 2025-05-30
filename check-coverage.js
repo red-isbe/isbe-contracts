@@ -1,8 +1,9 @@
 const fs = require('fs')
 
-const coverage = JSON.parse(fs.readFileSync('./coverage.json', 'utf8'))
+const coverage = JSON.parse(
+    fs.readFileSync('./coverage/coverage-final.json', 'utf8')
+)
 
-// Set your thresholds
 const thresholds = {
     lines: 95,
     branches: 95,
@@ -17,42 +18,42 @@ let total = {
     statements: { covered: 0, total: 0 },
 }
 
-for (const fileCoverage of Object.values(coverage)) {
-    const { s, b, f } = fileCoverage
+for (const file of Object.values(coverage)) {
+    const { s = {}, f = {}, b = {} } = file
 
     // Statements
-    total.statements.covered += Object.values(s).filter(
-        (count) => count > 0
-    ).length
-    total.statements.total += Object.values(s).length
-
-    // Branches
-    for (const counts of Object.values(b)) {
-        total.branches.total += counts.length
-        total.branches.covered += counts.filter((count) => count > 0).length
-    }
+    const sValues = Object.values(s)
+    total.statements.covered += sValues.filter((count) => count > 0).length
+    total.statements.total += sValues.length
 
     // Functions
-    total.functions.covered += Object.values(f).filter(
-        (count) => count > 0
-    ).length
-    total.functions.total += Object.values(f).length
+    const fValues = Object.values(f)
+    total.functions.covered += fValues.filter((count) => count > 0).length
+    total.functions.total += fValues.length
 
-    // Lines (fallback to statement count as proxy)
-    total.lines.covered += Object.values(s).filter((count) => count > 0).length
-    total.lines.total += Object.values(s).length
+    // Branches
+    const bValues = Object.values(b)
+    for (const branchCounts of bValues) {
+        total.branches.covered += branchCounts.filter(
+            (count) => count > 0
+        ).length
+        total.branches.total += branchCounts.length
+    }
+
+    // Lines (fallback: count non-zero statements)
+    total.lines.covered += sValues.filter((count) => count > 0).length
+    total.lines.total += sValues.length
 }
 
-// Compute and print the results
 let failed = false
 console.log('\n📊 Coverage Summary:')
 
 for (const metric of ['lines', 'branches', 'functions', 'statements']) {
-    const data = total[metric]
-    const pct = (data.covered / data.total) * 100 || 0
+    const { covered, total: totalCount } = total[metric]
+    const pct = (covered / totalCount) * 100 || 0
     const pass = pct >= thresholds[metric]
-
     const status = pass ? '✅' : '❌'
+
     console.log(
         `${status} ${metric}: ${pct.toFixed(2)}% (required: ${thresholds[metric]}%)`
     )
