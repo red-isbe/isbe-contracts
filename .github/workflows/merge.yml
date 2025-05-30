@@ -22,4 +22,4 @@ jobs:
                   solc-select use 0.8.28
 
             - name: Run Slither Analysis
-              run: slither:analysis:local
+              run: npm run slither:analysis:local
