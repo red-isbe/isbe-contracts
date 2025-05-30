@@ -1,8 +1,7 @@
 {
-    "name": "isbe-contracts",
+    "name": "@alastria/isbe-contracts",
     "version": "0.0.1",
-    "description": "Repository of certified and audited utilities for use in the ISBE network",
-    "main": "index.js",
+    "description": "Repository of certified and audited smart contracts for use in the ISBE network",
     "scripts": {
         "compile": "npx hardhat compile",
         "compile:traces": "npx hardhat --show-stack-traces compile",
@@ -87,5 +86,12 @@
         "*.{json,md}": [
             "prettier --write"
         ]
-    }
+    },
+    "publishConfig": {
+        "registry": "https://npm.pkg.github.com/"
+    },
+    "files": [
+        "artifacts",
+        "contracts"
+    ]
 }
