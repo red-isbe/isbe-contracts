@@ -1,0 +1,27 @@
+name: Initializes Project
+description: Shared setup for Node.js projects with optional registry settings
+
+inputs:
+    node-version:
+        description: Node.js version
+        default: '20'
+    registry-url:
+        description: Optional npm registry URL
+        required: false
+    scope:
+        description: Optional npm scope
+        required: false
+
+runs:
+    using: 'composite'
+    steps:
+        - name: Setup Node.js
+          uses: actions/setup-node@v4
+          with:
+              node-version: ${{ inputs.node-version }}
+              registry-url: ${{ inputs.registry-url || '' }}
+              scope: ${{ inputs.scope || '' }}
+
+        - name: Install dependencies
+          run: npm ci
+          shell: bash

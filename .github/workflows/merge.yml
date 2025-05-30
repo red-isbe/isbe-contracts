@@ -1,0 +1,28 @@
+name: Code Quality Check
+
+on:
+    pull_request:
+        branches:
+            - main
+
+jobs:
+    code-quality:
+        name: Code Quality Checks
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repo
+              uses: actions/checkout@v4
+
+            - uses: ./.github/actions/init
+
+            - name: Run pre-commit
+              run: npm run pre-commit
+
+            - name: Install Slither & solc
+              run: |
+                  pip install --upgrade slither-analyzer solc-select
+                  solc-select install 0.8.28
+                  solc-select use 0.8.28
+
+            - name: Run Slither Analysis
+              run: npm run slither:analysis:local

@@ -2,7 +2,6 @@
 
 pragma solidity ^0.8.28;
 
-import {_PAUSE_STORAGE_POSITION} from '../constants/storagePositions.sol';
 import {Common} from '../core/Common.sol';
 import {IPause} from './IPause.sol';
 
