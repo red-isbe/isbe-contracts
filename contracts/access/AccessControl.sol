@@ -27,25 +27,25 @@ contract AccessControl is IAccessControl, Common {
     function grantRole(
         bytes32 role,
         address account
-    ) external override onlyRole(_getRoleAdmin(role)) {
+    ) external override onlyRole(_getRoleAdmin(role)) whenNotPaused {
         _grantRole(role, account);
     }
 
     function revokeRole(
         bytes32 role,
         address account
-    ) external override onlyRole(_getRoleAdmin(role)) {
+    ) external override onlyRole(_getRoleAdmin(role)) whenNotPaused {
         _revokeRole(role, account);
     }
 
     function setRoleAdmin(
         bytes32 role,
         bytes32 adminRole
-    ) external override onlyRole(_getRoleAdmin(role)) {
+    ) external override onlyRole(_getRoleAdmin(role)) whenNotPaused {
         _setRoleAdmin(role, adminRole);
     }
 
-    function renounceRole(bytes32 role) external override {
+    function renounceRole(bytes32 role) external override whenNotPaused {
         _revokeRole(role, _msgSender());
     }
 

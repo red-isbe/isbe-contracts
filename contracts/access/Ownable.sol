@@ -22,16 +22,9 @@ abstract contract Ownable is IOwnable, OwnableInternal {
         emit OwnershipTransferred(_msgSender(), admin);
     }
 
-    function renounceOwnership() public virtual onlyOwner {
+    function renounceOwnership() public virtual onlyOwner whenNotPaused {
         _transferOwnership(address(0));
         emit OwnershipRenounced(_msgSender());
-    }
-
-    function transferOwnership(
-        address newOwner
-    ) public virtual onlyOwner addressIsNotZero(newOwner) {
-        _transferOwnership(newOwner);
-        emit OwnershipTransferred(_msgSender(), newOwner);
     }
 
     function owner() public view virtual returns (address) {
