@@ -23,7 +23,7 @@ abstract contract HashTimestampInternal is Common {
         _;
     }
 
-    function _timestampHash(bytes32 hash) internal {
+    function _timestampHash(bytes32 hash) internal onlyNonExistentHash(hash) {
         uint256 timestamp = _blockTimestamp();
         _hashTimestampStorage().hashTimestamps[hash] = timestamp;
         emit IHashTimestamp.HashTimestamped(hash, msg.sender, timestamp);

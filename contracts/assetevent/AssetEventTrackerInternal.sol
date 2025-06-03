@@ -22,7 +22,9 @@ abstract contract AssetEventTrackerInternal is Common {
         _;
     }
 
-    function _recordState(uint256 newState) internal {
+    function _recordState(
+        uint256 newState
+    ) internal onlyAllowedStateChange(newState) {
         uint256 timestamp = _blockTimestamp();
         _assetEventTrackerStorage().assetEvents.push(
             IAssetEventTracker.AssetEvent({

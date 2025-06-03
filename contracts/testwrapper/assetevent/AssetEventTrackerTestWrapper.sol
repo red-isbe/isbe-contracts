@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {AssetEventTracker} from '../../assetevent/AssetEventTracker.sol';
+import {
+    IsbeAssetEventTracker
+} from '../../assetevent/IsbeAssetEventTracker.sol';
 import {AccessControl} from '../../access/AccessControl.sol';
 import {ISBEPause} from '../../pause/ISBEPause.sol';
 
@@ -9,7 +11,7 @@ import {ISBEPause} from '../../pause/ISBEPause.sol';
 /// @notice Implements asset event tracker (only for test)
 /// @dev Inherits from AssetEventTracker, providing access to block timestamp and check state change functions
 contract AssetEventTrackerTestWrapper is
-    AssetEventTracker,
+    IsbeAssetEventTracker,
     AccessControl,
     ISBEPause
 {

@@ -1,14 +1,18 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {HashTimestamp} from '../../hashtimestamp/HashTimestamp.sol';
+import {IsbeHashTimestamp} from '../../hashtimestamp/IsbeHashTimestamp.sol';
 import {AccessControl} from '../../access/AccessControl.sol';
 import {ISBEPause} from '../../pause/ISBEPause.sol';
 
 /// @title HashTimestampTestWrapper
 /// @notice Implements timestamp for hashes (only for test)
 /// @dev Inherits from HashTimestamp, providing access to block timestamp functions
-contract HashTimestampTestWrapper is HashTimestamp, AccessControl, ISBEPause {
+contract HashTimestampTestWrapper is
+    IsbeHashTimestamp,
+    AccessControl,
+    ISBEPause
+{
     uint256 private _mockedTimestamp;
 
     function setMockedTimestamp(uint256 ts) external {
