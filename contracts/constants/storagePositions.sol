@@ -24,3 +24,9 @@ bytes32 constant _ASSET_EVENT_TRACKER_STORAGE_POSITION = 0xb13a0c12204f114e7a8e7
 
 // keccak256('isbe.contracts.pause.storage');
 bytes32 constant _PAUSE_STORAGE_POSITION = 0x1d1f84ff22b88aba71617485b5278dbc9110b6bf91b86a247efd1071e92d099a;
+
+// keccak256('isbe.contracts.ownable.storage');
+bytes32 constant _OWNABLE_STORAGE_POSITION = 0xbc95c8238b97fd6fe32b005c5fe8a78a552af93ec42635c72ee8c46205c82db7;
+
+// keccak256('isbe.contracts.ownable2step.storage');
+bytes32 constant _OWNABLE2STEP_STORAGE_POSITION = 0xd98f695f92cbf5b2cd00d847e9c69c1e7b2a437c38bab1d15885003ee783a631;
