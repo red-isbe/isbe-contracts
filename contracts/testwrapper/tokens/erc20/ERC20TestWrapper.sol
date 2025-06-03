@@ -3,16 +3,21 @@ pragma solidity ^0.8.28;
 
 import {
     ERC20Burnable
-} from '../../../tokens/erc20/extensions/ERC20Burnable.sol';
-import {ERC20Capped} from '../../../tokens/erc20/extensions/ERC20Capped.sol';
-import {ERC20Internal} from '../../../tokens/erc20/ERC20Internal.sol';
+} from '../../../tokens/erc20/extensions/burn/ERC20Burnable.sol';
+import {
+    ERC20Capped
+} from '../../../tokens/erc20/extensions/cap/ERC20Capped.sol';
+import {ERC20} from '../../../tokens/erc20/ERC20.sol';
+import {
+    ERC20Snapshot
+} from '../../../tokens/erc20/extensions/snapshot/ERC20Snapshot.sol';
+import {ISBEPause} from '../../../pause/ISBEPause.sol';
 
 // solhint-disable-next-line
-contract ERC20TestWrapper is ERC20Burnable, ERC20Capped {
-    function _mint(
-        address account,
-        uint256 amount
-    ) internal virtual override(ERC20Capped, ERC20Internal) {
-        ERC20Capped._mint(account, amount);
-    }
-}
+contract ERC20TestWrapper is
+    ERC20,
+    ERC20Burnable,
+    ERC20Capped,
+    ERC20Snapshot,
+    ISBEPause
+{}

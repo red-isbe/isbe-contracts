@@ -1,23 +1,23 @@
 import { expect } from 'chai'
 import { Signer } from 'ethers'
 import { ethers } from 'hardhat'
-import { ISBEOwnable2Step, ISBEOwnable } from '../typechain-types/index.js'
+import { Ownable2Step, Ownable } from '../typechain-types/index.js'
 import { ADDRESS_0 } from './constants'
 
 describe('Ownable & Ownable2Step', function () {
     let adminAccount: Signer
     let account_2: Signer
-    let ownable2StepImplementation: ISBEOwnable2Step
-    let ownable2Step: ISBEOwnable2Step
-    let ownableImplementation: ISBEOwnable
-    let ownable: ISBEOwnable
+    let ownable2StepImplementation: Ownable2Step
+    let ownable2Step: Ownable2Step
+    let ownableImplementation: Ownable
+    let ownable: Ownable
 
     before(async () => {
         ;[adminAccount, account_2] = await ethers.getSigners()
     })
 
     async function deployOwnable2Step(initialize: boolean = true) {
-        const Ownable2Step = await ethers.getContractFactory('ISBEOwnable2Step')
+        const Ownable2Step = await ethers.getContractFactory('Ownable2Step')
         ownable2StepImplementation = await Ownable2Step.deploy()
 
         const Proxy = await ethers.getContractFactory('DummyProxy')
@@ -26,20 +26,20 @@ describe('Ownable & Ownable2Step', function () {
 
         ownable2Step = Ownable2Step.attach(
             await proxy.getAddress()
-        ) as ISBEOwnable2Step
+        ) as Ownable2Step
 
         if (initialize) await ownable2Step.initializeOwnable(adminAccount)
     }
 
     async function deployOwnable(initialize: boolean = true) {
-        const Ownable = await ethers.getContractFactory('ISBEOwnable')
+        const Ownable = await ethers.getContractFactory('Ownable')
         ownableImplementation = await Ownable.deploy()
 
         const Proxy = await ethers.getContractFactory('DummyProxy')
         const proxy = await Proxy.deploy(ownableImplementation)
         await proxy.waitForDeployment()
 
-        ownable = Ownable.attach(await proxy.getAddress()) as ISBEOwnable
+        ownable = Ownable.attach(await proxy.getAddress()) as Ownable
 
         if (initialize) await ownable.initializeOwnable(adminAccount)
     }
@@ -224,7 +224,7 @@ describe('Ownable & Ownable2Step', function () {
     })
 
     async function TransferNonOwnerAccountTest(
-        contract: ISBEOwnable | ISBEOwnable2Step
+        contract: Ownable | Ownable2Step
     ) {
         contract = contract.connect(account_2)
 
@@ -234,7 +234,7 @@ describe('Ownable & Ownable2Step', function () {
     }
 
     async function RenounceNonOwnerAccountTest(
-        contract: ISBEOwnable | ISBEOwnable2Step
+        contract: Ownable | Ownable2Step
     ) {
         contract = contract.connect(account_2)
 
@@ -244,7 +244,7 @@ describe('Ownable & Ownable2Step', function () {
     }
 
     async function TransferOwnerAccountToZeroTest(
-        contract: ISBEOwnable | ISBEOwnable2Step
+        contract: Ownable | Ownable2Step
     ) {
         contract = contract.connect(adminAccount)
 
@@ -254,7 +254,7 @@ describe('Ownable & Ownable2Step', function () {
     }
 
     async function TransferOwnerAccountWhenPausedTest(
-        contract: ISBEOwnable | ISBEOwnable2Step
+        contract: Ownable | Ownable2Step
     ) {
         await contract.initializePause(true)
 
@@ -266,7 +266,7 @@ describe('Ownable & Ownable2Step', function () {
     }
 
     async function RenounceOwnerAccountWhenPausedTest(
-        contract: ISBEOwnable | ISBEOwnable2Step
+        contract: Ownable | Ownable2Step
     ) {
         await contract.initializePause(true)
 
@@ -277,9 +277,7 @@ describe('Ownable & Ownable2Step', function () {
         ).to.be.revertedWithCustomError(contract, 'IsPaused')
     }
 
-    async function RenounceSuccessTest(
-        contract: ISBEOwnable | ISBEOwnable2Step
-    ) {
+    async function RenounceSuccessTest(contract: Ownable | Ownable2Step) {
         contract = contract.connect(adminAccount)
 
         await expect(contract.renounceOwnership())

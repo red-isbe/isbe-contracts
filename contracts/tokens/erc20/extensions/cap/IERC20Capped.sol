@@ -14,16 +14,23 @@ pragma solidity ^0.8.28;
 interface IERC20Capped {
     /**
      * @notice Emitted after successfully initializing the token cap.
-     * @dev Should be triggered when `initializeCap` sets the supply cap.
-     * @param cap The value of the token supply cap.
+     * @dev Should be triggered when `initializeCap` or 'SetCap' sets the supply cap.
+     * @param operator The account that set the cap.
+     * @param newCap The value of the token supply cap.
      */
-    event CapInitialized(uint256 cap);
+    event CapSet(address operator, uint256 newCap);
 
     /**
      * @notice Thrown when an invalid token cap of zero is provided.
      * @dev Ensures that the token supply cap must always be greater than zero.
      */
     error CapIsZero();
+
+    /**
+     * @notice Thrown when an invalid token cap of less than the total supply is provided.
+     * @dev Ensures that the token supply cap must always be greater than the totalsupply.
+     */
+    error NewCapIsLessThanTotalSupply(uint256 cap, uint256 totalSupply);
 
     /**
      * @notice Thrown when the maximum token supply cap is exceeded.

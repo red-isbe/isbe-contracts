@@ -11,12 +11,19 @@ import {Ownable2StepInternal} from './Ownable2StepInternal.sol';
 contract Ownable2Step is IOwnable2Step, Ownable, Ownable2StepInternal {
     function transferOwnership(
         address newOwner
-    ) public virtual override onlyOwner addressIsNotZero(newOwner) {
+    )
+        public
+        virtual
+        override
+        onlyOwner
+        addressIsNotZero(newOwner)
+        whenNotPaused
+    {
         _initiateTransferOwnership(newOwner);
         emit OwnershipTransferStarted(_msgSender(), newOwner);
     }
 
-    function acceptOwnership() public virtual onlyPendingOwner {
+    function acceptOwnership() public virtual onlyPendingOwner whenNotPaused {
         _acceptOwnership();
         emit OwnershipAccepted(_msgSender());
     }
