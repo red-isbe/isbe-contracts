@@ -1,21 +1,23 @@
 import { expect } from 'chai'
 import { Signer } from 'ethers'
 import { ethers } from 'hardhat'
-import { Ownable2Step } from '../typechain-types/index.js'
+import { ISBEOwnable2Step, ISBEOwnable } from '../typechain-types/index.js'
 import { ADDRESS_0 } from './constants'
 
-describe('Ownable', function () {
+describe('Ownable & Ownable2Step', function () {
     let adminAccount: Signer
     let account_2: Signer
-    let ownable2StepImplementation: Ownable2Step
-    let ownable2Step: Ownable2Step
+    let ownable2StepImplementation: ISBEOwnable2Step
+    let ownable2Step: ISBEOwnable2Step
+    let ownableImplementation: ISBEOwnable
+    let ownable: ISBEOwnable
 
     before(async () => {
         ;[adminAccount, account_2] = await ethers.getSigners()
     })
 
-    async function deploy(initialize: boolean = true) {
-        const Ownable2Step = await ethers.getContractFactory('Ownable2Step')
+    async function deployOwnable2Step(initialize: boolean = true) {
+        const Ownable2Step = await ethers.getContractFactory('ISBEOwnable2Step')
         ownable2StepImplementation = await Ownable2Step.deploy()
 
         const Proxy = await ethers.getContractFactory('DummyProxy')
@@ -24,14 +26,27 @@ describe('Ownable', function () {
 
         ownable2Step = Ownable2Step.attach(
             await proxy.getAddress()
-        ) as Ownable2Step
+        ) as ISBEOwnable2Step
 
         if (initialize) await ownable2Step.initializeOwnable(adminAccount)
     }
 
+    async function deployOwnable(initialize: boolean = true) {
+        const Ownable = await ethers.getContractFactory('ISBEOwnable')
+        ownableImplementation = await Ownable.deploy()
+
+        const Proxy = await ethers.getContractFactory('DummyProxy')
+        const proxy = await Proxy.deploy(ownableImplementation)
+        await proxy.waitForDeployment()
+
+        ownable = Ownable.attach(await proxy.getAddress()) as ISBEOwnable
+
+        if (initialize) await ownable.initializeOwnable(adminAccount)
+    }
+
     describe('Testing initialization and constructor', function () {
         it('GIVEN an Ownable2Step WHEN initializing it THEN fails', async function () {
-            await deploy()
+            await deployOwnable2Step()
 
             await expect(
                 ownable2StepImplementation.initializeOwnable(account_2)
@@ -42,7 +57,7 @@ describe('Ownable', function () {
         })
 
         it('GIVEN a Proxy pointing to an Ownable2Step WHEN initializing it THEN fails', async function () {
-            await deploy()
+            await deployOwnable2Step()
 
             await expect(
                 ownable2Step.initializeOwnable(account_2)
@@ -53,7 +68,7 @@ describe('Ownable', function () {
         })
 
         it('GIVEN a new Proxy pointing to an Ownable2Step WHEN initializing it to address 0 THEN fails', async function () {
-            await deploy(false)
+            await deployOwnable2Step(false)
 
             await expect(
                 ownable2Step.initializeOwnable(ADDRESS_0)
@@ -61,35 +76,71 @@ describe('Ownable', function () {
         })
     })
 
-    describe('Transfer ownership', function () {
+    describe('Transfer, Renounce ownership', function () {
+        it('GIVEN an Ownable WHEN using non-owner account to transfer ownership THEN fails', async function () {
+            await deployOwnable()
+
+            await TransferNonOwnerAccountTest(ownable)
+        })
+
+        it('GIVEN an Ownable WHEN using non-owner account to renounce ownership THEN fails', async function () {
+            await deployOwnable()
+
+            await RenounceNonOwnerAccountTest(ownable)
+        })
+
+        it('GIVEN an Ownable WHEN using owner account to transfer ownership to address 0 THEN fails', async function () {
+            await deployOwnable()
+
+            await TransferOwnerAccountToZeroTest(ownable)
+        })
+
+        it('GIVEN an Ownable WHEN using owner account to transfer ownership while token is paused THEN fails', async function () {
+            await deployOwnable()
+
+            await TransferOwnerAccountWhenPausedTest(ownable)
+        })
+
+        it('GIVEN an Ownable WHEN using owner account to renounce ownership while token is paused THEN fails', async function () {
+            await deployOwnable()
+
+            await RenounceOwnerAccountWhenPausedTest(ownable)
+        })
+
+        it('GIVEN an Ownable WHEN using owner account to transfer ownership THEN succeeds', async function () {
+            await deployOwnable()
+
+            ownable = ownable.connect(adminAccount)
+
+            await expect(ownable.transferOwnership(account_2))
+                .to.emit(ownable, 'OwnershipTransferred')
+                .withArgs(adminAccount, account_2)
+
+            expect(await ownable.owner()).to.equal(account_2)
+        })
+
+        it('GIVEN an Ownable WHEN using owner account to renounce ownership THEN succeeds', async function () {
+            await deployOwnable()
+
+            await RenounceSuccessTest(ownable)
+        })
+    })
+
+    describe('Transfer, Renounce, Accept ownership 2 step', function () {
         it('GIVEN an Ownable2Step WHEN using non-owner account to transfer ownership THEN fails', async function () {
-            await deploy()
+            await deployOwnable2Step()
 
-            ownable2Step = ownable2Step.connect(account_2)
-
-            await expect(ownable2Step.transferOwnership(account_2))
-                .to.be.revertedWithCustomError(
-                    ownable2Step,
-                    'AccountIsNotOwner'
-                )
-                .withArgs(account_2)
+            await TransferNonOwnerAccountTest(ownable2Step)
         })
 
         it('GIVEN an Ownable2Step WHEN using non-owner account to renounce ownership THEN fails', async function () {
-            await deploy()
+            await deployOwnable2Step()
 
-            ownable2Step = ownable2Step.connect(account_2)
-
-            await expect(ownable2Step.renounceOwnership())
-                .to.be.revertedWithCustomError(
-                    ownable2Step,
-                    'AccountIsNotOwner'
-                )
-                .withArgs(account_2)
+            await RenounceNonOwnerAccountTest(ownable2Step)
         })
 
         it('GIVEN an Ownable2Step WHEN using non-pending owner account to accept ownership THEN fails', async function () {
-            await deploy()
+            await deployOwnable2Step()
 
             ownable2Step = ownable2Step.connect(account_2)
 
@@ -102,41 +153,25 @@ describe('Ownable', function () {
         })
 
         it('GIVEN an Ownable2Step WHEN using owner account to transfer ownership to address 0 THEN fails', async function () {
-            await deploy()
+            await deployOwnable2Step()
 
-            ownable2Step = ownable2Step.connect(adminAccount)
-
-            await expect(ownable2Step.transferOwnership(ADDRESS_0))
-                .to.be.revertedWithCustomError(ownable2Step, 'AddressZero')
-                .withArgs(ADDRESS_0)
+            await TransferOwnerAccountToZeroTest(ownable2Step)
         })
 
         it('GIVEN an Ownable2Step WHEN using owner account to transfer ownership while token is paused THEN fails', async function () {
-            await deploy()
+            await deployOwnable2Step()
 
-            await ownable2Step.initializePause(true)
-
-            ownable2Step = ownable2Step.connect(adminAccount)
-
-            await expect(
-                ownable2Step.transferOwnership(account_2)
-            ).to.be.revertedWithCustomError(ownable2Step, 'IsPaused')
+            await TransferOwnerAccountWhenPausedTest(ownable2Step)
         })
 
         it('GIVEN an Ownable2Step WHEN using owner account to renounce ownership while token is paused THEN fails', async function () {
-            await deploy()
+            await deployOwnable2Step()
 
-            await ownable2Step.initializePause(true)
-
-            ownable2Step = ownable2Step.connect(adminAccount)
-
-            await expect(
-                ownable2Step.renounceOwnership()
-            ).to.be.revertedWithCustomError(ownable2Step, 'IsPaused')
+            await RenounceOwnerAccountWhenPausedTest(ownable2Step)
         })
 
         it('GIVEN an Ownable2Step WHEN using pending owner account to accept ownership while token is paused THEN fails', async function () {
-            await deploy()
+            await deployOwnable2Step()
 
             ownable2Step = ownable2Step.connect(adminAccount)
 
@@ -152,7 +187,7 @@ describe('Ownable', function () {
         })
 
         it('GIVEN an Ownable2Step WHEN using owner account to transfer ownership THEN succeeds', async function () {
-            await deploy()
+            await deployOwnable2Step()
 
             ownable2Step = ownable2Step.connect(adminAccount)
 
@@ -165,19 +200,13 @@ describe('Ownable', function () {
         })
 
         it('GIVEN an Ownable2Step WHEN using owner account to renounce ownership THEN succeeds', async function () {
-            await deploy()
+            await deployOwnable2Step()
 
-            ownable2Step = ownable2Step.connect(adminAccount)
-
-            await expect(ownable2Step.renounceOwnership())
-                .to.emit(ownable2Step, 'OwnershipRenounced')
-                .withArgs(adminAccount)
-
-            expect(await ownable2Step.owner()).to.equal(ADDRESS_0)
+            await RenounceSuccessTest(ownable2Step)
         })
 
         it('GIVEN an Ownable2Step WHEN using owner account to accept ownership THEN succeeds', async function () {
-            await deploy()
+            await deployOwnable2Step()
 
             ownable2Step = ownable2Step.connect(adminAccount)
 
@@ -193,4 +222,70 @@ describe('Ownable', function () {
             expect(await ownable2Step.owner()).to.equal(account_2)
         })
     })
+
+    async function TransferNonOwnerAccountTest(
+        contract: ISBEOwnable | ISBEOwnable2Step
+    ) {
+        contract = contract.connect(account_2)
+
+        await expect(contract.transferOwnership(account_2))
+            .to.be.revertedWithCustomError(contract, 'AccountIsNotOwner')
+            .withArgs(account_2)
+    }
+
+    async function RenounceNonOwnerAccountTest(
+        contract: ISBEOwnable | ISBEOwnable2Step
+    ) {
+        contract = contract.connect(account_2)
+
+        await expect(contract.renounceOwnership())
+            .to.be.revertedWithCustomError(contract, 'AccountIsNotOwner')
+            .withArgs(account_2)
+    }
+
+    async function TransferOwnerAccountToZeroTest(
+        contract: ISBEOwnable | ISBEOwnable2Step
+    ) {
+        contract = contract.connect(adminAccount)
+
+        await expect(contract.transferOwnership(ADDRESS_0))
+            .to.be.revertedWithCustomError(contract, 'AddressZero')
+            .withArgs(ADDRESS_0)
+    }
+
+    async function TransferOwnerAccountWhenPausedTest(
+        contract: ISBEOwnable | ISBEOwnable2Step
+    ) {
+        await contract.initializePause(true)
+
+        contract = contract.connect(adminAccount)
+
+        await expect(
+            contract.transferOwnership(account_2)
+        ).to.be.revertedWithCustomError(contract, 'IsPaused')
+    }
+
+    async function RenounceOwnerAccountWhenPausedTest(
+        contract: ISBEOwnable | ISBEOwnable2Step
+    ) {
+        await contract.initializePause(true)
+
+        contract = contract.connect(adminAccount)
+
+        await expect(
+            contract.renounceOwnership()
+        ).to.be.revertedWithCustomError(contract, 'IsPaused')
+    }
+
+    async function RenounceSuccessTest(
+        contract: ISBEOwnable | ISBEOwnable2Step
+    ) {
+        contract = contract.connect(adminAccount)
+
+        await expect(contract.renounceOwnership())
+            .to.emit(contract, 'OwnershipRenounced')
+            .withArgs(adminAccount)
+
+        expect(await contract.owner()).to.equal(ADDRESS_0)
+    }
 })

@@ -8,7 +8,7 @@ import {_OWNABLE_RESOLVER_KEY} from '../constants/resolverKeys.sol';
 /// @title Ownable
 /// @notice Implements ownership mechanisms
 /// @dev Inherits from IOwnable and OwnableInternal
-abstract contract Ownable is IOwnable, OwnableInternal {
+contract Ownable is IOwnable, OwnableInternal {
     /// @notice Constructor that disables the initializer
 
     constructor() {
@@ -17,12 +17,24 @@ abstract contract Ownable is IOwnable, OwnableInternal {
 
     function initializeOwnable(
         address admin
-    ) external initializer(_OWNABLE_RESOLVER_KEY) addressIsNotZero(admin) {
+    )
+        public
+        virtual
+        initializer(_OWNABLE_RESOLVER_KEY)
+        addressIsNotZero(admin)
+    {
         _transferOwnership(admin);
         emit OwnershipTransferred(_msgSender(), admin);
     }
 
-    function renounceOwnership() public virtual onlyOwner whenNotPaused {
+    function transferOwnership(
+        address newOwner
+    ) public virtual override onlyOwner addressIsNotZero(newOwner) {
+        _transferOwnership(newOwner);
+        emit OwnershipTransferred(_msgSender(), newOwner);
+    }
+
+    function renounceOwnership() public virtual onlyOwner {
         _transferOwnership(address(0));
         emit OwnershipRenounced(_msgSender());
     }
