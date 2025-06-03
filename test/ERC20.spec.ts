@@ -365,4 +365,54 @@ describe('ERC20', function () {
             ).to.be.equal(0)
         })
     })
+
+    describe('Snapshot', () => {
+        const prepare = async () => {
+            const { erc20, implementation, owner, otherAccount } =
+                await deploy(true)
+            expect(implementation).not.to.be.undefined
+            await erc20.mint(owner.address, 100)
+            return { erc20, owner, otherAccount }
+        }
+
+        it('GIVEN an ERC20 WHEN not exists snapshot THEN balanceOfAt and totalSupplyAt fails', async () => {
+            const { erc20, owner } = await prepare()
+            await expect(
+                erc20.balanceOfAt(owner.address, 0)
+            ).to.revertedWithCustomError(erc20, 'SnapshotWithIdZero')
+            await expect(erc20.totalSupplyAt(0)).to.revertedWithCustomError(
+                erc20,
+                'SnapshotWithIdZero'
+            )
+            await expect(
+                erc20.balanceOfAt(owner.address, 1)
+            ).to.revertedWithCustomError(erc20, 'NonExistentSnapshotId')
+            await expect(erc20.totalSupplyAt(1)).to.revertedWithCustomError(
+                erc20,
+                'NonExistentSnapshotId'
+            )
+        })
+
+        it('GIVEN an ERC20 WHEN it is prepared THEN a snapshot can be made', async () => {
+            const { erc20, owner, otherAccount } = await prepare()
+            await expect(erc20.snapshot())
+                .to.emit(erc20, 'Snapshot')
+                .withArgs(1)
+            expect(await erc20.balanceOfAt(owner.address, 1)).to.be.equal(100)
+            expect(
+                await erc20.balanceOfAt(otherAccount.address, 1)
+            ).to.be.equal(0)
+            expect(await erc20.totalSupplyAt(1)).to.be.equal(100)
+            await erc20.transfer(otherAccount.address, 25)
+            await erc20.mint(otherAccount.address, 25)
+            expect(await erc20.balanceOfAt(owner.address, 1)).to.be.equal(100)
+            expect(
+                await erc20.balanceOfAt(otherAccount.address, 1)
+            ).to.be.equal(0)
+            expect(await erc20.totalSupplyAt(1)).to.be.equal(100)
+            expect(await erc20.balanceOf(owner.address)).to.be.equal(75)
+            expect(await erc20.balanceOf(otherAccount.address)).to.be.equal(50)
+            expect(await erc20.totalSupply()).to.be.equal(125)
+        })
+    })
 })

@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {ERC20Internal} from './ERC20Internal.sol';
+import {ERC20InternalCommon} from './extensions/ERC20InternalCommon.sol';
 import {_ERC20_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
+import {IERC20Isbe} from './IERC20Isbe.sol';
 
 /**
  * @title ERC20 Token Contract
@@ -12,17 +13,10 @@ import {_ERC20_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
  *      OpenZeppelin interfaces. It includes additional helper functions such as `increaseAllowance` and
  *      `decreaseAllowance` for more granular control over token allowances.
  */
-contract ERC20 is ERC20Internal {
+contract ERC20 is IERC20Isbe, ERC20InternalCommon {
     /// @notice Constructor that assigns the deployer as the default admin
     constructor() {
         _disableInitializers(_ERC20_RESOLVER_KEY);
-    }
-
-    function allowance(
-        address owner,
-        address spender
-    ) external view override returns (uint256) {
-        return _allowance(owner, spender);
     }
 
     /**
@@ -154,10 +148,17 @@ contract ERC20 is ERC20Internal {
 
     // TODO: Only for testing purposes. Remove when implement 4626 and burnable
     /// **********************************************************
-    function mint(address account, uint256 amount) public {
+    function mint(address account, uint256 amount) public virtual {
         _mint(account, amount);
     }
     /// **********************************************************
+
+    function allowance(
+        address owner,
+        address spender
+    ) public view virtual override returns (uint256) {
+        return _allowance(owner, spender);
+    }
 
     function decimals() public view virtual override returns (uint8) {
         return _decimals();

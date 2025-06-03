@@ -17,6 +17,7 @@
         "test:coverage": "npx hardhat coverage && node check-coverage.js",
         "test:accessControl": "npx hardhat test test/AccessControl.spec.ts",
         "test:pause": "npx hardhat test test/Pause.spec.ts",
+        "test:erc20": "npx hardhat test test/ERC20.spec.ts",
         "lint:sol": "solhint 'contracts/**/*.sol' --max-warnings 0",
         "lint:ts": "npx -y eslint .",
         "lint": "npm run lint:sol && npm run lint:ts",

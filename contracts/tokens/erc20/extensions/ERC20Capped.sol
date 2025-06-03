@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {ERC20} from '../ERC20.sol';
-import {ERC20CappedInternal} from './ERC20CappedInternal.sol';
+import {ERC20InternalCommon} from './ERC20InternalCommon.sol';
 import {_ERC20_CAPPED_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
+import {IERC20Capped} from './IERC20Capped.sol';
 
 /**
  * @title ERC20Capped
@@ -20,7 +20,7 @@ import {_ERC20_CAPPED_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
  *      - The cap value must be set during initialization, and it cannot be changed afterward.
  *      - An attempt to mint tokens exceeding the cap will revert with the `CapExceeded` error.
  */
-abstract contract ERC20Capped is ERC20CappedInternal {
+abstract contract ERC20Capped is IERC20Capped, ERC20InternalCommon {
     /**
      * @notice Sets the initial cap for the token supply.
      * @dev The cap value is immutable and can only be set once during the token's initialization.
@@ -39,13 +39,5 @@ abstract contract ERC20Capped is ERC20CappedInternal {
      */
     function cap() public view virtual returns (uint256) {
         return _cap();
-    }
-
-    /**
-     * @dev See {ERC20-_mint}.
-     */
-    function _mint(address account, uint256 amount) internal virtual override {
-        require(ERC20.totalSupply() + amount <= cap(), CapExceeded());
-        super._mint(account, amount);
     }
 }

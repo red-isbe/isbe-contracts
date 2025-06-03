@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {ERC20} from '../ERC20.sol';
+import {ERC20Internal} from '../ERC20Internal.sol';
 import {
     _ERC20_CAPPED_STORAGE_POSITION
 } from '../../../constants/storagePositions.sol';
@@ -19,13 +19,18 @@ import {IERC20Capped} from './IERC20Capped.sol';
  *      - Utilizes a private `_erc20CappedStorage` function that leverages a specific storage slot for cap management.
  *      This contract is intended to be inherited by other contracts, which will provide external interface functions.
  */
-abstract contract ERC20CappedInternal is ERC20, IERC20Capped {
+abstract contract ERC20CappedInternal is ERC20Internal {
     struct ERC20CappedStorage {
         uint256 cap;
     }
 
+    function _mint(address account, uint256 amount) internal virtual override {
+        require(_totalSupply() + amount <= _cap(), IERC20Capped.CapExceeded());
+        super._mint(account, amount);
+    }
+
     function _setCap(uint256 newCap) internal {
-        require(newCap > 0, CapIsZero());
+        require(newCap > 0, IERC20Capped.CapIsZero());
         _erc20CappedStorage().cap = newCap;
     }
 
