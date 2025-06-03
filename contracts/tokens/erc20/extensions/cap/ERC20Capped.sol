@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {ERC20InternalCommon} from './ERC20InternalCommon.sol';
-import {_ERC20_CAPPED_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
+import {ERC20InternalCommon} from '../ERC20InternalCommon.sol';
+import {
+    _ERC20_CAPPED_RESOLVER_KEY
+} from '../../../../constants/resolverKeys.sol';
 import {IERC20Capped} from './IERC20Capped.sol';
 
 /// @title ERC20Capped
@@ -20,7 +22,7 @@ abstract contract ERC20Capped is IERC20Capped, ERC20InternalCommon {
         emit CapSet(_msgSender(), newCap);
     }
 
-    function setCap(uint256 newCap) public virtual {
+    function setCap(uint256 newCap) public virtual whenNotPaused {
         _setCap(newCap);
         emit CapSet(_msgSender(), newCap);
     }

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {ERC20Internal} from '../ERC20Internal.sol';
+import {ERC20Internal} from '../../ERC20Internal.sol';
 import {
     _ERC20_CAPPED_STORAGE_POSITION
-} from '../../../constants/storagePositions.sol';
+} from '../../../../constants/storagePositions.sol';
 import {IERC20Capped} from './IERC20Capped.sol';
 
 /**

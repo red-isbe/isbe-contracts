@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {ERC20CappedInternal} from './ERC20CappedInternal.sol';
-import {ERC20SnapshotInternal} from './ERC20SnapshotInternal.sol';
+import {ERC20CappedInternal} from './cap/ERC20CappedInternal.sol';
+import {ERC20SnapshotInternal} from './snapshot/ERC20SnapshotInternal.sol';
 import {ERC20Internal} from '../ERC20Internal.sol';
 
 /// @title ERC20InternalCommon

@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {ERC20InternalCommon} from './ERC20InternalCommon.sol';
+import {ERC20InternalCommon} from '../ERC20InternalCommon.sol';
 import {IERC20Snapshot} from './IERC20Snapshot.sol';
 
 /// @title ERC20Snapshot
 /// @notice Implements snapshot mechanism
 /// @dev Inherits from IERC20Snapshot and ERC20InternalCommon
 abstract contract ERC20Snapshot is IERC20Snapshot, ERC20InternalCommon {
-    function snapshot() public virtual override {
+    function snapshot() public virtual override whenNotPaused {
         _snapshot();
     }
 

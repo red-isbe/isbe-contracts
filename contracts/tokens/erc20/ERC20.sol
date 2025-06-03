@@ -2,8 +2,8 @@
 pragma solidity ^0.8.28;
 
 import {ERC20InternalCommon} from './extensions/ERC20InternalCommon.sol';
-import {_ERC20_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
 import {IERC20Isbe} from './IERC20Isbe.sol';
+import {_ERC20_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
 
 /**
  * @title ERC20 Token Contract
@@ -45,7 +45,7 @@ contract ERC20 is IERC20Isbe, ERC20InternalCommon {
     function transfer(
         address to,
         uint256 amount
-    ) public virtual override returns (bool) {
+    ) public virtual override whenNotPaused returns (bool) {
         _transfer(_msgSender(), to, amount);
         return true;
     }
@@ -63,7 +63,7 @@ contract ERC20 is IERC20Isbe, ERC20InternalCommon {
     function approve(
         address spender,
         uint256 amount
-    ) public virtual override returns (bool) {
+    ) public virtual override whenNotPaused returns (bool) {
         _approve(_msgSender(), spender, amount);
         return true;
     }
@@ -88,7 +88,7 @@ contract ERC20 is IERC20Isbe, ERC20InternalCommon {
         address from,
         address to,
         uint256 amount
-    ) public virtual override returns (bool) {
+    ) public virtual override whenNotPaused returns (bool) {
         _spendAllowance(from, _msgSender(), amount);
         _transfer(from, to, amount);
         return true;
@@ -109,7 +109,7 @@ contract ERC20 is IERC20Isbe, ERC20InternalCommon {
     function increaseAllowance(
         address spender,
         uint256 addedValue
-    ) public virtual returns (bool) {
+    ) public virtual whenNotPaused returns (bool) {
         address owner = _msgSender();
         _approve(owner, spender, _allowance(owner, spender) + addedValue);
         return true;
@@ -132,12 +132,12 @@ contract ERC20 is IERC20Isbe, ERC20InternalCommon {
     function decreaseAllowance(
         address spender,
         uint256 subtractedValue
-    ) public virtual returns (bool) {
+    ) public virtual whenNotPaused returns (bool) {
         address owner = _msgSender();
         uint256 currentAllowance = _allowance(owner, spender);
         require(
             currentAllowance >= subtractedValue,
-            DecreasedAllowanceBellowZero()
+            IERC20Isbe.DecreasedAllowanceBellowZero()
         );
         unchecked {
             _approve(owner, spender, currentAllowance - subtractedValue);
@@ -148,7 +148,10 @@ contract ERC20 is IERC20Isbe, ERC20InternalCommon {
 
     // TODO: Only for testing purposes. Remove when implement 4626 and burnable
     /// **********************************************************
-    function mint(address account, uint256 amount) public virtual {
+    function mint(
+        address account,
+        uint256 amount
+    ) public virtual whenNotPaused {
         _mint(account, amount);
     }
     /// **********************************************************
