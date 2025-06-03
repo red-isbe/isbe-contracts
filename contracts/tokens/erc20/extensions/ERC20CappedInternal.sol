@@ -31,6 +31,13 @@ abstract contract ERC20CappedInternal is ERC20Internal {
 
     function _setCap(uint256 newCap) internal {
         require(newCap > 0, IERC20Capped.CapIsZero());
+
+        uint256 totalSupply = _totalSupply();
+
+        require(
+            newCap >= totalSupply,
+            IERC20Capped.NewCapIsLessThanTotalSupply(newCap, totalSupply)
+        );
         _erc20CappedStorage().cap = newCap;
     }
 

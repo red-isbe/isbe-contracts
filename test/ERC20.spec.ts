@@ -163,11 +163,11 @@ describe('ERC20', function () {
         })
 
         it('GIVEN an ERC20 WHEN cap is initialized THEN it can be retrieved', async () => {
-            const { erc20, implementation } = await deploy()
+            const { erc20, owner, implementation } = await deploy()
             expect(implementation).not.to.be.undefined
             await expect(erc20.initializeCap(1000))
-                .to.emit(erc20, 'CapInitialized')
-                .withArgs(1000)
+                .to.emit(erc20, 'CapSet')
+                .withArgs(owner.address, 1000)
             await expect(erc20.initializeCap(1))
                 .to.be.revertedWithCustomError(
                     erc20,
@@ -187,6 +187,32 @@ describe('ERC20', function () {
             await expect(
                 erc20.mint(owner.address, 1001)
             ).revertedWithCustomError(erc20, 'CapExceeded')
+        })
+
+        it('GIVEN an initialized ERC20 WHEN setting cap below total supply THEN it fails', async () => {
+            const { erc20, owner } = await deploy(true)
+            const totalSupply = 10
+
+            await erc20.mint(owner.address, totalSupply)
+
+            const newCap = totalSupply - 1
+
+            await expect(erc20.setCap(newCap))
+                .revertedWithCustomError(erc20, 'NewCapIsLessThanTotalSupply')
+                .withArgs(newCap, totalSupply)
+        })
+
+        it('GIVEN an initialized ERC20 WHEN setting cap over total supply THEN it succeeds', async () => {
+            const { erc20, owner } = await deploy(true)
+            const totalSupply = 10
+
+            await erc20.mint(owner.address, totalSupply)
+
+            const newCap = totalSupply + 1
+
+            await expect(erc20.setCap(newCap))
+                .to.emit(erc20, 'CapSet')
+                .withArgs(owner.address, newCap)
         })
     })
 

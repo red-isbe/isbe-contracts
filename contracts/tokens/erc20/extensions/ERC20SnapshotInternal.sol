@@ -53,27 +53,6 @@ abstract contract ERC20SnapshotInternal is ERC20Internal {
         uint256[] values;
     }
 
-    /**
-     * @dev Creates a new snapshot and returns its snapshot id.
-     *
-     * Emits a {Snapshot} event that contains the same id.
-     *
-     * {_snapshot} is `internal` and you have to decide how to expose it externally. Its usage may be restricted to a
-     * set of accounts, for example using {AccessControl}, or it may be open to the public.
-     *
-     * [WARNING]
-     * ====
-     * While an open way of calling {_snapshot} is required for certain trust minimization mechanisms such as forking,
-     * you must consider that it can potentially be used by attackers in two ways.
-     *
-     * First, it can be used to increase the cost of retrieval of values from snapshots, although it will grow
-     * logarithmically thus rendering this attack ineffective in the long term. Second, it can be used to target
-     * specific accounts and increase the cost of ERC20 transfers for them, in the ways specified in the Gas Costs
-     * section above.
-     *
-     * We haven't measured the actual numbers; if this is something you're interested in please reach out to us.
-     * ====
-     */
     function _snapshot() internal virtual returns (uint256) {
         _erc20SnapshotStorage().currentSnapshotId.increment();
 
@@ -82,8 +61,6 @@ abstract contract ERC20SnapshotInternal is ERC20Internal {
         return currentId;
     }
 
-    // Update balance and/or total supply snapshots before the values are modified. This is implemented
-    // in the _beforeTokenTransfer hook, which is executed for _mint, _burn, and _transfer operations.
     function _beforeTokenTransfer(
         address from,
         address to,
@@ -105,9 +82,6 @@ abstract contract ERC20SnapshotInternal is ERC20Internal {
         _updateAccountSnapshot(to);
     }
 
-    /**
-     * @dev Get the current snapshotId
-     */
     function _getCurrentSnapshotId() internal view virtual returns (uint256) {
         return _erc20SnapshotStorage().currentSnapshotId.current();
     }
@@ -121,26 +95,6 @@ abstract contract ERC20SnapshotInternal is ERC20Internal {
             snapshotId <= _getCurrentSnapshotId(),
             IERC20Snapshot.NonExistentSnapshotId()
         );
-
-        // When a valid snapshot is queried, there are three possibilities:
-        //      a) The queried value was not modified after the snapshot was taken.
-        //         Therefore, a snapshot entry was never created for this id,
-        //         and all stored snapshot ids are smaller than the requested one.
-        //         The value that corresponds to this id is the current one.
-        //
-        //      b) The queried value was modified after the snapshot was taken.
-        //         Therefore, there will be an entry with the requested id,
-        //         and its value is the one to return.
-        //
-        //      c) More snapshots were created after the requested one,
-        //         and the queried value was later modified. There will be no entry
-        //         for the requested id: the value that corresponds to it is that of
-        //         the smallest snapshot id that is larger than the requested one.
-        //
-        // In summary, we need to find an element in an array, returning the index
-        // of the smallest value that is larger if it is not found, unless said
-        // value doesn't exist (e.g., when all values are smaller).
-        // Arrays.findUpperBound does exactly this.
 
         uint256 index = snapshots.ids.findUpperBound(snapshotId);
         return
