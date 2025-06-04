@@ -14,3 +14,15 @@ bytes32 constant _ISBE_ROLE = 0xe02d3eaf0b5fb24a2d637286804770bf2618aa6d3b40cbf4
 
 // keccak256('isbe.contracts.role.asset.event.tracker');
 bytes32 constant _ASSET_EVENT_TRACKER_ROLE = 0x46ffae7721ce7c213dfc98101d48d6a7f58e3c12f2945ae1fb4f2e2862a44ff1;
+
+// keccak256('isbe.contracts.role.controller');
+bytes32 constant _CONTROLLER_ROLE = 0x6bc432609a8af6e2d25fcffbe70872e0b3c63d88116a2b673c42dfbc130d9331;
+
+// keccak256('isbe.contracts.role.cap');
+bytes32 constant _CAP_ROLE = 0xd2231b344d69ba7f64c324f071f0ef91a388e60c2a6b529339afc42cf411cb61;
+
+// keccak256('isbe.contracts.role.snapshot');
+bytes32 constant _SNAPSHOT_ROLE = 0x0ca5e23bde0d5e6112f10b9752afc92df6901f9218a43771a113f0ee5ab6bd49;
+
+// keccak256('isbe.contracts.role.minter');
+bytes32 constant _MINTER_ROLE = 0xd8e8f9f9638a19d632dbb79025022db564483265e96ba99b2dd89df138e9cace;
