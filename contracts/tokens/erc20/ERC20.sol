@@ -146,16 +146,6 @@ contract ERC20 is IERC20Isbe, ERC20InternalCommon {
         return true;
     }
 
-    // TODO: Only for testing purposes. Remove when implement 4626 and burnable
-    /// **********************************************************
-    function mint(
-        address account,
-        uint256 amount
-    ) public virtual whenNotPaused {
-        _mint(account, amount);
-    }
-    /// **********************************************************
-
     function allowance(
         address owner,
         address spender

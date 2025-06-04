@@ -24,12 +24,29 @@ abstract contract ERC20CappedInternal is ERC20Internal {
         uint256 cap;
     }
 
+    modifier checkNewCap(uint256 newCap) {
+        _checkNewCap(newCap);
+        _;
+    }
+
+    modifier checkCap(uint256 amount) {
+        _checkCap(amount);
+        _;
+    }
+
     function _mint(address account, uint256 amount) internal virtual override {
-        require(_totalSupply() + amount <= _cap(), IERC20Capped.CapExceeded());
         super._mint(account, amount);
     }
 
     function _setCap(uint256 newCap) internal {
+        _erc20CappedStorage().cap = newCap;
+    }
+
+    function _cap() internal view returns (uint256) {
+        return _erc20CappedStorage().cap;
+    }
+
+    function _checkNewCap(uint256 newCap) internal view virtual {
         require(newCap > 0, IERC20Capped.CapIsZero());
 
         uint256 totalSupply = _totalSupply();
@@ -38,11 +55,10 @@ abstract contract ERC20CappedInternal is ERC20Internal {
             newCap >= totalSupply,
             IERC20Capped.NewCapIsLessThanTotalSupply(newCap, totalSupply)
         );
-        _erc20CappedStorage().cap = newCap;
     }
 
-    function _cap() internal view returns (uint256) {
-        return _erc20CappedStorage().cap;
+    function _checkCap(uint256 amount) internal view virtual {
+        require(_totalSupply() + amount <= _cap(), IERC20Capped.CapExceeded());
     }
 
     function _erc20CappedStorage()
