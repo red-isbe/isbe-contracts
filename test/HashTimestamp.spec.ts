@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { Signer } from 'ethers'
 import { ethers } from 'hardhat'
-import { HashTimestampTestWrapper } from '../typechain-types/index.js'
+import { HashTimestampTestWrapper } from '../typechain-types'
 
 describe('Hash Timestamp', function () {
     const HASH =

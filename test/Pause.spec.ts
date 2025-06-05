@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { Signer } from 'ethers'
 import { ethers } from 'hardhat'
-import { ISBEPause } from '../typechain-types/index.js'
+import { ISBEPause } from '../typechain-types'
 import {
     PAUSER_ROLE,
     ISBE_ROLE,
@@ -29,11 +29,11 @@ describe('Pause', function () {
         const Pause = await ethers.getContractFactory('ISBEPause')
         pauseImplementation = await Pause.deploy()
 
-        const Proxy = await ethers.getContractFactory('DummyProxy')
+        const Proxy = await ethers.getContractFactory('IsbeERC1967Proxy')
         const proxy = await Proxy.deploy(pauseImplementation)
         await proxy.waitForDeployment()
 
-        pause = (await Pause.attach(await proxy.getAddress())) as ISBEPause
+        pause = Pause.attach(await proxy.getAddress()) as ISBEPause
 
         await pause.initializeAccessControl(adminAccount)
 

@@ -22,7 +22,7 @@ describe('ERC20', function () {
         const ERC20 = await ethers.getContractFactory('ERC20TestWrapper')
         const erc20Implementation = await ERC20.deploy()
 
-        const Proxy = await ethers.getContractFactory('DummyProxy')
+        const Proxy = await ethers.getContractFactory('IsbeERC1967Proxy')
         const proxy = await Proxy.deploy(erc20Implementation)
         await proxy.waitForDeployment()
 
@@ -528,9 +528,35 @@ describe('ERC20', function () {
             expect(await erc20.balanceOf(owner.address)).to.be.equal(200)
             expect(await erc20.balanceOf(otherAccount.address)).to.be.equal(0)
             expect(
-                await erc20.allowance(owner.address, otherAccount.address)
+                await erc20.allowance(otherAccount.address, owner.address)
             ).to.be.equal(0)
         })
+
+        it(
+            'GIVEN an ERC20 ' +
+                'WHEN transferFrom with max(uint256) to allowance ' +
+                'THEN a transfer can be made',
+            async () => {
+                const { erc20, owner, otherAccount } = await prepare()
+                await erc20
+                    .connect(otherAccount)
+                    .approve(owner.address, ethers.MaxUint256)
+                await expect(
+                    erc20.transferFrom(otherAccount.address, owner.address, 100)
+                )
+                    .to.emit(erc20, 'Transfer')
+                    .withArgs(otherAccount.address, owner.address, 100)
+
+                expect(await erc20.totalSupply()).to.be.equal(200)
+                expect(await erc20.balanceOf(owner.address)).to.be.equal(200)
+                expect(await erc20.balanceOf(otherAccount.address)).to.be.equal(
+                    0
+                )
+                expect(
+                    await erc20.allowance(otherAccount.address, owner.address)
+                ).to.be.equal(ethers.MaxUint256)
+            }
+        )
     })
 
     describe('Snapshot', () => {
@@ -646,6 +672,13 @@ describe('ERC20', function () {
             ).to.be.revertedWithCustomError(erc20, 'AccountHasNoRole')
         })
 
+        it('GIVEN an ERC20 WHEN forceBurn from zero address THEN it fails', async () => {
+            const { erc20 } = await prepare()
+            await expect(
+                erc20.forceBurn(ethers.ZeroAddress, MINTED)
+            ).revertedWithCustomError(erc20, 'AddressZero')
+        })
+
         it('GIVEN an ERC20 WHEN it is prepared THEN a force burn can be made', async () => {
             const { erc20, owner, otherAccount } = await prepare()
             await expect(erc20.forceBurn(otherAccount.address, MINTED))
@@ -682,6 +715,13 @@ describe('ERC20', function () {
                     MINTED - 1
                 )
             ).to.be.revertedWithCustomError(erc20, 'AccountHasNoRole')
+        })
+
+        it('GIVEN an ERC20 WHEN forceTransfer from zero address THEN fails', async () => {
+            const { erc20, owner } = await prepare()
+            await expect(
+                erc20.forceTransfer(ethers.ZeroAddress, owner.address, MINTED)
+            ).revertedWithCustomError(erc20, 'AddressZero')
         })
 
         it('GIVEN an ERC20 WHEN it is prepared THEN a force transfer can be made', async () => {

@@ -168,14 +168,10 @@ abstract contract ERC20Internal is Common {
         uint256 amount
     ) internal virtual {
         uint256 currentAllowance = _allowance(owner, spender);
-        if (currentAllowance != type(uint256).max) {
-            require(
-                currentAllowance >= amount,
-                IERC20Isbe.InsufficientAllowance()
-            );
-            unchecked {
-                _approve(owner, spender, currentAllowance - amount);
-            }
+        if (currentAllowance == type(uint256).max) return;
+        require(currentAllowance >= amount, IERC20Isbe.InsufficientAllowance());
+        unchecked {
+            _approve(owner, spender, currentAllowance - amount);
         }
     }
 

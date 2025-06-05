@@ -4,11 +4,14 @@ pragma solidity ^0.8.28;
 import {IAccessControl} from './IAccessControl.sol';
 import {Common} from '../core/Common.sol';
 import {_ACCESS_CONTROL_RESOLVER_KEY} from '../constants/resolverKeys.sol';
+import {
+    IEIP2535Introspection
+} from '../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 
 /// @title AccessControl
 /// @notice Implements role-based access control mechanisms
 /// @dev Inherits from IAccessControl and Common, providing external role management functions
-contract AccessControl is IAccessControl, Common {
+contract AccessControl is IAccessControl, Common, IEIP2535Introspection {
     /// @notice Constructor that disables the initializer
     constructor() {
         _disableInitializers(_ACCESS_CONTROL_RESOLVER_KEY);
@@ -60,5 +63,23 @@ contract AccessControl is IAccessControl, Common {
         bytes32 role
     ) external view override returns (bytes32) {
         return _getRoleAdmin(role);
+    }
+
+    function selectorsIntrospection()
+        external
+        pure
+        virtual // TODO: Revove with refactor tests
+        override
+        returns (bytes4[] memory selectors_)
+    {
+        uint256 selectorsLength = 7;
+        selectors_ = new bytes4[](selectorsLength);
+        selectors_[--selectorsLength] = this.initializeAccessControl.selector;
+        selectors_[--selectorsLength] = this.grantRole.selector;
+        selectors_[--selectorsLength] = this.revokeRole.selector;
+        selectors_[--selectorsLength] = this.setRoleAdmin.selector;
+        selectors_[--selectorsLength] = this.renounceRole.selector;
+        selectors_[--selectorsLength] = this.hasRole.selector;
+        selectors_[--selectorsLength] = this.getRoleAdmin.selector;
     }
 }

@@ -19,6 +19,22 @@ contract AssetEventTrackerTestWrapper is
         _mockedTimestamp = ts;
     }
 
+    function selectorsIntrospection()
+        external
+        pure
+        override(AccessControl, ISBEPause)
+        returns (bytes4[] memory selectors_)
+    {
+        uint256 selectorsLength = 6;
+        selectors_ = new bytes4[](selectorsLength);
+        selectors_[--selectorsLength] = this.recordState.selector;
+        selectors_[--selectorsLength] = this.getAssetEvents.selector;
+        selectors_[--selectorsLength] = this.getLatestAssetEvent.selector;
+        selectors_[--selectorsLength] = this.getCurrentState.selector;
+        selectors_[--selectorsLength] = this.isStateChangeAllowed.selector;
+        selectors_[--selectorsLength] = this.setMockedTimestamp.selector;
+    }
+
     function _blockTimestamp() internal view override returns (uint256) {
         return
             _mockedTimestamp == 0 ? super._blockTimestamp() : _mockedTimestamp;

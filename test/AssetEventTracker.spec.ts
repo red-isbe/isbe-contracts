@@ -20,11 +20,11 @@ describe('Asset Event Tracker', function () {
         const AssetEventTracker = await ethers.getContractFactory(
             'AssetEventTrackerTestWrapper'
         )
-        assetEventTrackerImplementation = await AssetEventTracker.deploy({
-            from: adminAccountAddress,
-        })
+        assetEventTrackerImplementation = await AssetEventTracker.deploy()
+        expect(await assetEventTrackerImplementation.selectorsIntrospection())
+            .to.not.be.undefined
 
-        const Proxy = await ethers.getContractFactory('DummyProxy')
+        const Proxy = await ethers.getContractFactory('IsbeERC1967Proxy')
         const proxy = await Proxy.deploy(assetEventTrackerImplementation)
         await proxy.waitForDeployment()
 

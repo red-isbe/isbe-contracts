@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
 import {Initializable} from './Initializable.sol';
@@ -11,13 +11,6 @@ abstract contract Common is
     PauseInternalCommon
 {
     /**
-     * @dev Emitted when the provided `addr` is 0
-     *
-     * @param addr The address to check
-     */
-    error AddressZero(address addr);
-
-    /**
      * @dev Checks if an address equals to zero address
      *
      * @param addr The address to check
@@ -25,14 +18,5 @@ abstract contract Common is
     modifier addressIsNotZero(address addr) {
         _addressIsNotZero(addr);
         _;
-    }
-
-    /**
-     * @dev Checks if an address equals to zero address
-     *
-     * @param addr The address to check
-     */
-    function _addressIsNotZero(address addr) internal pure {
-        require(addr != address(0), AddressZero(addr));
     }
 }

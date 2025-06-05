@@ -1,8 +1,7 @@
 import { expect } from 'chai'
 import { Signer } from 'ethers'
 import { ethers } from 'hardhat'
-import { Ownable2Step, Ownable } from '../typechain-types/index.js'
-import { ADDRESS_0 } from './constants'
+import { Ownable2Step, Ownable } from '../typechain-types'
 
 describe('Ownable & Ownable2Step', function () {
     let adminAccount: Signer
@@ -20,7 +19,7 @@ describe('Ownable & Ownable2Step', function () {
         const Ownable2Step = await ethers.getContractFactory('Ownable2Step')
         ownable2StepImplementation = await Ownable2Step.deploy()
 
-        const Proxy = await ethers.getContractFactory('DummyProxy')
+        const Proxy = await ethers.getContractFactory('IsbeERC1967Proxy')
         const proxy = await Proxy.deploy(ownable2StepImplementation)
         await proxy.waitForDeployment()
 
@@ -32,10 +31,12 @@ describe('Ownable & Ownable2Step', function () {
     }
 
     async function deployOwnable(initialize: boolean = true) {
-        const Ownable = await ethers.getContractFactory('Ownable')
+        const Ownable = await ethers.getContractFactory(
+            'contracts/access/Ownable.sol:Ownable'
+        )
         ownableImplementation = await Ownable.deploy()
 
-        const Proxy = await ethers.getContractFactory('DummyProxy')
+        const Proxy = await ethers.getContractFactory('IsbeERC1967Proxy')
         const proxy = await Proxy.deploy(ownableImplementation)
         await proxy.waitForDeployment()
 
@@ -71,7 +72,7 @@ describe('Ownable & Ownable2Step', function () {
             await deployOwnable2Step(false)
 
             await expect(
-                ownable2Step.initializeOwnable(ADDRESS_0)
+                ownable2Step.initializeOwnable(ethers.ZeroAddress)
             ).to.be.revertedWithCustomError(ownable2Step, 'AddressZero')
         })
     })
@@ -218,7 +219,9 @@ describe('Ownable & Ownable2Step', function () {
                 .to.emit(ownable2Step, 'OwnershipAccepted')
                 .withArgs(account_2)
 
-            expect(await ownable2Step.pendingOwner()).to.equal(ADDRESS_0)
+            expect(await ownable2Step.pendingOwner()).to.equal(
+                ethers.ZeroAddress
+            )
             expect(await ownable2Step.owner()).to.equal(account_2)
         })
     })
@@ -248,9 +251,9 @@ describe('Ownable & Ownable2Step', function () {
     ) {
         contract = contract.connect(adminAccount)
 
-        await expect(contract.transferOwnership(ADDRESS_0))
+        await expect(contract.transferOwnership(ethers.ZeroAddress))
             .to.be.revertedWithCustomError(contract, 'AddressZero')
-            .withArgs(ADDRESS_0)
+            .withArgs(ethers.ZeroAddress)
     }
 
     async function TransferOwnerAccountWhenPausedTest(
@@ -284,6 +287,6 @@ describe('Ownable & Ownable2Step', function () {
             .to.emit(contract, 'OwnershipRenounced')
             .withArgs(adminAccount)
 
-        expect(await contract.owner()).to.equal(ADDRESS_0)
+        expect(await contract.owner()).to.equal(ethers.ZeroAddress)
     }
 })

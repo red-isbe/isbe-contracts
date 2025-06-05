@@ -20,7 +20,7 @@ import {
 } from '../../../proxies/utils/IsbeUUPSUpgradeable.sol';
 
 // solhint-disable-next-line
-contract ERC20TestWrapper is
+contract ERC20TestWrapperUpdated is
     ERC20,
     ERC20Burnable,
     ERC20Capped,
@@ -29,13 +29,23 @@ contract ERC20TestWrapper is
     ISBEPause,
     IsbeUUPSUpgradeable
 {
+    function metadata()
+        external
+        view
+        returns (string memory name, string memory symbol, uint8 decimals)
+    {
+        name = _name();
+        symbol = _symbol();
+        decimals = _decimals();
+    }
+
     function selectorsIntrospection()
         external
         pure
         override
         returns (bytes4[] memory selectors_)
     {
-        uint256 selectorsLength = 22;
+        uint256 selectorsLength = 23;
         selectors_ = new bytes4[](selectorsLength);
         selectors_[--selectorsLength] = this.initializeErc20.selector;
         selectors_[--selectorsLength] = this.initializeCap.selector;
@@ -59,6 +69,7 @@ contract ERC20TestWrapper is
         selectors_[--selectorsLength] = this.totalSupplyAt.selector;
         selectors_[--selectorsLength] = this.forceTransfer.selector;
         selectors_[--selectorsLength] = this.forceBurn.selector;
+        selectors_[--selectorsLength] = this.metadata.selector;
     }
 
     function _mint(address account, uint256 amount) internal virtual override {

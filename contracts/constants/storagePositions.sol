@@ -2,6 +2,9 @@
 pragma solidity ^0.8.28;
 // solhint-disable max-line-length
 
+// keccak256('isbe.contracts.diamond.storage')
+bytes32 constant _DIAMOND_STORAGE_POSITION = 0x14a872dcf5b21c7ac5c7a21241cb3088ada7d77b91d45cb734d07fb6e61a0e4e;
+
 // keccak256('isbe.contracts.erc20.storage');
 bytes32 constant _ERC20_STORAGE_POSITION = 0xd93ac5c223af8b55b10aca6a04761f021176cb4baf866e7484f3c8d7325c3a93;
 
@@ -20,8 +23,6 @@ bytes32 constant _HASH_TIMESTAMP_STORAGE_POSITION = 0x9461e6f53daf5c3d0aa4d10025
 // keccak256('isbe.contracts.asset.event.tracker.storage');
 bytes32 constant _ASSET_EVENT_TRACKER_STORAGE_POSITION = 0xb13a0c12204f114e7a8e799996dabff59f106350c92089a46344d8deff3164b3;
 
-// solhint-enable max-line-length
-
 // keccak256('isbe.contracts.pause.storage');
 bytes32 constant _PAUSE_STORAGE_POSITION = 0x1d1f84ff22b88aba71617485b5278dbc9110b6bf91b86a247efd1071e92d099a;
 
@@ -30,3 +31,5 @@ bytes32 constant _OWNABLE_STORAGE_POSITION = 0xbc95c8238b97fd6fe32b005c5fe8a78a5
 
 // keccak256('isbe.contracts.ownable2step.storage');
 bytes32 constant _OWNABLE2STEP_STORAGE_POSITION = 0xd98f695f92cbf5b2cd00d847e9c69c1e7b2a437c38bab1d15885003ee783a631;
+
+// solhint-enable max-line-length
