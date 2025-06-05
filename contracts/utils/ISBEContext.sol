@@ -12,6 +12,8 @@ abstract contract ISBEContext is Context {
      */
     error AddressZero(address addr);
 
+    error UnimplementedMethod();
+
     function _blockTimestamp() internal view virtual returns (uint256) {
         return block.timestamp;
     }

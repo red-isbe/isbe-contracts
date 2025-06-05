@@ -2,7 +2,7 @@
 pragma solidity ^0.8.28;
 
 import {AssetEventTracker} from '../../assetevent/AssetEventTracker.sol';
-import {AccessControl} from '../../access/AccessControl.sol';
+import {AccessControl} from '../../access/accessControl/AccessControl.sol';
 import {ISBEPause} from '../../pause/ISBEPause.sol';
 
 /// @title AssetEventTrackerTestWrapper

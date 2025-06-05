@@ -7,7 +7,6 @@ pragma solidity ^0.8.28;
 /******************************************************************************/
 
 import {IDiamondCut} from '../interfaces/IDiamondCut.sol';
-import {OwnableInternal} from '../../../access/OwnableInternal.sol';
 import {EIP2535Internal} from '../EIP2535Internal.sol';
 import {IEIP2535Introspection} from '../interfaces/IEIP2535Introspection.sol';
 
@@ -17,7 +16,6 @@ import {IEIP2535Introspection} from '../interfaces/IEIP2535Introspection.sol';
 contract DiamondCutOwnableFacet is
     IDiamondCut,
     EIP2535Internal,
-    OwnableInternal,
     IEIP2535Introspection
 {
     /// @notice Add/replace/remove any number of functions and optionally execute

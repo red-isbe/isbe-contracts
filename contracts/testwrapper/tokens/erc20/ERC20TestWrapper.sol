@@ -18,6 +18,9 @@ import {ISBEPause} from '../../../pause/ISBEPause.sol';
 import {
     IsbeUUPSUpgradeable
 } from '../../../proxies/utils/IsbeUUPSUpgradeable.sol';
+import {
+    IEIP2535Introspection
+} from '../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 
 // solhint-disable-next-line
 contract ERC20TestWrapper is
@@ -27,7 +30,8 @@ contract ERC20TestWrapper is
     ERC20Snapshot,
     ERC20Controller,
     ISBEPause,
-    IsbeUUPSUpgradeable
+    IsbeUUPSUpgradeable,
+    IEIP2535Introspection
 {
     function selectorsIntrospection()
         external
@@ -59,10 +63,6 @@ contract ERC20TestWrapper is
         selectors_[--selectorsLength] = this.totalSupplyAt.selector;
         selectors_[--selectorsLength] = this.forceTransfer.selector;
         selectors_[--selectorsLength] = this.forceBurn.selector;
-    }
-
-    function _mint(address account, uint256 amount) internal virtual override {
-        super._mint(account, amount);
     }
 
     // solhint-disable-next-line

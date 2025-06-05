@@ -17,35 +17,31 @@ abstract contract Pause is IPause, PauseInternal {
 
     function initializePause(
         bool _paused
-    ) external virtual initializer(_PAUSE_RESOLVER_KEY) {
+    ) external initializer(_PAUSE_RESOLVER_KEY) {
         if (_paused) _pause();
         else _unpause();
     }
 
-    function pause() external virtual whenNotPaused {
+    function pause() external whenNotPaused {
         _checkPauserRoles();
 
         _pause();
         emit Paused(_msgSender());
     }
 
-    function unpause() external virtual whenPaused checkAuthorityLevel {
+    function unpause() external whenPaused {
         _checkPauserRoles();
+        _checkAuthorityLevel();
 
         _unpause();
         emit Unpaused(_msgSender());
     }
 
-    function paused() external view virtual returns (bool) {
+    function paused() external view returns (bool) {
         return _paused();
     }
 
-    function authorityLevel() external view virtual returns (uint256) {
+    function authorityLevel() external view returns (uint256) {
         return _authorityLevel();
     }
-
-    /// @notice Ensures the calling account has at least one of the required pauser roles
-    /// @dev This function must be overridden in derived contracts to provide the actual logic
-    ///      checking the caller's roles
-    function _checkPauserRoles() internal view virtual;
 }
