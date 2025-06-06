@@ -32,6 +32,14 @@ abstract contract AccessControlInternal is ISBEContext {
         _;
     }
 
+    function _initializeRbac(IAccessControl.Rbac[] memory rbacs) internal {
+        _checkRbacs(rbacs);
+        uint256 rbacsLength = rbacs.length;
+        for (uint256 index; index < rbacsLength; ++index) {
+            _grantRoles(rbacs[index].role, rbacs[index].members);
+        }
+    }
+
     function _setRoleAdmin(bytes32 role, bytes32 adminRole) internal {
         bytes32 previousAdminRole = _getRoleAdmin(role);
         if (previousAdminRole == adminRole) return;
@@ -49,6 +57,13 @@ abstract contract AccessControlInternal is ISBEContext {
 
         _accessControlStorage().roles[role].members[account] = true;
         emit IAccessControl.RoleGranted(role, account, _msgSender());
+    }
+
+    function _grantRoles(bytes32 role, address[] memory accounts) internal {
+        uint256 accountsLength = accounts.length;
+        for (uint256 index; index < accountsLength; ++index) {
+            _grantRole(role, accounts[index]);
+        }
     }
 
     function _revokeRole(bytes32 role, address account) internal virtual {
@@ -115,5 +130,43 @@ abstract contract AccessControlInternal is ISBEContext {
             storage_.slot := position
         }
         // slither-disable-end assembly
+    }
+
+    function _checkRbacs(IAccessControl.Rbac[] memory rbacs) private pure {
+        uint256 rbacLength = rbacs.length;
+        for (uint256 index; index < rbacLength; ++index) {
+            for (
+                uint256 innerIndex = index + 1;
+                innerIndex < rbacLength;
+                ++innerIndex
+            ) {
+                require(
+                    rbacs[index].role != rbacs[innerIndex].role,
+                    IAccessControl.RoleMustBeUnique(rbacs[index].role)
+                );
+            }
+            _checkMembers(rbacs[index].role, rbacs[index].members);
+        }
+    }
+
+    function _checkMembers(
+        bytes32 role,
+        address[] memory members
+    ) private pure {
+        uint256 membersLength = members.length;
+        for (uint256 index; index < membersLength; ++index) {
+            address currentMember = members[index];
+            _addressIsNotZero(currentMember);
+            for (
+                uint256 innerIndex = index + 1;
+                innerIndex < membersLength;
+                ++innerIndex
+            ) {
+                require(
+                    currentMember != members[innerIndex],
+                    IAccessControl.RoleMemberMustBeUnique(role, currentMember)
+                );
+            }
+        }
     }
 }

@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 import {Common} from '../../core/Common.sol';
 import {IERC20Isbe} from './IERC20Isbe.sol';
 import {_ERC20_STORAGE_POSITION} from '../../constants/storagePositions.sol';
+import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
 /**
  * @notice Abstract contract providing internal functionality for ERC20 tokens.
@@ -12,7 +13,7 @@ import {_ERC20_STORAGE_POSITION} from '../../constants/storagePositions.sol';
  * @dev This contract defines internal functions that form the backbone of ERC20 token operations.
  *      It adheres to the ERC20 standard and provides reusable methods for advanced token management.
  */
-abstract contract ERC20Internal is IERC20Isbe, Common {
+abstract contract ERC20Internal is Common {
     struct ERC20Storage {
         mapping(address account => uint256) balances;
         mapping(address account => mapping(address spender => uint256)) allowances;
@@ -55,7 +56,10 @@ abstract contract ERC20Internal is IERC20Isbe, Common {
         _beforeTokenTransfer(from, to, amount);
         ERC20Storage storage $ = _erc20Storage();
         uint256 fromBalance = $.balances[from];
-        require(fromBalance >= amount, TransferAmountExceedsBalance());
+        require(
+            fromBalance >= amount,
+            IERC20Isbe.TransferAmountExceedsBalance()
+        );
         unchecked {
             $.balances[from] = fromBalance - amount;
             // Overflow not possible: the sum of all balances is capped by totalSupply, and the sum is preserved by
@@ -63,7 +67,7 @@ abstract contract ERC20Internal is IERC20Isbe, Common {
             $.balances[to] += amount;
         }
 
-        emit Transfer(from, to, amount);
+        emit IERC20.Transfer(from, to, amount);
 
         _afterTokenTransfer(from, to, amount);
     }
@@ -89,7 +93,7 @@ abstract contract ERC20Internal is IERC20Isbe, Common {
             // Overflow not possible: balance + amount is at most totalSupply + amount, which is checked above.
             $.balances[account] += amount;
         }
-        emit Transfer(address(0), account, amount);
+        emit IERC20.Transfer(address(0), account, amount);
 
         _afterTokenTransfer(address(0), account, amount);
     }
@@ -113,14 +117,17 @@ abstract contract ERC20Internal is IERC20Isbe, Common {
 
         ERC20Storage storage $ = _erc20Storage();
         uint256 accountBalance = $.balances[account];
-        require(accountBalance >= amount, BurnAmountExceedsBalance());
+        require(
+            accountBalance >= amount,
+            IERC20Isbe.BurnAmountExceedsBalance()
+        );
         unchecked {
             $.balances[account] = accountBalance - amount;
             // Overflow not possible: amount <= accountBalance <= totalSupply.
             $.totalSupply -= amount;
         }
 
-        emit Transfer(account, address(0), amount);
+        emit IERC20.Transfer(account, address(0), amount);
 
         _afterTokenTransfer(account, address(0), amount);
     }
@@ -144,7 +151,7 @@ abstract contract ERC20Internal is IERC20Isbe, Common {
         uint256 amount
     ) internal virtual addressIsNotZero(owner) addressIsNotZero(spender) {
         _erc20Storage().allowances[owner][spender] = amount;
-        emit Approval(owner, spender, amount);
+        emit IERC20.Approval(owner, spender, amount);
     }
 
     /**
@@ -161,11 +168,10 @@ abstract contract ERC20Internal is IERC20Isbe, Common {
         uint256 amount
     ) internal virtual {
         uint256 currentAllowance = _allowance(owner, spender);
-        if (currentAllowance != type(uint256).max) {
-            require(currentAllowance >= amount, InsufficientAllowance());
-            unchecked {
-                _approve(owner, spender, currentAllowance - amount);
-            }
+        if (currentAllowance == type(uint256).max) return;
+        require(currentAllowance >= amount, IERC20Isbe.InsufficientAllowance());
+        unchecked {
+            _approve(owner, spender, currentAllowance - amount);
         }
     }
 
@@ -188,7 +194,7 @@ abstract contract ERC20Internal is IERC20Isbe, Common {
         address from,
         address to,
         uint256 amount
-    ) internal virtual {}
+    ) internal virtual;
 
     /**
      * @dev Hook that is called after any transfer of tokens. This includes

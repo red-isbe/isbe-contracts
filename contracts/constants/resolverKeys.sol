@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
 // keccak256('isbe.contracts.access.control.resolver.key');
@@ -12,3 +12,9 @@ bytes32 constant _ERC20_CAPPED_RESOLVER_KEY = 0x94ece6781e9aebbdab29d2bbc0301c80
 
 // keccak256('isbe.contracts.pause.resolver.key');
 bytes32 constant _PAUSE_RESOLVER_KEY = 0x7fabf0f3ed655fa26f86c82ae5da60e0ade03a5d35a9ff2985709278942966d3;
+
+// keccak256('isbe.contracts.ownable.resolver.key');
+bytes32 constant _OWNABLE_RESOLVER_KEY = 0x32d893fe746ed6e72cf641731066f84e26611cdd03031f873957cb1a29071a5f;
+
+// keccak256('isbe.contracts.ownable2step.resolver.key');
+bytes32 constant _OWNABLE2STEP_RESOLVER_KEY = 0x409f2dd40b4c74b904760a7ed7b5e93ae01104b9f1e8c0b978d6b60efccd2998;

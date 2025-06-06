@@ -22,9 +22,7 @@ abstract contract AssetEventTrackerInternal is Common {
         _;
     }
 
-    function _recordState(
-        uint256 newState
-    ) internal onlyAllowedStateChange(newState) {
+    function _recordState(uint256 newState) internal virtual {
         uint256 timestamp = _blockTimestamp();
         _assetEventTrackerStorage().assetEvents.push(
             IAssetEventTracker.AssetEvent({
@@ -41,6 +39,7 @@ abstract contract AssetEventTrackerInternal is Common {
     )
         internal
         view
+        virtual
         returns (IAssetEventTracker.AssetEvent[] memory assetEvents)
     {
         uint256 start = pageNumber * resultsPerPage;
@@ -64,6 +63,7 @@ abstract contract AssetEventTrackerInternal is Common {
     function _getLatestAssetEvent()
         internal
         view
+        virtual
         returns (IAssetEventTracker.AssetEvent memory assetEvent_)
     {
         uint256 assetEventsLength = _assetEventTrackerStorage()
@@ -74,7 +74,7 @@ abstract contract AssetEventTrackerInternal is Common {
             : assetEvent_;
     }
 
-    function _getCurrentState() internal view returns (uint256) {
+    function _getCurrentState() internal view virtual returns (uint256) {
         return _getLatestAssetEvent().state;
     }
 
@@ -89,7 +89,7 @@ abstract contract AssetEventTrackerInternal is Common {
 
     /// @notice Check if state change is allowed
     /// @param newState The new state to change
-    function _checkStateChange(uint256 newState) internal view {
+    function _checkStateChange(uint256 newState) internal view virtual {
         require(
             _isStateChangeAllowed(_getCurrentState(), newState),
             IAssetEventTracker.StateChangeNotAllowed(newState)

@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { Signer } from 'ethers'
 import { ethers } from 'hardhat'
-import { ISBEPause } from '../typechain-types/index.js'
+import { ISBEPause } from '../typechain-types'
 import {
     PAUSER_ROLE,
     ISBE_ROLE,
@@ -23,23 +23,25 @@ describe('Pause', function () {
 
     async function deploy(
         init_pause: boolean = PAUSE_INIT_STATE,
-        addRole?: string,
-        user?: Signer
+        addRole?: string[],
+        user?: Signer[]
     ) {
         const Pause = await ethers.getContractFactory('ISBEPause')
         pauseImplementation = await Pause.deploy()
 
-        const Proxy = await ethers.getContractFactory('DummyProxy')
+        const Proxy = await ethers.getContractFactory('IsbeERC1967Proxy')
         const proxy = await Proxy.deploy(pauseImplementation)
         await proxy.waitForDeployment()
 
-        pause = (await Pause.attach(await proxy.getAddress())) as ISBEPause
+        pause = Pause.attach(await proxy.getAddress()) as ISBEPause
 
         await pause.initializeAccessControl(adminAccount)
 
-        if (addRole) {
+        if (addRole && user) {
             pause = pause.connect(adminAccount)
-            await pause.grantRole(addRole!, user!)
+            for (let i = 0; i < addRole.length; i++) {
+                await pause.grantRole(addRole[i], user[i])
+            }
         }
 
         await pause.initializePause(init_pause)
@@ -77,7 +79,7 @@ describe('Pause', function () {
         })
 
         it('GIVEN a Pause WHEN reading authority level THEN succeeds', async function () {
-            await deploy(true, PAUSER_ROLE, adminAccount)
+            await deploy(true, [PAUSER_ROLE], [adminAccount])
 
             expect(await pause.authorityLevel()).to.equal(
                 PAUSER_AUTHORIZATION_LEVEL
@@ -109,12 +111,13 @@ describe('Pause', function () {
         })
 
         it('GIVEN a Pause WHEN using account with pauser and ISBE role to pause an already paused token THEN fails', async function () {
-            await deploy(true)
+            await deploy(
+                true,
+                [PAUSER_ROLE, ISBE_ROLE],
+                [adminAccount, adminAccount]
+            )
 
             pause = pause.connect(adminAccount)
-
-            await pause.grantRole(PAUSER_ROLE, adminAccount)
-            await pause.grantRole(ISBE_ROLE, adminAccount)
 
             await expect(pause.pause()).to.be.revertedWithCustomError(
                 pause,
@@ -137,11 +140,7 @@ describe('Pause', function () {
         })
 
         it('GIVEN a Pause WHEN using account with pauser role to unpause a token previously paused by another account with pauser role THEN succeeds', async function () {
-            await deploy(true, PAUSER_ROLE, adminAccount)
-
-            pause = pause.connect(adminAccount)
-
-            await pause.grantRole(PAUSER_ROLE, account_2)
+            await deploy(true, [PAUSER_ROLE], [account_2])
 
             pause = pause.connect(account_2)
 
@@ -153,11 +152,11 @@ describe('Pause', function () {
         })
 
         it('GIVEN a Pause WHEN using account with pauser role to unpause a token previously paused by another account with ISBE role THEN fails', async function () {
-            await deploy(true, ISBE_ROLE, adminAccount)
-
-            pause = pause.connect(adminAccount)
-
-            await pause.grantRole(PAUSER_ROLE, account_2)
+            await deploy(
+                true,
+                [ISBE_ROLE, PAUSER_ROLE],
+                [adminAccount, account_2]
+            )
 
             pause = pause.connect(account_2)
 

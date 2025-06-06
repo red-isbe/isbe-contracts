@@ -1,8 +1,8 @@
 import { expect } from 'chai'
 import { Signer } from 'ethers'
 import { ethers } from 'hardhat'
-import { AccessControl } from '../typechain-types/index.js'
-import { DEFAULT_ADMIN_ROLE, ROLE_1, ROLE_2, ADDRESS_0 } from './constants'
+import { AccessControl } from '../typechain-types'
+import { DEFAULT_ADMIN_ROLE, ROLE_1, ROLE_2 } from './constants'
 
 describe('Access Control', function () {
     let adminAccount: Signer
@@ -18,7 +18,7 @@ describe('Access Control', function () {
         const AccessControl = await ethers.getContractFactory('AccessControl')
         accessControlImplementation = await AccessControl.deploy()
 
-        const Proxy = await ethers.getContractFactory('DummyProxy')
+        const Proxy = await ethers.getContractFactory('IsbeERC1967Proxy')
         const proxy = await Proxy.deploy(accessControlImplementation)
         await proxy.waitForDeployment()
 
@@ -57,7 +57,7 @@ describe('Access Control', function () {
             await deploy(false)
 
             await expect(
-                accessControl.initializeAccessControl(ADDRESS_0)
+                accessControl.initializeAccessControl(ethers.ZeroAddress)
             ).to.be.revertedWithCustomError(accessControl, 'AddressZero')
         })
     })

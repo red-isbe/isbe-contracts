@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {ERC20Internal} from './ERC20Internal.sol';
+import {ERC20InternalCommon} from './extensions/ERC20InternalCommon.sol';
+import {IERC20Isbe} from './IERC20Isbe.sol';
 import {_ERC20_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
 
 /**
@@ -12,17 +13,10 @@ import {_ERC20_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
  *      OpenZeppelin interfaces. It includes additional helper functions such as `increaseAllowance` and
  *      `decreaseAllowance` for more granular control over token allowances.
  */
-contract ERC20 is ERC20Internal {
+contract ERC20 is IERC20Isbe, ERC20InternalCommon {
     /// @notice Constructor that assigns the deployer as the default admin
     constructor() {
         _disableInitializers(_ERC20_RESOLVER_KEY);
-    }
-
-    function allowance(
-        address owner,
-        address spender
-    ) external view override returns (uint256) {
-        return _allowance(owner, spender);
     }
 
     /**
@@ -51,7 +45,7 @@ contract ERC20 is ERC20Internal {
     function transfer(
         address to,
         uint256 amount
-    ) public virtual override returns (bool) {
+    ) public virtual override whenNotPaused returns (bool) {
         _transfer(_msgSender(), to, amount);
         return true;
     }
@@ -69,7 +63,7 @@ contract ERC20 is ERC20Internal {
     function approve(
         address spender,
         uint256 amount
-    ) public virtual override returns (bool) {
+    ) public virtual override whenNotPaused returns (bool) {
         _approve(_msgSender(), spender, amount);
         return true;
     }
@@ -94,7 +88,7 @@ contract ERC20 is ERC20Internal {
         address from,
         address to,
         uint256 amount
-    ) public virtual override returns (bool) {
+    ) public virtual override whenNotPaused returns (bool) {
         _spendAllowance(from, _msgSender(), amount);
         _transfer(from, to, amount);
         return true;
@@ -115,7 +109,7 @@ contract ERC20 is ERC20Internal {
     function increaseAllowance(
         address spender,
         uint256 addedValue
-    ) public virtual returns (bool) {
+    ) public virtual whenNotPaused returns (bool) {
         address owner = _msgSender();
         _approve(owner, spender, _allowance(owner, spender) + addedValue);
         return true;
@@ -138,12 +132,12 @@ contract ERC20 is ERC20Internal {
     function decreaseAllowance(
         address spender,
         uint256 subtractedValue
-    ) public virtual returns (bool) {
+    ) public virtual whenNotPaused returns (bool) {
         address owner = _msgSender();
         uint256 currentAllowance = _allowance(owner, spender);
         require(
             currentAllowance >= subtractedValue,
-            DecreasedAllowanceBellowZero()
+            IERC20Isbe.DecreasedAllowanceBellowZero()
         );
         unchecked {
             _approve(owner, spender, currentAllowance - subtractedValue);
@@ -152,12 +146,12 @@ contract ERC20 is ERC20Internal {
         return true;
     }
 
-    // TODO: Only for testing purposes. Remove when implement 4626 and burnable
-    /// **********************************************************
-    function mint(address account, uint256 amount) public {
-        _mint(account, amount);
+    function allowance(
+        address owner,
+        address spender
+    ) public view virtual override returns (uint256) {
+        return _allowance(owner, spender);
     }
-    /// **********************************************************
 
     function decimals() public view virtual override returns (uint8) {
         return _decimals();

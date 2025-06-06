@@ -4,6 +4,24 @@ pragma solidity ^0.8.28;
 /// @title Access Control Interface
 /// @notice External interface for role-based access control functionality
 interface IAccessControl {
+    /**
+     * @title Rbac (Role-Based Access Control) Structure
+     * @dev This struct is used to implement a simple role-based access control mechanism.
+     * It defines a role and the list of addresses that are members of that role.
+     */
+    struct Rbac {
+        /**
+         * @dev A unique identifier for the role.
+         * This is typically a `bytes32` hash that represents the role name (e.g., keccak256("ADMIN_ROLE")).
+         */
+        bytes32 role;
+        /**
+         * @dev An array of addresses that are members of the role.
+         * These accounts have been granted the privileges associated with the specified role.
+         */
+        address[] members;
+    }
+
     /// @notice Emitted when a role's admin role is changed
     /// @param role The role identifier
     /// @param previousAdminRole The previous admin role
@@ -35,6 +53,9 @@ interface IAccessControl {
         address indexed account,
         address indexed sender
     );
+
+    error RoleMustBeUnique(bytes32 role);
+    error RoleMemberMustBeUnique(bytes32 role, address member);
 
     /// @notice Error indicating an account does not hold a required role
     /// @param account The account being checked
