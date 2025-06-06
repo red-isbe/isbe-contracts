@@ -23,17 +23,19 @@ abstract contract HashTimestampInternal is Common {
         _;
     }
 
-    function _timestampHash(bytes32 hash) internal {
+    function _timestampHash(bytes32 hash) internal virtual {
         uint256 timestamp = _blockTimestamp();
         _hashTimestampStorage().hashTimestamps[hash] = timestamp;
         emit IHashTimestamp.HashTimestamped(hash, msg.sender, timestamp);
     }
 
-    function _exists(bytes32 hash) internal view returns (bool) {
+    function _exists(bytes32 hash) internal view virtual returns (bool) {
         return _getTimestamp(hash) != 0;
     }
 
-    function _getTimestamp(bytes32 hash) internal view returns (uint256) {
+    function _getTimestamp(
+        bytes32 hash
+    ) internal view virtual returns (uint256) {
         return _hashTimestampStorage().hashTimestamps[hash];
     }
 

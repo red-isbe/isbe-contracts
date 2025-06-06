@@ -2,16 +2,16 @@
 pragma solidity ^0.8.28;
 
 import {AssetEventTracker} from '../../assetevent/AssetEventTracker.sol';
-import {AccessControl} from '../../access/accessControl/AccessControl.sol';
-import {ISBEPause} from '../../pause/ISBEPause.sol';
+import {
+    IEIP2535Introspection
+} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 
 /// @title AssetEventTrackerTestWrapper
 /// @notice Implements asset event tracker (only for test)
 /// @dev Inherits from AssetEventTracker, providing access to block timestamp and check state change functions
 contract AssetEventTrackerTestWrapper is
     AssetEventTracker,
-    AccessControl,
-    ISBEPause
+    IEIP2535Introspection
 {
     uint256 private _mockedTimestamp;
 
@@ -22,7 +22,7 @@ contract AssetEventTrackerTestWrapper is
     function selectorsIntrospection()
         external
         pure
-        override(AccessControl, ISBEPause)
+        override
         returns (bytes4[] memory selectors_)
     {
         uint256 selectorsLength = 6;

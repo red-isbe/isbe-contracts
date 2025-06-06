@@ -7,6 +7,9 @@ export const ISBE_ROLE =
 export const ASSET_EVENT_TRACKER_ROLE =
     '0x46ffae7721ce7c213dfc98101d48d6a7f58e3c12f2945ae1fb4f2e2862a44ff1'
 
+export const HASH_TIMESTAMP_ROLE =
+    '0x3bb8341caefb6dc4800c130d6d6d2789f8c4e534bc168ff9a7eda2e2831a721f'
+
 export const CONTROLLER_ROLE =
     '0x6bc432609a8af6e2d25fcffbe70872e0b3c63d88116a2b673c42dfbc130d9331'
 
