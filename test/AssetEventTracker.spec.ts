@@ -10,10 +10,12 @@ import {
     DiamondCutAccessControlFacet,
     DiamondLoupeFacet__factory,
     DiamondLoupeFacet,
-    AccessControl__factory,
+    AccessControlFacet__factory,
     AccessControl,
-    ISBEPause__factory,
+    ISBEPauseFacet__factory,
     ISBEPause,
+    AccessControlFacet,
+    ISBEPauseFacet,
 } from '../typechain-types'
 import {
     DEFAULT_ADMIN_ROLE,
@@ -29,14 +31,14 @@ describe('Asset Event Tracker', function () {
     let EIP2535AccessControlFactory: EIP2535AccessControl__factory
     let DiamondCutAccessControlFacetFactory: DiamondCutAccessControlFacet__factory
     let DiamondLoupeFacetFactory: DiamondLoupeFacet__factory
-    let AccessControlFactory: AccessControl__factory
-    let ISBEPauseFactory: ISBEPause__factory
+    let AccessControlFacetFactory: AccessControlFacet__factory
+    let ISBEPauseFacetFactory: ISBEPauseFacet__factory
     let AssetEventTrackerTestWrapperFactory: AssetEventTrackerTestWrapper__factory
 
     let diamondCutFacet: DiamondCutAccessControlFacet
     let diamondLoupeFacet: DiamondLoupeFacet
-    let accessControlFacet: AccessControl
-    let pauseFacet: ISBEPause
+    let accessControlFacet: AccessControlFacet
+    let pauseFacet: ISBEPauseFacet
     let assetEventTrackerFacet: AssetEventTrackerTestWrapper
 
     let diamondProxy: EIP2535AccessControl
@@ -60,16 +62,18 @@ describe('Asset Event Tracker', function () {
         DiamondLoupeFacetFactory =
             await ethers.getContractFactory('DiamondLoupeFacet')
 
-        AccessControlFactory = await ethers.getContractFactory('AccessControl')
-        ISBEPauseFactory = await ethers.getContractFactory('ISBEPause')
+        AccessControlFacetFactory =
+            await ethers.getContractFactory('AccessControlFacet')
+        ISBEPauseFacetFactory =
+            await ethers.getContractFactory('ISBEPauseFacet')
         AssetEventTrackerTestWrapperFactory = await ethers.getContractFactory(
             'AssetEventTrackerTestWrapper'
         )
 
         diamondCutFacet = await DiamondCutAccessControlFacetFactory.deploy()
         diamondLoupeFacet = await DiamondLoupeFacetFactory.deploy()
-        accessControlFacet = await AccessControlFactory.deploy()
-        pauseFacet = await ISBEPauseFactory.deploy()
+        accessControlFacet = await AccessControlFacetFactory.deploy()
+        pauseFacet = await ISBEPauseFacetFactory.deploy()
         assetEventTrackerFacet =
             await AssetEventTrackerTestWrapperFactory.deploy()
 
@@ -172,7 +176,7 @@ describe('Asset Event Tracker', function () {
             await deploy()
 
             assetEventTracker = assetEventTracker.connect(adminAccount)
-            pause = ISBEPauseFactory.attach(
+            pause = ISBEPauseFacetFactory.attach(
                 await diamondProxy.getAddress()
             ) as ISBEPause
             await pause.pause()
@@ -186,7 +190,7 @@ describe('Asset Event Tracker', function () {
             await deploy()
 
             assetEventTracker = assetEventTracker.connect(adminAccount)
-            accessControl = AccessControlFactory.attach(
+            accessControl = AccessControlFacetFactory.attach(
                 await diamondProxy.getAddress()
             ) as AccessControl
             await accessControl.revokeRole(
