@@ -26,17 +26,6 @@ describe('Ownable & Ownable2Step', function () {
     })
 
     async function deployOwnable2Step(initialize: boolean = true) {
-        /*const Ownable2Step = await ethers.getContractFactory('Ownable2Step')
-        ownable2StepImplementation = await Ownable2Step.deploy()
-
-        const Proxy = await ethers.getContractFactory('IsbeERC1967Proxy')
-        const proxy = await Proxy.deploy(ownable2StepImplementation)
-        await proxy.waitForDeployment()
-
-        ownable2Step = Ownable2Step.attach(
-            await proxy.getAddress()
-        ) as Ownable2Step*/
-
         let result = await deployAll()
         diamondProxy = result.diamondProxy
         ownable2Step = result.ownable2Step
@@ -48,17 +37,6 @@ describe('Ownable & Ownable2Step', function () {
     }
 
     async function deployOwnable(initialize: boolean = true) {
-        /*const Ownable = await ethers.getContractFactory(
-            'contracts/access/Ownable.sol:Ownable'
-        )
-        ownableImplementation = await Ownable.deploy()
-
-        const Proxy = await ethers.getContractFactory('IsbeERC1967Proxy')
-        const proxy = await Proxy.deploy(ownableImplementation)
-        await proxy.waitForDeployment()
-
-        ownable = Ownable.attach(await proxy.getAddress()) as Ownable*/
-
         let result = await deployAll(true)
         diamondProxy = result.diamondProxy
         ownable = result.ownable
