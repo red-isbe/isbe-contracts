@@ -127,8 +127,8 @@ export async function deployAll(isOwnable: boolean = false) {
         await diamondLoupeFacet.getAddress(),
         await accessControlFacet.getAddress(),
         isOwnable == true
-            ? await ownable2StepFacet.getAddress()
-            : await ownableFacet.getAddress(),
+            ? await ownableFacet.getAddress()
+            : await ownable2StepFacet.getAddress(),
         await pauseFacet.getAddress(),
         await erc20Facet.getAddress(),
         await assetEventTrackerFacet.getAddress(),
