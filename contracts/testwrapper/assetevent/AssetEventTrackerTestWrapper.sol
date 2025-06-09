@@ -11,13 +11,6 @@ import {ISBEContext} from '../../utils/ISBEContext.sol';
 /// @notice Implements asset event tracker (only for test)
 /// @dev Inherits from AssetEventTracker, providing access to block timestamp and check state change functions
 contract AssetEventTrackerTestWrapper is AssetEventTrackerFacet, MockTimestamp {
-    function _isStateChangeAllowed(
-        uint256 currentState,
-        uint256 newState
-    ) internal pure override returns (bool) {
-        return currentState < newState;
-    }
-
     function _blockTimestamp()
         internal
         view
@@ -25,5 +18,12 @@ contract AssetEventTrackerTestWrapper is AssetEventTrackerFacet, MockTimestamp {
         returns (uint256)
     {
         return MockTimestamp._blockTimestamp();
+    }
+
+    function _isStateChangeAllowed(
+        uint256 currentState,
+        uint256 newState
+    ) internal pure override returns (bool) {
+        return currentState < newState;
     }
 }

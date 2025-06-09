@@ -28,7 +28,7 @@ describe('Pause', function () {
         addRole?: string[],
         user?: Signer[]
     ) {
-        let result = await deployAll()
+        const result = await deployAll()
         pause = result.pause
         accessControl = result.accessControl
         pauseFacet = result.pauseFacet

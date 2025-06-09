@@ -1,11 +1,7 @@
 import { expect } from 'chai'
 import { Signer } from 'ethers'
 import { ethers } from 'hardhat'
-import {
-    AccessControl,
-    EIP2535AccessControl,
-    ISBEPause,
-} from '../typechain-types'
+import { AccessControl } from '../typechain-types'
 import { DEFAULT_ADMIN_ROLE, ROLE_1, ROLE_2 } from './constants'
 import { deployAll } from './initialization'
 
@@ -14,17 +10,13 @@ describe('Access Control', function () {
     let account_2: Signer
     let accessControlFacet: AccessControl
     let accessControl: AccessControl
-    let diamondProxy: EIP2535AccessControl
-    let pause: ISBEPause
 
     before(async () => {
         ;[adminAccount, account_2] = await ethers.getSigners()
     })
 
     async function deploy(initialize: boolean = true) {
-        let result = await deployAll()
-        diamondProxy = result.diamondProxy
-        pause = result.pause
+        const result = await deployAll()
         accessControl = result.accessControl
         accessControlFacet = result.accessControlFacet
 

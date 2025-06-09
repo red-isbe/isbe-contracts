@@ -1,13 +1,7 @@
 import { expect } from 'chai'
 import { Signer } from 'ethers'
 import { ethers } from 'hardhat'
-import {
-    Ownable2Step,
-    Ownable,
-    EIP2535AccessControl,
-    ISBEPause,
-    AccessControl,
-} from '../typechain-types'
+import { Ownable2Step, Ownable, ISBEPause } from '../typechain-types'
 import { deployAll } from './initialization'
 
 describe('Ownable & Ownable2Step', function () {
@@ -15,34 +9,26 @@ describe('Ownable & Ownable2Step', function () {
     let account_2: Signer
     let ownable2Step: Ownable2Step
     let ownable2StepFacet: Ownable2Step
-    let ownableFacet: Ownable
     let ownable: Ownable
-    let diamondProxy: EIP2535AccessControl
     let pause: ISBEPause
-    let accessControl: AccessControl
 
     before(async () => {
         ;[adminAccount, account_2] = await ethers.getSigners()
     })
 
     async function deployOwnable2Step(initialize: boolean = true) {
-        let result = await deployAll()
-        diamondProxy = result.diamondProxy
+        const result = await deployAll()
         ownable2Step = result.ownable2Step
         pause = result.pause
-        accessControl = result.accessControl
         ownable2StepFacet = result.ownable2StepFacet
 
         if (initialize) await ownable2Step.initializeOwnable(adminAccount)
     }
 
     async function deployOwnable(initialize: boolean = true) {
-        let result = await deployAll(true)
-        diamondProxy = result.diamondProxy
+        const result = await deployAll(true)
         ownable = result.ownable
         pause = result.pause
-        accessControl = result.accessControl
-        ownableFacet = result.ownableFacet
 
         if (initialize) await ownable.initializeOwnable(adminAccount)
     }

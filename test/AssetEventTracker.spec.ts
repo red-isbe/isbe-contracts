@@ -2,7 +2,6 @@ import { expect } from 'chai'
 import { Signer } from 'ethers'
 import { ethers } from 'hardhat'
 import {
-    EIP2535AccessControl,
     AssetEventTrackerTestWrapper,
     AccessControl,
     ISBEPause,
@@ -16,8 +15,6 @@ describe('Asset Event Tracker', function () {
     const STATE_2 = 2
     const BLOCK_TIMESTAMP = 1234567890
 
-    let diamondProxy: EIP2535AccessControl
-
     let adminAccount: Signer
     let assetEventTracker: AssetEventTrackerTestWrapper
     let pause: ISBEPause
@@ -28,8 +25,7 @@ describe('Asset Event Tracker', function () {
         ;[adminAccount] = await ethers.getSigners()
         const adminAccountAddress = await adminAccount.getAddress()
 
-        let result = await deployAll()
-        diamondProxy = result.diamondProxy
+        const result = await deployAll()
         assetEventTracker = result.assetEventTracker
         pause = result.pause
         accessControl = result.accessControl

@@ -2,10 +2,8 @@ import { expect } from 'chai'
 import { Signer } from 'ethers'
 import { ethers } from 'hardhat'
 import {
-    EIP2535AccessControl,
     AccessControl,
     ISBEPause,
-    MockTimestamp,
     HashTimestampTestWrapper,
 } from '../typechain-types/index.js'
 import { HASH_TIMESTAMP_ROLE, PAUSER_ROLE } from './constants'
@@ -17,24 +15,19 @@ describe('Hash Timestamp', function () {
 
     const BLOCK_TIMESTAMP = 1234567890
 
-    let diamondProxy: EIP2535AccessControl
-
     let adminAccount: Signer
     let hashTimestamp: HashTimestampTestWrapper
     let pause: ISBEPause
     let accessControl: AccessControl
-    let mockTimestamp: MockTimestamp
 
     async function deploy() {
         ;[adminAccount] = await ethers.getSigners()
         const adminAccountAddress = await adminAccount.getAddress()
 
-        let result = await deployAll()
-        diamondProxy = result.diamondProxy
+        const result = await deployAll()
         hashTimestamp = result.hashTimestamp
         pause = result.pause
         accessControl = result.accessControl
-        mockTimestamp = result.mockTimestamp
 
         await accessControl.grantRole(PAUSER_ROLE, adminAccountAddress)
         await accessControl.grantRole(HASH_TIMESTAMP_ROLE, adminAccountAddress)

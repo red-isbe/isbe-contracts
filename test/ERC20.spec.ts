@@ -1,12 +1,7 @@
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
 import { Signer } from 'ethers'
-import {
-    ERC20TestWrapper,
-    AccessControl,
-    ISBEPause,
-    EIP2535AccessControl,
-} from '../typechain-types'
+import { ERC20TestWrapper, AccessControl, ISBEPause } from '../typechain-types'
 import {
     CAP_ROLE,
     MINTER_ROLE,
@@ -20,8 +15,6 @@ describe('ERC20', function () {
     const symbol = 'isbe'
 
     let erc20Facet: ERC20TestWrapper
-
-    let diamondProxy: EIP2535AccessControl
 
     let erc20: ERC20TestWrapper
     let pause: ISBEPause
@@ -37,8 +30,7 @@ describe('ERC20', function () {
         ownerAddress = await owner.getAddress()
         otherAccountAddress = await otherAccount.getAddress()
 
-        let result = await deployAll()
-        diamondProxy = result.diamondProxy
+        const result = await deployAll()
         erc20 = result.erc20
         pause = result.pause
         accessControl = result.accessControl
@@ -580,7 +572,6 @@ describe('ERC20', function () {
         })
 
         it('GIVEN an ERC20 WHEN non snapshoter takes a snapshot THEN fails', async () => {
-            // eslint-disable-next-line prefer-const
             await prepare()
 
             erc20 = erc20.connect(otherAccount)
@@ -639,7 +630,6 @@ describe('ERC20', function () {
         })
 
         it('GIVEN an ERC20 initialized WHEN non controller tries to force burn THEN it fails', async () => {
-            // eslint-disable-next-line prefer-const
             await prepare()
 
             erc20 = erc20.connect(otherAccount)
@@ -680,7 +670,6 @@ describe('ERC20', function () {
         })
 
         it('GIVEN an ERC20 initialized WHEN non controller tries to force transfer THEN it fails', async () => {
-            // eslint-disable-next-line prefer-const
             await prepare()
 
             erc20 = erc20.connect(otherAccount)

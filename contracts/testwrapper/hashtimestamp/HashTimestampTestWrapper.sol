@@ -2,9 +2,6 @@
 pragma solidity ^0.8.28;
 
 import {HashTimestampFacet} from '../../hashtimestamp/HashTimestampFacet.sol';
-import {
-    IEIP2535Introspection
-} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 import {MockTimestamp} from '../mockTimestamp/MockTimestamp.sol';
 import {ISBEContext} from '../../utils/ISBEContext.sol';
 
