@@ -2,120 +2,44 @@ import { expect } from 'chai'
 import { Signer } from 'ethers'
 import { ethers } from 'hardhat'
 import {
-    EIP2535AccessControl__factory,
     EIP2535AccessControl,
-    AssetEventTrackerTestWrapper__factory,
     AssetEventTrackerTestWrapper,
-    DiamondCutAccessControlFacet__factory,
-    DiamondCutAccessControlFacet,
-    DiamondLoupeFacet__factory,
-    DiamondLoupeFacet,
-    AccessControlFacet__factory,
     AccessControl,
-    ISBEPauseFacet__factory,
     ISBEPause,
-    AccessControlFacet,
-    ISBEPauseFacet,
+    MockTimestamp,
 } from '../typechain-types'
-import {
-    DEFAULT_ADMIN_ROLE,
-    ASSET_EVENT_TRACKER_ROLE,
-    PAUSER_ROLE,
-} from './constants'
+import { ASSET_EVENT_TRACKER_ROLE, PAUSER_ROLE } from './constants'
+import { deployAll } from './initialization'
 
 describe('Asset Event Tracker', function () {
     const STATE_1 = 1
     const STATE_2 = 2
     const BLOCK_TIMESTAMP = 1234567890
 
-    let EIP2535AccessControlFactory: EIP2535AccessControl__factory
-    let DiamondCutAccessControlFacetFactory: DiamondCutAccessControlFacet__factory
-    let DiamondLoupeFacetFactory: DiamondLoupeFacet__factory
-    let AccessControlFacetFactory: AccessControlFacet__factory
-    let ISBEPauseFacetFactory: ISBEPauseFacet__factory
-    let AssetEventTrackerTestWrapperFactory: AssetEventTrackerTestWrapper__factory
-
-    let diamondCutFacet: DiamondCutAccessControlFacet
-    let diamondLoupeFacet: DiamondLoupeFacet
-    let accessControlFacet: AccessControlFacet
-    let pauseFacet: ISBEPauseFacet
-    let assetEventTrackerFacet: AssetEventTrackerTestWrapper
-
     let diamondProxy: EIP2535AccessControl
 
-    let facetAddresses: string[]
     let adminAccount: Signer
     let assetEventTracker: AssetEventTrackerTestWrapper
     let pause: ISBEPause
     let accessControl: AccessControl
+    let mockTimestamp: MockTimestamp
 
     async function deploy() {
         ;[adminAccount] = await ethers.getSigners()
         const adminAccountAddress = await adminAccount.getAddress()
 
-        EIP2535AccessControlFactory = await ethers.getContractFactory(
-            'EIP2535AccessControl'
+        let result = await deployAll()
+        diamondProxy = result.diamondProxy
+        assetEventTracker = result.assetEventTracker
+        pause = result.pause
+        accessControl = result.accessControl
+        mockTimestamp = result.mockTimestamp
+
+        await accessControl.grantRole(PAUSER_ROLE, adminAccountAddress)
+        await accessControl.grantRole(
+            ASSET_EVENT_TRACKER_ROLE,
+            adminAccountAddress
         )
-        DiamondCutAccessControlFacetFactory = await ethers.getContractFactory(
-            'DiamondCutAccessControlFacet'
-        )
-        DiamondLoupeFacetFactory =
-            await ethers.getContractFactory('DiamondLoupeFacet')
-
-        AccessControlFacetFactory =
-            await ethers.getContractFactory('AccessControlFacet')
-        ISBEPauseFacetFactory =
-            await ethers.getContractFactory('ISBEPauseFacet')
-        AssetEventTrackerTestWrapperFactory = await ethers.getContractFactory(
-            'AssetEventTrackerTestWrapper'
-        )
-
-        diamondCutFacet = await DiamondCutAccessControlFacetFactory.deploy()
-        diamondLoupeFacet = await DiamondLoupeFacetFactory.deploy()
-        accessControlFacet = await AccessControlFacetFactory.deploy()
-        pauseFacet = await ISBEPauseFacetFactory.deploy()
-        assetEventTrackerFacet =
-            await AssetEventTrackerTestWrapperFactory.deploy()
-
-        await diamondCutFacet.waitForDeployment()
-        await diamondLoupeFacet.waitForDeployment()
-        await accessControlFacet.waitForDeployment()
-        await pauseFacet.waitForDeployment()
-        await assetEventTrackerFacet.waitForDeployment()
-
-        facetAddresses = [
-            await diamondCutFacet.getAddress(),
-            await diamondLoupeFacet.getAddress(),
-            await accessControlFacet.getAddress(),
-            await pauseFacet.getAddress(),
-            await assetEventTrackerFacet.getAddress(),
-        ]
-
-        diamondProxy = await EIP2535AccessControlFactory.deploy(
-            facetAddresses,
-            {
-                rbacs: [
-                    {
-                        role: DEFAULT_ADMIN_ROLE,
-                        members: [adminAccountAddress],
-                    },
-                    {
-                        role: PAUSER_ROLE,
-                        members: [adminAccountAddress],
-                    },
-                    {
-                        role: ASSET_EVENT_TRACKER_ROLE,
-                        members: [adminAccountAddress],
-                    },
-                ],
-                init: ethers.ZeroAddress,
-                initCalldata: '0x',
-            }
-        )
-        await diamondProxy.waitForDeployment()
-        assetEventTracker = AssetEventTrackerTestWrapperFactory.attach(
-            await diamondProxy.getAddress()
-        ) as AssetEventTrackerTestWrapper
     }
 
     describe('Recording states', function () {
@@ -123,7 +47,9 @@ describe('Asset Event Tracker', function () {
             await deploy()
 
             assetEventTracker = assetEventTracker.connect(adminAccount)
-            await assetEventTracker.setMockedTimestamp(BLOCK_TIMESTAMP)
+            mockTimestamp = mockTimestamp.connect(adminAccount)
+
+            await mockTimestamp.setMockedTimestamp(BLOCK_TIMESTAMP)
 
             await expect(assetEventTracker.recordState(STATE_1))
                 .to.emit(assetEventTracker, 'StateRecorded')
@@ -146,7 +72,7 @@ describe('Asset Event Tracker', function () {
             await deploy()
 
             assetEventTracker = assetEventTracker.connect(adminAccount)
-            await assetEventTracker.setMockedTimestamp(BLOCK_TIMESTAMP)
+            await mockTimestamp.setMockedTimestamp(BLOCK_TIMESTAMP)
 
             await expect(assetEventTracker.recordState(STATE_2))
                 .to.emit(assetEventTracker, 'StateRecorded')
@@ -176,9 +102,7 @@ describe('Asset Event Tracker', function () {
             await deploy()
 
             assetEventTracker = assetEventTracker.connect(adminAccount)
-            pause = ISBEPauseFacetFactory.attach(
-                await diamondProxy.getAddress()
-            ) as ISBEPause
+
             await pause.pause()
 
             await expect(
@@ -190,9 +114,6 @@ describe('Asset Event Tracker', function () {
             await deploy()
 
             assetEventTracker = assetEventTracker.connect(adminAccount)
-            accessControl = AccessControlFacetFactory.attach(
-                await diamondProxy.getAddress()
-            ) as AccessControl
             await accessControl.revokeRole(
                 ASSET_EVENT_TRACKER_ROLE,
                 adminAccount.getAddress()
@@ -250,7 +171,7 @@ describe('Asset Event Tracker', function () {
             await deploy()
 
             assetEventTracker = assetEventTracker.connect(adminAccount)
-            await assetEventTracker.setMockedTimestamp(BLOCK_TIMESTAMP)
+            await mockTimestamp.setMockedTimestamp(BLOCK_TIMESTAMP)
 
             await assetEventTracker.recordState(STATE_1)
 

@@ -3,50 +3,25 @@ import { ethers } from 'hardhat'
 import { Signer } from 'ethers'
 import {
     ERC20TestWrapper,
-    EIP2535AccessControl__factory,
-    EIP2535AccessControl,
-    ERC20TestWrapper__factory,
-    DiamondCutAccessControlFacet__factory,
-    DiamondCutAccessControlFacet,
-    DiamondLoupeFacet__factory,
-    DiamondLoupeFacet,
-    AccessControlFacet__factory,
-    AccessControlFacet,
-    ISBEPauseFacet__factory,
-    ISBEPauseFacet,
     AccessControl,
     ISBEPause,
+    EIP2535AccessControl,
 } from '../typechain-types'
 import {
     CAP_ROLE,
     MINTER_ROLE,
     SNAPSHOT_ROLE,
     CONTROLLER_ROLE,
-    DEFAULT_ADMIN_ROLE,
-    PAUSER_ROLE,
 } from './constants'
-
+import { deployAll } from './initialization'
 describe('ERC20', function () {
     const decimals = 2
     const name = 'ISBE stable token'
     const symbol = 'isbe'
 
-    let EIP2535AccessControlFactory: EIP2535AccessControl__factory
-    let DiamondCutAccessControlFacetFactory: DiamondCutAccessControlFacet__factory
-    let DiamondLoupeFacetFactory: DiamondLoupeFacet__factory
-    let AccessControlFacetFactory: AccessControlFacet__factory
-    let ISBEPauseFacetFactory: ISBEPauseFacet__factory
-    let ERC20TestWrapperFactory: ERC20TestWrapper__factory
-
-    let diamondCutFacet: DiamondCutAccessControlFacet
-    let diamondLoupeFacet: DiamondLoupeFacet
-    let accessControlFacet: AccessControlFacet
-    let pauseFacet: ISBEPauseFacet
     let erc20Facet: ERC20TestWrapper
 
     let diamondProxy: EIP2535AccessControl
-
-    let facetAddresses: string[]
 
     let erc20: ERC20TestWrapper
     let pause: ISBEPause
@@ -62,72 +37,12 @@ describe('ERC20', function () {
         ownerAddress = await owner.getAddress()
         otherAccountAddress = await otherAccount.getAddress()
 
-        EIP2535AccessControlFactory = await ethers.getContractFactory(
-            'EIP2535AccessControl'
-        )
-        DiamondCutAccessControlFacetFactory = await ethers.getContractFactory(
-            'DiamondCutAccessControlFacet'
-        )
-        DiamondLoupeFacetFactory =
-            await ethers.getContractFactory('DiamondLoupeFacet')
-
-        AccessControlFacetFactory =
-            await ethers.getContractFactory('AccessControlFacet')
-        ISBEPauseFacetFactory =
-            await ethers.getContractFactory('ISBEPauseFacet')
-        ERC20TestWrapperFactory =
-            await ethers.getContractFactory('ERC20TestWrapper')
-
-        diamondCutFacet = await DiamondCutAccessControlFacetFactory.deploy()
-        diamondLoupeFacet = await DiamondLoupeFacetFactory.deploy()
-        accessControlFacet = await AccessControlFacetFactory.deploy()
-        pauseFacet = await ISBEPauseFacetFactory.deploy()
-        erc20Facet = await ERC20TestWrapperFactory.deploy()
-
-        await diamondCutFacet.waitForDeployment()
-        await diamondLoupeFacet.waitForDeployment()
-        await accessControlFacet.waitForDeployment()
-        await pauseFacet.waitForDeployment()
-        await erc20Facet.waitForDeployment()
-
-        facetAddresses = [
-            await diamondCutFacet.getAddress(),
-            await diamondLoupeFacet.getAddress(),
-            await accessControlFacet.getAddress(),
-            await pauseFacet.getAddress(),
-            await erc20Facet.getAddress(),
-        ]
-
-        diamondProxy = await EIP2535AccessControlFactory.deploy(
-            facetAddresses,
-            {
-                rbacs: [
-                    {
-                        role: DEFAULT_ADMIN_ROLE,
-                        members: [owner],
-                    },
-                    {
-                        role: PAUSER_ROLE,
-                        members: [owner],
-                    },
-                ],
-                init: ethers.ZeroAddress,
-                initCalldata: '0x',
-            }
-        )
-        await diamondProxy.waitForDeployment()
-
-        erc20 = ERC20TestWrapperFactory.attach(
-            await diamondProxy.getAddress()
-        ) as ERC20TestWrapper
-
-        pause = ISBEPauseFacetFactory.attach(
-            await diamondProxy.getAddress()
-        ) as ISBEPause
-
-        accessControl = AccessControlFacetFactory.attach(
-            await diamondProxy.getAddress()
-        ) as AccessControl
+        let result = await deployAll()
+        diamondProxy = result.diamondProxy
+        erc20 = result.erc20
+        pause = result.pause
+        accessControl = result.accessControl
+        erc20Facet = result.erc20Facet
 
         if (initialize) {
             await erc20.initializeErc20(name, symbol, decimals)

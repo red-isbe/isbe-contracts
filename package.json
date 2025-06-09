@@ -19,6 +19,8 @@
         "test:pause": "npx hardhat test test/Pause.spec.ts",
         "test:ownable": "npx hardhat test test/Ownable.spec.ts",
         "test:erc20": "npx hardhat test test/ERC20.spec.ts",
+        "test:assetEventTracker": "npx hardhat test test/AssetEventTracker.spec.ts",
+        "test:hashTimestamp": "npx hardhat test test/HashTimestamp.spec.ts",
         "lint:sol": "solhint 'contracts/**/*.sol' --max-warnings 0",
         "lint:ts": "npx -y eslint .",
         "lint": "npm run lint:sol && npm run lint:ts",

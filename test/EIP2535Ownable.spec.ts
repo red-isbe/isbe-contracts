@@ -20,6 +20,10 @@ import {
     ISBEPause__factory,
     AccessControl__factory,
     AccessControl,
+    AccessControlFacet,
+    ISBEPauseFacet,
+    AccessControlFacet__factory,
+    ISBEPauseFacet__factory,
 } from '../typechain-types'
 import { Signer } from 'ethers'
 import { PAUSER_ROLE } from './constants'
@@ -32,14 +36,14 @@ describe('EIP2535OwnableProxy', function () {
     let DiamondLoupeFacetFactory: DiamondLoupeFacet__factory
     let ERC20TestWrapperFactory: ERC20TestWrapper__factory
     let ERC20TestWrapperUpdatedFactory: ERC20TestWrapperUpdated__factory
-    let AccessControlFactory: AccessControl__factory
-    let ISBEPauseFactory: ISBEPause__factory
+    let AccessControlFacetFactory: AccessControlFacet__factory
+    let ISBEPauseFacetFactory: ISBEPauseFacet__factory
     let erc20Impl: ERC20TestWrapper
     let erc20ImplUpdated: ERC20TestWrapperUpdated
-    let pauseFacet: ISBEPause
+    let pauseFacet: ISBEPauseFacet
     let erc20: ERC20TestWrapper
     let erc20Updated: ERC20TestWrapperUpdated
-    let accessControlFacet: AccessControl
+    let accessControlFacet: AccessControlFacet
     let diamondProxy: EIP2535Ownable
     let diamondCutFacet: DiamondCutOwnableFacet
     let diamondLoupeFacet: DiamondLoupeFacet
@@ -53,7 +57,8 @@ describe('EIP2535OwnableProxy', function () {
         ERC20TestWrapperUpdatedFactory = await ethers.getContractFactory(
             'ERC20TestWrapperUpdated'
         )
-        AccessControlFactory = await ethers.getContractFactory('AccessControl')
+        AccessControlFacetFactory =
+            await ethers.getContractFactory('AccessControlFacet')
         DiamondCutOwnableFacetFactory = await ethers.getContractFactory(
             'DiamondCutOwnableFacet'
         )
@@ -61,13 +66,14 @@ describe('EIP2535OwnableProxy', function () {
             await ethers.getContractFactory('DiamondLoupeFacet')
         EIP2535OwnableFactory =
             await ethers.getContractFactory('EIP2535Ownable')
-        ISBEPauseFactory = await ethers.getContractFactory('ISBEPause')
+        ISBEPauseFacetFactory =
+            await ethers.getContractFactory('ISBEPauseFacet')
         erc20Impl = await ERC20TestWrapperFactory.deploy()
         erc20ImplUpdated = await ERC20TestWrapperUpdatedFactory.deploy()
-        accessControlFacet = await AccessControlFactory.deploy()
+        accessControlFacet = await AccessControlFacetFactory.deploy()
         diamondCutFacet = await DiamondCutOwnableFacetFactory.deploy()
         diamondLoupeFacet = await DiamondLoupeFacetFactory.deploy()
-        pauseFacet = await ISBEPauseFactory.deploy()
+        pauseFacet = await ISBEPauseFacetFactory.deploy()
         await erc20Impl.waitForDeployment()
         await erc20ImplUpdated.waitForDeployment()
         await accessControlFacet.waitForDeployment()

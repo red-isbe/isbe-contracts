@@ -1,30 +1,32 @@
 import { expect } from 'chai'
 import { Signer } from 'ethers'
 import { ethers } from 'hardhat'
-import { AccessControl } from '../typechain-types'
+import {
+    AccessControl,
+    EIP2535AccessControl,
+    ISBEPause,
+} from '../typechain-types'
 import { DEFAULT_ADMIN_ROLE, ROLE_1, ROLE_2 } from './constants'
+import { deployAll } from './initialization'
 
 describe('Access Control', function () {
     let adminAccount: Signer
     let account_2: Signer
-    let accessControlImplementation: AccessControl
+    let accessControlFacet: AccessControl
     let accessControl: AccessControl
+    let diamondProxy: EIP2535AccessControl
+    let pause: ISBEPause
 
     before(async () => {
         ;[adminAccount, account_2] = await ethers.getSigners()
     })
 
     async function deploy(initialize: boolean = true) {
-        const AccessControl = await ethers.getContractFactory('AccessControl')
-        accessControlImplementation = await AccessControl.deploy()
-
-        const Proxy = await ethers.getContractFactory('IsbeERC1967Proxy')
-        const proxy = await Proxy.deploy(accessControlImplementation)
-        await proxy.waitForDeployment()
-
-        accessControl = AccessControl.attach(
-            await proxy.getAddress()
-        ) as AccessControl
+        let result = await deployAll()
+        diamondProxy = result.diamondProxy
+        pause = result.pause
+        accessControl = result.accessControl
+        accessControlFacet = result.accessControlFacet
 
         if (initialize)
             await accessControl.initializeAccessControl(adminAccount)
@@ -35,9 +37,9 @@ describe('Access Control', function () {
             await deploy()
 
             await expect(
-                accessControlImplementation.initializeAccessControl(account_2)
+                accessControlFacet.initializeAccessControl(account_2)
             ).to.be.revertedWithCustomError(
-                accessControlImplementation,
+                accessControlFacet,
                 'ContractIsAlreadyInitialized'
             )
         })
