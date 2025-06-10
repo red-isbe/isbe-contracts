@@ -13,13 +13,9 @@ import {
     DiamondLoupeFacet,
     IDiamond,
     IEIP2535Introspection,
-    Ownable2Step__factory,
-    Ownable2Step,
-    ISBEPause,
+    Ownable2StepFacet__factory,
+    Ownable2StepFacet,
     DiamondCutAccessControlFacet,
-    ISBEPause__factory,
-    AccessControl__factory,
-    AccessControl,
     AccessControlFacet,
     ISBEPauseFacet,
     AccessControlFacet__factory,
@@ -48,6 +44,7 @@ describe('EIP2535OwnableProxy', function () {
     let diamondCutFacet: DiamondCutOwnableFacet
     let diamondLoupeFacet: DiamondLoupeFacet
     let facetCutsList: IDiamond.FacetCutStruct[]
+    let accessControl: AccessControlFacet
 
     async function deployInitial() {
         ;[admin, nonAdmin] = await ethers.getSigners()
@@ -128,8 +125,11 @@ describe('EIP2535OwnableProxy', function () {
         ) as ERC20TestWrapper
         await erc20.initializeCap(10000)
         const adminAddress = await admin.getAddress()
-        await erc20.initializeAccessControl(adminAddress)
-        await erc20.grantRole(PAUSER_ROLE, adminAddress)
+        accessControl = AccessControlFacetFactory.attach(
+            await diamondProxy.getAddress()
+        ) as AccessControlFacet
+        await accessControl.initializeAccessControl(adminAddress)
+        await accessControl.grantRole(PAUSER_ROLE, adminAddress)
         erc20Updated = ERC20TestWrapperUpdatedFactory.attach(
             await diamondProxy.getAddress()
         ) as ERC20TestWrapperUpdated
@@ -157,7 +157,7 @@ describe('EIP2535OwnableProxy', function () {
     })
 
     it('GIVEN deployed EIP2535 proxy WHEN pause THEN cant use DiamondCut', async () => {
-        const pause: ISBEPause = ISBEPauseFactory.attach(
+        const pause: ISBEPauseFacet = ISBEPauseFacetFactory.attach(
             await diamondProxy.getAddress()
         )
         await pause.pause()
@@ -235,11 +235,11 @@ describe('EIP2535OwnableProxy', function () {
     })
 
     it('GIVEN an ERC20 deployed linked to a EIP2535 proxy WHEN add new Ownable2Step THEN it can be used', async () => {
-        const Ownable2StepFactory: Ownable2Step__factory =
-            await ethers.getContractFactory('Ownable2Step')
-        const Ownable2StepImpl: Ownable2Step =
-            await Ownable2StepFactory.deploy()
-        await Ownable2StepImpl.waitForDeployment()
+        const Ownable2StepFacetFactory: Ownable2StepFacet__factory =
+            await ethers.getContractFactory('Ownable2StepFacet')
+        const ownable2StepFacetImpl: Ownable2StepFacet =
+            await Ownable2StepFacetFactory.deploy()
+        await ownable2StepFacetImpl.waitForDeployment()
         const diamondCut = DiamondCutOwnableFacetFactory.attach(
             await diamondProxy.getAddress()
         ) as DiamondCutOwnableFacet
@@ -247,10 +247,10 @@ describe('EIP2535OwnableProxy', function () {
         await diamondCut.diamondCut(
             [
                 {
-                    facetAddress: await Ownable2StepImpl.getAddress(),
+                    facetAddress: await ownable2StepFacetImpl.getAddress(),
                     action: 0,
                     functionSelectors: [
-                        ...(await Ownable2StepImpl.selectorsIntrospection()),
+                        ...(await ownable2StepFacetImpl.selectorsIntrospection()),
                     ],
                 },
             ],
@@ -262,15 +262,16 @@ describe('EIP2535OwnableProxy', function () {
         )
         const facets = await diamondLoupe.facets()
         expect(facets[5].facetAddress).to.equal(
-            await Ownable2StepImpl.getAddress()
+            await ownable2StepFacetImpl.getAddress()
         )
         expect(facets[5].functionSelectors).to.deep.equal(
-            await Ownable2StepImpl.selectorsIntrospection()
+            await ownable2StepFacetImpl.selectorsIntrospection()
         )
-        const Ownable2Step: Ownable2Step = Ownable2StepFactory.attach(
-            await diamondProxy.getAddress()
+        const ownable2StepFacet: Ownable2StepFacet =
+            Ownable2StepFacetFactory.attach(await diamondProxy.getAddress())
+        expect(await ownable2StepFacet.owner()).to.be.equal(
+            await admin.getAddress()
         )
-        expect(await Ownable2Step.owner()).to.be.equal(await admin.getAddress())
         expect(await erc20.name()).to.equal('My Token')
         expect(await erc20.symbol()).to.equal('MTK')
         expect(await erc20.decimals()).to.equal(18)

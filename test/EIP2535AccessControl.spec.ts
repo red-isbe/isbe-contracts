@@ -12,10 +12,10 @@ import {
     DiamondCutAccessControlFacet,
     DiamondLoupeFacet,
     IEIP2535Introspection,
-    ISBEPause__factory,
-    ISBEPause,
-    AccessControl__factory,
-    AccessControl,
+    ISBEPauseFacet__factory,
+    ISBEPauseFacet,
+    AccessControlFacet__factory,
+    AccessControlFacet,
 } from '../typechain-types'
 import { Signer } from 'ethers'
 import { DEFAULT_ADMIN_ROLE, ISBE_ROLE, PAUSER_ROLE } from './constants'
@@ -29,10 +29,10 @@ describe('EIP2535AccessControlProxy', function () {
     let DiamondLoupeFacetFactory: DiamondLoupeFacet__factory
     let ERC20TestWrapperFactory: ERC20TestWrapper__factory
     let ERC20TestWrapperUpdatedFactory: ERC20TestWrapperUpdated__factory
-    let ISBEPauseFactory: ISBEPause__factory
+    let ISBEPauseFacetFactory: ISBEPauseFacet__factory
     let erc20Impl: ERC20TestWrapper
     let erc20ImplUpdated: ERC20TestWrapperUpdated
-    let pauseFacet: ISBEPause
+    let pauseFacet: ISBEPauseFacet
     let erc20: ERC20TestWrapper
     let erc20Updated: ERC20TestWrapperUpdated
     let diamondProxy: EIP2535AccessControl
@@ -57,12 +57,13 @@ describe('EIP2535AccessControlProxy', function () {
         EIP2535AccessControlFactory = await ethers.getContractFactory(
             'EIP2535AccessControl'
         )
-        ISBEPauseFactory = await ethers.getContractFactory('ISBEPause')
+        ISBEPauseFacetFactory =
+            await ethers.getContractFactory('ISBEPauseFacet')
         erc20Impl = await ERC20TestWrapperFactory.deploy()
         erc20ImplUpdated = await ERC20TestWrapperUpdatedFactory.deploy()
         diamondCutFacet = await DiamondCutAccessControlFacetFactory.deploy()
         diamondLoupeFacet = await DiamondLoupeFacetFactory.deploy()
-        pauseFacet = await ISBEPauseFactory.deploy()
+        pauseFacet = await ISBEPauseFacetFactory.deploy()
         await erc20Impl.waitForDeployment()
         await erc20ImplUpdated.waitForDeployment()
         await diamondCutFacet.waitForDeployment()
@@ -168,10 +169,11 @@ describe('EIP2535AccessControlProxy', function () {
                         },
                     ],
                     init: await pauseFacet.getAddress(),
-                    initCalldata: ISBEPauseFactory.interface.encodeFunctionData(
-                        pauseFacet.pause.fragment,
-                        []
-                    ),
+                    initCalldata:
+                        ISBEPauseFacetFactory.interface.encodeFunctionData(
+                            pauseFacet.pause.fragment,
+                            []
+                        ),
                 })
             )
                 .revertedWithCustomError(pauseFacet, 'AccountHasNoRoles')
@@ -620,7 +622,7 @@ describe('EIP2535AccessControlProxy', function () {
         })
 
         it('GIVEN deployed EIP2535 proxy WHEN pause THEN cant use DiamondCut', async () => {
-            const pause: ISBEPause = ISBEPauseFactory.attach(
+            const pause: ISBEPauseFacet = ISBEPauseFacetFactory.attach(
                 await diamondProxy.getAddress()
             )
             await pause.pause()
@@ -698,21 +700,21 @@ describe('EIP2535AccessControlProxy', function () {
         })
 
         it('GIVEN an ERC20 deployed linked to a EIP2535 proxy WHEN add new AccessControl THEN it can be used', async () => {
-            const AccessControlFactory: AccessControl__factory =
-                await ethers.getContractFactory('AccessControl')
-            const accessControlImpl: AccessControl =
-                await AccessControlFactory.deploy()
-            await accessControlImpl.waitForDeployment()
+            const AccessControlFacetFactory: AccessControlFacet__factory =
+                await ethers.getContractFactory('AccessControlFacet')
+            const accessControlFacetImpl: AccessControlFacet =
+                await AccessControlFacetFactory.deploy()
+            await accessControlFacetImpl.waitForDeployment()
             const diamondCut = DiamondCutAccessControlFacetFactory.attach(
                 await diamondProxy.getAddress()
             ) as DiamondCutAccessControlFacet
             await diamondCut.diamondCut(
                 [
                     {
-                        facetAddress: await accessControlImpl.getAddress(),
+                        facetAddress: await accessControlFacetImpl.getAddress(),
                         action: 0,
                         functionSelectors: [
-                            ...(await accessControlImpl.selectorsIntrospection()),
+                            ...(await accessControlFacetImpl.selectorsIntrospection()),
                         ],
                     },
                 ],
@@ -723,14 +725,15 @@ describe('EIP2535AccessControlProxy', function () {
                 DiamondLoupeFacetFactory.attach(await diamondProxy.getAddress())
             const facets = await diamondLoupe.facets()
             expect(facets[4].facetAddress).to.equal(
-                await accessControlImpl.getAddress()
+                await accessControlFacetImpl.getAddress()
             )
             expect(facets[4].functionSelectors).to.deep.equal(
-                await accessControlImpl.selectorsIntrospection()
+                await accessControlFacetImpl.selectorsIntrospection()
             )
-            const accessControl: AccessControl = AccessControlFactory.attach(
-                await diamondProxy.getAddress()
-            )
+            const accessControl: AccessControlFacet =
+                AccessControlFacetFactory.attach(
+                    await diamondProxy.getAddress()
+                )
             expect(
                 await accessControl.hasRole(
                     DEFAULT_ADMIN_ROLE,
@@ -761,7 +764,7 @@ describe('EIP2535AccessControlProxy', function () {
             await expect(erc20Updated.metadata())
                 .revertedWithCustomError(diamondProxy, 'FunctionNotFound')
                 .withArgs('0x392f37e9')
-            const pause: ISBEPause = ISBEPauseFactory.attach(
+            const pause: ISBEPauseFacet = ISBEPauseFacetFactory.attach(
                 await diamondProxy.getAddress()
             )
             await pause.pause()
