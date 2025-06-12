@@ -1,10 +1,8 @@
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
 import {
-    ERC20TestWrapper,
     ERC20TestWrapper__factory,
-    ERC20TestWrapperUpdated__factory,
-    ERC20TestWrapperUpdated,
+    ERC20TestWrapper,
     EIP2535Ownable__factory,
     DiamondCutOwnableFacet__factory,
     DiamondLoupeFacet__factory,
@@ -24,6 +22,10 @@ import {
 import { Signer } from 'ethers'
 import { PAUSER_ROLE } from './constants'
 
+const NAME = 'My Token'
+const SYMBOL = 'MTK'
+const DECIMALS = 18
+
 describe('EIP2535OwnableProxy', function () {
     let admin: Signer
     let nonAdmin: Signer
@@ -31,14 +33,11 @@ describe('EIP2535OwnableProxy', function () {
     let DiamondCutOwnableFacetFactory: DiamondCutOwnableFacet__factory
     let DiamondLoupeFacetFactory: DiamondLoupeFacet__factory
     let ERC20TestWrapperFactory: ERC20TestWrapper__factory
-    let ERC20TestWrapperUpdatedFactory: ERC20TestWrapperUpdated__factory
     let AccessControlFacetFactory: AccessControlFacet__factory
     let ISBEPauseFacetFactory: ISBEPauseFacet__factory
     let erc20Impl: ERC20TestWrapper
-    let erc20ImplUpdated: ERC20TestWrapperUpdated
     let pauseFacet: ISBEPauseFacet
     let erc20: ERC20TestWrapper
-    let erc20Updated: ERC20TestWrapperUpdated
     let accessControlFacet: AccessControlFacet
     let diamondProxy: EIP2535Ownable
     let diamondCutFacet: DiamondCutOwnableFacet
@@ -51,9 +50,6 @@ describe('EIP2535OwnableProxy', function () {
         // Despliegue Ownable logic
         ERC20TestWrapperFactory =
             await ethers.getContractFactory('ERC20TestWrapper')
-        ERC20TestWrapperUpdatedFactory = await ethers.getContractFactory(
-            'ERC20TestWrapperUpdated'
-        )
         AccessControlFacetFactory =
             await ethers.getContractFactory('AccessControlFacet')
         DiamondCutOwnableFacetFactory = await ethers.getContractFactory(
@@ -66,13 +62,11 @@ describe('EIP2535OwnableProxy', function () {
         ISBEPauseFacetFactory =
             await ethers.getContractFactory('ISBEPauseFacet')
         erc20Impl = await ERC20TestWrapperFactory.deploy()
-        erc20ImplUpdated = await ERC20TestWrapperUpdatedFactory.deploy()
         accessControlFacet = await AccessControlFacetFactory.deploy()
         diamondCutFacet = await DiamondCutOwnableFacetFactory.deploy()
         diamondLoupeFacet = await DiamondLoupeFacetFactory.deploy()
         pauseFacet = await ISBEPauseFacetFactory.deploy()
         await erc20Impl.waitForDeployment()
-        await erc20ImplUpdated.waitForDeployment()
         await accessControlFacet.waitForDeployment()
         await diamondCutFacet.waitForDeployment()
         await diamondLoupeFacet.waitForDeployment()
@@ -115,7 +109,7 @@ describe('EIP2535OwnableProxy', function () {
                 initCalldata:
                     ERC20TestWrapperFactory.interface.encodeFunctionData(
                         erc20Impl.initializeErc20.fragment,
-                        ['My Token', 'MTK', 18]
+                        [NAME, SYMBOL, DECIMALS]
                     ),
             }
         )
@@ -130,9 +124,6 @@ describe('EIP2535OwnableProxy', function () {
         ) as AccessControlFacet
         await accessControl.initializeAccessControl(adminAddress)
         await accessControl.grantRole(PAUSER_ROLE, adminAddress)
-        erc20Updated = ERC20TestWrapperUpdatedFactory.attach(
-            await diamondProxy.getAddress()
-        ) as ERC20TestWrapperUpdated
     })
 
     it('GIVEN an ERC20 deployed WHEN deploy a EIP2535 proxy THEN cant use DiamondCut without ownership', async () => {
@@ -203,12 +194,14 @@ describe('EIP2535OwnableProxy', function () {
     })
 
     it('GIVEN an ERC20 deployed WHEN deploy a EIP2535 proxy THEN it can be initialized', async () => {
-        expect(await erc20.name()).to.equal('My Token')
-        expect(await erc20.symbol()).to.equal('MTK')
-        expect(await erc20.decimals()).to.equal(18)
-        await expect(erc20Updated.metadata())
-            .revertedWithCustomError(diamondProxy, 'FunctionNotFound')
-            .withArgs('0x392f37e9')
+        expect(await erc20.name()).to.equal(NAME)
+        expect(await erc20.symbol()).to.equal(SYMBOL)
+        expect(await erc20.decimals()).to.equal(DECIMALS)
+        expect(await erc20.metadata()).to.be.deep.equal([
+            NAME,
+            SYMBOL,
+            DECIMALS,
+        ])
     })
 
     it('GIVEN an ERC20 deployed linked to a EIP2535 proxy WHEN update THEN it can be updated', async () => {
@@ -219,18 +212,18 @@ describe('EIP2535OwnableProxy', function () {
             [
                 await diamondCutFacet.getAddress(),
                 await diamondLoupeFacet.getAddress(),
-                await erc20ImplUpdated.getAddress(),
+                await erc20Impl.getAddress(),
             ],
             ethers.ZeroAddress,
             '0x'
         )
-        expect(await erc20.name()).to.equal('My Token')
-        expect(await erc20.symbol()).to.equal('MTK')
-        expect(await erc20.decimals()).to.equal(18)
-        expect(await erc20Updated.metadata()).to.be.deep.equal([
-            'My Token',
-            'MTK',
-            18,
+        expect(await erc20.name()).to.equal(NAME)
+        expect(await erc20.symbol()).to.equal(SYMBOL)
+        expect(await erc20.decimals()).to.equal(DECIMALS)
+        expect(await erc20.metadata()).to.be.deep.equal([
+            NAME,
+            SYMBOL,
+            DECIMALS,
         ])
     })
 
@@ -272,11 +265,13 @@ describe('EIP2535OwnableProxy', function () {
         expect(await ownable2StepFacet.owner()).to.be.equal(
             await admin.getAddress()
         )
-        expect(await erc20.name()).to.equal('My Token')
-        expect(await erc20.symbol()).to.equal('MTK')
-        expect(await erc20.decimals()).to.equal(18)
-        await expect(erc20Updated.metadata())
-            .revertedWithCustomError(diamondProxy, 'FunctionNotFound')
-            .withArgs('0x392f37e9')
+        expect(await erc20.name()).to.equal(NAME)
+        expect(await erc20.symbol()).to.equal(SYMBOL)
+        expect(await erc20.decimals()).to.equal(DECIMALS)
+        expect(await erc20.metadata()).to.be.deep.equal([
+            NAME,
+            SYMBOL,
+            DECIMALS,
+        ])
     })
 })

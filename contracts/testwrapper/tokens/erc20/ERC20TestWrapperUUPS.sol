@@ -31,16 +31,6 @@ contract ERC20TestWrapperUUPS is
     AccessControl,
     IsbeUUPSUpgradeable
 {
-    function metadata()
-        external
-        view
-        returns (string memory name, string memory symbol, uint8 decimals)
-    {
-        name = _name();
-        symbol = _symbol();
-        decimals = _decimals();
-    }
-
     // solhint-disable-next-line
     function _authorizeUpgrade(address newImplementation) internal override {}
 }

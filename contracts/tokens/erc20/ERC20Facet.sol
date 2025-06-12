@@ -13,7 +13,7 @@ contract ERC20Facet is ERC20, IEIP2535Introspection {
         override
         returns (bytes4[] memory selectors_)
     {
-        uint256 selectorsLength = 12;
+        uint256 selectorsLength = 13;
         selectors_ = new bytes4[](selectorsLength);
         selectors_[--selectorsLength] = this.initializeErc20.selector;
         selectors_[--selectorsLength] = this.transfer.selector;
@@ -27,5 +27,6 @@ contract ERC20Facet is ERC20, IEIP2535Introspection {
         selectors_[--selectorsLength] = this.name.selector;
         selectors_[--selectorsLength] = this.totalSupply.selector;
         selectors_[--selectorsLength] = this.balanceOf.selector;
+        selectors_[--selectorsLength] = this.metadata.selector;
     }
 }

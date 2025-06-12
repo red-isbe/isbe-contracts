@@ -26,14 +26,4 @@ contract ERC20TestWrapperTransparent is
     ERC20Controller,
     ISBEPause,
     AccessControl
-{
-    function metadata()
-        external
-        view
-        returns (string memory name, string memory symbol, uint8 decimals)
-    {
-        name = _name();
-        symbol = _symbol();
-        decimals = _decimals();
-    }
-}
+{}
