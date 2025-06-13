@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
+import {_ERC20_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
 import {
     ERC20Capped
 } from '../../../tokens/erc20/extensions/cap/ERC20Capped.sol';
@@ -29,6 +30,15 @@ contract ERC20TestWrapper is
     ISBEPause,
     IsbeUUPSUpgradeable
 {
+    function businessIdIntrospection()
+        external
+        pure
+        override
+        returns (bytes32 businessId_)
+    {
+        businessId_ = _ERC20_RESOLVER_KEY;
+    }
+
     function selectorsIntrospection()
         external
         pure
