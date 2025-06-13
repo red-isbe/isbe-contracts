@@ -12,14 +12,11 @@ interface IBusinessLogicFactory {
      * @param businessId Unique identifier of the deployed business logic.
      * @param version Version of the deployed business logic.
      */
-    event Deployed(bytes32 businessId, uint256 version);
-
-    /**
-     * @notice Emitted when multiple business logics are deployed successfully in bulk.
-     * @param businessIds List of unique IDs for the deployed business logics.
-     * @param version Common version of all deployed business logics in the batch.
-     */
-    event BulkDeployed(bytes32[] businessIds, uint256 version);
+    event Deployed(
+        bytes32 businessId,
+        address businessAddress,
+        uint256 version
+    );
 
     /**
      * @notice Deploys a single business logic by its unique ID and the provided bytecode.
@@ -29,14 +26,17 @@ interface IBusinessLogicFactory {
      */
     function deploy(bytes32 businessId, bytes calldata bytecode) external;
 
-    /**
-     * @notice Deploys multiple business logics in one operation using IDs and corresponding bytecode.
-     * @dev Emits the `BulkDeployed` event upon successful deployment of all business logics.
-     * @param businessIds List of unique IDs of the business logics to deploy.
-     * @param bytecodes List of binary data representing the business logics to deploy.
-     */
-    function deployBulk(
-        bytes32[] calldata businessIds,
-        bytes[] calldata bytecodes
-    ) external;
+    function getBusinessLogicAddress(
+        bytes32 businessId,
+        uint256 version
+    ) external view returns (address businessLogicAddress_);
+
+    function getBusinessLogics()
+        external
+        view
+        returns (bytes32[] memory businessLogicIds_);
+
+    function getBusinessLogicVersions(
+        bytes32 businessId
+    ) external view returns (address[] memory versions_);
 }

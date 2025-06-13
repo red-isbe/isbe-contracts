@@ -11,6 +11,8 @@ abstract contract ISBEContext is Context {
      * @param addr The address to check
      */
     error AddressZero(address addr);
+    error EmptyBytes32();
+    error EmptyBytes();
 
     function _blockTimestamp() internal view virtual returns (uint256) {
         return block.timestamp;
@@ -27,5 +29,13 @@ abstract contract ISBEContext is Context {
      */
     function _addressIsNotZero(address addr) internal pure {
         require(addr != address(0), AddressZero(addr));
+    }
+
+    function _bytes32IsNotZero(bytes32 hash) internal pure {
+        require(hash != bytes32(0), EmptyBytes32());
+    }
+
+    function _emptyBytes(bytes memory code) internal pure {
+        require(code.length != 0, EmptyBytes());
     }
 }

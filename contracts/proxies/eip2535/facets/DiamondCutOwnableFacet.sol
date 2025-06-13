@@ -6,6 +6,7 @@ pragma solidity ^0.8.28;
 * EIP-2535 Diamonds
 /******************************************************************************/
 
+import {_DIAMOND_CUT_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
 import {IDiamondCut} from '../interfaces/IDiamondCut.sol';
 import {OwnableInternal} from '../../../access/OwnableInternal.sol';
 import {EIP2535Internal} from '../EIP2535Internal.sol';
@@ -40,6 +41,15 @@ contract DiamondCutOwnableFacet is
         bytes calldata _calldata
     ) external override onlyOwner whenNotPaused {
         _facetUpdates(_facetAddresses, _init, _calldata);
+    }
+
+    function businessIdIntrospection()
+        external
+        pure
+        override
+        returns (bytes32 businessId_)
+    {
+        businessId_ = _DIAMOND_CUT_RESOLVER_KEY;
     }
 
     function selectorsIntrospection()

@@ -22,7 +22,12 @@ import {
     AccessControl,
 } from '../typechain-types'
 import { Signer } from 'ethers'
-import { PAUSER_ROLE } from './constants'
+import {
+    ACCESS_CONTROL_RESOLVER_KEY,
+    DIAMOND_CUT_RESOLVER_KEY,
+    DIAMOND_LOUPE_RESOLVER_KEY,
+    PAUSER_ROLE,
+} from './constants'
 
 describe('EIP2535OwnableProxy', function () {
     let admin: Signer
@@ -74,6 +79,15 @@ describe('EIP2535OwnableProxy', function () {
         await diamondCutFacet.waitForDeployment()
         await diamondLoupeFacet.waitForDeployment()
         await pauseFacet.waitForDeployment()
+        expect(await diamondCutFacet.businessIdIntrospection()).to.be.equal(
+            DIAMOND_CUT_RESOLVER_KEY
+        )
+        expect(await diamondLoupeFacet.businessIdIntrospection()).to.be.equal(
+            DIAMOND_LOUPE_RESOLVER_KEY
+        )
+        expect(await accessControlFacet.businessIdIntrospection()).to.be.equal(
+            ACCESS_CONTROL_RESOLVER_KEY
+        )
     }
 
     before(async () => {

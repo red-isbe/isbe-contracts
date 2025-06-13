@@ -65,6 +65,16 @@ contract AccessControl is IAccessControl, Common, IEIP2535Introspection {
         return _getRoleAdmin(role);
     }
 
+    function businessIdIntrospection()
+        external
+        pure
+        virtual
+        override
+        returns (bytes32 businessId_)
+    {
+        businessId_ = _ACCESS_CONTROL_RESOLVER_KEY;
+    }
+
     function selectorsIntrospection()
         external
         pure

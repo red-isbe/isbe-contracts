@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
+// solhint-disable max-line-length
+
 // keccak256('isbe.contracts.access.control.resolver.key');
 bytes32 constant _ACCESS_CONTROL_RESOLVER_KEY = 0xa4de16c45770db08a06a2cdfeb0229e16d2ff660f7f1bf74c3dc07212770c70c;
 
@@ -18,3 +20,14 @@ bytes32 constant _OWNABLE_RESOLVER_KEY = 0x32d893fe746ed6e72cf641731066f84e26611
 
 // keccak256('isbe.contracts.ownable2step.resolver.key');
 bytes32 constant _OWNABLE2STEP_RESOLVER_KEY = 0x409f2dd40b4c74b904760a7ed7b5e93ae01104b9f1e8c0b978d6b60efccd2998;
+
+// keccak256('isbe.contracts.diamond.cut.resolver.key');
+bytes32 constant _DIAMOND_CUT_RESOLVER_KEY = 0xb1733495acec04f904af52509bd68775ca2e4aa31f6948d02cccd2af2adee890;
+
+// keccak256('isbe.contracts.diamond.loupe.resolver.key');
+bytes32 constant _DIAMOND_LOUPE_RESOLVER_KEY = 0xa081a7fa2e40735a4006bc6a225e18158879b54064ab1f60045661349931c41b;
+
+// keccak256('isbe.contracts.business.logic.factory.resolver.key');
+bytes32 constant _BUSINESS_LOGIC_FACTORY_RESOLVER_KEY = 0xc6315ad82a957243645764f5542166d6ca27427e14eee4c56d66d963349845f4;
+
+// solhint-enable max-line-length

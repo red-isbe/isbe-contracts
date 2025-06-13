@@ -19,4 +19,14 @@ abstract contract Common is
         _addressIsNotZero(addr);
         _;
     }
+
+    modifier bytes32IsNotZero(bytes32 hash) {
+        _bytes32IsNotZero(hash);
+        _;
+    }
+
+    modifier emptyCode(bytes memory code) {
+        _emptyBytes(code);
+        _;
+    }
 }

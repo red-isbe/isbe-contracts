@@ -8,6 +8,7 @@ pragma solidity ^0.8.28;
 // The functions in DiamondLoupeFacet MUST be added to a diamond.
 // The EIP-2535 Diamond standard requires these functions.
 
+import {_DIAMOND_LOUPE_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
 import {IERC165} from '@openzeppelin/contracts/utils/introspection/IERC165.sol';
 import {IDiamondLoupe} from '../interfaces/IDiamondLoupe.sol';
 import {IEIP2535Introspection} from '../interfaces/IEIP2535Introspection.sol';
@@ -68,6 +69,15 @@ contract DiamondLoupeFacet is
         bytes4 _interfaceId
     ) external view override returns (bool) {
         return _supportsInterface(_interfaceId);
+    }
+
+    function businessIdIntrospection()
+        external
+        pure
+        override
+        returns (bytes32 businessId_)
+    {
+        businessId_ = _DIAMOND_LOUPE_RESOLVER_KEY;
     }
 
     function selectorsIntrospection()
