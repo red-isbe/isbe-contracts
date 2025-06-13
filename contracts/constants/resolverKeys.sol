@@ -18,3 +18,10 @@ bytes32 constant _OWNABLE_RESOLVER_KEY = 0x32d893fe746ed6e72cf641731066f84e26611
 
 // keccak256('isbe.contracts.ownable2step.resolver.key');
 bytes32 constant _OWNABLE2STEP_RESOLVER_KEY = 0x409f2dd40b4c74b904760a7ed7b5e93ae01104b9f1e8c0b978d6b60efccd2998;
+
+//ERC721 resolver key
+// keccak256('isbe.contracts.erc721.resolver.key');
+bytes32 constant _ERC721_RESOLVER_KEY = 0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413;
+
+// keccak256('isbe.contracts.erc721.capped.resolver.key');
+bytes32 constant _ERC721_CAPPED_RESOLVER_KEY = 0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c;

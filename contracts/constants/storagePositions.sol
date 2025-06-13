@@ -33,3 +33,13 @@ bytes32 constant _OWNABLE_STORAGE_POSITION = 0xbc95c8238b97fd6fe32b005c5fe8a78a5
 bytes32 constant _OWNABLE2STEP_STORAGE_POSITION = 0xd98f695f92cbf5b2cd00d847e9c69c1e7b2a437c38bab1d15885003ee783a631;
 
 // solhint-enable max-line-length
+
+//ERC721 storage position
+// keccak256('isbe.contracts.erc721.storage');
+bytes32 constant _ERC721_STORAGE_POSITION = 0x831e41d39c52997482833cb014c17663793796e3e15559f599f945b05d1d8c17;
+
+// keccak256('isbe.contracts.erc721.capped.storage');
+bytes32 constant _ERC721_CAPPED_STORAGE_POSITION = 0x68abe8f291911e473a79ad8b9632ea2f4e12bec61ec5fc0b39019d84eac1786a;
+
+// keccak256('isbe.contracts.erc721.snapshot.storage');
+bytes32 constant _ERC721_SNAPSHOT_STORAGE_POSITION = 0xb8b8eb4b7ec15c12c11fa90a47c5ca87b2bf70f08ce0b50ddc4308120d336886;
