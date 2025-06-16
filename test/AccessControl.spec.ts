@@ -3,11 +3,12 @@ import { Signer } from 'ethers'
 import { ethers } from 'hardhat'
 import { AccessControl } from '../typechain-types'
 import { DEFAULT_ADMIN_ROLE, ROLE_1, ROLE_2 } from './constants'
+import { deployAll } from './initialization'
 
 describe('Access Control', function () {
     let adminAccount: Signer
     let account_2: Signer
-    let accessControlImplementation: AccessControl
+    let accessControlFacet: AccessControl
     let accessControl: AccessControl
 
     before(async () => {
@@ -15,16 +16,9 @@ describe('Access Control', function () {
     })
 
     async function deploy(initialize: boolean = true) {
-        const AccessControl = await ethers.getContractFactory('AccessControl')
-        accessControlImplementation = await AccessControl.deploy()
-
-        const Proxy = await ethers.getContractFactory('IsbeERC1967Proxy')
-        const proxy = await Proxy.deploy(accessControlImplementation)
-        await proxy.waitForDeployment()
-
-        accessControl = AccessControl.attach(
-            await proxy.getAddress()
-        ) as AccessControl
+        const result = await deployAll()
+        accessControl = result.accessControl
+        accessControlFacet = result.accessControlFacet
 
         if (initialize)
             await accessControl.initializeAccessControl(adminAccount)
@@ -35,9 +29,9 @@ describe('Access Control', function () {
             await deploy()
 
             await expect(
-                accessControlImplementation.initializeAccessControl(account_2)
+                accessControlFacet.initializeAccessControl(account_2)
             ).to.be.revertedWithCustomError(
-                accessControlImplementation,
+                accessControlFacet,
                 'ContractIsAlreadyInitialized'
             )
         })

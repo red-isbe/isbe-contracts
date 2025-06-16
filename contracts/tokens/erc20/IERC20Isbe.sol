@@ -46,4 +46,9 @@ interface IERC20Isbe is IERC20, IERC20Metadata {
         string memory newSymbol,
         uint8 newDecimals
     ) external;
+
+    function metadata()
+        external
+        view
+        returns (string memory name, string memory symbol, uint8 decimals);
 }

@@ -3,14 +3,21 @@ pragma solidity ^0.8.28;
 
 import {IHashTimestamp} from './IHashTimestamp.sol';
 import {HashTimestampInternal} from './HashTimestampInternal.sol';
+import {_HASH_TIMESTAMP_ROLE} from '../constants/roles.sol';
 
 /// @title HashTimestamp
 /// @notice Implements timestamp for hashes
 /// @dev Inherits from IHashTimestamp and HashTimestampInternal, providing external timestamp hashes functions
-contract HashTimestamp is IHashTimestamp, HashTimestampInternal {
+abstract contract HashTimestamp is IHashTimestamp, HashTimestampInternal {
     function timestampHash(
         bytes32 hash
-    ) external override onlyNonExistentHash(hash) {
+    )
+        external
+        override
+        onlyNonExistentHash(hash)
+        whenNotPaused
+        onlyRole(_HASH_TIMESTAMP_ROLE)
+    {
         _timestampHash(hash);
     }
 

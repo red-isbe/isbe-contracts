@@ -2,15 +2,29 @@
 
 pragma solidity ^0.8.28;
 
-import {Common} from '../core/Common.sol';
 import {IPause} from './IPause.sol';
+import {Common} from '../core/Common.sol';
 
 /// @title PauseInternal
 /// @notice Internal logic for pausing mechanism
 abstract contract PauseInternal is Common {
-    /// @notice Modifier to restrict function to accounts with an authority level high enough
-    /// @dev Reverts with `InsufficientAuthorityLevel` error if the authority level is not high enough
-    modifier checkAuthorityLevel() {
+    function _pause() internal virtual {
+        PauseStorage storage pauseStorage = _pauseStorage();
+        pauseStorage.pause = true;
+        pauseStorage.authorityLevel = _getAuthorityLevel(_msgSender());
+    }
+
+    function _unpause() internal virtual {
+        PauseStorage storage pauseStorage = _pauseStorage();
+        pauseStorage.pause = false;
+        pauseStorage.authorityLevel = 0;
+    }
+
+    function _authorityLevel() internal view virtual returns (uint256) {
+        return _pauseStorage().authorityLevel;
+    }
+
+    function _checkAuthorityLevel() internal view {
         uint256 senderAuthorityLevel = _getAuthorityLevel(_msgSender());
         uint256 requiredAuthorityLevel = _pauseStorage().authorityLevel;
 
@@ -24,29 +38,13 @@ abstract contract PauseInternal is Common {
                 requiredAuthorityLevel
             )
         );
-        _;
     }
 
-    function _pause() internal virtual {
-        PauseStorage storage pauseStorage = _pauseStorage();
-        pauseStorage.pause = true;
-        pauseStorage.authorityLevel = _getAuthorityLevel(_msgSender());
-    }
-
-    function _unpause() internal virtual {
-        PauseStorage storage pauseStorage = _pauseStorage();
-        pauseStorage.pause = false;
-        pauseStorage.authorityLevel = 0;
-    }
-
-    /// @notice Retrieves the authority level of a specific account
-    /// @dev This function must be overridden in derived contracts to provide the actual logic
-    ///      for determining an account's authority level
-    /// @param _account The address of the account whose authority level is being queried
-    /// @return The authority level of the given account
     function _getAuthorityLevel(
         address _account
     ) internal view virtual returns (uint256);
+
+    function _checkPauserRoles() internal view virtual;
 
     function _compareAuthorityLevels(
         uint256 _newLevel,

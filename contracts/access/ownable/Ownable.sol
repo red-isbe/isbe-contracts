@@ -2,14 +2,13 @@
 pragma solidity ^0.8.28;
 
 import {IOwnable} from './IOwnable.sol';
-import {OwnableInternal} from './OwnableInternal.sol';
-import {_OWNABLE_RESOLVER_KEY} from '../constants/resolverKeys.sol';
-import {ISBEPause} from '../pause/ISBEPause.sol';
+import {Common} from '../../core/Common.sol';
+import {_OWNABLE_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
 
 /// @title Ownable
 /// @notice Implements ownership mechanisms
 /// @dev Inherits from IOwnable and OwnableInternal
-contract Ownable is IOwnable, OwnableInternal, ISBEPause {
+contract Ownable is IOwnable, Common {
     /// @notice Constructor that disables the initializer
 
     constructor() {
@@ -18,12 +17,7 @@ contract Ownable is IOwnable, OwnableInternal, ISBEPause {
 
     function initializeOwnable(
         address admin
-    )
-        public
-        virtual
-        initializer(_OWNABLE_RESOLVER_KEY)
-        addressIsNotZero(admin)
-    {
+    ) external initializer(_OWNABLE_RESOLVER_KEY) addressIsNotZero(admin) {
         _transferOwnership(admin);
         emit OwnershipTransferred(_msgSender(), admin);
     }
@@ -31,7 +25,7 @@ contract Ownable is IOwnable, OwnableInternal, ISBEPause {
     function transferOwnership(
         address newOwner
     )
-        public
+        external
         virtual
         override
         onlyOwner
@@ -42,12 +36,12 @@ contract Ownable is IOwnable, OwnableInternal, ISBEPause {
         emit OwnershipTransferred(_msgSender(), newOwner);
     }
 
-    function renounceOwnership() public virtual onlyOwner whenNotPaused {
+    function renounceOwnership() external override onlyOwner whenNotPaused {
         _transferOwnership(address(0));
         emit OwnershipRenounced(_msgSender());
     }
 
-    function owner() public view virtual returns (address) {
+    function owner() external view override returns (address) {
         return _owner();
     }
 }

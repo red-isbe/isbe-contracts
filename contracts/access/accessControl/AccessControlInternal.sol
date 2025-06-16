@@ -3,9 +3,9 @@ pragma solidity ^0.8.28;
 
 import {
     _ACCESS_CONTROL_STORAGE_POSITION
-} from '../constants/storagePositions.sol';
+} from '../../constants/storagePositions.sol';
 import {IAccessControl} from './IAccessControl.sol';
-import {ISBEContext} from '../utils/ISBEContext.sol';
+import {ISBEContext} from '../../utils/ISBEContext.sol';
 
 /// @title AccessControlInternal
 /// @notice Internal logic for role-based access control
@@ -32,7 +32,9 @@ abstract contract AccessControlInternal is ISBEContext {
         _;
     }
 
-    function _initializeRbac(IAccessControl.Rbac[] memory rbacs) internal {
+    function _initializeRbac(
+        IAccessControl.Rbac[] memory rbacs
+    ) internal virtual {
         _checkRbacs(rbacs);
         uint256 rbacsLength = rbacs.length;
         for (uint256 index; index < rbacsLength; ++index) {
@@ -40,7 +42,7 @@ abstract contract AccessControlInternal is ISBEContext {
         }
     }
 
-    function _setRoleAdmin(bytes32 role, bytes32 adminRole) internal {
+    function _setRoleAdmin(bytes32 role, bytes32 adminRole) internal virtual {
         bytes32 previousAdminRole = _getRoleAdmin(role);
         if (previousAdminRole == adminRole) return;
         _accessControlStorage().roles[role].adminRole = adminRole;
@@ -52,14 +54,17 @@ abstract contract AccessControlInternal is ISBEContext {
         );
     }
 
-    function _grantRole(bytes32 role, address account) internal {
+    function _grantRole(bytes32 role, address account) internal virtual {
         if (_hasRole(role, account)) return;
 
         _accessControlStorage().roles[role].members[account] = true;
         emit IAccessControl.RoleGranted(role, account, _msgSender());
     }
 
-    function _grantRoles(bytes32 role, address[] memory accounts) internal {
+    function _grantRoles(
+        bytes32 role,
+        address[] memory accounts
+    ) internal virtual {
         uint256 accountsLength = accounts.length;
         for (uint256 index; index < accountsLength; ++index) {
             _grantRole(role, accounts[index]);
@@ -76,15 +81,17 @@ abstract contract AccessControlInternal is ISBEContext {
     function _hasRole(
         bytes32 role,
         address account
-    ) internal view returns (bool) {
+    ) internal view virtual returns (bool) {
         return _accessControlStorage().roles[role].members[account];
     }
 
-    function _getRoleAdmin(bytes32 role) internal view returns (bytes32) {
+    function _getRoleAdmin(
+        bytes32 role
+    ) internal view virtual returns (bytes32) {
         return _accessControlStorage().roles[role].adminRole;
     }
 
-    function _checkRole(bytes32 role) internal view {
+    function _checkRole(bytes32 role) internal view virtual {
         _checkRole(role, _msgSender());
     }
 
