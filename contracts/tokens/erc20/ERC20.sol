@@ -29,7 +29,7 @@ contract ERC20 is IERC20Isbe, ERC20InternalCommon {
         string memory newName,
         string memory newSymbol,
         uint8 newDecimals
-    ) public virtual override initializer(_ERC20_RESOLVER_KEY) {
+    ) external override initializer(_ERC20_RESOLVER_KEY) {
         _initialize(newName, newSymbol, newDecimals);
         emit Erc20Initialized(newName, newSymbol, newDecimals);
     }
@@ -45,7 +45,7 @@ contract ERC20 is IERC20Isbe, ERC20InternalCommon {
     function transfer(
         address to,
         uint256 amount
-    ) public virtual override whenNotPaused returns (bool) {
+    ) external override whenNotPaused returns (bool) {
         _transfer(_msgSender(), to, amount);
         return true;
     }
@@ -63,7 +63,7 @@ contract ERC20 is IERC20Isbe, ERC20InternalCommon {
     function approve(
         address spender,
         uint256 amount
-    ) public virtual override whenNotPaused returns (bool) {
+    ) external override whenNotPaused returns (bool) {
         _approve(_msgSender(), spender, amount);
         return true;
     }
@@ -88,7 +88,7 @@ contract ERC20 is IERC20Isbe, ERC20InternalCommon {
         address from,
         address to,
         uint256 amount
-    ) public virtual override whenNotPaused returns (bool) {
+    ) external override whenNotPaused returns (bool) {
         _spendAllowance(from, _msgSender(), amount);
         _transfer(from, to, amount);
         return true;
@@ -109,7 +109,7 @@ contract ERC20 is IERC20Isbe, ERC20InternalCommon {
     function increaseAllowance(
         address spender,
         uint256 addedValue
-    ) public virtual whenNotPaused returns (bool) {
+    ) external whenNotPaused returns (bool) {
         address owner = _msgSender();
         _approve(owner, spender, _allowance(owner, spender) + addedValue);
         return true;
@@ -132,7 +132,7 @@ contract ERC20 is IERC20Isbe, ERC20InternalCommon {
     function decreaseAllowance(
         address spender,
         uint256 subtractedValue
-    ) public virtual whenNotPaused returns (bool) {
+    ) external whenNotPaused returns (bool) {
         address owner = _msgSender();
         uint256 currentAllowance = _allowance(owner, spender);
         require(
@@ -149,29 +149,38 @@ contract ERC20 is IERC20Isbe, ERC20InternalCommon {
     function allowance(
         address owner,
         address spender
-    ) public view virtual override returns (uint256) {
+    ) external view override returns (uint256) {
         return _allowance(owner, spender);
     }
 
-    function decimals() public view virtual override returns (uint8) {
+    function metadata()
+        external
+        view
+        override
+        returns (string memory, string memory, uint8)
+    {
+        return (_name(), _symbol(), _decimals());
+    }
+
+    function decimals() external view override returns (uint8) {
         return _decimals();
     }
 
-    function symbol() public view virtual override returns (string memory) {
+    function symbol() external view override returns (string memory) {
         return _symbol();
     }
 
-    function name() public view virtual override returns (string memory) {
+    function name() external view override returns (string memory) {
         return _name();
     }
 
-    function totalSupply() public view virtual override returns (uint256) {
+    function totalSupply() external view override returns (uint256) {
         return _totalSupply();
     }
 
     function balanceOf(
         address account
-    ) public view virtual override returns (uint256) {
+    ) external view override returns (uint256) {
         return _balanceOf(account);
     }
 }

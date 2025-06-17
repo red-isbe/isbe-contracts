@@ -1,21 +1,23 @@
 import { expect } from 'chai'
 import { Signer } from 'ethers'
 import { ethers } from 'hardhat'
-import { ISBEPause } from '../typechain-types'
+import { AccessControl, ISBEPause } from '../typechain-types'
 import {
     PAUSER_ROLE,
     ISBE_ROLE,
     ISBE_AUTHORIZATION_LEVEL,
     PAUSER_AUTHORIZATION_LEVEL,
 } from './constants'
+import { deployAll } from './initialization'
 
 describe('Pause', function () {
     const PAUSE_INIT_STATE = false
 
     let adminAccount: Signer
     let account_2: Signer
-    let pauseImplementation: ISBEPause
+    let pauseFacet: ISBEPause
     let pause: ISBEPause
+    let accessControl: AccessControl
 
     before(async () => {
         ;[adminAccount, account_2] = await ethers.getSigners()
@@ -26,21 +28,17 @@ describe('Pause', function () {
         addRole?: string[],
         user?: Signer[]
     ) {
-        const Pause = await ethers.getContractFactory('ISBEPause')
-        pauseImplementation = await Pause.deploy()
+        const result = await deployAll()
+        pause = result.pause
+        accessControl = result.accessControl
+        pauseFacet = result.pauseFacet
 
-        const Proxy = await ethers.getContractFactory('IsbeERC1967Proxy')
-        const proxy = await Proxy.deploy(pauseImplementation)
-        await proxy.waitForDeployment()
-
-        pause = Pause.attach(await proxy.getAddress()) as ISBEPause
-
-        await pause.initializeAccessControl(adminAccount)
+        await accessControl.initializeAccessControl(adminAccount)
 
         if (addRole && user) {
-            pause = pause.connect(adminAccount)
+            accessControl = accessControl.connect(adminAccount)
             for (let i = 0; i < addRole.length; i++) {
-                await pause.grantRole(addRole[i], user[i])
+                await accessControl.grantRole(addRole[i], user[i])
             }
         }
 
@@ -52,9 +50,9 @@ describe('Pause', function () {
             await deploy()
 
             await expect(
-                pauseImplementation.initializePause(false)
+                pauseFacet.initializePause(false)
             ).to.be.revertedWithCustomError(
-                pauseImplementation,
+                pauseFacet,
                 'ContractIsAlreadyInitialized'
             )
         })
@@ -130,8 +128,8 @@ describe('Pause', function () {
 
             pause = pause.connect(adminAccount)
 
-            await pause.grantRole(PAUSER_ROLE, adminAccount)
-            await pause.grantRole(ISBE_ROLE, adminAccount)
+            await accessControl.grantRole(PAUSER_ROLE, adminAccount)
+            await accessControl.grantRole(ISBE_ROLE, adminAccount)
 
             await expect(pause.unpause()).to.be.revertedWithCustomError(
                 pause,
@@ -173,7 +171,7 @@ describe('Pause', function () {
 
             pause = pause.connect(adminAccount)
 
-            await pause.grantRole(PAUSER_ROLE, adminAccount)
+            await accessControl.grantRole(PAUSER_ROLE, adminAccount)
 
             await expect(pause.pause())
                 .to.emit(pause, 'Paused')
@@ -187,7 +185,7 @@ describe('Pause', function () {
 
             pause = pause.connect(adminAccount)
 
-            await pause.grantRole(ISBE_ROLE, adminAccount)
+            await accessControl.grantRole(ISBE_ROLE, adminAccount)
 
             await expect(pause.pause())
                 .to.emit(pause, 'Paused')

@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {Common} from '../core/Common.sol';
-import {_OWNABLE_STORAGE_POSITION} from '../constants/storagePositions.sol';
+import {_OWNABLE_STORAGE_POSITION} from '../../constants/storagePositions.sol';
 import {IOwnable} from './IOwnable.sol';
+import {ISBEContext} from '../../utils/ISBEContext.sol';
 
 /// @title OwnableInternal
 /// @notice Internal logic for owner control
-abstract contract OwnableInternal is Common {
+abstract contract OwnableInternal is ISBEContext {
     /// @notice Struct storing the owner
     struct OwnableStorage {
         address owner;

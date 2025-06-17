@@ -15,10 +15,9 @@ import {
     ERC20Snapshot
 } from '../../../tokens/erc20/extensions/snapshot/ERC20Snapshot.sol';
 import {ERC20} from '../../../tokens/erc20/ERC20.sol';
-import {ISBEPause} from '../../../pause/ISBEPause.sol';
 import {
-    IsbeUUPSUpgradeable
-} from '../../../proxies/utils/IsbeUUPSUpgradeable.sol';
+    IEIP2535Introspection
+} from '../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 
 // solhint-disable-next-line
 contract ERC20TestWrapper is
@@ -27,8 +26,7 @@ contract ERC20TestWrapper is
     ERC20Capped,
     ERC20Snapshot,
     ERC20Controller,
-    ISBEPause,
-    IsbeUUPSUpgradeable
+    IEIP2535Introspection
 {
     function businessIdIntrospection()
         external
@@ -45,7 +43,7 @@ contract ERC20TestWrapper is
         override
         returns (bytes4[] memory selectors_)
     {
-        uint256 selectorsLength = 22;
+        uint256 selectorsLength = 24;
         selectors_ = new bytes4[](selectorsLength);
         selectors_[--selectorsLength] = this.initializeErc20.selector;
         selectors_[--selectorsLength] = this.initializeCap.selector;
@@ -65,16 +63,11 @@ contract ERC20TestWrapper is
         selectors_[--selectorsLength] = this.allowance.selector;
         selectors_[--selectorsLength] = this.setCap.selector;
         selectors_[--selectorsLength] = this.cap.selector;
+        selectors_[--selectorsLength] = this.snapshot.selector;
         selectors_[--selectorsLength] = this.balanceOfAt.selector;
         selectors_[--selectorsLength] = this.totalSupplyAt.selector;
         selectors_[--selectorsLength] = this.forceTransfer.selector;
         selectors_[--selectorsLength] = this.forceBurn.selector;
+        selectors_[--selectorsLength] = this.metadata.selector;
     }
-
-    function _mint(address account, uint256 amount) internal virtual override {
-        super._mint(account, amount);
-    }
-
-    // solhint-disable-next-line
-    function _authorizeUpgrade(address newImplementation) internal override {}
 }

@@ -1,46 +1,34 @@
 import { expect } from 'chai'
 import { Signer } from 'ethers'
 import { ethers } from 'hardhat'
-import { Ownable2Step, Ownable } from '../typechain-types'
+import { Ownable2Step, Ownable, ISBEPause } from '../typechain-types'
+import { deployAll } from './initialization'
 
 describe('Ownable & Ownable2Step', function () {
     let adminAccount: Signer
     let account_2: Signer
-    let ownable2StepImplementation: Ownable2Step
     let ownable2Step: Ownable2Step
-    let ownableImplementation: Ownable
+    let ownable2StepFacet: Ownable2Step
     let ownable: Ownable
+    let pause: ISBEPause
 
     before(async () => {
         ;[adminAccount, account_2] = await ethers.getSigners()
     })
 
     async function deployOwnable2Step(initialize: boolean = true) {
-        const Ownable2Step = await ethers.getContractFactory('Ownable2Step')
-        ownable2StepImplementation = await Ownable2Step.deploy()
-
-        const Proxy = await ethers.getContractFactory('IsbeERC1967Proxy')
-        const proxy = await Proxy.deploy(ownable2StepImplementation)
-        await proxy.waitForDeployment()
-
-        ownable2Step = Ownable2Step.attach(
-            await proxy.getAddress()
-        ) as Ownable2Step
+        const result = await deployAll()
+        ownable2Step = result.ownable2Step
+        pause = result.pause
+        ownable2StepFacet = result.ownable2StepFacet
 
         if (initialize) await ownable2Step.initializeOwnable(adminAccount)
     }
 
     async function deployOwnable(initialize: boolean = true) {
-        const Ownable = await ethers.getContractFactory(
-            'contracts/access/Ownable.sol:Ownable'
-        )
-        ownableImplementation = await Ownable.deploy()
-
-        const Proxy = await ethers.getContractFactory('IsbeERC1967Proxy')
-        const proxy = await Proxy.deploy(ownableImplementation)
-        await proxy.waitForDeployment()
-
-        ownable = Ownable.attach(await proxy.getAddress()) as Ownable
+        const result = await deployAll(true)
+        ownable = result.ownable
+        pause = result.pause
 
         if (initialize) await ownable.initializeOwnable(adminAccount)
     }
@@ -50,9 +38,9 @@ describe('Ownable & Ownable2Step', function () {
             await deployOwnable2Step()
 
             await expect(
-                ownable2StepImplementation.initializeOwnable(account_2)
+                ownable2StepFacet.initializeOwnable(account_2)
             ).to.be.revertedWithCustomError(
-                ownable2StepImplementation,
+                ownable2StepFacet,
                 'ContractIsAlreadyInitialized'
             )
         })
@@ -178,7 +166,7 @@ describe('Ownable & Ownable2Step', function () {
 
             await ownable2Step.transferOwnership(account_2)
 
-            await ownable2Step.initializePause(true)
+            await pause.initializePause(true)
 
             ownable2Step = ownable2Step.connect(account_2)
 
@@ -259,7 +247,7 @@ describe('Ownable & Ownable2Step', function () {
     async function TransferOwnerAccountWhenPausedTest(
         contract: Ownable | Ownable2Step
     ) {
-        await contract.initializePause(true)
+        await pause.initializePause(true)
 
         contract = contract.connect(adminAccount)
 
@@ -271,7 +259,7 @@ describe('Ownable & Ownable2Step', function () {
     async function RenounceOwnerAccountWhenPausedTest(
         contract: Ownable | Ownable2Step
     ) {
-        await contract.initializePause(true)
+        await pause.initializePause(true)
 
         contract = contract.connect(adminAccount)
 

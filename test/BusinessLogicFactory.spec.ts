@@ -1,19 +1,19 @@
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
 import {
-    ERC20TestWrapper__factory,
-    ERC20TestWrapperUpdated__factory,
     EIP2535AccessControl__factory,
     EIP2535AccessControl,
     BusinessLogicFactory,
     BusinessLogicFactoryFacet__factory,
     BusinessLogicFactoryFacet,
+    CounterFacetTestWrapper__factory,
+    CounterV2FacetTestWrapper__factory,
 } from '../typechain-types'
 import { Signer } from 'ethers'
 import {
     BUSINESS_LOGIC_FACTORY_RESOLVER_KEY,
+    COUNTER_RESOLVER_KEY,
     DEFAULT_ADMIN_ROLE,
-    ERC20_RESOLVER_KEY,
     ISBE_ROLE,
 } from './constants'
 
@@ -22,8 +22,8 @@ describe('BusinessLogicFactory', function () {
     let nonAdmin: Signer
     let EIP2535AccessControlFactory: EIP2535AccessControl__factory
     let BusinessLogicFactoryFactory: BusinessLogicFactoryFacet__factory
-    let ERC20TestWrapperFactory: ERC20TestWrapper__factory
-    let ERC20TestWrapperUpdatedFactory: ERC20TestWrapperUpdated__factory
+    let CounterFacetFactory: CounterFacetTestWrapper__factory
+    let CounterV2FacetFactory: CounterV2FacetTestWrapper__factory
     let diamondProxy: EIP2535AccessControl
     let businessLogicFactoryFacet: BusinessLogicFactoryFacet
     let businessLogicFactory: BusinessLogicFactory
@@ -37,10 +37,11 @@ describe('BusinessLogicFactory', function () {
         EIP2535AccessControlFactory = await ethers.getContractFactory(
             'EIP2535AccessControl'
         )
-        ERC20TestWrapperFactory =
-            await ethers.getContractFactory('ERC20TestWrapper')
-        ERC20TestWrapperUpdatedFactory = await ethers.getContractFactory(
-            'ERC20TestWrapperUpdated'
+        CounterFacetFactory = await ethers.getContractFactory(
+            'CounterFacetTestWrapper'
+        )
+        CounterV2FacetFactory = await ethers.getContractFactory(
+            'CounterV2FacetTestWrapper'
         )
         businessLogicFactoryFacet = await BusinessLogicFactoryFactory.deploy()
         await businessLogicFactoryFacet.waitForDeployment()
@@ -128,7 +129,7 @@ describe('BusinessLogicFactory', function () {
             await expect(
                 businessLogicFactory.deploy(
                     BUSINESS_LOGIC_FACTORY_RESOLVER_KEY,
-                    ERC20TestWrapperFactory.bytecode
+                    CounterFacetFactory.bytecode
                 )
             )
                 .to.be.revertedWithCustomError(
@@ -140,88 +141,88 @@ describe('BusinessLogicFactory', function () {
 
         it('GIVEN an EIP2535 proxy with BusinessLogicFactory WHEN deploy with correct businessId THEN it success', async () => {
             const deployTx = businessLogicFactory.deploy(
-                ERC20_RESOLVER_KEY,
-                ERC20TestWrapperFactory.bytecode
+                COUNTER_RESOLVER_KEY,
+                CounterFacetFactory.bytecode
             )
             await (await deployTx).wait()
-            const erc20BusinessLogicAddress =
+            const counterBusinessLogicAddress =
                 await businessLogicFactory.getBusinessLogicAddress(
-                    ERC20_RESOLVER_KEY,
+                    COUNTER_RESOLVER_KEY,
                     0
                 )
             expect(
                 await businessLogicFactory.getBusinessLogicAddress(
-                    ERC20_RESOLVER_KEY,
+                    COUNTER_RESOLVER_KEY,
                     1
                 )
-            ).to.be.equal(erc20BusinessLogicAddress)
+            ).to.be.equal(counterBusinessLogicAddress)
             expect(
                 await businessLogicFactory.getBusinessLogicAddress(
-                    ERC20_RESOLVER_KEY,
+                    COUNTER_RESOLVER_KEY,
                     2
                 )
             ).to.be.equal(ethers.ZeroAddress)
             expect(
                 await businessLogicFactory.getBusinessLogics()
-            ).to.be.deep.equal([ERC20_RESOLVER_KEY])
+            ).to.be.deep.equal([COUNTER_RESOLVER_KEY])
             expect(
                 await businessLogicFactory.getBusinessLogicVersions(
-                    ERC20_RESOLVER_KEY
+                    COUNTER_RESOLVER_KEY
                 )
             ).to.be.deep.equal([
-                erc20BusinessLogicAddress,
-                erc20BusinessLogicAddress,
+                counterBusinessLogicAddress,
+                counterBusinessLogicAddress,
             ])
             await expect(deployTx)
                 .to.emit(businessLogicFactory, 'Deployed')
-                .withArgs(ERC20_RESOLVER_KEY, erc20BusinessLogicAddress, 1)
+                .withArgs(COUNTER_RESOLVER_KEY, counterBusinessLogicAddress, 1)
         })
 
         it('GIVEN an EIP2535 proxy with BusinessLogicFactory WHEN deploy two versions THEN it success', async () => {
             let deployTx = businessLogicFactory.deploy(
-                ERC20_RESOLVER_KEY,
-                ERC20TestWrapperFactory.bytecode
+                COUNTER_RESOLVER_KEY,
+                CounterFacetFactory.bytecode
             )
             await (await deployTx).wait()
             const firstErc20BusinessLogicAddress =
                 await businessLogicFactory.getBusinessLogicAddress(
-                    ERC20_RESOLVER_KEY,
+                    COUNTER_RESOLVER_KEY,
                     0
                 )
             deployTx = businessLogicFactory.deploy(
-                ERC20_RESOLVER_KEY,
-                ERC20TestWrapperUpdatedFactory.bytecode
+                COUNTER_RESOLVER_KEY,
+                CounterV2FacetFactory.bytecode
             )
             await (await deployTx).wait()
             const latestErc20BusinessLogicAddress =
                 await businessLogicFactory.getBusinessLogicAddress(
-                    ERC20_RESOLVER_KEY,
+                    COUNTER_RESOLVER_KEY,
                     0
                 )
             expect(
                 await businessLogicFactory.getBusinessLogicAddress(
-                    ERC20_RESOLVER_KEY,
+                    COUNTER_RESOLVER_KEY,
                     1
                 )
             ).to.be.equal(firstErc20BusinessLogicAddress)
             expect(
                 await businessLogicFactory.getBusinessLogicAddress(
-                    ERC20_RESOLVER_KEY,
+                    COUNTER_RESOLVER_KEY,
                     2
                 )
             ).to.be.equal(latestErc20BusinessLogicAddress)
             expect(
                 await businessLogicFactory.getBusinessLogicAddress(
-                    ERC20_RESOLVER_KEY,
+                    COUNTER_RESOLVER_KEY,
                     3
                 )
             ).to.be.equal(ethers.ZeroAddress)
             expect(
                 await businessLogicFactory.getBusinessLogics()
-            ).to.be.deep.equal([ERC20_RESOLVER_KEY])
+            ).to.be.deep.equal([COUNTER_RESOLVER_KEY])
             expect(
                 await businessLogicFactory.getBusinessLogicVersions(
-                    ERC20_RESOLVER_KEY
+                    COUNTER_RESOLVER_KEY
                 )
             ).to.be.deep.equal([
                 latestErc20BusinessLogicAddress,
@@ -231,7 +232,7 @@ describe('BusinessLogicFactory', function () {
             await expect(deployTx)
                 .to.emit(businessLogicFactory, 'Deployed')
                 .withArgs(
-                    ERC20_RESOLVER_KEY,
+                    COUNTER_RESOLVER_KEY,
                     latestErc20BusinessLogicAddress,
                     2
                 )

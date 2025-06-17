@@ -14,6 +14,8 @@ abstract contract ISBEContext is Context {
     error EmptyBytes32();
     error EmptyBytes();
 
+    error UnimplementedMethod();
+
     function _blockTimestamp() internal view virtual returns (uint256) {
         return block.timestamp;
     }
