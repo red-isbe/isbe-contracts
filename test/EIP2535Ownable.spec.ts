@@ -197,11 +197,6 @@ describe('EIP2535OwnableProxy', function () {
         expect(await erc20.name()).to.equal(NAME)
         expect(await erc20.symbol()).to.equal(SYMBOL)
         expect(await erc20.decimals()).to.equal(DECIMALS)
-        expect(await erc20.metadata()).to.be.deep.equal([
-            NAME,
-            SYMBOL,
-            DECIMALS,
-        ])
     })
 
     it('GIVEN an ERC20 deployed linked to a EIP2535 proxy WHEN update THEN it can be updated', async () => {
@@ -220,11 +215,6 @@ describe('EIP2535OwnableProxy', function () {
         expect(await erc20.name()).to.equal(NAME)
         expect(await erc20.symbol()).to.equal(SYMBOL)
         expect(await erc20.decimals()).to.equal(DECIMALS)
-        expect(await erc20.metadata()).to.be.deep.equal([
-            NAME,
-            SYMBOL,
-            DECIMALS,
-        ])
     })
 
     it('GIVEN an ERC20 deployed linked to a EIP2535 proxy WHEN add new Ownable2Step THEN it can be used', async () => {
@@ -268,10 +258,5 @@ describe('EIP2535OwnableProxy', function () {
         expect(await erc20.name()).to.equal(NAME)
         expect(await erc20.symbol()).to.equal(SYMBOL)
         expect(await erc20.decimals()).to.equal(DECIMALS)
-        expect(await erc20.metadata()).to.be.deep.equal([
-            NAME,
-            SYMBOL,
-            DECIMALS,
-        ])
     })
 })

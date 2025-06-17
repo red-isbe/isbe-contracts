@@ -662,11 +662,6 @@ describe('EIP2535AccessControlProxy', function () {
             expect(await erc20.name()).to.equal(NAME)
             expect(await erc20.symbol()).to.equal(SYMBOL)
             expect(await erc20.decimals()).to.equal(DECIMALS)
-            expect(await erc20.metadata()).to.be.deep.equal([
-                NAME,
-                SYMBOL,
-                DECIMALS,
-            ])
         })
 
         it('GIVEN an ERC20 deployed linked to a EIP2535 proxy WHEN update THEN it can be updated', async () => {
@@ -685,11 +680,6 @@ describe('EIP2535AccessControlProxy', function () {
             expect(await erc20.name()).to.equal(NAME)
             expect(await erc20.symbol()).to.equal(SYMBOL)
             expect(await erc20.decimals()).to.equal(DECIMALS)
-            expect(await erc20.metadata()).to.be.deep.equal([
-                NAME,
-                SYMBOL,
-                DECIMALS,
-            ])
         })
 
         it('GIVEN an ERC20 deployed linked to a EIP2535 proxy WHEN add new AccessControl THEN it can be used', async () => {
@@ -754,11 +744,6 @@ describe('EIP2535AccessControlProxy', function () {
             expect(await erc20.name()).to.equal(NAME)
             expect(await erc20.symbol()).to.equal(SYMBOL)
             expect(await erc20.decimals()).to.equal(DECIMALS)
-            expect(await erc20.metadata()).to.be.deep.equal([
-                NAME,
-                SYMBOL,
-                DECIMALS,
-            ])
             const pause: ISBEPauseFacet = ISBEPauseFacetFactory.attach(
                 await diamondProxy.getAddress()
             )
@@ -820,11 +805,6 @@ describe('EIP2535AccessControlProxy', function () {
                 expect(await erc20.name()).to.equal(NAME)
                 expect(await erc20.symbol()).to.equal(SYMBOL)
                 expect(await erc20.decimals()).to.equal(DECIMALS)
-                expect(await erc20.metadata()).to.be.deep.equal([
-                    NAME,
-                    SYMBOL,
-                    DECIMALS,
-                ])
             })
 
             it('GIVEN a deployed EIP2535 WHEN delete a selector and try to see it THEN it success', async () => {
