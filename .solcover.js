@@ -1,8 +1,13 @@
 module.exports = {
     skipFiles: [
+        'testWrapper/assetevent/AssetEventTrackerTestWrapper.sol',
         'testWrapper/factory/facet/CounterFacetInternal.sol',
         'testWrapper/factory/facet/CounterFacetTestWrapper.sol',
         'testWrapper/factory/facet/CounterV2FacetTestWrapper.sol',
+        'testWrapper/hashtimestamp/HasTimestampTestWrapper.sol',
+        'testWrapper/mockTimestamp/IMockTimestamp.sol',
+        'testWrapper/mockTimestamp/MockTimestamp.sol',
+        'testWrapper/mockTimestamp/MockTimestampFacet.sol',
         'testWrapper/tokens/erc20/ERC20TestWrapper.sol',
         'testWrapper/tokens/erc20/ERC20TestWrapperTransparent.sol',
         'testWrapper/tokens/erc20/ERC20TestWrapperUUPS.sol',
