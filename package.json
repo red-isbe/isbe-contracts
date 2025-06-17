@@ -63,7 +63,7 @@
         "@nomicfoundation/hardhat-toolbox": "^5.0.0",
         "@openzeppelin/contracts": "^4.9.6",
         "eslint": "^9.25.1",
-        "hardhat": "^2.24.3",
+        "hardhat": "^2.23.0",
         "hardhat-contract-sizer": "^2.10.0",
         "husky": "^9.1.7",
         "lint-staged": "^15.5.1",
