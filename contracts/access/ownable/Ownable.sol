@@ -1,47 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {IOwnable} from './IOwnable.sol';
-import {Common} from '../../core/Common.sol';
-import {_OWNABLE_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
+import {OwnableBase} from './OwnableBase.sol';
 
 /// @title Ownable
 /// @notice Implements ownership mechanisms
 /// @dev Inherits from IOwnable and OwnableInternal
-contract Ownable is IOwnable, Common {
-    /// @notice Constructor that disables the initializer
-
-    constructor() {
-        _disableInitializers(_OWNABLE_RESOLVER_KEY);
-    }
-
-    function initializeOwnable(
-        address admin
-    ) external initializer(_OWNABLE_RESOLVER_KEY) addressIsNotZero(admin) {
-        _transferOwnership(admin);
-        emit OwnershipTransferred(_msgSender(), admin);
-    }
-
+contract Ownable is OwnableBase {
     function transferOwnership(
         address newOwner
-    )
-        external
-        virtual
-        override
-        onlyOwner
-        addressIsNotZero(newOwner)
-        whenNotPaused
-    {
+    ) external override onlyOwner addressIsNotZero(newOwner) whenNotPaused {
         _transferOwnership(newOwner);
         emit OwnershipTransferred(_msgSender(), newOwner);
-    }
-
-    function renounceOwnership() external override onlyOwner whenNotPaused {
-        _transferOwnership(address(0));
-        emit OwnershipRenounced(_msgSender());
-    }
-
-    function owner() external view override returns (address) {
-        return _owner();
     }
 }
