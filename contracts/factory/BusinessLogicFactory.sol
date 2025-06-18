@@ -5,6 +5,15 @@ import {BusinessLogicFactoryInternal} from './BusinessLogicFactoryInternal.sol';
 import {IBusinessLogicFactory} from './IBusinessLogicFactory.sol';
 import {_ISBE_ROLE} from '../constants/roles.sol';
 
+/**
+ * @title BusinessLogicFactory
+ * @author ISBE
+ * @notice A factory contract for deploying and managing versioned business logic contracts.
+ * @dev This contract serves as the public-facing entry point for the business logic
+ * deployment system. It implements the `IBusinessLogicFactory` interface and inherits
+ * the core deployment and storage logic from `BusinessLogicFactoryInternal`.
+ * Access to state-changing functions is restricted by role-based access control.
+ */
 contract BusinessLogicFactory is
     BusinessLogicFactoryInternal,
     IBusinessLogicFactory

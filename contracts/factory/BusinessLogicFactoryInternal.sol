@@ -9,14 +9,43 @@ import {
 } from '../constants/storagePositions.sol';
 import {Common} from '../core/Common.sol';
 
+/**
+ * @title BusinessLogicFactoryInternal
+ * @author ISBE
+ * @notice An abstract contract containing the internal logic to deploy and manage
+ * versioned business logic (implementation) contracts.
+ * @dev This contract uses an unstructured storage layout (akin to Diamond Storage)
+ * to ensure its logic is reusable across different contexts, such as within a proxy
+ * facet. It handles the deployment of contracts via the CREATE opcode and maintains
+ * a versioned record of each business logic.
+ */
 abstract contract BusinessLogicFactoryInternal is Common {
+    /**
+     * @dev Defines the storage structure for the business logic factory.
+     * @param businessLogicVersions A mapping from a business ID to an array of addresses.
+     * Index 0 always holds the address of the most recent version. Indices from 1
+     * onwards correspond to the version number (e.g., index 1 is version 1).
+     * @param businessLogics An array containing all unique business IDs that have been deployed.
+     */
     struct BusinessLogicStorage {
         // latestVersion = 0. The array position indicates the version deployed
         mapping(bytes32 => address[]) businessLogicVersions;
         bytes32[] businessLogics;
     }
 
+    /**
+     * @notice Raised when the deployment of a business logic contract fails.
+     * @dev This error is triggered if the `create` opcode does not result in a
+     * contract with a code size greater than zero.
+     */
     error DeployFailed();
+
+    /**
+     * @notice Raised if the deployed contract's business ID does not match the expected ID.
+     * @dev Triggered during the post-deployment check, ensuring the deployed contract
+     * reports the correct identifier via its EIP-2535 introspection function.
+     * @param businessId The `businessId` that the deployed contract was expected to have.
+     */
     error BadBusinessId(bytes32 businessId);
 
     function _deploy(
