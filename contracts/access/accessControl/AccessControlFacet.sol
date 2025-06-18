@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
+import {_ACCESS_CONTROL_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
 import {AccessControl} from './AccessControl.sol';
 import {
     IEIP2535Introspection
@@ -10,6 +11,15 @@ import {
 /// @notice Access Control Facet smart contract
 /// @dev Adds IEIP2535Introspection functionality
 contract AccessControlFacet is AccessControl, IEIP2535Introspection {
+    function businessIdIntrospection()
+        external
+        pure
+        override
+        returns (bytes32 businessId_)
+    {
+        businessId_ = _ACCESS_CONTROL_RESOLVER_KEY;
+    }
+
     function selectorsIntrospection()
         external
         pure

@@ -64,8 +64,7 @@ abstract contract ERC20SnapshotInternal is ERC20Internal {
     function _beforeTokenTransfer(
         address from,
         address to,
-        /* solhint-disable-next-line no-unused-vars */
-        uint256 amount
+        uint256 /*amount*/
     ) internal virtual override {
         if (from == address(0)) {
             // mint

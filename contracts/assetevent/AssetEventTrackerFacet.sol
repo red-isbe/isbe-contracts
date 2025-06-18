@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
+import {_ASSET_EVENT_TRACKER_RESOLVER_KEY} from '../constants/resolverKeys.sol';
 import {AssetEventTracker} from './AssetEventTracker.sol';
 import {
     IEIP2535Introspection
@@ -13,6 +14,15 @@ abstract contract AssetEventTrackerFacet is
     AssetEventTracker,
     IEIP2535Introspection
 {
+    function businessIdIntrospection()
+        external
+        pure
+        override
+        returns (bytes32 businessId_)
+    {
+        businessId_ = _ASSET_EVENT_TRACKER_RESOLVER_KEY;
+    }
+
     function selectorsIntrospection()
         external
         pure

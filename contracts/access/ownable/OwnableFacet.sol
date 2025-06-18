@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
+import {_OWNABLE_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
 import {Ownable} from './Ownable.sol';
 import {
     IEIP2535Introspection
@@ -10,6 +11,15 @@ import {
 /// @notice Implements ownership mechanisms
 /// @dev Inherits from IOwnable and OwnableInternal
 contract OwnableFacet is Ownable, IEIP2535Introspection {
+    function businessIdIntrospection()
+        external
+        pure
+        override
+        returns (bytes32 businessId_)
+    {
+        businessId_ = _OWNABLE_RESOLVER_KEY;
+    }
+
     function selectorsIntrospection()
         external
         pure

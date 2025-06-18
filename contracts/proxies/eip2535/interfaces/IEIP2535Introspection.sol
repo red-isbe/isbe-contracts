@@ -7,6 +7,11 @@ pragma solidity ^0.8.28;
  *      This interface enables tools and developers to retrieve function selectors for compatibility and inspection.
  */
 interface IEIP2535Introspection {
+    function businessIdIntrospection()
+        external
+        pure
+        returns (bytes32 businessId_);
+
     /**
      * @notice Retrieves the function selectors supported by the EIP-2535 Diamond Standard.
      * @dev Returns a static list of function selectors supported by the interface. It is a pure function and does not

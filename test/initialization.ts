@@ -16,7 +16,24 @@ import {
     ERC20Controller,
     ERC20,
 } from '../typechain-types'
-import { DEFAULT_ADMIN_ROLE } from './constants'
+import {
+    ACCESS_CONTROL_RESOLVER_KEY,
+    ASSET_EVENT_TRACKER_RESOLVER_KEY,
+    DEFAULT_ADMIN_ROLE,
+    DIAMOND_CUT_RESOLVER_KEY,
+    DIAMOND_LOUPE_RESOLVER_KEY,
+    ERC20_BURNABLE_RESOLVER_KEY,
+    ERC20_CAPPED_RESOLVER_KEY,
+    ERC20_CONTROLLER_RESOLVER_KEY,
+    ERC20_RESOLVER_KEY,
+    ERC20_SNAPSHOT_RESOLVER_KEY,
+    HASH_TIMESTAMP_RESOLVER_KEY,
+    MOCK_TIMESTAMP_RESOLVER_KEY,
+    OWNABLE2STEP_RESOLVER_KEY,
+    OWNABLE_RESOLVER_KEY,
+    PAUSE_RESOLVER_KEY,
+} from './constants'
+import { expect } from 'chai'
 
 export async function deployAll(isOwnable: boolean = false) {
     const [owner] = await ethers.getSigners()
@@ -91,12 +108,54 @@ export async function deployAll(isOwnable: boolean = false) {
     await assetEventTrackerFacet.waitForDeployment()
     await hashTimestampFacet.waitForDeployment()
     await mockTimestampFacet.waitForDeployment()
+    expect(await diamondCutFacet.businessIdIntrospection()).to.equal(
+        DIAMOND_CUT_RESOLVER_KEY
+    )
+    expect(await diamondLoupeFacet.businessIdIntrospection()).to.equal(
+        DIAMOND_LOUPE_RESOLVER_KEY
+    )
+    expect(await accessControlFacet.businessIdIntrospection()).to.equal(
+        ACCESS_CONTROL_RESOLVER_KEY
+    )
+    expect(await ownable2StepFacet.businessIdIntrospection()).to.equal(
+        OWNABLE2STEP_RESOLVER_KEY
+    )
+    expect(await ownableFacet.businessIdIntrospection()).to.equal(
+        OWNABLE_RESOLVER_KEY
+    )
+    expect(await pauseFacet.businessIdIntrospection()).to.equal(
+        PAUSE_RESOLVER_KEY
+    )
+    expect(await erc20SnapshotFacet.businessIdIntrospection()).to.equal(
+        ERC20_SNAPSHOT_RESOLVER_KEY
+    )
+    expect(await erc20BurnableFacet.businessIdIntrospection()).to.equal(
+        ERC20_BURNABLE_RESOLVER_KEY
+    )
+    expect(await erc20CappedFacet.businessIdIntrospection()).to.equal(
+        ERC20_CAPPED_RESOLVER_KEY
+    )
+    expect(await erc20ControllerFacet.businessIdIntrospection()).to.equal(
+        ERC20_CONTROLLER_RESOLVER_KEY
+    )
+    expect(await erc20Facet.businessIdIntrospection()).to.equal(
+        ERC20_RESOLVER_KEY
+    )
+    expect(await assetEventTrackerFacet.businessIdIntrospection()).to.equal(
+        ASSET_EVENT_TRACKER_RESOLVER_KEY
+    )
+    expect(await hashTimestampFacet.businessIdIntrospection()).to.equal(
+        HASH_TIMESTAMP_RESOLVER_KEY
+    )
+    expect(await mockTimestampFacet.businessIdIntrospection()).to.equal(
+        MOCK_TIMESTAMP_RESOLVER_KEY
+    )
 
     const facetAddresses = [
         await diamondCutFacet.getAddress(),
         await diamondLoupeFacet.getAddress(),
         await accessControlFacet.getAddress(),
-        isOwnable == true
+        isOwnable
             ? await ownableFacet.getAddress()
             : await ownable2StepFacet.getAddress(),
         await pauseFacet.getAddress(),

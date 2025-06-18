@@ -1,13 +1,22 @@
 // SPDX-License-Identifier: UNLICENSED
-
 pragma solidity ^0.8.28;
 
+import {_PAUSE_RESOLVER_KEY} from '../constants/resolverKeys.sol';
 import {ISBEPause} from './ISBEPause.sol';
 import {
     IEIP2535Introspection
 } from '../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 
 contract ISBEPauseFacet is ISBEPause, IEIP2535Introspection {
+    function businessIdIntrospection()
+        external
+        pure
+        override
+        returns (bytes32 businessId_)
+    {
+        businessId_ = _PAUSE_RESOLVER_KEY;
+    }
+
     function selectorsIntrospection()
         external
         pure

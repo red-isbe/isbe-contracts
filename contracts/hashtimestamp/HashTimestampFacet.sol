@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
+import {_HASH_TIMESTAMP_RESOLVER_KEY} from '../constants/resolverKeys.sol';
 import {HashTimestamp} from './HashTimestamp.sol';
 import {
     IEIP2535Introspection
@@ -10,6 +11,15 @@ import {
 /// @notice Implements timestamp for hashes facet
 /// @dev Inherits from HashTimestamp, providing external timestamp hashes functions
 contract HashTimestampFacet is HashTimestamp, IEIP2535Introspection {
+    function businessIdIntrospection()
+        external
+        pure
+        override
+        returns (bytes32 businessId_)
+    {
+        businessId_ = _HASH_TIMESTAMP_RESOLVER_KEY;
+    }
+
     function selectorsIntrospection()
         external
         pure

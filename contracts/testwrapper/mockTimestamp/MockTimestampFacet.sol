@@ -7,6 +7,19 @@ import {
 } from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 
 contract MockTimestampFacet is IEIP2535Introspection, MockTimestamp {
+    // keccak256('isbe.contracts.mock.timestamp.resolver.key');
+    bytes32 private constant _MOCK_TIMESTAMP_RESOLVER_KEY =
+        0xfa3c45d4727a5270f2c6166509595a392f4cabdf459fab1b34ccfab634b56777;
+
+    function businessIdIntrospection()
+        external
+        pure
+        override
+        returns (bytes32 businessId_)
+    {
+        businessId_ = _MOCK_TIMESTAMP_RESOLVER_KEY;
+    }
+
     function selectorsIntrospection()
         external
         pure

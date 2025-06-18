@@ -20,7 +20,11 @@ import {
     ISBEPauseFacet__factory,
 } from '../typechain-types'
 import { Signer } from 'ethers'
-import { PAUSER_ROLE } from './constants'
+import {
+    DIAMOND_CUT_RESOLVER_KEY,
+    ERC20_RESOLVER_KEY,
+    PAUSER_ROLE,
+} from './constants'
 
 const NAME = 'My Token'
 const SYMBOL = 'MTK'
@@ -71,6 +75,12 @@ describe('EIP2535OwnableProxy', function () {
         await diamondCutFacet.waitForDeployment()
         await diamondLoupeFacet.waitForDeployment()
         await pauseFacet.waitForDeployment()
+        expect(await erc20Impl.businessIdIntrospection()).to.equal(
+            ERC20_RESOLVER_KEY
+        )
+        expect(await diamondCutFacet.businessIdIntrospection()).to.equal(
+            DIAMOND_CUT_RESOLVER_KEY
+        )
     }
 
     before(async () => {
