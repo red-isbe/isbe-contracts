@@ -3,11 +3,11 @@ pragma solidity ^0.8.28;
 
 import {
     IEIP2535Introspection
-} from '../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 import {
     _BUSINESS_LOGIC_STORAGE_POSITION
-} from '../constants/storagePositions.sol';
-import {Common} from '../core/Common.sol';
+} from '../../constants/storagePositions.sol';
+import {Common} from '../../core/Common.sol';
 
 /**
  * @title BusinessLogicFactoryInternal

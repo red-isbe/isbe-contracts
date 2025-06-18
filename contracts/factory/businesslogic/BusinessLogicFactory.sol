@@ -3,7 +3,7 @@ pragma solidity ^0.8.28;
 
 import {BusinessLogicFactoryInternal} from './BusinessLogicFactoryInternal.sol';
 import {IBusinessLogicFactory} from './IBusinessLogicFactory.sol';
-import {_ISBE_ROLE} from '../constants/roles.sol';
+import {_ISBE_ROLE} from '../../constants/roles.sol';
 
 /**
  * @title BusinessLogicFactory
