@@ -58,11 +58,6 @@ describe('IsbeERC1967Proxy', function () {
         expect(await erc20UUPS.name()).to.equal(NAME)
         expect(await erc20UUPS.symbol()).to.equal(SYMBOL)
         expect(await erc20UUPS.decimals()).to.equal(DECIMALS)
-        expect(await erc20UUPS.metadata()).to.deep.equal([
-            NAME,
-            SYMBOL,
-            DECIMALS,
-        ])
     })
 
     it('GIVEN an ERC20 deployed linked to an UUPS proxy WHEN update THEN it can be updated', async () => {
@@ -76,10 +71,5 @@ describe('IsbeERC1967Proxy', function () {
         expect(await erc20UUPS.name()).to.equal(NAME)
         expect(await erc20UUPS.symbol()).to.equal(SYMBOL)
         expect(await erc20UUPS.decimals()).to.equal(DECIMALS)
-        expect(await erc20UUPS.metadata()).to.deep.equal([
-            NAME,
-            SYMBOL,
-            DECIMALS,
-        ])
     })
 })

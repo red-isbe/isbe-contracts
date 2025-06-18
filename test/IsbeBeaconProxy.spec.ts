@@ -71,12 +71,6 @@ describe('BeaconProxy', function () {
         expect(await erc20Transparent.name()).to.equal(NAME)
         expect(await erc20Transparent.symbol()).to.equal(SYMBOL)
         expect(await erc20Transparent.decimals()).to.equal(DECIMALS)
-
-        expect(await erc20Transparent.metadata()).to.deep.equal([
-            NAME,
-            SYMBOL,
-            DECIMALS,
-        ])
     })
 
     it('GIVEN an ERC20 deployed linked to an Beacon proxy WHEN update THEN it can be updated', async () => {
@@ -92,12 +86,6 @@ describe('BeaconProxy', function () {
         expect(await erc20Transparent.name()).to.equal(NAME)
         expect(await erc20Transparent.symbol()).to.equal(SYMBOL)
         expect(await erc20Transparent.decimals()).to.equal(DECIMALS)
-
-        expect(await erc20Transparent.metadata()).to.deep.equal([
-            NAME,
-            SYMBOL,
-            DECIMALS,
-        ])
 
         await erc20Transparent.mint(await erc20Transparent.getAddress(), 100)
     })
