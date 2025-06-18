@@ -24,6 +24,12 @@ interface IDiamond {
         Remove // Remove function selectors (value: 2)
     }
 
+    enum InterfaceUpdateAction {
+        Add, // Add a new interface (value: 0)
+        Replace, // Replace existing function selectors (value: 1)
+        Remove // Remove interface (value: 2)
+    }
+
     /**
      * @dev Struct used to define a facet and the action to be performed on it.
      * @param facetAddress The address of the facet to be added, replaced, or removed.
@@ -37,6 +43,18 @@ interface IDiamond {
     }
 
     /**
+     * @dev Struct used to define an interface and the action to be performed on it.
+     *      * @param facetAddress The address of the facet to be added, replaced, or removed.
+     * @param action The action to be performed on the interface (defined by InterfaceUpdateAction).
+     * @param interfaces An array of interfaces to add, replace or remove.
+     */
+    struct InterfaceUpdates {
+        address facetAddress;
+        InterfaceUpdateAction action;
+        bytes4[] interfaces;
+    }
+
+    /**
      * @dev Emitted when the diamond's facets are updated.
      * This event signals changes to the diamond's state (e.g., adding, replacing, or removing facets).
      * @param _diamondCut An array of FacetCut defining the actions performed on facets.
@@ -44,4 +62,11 @@ interface IDiamond {
      * @param _calldata The calldata for the initialization function called on `_init`.
      */
     event DiamondCut(FacetCut[] _diamondCut, address _init, bytes _calldata);
+
+    /**
+     * @dev Emitted when the diamond's interfaces are updated.
+     * This event signals changes to the diamond's state (e.g., adding, replacing or removing interfaces).
+     * @param _interfaceUpdates An array of InterfaceCut defining the actions performed on interfaces.
+     */
+    event InterfacesUpdates(InterfaceUpdates[] _interfaceUpdates);
 }

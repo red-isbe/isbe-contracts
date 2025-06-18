@@ -29,7 +29,6 @@ import {
     ERC20_SNAPSHOT_RESOLVER_KEY,
     HASH_TIMESTAMP_RESOLVER_KEY,
     MOCK_TIMESTAMP_RESOLVER_KEY,
-    OWNABLE2STEP_RESOLVER_KEY,
     OWNABLE_RESOLVER_KEY,
     PAUSE_RESOLVER_KEY,
 } from './constants'
@@ -118,7 +117,7 @@ export async function deployAll(isOwnable: boolean = false) {
         ACCESS_CONTROL_RESOLVER_KEY
     )
     expect(await ownable2StepFacet.businessIdIntrospection()).to.equal(
-        OWNABLE2STEP_RESOLVER_KEY
+        OWNABLE_RESOLVER_KEY
     )
     expect(await ownableFacet.businessIdIntrospection()).to.equal(
         OWNABLE_RESOLVER_KEY

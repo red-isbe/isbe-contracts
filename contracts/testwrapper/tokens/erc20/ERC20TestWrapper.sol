@@ -28,6 +28,70 @@ contract ERC20TestWrapper is
     ERC20Controller,
     IEIP2535Introspection
 {
+    function supportsInterface(
+        bytes4 interfaceId
+    )
+        external
+        pure
+        override(
+            ERC20,
+            ERC20Burnable,
+            ERC20Capped,
+            ERC20Snapshot,
+            ERC20Controller
+        )
+        returns (bool)
+    {
+        return
+            _supportsERC165Interface(interfaceId) ||
+            _supportsInterface(interfaceId, _erc20Interfaces()) ||
+            _supportsInterface(interfaceId, _erc20BurnableInterfaces()) ||
+            _supportsInterface(interfaceId, _erc20CappedInterfaces()) ||
+            _supportsInterface(interfaceId, _erc20SnapshotInterfaces()) ||
+            _supportsInterface(interfaceId, _erc20ControllerInterfaces());
+    }
+
+    function interfacesIntrospection()
+        external
+        pure
+        returns (bytes4[] memory interfaces_)
+    {
+        uint256 interfacesLength = _erc20Interfaces().length +
+            _erc20BurnableInterfaces().length +
+            _erc20CappedInterfaces().length +
+            _erc20ControllerInterfaces().length +
+            _erc20SnapshotInterfaces().length;
+
+        interfaces_ = new bytes4[](interfacesLength);
+
+        uint256 index = 0;
+
+        for (uint256 i = 0; i < _erc20Interfaces().length; i++) {
+            interfaces_[index] = _erc20Interfaces()[i];
+            index++;
+        }
+
+        for (uint256 i = 0; i < _erc20BurnableInterfaces().length; i++) {
+            interfaces_[index] = _erc20BurnableInterfaces()[i];
+            index++;
+        }
+
+        for (uint256 i = 0; i < _erc20CappedInterfaces().length; i++) {
+            interfaces_[index] = _erc20CappedInterfaces()[i];
+            index++;
+        }
+
+        for (uint256 i = 0; i < _erc20ControllerInterfaces().length; i++) {
+            interfaces_[index] = _erc20ControllerInterfaces()[i];
+            index++;
+        }
+
+        for (uint256 i = 0; i < _erc20SnapshotInterfaces().length; i++) {
+            interfaces_[index] = _erc20SnapshotInterfaces()[i];
+            index++;
+        }
+    }
+
     function businessIdIntrospection()
         external
         pure

@@ -4,11 +4,13 @@ pragma solidity ^0.8.28;
 import {IAssetEventTracker} from './IAssetEventTracker.sol';
 import {AssetEventTrackerInternal} from './AssetEventTrackerInternal.sol';
 import {_ASSET_EVENT_TRACKER_ROLE} from '../constants/roles.sol';
+import {IERC165} from '@openzeppelin/contracts/utils/introspection/IERC165.sol';
 
 /// @title AssetEventTracker
 /// @notice Implements generic state tracking for an asset using events
 abstract contract AssetEventTracker is
     IAssetEventTracker,
+    IERC165,
     AssetEventTrackerInternal
 {
     function recordState(
@@ -47,5 +49,23 @@ abstract contract AssetEventTracker is
         uint256 newState
     ) external view returns (bool) {
         return _isStateChangeAllowed(_getCurrentState(), newState);
+    }
+
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override returns (bool) {
+        return
+            _supportsERC165Interface(interfaceId) ||
+            _supportsInterface(interfaceId, _assetEventTrackerInterfaces());
+    }
+
+    function _assetEventTrackerInterfaces()
+        internal
+        pure
+        returns (bytes4[] memory interfaces_)
+    {
+        uint256 interfacesLength = 1;
+        interfaces_ = new bytes4[](interfacesLength);
+        interfaces_[--interfacesLength] = type(IAssetEventTracker).interfaceId;
     }
 }

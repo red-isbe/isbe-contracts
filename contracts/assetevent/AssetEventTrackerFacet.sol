@@ -6,6 +6,7 @@ import {AssetEventTracker} from './AssetEventTracker.sol';
 import {
     IEIP2535Introspection
 } from '../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {IAssetEventTracker} from './IAssetEventTracker.sol';
 
 /// @title AssetEventTrackerFacet
 /// @notice Implements generic state tracking for an asset using events
@@ -14,6 +15,16 @@ abstract contract AssetEventTrackerFacet is
     AssetEventTracker,
     IEIP2535Introspection
 {
+    function interfacesIntrospection()
+        external
+        pure
+        returns (bytes4[] memory interfaces_)
+    {
+        uint256 interfacesLength = 1;
+        interfaces_ = new bytes4[](interfacesLength);
+        interfaces_[--interfacesLength] = type(IAssetEventTracker).interfaceId;
+    }
+
     function businessIdIntrospection()
         external
         pure

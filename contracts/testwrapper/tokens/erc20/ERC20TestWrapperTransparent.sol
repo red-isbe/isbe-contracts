@@ -15,6 +15,7 @@ import {
 } from '../../../tokens/erc20/extensions/snapshot/ERC20Snapshot.sol';
 import {ERC20} from '../../../tokens/erc20/ERC20.sol';
 import {ISBEPause} from '../../../pause/ISBEPause.sol';
+import {Pause} from '../../../pause/Pause.sol';
 import {AccessControl} from '../../../access/accessControl/AccessControl.sol';
 
 // solhint-disable-next-line
@@ -26,4 +27,31 @@ contract ERC20TestWrapperTransparent is
     ERC20Controller,
     ISBEPause,
     AccessControl
-{}
+{
+    function supportsInterface(
+        bytes4 interfaceId
+    )
+        external
+        view
+        override(
+            ERC20,
+            ERC20Burnable,
+            ERC20Capped,
+            ERC20Snapshot,
+            ERC20Controller,
+            Pause,
+            AccessControl
+        )
+        returns (bool)
+    {
+        return
+            _supportsERC165Interface(interfaceId) ||
+            _supportsInterface(interfaceId, _erc20Interfaces()) ||
+            _supportsInterface(interfaceId, _erc20BurnableInterfaces()) ||
+            _supportsInterface(interfaceId, _erc20CappedInterfaces()) ||
+            _supportsInterface(interfaceId, _erc20SnapshotInterfaces()) ||
+            _supportsInterface(interfaceId, _erc20ControllerInterfaces()) ||
+            _supportsInterface(interfaceId, _pauseInterfaces()) ||
+            _supportsInterface(interfaceId, _accessControlInterfaces());
+    }
+}

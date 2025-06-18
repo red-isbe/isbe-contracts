@@ -33,13 +33,16 @@ bytes32 constant _PAUSE_RESOLVER_KEY = 0x7fabf0f3ed655fa26f86c82ae5da60e0ade03a5
 // keccak256('isbe.contracts.ownable.resolver.key');
 bytes32 constant _OWNABLE_RESOLVER_KEY = 0x32d893fe746ed6e72cf641731066f84e26611cdd03031f873957cb1a29071a5f;
 
-// keccak256('isbe.contracts.ownable2step.resolver.key');
-bytes32 constant _OWNABLE2STEP_RESOLVER_KEY = 0x409f2dd40b4c74b904760a7ed7b5e93ae01104b9f1e8c0b978d6b60efccd2998;
+// keccak256('isbe.contracts.diamond.resolver.key');
+bytes32 constant _DIAMOND_RESOLVER_KEY = 0xa48ef589a9e2ec85332f5cce03f3c0311fea4c7dd368ec555f810826f433337e;
 
 // keccak256('isbe.contracts.diamond.cut.resolver.key');
 bytes32 constant _DIAMOND_CUT_RESOLVER_KEY = 0xb1733495acec04f904af52509bd68775ca2e4aa31f6948d02cccd2af2adee890;
 
 // keccak256('isbe.contracts.diamond.loupe.resolver.key');
 bytes32 constant _DIAMOND_LOUPE_RESOLVER_KEY = 0xa081a7fa2e40735a4006bc6a225e18158879b54064ab1f60045661349931c41b;
+
+// keccak256('isbe.contracts.erc165.resolver.key');
+bytes32 constant _ERC165_RESOLVER_KEY = 0x0d211187337a25b55ba62c44fbaaff686007a4ff3d149631d418963345936a29;
 
 // solhint-enable max-line-length

@@ -11,6 +11,14 @@ import {
 /// @notice Implements ownership mechanisms
 /// @dev Inherits from IOwnable and OwnableInternal
 contract OwnableFacet is Ownable, IEIP2535Introspection {
+    function interfacesIntrospection()
+        external
+        pure
+        returns (bytes4[] memory interfaces_)
+    {
+        return _ownableInterfaces();
+    }
+
     function businessIdIntrospection()
         external
         pure

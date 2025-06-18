@@ -11,6 +11,14 @@ import {
 /// @notice Access Control Facet smart contract
 /// @dev Adds IEIP2535Introspection functionality
 contract AccessControlFacet is AccessControl, IEIP2535Introspection {
+    function interfacesIntrospection()
+        external
+        pure
+        returns (bytes4[] memory interfaces_)
+    {
+        return _accessControlInterfaces();
+    }
+
     function businessIdIntrospection()
         external
         pure

@@ -7,11 +7,12 @@ import {
 } from '../../../../constants/resolverKeys.sol';
 import {IERC20Capped} from './IERC20Capped.sol';
 import {_CAP_ROLE, _MINTER_ROLE} from '../../../../constants/roles.sol';
+import {IERC165} from '@openzeppelin/contracts/utils/introspection/IERC165.sol';
 
 /// @title ERC20Capped
 /// @notice Implements capped mechanism
 /// @dev Inherits from IERC20Capped and ERC20InternalCommon
-abstract contract ERC20Capped is IERC20Capped, ERC20InternalCommon {
+abstract contract ERC20Capped is IERC20Capped, IERC165, ERC20InternalCommon {
     constructor() {
         _disableInitializers(_ERC20_CAPPED_RESOLVER_KEY);
     }
@@ -39,5 +40,23 @@ abstract contract ERC20Capped is IERC20Capped, ERC20InternalCommon {
 
     function cap() external view returns (uint256) {
         return _cap();
+    }
+
+    function supportsInterface(
+        bytes4 interfaceId
+    ) external view virtual override returns (bool) {
+        return
+            _supportsERC165Interface(interfaceId) ||
+            _supportsInterface(interfaceId, _erc20CappedInterfaces());
+    }
+
+    function _erc20CappedInterfaces()
+        internal
+        pure
+        returns (bytes4[] memory interfaces_)
+    {
+        uint256 interfacesLength = 1;
+        interfaces_ = new bytes4[](interfacesLength);
+        interfaces_[--interfacesLength] = type(IERC20Capped).interfaceId;
     }
 }

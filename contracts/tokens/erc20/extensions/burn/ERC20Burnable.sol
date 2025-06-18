@@ -3,11 +3,12 @@ pragma solidity ^0.8.28;
 
 import {ERC20InternalCommon} from '../ERC20InternalCommon.sol';
 import {IERC20Burnable} from './IERC20Burnable.sol';
+import {IERC165} from '@openzeppelin/contracts/utils/introspection/IERC165.sol';
 
 /// @title ERC20Burnable
 /// @notice Implements burn mechanism
 /// @dev Inherits from IERC20Burnable and ERC20InternalCommon
-contract ERC20Burnable is IERC20Burnable, ERC20InternalCommon {
+contract ERC20Burnable is IERC20Burnable, IERC165, ERC20InternalCommon {
     function burn(uint256 amount) external override whenNotPaused {
         _burn(_msgSender(), amount);
     }
@@ -18,5 +19,23 @@ contract ERC20Burnable is IERC20Burnable, ERC20InternalCommon {
     ) external override whenNotPaused {
         _spendAllowance(account, _msgSender(), amount);
         _burn(account, amount);
+    }
+
+    function supportsInterface(
+        bytes4 interfaceId
+    ) external view virtual override returns (bool) {
+        return
+            _supportsERC165Interface(interfaceId) ||
+            _supportsInterface(interfaceId, _erc20BurnableInterfaces());
+    }
+
+    function _erc20BurnableInterfaces()
+        internal
+        pure
+        returns (bytes4[] memory interfaces_)
+    {
+        uint256 interfacesLength = 1;
+        interfaces_ = new bytes4[](interfacesLength);
+        interfaces_[--interfacesLength] = type(IERC20Burnable).interfaceId;
     }
 }

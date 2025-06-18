@@ -41,6 +41,16 @@ contract DiamondCutOwnableFacet is
         _facetUpdates(_facetAddresses, _init, _calldata);
     }
 
+    function interfacesIntrospection()
+        external
+        pure
+        returns (bytes4[] memory interfaces_)
+    {
+        uint256 interfacesLength = 1;
+        interfaces_ = new bytes4[](interfacesLength);
+        interfaces_[--interfacesLength] = type(IDiamondCut).interfaceId;
+    }
+
     function businessIdIntrospection()
         external
         pure

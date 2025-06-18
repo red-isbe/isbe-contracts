@@ -19,6 +19,7 @@ import {AccessControl} from '../../../access/accessControl/AccessControl.sol';
 import {
     IsbeUUPSUpgradeable
 } from '../../../proxies/utils/IsbeUUPSUpgradeable.sol';
+import {Pause} from '../../../pause/Pause.sol';
 
 // solhint-disable-next-line
 contract ERC20TestWrapperUUPS is
@@ -31,6 +32,32 @@ contract ERC20TestWrapperUUPS is
     AccessControl,
     IsbeUUPSUpgradeable
 {
+    function supportsInterface(
+        bytes4 interfaceId
+    )
+        public
+        view
+        override(
+            ERC20,
+            ERC20Burnable,
+            ERC20Capped,
+            ERC20Snapshot,
+            ERC20Controller,
+            Pause,
+            AccessControl
+        )
+        returns (bool)
+    {
+        return
+            _supportsERC165Interface(interfaceId) ||
+            _supportsInterface(interfaceId, _erc20Interfaces()) ||
+            _supportsInterface(interfaceId, _erc20BurnableInterfaces()) ||
+            _supportsInterface(interfaceId, _erc20CappedInterfaces()) ||
+            _supportsInterface(interfaceId, _erc20SnapshotInterfaces()) ||
+            _supportsInterface(interfaceId, _erc20ControllerInterfaces()) ||
+            _supportsInterface(interfaceId, _pauseInterfaces()) ||
+            _supportsInterface(interfaceId, _accessControlInterfaces());
+    }
     // solhint-disable-next-line
     function _authorizeUpgrade(address newImplementation) internal override {}
 }

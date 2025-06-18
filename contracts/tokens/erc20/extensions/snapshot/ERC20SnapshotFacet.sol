@@ -8,8 +8,19 @@ import {ERC20Snapshot} from './ERC20Snapshot.sol';
 import {
     IEIP2535Introspection
 } from '../../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {IERC20Snapshot} from './IERC20Snapshot.sol';
 
 contract ERC20SnapshotFacet is ERC20Snapshot, IEIP2535Introspection {
+    function interfacesIntrospection()
+        external
+        pure
+        returns (bytes4[] memory interfaces_)
+    {
+        uint256 interfacesLength = 1;
+        interfaces_ = new bytes4[](interfacesLength);
+        interfaces_[--interfacesLength] = type(IERC20Snapshot).interfaceId;
+    }
+
     function businessIdIntrospection()
         external
         pure

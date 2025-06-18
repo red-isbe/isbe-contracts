@@ -8,8 +8,19 @@ import {ERC20Capped} from './ERC20Capped.sol';
 import {
     IEIP2535Introspection
 } from '../../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {IERC20Capped} from './IERC20Capped.sol';
 
 contract ERC20CappedFacet is ERC20Capped, IEIP2535Introspection {
+    function interfacesIntrospection()
+        external
+        pure
+        returns (bytes4[] memory interfaces_)
+    {
+        uint256 interfacesLength = 1;
+        interfaces_ = new bytes4[](interfacesLength);
+        interfaces_[--interfacesLength] = type(IERC20Capped).interfaceId;
+    }
+
     function businessIdIntrospection()
         external
         pure
