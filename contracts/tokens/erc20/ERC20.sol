@@ -153,15 +153,6 @@ contract ERC20 is IERC20Isbe, ERC20InternalCommon {
         return _allowance(owner, spender);
     }
 
-    function metadata()
-        external
-        view
-        override
-        returns (string memory, string memory, uint8)
-    {
-        return (_name(), _symbol(), _decimals());
-    }
-
     function decimals() external view override returns (uint8) {
         return _decimals();
     }

@@ -23,6 +23,7 @@ import { Signer } from 'ethers'
 import {
     ACCESS_CONTROL_RESOLVER_KEY,
     DIAMOND_CUT_RESOLVER_KEY,
+    ERC20_RESOLVER_KEY,
     DIAMOND_LOUPE_RESOLVER_KEY,
     PAUSER_ROLE,
 } from './constants'
@@ -76,6 +77,9 @@ describe('EIP2535OwnableProxy', function () {
         await diamondCutFacet.waitForDeployment()
         await diamondLoupeFacet.waitForDeployment()
         await pauseFacet.waitForDeployment()
+        expect(await erc20Impl.businessIdIntrospection()).to.equal(
+            ERC20_RESOLVER_KEY
+        )
         expect(await diamondCutFacet.businessIdIntrospection()).to.be.equal(
             DIAMOND_CUT_RESOLVER_KEY
         )
@@ -211,11 +215,6 @@ describe('EIP2535OwnableProxy', function () {
         expect(await erc20.name()).to.equal(NAME)
         expect(await erc20.symbol()).to.equal(SYMBOL)
         expect(await erc20.decimals()).to.equal(DECIMALS)
-        expect(await erc20.metadata()).to.be.deep.equal([
-            NAME,
-            SYMBOL,
-            DECIMALS,
-        ])
     })
 
     it('GIVEN an ERC20 deployed linked to a EIP2535 proxy WHEN update THEN it can be updated', async () => {
@@ -234,11 +233,6 @@ describe('EIP2535OwnableProxy', function () {
         expect(await erc20.name()).to.equal(NAME)
         expect(await erc20.symbol()).to.equal(SYMBOL)
         expect(await erc20.decimals()).to.equal(DECIMALS)
-        expect(await erc20.metadata()).to.be.deep.equal([
-            NAME,
-            SYMBOL,
-            DECIMALS,
-        ])
     })
 
     it('GIVEN an ERC20 deployed linked to a EIP2535 proxy WHEN add new Ownable2Step THEN it can be used', async () => {
@@ -282,10 +276,5 @@ describe('EIP2535OwnableProxy', function () {
         expect(await erc20.name()).to.equal(NAME)
         expect(await erc20.symbol()).to.equal(SYMBOL)
         expect(await erc20.decimals()).to.equal(DECIMALS)
-        expect(await erc20.metadata()).to.be.deep.equal([
-            NAME,
-            SYMBOL,
-            DECIMALS,
-        ])
     })
 })

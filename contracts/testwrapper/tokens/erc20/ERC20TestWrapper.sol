@@ -43,7 +43,7 @@ contract ERC20TestWrapper is
         override
         returns (bytes4[] memory selectors_)
     {
-        uint256 selectorsLength = 24;
+        uint256 selectorsLength = 23;
         selectors_ = new bytes4[](selectorsLength);
         selectors_[--selectorsLength] = this.initializeErc20.selector;
         selectors_[--selectorsLength] = this.initializeCap.selector;
@@ -68,6 +68,5 @@ contract ERC20TestWrapper is
         selectors_[--selectorsLength] = this.totalSupplyAt.selector;
         selectors_[--selectorsLength] = this.forceTransfer.selector;
         selectors_[--selectorsLength] = this.forceBurn.selector;
-        selectors_[--selectorsLength] = this.metadata.selector;
     }
 }

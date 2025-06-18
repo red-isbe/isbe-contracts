@@ -39,6 +39,7 @@ import {
 } from './constants'
 import { ContractFactory } from 'ethers'
 import { ContractTransactionReceipt } from 'ethers/src.ts/contract/wrappers'
+import { expect } from 'chai'
 
 let BusinessLogicFactoryFacetFactory: BusinessLogicFactoryFacet__factory
 let EIP2535AccessControlFactory: EIP2535AccessControl__factory
@@ -188,6 +189,48 @@ export async function deployAll(isOwnable: boolean = false) {
     const mockTimestampFacet = await deployBusinessLogicFromFactory(
         MOCK_TIMESTAMP_RESOLVER_KEY,
         MockTimestampFacetFactory
+    )
+    expect(await diamondCutFacet.businessIdIntrospection()).to.equal(
+        DIAMOND_CUT_RESOLVER_KEY
+    )
+    expect(await diamondLoupeFacet.businessIdIntrospection()).to.equal(
+        DIAMOND_LOUPE_RESOLVER_KEY
+    )
+    expect(await accessControlFacet.businessIdIntrospection()).to.equal(
+        ACCESS_CONTROL_RESOLVER_KEY
+    )
+    expect(await ownable2StepFacet.businessIdIntrospection()).to.equal(
+        OWNABLE2STEP_RESOLVER_KEY
+    )
+    expect(await ownableFacet.businessIdIntrospection()).to.equal(
+        OWNABLE_RESOLVER_KEY
+    )
+    expect(await pauseFacet.businessIdIntrospection()).to.equal(
+        PAUSE_RESOLVER_KEY
+    )
+    expect(await erc20SnapshotFacet.businessIdIntrospection()).to.equal(
+        ERC20_SNAPSHOT_RESOLVER_KEY
+    )
+    expect(await erc20BurnableFacet.businessIdIntrospection()).to.equal(
+        ERC20_BURNABLE_RESOLVER_KEY
+    )
+    expect(await erc20CappedFacet.businessIdIntrospection()).to.equal(
+        ERC20_CAPPED_RESOLVER_KEY
+    )
+    expect(await erc20ControllerFacet.businessIdIntrospection()).to.equal(
+        ERC20_CONTROLLER_RESOLVER_KEY
+    )
+    expect(await erc20Facet.businessIdIntrospection()).to.equal(
+        ERC20_RESOLVER_KEY
+    )
+    expect(await assetEventTrackerFacet.businessIdIntrospection()).to.equal(
+        ASSET_EVENT_TRACKER_RESOLVER_KEY
+    )
+    expect(await hashTimestampFacet.businessIdIntrospection()).to.equal(
+        HASH_TIMESTAMP_RESOLVER_KEY
+    )
+    expect(await mockTimestampFacet.businessIdIntrospection()).to.equal(
+        MOCK_TIMESTAMP_RESOLVER_KEY
     )
 
     const facetAddresses = [
