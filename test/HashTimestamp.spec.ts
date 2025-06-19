@@ -5,7 +5,7 @@ import {
     AccessControl,
     ISBEPause,
     HashTimestampTestWrapper,
-} from '../typechain-types/index.js'
+} from '../typechain-types'
 import { HASH_TIMESTAMP_ROLE, PAUSER_ROLE } from './constants'
 import { deployAll } from './initialization'
 

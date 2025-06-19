@@ -15,6 +15,7 @@ import {
     MINTER_ROLE,
     SNAPSHOT_ROLE,
     CONTROLLER_ROLE,
+    ERC20_RESOLVER_KEY,
 } from './constants'
 import { deployAll } from './initialization'
 describe('ERC20', function () {
@@ -57,6 +58,9 @@ describe('ERC20', function () {
             await erc20.initializeErc20(name, symbol, decimals)
             await erc20Capped.initializeCap(1000)
         }
+        expect(await result.erc20Facet.businessIdIntrospection()).to.equal(
+            ERC20_RESOLVER_KEY
+        )
     }
 
     describe('Deployment', () => {
