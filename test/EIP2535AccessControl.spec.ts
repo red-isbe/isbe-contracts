@@ -276,8 +276,8 @@ describe('EIP2535AccessControlProxy', function () {
                     .withArgs(['0x01234567'])
             })
 
-            it.skip('GIVEN a deployed EIP2535 WHEN try to add an existent signature THEN revert', async () => {
-                const facetAddress = await diamondCutFacet.getAddress()
+            it('GIVEN a deployed EIP2535 WHEN try to add an existent signature THEN revert', async () => {
+                const facetAddress = await diamondLoupeFacet.getAddress()
                 const items = [
                     (await diamondCutFacet.selectorsIntrospection())[0],
                 ]
@@ -299,6 +299,30 @@ describe('EIP2535AccessControlProxy', function () {
                         'CannotAddItemToDiamondThatAlreadyExists'
                     )
                     .withArgs(items[0])
+            })
+
+            it.skip('GIVEN a deployed EIP2535 WHEN try to add an existent signature to the same address THEN success', async () => {
+                const facetAddress = await diamondCutFacet.getAddress()
+                const selector = (
+                    await diamondCutFacet.selectorsIntrospection()
+                )[0]
+                const items = [selector]
+
+                await diamondCut.diamondCut(
+                    [
+                        {
+                            facetAddress,
+                            action: 0,
+                            items,
+                        },
+                    ],
+                    ethers.ZeroAddress,
+                    '0x'
+                )
+
+                const result = await diamondLoupeFacet.facetAddress(selector)
+
+                expect(result).to.be.equal(facetAddress)
             })
 
             it('GIVEN a deployed EIP2535 WHEN try to add a Zero signature THEN revert', async () => {
