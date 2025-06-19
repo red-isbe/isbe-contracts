@@ -33,6 +33,12 @@ contract DiamondCutAccessControlFacet is
         _diamondCut(_facetCuts, _init, _calldata);
     }
 
+    function interfaceCut(
+        InterfaceCut[] calldata _interfaceCuts
+    ) external override onlyRole(DEFAULT_ADMIN_ROLE) whenNotPaused {
+        _interfaceCut(_interfaceCuts);
+    }
+
     function facetUpdates(
         address[] memory _facetAddresses,
         address _init,

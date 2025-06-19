@@ -34,10 +34,12 @@ interface IDiamondCut is IDiamond {
         bytes calldata _calldata
     ) external;
 
+    function interfaceCut(InterfaceCut[] calldata _interfaceCuts) external;
+
     /**
      * @notice Update the facets of the diamond by specifying facet addresses,
      *         optionally executing a function with `delegatecall` for initialization or other purposes.
-     * @param _facetAddresses An array of facet addresses to be updated or initialized.
+     * @param _newFacetAddresses An array of facet addresses to be updated or initialized.
      * @param _init The address of the contract or facet to execute `_calldata` with `delegatecall`.
      *              If `_init` is the zero address, no initialization function is called.
      * @param _calldata The data for the function call, including the function selector and arguments.
@@ -45,7 +47,7 @@ interface IDiamondCut is IDiamond {
      *                  If `_calldata` is empty, no call is executed.
      */
     function facetUpdates(
-        address[] memory _facetAddresses,
+        address[] memory _newFacetAddresses,
         address _init,
         bytes calldata _calldata
     ) external;

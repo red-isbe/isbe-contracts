@@ -33,12 +33,18 @@ contract DiamondCutOwnableFacet is
         _diamondCut(_facetCuts, _init, _calldata);
     }
 
+    function interfaceCut(
+        InterfaceCut[] calldata _interfaceCuts
+    ) external override onlyOwner whenNotPaused {
+        _interfaceCut(_interfaceCuts);
+    }
+
     function facetUpdates(
-        address[] memory _facetAddresses,
+        address[] memory _newFacetAddresses,
         address _init,
         bytes calldata _calldata
     ) external override onlyOwner whenNotPaused {
-        _facetUpdates(_facetAddresses, _init, _calldata);
+        _facetUpdates(_newFacetAddresses, _init, _calldata);
     }
 
     function interfacesIntrospection()

@@ -127,40 +127,39 @@ abstract contract EIP2535Internal is Common {
         _initializeDiamondCut(_init, _calldata);
     }
 
-    function _updateInterfaces(
-        IDiamondCut.InterfaceUpdates[] memory _interfaceUpdates
+    function _interfaceCut(
+        IDiamondCut.InterfaceCut[] memory _interfaceCuts
     ) internal {
-        uint256 length = _interfaceUpdates.length;
+        uint256 length = _interfaceCuts.length;
 
         for (uint256 interfaceIndex; interfaceIndex < length; ) {
-            bytes4[] memory interfaces = _interfaceUpdates[interfaceIndex]
+            bytes4[] memory interfaces = _interfaceCuts[interfaceIndex]
                 .interfaces;
-            address facetAddress = _interfaceUpdates[interfaceIndex]
-                .facetAddress;
+            address facetAddress = _interfaceCuts[interfaceIndex].facetAddress;
 
             if (interfaces.length == 0) {
                 revert NoInterfacesProvidedForUpdate(facetAddress);
             }
             _checkNonZeroInterface(facetAddress, interfaces);
 
-            IDiamondCut.InterfaceUpdateAction action = _interfaceUpdates[
+            IDiamondCut.InterfaceCutAction action = _interfaceCuts[
                 interfaceIndex
             ].action;
             unchecked {
                 ++interfaceIndex;
             }
-            if (action == IDiamond.InterfaceUpdateAction.Add) {
+            if (action == IDiamond.InterfaceCutAction.Add) {
                 _addInterfaces(facetAddress, interfaces);
                 continue;
             }
-            if (action == IDiamond.InterfaceUpdateAction.Replace) {
+            if (action == IDiamond.InterfaceCutAction.Replace) {
                 _replaceInterfaces(facetAddress, interfaces);
                 continue;
             }
             _removeInterfaces(facetAddress, interfaces);
         }
 
-        emit IDiamond.InterfacesUpdates(_interfaceUpdates);
+        emit IDiamond.InterfacesUpdate(_interfaceCuts);
     }
 
     /**
@@ -191,7 +190,7 @@ abstract contract EIP2535Internal is Common {
             _init,
             _calldata
         );
-        _updateInterfaces(
+        _interfaceCut(
             _buildInterfaceUpdatesFromIntrospection(_newFacetAddresses)
         );
     }
@@ -285,11 +284,12 @@ abstract contract EIP2535Internal is Common {
         uint16 itemCount = uint16(_items.length);
 
         uint256 length = _newItems.length;
-        for (uint256 itemIndex; itemIndex < length; ) {
+        for (uint256 itemIndex; itemIndex < length; itemIndex++) {
             bytes4 item = _newItems[itemIndex];
             address oldFacetAddress = _facetAddressAndItemPosition[item]
                 .facetAddress;
             if (oldFacetAddress != address(0)) {
+                if (oldFacetAddress == _newFacetAddress) continue;
                 revert CannotAddItemToDiamondThatAlreadyExists(item);
             }
             _facetAddressAndItemPosition[item] = FacetAddressAndItemPosition(
@@ -299,7 +299,6 @@ abstract contract EIP2535Internal is Common {
             _items.push(item);
             unchecked {
                 ++itemCount;
-                ++itemIndex;
             }
         }
     }
@@ -644,25 +643,19 @@ abstract contract EIP2535Internal is Common {
 
     function _buildInterfaceUpdatesFromIntrospection(
         address[] memory facetAddresses
-    )
-        private
-        pure
-        returns (IDiamondCut.InterfaceUpdates[] memory interfaceUpdates)
-    {
+    ) private pure returns (IDiamondCut.InterfaceCut[] memory interfaceCut) {
         uint256 facetAddressesLength = facetAddresses.length;
-        interfaceUpdates = new IDiamondCut.InterfaceUpdates[](
-            facetAddressesLength
-        );
+        interfaceCut = new IDiamondCut.InterfaceCut[](facetAddressesLength);
         for (uint256 index; index < facetAddressesLength; ++index) {
-            interfaceUpdates[index] = IDiamond.InterfaceUpdates({
+            interfaceCut[index] = IDiamond.InterfaceCut({
                 facetAddress: facetAddresses[index],
-                action: IDiamond.InterfaceUpdateAction.Add,
+                action: IDiamond.InterfaceCutAction.Add,
                 interfaces: IEIP2535Introspection(facetAddresses[index])
                     .interfacesIntrospection()
             });
             _checkNonZeroInterface(
                 facetAddresses[index],
-                interfaceUpdates[index].interfaces
+                interfaceCut[index].interfaces
             );
         }
     }

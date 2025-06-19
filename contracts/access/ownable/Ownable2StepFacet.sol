@@ -6,8 +6,6 @@ import {Ownable2Step} from './Ownable2Step.sol';
 import {
     IEIP2535Introspection
 } from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
-import {IOwnable} from './IOwnable.sol';
-import {IOwnable2Step} from './IOwnable2Step.sol';
 
 /// @title Ownable
 /// @notice Implements ownership mechanisms
@@ -18,10 +16,7 @@ contract Ownable2StepFacet is Ownable2Step, IEIP2535Introspection {
         pure
         returns (bytes4[] memory interfaces_)
     {
-        uint256 interfacesLength = 2;
-        interfaces_ = new bytes4[](interfacesLength);
-        interfaces_[--interfacesLength] = type(IOwnable).interfaceId;
-        interfaces_[--interfacesLength] = type(IOwnable2Step).interfaceId;
+        return _implementedInterfaces();
     }
 
     function businessIdIntrospection()
