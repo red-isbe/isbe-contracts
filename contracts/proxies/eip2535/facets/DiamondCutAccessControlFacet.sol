@@ -72,9 +72,10 @@ contract DiamondCutAccessControlFacet is
         override
         returns (bytes4[] memory selectors_)
     {
-        uint256 selectorsLength = 2;
+        uint256 selectorsLength = 3;
         selectors_ = new bytes4[](selectorsLength);
         selectors_[--selectorsLength] = this.diamondCut.selector;
+        selectors_[--selectorsLength] = this.interfaceCut.selector;
         selectors_[--selectorsLength] = this.facetUpdates.selector;
     }
 }
