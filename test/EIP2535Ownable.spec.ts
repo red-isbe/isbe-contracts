@@ -21,8 +21,10 @@ import {
 } from '../typechain-types'
 import { Signer } from 'ethers'
 import {
+    ACCESS_CONTROL_RESOLVER_KEY,
     DIAMOND_CUT_RESOLVER_KEY,
     ERC20_RESOLVER_KEY,
+    DIAMOND_LOUPE_RESOLVER_KEY,
     PAUSER_ROLE,
 } from './constants'
 
@@ -78,8 +80,14 @@ describe('EIP2535OwnableProxy', function () {
         expect(await erc20Impl.businessIdIntrospection()).to.equal(
             ERC20_RESOLVER_KEY
         )
-        expect(await diamondCutFacet.businessIdIntrospection()).to.equal(
+        expect(await diamondCutFacet.businessIdIntrospection()).to.be.equal(
             DIAMOND_CUT_RESOLVER_KEY
+        )
+        expect(await diamondLoupeFacet.businessIdIntrospection()).to.be.equal(
+            DIAMOND_LOUPE_RESOLVER_KEY
+        )
+        expect(await accessControlFacet.businessIdIntrospection()).to.be.equal(
+            ACCESS_CONTROL_RESOLVER_KEY
         )
     }
 

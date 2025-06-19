@@ -35,6 +35,9 @@ bytes32 constant _OWNABLE2STEP_STORAGE_POSITION = 0xd98f695f92cbf5b2cd00d847e9c6
 // keccak256('isbe.contracts.reentrancyguard.storage');
 bytes32 constant _REENTRANCY_GUARD_POSITION = 0x7bf241ea64ab5edc778605f2e8ec976d076766db0a3b325c3d4cf284b900691c;
 
+// keccak256('isbe.contracts.business.logic.storage');
+bytes32 constant _BUSINESS_LOGIC_STORAGE_POSITION = 0xcc909a7aa58395856caf7fad6a3a60f28409d3125d9bcd5a8af0f1af5335b5fe;
+
 // keccak256('isbe.contracts.erc165.storage');
 bytes32 constant _ERC165_STORAGE_POSITION = 0x5a9f265fc8293625a32b1b511d224627edb2b19485eec7afa363a8bc332ee1c9;
 

@@ -1,14 +1,14 @@
 import { expect } from 'chai'
 import { Signer } from 'ethers'
 import { ethers } from 'hardhat'
-import { AccessControl } from '../typechain-types'
+import { AccessControl, AccessControlFacet } from '../typechain-types'
 import { DEFAULT_ADMIN_ROLE, ROLE_1, ROLE_2 } from './constants'
 import { deployAll } from './initialization'
 
 describe('Access Control', function () {
     let adminAccount: Signer
     let account_2: Signer
-    let accessControlFacet: AccessControl
+    let accessControlFacet: AccessControlFacet
     let accessControl: AccessControl
 
     before(async () => {
