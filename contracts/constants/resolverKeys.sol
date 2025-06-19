@@ -45,4 +45,7 @@ bytes32 constant _DIAMOND_LOUPE_RESOLVER_KEY = 0xa081a7fa2e40735a4006bc6a225e181
 // keccak256('isbe.contracts.business.logic.factory.resolver.key');
 bytes32 constant _BUSINESS_LOGIC_FACTORY_RESOLVER_KEY = 0xc6315ad82a957243645764f5542166d6ca27427e14eee4c56d66d963349845f4;
 
+// keccak256('isbe.contracts.proxy.factory.resolver.key');
+bytes32 constant _PROXY_FACTORY_RESOLVER_KEY = 0x949f2c59318fff1925835e4fd22837f508de87f71875ac3e71a5f5c7e4c74d10;
+
 // solhint-enable max-line-length

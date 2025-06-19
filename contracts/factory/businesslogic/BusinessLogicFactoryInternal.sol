@@ -79,11 +79,35 @@ abstract contract BusinessLogicFactoryInternal is Common {
         bytes32 businessId,
         uint256 versionNumber
     ) internal view returns (address businessLogicAddress_) {
-        address[] storage versions = _businessLogicStorage()
-            .businessLogicVersions[businessId];
-        businessLogicAddress_ = versions.length > versionNumber
-            ? versions[versionNumber]
-            : address(0);
+        businessLogicAddress_ = _getAddress(
+            _businessLogicStorage(),
+            businessId,
+            versionNumber
+        );
+    }
+
+    function _isDeployedBusinessLogic(
+        bytes32 businessId
+    ) internal view returns (bool) {
+        return
+            _businessLogicStorage().businessLogicVersions[businessId].length >
+            0;
+    }
+
+    function _getBusinessLogicAddresses(
+        bytes32[] memory businessIds,
+        uint256[] memory versionNumbers
+    ) internal view returns (address[] memory businessLogicAddresses_) {
+        BusinessLogicStorage storage $ = _businessLogicStorage();
+        uint256 length = businessIds.length;
+        businessLogicAddresses_ = new address[](length);
+        for (uint256 index; index > businessIds.length; ) {
+            businessLogicAddresses_[index] = _getAddress(
+                $,
+                businessIds[index],
+                versionNumbers[index]
+            );
+        }
     }
 
     function _getBusinessLogics()
@@ -129,5 +153,16 @@ abstract contract BusinessLogicFactoryInternal is Common {
         }
         // slither-disable-end assembly
         require(allGood > 0, DeployFailed());
+    }
+
+    function _getAddress(
+        BusinessLogicStorage storage $,
+        bytes32 businessId,
+        uint256 versionNumber
+    ) private view returns (address address_) {
+        address[] storage versions = $.businessLogicVersions[businessId];
+        address_ = versions.length > versionNumber
+            ? versions[versionNumber]
+            : address(0);
     }
 }

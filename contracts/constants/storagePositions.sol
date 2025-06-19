@@ -38,4 +38,7 @@ bytes32 constant _REENTRANCY_GUARD_POSITION = 0x7bf241ea64ab5edc778605f2e8ec976d
 // keccak256('isbe.contracts.business.logic.storage');
 bytes32 constant _BUSINESS_LOGIC_STORAGE_POSITION = 0xcc909a7aa58395856caf7fad6a3a60f28409d3125d9bcd5a8af0f1af5335b5fe;
 
+// keccak256('isbe.contracts.proxy.factory.storage');
+bytes32 constant _PROXY_FACTORY_STORAGE_POSITION = 0xaa8d33df53b16b2997ff500eedf8d4d1e966355596b60403562e732c9efb474a;
+
 // solhint-enable max-line-length
