@@ -35,7 +35,7 @@ contract EIP2535AccessControl is EIP2535 {
      * @param _args Struct containing diamond initialization arguments (`DiamondArgs`).
      */
     constructor(address[] memory _facets, DiamondArgs memory _args) payable {
-        _initializeRbacs(_args.rbacs); // Set up role-based access control
+        _initializeRbac(_args.rbacs); // Set up role-based access control
         _configureFacets(_facets, _args.init, _args.initCalldata); // Configure facets and execute initialization logic
     }
 }

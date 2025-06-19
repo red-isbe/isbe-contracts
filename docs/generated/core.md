@@ -14,18 +14,6 @@ _Checks if an address equals to zero address_
 | ---- | ------- | -------------------- |
 | addr | address | The address to check |
 
-### bytes32IsNotZero
-
-```solidity
-modifier bytes32IsNotZero(bytes32 hash)
-```
-
-### emptyCode
-
-```solidity
-modifier emptyCode(bytes code)
-```
-
 ---
 
 ## Initializable

@@ -26,24 +26,6 @@ Initializes the Access Control contrl grating admin right to an account
 | ----- | ------- | -------------------------------------- |
 | admin | address | The address to grant the admin role to |
 
-### initializeRbacs
-
-```solidity
-function initializeRbacs(struct IAccessControl.Rbac[] rbacs) external
-```
-
-Initialises the contract with a set of Role-Based Access Control configurations.
-
-_This is intended to be a one-time function call, executed right after the contract's
-deployment to establish all necessary roles and their permissions from the outset.
-Calling this function should set up the complete access control scheme for the contract._
-
-#### Parameters
-
-| Name  | Type                         | Description                                                                             |
-| ----- | ---------------------------- | --------------------------------------------------------------------------------------- |
-| rbacs | struct IAccessControl.Rbac[] | An array of `IAccessControl.Rbac` structures, each defining a role and its permissions. |
-
 ### grantRole
 
 ```solidity
@@ -226,10 +208,10 @@ _Reverts with `AccountHasNoRole` error if the account does not have the specific
 | ---- | ------- | ----------------- |
 | role | bytes32 | The required role |
 
-### \_initializeRbacs
+### \_initializeRbac
 
 ```solidity
-function _initializeRbacs(struct IAccessControl.Rbac[] rbacs) internal virtual
+function _initializeRbac(struct IAccessControl.Rbac[] rbacs) internal virtual
 ```
 
 ### \_setRoleAdmin

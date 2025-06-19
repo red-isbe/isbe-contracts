@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {InitializeBusinessLogic} from '../../utils/InitializeBusinessLogic.sol';
-import {Common} from '../../core/Common.sol';
-import {IDiamondCut} from './interfaces/IDiamondCut.sol';
 import {IDiamondLoupe} from './interfaces/IDiamondLoupe.sol';
+import {IDiamondCut} from './interfaces/IDiamondCut.sol';
 import {IDiamond} from './interfaces/IDiamond.sol';
 import {IEIP2535Introspection} from './interfaces/IEIP2535Introspection.sol';
 import {_DIAMOND_STORAGE_POSITION} from '../../constants/storagePositions.sol';
+import {Common} from '../../core/Common.sol';
 
 // solhint-disable no-inline-assembly
 /**
@@ -17,7 +16,7 @@ import {_DIAMOND_STORAGE_POSITION} from '../../constants/storagePositions.sol';
  *      replacing, or removing functions. Contains detailed error handling for various edge cases during
  *      diamond modification and management.
  */
-abstract contract EIP2535Internal is Common, InitializeBusinessLogic {
+abstract contract EIP2535Internal is Common {
     /**
      * @dev Struct to store the facet address and its selector position for a given selector.
      * @param facetAddress The address of the facet that implements the function.
@@ -59,6 +58,10 @@ abstract contract EIP2535Internal is Common, InitializeBusinessLogic {
     error RemoveFacetAddressMustBeZeroAddress(address _facetAddress);
     error CannotRemoveFunctionThatDoesNotExist(bytes4 _selector);
     error CannotRemoveImmutableFunction(bytes4 _selector);
+    error InitializationFunctionReverted(
+        address _initializationContractAddress,
+        bytes _calldata
+    );
     error ZeroSelector(address facetAddress, uint256 position);
 
     /**
@@ -274,7 +277,22 @@ abstract contract EIP2535Internal is Common, InitializeBusinessLogic {
             _init,
             'LibDiamondCut: _init address has no code'
         );
-        _initializeBusinessLogic(_init, _calldata);
+        // solhint-disable avoid-low-level-calls
+        // slither-disable-next-line controlled-delegatecall
+        (bool success, bytes memory error) = _init.delegatecall(_calldata);
+        // solhint-enable avoid-low-level-calls
+        if (success) {
+            return;
+        }
+        if (error.length == 0) {
+            revert InitializationFunctionReverted(_init, _calldata);
+        }
+        // bubble up error
+        /// @solidity memory-safe-assembly
+        assembly {
+            let returndata_size := mload(error)
+            revert(add(32, error), returndata_size)
+        }
     }
 
     function _enforceHasContractCode(

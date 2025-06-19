@@ -1,17 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {
-    ITransparentAccessControl
-} from '../../factory/proxyfactory/ITransparentAccessControl.sol';
-import {Common} from '../../core/Common.sol';
 import {IAccessControl} from './IAccessControl.sol';
+import {Common} from '../../core/Common.sol';
 import {_ACCESS_CONTROL_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
 
 /// @title AccessControl
 /// @notice Implements role-based access control mechanisms
 /// @dev Inherits from IAccessControl and Common, providing external role management functions
-contract AccessControl is IAccessControl, ITransparentAccessControl, Common {
+contract AccessControl is IAccessControl, Common {
     /// @notice Constructor that disables the initializer
     constructor() {
         _disableInitializers(_ACCESS_CONTROL_RESOLVER_KEY);
@@ -25,12 +22,6 @@ contract AccessControl is IAccessControl, ITransparentAccessControl, Common {
         addressIsNotZero(admin)
     {
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
-    }
-
-    function initializeRbacs(
-        Rbac[] memory rbacs
-    ) external initializer(_ACCESS_CONTROL_RESOLVER_KEY) {
-        _initializeRbacs(rbacs);
     }
 
     function grantRole(

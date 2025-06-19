@@ -207,8 +207,7 @@ describe('EIP2535AccessControlProxy', function () {
                 )
                 .withArgs(
                     await diamondCutFacet.getAddress(),
-                    '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
-                    '0x'
+                    '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
                 )
         })
 
