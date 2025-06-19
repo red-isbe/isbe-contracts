@@ -144,7 +144,7 @@ export async function deployAll(isOwnable: boolean = false) {
         AccessControlFacetFactory
     )
     const ownable2StepFacet = await deployBusinessLogicFromFactory(
-        OWNABLE2STEP_RESOLVER_KEY,
+        OWNABLE_RESOLVER_KEY,
         Ownable2StepFacetFactory
     )
     const ownableFacet = await deployBusinessLogicFromFactory(
