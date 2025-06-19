@@ -16,7 +16,7 @@ contract OwnableFacet is Ownable, IEIP2535Introspection {
         pure
         returns (bytes4[] memory interfaces_)
     {
-        return _ownableInterfaces();
+        return _implementedInterfaces();
     }
 
     function businessIdIntrospection()

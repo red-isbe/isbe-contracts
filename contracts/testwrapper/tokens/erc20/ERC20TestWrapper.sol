@@ -28,68 +28,12 @@ contract ERC20TestWrapper is
     ERC20Controller,
     IEIP2535Introspection
 {
-    function supportsInterface(
-        bytes4 interfaceId
-    )
-        external
-        pure
-        override(
-            ERC20,
-            ERC20Burnable,
-            ERC20Capped,
-            ERC20Snapshot,
-            ERC20Controller
-        )
-        returns (bool)
-    {
-        return
-            _supportsERC165Interface(interfaceId) ||
-            _supportsInterface(interfaceId, _erc20Interfaces()) ||
-            _supportsInterface(interfaceId, _erc20BurnableInterfaces()) ||
-            _supportsInterface(interfaceId, _erc20CappedInterfaces()) ||
-            _supportsInterface(interfaceId, _erc20SnapshotInterfaces()) ||
-            _supportsInterface(interfaceId, _erc20ControllerInterfaces());
-    }
-
     function interfacesIntrospection()
         external
         pure
         returns (bytes4[] memory interfaces_)
     {
-        uint256 interfacesLength = _erc20Interfaces().length +
-            _erc20BurnableInterfaces().length +
-            _erc20CappedInterfaces().length +
-            _erc20ControllerInterfaces().length +
-            _erc20SnapshotInterfaces().length;
-
-        interfaces_ = new bytes4[](interfacesLength);
-
-        uint256 index = 0;
-
-        for (uint256 i = 0; i < _erc20Interfaces().length; i++) {
-            interfaces_[index] = _erc20Interfaces()[i];
-            index++;
-        }
-
-        for (uint256 i = 0; i < _erc20BurnableInterfaces().length; i++) {
-            interfaces_[index] = _erc20BurnableInterfaces()[i];
-            index++;
-        }
-
-        for (uint256 i = 0; i < _erc20CappedInterfaces().length; i++) {
-            interfaces_[index] = _erc20CappedInterfaces()[i];
-            index++;
-        }
-
-        for (uint256 i = 0; i < _erc20ControllerInterfaces().length; i++) {
-            interfaces_[index] = _erc20ControllerInterfaces()[i];
-            index++;
-        }
-
-        for (uint256 i = 0; i < _erc20SnapshotInterfaces().length; i++) {
-            interfaces_[index] = _erc20SnapshotInterfaces()[i];
-            index++;
-        }
+        return _implementedInterfaces();
     }
 
     function businessIdIntrospection()
@@ -132,5 +76,30 @@ contract ERC20TestWrapper is
         selectors_[--selectorsLength] = this.totalSupplyAt.selector;
         selectors_[--selectorsLength] = this.forceTransfer.selector;
         selectors_[--selectorsLength] = this.forceBurn.selector;
+    }
+
+    function _implementedInterfaces()
+        internal
+        pure
+        virtual
+        override(
+            ERC20,
+            ERC20Burnable,
+            ERC20Capped,
+            ERC20Controller,
+            ERC20Snapshot
+        )
+        returns (bytes4[] memory interfaces_)
+    {
+        uint256 index = 0;
+
+        bytes4[][] memory interfaceGroups = new bytes4[][](5);
+        interfaceGroups[index++] = ERC20._implementedInterfaces();
+        interfaceGroups[index++] = ERC20Burnable._implementedInterfaces();
+        interfaceGroups[index++] = ERC20Capped._implementedInterfaces();
+        interfaceGroups[index++] = ERC20Controller._implementedInterfaces();
+        interfaceGroups[index++] = ERC20Snapshot._implementedInterfaces();
+
+        return _aggregateInterfaces(interfaceGroups, new bytes4[](0));
     }
 }

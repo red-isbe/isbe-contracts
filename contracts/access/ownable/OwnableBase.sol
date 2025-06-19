@@ -4,12 +4,12 @@ pragma solidity ^0.8.28;
 import {IOwnable} from './IOwnable.sol';
 import {Common} from '../../core/Common.sol';
 import {_OWNABLE_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
-import {IERC165} from '@openzeppelin/contracts/utils/introspection/IERC165.sol';
+import {ERC165} from '../../core/ERC165.sol';
 
 /// @title Ownable
 /// @notice Implements ownership mechanisms
 /// @dev Inherits from IOwnable and OwnableInternal
-abstract contract OwnableBase is IOwnable, IERC165, Common {
+abstract contract OwnableBase is IOwnable, ERC165, Common {
     /// @notice Constructor that disables the initializer
 
     constructor() {
@@ -19,7 +19,7 @@ abstract contract OwnableBase is IOwnable, IERC165, Common {
     function initializeOwnable(
         address admin
     ) external initializer(_OWNABLE_RESOLVER_KEY) addressIsNotZero(admin) {
-        _initializeOwnable(admin);
+        _transferOwnership(admin);
         emit OwnershipTransferred(_msgSender(), admin);
     }
 
@@ -32,21 +32,11 @@ abstract contract OwnableBase is IOwnable, IERC165, Common {
         return _owner();
     }
 
-    function supportsInterface(
-        bytes4 interfaceId
-    ) external view virtual override returns (bool) {
-        return
-            _supportsERC165Interface(interfaceId) ||
-            _supportsInterface(interfaceId, _ownableInterfaces());
-    }
-
-    function _initializeOwnable(address admin) internal {
-        _transferOwnership(admin);
-    }
-
-    function _ownableInterfaces()
+    function _implementedInterfaces()
         internal
         pure
+        virtual
+        override
         returns (bytes4[] memory interfaces_)
     {
         uint256 interfacesLength = 1;

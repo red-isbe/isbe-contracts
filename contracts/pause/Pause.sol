@@ -5,12 +5,12 @@ pragma solidity ^0.8.28;
 import {PauseInternal} from './PauseInternal.sol';
 import {IPause} from './IPause.sol';
 import {_PAUSE_RESOLVER_KEY} from '../constants/resolverKeys.sol';
-import {IERC165} from '@openzeppelin/contracts/utils/introspection/IERC165.sol';
+import {ERC165} from '../core/ERC165.sol';
 
 /// @title Pause
 /// @notice Implements pausing mechanism
 /// @dev Inherits from IPause and PauseInternal, providing external pause functions
-abstract contract Pause is IPause, IERC165, PauseInternal {
+abstract contract Pause is IPause, ERC165, PauseInternal {
     /// @notice Constructor that disables the initializer
     constructor() {
         _disableInitializers(_PAUSE_RESOLVER_KEY);
@@ -46,17 +46,11 @@ abstract contract Pause is IPause, IERC165, PauseInternal {
         return _authorityLevel();
     }
 
-    function supportsInterface(
-        bytes4 interfaceId
-    ) external view virtual override returns (bool) {
-        return
-            _supportsERC165Interface(interfaceId) ||
-            _supportsInterface(interfaceId, _pauseInterfaces());
-    }
-
-    function _pauseInterfaces()
+    function _implementedInterfaces()
         internal
         pure
+        virtual
+        override
         returns (bytes4[] memory interfaces_)
     {
         uint256 interfacesLength = 1;

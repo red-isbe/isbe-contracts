@@ -25,22 +25,19 @@ contract Ownable2Step is IOwnable2Step, OwnableBase, Ownable2StepInternal {
         return _pendingOwner();
     }
 
-    function supportsInterface(
-        bytes4 interfaceId
-    ) external view virtual override returns (bool) {
-        return
-            _supportsERC165Interface(interfaceId) ||
-            _supportsInterface(interfaceId, _ownableInterfaces()) ||
-            _supportsInterface(interfaceId, _ownable2StepInterfaces());
-    }
-
-    function _ownable2StepInterfaces()
+    function _implementedInterfaces()
         internal
         pure
+        virtual
+        override
         returns (bytes4[] memory interfaces_)
     {
-        uint256 interfacesLength = 1;
-        interfaces_ = new bytes4[](interfacesLength);
-        interfaces_[--interfacesLength] = type(IOwnable2Step).interfaceId;
+        bytes4[][] memory interfaceGroups = new bytes4[][](1);
+        interfaceGroups[0] = OwnableBase._implementedInterfaces();
+
+        bytes4[] memory interfaceIds = new bytes4[](1);
+        interfaceIds[0] = type(IOwnable2Step).interfaceId;
+
+        return _aggregateInterfaces(interfaceGroups, interfaceIds);
     }
 }

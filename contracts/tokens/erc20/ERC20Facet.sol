@@ -13,7 +13,7 @@ contract ERC20Facet is ERC20, IEIP2535Introspection {
         pure
         returns (bytes4[] memory interfaces_)
     {
-        return _erc20Interfaces();
+        return _implementedInterfaces();
     }
 
     function businessIdIntrospection()

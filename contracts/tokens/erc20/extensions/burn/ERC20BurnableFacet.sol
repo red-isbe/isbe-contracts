@@ -15,7 +15,7 @@ contract ERC20BurnableFacet is ERC20Burnable, IEIP2535Introspection {
         pure
         returns (bytes4[] memory interfaces_)
     {
-        return _erc20BurnableInterfaces();
+        return _implementedInterfaces();
     }
 
     function businessIdIntrospection()

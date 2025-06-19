@@ -8,7 +8,7 @@ import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {
     IERC20Metadata
 } from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
-import {IERC165} from '@openzeppelin/contracts/utils/introspection/IERC165.sol';
+import {ERC165} from '../../core/ERC165.sol';
 
 /**
  * @title ERC20 Token Contract
@@ -18,7 +18,7 @@ import {IERC165} from '@openzeppelin/contracts/utils/introspection/IERC165.sol';
  *      OpenZeppelin interfaces. It includes additional helper functions such as `increaseAllowance` and
  *      `decreaseAllowance` for more granular control over token allowances.
  */
-contract ERC20 is IERC20Isbe, IERC165, ERC20InternalCommon {
+contract ERC20 is IERC20Isbe, ERC165, ERC20InternalCommon {
     /// @notice Constructor that assigns the deployer as the default admin
     constructor() {
         _disableInitializers(_ERC20_RESOLVER_KEY);
@@ -180,17 +180,11 @@ contract ERC20 is IERC20Isbe, IERC165, ERC20InternalCommon {
         return _balanceOf(account);
     }
 
-    function supportsInterface(
-        bytes4 interfaceId
-    ) external view virtual override returns (bool) {
-        return
-            _supportsERC165Interface(interfaceId) ||
-            _supportsInterface(interfaceId, _erc20Interfaces());
-    }
-
-    function _erc20Interfaces()
+    function _implementedInterfaces()
         internal
         pure
+        virtual
+        override
         returns (bytes4[] memory interfaces_)
     {
         uint256 interfacesLength = 3;

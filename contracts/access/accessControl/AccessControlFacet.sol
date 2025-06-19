@@ -16,7 +16,7 @@ contract AccessControlFacet is AccessControl, IEIP2535Introspection {
         pure
         returns (bytes4[] memory interfaces_)
     {
-        return _accessControlInterfaces();
+        return _implementedInterfaces();
     }
 
     function businessIdIntrospection()

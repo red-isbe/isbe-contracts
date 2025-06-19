@@ -16,7 +16,7 @@ contract HashTimestampFacet is HashTimestamp, IEIP2535Introspection {
         pure
         returns (bytes4[] memory interfaces_)
     {
-        return _hashTimeStampInterfaces();
+        return _implementedInterfaces();
     }
 
     function businessIdIntrospection()

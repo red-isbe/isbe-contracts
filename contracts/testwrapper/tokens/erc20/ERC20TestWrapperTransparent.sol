@@ -28,30 +28,31 @@ contract ERC20TestWrapperTransparent is
     ISBEPause,
     AccessControl
 {
-    function supportsInterface(
-        bytes4 interfaceId
-    )
-        external
-        view
+    function _implementedInterfaces()
+        internal
+        pure
+        virtual
         override(
             ERC20,
             ERC20Burnable,
             ERC20Capped,
-            ERC20Snapshot,
             ERC20Controller,
+            ERC20Snapshot,
             Pause,
             AccessControl
         )
-        returns (bool)
+        returns (bytes4[] memory interfaces_)
     {
-        return
-            _supportsERC165Interface(interfaceId) ||
-            _supportsInterface(interfaceId, _erc20Interfaces()) ||
-            _supportsInterface(interfaceId, _erc20BurnableInterfaces()) ||
-            _supportsInterface(interfaceId, _erc20CappedInterfaces()) ||
-            _supportsInterface(interfaceId, _erc20SnapshotInterfaces()) ||
-            _supportsInterface(interfaceId, _erc20ControllerInterfaces()) ||
-            _supportsInterface(interfaceId, _pauseInterfaces()) ||
-            _supportsInterface(interfaceId, _accessControlInterfaces());
+        uint256 index = 0;
+        bytes4[][] memory interfaceGroups = new bytes4[][](7);
+        interfaceGroups[index++] = ERC20._implementedInterfaces();
+        interfaceGroups[index++] = ERC20Burnable._implementedInterfaces();
+        interfaceGroups[index++] = ERC20Capped._implementedInterfaces();
+        interfaceGroups[index++] = ERC20Controller._implementedInterfaces();
+        interfaceGroups[index++] = ERC20Snapshot._implementedInterfaces();
+        interfaceGroups[index++] = Pause._implementedInterfaces();
+        interfaceGroups[index++] = AccessControl._implementedInterfaces();
+
+        return _aggregateInterfaces(interfaceGroups, new bytes4[](0));
     }
 }
