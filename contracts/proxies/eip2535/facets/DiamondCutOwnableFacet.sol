@@ -26,7 +26,7 @@ contract DiamondCutOwnableFacet is
     /// @param _calldata A function call, including function selector and arguments
     ///                  _calldata is executed with delegatecall on _init
     function diamondCut(
-        FacetCut[] calldata _facetCuts,
+        ItemCut[] calldata _facetCuts,
         address _init,
         bytes calldata _calldata
     ) external override onlyOwner whenNotPaused {
@@ -34,7 +34,7 @@ contract DiamondCutOwnableFacet is
     }
 
     function interfaceCut(
-        InterfaceCut[] calldata _interfaceCuts
+        ItemCut[] calldata _interfaceCuts
     ) external override onlyOwner whenNotPaused {
         _interfaceCut(_interfaceCuts);
     }

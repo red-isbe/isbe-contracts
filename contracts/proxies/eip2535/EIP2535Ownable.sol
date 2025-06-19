@@ -40,7 +40,7 @@ contract EIP2535Ownable is EIP2535 {
      * @dev Additional logic can be added after `_diamondCut` for extra setup or to initialize state variables.
      */
     constructor(
-        IDiamondCut.FacetCut[] memory _facetCuts,
+        IDiamondCut.ItemCut[] memory _facetCuts,
         DiamondArgs memory _args
     ) payable {
         // Transfer ownership to the specified address

@@ -53,30 +53,15 @@ abstract contract EIP2535Internal is Common {
         bytes4[] interfaces;
     }
 
-    error NoSelectorsGivenToAdd();
-    error NotContractOwner(address _user, address _contractOwner);
-    error NoSelectorsProvidedForFacetForCut(address _facetAddress);
-    error CannotAddSelectorsToZeroAddress(bytes4[] _selectors);
     error NoBytecodeAtAddress(address _contractAddress, string _message);
-    error IncorrectFacetCutAction(uint8 _action);
-    error CannotAddFunctionToDiamondThatAlreadyExists(bytes4 _selector);
-    error CannotReplaceFunctionsFromFacetWithZeroAddress(bytes4[] _selectors);
-    error CannotReplaceImmutableFunction(bytes4 _selector);
-    error CannotReplaceFunctionWithTheSameFunctionFromTheSameFacet(
-        bytes4 _selector
-    );
-    error CannotReplaceFunctionThatDoesNotExists(bytes4 _selector);
     error RemoveFacetAddressMustBeZeroAddress(address _facetAddress);
-    error CannotRemoveFunctionThatDoesNotExist(bytes4 _selector);
-    error CannotRemoveImmutableFunction(bytes4 _selector);
     error InitializationFunctionReverted(
         address _initializationContractAddress,
         bytes _calldata
     );
-    error ZeroSelector(address facetAddress, uint256 position);
 
-    error NoInterfacesProvidedForUpdate(address _facetAddress);
-    error ZeroInterface(address facetAddress, uint256 position);
+    error NoItemsProvidedForUpdate(address _facetAddress);
+    error ZeroItem(address facetAddress, uint256 position);
     error CannotAddItemsToZeroAddress(bytes4[] _items);
     error CannotAddItemToDiamondThatAlreadyExists(bytes4 _items);
     error CannotReplaceItemsFromFacetWithZeroAddress(bytes4[] _items);
@@ -96,70 +81,76 @@ abstract contract EIP2535Internal is Common {
      * @param _calldata The calldata to execute during initialization.
      */
     function _diamondCut(
-        IDiamondCut.FacetCut[] memory _facetCuts,
+        IDiamondCut.ItemCut[] memory _facetCuts,
         address _init,
         bytes memory _calldata
     ) internal {
-        uint256 length = _facetCuts.length;
-        for (uint256 facetIndex; facetIndex < length; ) {
-            bytes4[] memory functionSelectors = _facetCuts[facetIndex]
-                .functionSelectors;
-            address facetAddress = _facetCuts[facetIndex].facetAddress;
-            if (functionSelectors.length == 0) {
-                revert NoSelectorsProvidedForFacetForCut(facetAddress);
-            }
-            _checkNonZeroSelector(facetAddress, functionSelectors);
-            IDiamondCut.FacetCutAction action = _facetCuts[facetIndex].action;
-            unchecked {
-                ++facetIndex;
-            }
-            if (action == IDiamond.FacetCutAction.Add) {
-                _addFunctions(facetAddress, functionSelectors);
-                continue;
-            }
-            if (action == IDiamond.FacetCutAction.Replace) {
-                _replaceFunctions(facetAddress, functionSelectors);
-                continue;
-            }
-            _removeFunctions(facetAddress, functionSelectors);
-        }
+        DiamondStorage storage $ = _diamondStorage();
+
+        _itemCut(_facetCuts, $.facetAddressAndSelectorPosition, $.selectors);
+
         emit IDiamond.DiamondCut(_facetCuts, _init, _calldata);
         _initializeDiamondCut(_init, _calldata);
     }
 
     function _interfaceCut(
-        IDiamondCut.InterfaceCut[] memory _interfaceCuts
+        IDiamondCut.ItemCut[] memory _interfaceCuts
     ) internal {
-        uint256 length = _interfaceCuts.length;
+        DiamondStorage storage $ = _diamondStorage();
 
-        for (uint256 interfaceIndex; interfaceIndex < length; ) {
-            bytes4[] memory interfaces = _interfaceCuts[interfaceIndex]
-                .interfaces;
-            address facetAddress = _interfaceCuts[interfaceIndex].facetAddress;
-
-            if (interfaces.length == 0) {
-                revert NoInterfacesProvidedForUpdate(facetAddress);
-            }
-            _checkNonZeroInterface(facetAddress, interfaces);
-
-            IDiamondCut.InterfaceCutAction action = _interfaceCuts[
-                interfaceIndex
-            ].action;
-            unchecked {
-                ++interfaceIndex;
-            }
-            if (action == IDiamond.InterfaceCutAction.Add) {
-                _addInterfaces(facetAddress, interfaces);
-                continue;
-            }
-            if (action == IDiamond.InterfaceCutAction.Replace) {
-                _replaceInterfaces(facetAddress, interfaces);
-                continue;
-            }
-            _removeInterfaces(facetAddress, interfaces);
-        }
+        _itemCut(
+            _interfaceCuts,
+            $.facetAddressAndInterfacePosition,
+            $.interfaces
+        );
 
         emit IDiamond.InterfacesUpdate(_interfaceCuts);
+    }
+
+    function _itemCut(
+        IDiamondCut.ItemCut[] memory _itemCuts,
+        mapping(bytes4 => FacetAddressAndItemPosition) storage _facetAddressAndItemPosition,
+        bytes4[] storage _items
+    ) internal {
+        uint256 length = _itemCuts.length;
+
+        for (uint256 itemIndex; itemIndex < length; ) {
+            bytes4[] memory items = _itemCuts[itemIndex].items;
+            address facetAddress = _itemCuts[itemIndex].facetAddress;
+
+            if (items.length == 0) {
+                revert NoItemsProvidedForUpdate(facetAddress);
+            }
+            _checkNonZeroItem(facetAddress, items);
+
+            IDiamondCut.ItemCutAction action = _itemCuts[itemIndex].action;
+            unchecked {
+                ++itemIndex;
+            }
+            if (action == IDiamond.ItemCutAction.Add) {
+                _addItems(
+                    facetAddress,
+                    items,
+                    _facetAddressAndItemPosition,
+                    _items
+                );
+                continue;
+            }
+            if (action == IDiamond.ItemCutAction.Replace) {
+                _replaceItems(
+                    facetAddress,
+                    items,
+                    _facetAddressAndItemPosition
+                );
+                continue;
+            }
+            _removeItems(
+                facetAddress,
+                items,
+                _facetAddressAndItemPosition,
+                _items
+            );
+        }
     }
 
     /**
@@ -175,8 +166,10 @@ abstract contract EIP2535Internal is Common {
         address _init,
         bytes calldata _calldata
     ) internal {
-        _removeAllSelectors();
-        _removeAllInterfaces();
+        DiamondStorage storage $ = _diamondStorage();
+
+        _removeAllItems($.facetAddressAndSelectorPosition, $.selectors);
+        _removeAllItems($.facetAddressAndInterfacePosition, $.interfaces);
         _configureFacets(_newFacetAddresses, _init, _calldata);
     }
 
@@ -186,88 +179,18 @@ abstract contract EIP2535Internal is Common {
         bytes memory _calldata
     ) internal {
         _diamondCut(
-            _buildFacetCutsFromIntrospection(_newFacetAddresses),
+            _buildItemUpdatesFromIntrospection(
+                _newFacetAddresses,
+                IDiamond.ItemsType.Selectors
+            ),
             _init,
             _calldata
         );
         _interfaceCut(
-            _buildInterfaceUpdatesFromIntrospection(_newFacetAddresses)
-        );
-    }
-
-    function _addFunctions(
-        address _newFacetAddress,
-        bytes4[] memory _functionSelectors
-    ) internal {
-        DiamondStorage storage $ = _diamondStorage();
-        _addItems(
-            _newFacetAddress,
-            _functionSelectors,
-            $.facetAddressAndSelectorPosition,
-            $.selectors
-        );
-    }
-
-    function _replaceFunctions(
-        address _newFacetAddress,
-        bytes4[] memory _functionSelectors
-    ) internal {
-        DiamondStorage storage $ = _diamondStorage();
-        _replaceItems(
-            _newFacetAddress,
-            _functionSelectors,
-            $.facetAddressAndSelectorPosition
-        );
-    }
-
-    function _removeFunctions(
-        address _emptyAddress,
-        bytes4[] memory _functionSelectors
-    ) internal {
-        DiamondStorage storage $ = _diamondStorage();
-        _removeItems(
-            _emptyAddress,
-            _functionSelectors,
-            $.facetAddressAndSelectorPosition,
-            $.selectors
-        );
-    }
-
-    function _addInterfaces(
-        address _newFacetAddress,
-        bytes4[] memory _interfaces
-    ) internal {
-        DiamondStorage storage $ = _diamondStorage();
-        _addItems(
-            _newFacetAddress,
-            _interfaces,
-            $.facetAddressAndInterfacePosition,
-            $.interfaces
-        );
-    }
-
-    function _replaceInterfaces(
-        address _newFacetAddress,
-        bytes4[] memory _interfaces
-    ) internal {
-        DiamondStorage storage $ = _diamondStorage();
-        _replaceItems(
-            _newFacetAddress,
-            _interfaces,
-            $.facetAddressAndInterfacePosition
-        );
-    }
-
-    function _removeInterfaces(
-        address _emptyAddress,
-        bytes4[] memory _interfaces
-    ) internal {
-        DiamondStorage storage $ = _diamondStorage();
-        _removeItems(
-            _emptyAddress,
-            _interfaces,
-            $.facetAddressAndInterfacePosition,
-            $.interfaces
+            _buildItemUpdatesFromIntrospection(
+                _newFacetAddresses,
+                IDiamond.ItemsType.Interfaces
+            )
         );
     }
 
@@ -282,6 +205,10 @@ abstract contract EIP2535Internal is Common {
         }
 
         uint16 itemCount = uint16(_items.length);
+        _enforceHasContractCode(
+            _newFacetAddress,
+            'LibDiamondCut: Add facet has no code'
+        );
 
         uint256 length = _newItems.length;
         for (uint256 itemIndex; itemIndex < length; itemIndex++) {
@@ -311,6 +238,11 @@ abstract contract EIP2535Internal is Common {
         if (_newFacetAddress == address(0)) {
             revert CannotReplaceItemsFromFacetWithZeroAddress(_items);
         }
+
+        _enforceHasContractCode(
+            _newFacetAddress,
+            'LibDiamondCut: Replace facet has no code'
+        );
 
         for (uint256 itemIndex; itemIndex < _items.length; ) {
             bytes4 item = _items[itemIndex];
@@ -577,34 +509,19 @@ abstract contract EIP2535Internal is Common {
             address(0);
     }
 
-    function _removeAllSelectors() private {
-        DiamondStorage storage $ = _diamondStorage();
-        uint256 selectorsLength = $.selectors.length;
+    function _removeAllItems(
+        mapping(bytes4 => FacetAddressAndItemPosition) storage _facetAddressAndItemPosition,
+        bytes4[] storage _items
+    ) private {
+        uint256 itemsLength = _items.length;
         FacetAddressAndItemPosition memory empty;
-        for (uint256 index; index < selectorsLength; ) {
+
+        for (uint256 index; index < itemsLength; ) {
             unchecked {
                 ++index;
             }
-            $.facetAddressAndSelectorPosition[
-                $.selectors[selectorsLength - index]
-            ] = empty;
-            $.selectors.pop();
-        }
-    }
-
-    function _removeAllInterfaces() private {
-        DiamondStorage storage $ = _diamondStorage();
-        uint256 interfacesLength = $.interfaces.length;
-        FacetAddressAndItemPosition memory empty;
-
-        for (uint256 index; index < interfacesLength; ) {
-            unchecked {
-                ++index;
-            }
-            $.facetAddressAndInterfacePosition[
-                $.interfaces[interfacesLength - index]
-            ] = empty;
-            $.interfaces.pop();
+            _facetAddressAndItemPosition[_items[itemsLength - index]] = empty;
+            _items.pop();
         }
     }
 
@@ -622,67 +539,42 @@ abstract contract EIP2535Internal is Common {
         // slither-disable-end assembly
     }
 
-    function _buildFacetCutsFromIntrospection(
-        address[] memory facetAddresses
-    ) private pure returns (IDiamondCut.FacetCut[] memory diamondCut) {
+    function _buildItemUpdatesFromIntrospection(
+        address[] memory facetAddresses,
+        IDiamond.ItemsType itemType
+    ) private pure returns (IDiamondCut.ItemCut[] memory itemCut) {
         uint256 facetAddressesLength = facetAddresses.length;
-        diamondCut = new IDiamondCut.FacetCut[](facetAddressesLength);
+        itemCut = new IDiamondCut.ItemCut[](facetAddressesLength);
         for (uint256 index; index < facetAddressesLength; ++index) {
-            diamondCut[index] = IDiamond.FacetCut({
+            itemCut[index] = IDiamond.ItemCut({
                 facetAddress: facetAddresses[index],
-                action: IDiamond.FacetCutAction.Add,
-                functionSelectors: IEIP2535Introspection(facetAddresses[index])
-                    .selectorsIntrospection()
+                action: IDiamond.ItemCutAction.Add,
+                items: _introspectItems(facetAddresses[index], itemType)
             });
-            _checkNonZeroSelector(
-                facetAddresses[index],
-                diamondCut[index].functionSelectors
-            );
+            _checkNonZeroItem(facetAddresses[index], itemCut[index].items);
         }
     }
 
-    function _buildInterfaceUpdatesFromIntrospection(
-        address[] memory facetAddresses
-    ) private pure returns (IDiamondCut.InterfaceCut[] memory interfaceCut) {
-        uint256 facetAddressesLength = facetAddresses.length;
-        interfaceCut = new IDiamondCut.InterfaceCut[](facetAddressesLength);
-        for (uint256 index; index < facetAddressesLength; ++index) {
-            interfaceCut[index] = IDiamond.InterfaceCut({
-                facetAddress: facetAddresses[index],
-                action: IDiamond.InterfaceCutAction.Add,
-                interfaces: IEIP2535Introspection(facetAddresses[index])
-                    .interfacesIntrospection()
-            });
-            _checkNonZeroInterface(
-                facetAddresses[index],
-                interfaceCut[index].interfaces
-            );
-        }
-    }
-
-    function _checkNonZeroSelector(
+    function _introspectItems(
         address facetAddress,
-        bytes4[] memory selectors
-    ) private pure {
-        uint256 length = selectors.length;
-        for (uint256 index; index < length; ++index) {
-            require(
-                selectors[index] != bytes4(0),
-                ZeroSelector(facetAddress, index)
-            );
+        IDiamond.ItemsType itemType
+    ) private pure returns (bytes4[] memory items) {
+        if (itemType == IDiamond.ItemsType.Selectors) {
+            items = IEIP2535Introspection(facetAddress)
+                .selectorsIntrospection();
+        } else {
+            items = IEIP2535Introspection(facetAddress)
+                .interfacesIntrospection();
         }
     }
 
-    function _checkNonZeroInterface(
-        address facetAddress,
-        bytes4[] memory interfaces
+    function _checkNonZeroItem(
+        address _address,
+        bytes4[] memory _items
     ) private pure {
-        uint256 length = interfaces.length;
+        uint256 length = _items.length;
         for (uint256 index; index < length; ++index) {
-            require(
-                interfaces[index] != bytes4(0),
-                ZeroInterface(facetAddress, index)
-            );
+            require(_items[index] != bytes4(0), ZeroItem(_address, index));
         }
     }
 }

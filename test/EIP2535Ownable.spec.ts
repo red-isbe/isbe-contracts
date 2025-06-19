@@ -102,11 +102,11 @@ describe('EIP2535OwnableProxy', function () {
         const action = 0
         for (const facet of facets) {
             const facetAddress = await facet.getAddress()
-            const functionSelectors = await facet.selectorsIntrospection()
+            const items = await facet.selectorsIntrospection()
             facetCutsList.push({
                 facetAddress,
                 action,
-                functionSelectors: [...functionSelectors],
+                items: [...items],
             })
         }
         return facetCutsList
@@ -192,17 +192,15 @@ describe('EIP2535OwnableProxy', function () {
                 facetCutsList[index].facetAddress
             )
             expect([...facets[index].functionSelectors]).to.deep.equal(
-                facetCutsList[index].functionSelectors
+                facetCutsList[index].items
             )
             expect([
                 ...(await diamondLoupe.facetFunctionSelectors(
                     facetCutsList[index].facetAddress
                 )),
-            ]).to.deep.equal(facetCutsList[index].functionSelectors)
+            ]).to.deep.equal(facetCutsList[index].items)
             expect(
-                await diamondLoupe.facetAddress(
-                    facetCutsList[index].functionSelectors[0]
-                )
+                await diamondLoupe.facetAddress(facetCutsList[index].items[0])
             ).to.be.equal(facetCutsList[index].facetAddress)
         }
         expect([...(await diamondLoupe.facetAddresses())]).to.deep.equal(
@@ -250,7 +248,7 @@ describe('EIP2535OwnableProxy', function () {
                 {
                     facetAddress: await ownable2StepFacetImpl.getAddress(),
                     action: 0,
-                    functionSelectors: [
+                    items: [
                         ...(await ownable2StepFacetImpl.selectorsIntrospection()),
                     ],
                 },

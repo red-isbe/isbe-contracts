@@ -13,10 +13,12 @@ import {IDiamondLoupe} from '../interfaces/IDiamondLoupe.sol';
 import {IEIP2535Introspection} from '../interfaces/IEIP2535Introspection.sol';
 import {EIP2535Internal} from '../EIP2535Internal.sol';
 import {IERC165} from '@openzeppelin/contracts/utils/introspection/IERC165.sol';
+import {ERC165Internal} from '../../../core/ERC165Internal.sol';
 
 // solhint-disable no-inline-assembly
 contract DiamondLoupeFacet is
     IERC165,
+    ERC165Internal,
     EIP2535Internal,
     IDiamondLoupe,
     IEIP2535Introspection
@@ -68,6 +70,9 @@ contract DiamondLoupeFacet is
     function supportsInterface(
         bytes4 interfaceId
     ) external view virtual override returns (bool) {
+        if (!_checkERC165ForbiddenInterfaces(interfaceId)) {
+            return false;
+        }
         return _supportsInterface(interfaceId);
     }
 

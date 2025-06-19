@@ -29,12 +29,12 @@ interface IDiamondCut is IDiamond {
      *                  If `_calldata` is empty, no call is executed.
      */
     function diamondCut(
-        FacetCut[] calldata _diamondCut,
+        ItemCut[] calldata _diamondCut,
         address _init,
         bytes calldata _calldata
     ) external;
 
-    function interfaceCut(InterfaceCut[] calldata _interfaceCuts) external;
+    function interfaceCut(ItemCut[] calldata _interfaceCuts) external;
 
     /**
      * @notice Update the facets of the diamond by specifying facet addresses,
