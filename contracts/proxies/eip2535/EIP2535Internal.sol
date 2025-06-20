@@ -216,7 +216,6 @@ abstract contract EIP2535Internal is Common {
             address oldFacetAddress = _facetAddressAndItemPosition[item]
                 .facetAddress;
             if (oldFacetAddress != address(0)) {
-                if (oldFacetAddress == _newFacetAddress) continue;
                 revert CannotAddItemToDiamondThatAlreadyExists(item);
             }
             _facetAddressAndItemPosition[item] = FacetAddressAndItemPosition(
