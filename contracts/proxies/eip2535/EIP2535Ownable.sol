@@ -10,6 +10,7 @@ pragma solidity ^0.8.28;
 
 import {EIP2535} from './EIP2535.sol';
 import {IDiamondCut} from './interfaces/IDiamondCut.sol';
+import {OwnableInternal} from '../../access/ownable/OwnableInternal.sol';
 
 /**
  * @title EIP2535Ownable Contract
@@ -17,7 +18,7 @@ import {IDiamondCut} from './interfaces/IDiamondCut.sol';
  *      Inherits from `EIP2535` and `OwnableInternal` to provide ownership control and diamond behavior.
  *      This contract simplifies ownership transfer and facet configuration during initialization.
  */
-contract EIP2535Ownable is EIP2535 {
+contract EIP2535Ownable is EIP2535, OwnableInternal {
     /**
      * @dev Struct to bundle arguments used during the diamond constructor.
      *      This approach helps to prevent "stack too deep" errors by consolidating parameters.

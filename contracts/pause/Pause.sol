@@ -5,12 +5,11 @@ pragma solidity ^0.8.28;
 import {PauseInternal} from './PauseInternal.sol';
 import {IPause} from './IPause.sol';
 import {_PAUSE_RESOLVER_KEY} from '../constants/resolverKeys.sol';
-import {ERC165} from '../core/ERC165.sol';
 
 /// @title Pause
 /// @notice Implements pausing mechanism
 /// @dev Inherits from IPause and PauseInternal, providing external pause functions
-abstract contract Pause is IPause, ERC165, PauseInternal {
+abstract contract Pause is IPause, PauseInternal {
     /// @notice Constructor that disables the initializer
     constructor() {
         _disableInitializers(_PAUSE_RESOLVER_KEY);

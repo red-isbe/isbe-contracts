@@ -7,9 +7,11 @@ import {
 } from '../access/accessControl/AccessControlInternal.sol';
 import {PauseInternalCommon} from '../pause/PauseInternalCommon.sol';
 import {OwnableInternal} from '../access/ownable/OwnableInternal.sol';
+import {ERC165} from './ERC165.sol';
 
 abstract contract Common is
     Initializable,
+    ERC165,
     AccessControlInternal,
     PauseInternalCommon,
     OwnableInternal

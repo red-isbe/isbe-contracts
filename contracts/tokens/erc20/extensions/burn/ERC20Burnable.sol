@@ -3,12 +3,11 @@ pragma solidity ^0.8.28;
 
 import {ERC20InternalCommon} from '../ERC20InternalCommon.sol';
 import {IERC20Burnable} from './IERC20Burnable.sol';
-import {ERC165} from '../../../../core/ERC165.sol';
 
 /// @title ERC20Burnable
 /// @notice Implements burn mechanism
 /// @dev Inherits from IERC20Burnable and ERC20InternalCommon
-contract ERC20Burnable is IERC20Burnable, ERC165, ERC20InternalCommon {
+contract ERC20Burnable is IERC20Burnable, ERC20InternalCommon {
     function burn(uint256 amount) external override whenNotPaused {
         _burn(_msgSender(), amount);
     }

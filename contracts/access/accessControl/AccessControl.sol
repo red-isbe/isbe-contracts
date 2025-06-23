@@ -4,12 +4,11 @@ pragma solidity ^0.8.28;
 import {IAccessControl} from './IAccessControl.sol';
 import {Common} from '../../core/Common.sol';
 import {_ACCESS_CONTROL_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
-import {ERC165} from '../../core/ERC165.sol';
 
 /// @title AccessControl
 /// @notice Implements role-based access control mechanisms
 /// @dev Inherits from IAccessControl and Common, providing external role management functions
-contract AccessControl is IAccessControl, ERC165, Common {
+contract AccessControl is IAccessControl, Common {
     /// @notice Constructor that disables the initializer
     constructor() {
         _disableInitializers(_ACCESS_CONTROL_RESOLVER_KEY);

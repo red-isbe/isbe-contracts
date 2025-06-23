@@ -10,6 +10,7 @@ import {_DIAMOND_CUT_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
 import {IDiamondCut} from '../interfaces/IDiamondCut.sol';
 import {EIP2535Internal} from '../EIP2535Internal.sol';
 import {IEIP2535Introspection} from '../interfaces/IEIP2535Introspection.sol';
+import {OwnableInternal} from '../../../access/ownable/OwnableInternal.sol';
 
 // Remember to add the loupe functions from DiamondLoupeFacet to the diamond.
 // The loupe functions are required by the EIP2535 Diamonds standard
@@ -17,6 +18,7 @@ import {IEIP2535Introspection} from '../interfaces/IEIP2535Introspection.sol';
 contract DiamondCutOwnableFacet is
     IDiamondCut,
     EIP2535Internal,
+    OwnableInternal,
     IEIP2535Introspection
 {
     /// @notice Add/replace/remove any number of functions and optionally execute

@@ -4,16 +4,11 @@ pragma solidity ^0.8.28;
 import {IHashTimestamp} from './IHashTimestamp.sol';
 import {HashTimestampInternal} from './HashTimestampInternal.sol';
 import {_HASH_TIMESTAMP_ROLE} from '../constants/roles.sol';
-import {ERC165} from '../core/ERC165.sol';
 
 /// @title HashTimestamp
 /// @notice Implements timestamp for hashes
 /// @dev Inherits from IHashTimestamp and HashTimestampInternal, providing external timestamp hashes functions
-abstract contract HashTimestamp is
-    IHashTimestamp,
-    ERC165,
-    HashTimestampInternal
-{
+abstract contract HashTimestamp is IHashTimestamp, HashTimestampInternal {
     function timestampHash(
         bytes32 hash
     )

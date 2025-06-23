@@ -8,7 +8,6 @@ import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {
     IERC20Metadata
 } from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
-import {ERC165} from '../../core/ERC165.sol';
 
 /**
  * @title ERC20 Token Contract
@@ -18,7 +17,7 @@ import {ERC165} from '../../core/ERC165.sol';
  *      OpenZeppelin interfaces. It includes additional helper functions such as `increaseAllowance` and
  *      `decreaseAllowance` for more granular control over token allowances.
  */
-contract ERC20 is IERC20Isbe, ERC165, ERC20InternalCommon {
+contract ERC20 is IERC20Isbe, ERC20InternalCommon {
     /// @notice Constructor that assigns the deployer as the default admin
     constructor() {
         _disableInitializers(_ERC20_RESOLVER_KEY);

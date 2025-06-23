@@ -36,7 +36,7 @@ contract CounterV2FacetTestWrapper is
         pure
         returns (bytes4[] memory interfaces_)
     {
-        return new bytes4[](0);
+        return _implementedInterfaces();
     }
 
     function businessIdIntrospection()
@@ -59,5 +59,15 @@ contract CounterV2FacetTestWrapper is
         selectors_[--selectorsLength] = this.initializeCounter.selector;
         selectors_[--selectorsLength] = this.increment.selector;
         selectors_[--selectorsLength] = this.counter.selector;
+    }
+
+    function _implementedInterfaces()
+        internal
+        pure
+        virtual
+        override
+        returns (bytes4[] memory interfaces_)
+    {
+        return new bytes4[](0);
     }
 }

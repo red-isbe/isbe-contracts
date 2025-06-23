@@ -4,7 +4,6 @@ pragma solidity ^0.8.28;
 import {BusinessLogicFactoryInternal} from './BusinessLogicFactoryInternal.sol';
 import {IBusinessLogicFactory} from './IBusinessLogicFactory.sol';
 import {_ISBE_ROLE} from '../../constants/roles.sol';
-import {ERC165} from '../../core/ERC165.sol';
 
 /**
  * @title BusinessLogicFactory
@@ -17,7 +16,6 @@ import {ERC165} from '../../core/ERC165.sol';
  */
 contract BusinessLogicFactory is
     BusinessLogicFactoryInternal,
-    ERC165,
     IBusinessLogicFactory
 {
     function deploy(

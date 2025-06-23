@@ -4,12 +4,11 @@ pragma solidity ^0.8.28;
 import {IOwnable} from './IOwnable.sol';
 import {Common} from '../../core/Common.sol';
 import {_OWNABLE_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
-import {ERC165} from '../../core/ERC165.sol';
 
 /// @title Ownable
 /// @notice Implements ownership mechanisms
 /// @dev Inherits from IOwnable and OwnableInternal
-abstract contract OwnableBase is IOwnable, ERC165, Common {
+abstract contract OwnableBase is IOwnable, Common {
     /// @notice Constructor that disables the initializer
 
     constructor() {

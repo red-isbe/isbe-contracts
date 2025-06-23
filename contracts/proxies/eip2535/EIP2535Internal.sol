@@ -6,7 +6,7 @@ import {IDiamondCut} from './interfaces/IDiamondCut.sol';
 import {IDiamond} from './interfaces/IDiamond.sol';
 import {IEIP2535Introspection} from './interfaces/IEIP2535Introspection.sol';
 import {_DIAMOND_STORAGE_POSITION} from '../../constants/storagePositions.sol';
-import {Common} from '../../core/Common.sol';
+import {PauseInternalCommon} from '../../pause/PauseInternalCommon.sol';
 
 // solhint-disable no-inline-assembly
 /**
@@ -16,7 +16,7 @@ import {Common} from '../../core/Common.sol';
  *      replacing, or removing functions. Contains detailed error handling for various edge cases during
  *      diamond modification and management.
  */
-abstract contract EIP2535Internal is Common {
+abstract contract EIP2535Internal is PauseInternalCommon {
     /**
      * @dev Struct to store the facet address and its selector position for a given selector.
      * @param facetAddress The address of the facet that implements the function.

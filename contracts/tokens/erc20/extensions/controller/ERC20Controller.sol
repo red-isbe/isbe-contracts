@@ -4,12 +4,11 @@ pragma solidity ^0.8.28;
 import {ERC20InternalCommon} from '../ERC20InternalCommon.sol';
 import {IERC20Controller} from './IERC20Controller.sol';
 import {_CONTROLLER_ROLE} from '../../../../constants/roles.sol';
-import {ERC165} from '../../../../core/ERC165.sol';
 
 /// @title ERC20Controller
 /// @notice Implements force mechanism
 /// @dev Inherits from IERC20Controller and ERC20InternalCommon
-contract ERC20Controller is IERC20Controller, ERC165, ERC20InternalCommon {
+contract ERC20Controller is IERC20Controller, ERC20InternalCommon {
     function forceTransfer(
         address from,
         address to,
