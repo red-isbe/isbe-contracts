@@ -18,7 +18,29 @@ Using facets also makes it easier to upgrade or extend parts of the contract wit
 
 In order to facilitate facet implementation, we have created an interface that every facet must implement. This interface is IEIP2535Introspection.
 
-This interface allow you to specify all functions that this facet exposes. To specify these functions, you should implement the following function:
+This interface allow you to define an unique id for your facet. Tho specify this id, you should implement the following function:
+
+```
+businessIdIntrospection()
+```
+
+This function is used by the diamond in order to identify the specific facets registered. Here you have an implementation example of this function:
+
+```
+// keccak256('isbe.contracts.erc20.resolver.key');
+bytes32 constant _ERC20_RESOLVER_KEY = 0x2428f215905ecd05cc26794e218b9fad455e6ae2ca828b2f1c1903e8770265ad;
+
+function businessIdIntrospection()
+    external
+    pure
+    override
+    returns (bytes32 businessId_)
+{
+    businessId_ = _ERC20_RESOLVER_KEY;
+}
+```
+
+Also this interface allow you to specify all functions that this facet exposes. To specify these functions, you should implement the following function:
 
 ```
 selectorsIntrospection()
