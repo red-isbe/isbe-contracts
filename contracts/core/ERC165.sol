@@ -15,10 +15,4 @@ abstract contract ERC165 is IERC165, ERC165Internal {
             _supportsERC165Interface(_interfaceId) ||
             _supportsInterface(_interfaceId, _implementedInterfaces());
     }
-
-    function _implementedInterfaces()
-        internal
-        pure
-        virtual
-        returns (bytes4[] memory interfaces_);
 }

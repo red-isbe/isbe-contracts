@@ -81,10 +81,7 @@ contract DiamondLoupeFacet is
         pure
         returns (bytes4[] memory interfaces_)
     {
-        uint256 interfacesLength = 2;
-        interfaces_ = new bytes4[](interfacesLength);
-        interfaces_[--interfacesLength] = type(IDiamondLoupe).interfaceId;
-        interfaces_[--interfacesLength] = type(IERC165).interfaceId;
+        return _implementedInterfaces();
     }
 
     function businessIdIntrospection()
@@ -109,6 +106,19 @@ contract DiamondLoupeFacet is
         selectors_[--selectorsLength] = this.facetAddresses.selector;
         selectors_[--selectorsLength] = this.facetAddress.selector;
         selectors_[--selectorsLength] = this.supportsInterface.selector;
+    }
+
+    function _implementedInterfaces()
+        internal
+        pure
+        virtual
+        override
+        returns (bytes4[] memory interfaces_)
+    {
+        uint256 interfacesLength = 2;
+        interfaces_ = new bytes4[](interfacesLength);
+        interfaces_[--interfacesLength] = type(IDiamondLoupe).interfaceId;
+        interfaces_[--interfacesLength] = type(IERC165).interfaceId;
     }
 }
 // solhint-enable no-inline-assembly

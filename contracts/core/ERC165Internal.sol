@@ -56,4 +56,10 @@ abstract contract ERC165Internal {
             interfaces_[index++] = _interfaces[k];
         }
     }
+
+    function _implementedInterfaces()
+        internal
+        pure
+        virtual
+        returns (bytes4[] memory interfaces_);
 }

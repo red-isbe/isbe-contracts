@@ -1,3 +1,4 @@
+import { ethers } from 'hardhat'
 import { expect } from 'chai'
 import {
     Interface,
@@ -8,8 +9,9 @@ import {
 } from 'ethers'
 import {
     DiamondLoupeFacet,
-    AccessControlFacet,
+    AccessControlTestWrapper,
     IAccessControl__factory,
+    AccessControlTestWrapper__factory,
 } from '../typechain-types'
 import { deployAll } from './initialization'
 
@@ -18,12 +20,19 @@ const ERC165_INTERFACE_ID = '0x01ffc9a7'
 const NON_EXISTING_INTERFACE_ID = '0x00000012'
 describe('ERC165', function () {
     let diamondLoupe: DiamondLoupeFacet
-    let accessControlFacet: AccessControlFacet
+    let accessControlTestWrapper: AccessControlTestWrapper
+    let AccessControlTestWrapperFactory: AccessControlTestWrapper__factory
 
     async function deploy() {
         const result = await deployAll()
         diamondLoupe = result.diamondLoupe
-        accessControlFacet = result.accessControlFacet
+
+        AccessControlTestWrapperFactory = await ethers.getContractFactory(
+            'AccessControlTestWrapper'
+        )
+
+        accessControlTestWrapper =
+            await AccessControlTestWrapperFactory.deploy()
     }
 
     function getInterfaceId(iface: Interface): string {
@@ -61,7 +70,7 @@ describe('ERC165', function () {
         it('GIVEN ERC165 compliant contract WHEN checking forbidden interface THEN fails', async function () {
             await deploy()
 
-            const supported = await accessControlFacet.supportsInterface(
+            const supported = await accessControlTestWrapper.supportsInterface(
                 FORBIDDEN_ERC165_INTERFACE_ID
             )
 
@@ -81,7 +90,7 @@ describe('ERC165', function () {
         it('GIVEN ERC165 compliant contract WHEN checking non-existing interface THEN fails', async function () {
             await deploy()
 
-            const supported = await accessControlFacet.supportsInterface(
+            const supported = await accessControlTestWrapper.supportsInterface(
                 NON_EXISTING_INTERFACE_ID
             )
 
@@ -101,7 +110,9 @@ describe('ERC165', function () {
             await deploy()
 
             const supported =
-                await accessControlFacet.supportsInterface(ERC165_INTERFACE_ID)
+                await accessControlTestWrapper.supportsInterface(
+                    ERC165_INTERFACE_ID
+                )
 
             expect(supported).to.be.true
         })
@@ -123,7 +134,7 @@ describe('ERC165', function () {
 
             const iface = new Interface(IAccessControl__factory.abi)
 
-            const supported = await accessControlFacet.supportsInterface(
+            const supported = await accessControlTestWrapper.supportsInterface(
                 getInterfaceId(iface)
             )
 
