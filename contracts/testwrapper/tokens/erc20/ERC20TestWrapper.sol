@@ -91,14 +91,18 @@ contract ERC20TestWrapper is
         )
         returns (bytes4[] memory interfaces_)
     {
-        uint256 index = 0;
+        uint256 interfacesLength = 5;
 
-        bytes4[][] memory interfaceGroups = new bytes4[][](5);
-        interfaceGroups[index++] = ERC20._implementedInterfaces();
-        interfaceGroups[index++] = ERC20Burnable._implementedInterfaces();
-        interfaceGroups[index++] = ERC20Capped._implementedInterfaces();
-        interfaceGroups[index++] = ERC20Controller._implementedInterfaces();
-        interfaceGroups[index++] = ERC20Snapshot._implementedInterfaces();
+        bytes4[][] memory interfaceGroups = new bytes4[][](interfacesLength);
+        interfaceGroups[--interfacesLength] = ERC20._implementedInterfaces();
+        interfaceGroups[--interfacesLength] = ERC20Burnable
+            ._implementedInterfaces();
+        interfaceGroups[--interfacesLength] = ERC20Capped
+            ._implementedInterfaces();
+        interfaceGroups[--interfacesLength] = ERC20Controller
+            ._implementedInterfaces();
+        interfaceGroups[--interfacesLength] = ERC20Snapshot
+            ._implementedInterfaces();
 
         return _aggregateInterfaces(interfaceGroups, new bytes4[](0));
     }

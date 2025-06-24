@@ -30,6 +30,14 @@ modifier emptyCode(bytes code)
 
 ## ERC165
 
+Implements the ERC-165 standard for interface detection.
+
+_This abstract contract provides a standardised way to check if a smart contract
+implements a given interface. It combines the `IERC165` interface with the internal
+logic from `ERC165Internal` to deliver a complete implementation. The `supportsInterface`
+function is the primary entry point, allowing external contracts and applications to
+query the supported interfaces of a contract._
+
 ### supportsInterface
 
 ```solidity
@@ -55,7 +63,7 @@ function _supportsERC165Interface(bytes4 _interfaceId) internal pure virtual ret
 ### \_supportsInterface
 
 ```solidity
-function _supportsInterface(bytes4 _interfaceId, bytes4[] _interfaces) internal pure virtual returns (bool)
+function _supportsInterface(bytes4 _interfaceId, bytes4[] _interfaces) internal pure virtual returns (bool supported)
 ```
 
 ### \_aggregateInterfaces

@@ -22,38 +22,60 @@ abstract contract ERC165Internal {
     function _supportsInterface(
         bytes4 _interfaceId,
         bytes4[] memory _interfaces
-    ) internal pure virtual returns (bool) {
-        for (uint256 i = 0; i < _interfaces.length; i++) {
-            if (_interfaces[i] == _interfaceId) {
+    ) internal pure virtual returns (bool supported) {
+        uint256 length = _interfaces.length;
+        for (uint256 index; index < length; ) {
+            if (_interfaces[index] == _interfaceId) {
                 return true;
             }
+            unchecked {
+                ++index;
+            }
         }
-        return false;
     }
 
     function _aggregateInterfaces(
         bytes4[][] memory interfacesArrays,
         bytes4[] memory _interfaces
     ) internal pure returns (bytes4[] memory interfaces_) {
-        uint256 interfacesLength = _interfaces.length;
+        uint256 inputLength = interfacesArrays.length;
+        uint256 outputLength = _interfaces.length;
 
-        for (uint256 i = 0; i < interfacesArrays.length; i++) {
-            interfacesLength += interfacesArrays[i].length;
-        }
-
-        interfaces_ = new bytes4[](interfacesLength);
-
-        uint256 index = 0;
-
-        for (uint256 i = 0; i < interfacesArrays.length; i++) {
-            bytes4[] memory subArray = interfacesArrays[i];
-            for (uint256 j = 0; j < subArray.length; j++) {
-                interfaces_[index++] = subArray[j];
+        for (uint256 index; index < inputLength; ) {
+            unchecked {
+                outputLength += interfacesArrays[index].length;
+                ++index;
             }
         }
 
-        for (uint256 k = 0; k < _interfaces.length; k++) {
-            interfaces_[index++] = _interfaces[k];
+        interfaces_ = new bytes4[](outputLength);
+
+        uint256 outputIndex;
+        uint256 innerLength;
+        uint256 subArrayIndex;
+        for (uint256 inputIndex; inputIndex < inputLength; ) {
+            bytes4[] memory subArray = interfacesArrays[inputIndex];
+            innerLength = subArray.length;
+            for (; subArrayIndex < innerLength; ) {
+                interfaces_[outputIndex] = subArray[subArrayIndex];
+                unchecked {
+                    ++subArrayIndex;
+                    ++outputIndex;
+                }
+            }
+            subArrayIndex = 0;
+            unchecked {
+                ++inputIndex;
+            }
+        }
+
+        uint256 inputInterfacesLength = _interfaces.length;
+        for (uint256 inputIndex; inputIndex < inputInterfacesLength; ) {
+            interfaces_[outputIndex] = _interfaces[inputIndex];
+            unchecked {
+                ++inputIndex;
+                ++outputIndex;
+            }
         }
     }
 
