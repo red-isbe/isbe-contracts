@@ -87,6 +87,36 @@ If a Diamond proxy is used, the following guidelines must be followed:
 - **The facet contract must implement the `IEIP2535Introspection` interface:**  
   This interface is available within the ISBE-contracts project for use. It allows for the standardized management of the facet selectors supported by a diamond and simplifies the development of contracts compatible with a diamond proxy for developers.
 
+- **The facet contract must implement the `interfacesIntrospection` function from the interface:**
+  This enables the diamond to uniquely identify all the interface ids each facet exposes. This function returns a list of interface Ids according to the ERC165 format. Below is the exact implementation that every facet should use (copy / paste the code below):
+
+```
+  function interfacesIntrospection()
+        external
+        pure
+        returns (bytes4[] memory interfaces_)
+    {
+        return _implementedInterfaces();
+    }
+```
+
+In order for this introspection method to work, you will need to implement the following internal method which is included in the `Common.sol`core contract your facet should be inheriting from. Below is an example of its implementation:
+
+```
+  function _implementedInterfaces()
+        internal
+        pure
+        virtual
+        override
+        returns (bytes4[] memory interfaces_)
+    {
+        uint256 interfacesLength = 1;
+        interfaces_ = new bytes4[](interfacesLength);
+        interfaces_[--interfacesLength] = type(IAccessControl).interfaceId;
+    }
+
+```
+
 - **The facet contract must implement the `businessIdIntrospection` function from the interface:**  
   This enables the diamond to uniquely identify each business logic facet it manages. This function returns a `businessId`, which corresponds to the resolver key mentioned earlier. Below is an example of its implementation:
 

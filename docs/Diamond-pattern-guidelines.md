@@ -18,7 +18,42 @@ Using facets also makes it easier to upgrade or extend parts of the contract wit
 
 In order to facilitate facet implementation, we have created an interface that every facet must implement. This interface is IEIP2535Introspection.
 
-This interface allow you to define an unique id for your facet. Tho specify this id, you should implement the following function:
+This interface will give the possibility to expose the list of interface Ids implemented by each registered facet . This is the method returning the list:
+
+```
+interfacesIntrospection()
+```
+
+This method will be implemented in the same way for each facet.
+
+```
+  function interfacesIntrospection()
+        external
+        pure
+        returns (bytes4[] memory interfaces_)
+    {
+        return _implementedInterfaces();
+    }
+```
+
+Below an example of how to implement the `_implementedInterfaces` method which is part of the `Common.sol`contract:
+
+```
+  function _implementedInterfaces()
+        internal
+        pure
+        virtual
+        override
+        returns (bytes4[] memory interfaces_)
+    {
+        uint256 interfacesLength = 1;
+        interfaces_ = new bytes4[](interfacesLength);
+        interfaces_[--interfacesLength] = type(IAccessControl).interfaceId;
+    }
+
+```
+
+This interface will also allow you to define an unique id for your facet. To specify this id, you should implement the following function:
 
 ```
 businessIdIntrospection()
