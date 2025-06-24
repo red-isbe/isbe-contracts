@@ -59,4 +59,17 @@ contract BusinessLogicFactory is
     ) external view returns (address[] memory versions_) {
         versions_ = _getBusinessLogicVersions(businessId);
     }
+
+    function _implementedInterfaces()
+        internal
+        pure
+        virtual
+        override
+        returns (bytes4[] memory interfaces_)
+    {
+        uint256 interfacesLength = 1;
+        interfaces_ = new bytes4[](interfacesLength);
+        interfaces_[--interfacesLength] = type(IBusinessLogicFactory)
+            .interfaceId;
+    }
 }

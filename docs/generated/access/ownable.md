@@ -224,6 +224,12 @@ Returns the address of the pending owner
 | ---- | ------- | ---------------------------------------------------------- |
 | [0]  | address | The address that has been proposed to become the new owner |
 
+### \_implementedInterfaces
+
+```solidity
+function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
+```
+
 ---
 
 ## Ownable2StepFacet
@@ -231,6 +237,23 @@ Returns the address of the pending owner
 Implements ownership mechanisms
 
 _Inherits from IOwnable and OwnableInternal_
+
+### interfacesIntrospection
+
+```solidity
+function interfacesIntrospection() external pure returns (bytes4[] interfaces_)
+```
+
+Retrieves the interfaces supported by the EIP-2535 Diamond Standard.
+
+_Returns a static list of interfaces supported by the contract. It is a view function and does not
+modify or depend on contract state._
+
+#### Return Values
+
+| Name         | Type     | Description                                                                         |
+| ------------ | -------- | ----------------------------------------------------------------------------------- |
+| interfaces\_ | bytes4[] | An array of interface identifiers (`bytes4[]`) compliant with the EIP-165 standard. |
 
 ### businessIdIntrospection
 
@@ -357,6 +380,12 @@ Returns the current owner of the contract
 | ---- | ------- | -------------------------------- |
 | [0]  | address | The address of the current owner |
 
+### \_implementedInterfaces
+
+```solidity
+function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
+```
+
 ---
 
 ## OwnableFacet
@@ -364,6 +393,23 @@ Returns the current owner of the contract
 Implements ownership mechanisms
 
 _Inherits from IOwnable and OwnableInternal_
+
+### interfacesIntrospection
+
+```solidity
+function interfacesIntrospection() external pure returns (bytes4[] interfaces_)
+```
+
+Retrieves the interfaces supported by the EIP-2535 Diamond Standard.
+
+_Returns a static list of interfaces supported by the contract. It is a view function and does not
+modify or depend on contract state._
+
+#### Return Values
+
+| Name         | Type     | Description                                                                         |
+| ------------ | -------- | ----------------------------------------------------------------------------------- |
+| interfaces\_ | bytes4[] | An array of interface identifiers (`bytes4[]`) compliant with the EIP-165 standard. |
 
 ### businessIdIntrospection
 

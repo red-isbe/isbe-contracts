@@ -61,4 +61,16 @@ contract AccessControl is IAccessControl, Common {
     ) external view override returns (bytes32) {
         return _getRoleAdmin(role);
     }
+
+    function _implementedInterfaces()
+        internal
+        pure
+        virtual
+        override
+        returns (bytes4[] memory interfaces_)
+    {
+        uint256 interfacesLength = 1;
+        interfaces_ = new bytes4[](interfacesLength);
+        interfaces_[--interfacesLength] = type(IAccessControl).interfaceId;
+    }
 }

@@ -40,4 +40,16 @@ abstract contract ERC20Capped is IERC20Capped, ERC20InternalCommon {
     function cap() external view returns (uint256) {
         return _cap();
     }
+
+    function _implementedInterfaces()
+        internal
+        pure
+        virtual
+        override
+        returns (bytes4[] memory interfaces_)
+    {
+        uint256 interfacesLength = 1;
+        interfaces_ = new bytes4[](interfacesLength);
+        interfaces_[--interfacesLength] = type(IERC20Capped).interfaceId;
+    }
 }

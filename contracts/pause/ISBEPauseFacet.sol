@@ -8,6 +8,14 @@ import {
 } from '../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 
 contract ISBEPauseFacet is ISBEPause, IEIP2535Introspection {
+    function interfacesIntrospection()
+        external
+        pure
+        returns (bytes4[] memory interfaces_)
+    {
+        return _implementedInterfaces();
+    }
+
     function businessIdIntrospection()
         external
         pure

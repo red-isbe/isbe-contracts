@@ -10,6 +10,9 @@ import {_DIAMOND_CUT_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
 import {IDiamondCut} from '../interfaces/IDiamondCut.sol';
 import {EIP2535Internal} from '../EIP2535Internal.sol';
 import {IEIP2535Introspection} from '../interfaces/IEIP2535Introspection.sol';
+import {
+    AccessControlInternal
+} from '../../../access/accessControl/AccessControlInternal.sol';
 
 // Remember to add the loupe functions from DiamondLoupeFacet to the diamond.
 // The loupe functions are required by the EIP2535 Diamonds standard
@@ -17,6 +20,7 @@ import {IEIP2535Introspection} from '../interfaces/IEIP2535Introspection.sol';
 contract DiamondCutAccessControlFacet is
     IDiamondCut,
     EIP2535Internal,
+    AccessControlInternal,
     IEIP2535Introspection
 {
     /// @notice Add/replace/remove any number of functions and optionally execute
@@ -26,11 +30,17 @@ contract DiamondCutAccessControlFacet is
     /// @param _calldata A function call, including function selector and arguments
     ///                  _calldata is executed with delegatecall on _init
     function diamondCut(
-        FacetCut[] calldata _facetCuts,
+        ItemCut[] calldata _facetCuts,
         address _init,
         bytes calldata _calldata
     ) external override onlyRole(DEFAULT_ADMIN_ROLE) whenNotPaused {
         _diamondCut(_facetCuts, _init, _calldata);
+    }
+
+    function interfaceCut(
+        ItemCut[] calldata _interfaceCuts
+    ) external override onlyRole(DEFAULT_ADMIN_ROLE) whenNotPaused {
+        _interfaceCut(_interfaceCuts);
     }
 
     function facetUpdates(
@@ -39,6 +49,16 @@ contract DiamondCutAccessControlFacet is
         bytes calldata _calldata
     ) external override onlyRole(DEFAULT_ADMIN_ROLE) whenNotPaused {
         _facetUpdates(_facetAddresses, _init, _calldata);
+    }
+
+    function interfacesIntrospection()
+        external
+        pure
+        returns (bytes4[] memory interfaces_)
+    {
+        uint256 interfacesLength = 1;
+        interfaces_ = new bytes4[](interfacesLength);
+        interfaces_[--interfacesLength] = type(IDiamondCut).interfaceId;
     }
 
     function businessIdIntrospection()
@@ -56,9 +76,10 @@ contract DiamondCutAccessControlFacet is
         override
         returns (bytes4[] memory selectors_)
     {
-        uint256 selectorsLength = 2;
+        uint256 selectorsLength = 3;
         selectors_ = new bytes4[](selectorsLength);
         selectors_[--selectorsLength] = this.diamondCut.selector;
+        selectors_[--selectorsLength] = this.interfaceCut.selector;
         selectors_[--selectorsLength] = this.facetUpdates.selector;
     }
 }

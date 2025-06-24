@@ -24,6 +24,14 @@ contract BusinessLogicFactoryFacet is
     BusinessLogicFactory,
     IEIP2535Introspection
 {
+    function interfacesIntrospection()
+        external
+        pure
+        returns (bytes4[] memory interfaces_)
+    {
+        return _implementedInterfaces();
+    }
+
     function businessIdIntrospection()
         external
         pure

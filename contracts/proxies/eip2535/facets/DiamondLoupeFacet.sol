@@ -9,15 +9,18 @@ pragma solidity ^0.8.28;
 // The EIP-2535 Diamond standard requires these functions.
 
 import {_DIAMOND_LOUPE_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
-import {IERC165} from '@openzeppelin/contracts/utils/introspection/IERC165.sol';
 import {IDiamondLoupe} from '../interfaces/IDiamondLoupe.sol';
 import {IEIP2535Introspection} from '../interfaces/IEIP2535Introspection.sol';
 import {EIP2535Internal} from '../EIP2535Internal.sol';
+import {IERC165} from '@openzeppelin/contracts/utils/introspection/IERC165.sol';
+import {ERC165Internal} from '../../../core/ERC165Internal.sol';
+
 // solhint-disable no-inline-assembly
 contract DiamondLoupeFacet is
+    IERC165,
+    ERC165Internal,
     EIP2535Internal,
     IDiamondLoupe,
-    IERC165,
     IEIP2535Introspection
 {
     // Diamond Loupe Functions
@@ -64,11 +67,21 @@ contract DiamondLoupeFacet is
         facetAddress_ = _facetAddress(_functionSelector);
     }
 
-    // This implements ERC-165.
     function supportsInterface(
-        bytes4 _interfaceId
-    ) external view override returns (bool) {
-        return _supportsInterface(_interfaceId);
+        bytes4 interfaceId
+    ) external view virtual override returns (bool) {
+        if (!_checkERC165ForbiddenInterfaces(interfaceId)) {
+            return false;
+        }
+        return _supportsInterface(interfaceId);
+    }
+
+    function interfacesIntrospection()
+        external
+        pure
+        returns (bytes4[] memory interfaces_)
+    {
+        return _implementedInterfaces();
     }
 
     function businessIdIntrospection()
@@ -93,6 +106,19 @@ contract DiamondLoupeFacet is
         selectors_[--selectorsLength] = this.facetAddresses.selector;
         selectors_[--selectorsLength] = this.facetAddress.selector;
         selectors_[--selectorsLength] = this.supportsInterface.selector;
+    }
+
+    function _implementedInterfaces()
+        internal
+        pure
+        virtual
+        override
+        returns (bytes4[] memory interfaces_)
+    {
+        uint256 interfacesLength = 2;
+        interfaces_ = new bytes4[](interfacesLength);
+        interfaces_[--interfacesLength] = type(IDiamondLoupe).interfaceId;
+        interfaces_[--interfacesLength] = type(IERC165).interfaceId;
     }
 }
 // solhint-enable no-inline-assembly

@@ -6,63 +6,77 @@ import {IDiamondCut} from './interfaces/IDiamondCut.sol';
 import {IDiamond} from './interfaces/IDiamond.sol';
 import {IEIP2535Introspection} from './interfaces/IEIP2535Introspection.sol';
 import {_DIAMOND_STORAGE_POSITION} from '../../constants/storagePositions.sol';
-import {Common} from '../../core/Common.sol';
+import {PauseInternalCommon} from '../../pause/PauseInternalCommon.sol';
 
 // solhint-disable no-inline-assembly
 /**
- * @title EIP2535Internal Abstract Contract
- * @dev Provides internal functions and structures to manage the facets and function selectors of a diamond
- *      contract. Implements the core operations related to the EIP-2535 Diamond Standard, such as adding,
- *      replacing, or removing functions. Contains detailed error handling for various edge cases during
- *      diamond modification and management.
+ * @title Internal EIP-2535 Diamond Logic
+ * @author ISBE
+ * @notice Provides the core internal functions and storage for managing facets and interfaces in an EIP-2535 Diamond.
+ * @dev This abstract contract is the engine of the diamond, handling the addition, replacement, and removal of
+ *      functions (selectors) and supported interfaces. It is designed to be inherited by other contracts and
+ *      uses a dedicated storage slot (`_DIAMOND_STORAGE_POSITION`) to prevent storage layout collisions.
+ *      It contains the logic for the `diamondCut`, interface management, and the Diamond Loupe introspection functions.
  */
-abstract contract EIP2535Internal is Common {
+abstract contract EIP2535Internal is PauseInternalCommon {
     /**
-     * @dev Struct to store the facet address and its selector position for a given selector.
-     * @param facetAddress The address of the facet that implements the function.
-     * @param selectorPosition The position of the selector in the array of selectors for the facet.
+     * @dev A struct that associates a facet's address with its position within an array.
+     * @param facetAddress The address of the facet contract.
+     * @param itemPosition The index of an item (selector or interface) in its corresponding storage array.
      */
-    struct FacetAddressAndSelectorPosition {
+    struct FacetAddressAndItemPosition {
         address facetAddress;
-        uint16 selectorPosition;
+        uint16 itemPosition;
     }
 
     /**
-     * @dev Struct storing the data necessary for managing facet addresses and selectors.
-     * @param facetAddressAndSelectorPosition Maps function selectors (`bytes4`) to their corresponding facet address
-     *        and selector position.
-     * @param selectors An array of all function selectors currently associated with the diamond.
-     * @param supportedInterfaces A mapping of interface IDs (`bytes4`) to boolean values indicating their support
-     *        status.
+     * @dev The main storage layout for the diamond.
+     * @param facetAddressAndSelectorPosition Maps a function selector (`bytes4`) to its facet's
+     *     address and its position in the `selectors` array.
+     * @param selectors An array of all function selectors registered in the diamond.
+     * @param facetAddressAndInterfacePosition Maps an interface ID (`bytes4`) to its facet's
+     *     address and its position in the `interfaces` array.
+     * @param interfaces An array of all interface IDs supported by the diamond.
      */
     struct DiamondStorage {
-        // function selector => facet address and selector position in selectors array
-        mapping(bytes4 => FacetAddressAndSelectorPosition) facetAddressAndSelectorPosition;
+        mapping(bytes4 => FacetAddressAndItemPosition) facetAddressAndSelectorPosition;
         bytes4[] selectors;
-        mapping(bytes4 => bool) supportedInterfaces;
+        mapping(bytes4 => FacetAddressAndItemPosition) facetAddressAndInterfacePosition;
+        bytes4[] interfaces;
     }
 
-    error NoSelectorsGivenToAdd();
-    error NotContractOwner(address _user, address _contractOwner);
-    error NoSelectorsProvidedForFacetForCut(address _facetAddress);
-    error CannotAddSelectorsToZeroAddress(bytes4[] _selectors);
+    /// @param _contractAddress The address that was expected to contain bytecode.
+    /// @param _message A descriptive error message.
     error NoBytecodeAtAddress(address _contractAddress, string _message);
-    error IncorrectFacetCutAction(uint8 _action);
-    error CannotAddFunctionToDiamondThatAlreadyExists(bytes4 _selector);
-    error CannotReplaceFunctionsFromFacetWithZeroAddress(bytes4[] _selectors);
-    error CannotReplaceImmutableFunction(bytes4 _selector);
-    error CannotReplaceFunctionWithTheSameFunctionFromTheSameFacet(
-        bytes4 _selector
-    );
-    error CannotReplaceFunctionThatDoesNotExists(bytes4 _selector);
+    /// @param _facetAddress The address provided for the removal action, which must be the zero address.
     error RemoveFacetAddressMustBeZeroAddress(address _facetAddress);
-    error CannotRemoveFunctionThatDoesNotExist(bytes4 _selector);
-    error CannotRemoveImmutableFunction(bytes4 _selector);
+    /// @param _initializationContractAddress The address of the contract that failed to initialise.
+    /// @param _calldata The calldata passed to the initialisation function.
     error InitializationFunctionReverted(
         address _initializationContractAddress,
         bytes _calldata
     );
-    error ZeroSelector(address facetAddress, uint256 position);
+    /// @param _facetAddress The facet address for which an empty items array was provided.
+    error NoItemsProvidedForUpdate(address _facetAddress);
+    /// @param facetAddress The address of the facet containing the invalid item.
+    /// @param position The index of the zero-value item in the input array.
+    error ZeroItem(address facetAddress, uint256 position);
+    /// @param _items The array of items that were attempted to be added to the zero address.
+    error CannotAddItemsToZeroAddress(bytes4[] _items);
+    /// @param _items The item (selector) that already exists in the diamond.
+    error CannotAddItemToDiamondThatAlreadyExists(bytes4 _items);
+    /// @param _items The array of items that were attempted to be replaced from the zero address.
+    error CannotReplaceItemsFromFacetWithZeroAddress(bytes4[] _items);
+    /// @param _item The immutable item (defined in the diamond itself) that cannot be replaced.
+    error CannotReplaceImmutableItems(bytes4 _item);
+    /// @param _item The item that was attempted to be replaced with the same item from the same facet.
+    error CannotReplaceItemWithTheSameItemFromTheSameFacet(bytes4 _item);
+    /// @param _item The item that was attempted to be replaced but does not exist in the diamond.
+    error CannotReplaceItemThatDoesNotExists(bytes4 _item);
+    /// @param _item The item that was attempted to be removed but does not exist in the diamond.
+    error CannotRemoveItemThatDoesNotExist(bytes4 _item);
+    /// @param _item The immutable item that cannot be removed.
+    error CannotRemoveImmutableItem(bytes4 _item);
 
     /**
      * @notice Modifies the diamond by applying the given facet cuts.
@@ -74,35 +88,76 @@ abstract contract EIP2535Internal is Common {
      * @param _calldata The calldata to execute during initialization.
      */
     function _diamondCut(
-        IDiamondCut.FacetCut[] memory _facetCuts,
+        IDiamondCut.ItemCut[] memory _facetCuts,
         address _init,
         bytes memory _calldata
     ) internal {
-        uint256 length = _facetCuts.length;
-        for (uint256 facetIndex; facetIndex < length; ) {
-            bytes4[] memory functionSelectors = _facetCuts[facetIndex]
-                .functionSelectors;
-            address facetAddress = _facetCuts[facetIndex].facetAddress;
-            if (functionSelectors.length == 0) {
-                revert NoSelectorsProvidedForFacetForCut(facetAddress);
-            }
-            _checkNonZeroSelector(facetAddress, functionSelectors);
-            IDiamondCut.FacetCutAction action = _facetCuts[facetIndex].action;
-            unchecked {
-                ++facetIndex;
-            }
-            if (action == IDiamond.FacetCutAction.Add) {
-                _addFunctions(facetAddress, functionSelectors);
-                continue;
-            }
-            if (action == IDiamond.FacetCutAction.Replace) {
-                _replaceFunctions(facetAddress, functionSelectors);
-                continue;
-            }
-            _removeFunctions(facetAddress, functionSelectors);
-        }
+        DiamondStorage storage $ = _diamondStorage();
+
+        _itemCut(_facetCuts, $.facetAddressAndSelectorPosition, $.selectors);
+
         emit IDiamond.DiamondCut(_facetCuts, _init, _calldata);
         _initializeDiamondCut(_init, _calldata);
+    }
+
+    function _interfaceCut(
+        IDiamondCut.ItemCut[] memory _interfaceCuts
+    ) internal {
+        DiamondStorage storage $ = _diamondStorage();
+
+        _itemCut(
+            _interfaceCuts,
+            $.facetAddressAndInterfacePosition,
+            $.interfaces
+        );
+
+        emit IDiamond.InterfacesUpdate(_interfaceCuts);
+    }
+
+    function _itemCut(
+        IDiamondCut.ItemCut[] memory _itemCuts,
+        mapping(bytes4 => FacetAddressAndItemPosition) storage _facetAddressAndItemPosition,
+        bytes4[] storage _items
+    ) internal {
+        uint256 length = _itemCuts.length;
+
+        for (uint256 itemIndex; itemIndex < length; ) {
+            bytes4[] memory items = _itemCuts[itemIndex].items;
+            address facetAddress = _itemCuts[itemIndex].facetAddress;
+
+            if (items.length == 0) {
+                revert NoItemsProvidedForUpdate(facetAddress);
+            }
+            _checkNonZeroItem(facetAddress, items);
+
+            IDiamondCut.ItemCutAction action = _itemCuts[itemIndex].action;
+            unchecked {
+                ++itemIndex;
+            }
+            if (action == IDiamond.ItemCutAction.Add) {
+                _addItems(
+                    facetAddress,
+                    items,
+                    _facetAddressAndItemPosition,
+                    _items
+                );
+                continue;
+            }
+            if (action == IDiamond.ItemCutAction.Replace) {
+                _replaceItems(
+                    facetAddress,
+                    items,
+                    _facetAddressAndItemPosition
+                );
+                continue;
+            }
+            _removeItems(
+                facetAddress,
+                items,
+                _facetAddressAndItemPosition,
+                _items
+            );
+        }
     }
 
     /**
@@ -118,7 +173,10 @@ abstract contract EIP2535Internal is Common {
         address _init,
         bytes calldata _calldata
     ) internal {
-        _removeAllSelectors();
+        DiamondStorage storage $ = _diamondStorage();
+
+        _removeAllItems($.facetAddressAndSelectorPosition, $.selectors);
+        _removeAllItems($.facetAddressAndInterfacePosition, $.interfaces);
         _configureFacets(_newFacetAddresses, _init, _calldata);
     }
 
@@ -128,140 +186,132 @@ abstract contract EIP2535Internal is Common {
         bytes memory _calldata
     ) internal {
         _diamondCut(
-            _buildFacetCutsFromIntrospection(_newFacetAddresses),
+            _buildItemUpdatesFromIntrospection(
+                _newFacetAddresses,
+                IDiamond.ItemsType.Selectors
+            ),
             _init,
             _calldata
         );
+        _interfaceCut(
+            _buildItemUpdatesFromIntrospection(
+                _newFacetAddresses,
+                IDiamond.ItemsType.Interfaces
+            )
+        );
     }
 
-    function _addFunctions(
+    function _addItems(
         address _newFacetAddress,
-        bytes4[] memory _functionSelectors
+        bytes4[] memory _newItems,
+        mapping(bytes4 => FacetAddressAndItemPosition) storage _facetAddressAndItemPosition,
+        bytes4[] storage _items
     ) internal {
         if (_newFacetAddress == address(0)) {
-            revert CannotAddSelectorsToZeroAddress(_functionSelectors);
+            revert CannotAddItemsToZeroAddress(_newItems);
         }
-        DiamondStorage storage $ = _diamondStorage();
-        uint16 selectorCount = uint16($.selectors.length);
+
+        uint16 itemCount = uint16(_items.length);
         _enforceHasContractCode(
             _newFacetAddress,
             'LibDiamondCut: Add facet has no code'
         );
-        uint256 length = _functionSelectors.length;
-        for (uint256 selectorIndex; selectorIndex < length; ) {
-            bytes4 selector = _functionSelectors[selectorIndex];
-            address oldFacetAddress = $
-                .facetAddressAndSelectorPosition[selector]
+
+        uint256 length = _newItems.length;
+        for (uint256 itemIndex; itemIndex < length; itemIndex++) {
+            bytes4 item = _newItems[itemIndex];
+            address oldFacetAddress = _facetAddressAndItemPosition[item]
                 .facetAddress;
             if (oldFacetAddress != address(0)) {
-                revert CannotAddFunctionToDiamondThatAlreadyExists(selector);
+                revert CannotAddItemToDiamondThatAlreadyExists(item);
             }
-            $.facetAddressAndSelectorPosition[
-                selector
-            ] = FacetAddressAndSelectorPosition(
+            _facetAddressAndItemPosition[item] = FacetAddressAndItemPosition(
                 _newFacetAddress,
-                selectorCount
+                itemCount
             );
-            $.selectors.push(selector);
+            _items.push(item);
             unchecked {
-                ++selectorCount;
-                ++selectorIndex;
+                ++itemCount;
             }
         }
     }
 
-    function _replaceFunctions(
+    function _replaceItems(
         address _newFacetAddress,
-        bytes4[] memory _functionSelectors
+        bytes4[] memory _items,
+        mapping(bytes4 => FacetAddressAndItemPosition) storage _facetAddressAndItemPosition
     ) internal {
-        DiamondStorage storage $ = _diamondStorage();
         if (_newFacetAddress == address(0)) {
-            revert CannotReplaceFunctionsFromFacetWithZeroAddress(
-                _functionSelectors
-            );
+            revert CannotReplaceItemsFromFacetWithZeroAddress(_items);
         }
+
         _enforceHasContractCode(
             _newFacetAddress,
             'LibDiamondCut: Replace facet has no code'
         );
-        for (
-            uint256 selectorIndex;
-            selectorIndex < _functionSelectors.length;
 
-        ) {
-            bytes4 selector = _functionSelectors[selectorIndex];
-            address oldFacetAddress = $
-                .facetAddressAndSelectorPosition[selector]
+        for (uint256 itemIndex; itemIndex < _items.length; ) {
+            bytes4 item = _items[itemIndex];
+            address oldFacetAddress = _facetAddressAndItemPosition[item]
                 .facetAddress;
             // can't replace immutable functions -- functions defined directly in the diamond in this case
             if (oldFacetAddress == address(this)) {
-                revert CannotReplaceImmutableFunction(selector);
+                revert CannotReplaceImmutableItems(item);
             }
             if (oldFacetAddress == _newFacetAddress) {
-                revert CannotReplaceFunctionWithTheSameFunctionFromTheSameFacet(
-                    selector
-                );
+                revert CannotReplaceItemWithTheSameItemFromTheSameFacet(item);
             }
             if (oldFacetAddress == address(0)) {
-                revert CannotReplaceFunctionThatDoesNotExists(selector);
+                revert CannotReplaceItemThatDoesNotExists(item);
             }
             // replace old facet address
-            $
-                .facetAddressAndSelectorPosition[selector]
-                .facetAddress = _newFacetAddress;
+            _facetAddressAndItemPosition[item].facetAddress = _newFacetAddress;
             unchecked {
-                ++selectorIndex;
+                ++itemIndex;
             }
         }
     }
 
-    function _removeFunctions(
+    function _removeItems(
         address _emptyAddress,
-        bytes4[] memory _functionSelectors
+        bytes4[] memory _oldItems,
+        mapping(bytes4 => FacetAddressAndItemPosition) storage _facetAddressAndItemPosition,
+        bytes4[] storage _items
     ) internal {
-        DiamondStorage storage $ = _diamondStorage();
-        uint256 selectorCount = $.selectors.length;
+        uint256 itemCount = _items.length;
         if (_emptyAddress != address(0)) {
             revert RemoveFacetAddressMustBeZeroAddress(_emptyAddress);
         }
-        uint256 length = _functionSelectors.length;
-        for (uint256 selectorIndex; selectorIndex < length; ) {
-            bytes4 selector = _functionSelectors[selectorIndex];
-            FacetAddressAndSelectorPosition
-                memory oldFacetAddressAndSelectorPosition = $
-                    .facetAddressAndSelectorPosition[selector];
-            if (oldFacetAddressAndSelectorPosition.facetAddress == address(0)) {
-                revert CannotRemoveFunctionThatDoesNotExist(selector);
+        uint256 length = _oldItems.length;
+        for (uint256 itemIndex; itemIndex < length; ) {
+            bytes4 item = _oldItems[itemIndex];
+            FacetAddressAndItemPosition
+                memory oldFacetAddressAndItemPosition = _facetAddressAndItemPosition[
+                    item
+                ];
+            if (oldFacetAddressAndItemPosition.facetAddress == address(0)) {
+                revert CannotRemoveItemThatDoesNotExist(item);
             }
 
-            // can't remove immutable functions -- functions defined directly in the diamond
-            if (
-                oldFacetAddressAndSelectorPosition.facetAddress == address(this)
-            ) {
-                revert CannotRemoveImmutableFunction(selector);
+            // can't remove immutable Item -- Item defined directly in the diamond
+            if (oldFacetAddressAndItemPosition.facetAddress == address(this)) {
+                revert CannotRemoveImmutableItem(item);
             }
-            // replace selector with last selector
+            // replace Item with last Item
             unchecked {
-                --selectorCount;
+                --itemCount;
             }
-            if (
-                oldFacetAddressAndSelectorPosition.selectorPosition !=
-                selectorCount
-            ) {
-                bytes4 lastSelector = $.selectors[selectorCount];
-                $.selectors[
-                    oldFacetAddressAndSelectorPosition.selectorPosition
-                ] = lastSelector;
-                $
-                    .facetAddressAndSelectorPosition[lastSelector]
-                    .selectorPosition = oldFacetAddressAndSelectorPosition
-                    .selectorPosition;
+            if (oldFacetAddressAndItemPosition.itemPosition != itemCount) {
+                bytes4 lastItem = _items[itemCount];
+                _items[oldFacetAddressAndItemPosition.itemPosition] = lastItem;
+                _facetAddressAndItemPosition[lastItem]
+                    .itemPosition = oldFacetAddressAndItemPosition.itemPosition;
             }
-            // delete last selector
-            $.selectors.pop();
-            delete $.facetAddressAndSelectorPosition[selector];
+            // delete last item
+            _items.pop();
+            delete _facetAddressAndItemPosition[item];
             unchecked {
-                ++selectorIndex;
+                ++itemIndex;
             }
         }
     }
@@ -455,24 +505,29 @@ abstract contract EIP2535Internal is Common {
                 .facetAddressAndSelectorPosition[_signature]
                 .facetAddress;
     }
+
     function _supportsInterface(
-        bytes4 _interfaceId
-    ) internal view returns (bool) {
-        return _diamondStorage().supportedInterfaces[_interfaceId];
+        bytes4 interfaceId
+    ) internal view virtual returns (bool) {
+        DiamondStorage storage $ = _diamondStorage();
+        return
+            $.facetAddressAndInterfacePosition[interfaceId].facetAddress !=
+            address(0);
     }
 
-    function _removeAllSelectors() private {
-        DiamondStorage storage $ = _diamondStorage();
-        uint256 selectorsLength = $.selectors.length;
-        FacetAddressAndSelectorPosition memory empty;
-        for (uint256 index; index < selectorsLength; ) {
+    function _removeAllItems(
+        mapping(bytes4 => FacetAddressAndItemPosition) storage _facetAddressAndItemPosition,
+        bytes4[] storage _items
+    ) private {
+        uint256 itemsLength = _items.length;
+        FacetAddressAndItemPosition memory empty;
+
+        for (uint256 index; index < itemsLength; ) {
             unchecked {
                 ++index;
             }
-            $.facetAddressAndSelectorPosition[
-                $.selectors[selectorsLength - index]
-            ] = empty;
-            $.selectors.pop();
+            _facetAddressAndItemPosition[_items[itemsLength - index]] = empty;
+            _items.pop();
         }
     }
 
@@ -490,35 +545,42 @@ abstract contract EIP2535Internal is Common {
         // slither-disable-end assembly
     }
 
-    function _buildFacetCutsFromIntrospection(
-        address[] memory facetAddresses
-    ) private pure returns (IDiamondCut.FacetCut[] memory diamondCut) {
+    function _buildItemUpdatesFromIntrospection(
+        address[] memory facetAddresses,
+        IDiamond.ItemsType itemType
+    ) private pure returns (IDiamondCut.ItemCut[] memory itemCut) {
         uint256 facetAddressesLength = facetAddresses.length;
-        diamondCut = new IDiamondCut.FacetCut[](facetAddressesLength);
+        itemCut = new IDiamondCut.ItemCut[](facetAddressesLength);
         for (uint256 index; index < facetAddressesLength; ++index) {
-            diamondCut[index] = IDiamond.FacetCut({
+            itemCut[index] = IDiamond.ItemCut({
                 facetAddress: facetAddresses[index],
-                action: IDiamond.FacetCutAction.Add,
-                functionSelectors: IEIP2535Introspection(facetAddresses[index])
-                    .selectorsIntrospection()
+                action: IDiamond.ItemCutAction.Add,
+                items: _introspectItems(facetAddresses[index], itemType)
             });
-            _checkNonZeroSelector(
-                facetAddresses[index],
-                diamondCut[index].functionSelectors
-            );
+            _checkNonZeroItem(facetAddresses[index], itemCut[index].items);
         }
     }
 
-    function _checkNonZeroSelector(
+    function _introspectItems(
         address facetAddress,
-        bytes4[] memory selectors
+        IDiamond.ItemsType itemType
+    ) private pure returns (bytes4[] memory items) {
+        if (itemType == IDiamond.ItemsType.Selectors) {
+            items = IEIP2535Introspection(facetAddress)
+                .selectorsIntrospection();
+        } else {
+            items = IEIP2535Introspection(facetAddress)
+                .interfacesIntrospection();
+        }
+    }
+
+    function _checkNonZeroItem(
+        address _address,
+        bytes4[] memory _items
     ) private pure {
-        uint256 length = selectors.length;
+        uint256 length = _items.length;
         for (uint256 index; index < length; ++index) {
-            require(
-                selectors[index] != bytes4(0),
-                ZeroSelector(facetAddress, index)
-            );
+            require(_items[index] != bytes4(0), ZeroItem(_address, index));
         }
     }
 }

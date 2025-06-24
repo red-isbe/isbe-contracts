@@ -28,6 +28,14 @@ contract ERC20TestWrapper is
     ERC20Controller,
     IEIP2535Introspection
 {
+    function interfacesIntrospection()
+        external
+        pure
+        returns (bytes4[] memory interfaces_)
+    {
+        return _implementedInterfaces();
+    }
+
     function businessIdIntrospection()
         external
         pure
@@ -68,5 +76,34 @@ contract ERC20TestWrapper is
         selectors_[--selectorsLength] = this.totalSupplyAt.selector;
         selectors_[--selectorsLength] = this.forceTransfer.selector;
         selectors_[--selectorsLength] = this.forceBurn.selector;
+    }
+
+    function _implementedInterfaces()
+        internal
+        pure
+        virtual
+        override(
+            ERC20,
+            ERC20Burnable,
+            ERC20Capped,
+            ERC20Controller,
+            ERC20Snapshot
+        )
+        returns (bytes4[] memory interfaces_)
+    {
+        uint256 interfacesLength = 5;
+
+        bytes4[][] memory interfaceGroups = new bytes4[][](interfacesLength);
+        interfaceGroups[--interfacesLength] = ERC20._implementedInterfaces();
+        interfaceGroups[--interfacesLength] = ERC20Burnable
+            ._implementedInterfaces();
+        interfaceGroups[--interfacesLength] = ERC20Capped
+            ._implementedInterfaces();
+        interfaceGroups[--interfacesLength] = ERC20Controller
+            ._implementedInterfaces();
+        interfaceGroups[--interfacesLength] = ERC20Snapshot
+            ._implementedInterfaces();
+
+        return _aggregateInterfaces(interfaceGroups, new bytes4[](0));
     }
 }

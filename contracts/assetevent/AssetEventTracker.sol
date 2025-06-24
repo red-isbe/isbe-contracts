@@ -48,4 +48,16 @@ abstract contract AssetEventTracker is
     ) external view returns (bool) {
         return _isStateChangeAllowed(_getCurrentState(), newState);
     }
+
+    function _implementedInterfaces()
+        internal
+        pure
+        virtual
+        override
+        returns (bytes4[] memory interfaces_)
+    {
+        uint256 interfacesLength = 1;
+        interfaces_ = new bytes4[](interfacesLength);
+        interfaces_[--interfacesLength] = type(IAssetEventTracker).interfaceId;
+    }
 }

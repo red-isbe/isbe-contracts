@@ -4,6 +4,8 @@
 - [access/ownable](access/ownable.md)
 - [assetevent](assetevent.md)
 - [core](core.md)
+- [factory](factory.md)
+- [factory/businesslogic](factory/businesslogic.md)
 - [hashtimestamp](hashtimestamp.md)
 - [pause](pause.md)
 - [proxies/ERC1967](proxies/ERC1967.md)

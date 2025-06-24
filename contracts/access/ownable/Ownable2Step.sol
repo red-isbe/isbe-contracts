@@ -24,4 +24,20 @@ contract Ownable2Step is IOwnable2Step, OwnableBase, Ownable2StepInternal {
     function pendingOwner() external view returns (address) {
         return _pendingOwner();
     }
+
+    function _implementedInterfaces()
+        internal
+        pure
+        virtual
+        override
+        returns (bytes4[] memory interfaces_)
+    {
+        bytes4[][] memory interfaceGroups = new bytes4[][](1);
+        interfaceGroups[0] = OwnableBase._implementedInterfaces();
+
+        bytes4[] memory interfaceIds = new bytes4[](1);
+        interfaceIds[0] = type(IOwnable2Step).interfaceId;
+
+        return _aggregateInterfaces(interfaceGroups, interfaceIds);
+    }
 }

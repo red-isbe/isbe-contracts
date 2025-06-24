@@ -30,4 +30,16 @@ abstract contract HashTimestamp is IHashTimestamp, HashTimestampInternal {
     ) external view override returns (uint256) {
         return _getTimestamp(hash);
     }
+
+    function _implementedInterfaces()
+        internal
+        pure
+        virtual
+        override
+        returns (bytes4[] memory interfaces_)
+    {
+        uint256 interfacesLength = 1;
+        interfaces_ = new bytes4[](interfacesLength);
+        interfaces_[--interfacesLength] = type(IHashTimestamp).interfaceId;
+    }
 }

@@ -19,4 +19,16 @@ contract ERC20Burnable is IERC20Burnable, ERC20InternalCommon {
         _spendAllowance(account, _msgSender(), amount);
         _burn(account, amount);
     }
+
+    function _implementedInterfaces()
+        internal
+        pure
+        virtual
+        override
+        returns (bytes4[] memory interfaces_)
+    {
+        uint256 interfacesLength = 1;
+        interfaces_ = new bytes4[](interfacesLength);
+        interfaces_[--interfacesLength] = type(IERC20Burnable).interfaceId;
+    }
 }

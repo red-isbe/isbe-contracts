@@ -14,6 +14,70 @@ _Checks if an address equals to zero address_
 | ---- | ------- | -------------------- |
 | addr | address | The address to check |
 
+### bytes32IsNotZero
+
+```solidity
+modifier bytes32IsNotZero(bytes32 hash)
+```
+
+### emptyCode
+
+```solidity
+modifier emptyCode(bytes code)
+```
+
+---
+
+## ERC165
+
+Implements the ERC-165 standard for interface detection.
+
+_This abstract contract provides a standardised way to check if a smart contract
+implements a given interface. It combines the `IERC165` interface with the internal
+logic from `ERC165Internal` to deliver a complete implementation. The `supportsInterface`
+function is the primary entry point, allowing external contracts and applications to
+query the supported interfaces of a contract._
+
+### supportsInterface
+
+```solidity
+function supportsInterface(bytes4 _interfaceId) external pure returns (bool)
+```
+
+---
+
+## ERC165Internal
+
+### \_checkERC165ForbiddenInterfaces
+
+```solidity
+function _checkERC165ForbiddenInterfaces(bytes4 _interfaceId) internal pure virtual returns (bool)
+```
+
+### \_supportsERC165Interface
+
+```solidity
+function _supportsERC165Interface(bytes4 _interfaceId) internal pure virtual returns (bool)
+```
+
+### \_supportsInterface
+
+```solidity
+function _supportsInterface(bytes4 _interfaceId, bytes4[] _interfaces) internal pure virtual returns (bool supported)
+```
+
+### \_aggregateInterfaces
+
+```solidity
+function _aggregateInterfaces(bytes4[][] interfacesArrays, bytes4[] _interfaces) internal pure returns (bytes4[] interfaces_)
+```
+
+### \_implementedInterfaces
+
+```solidity
+function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
+```
+
 ---
 
 ## Initializable

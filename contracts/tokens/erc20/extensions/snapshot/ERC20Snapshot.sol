@@ -40,4 +40,16 @@ abstract contract ERC20Snapshot is IERC20Snapshot, ERC20InternalCommon {
 
         return snapshotted ? value : _totalSupply();
     }
+
+    function _implementedInterfaces()
+        internal
+        pure
+        virtual
+        override
+        returns (bytes4[] memory interfaces_)
+    {
+        uint256 interfacesLength = 1;
+        interfaces_ = new bytes4[](interfacesLength);
+        interfaces_[--interfacesLength] = type(IERC20Snapshot).interfaceId;
+    }
 }

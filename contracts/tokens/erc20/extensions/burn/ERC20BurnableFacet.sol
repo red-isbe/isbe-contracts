@@ -10,6 +10,14 @@ import {
 } from '../../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 
 contract ERC20BurnableFacet is ERC20Burnable, IEIP2535Introspection {
+    function interfacesIntrospection()
+        external
+        pure
+        returns (bytes4[] memory interfaces_)
+    {
+        return _implementedInterfaces();
+    }
+
     function businessIdIntrospection()
         external
         pure

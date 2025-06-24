@@ -149,6 +149,23 @@ function _getAuthorityLevel(address _account) internal view returns (uint256)
 
 ## ISBEPauseFacet
 
+### interfacesIntrospection
+
+```solidity
+function interfacesIntrospection() external pure returns (bytes4[] interfaces_)
+```
+
+Retrieves the interfaces supported by the EIP-2535 Diamond Standard.
+
+_Returns a static list of interfaces supported by the contract. It is a view function and does not
+modify or depend on contract state._
+
+#### Return Values
+
+| Name         | Type     | Description                                                                         |
+| ------------ | -------- | ----------------------------------------------------------------------------------- |
+| interfaces\_ | bytes4[] | An array of interface identifiers (`bytes4[]`) compliant with the EIP-165 standard. |
+
 ### businessIdIntrospection
 
 ```solidity
@@ -251,6 +268,12 @@ Returns the authority level of the account that paused the contract
 | Name | Type    | Description                       |
 | ---- | ------- | --------------------------------- |
 | [0]  | uint256 | The last pauser's authority level |
+
+### \_implementedInterfaces
+
+```solidity
+function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
+```
 
 ---
 

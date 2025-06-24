@@ -30,4 +30,16 @@ abstract contract OwnableBase is IOwnable, Common {
     function owner() external view override returns (address) {
         return _owner();
     }
+
+    function _implementedInterfaces()
+        internal
+        pure
+        virtual
+        override
+        returns (bytes4[] memory interfaces_)
+    {
+        uint256 interfacesLength = 1;
+        interfaces_ = new bytes4[](interfacesLength);
+        interfaces_[--interfacesLength] = type(IOwnable).interfaceId;
+    }
 }

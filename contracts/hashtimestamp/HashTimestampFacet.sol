@@ -11,6 +11,14 @@ import {
 /// @notice Implements timestamp for hashes facet
 /// @dev Inherits from HashTimestamp, providing external timestamp hashes functions
 contract HashTimestampFacet is HashTimestamp, IEIP2535Introspection {
+    function interfacesIntrospection()
+        external
+        pure
+        returns (bytes4[] memory interfaces_)
+    {
+        return _implementedInterfaces();
+    }
+
     function businessIdIntrospection()
         external
         pure

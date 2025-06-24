@@ -7,6 +7,17 @@ pragma solidity ^0.8.28;
  *      This interface enables tools and developers to retrieve function selectors for compatibility and inspection.
  */
 interface IEIP2535Introspection {
+    /**
+     * @notice Retrieves the interfaces supported by the EIP-2535 Diamond Standard.
+     * @dev Returns a static list of interfaces supported by the contract. It is a view function and does not
+     *      modify or depend on contract state.
+     * @return interfaces_ An array of interface identifiers (`bytes4[]`) compliant with the EIP-165 standard.
+     */
+    function interfacesIntrospection()
+        external
+        pure
+        returns (bytes4[] memory interfaces_);
+
     function businessIdIntrospection()
         external
         pure

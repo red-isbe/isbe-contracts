@@ -25,4 +25,16 @@ contract ERC20Controller is IERC20Controller, ERC20InternalCommon {
         _burn(from, amount);
         emit ForceBurn(_msgSender(), from, amount);
     }
+
+    function _implementedInterfaces()
+        internal
+        pure
+        virtual
+        override
+        returns (bytes4[] memory interfaces_)
+    {
+        uint256 interfacesLength = 1;
+        interfaces_ = new bytes4[](interfacesLength);
+        interfaces_[--interfacesLength] = type(IERC20Controller).interfaceId;
+    }
 }

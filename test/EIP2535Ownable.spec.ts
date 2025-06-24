@@ -102,11 +102,11 @@ describe('EIP2535OwnableProxy', function () {
         const action = 0
         for (const facet of facets) {
             const facetAddress = await facet.getAddress()
-            const functionSelectors = await facet.selectorsIntrospection()
+            const items = await facet.selectorsIntrospection()
             facetCutsList.push({
                 facetAddress,
                 action,
-                functionSelectors: [...functionSelectors],
+                items: [...items],
             })
         }
         return facetCutsList
@@ -165,6 +165,23 @@ describe('EIP2535OwnableProxy', function () {
             .withArgs(await nonAdmin.getAddress())
     })
 
+    it('GIVEN an ERC20 deployed WHEN deploy a EIP2535 proxy THEN cant use InterfaceCut without ownership', async () => {
+        const diamondCut: DiamondCutOwnableFacet =
+            DiamondCutOwnableFacetFactory.attach(
+                await diamondProxy.getAddress()
+            )
+        await expect(diamondCut.connect(nonAdmin).interfaceCut([]))
+            .to.be.revertedWithCustomError(diamondCut, 'AccountIsNotOwner')
+            .withArgs(await nonAdmin.getAddress())
+        await expect(
+            diamondCut
+                .connect(nonAdmin)
+                .facetUpdates([], ethers.ZeroAddress, '0x')
+        )
+            .to.be.revertedWithCustomError(diamondCut, 'AccountIsNotOwner')
+            .withArgs(await nonAdmin.getAddress())
+    })
+
     it('GIVEN deployed EIP2535 proxy WHEN pause THEN cant use DiamondCut', async () => {
         const pause: ISBEPauseFacet = ISBEPauseFacetFactory.attach(
             await diamondProxy.getAddress()
@@ -182,6 +199,23 @@ describe('EIP2535OwnableProxy', function () {
             .withArgs()
     })
 
+    it('GIVEN deployed EIP2535 proxy WHEN pause THEN cant use InterfaceCut', async () => {
+        const pause: ISBEPauseFacet = ISBEPauseFacetFactory.attach(
+            await diamondProxy.getAddress()
+        )
+        await pause.pause()
+        const diamondCut: DiamondCutAccessControlFacet =
+            DiamondCutOwnableFacetFactory.attach(
+                await diamondProxy.getAddress()
+            )
+        await expect(diamondCut.interfaceCut([]))
+            .to.be.revertedWithCustomError(diamondCut, 'IsPaused')
+            .withArgs()
+        await expect(diamondCut.facetUpdates([], ethers.ZeroAddress, '0x'))
+            .to.be.revertedWithCustomError(diamondCut, 'IsPaused')
+            .withArgs()
+    })
+
     it('GIVEN an ERC20 deployed WHEN deploy a EIP2535 proxy THEN it can be initialized', async () => {
         const diamondLoupe: DiamondLoupeFacet = DiamondLoupeFacetFactory.attach(
             await diamondProxy.getAddress()
@@ -192,17 +226,15 @@ describe('EIP2535OwnableProxy', function () {
                 facetCutsList[index].facetAddress
             )
             expect([...facets[index].functionSelectors]).to.deep.equal(
-                facetCutsList[index].functionSelectors
+                facetCutsList[index].items
             )
             expect([
                 ...(await diamondLoupe.facetFunctionSelectors(
                     facetCutsList[index].facetAddress
                 )),
-            ]).to.deep.equal(facetCutsList[index].functionSelectors)
+            ]).to.deep.equal(facetCutsList[index].items)
             expect(
-                await diamondLoupe.facetAddress(
-                    facetCutsList[index].functionSelectors[0]
-                )
+                await diamondLoupe.facetAddress(facetCutsList[index].items[0])
             ).to.be.equal(facetCutsList[index].facetAddress)
         }
         expect([...(await diamondLoupe.facetAddresses())]).to.deep.equal(
@@ -250,7 +282,7 @@ describe('EIP2535OwnableProxy', function () {
                 {
                     facetAddress: await ownable2StepFacetImpl.getAddress(),
                     action: 0,
-                    functionSelectors: [
+                    items: [
                         ...(await ownable2StepFacetImpl.selectorsIntrospection()),
                     ],
                 },
@@ -276,5 +308,26 @@ describe('EIP2535OwnableProxy', function () {
         expect(await erc20.name()).to.equal(NAME)
         expect(await erc20.symbol()).to.equal(SYMBOL)
         expect(await erc20.decimals()).to.equal(DECIMALS)
+    })
+
+    it('GIVEN an ERC20 deployed linked to a EIP2535 proxy WHEN interfacetCut THEN success', async () => {
+        const Ownable2StepFacetFactory: Ownable2StepFacet__factory =
+            await ethers.getContractFactory('Ownable2StepFacet')
+        const ownable2StepFacetImpl: Ownable2StepFacet =
+            await Ownable2StepFacetFactory.deploy()
+        await ownable2StepFacetImpl.waitForDeployment()
+        const diamondCut = DiamondCutOwnableFacetFactory.attach(
+            await diamondProxy.getAddress()
+        ) as DiamondCutOwnableFacet
+
+        await diamondCut.interfaceCut([
+            {
+                facetAddress: await ownable2StepFacetImpl.getAddress(),
+                action: 0,
+                items: [
+                    ...(await ownable2StepFacetImpl.interfacesIntrospection()),
+                ],
+            },
+        ])
     })
 })
