@@ -14,6 +14,62 @@ _Checks if an address equals to zero address_
 | ---- | ------- | -------------------- |
 | addr | address | The address to check |
 
+### bytes32IsNotZero
+
+```solidity
+modifier bytes32IsNotZero(bytes32 hash)
+```
+
+### emptyCode
+
+```solidity
+modifier emptyCode(bytes code)
+```
+
+---
+
+## ERC165
+
+### supportsInterface
+
+```solidity
+function supportsInterface(bytes4 _interfaceId) external pure returns (bool)
+```
+
+---
+
+## ERC165Internal
+
+### \_checkERC165ForbiddenInterfaces
+
+```solidity
+function _checkERC165ForbiddenInterfaces(bytes4 _interfaceId) internal pure virtual returns (bool)
+```
+
+### \_supportsERC165Interface
+
+```solidity
+function _supportsERC165Interface(bytes4 _interfaceId) internal pure virtual returns (bool)
+```
+
+### \_supportsInterface
+
+```solidity
+function _supportsInterface(bytes4 _interfaceId, bytes4[] _interfaces) internal pure virtual returns (bool)
+```
+
+### \_aggregateInterfaces
+
+```solidity
+function _aggregateInterfaces(bytes4[][] interfacesArrays, bytes4[] _interfaces) internal pure returns (bytes4[] interfaces_)
+```
+
+### \_implementedInterfaces
+
+```solidity
+function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
+```
+
 ---
 
 ## Initializable

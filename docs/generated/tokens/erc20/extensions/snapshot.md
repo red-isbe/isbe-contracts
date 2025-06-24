@@ -57,9 +57,32 @@ Will revert if the snapshot ID is invalid or does not exist._
 | ---- | ------- | -------------------------------------------------- |
 | [0]  | uint256 | The total token supply at the queried snapshot ID. |
 
+### \_implementedInterfaces
+
+```solidity
+function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
+```
+
 ---
 
 ## ERC20SnapshotFacet
+
+### interfacesIntrospection
+
+```solidity
+function interfacesIntrospection() external pure returns (bytes4[] interfaces_)
+```
+
+Retrieves the interfaces supported by the EIP-2535 Diamond Standard.
+
+_Returns a static list of interfaces supported by the contract. It is a view function and does not
+modify or depend on contract state._
+
+#### Return Values
+
+| Name         | Type     | Description                                                                         |
+| ------------ | -------- | ----------------------------------------------------------------------------------- |
+| interfaces\_ | bytes4[] | An array of interface identifiers (`bytes4[]`) compliant with the EIP-165 standard. |
 
 ### businessIdIntrospection
 

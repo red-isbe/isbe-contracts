@@ -126,6 +126,12 @@ Returns the admin role controlling a given role
 | ---- | ------- | --------------------------------------- |
 | [0]  | bytes32 | The admin role associated with the role |
 
+### \_implementedInterfaces
+
+```solidity
+function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
+```
+
 ---
 
 ## AccessControlFacet
@@ -133,6 +139,23 @@ Returns the admin role controlling a given role
 Access Control Facet smart contract
 
 _Adds IEIP2535Introspection functionality_
+
+### interfacesIntrospection
+
+```solidity
+function interfacesIntrospection() external pure returns (bytes4[] interfaces_)
+```
+
+Retrieves the interfaces supported by the EIP-2535 Diamond Standard.
+
+_Returns a static list of interfaces supported by the contract. It is a view function and does not
+modify or depend on contract state._
+
+#### Return Values
+
+| Name         | Type     | Description                                                                         |
+| ------------ | -------- | ----------------------------------------------------------------------------------- |
+| interfaces\_ | bytes4[] | An array of interface identifiers (`bytes4[]`) compliant with the EIP-165 standard. |
 
 ### businessIdIntrospection
 

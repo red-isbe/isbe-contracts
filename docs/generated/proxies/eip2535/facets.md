@@ -3,7 +3,7 @@
 ### diamondCut
 
 ```solidity
-function diamondCut(struct IDiamond.FacetCut[] _facetCuts, address _init, bytes _calldata) external
+function diamondCut(struct IDiamond.ItemCut[] _facetCuts, address _init, bytes _calldata) external
 ```
 
 Add/replace/remove any number of functions and optionally execute
@@ -11,11 +11,17 @@ a function with delegatecall
 
 #### Parameters
 
-| Name        | Type                       | Description                                                                                                   |
-| ----------- | -------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| \_facetCuts | struct IDiamond.FacetCut[] | Contains the facet addresses and function selectors                                                           |
-| \_init      | address                    | The address of the contract or facet to execute \_calldata                                                    |
-| \_calldata  | bytes                      | A function call, including function selector and arguments \_calldata is executed with delegatecall on \_init |
+| Name        | Type                      | Description                                                                                                   |
+| ----------- | ------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| \_facetCuts | struct IDiamond.ItemCut[] | Contains the facet addresses and function selectors                                                           |
+| \_init      | address                   | The address of the contract or facet to execute \_calldata                                                    |
+| \_calldata  | bytes                     | A function call, including function selector and arguments \_calldata is executed with delegatecall on \_init |
+
+### interfaceCut
+
+```solidity
+function interfaceCut(struct IDiamond.ItemCut[] _interfaceCuts) external
+```
 
 ### facetUpdates
 
@@ -23,16 +29,22 @@ a function with delegatecall
 function facetUpdates(address[] _facetAddresses, address _init, bytes _calldata) external
 ```
 
-Update the facets of the diamond by specifying facet addresses,
-optionally executing a function with `delegatecall` for initialization or other purposes.
+### interfacesIntrospection
 
-#### Parameters
+```solidity
+function interfacesIntrospection() external pure returns (bytes4[] interfaces_)
+```
 
-| Name             | Type      | Description                                                                                                                                                                                |
-| ---------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| \_facetAddresses | address[] | An array of facet addresses to be updated or initialized.                                                                                                                                  |
-| \_init           | address   | The address of the contract or facet to execute `_calldata` with `delegatecall`. If `_init` is the zero address, no initialization function is called.                                     |
-| \_calldata       | bytes     | The data for the function call, including the function selector and arguments. This is executed using `delegatecall` on the `_init` address. If `_calldata` is empty, no call is executed. |
+Retrieves the interfaces supported by the EIP-2535 Diamond Standard.
+
+_Returns a static list of interfaces supported by the contract. It is a view function and does not
+modify or depend on contract state._
+
+#### Return Values
+
+| Name         | Type     | Description                                                                         |
+| ------------ | -------- | ----------------------------------------------------------------------------------- |
+| interfaces\_ | bytes4[] | An array of interface identifiers (`bytes4[]`) compliant with the EIP-165 standard. |
 
 ### businessIdIntrospection
 
@@ -64,7 +76,7 @@ modify or depend on contract state._
 ### diamondCut
 
 ```solidity
-function diamondCut(struct IDiamond.FacetCut[] _facetCuts, address _init, bytes _calldata) external
+function diamondCut(struct IDiamond.ItemCut[] _facetCuts, address _init, bytes _calldata) external
 ```
 
 Add/replace/remove any number of functions and optionally execute
@@ -72,16 +84,22 @@ a function with delegatecall
 
 #### Parameters
 
-| Name        | Type                       | Description                                                                                                   |
-| ----------- | -------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| \_facetCuts | struct IDiamond.FacetCut[] | Contains the facet addresses and function selectors                                                           |
-| \_init      | address                    | The address of the contract or facet to execute \_calldata                                                    |
-| \_calldata  | bytes                      | A function call, including function selector and arguments \_calldata is executed with delegatecall on \_init |
+| Name        | Type                      | Description                                                                                                   |
+| ----------- | ------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| \_facetCuts | struct IDiamond.ItemCut[] | Contains the facet addresses and function selectors                                                           |
+| \_init      | address                   | The address of the contract or facet to execute \_calldata                                                    |
+| \_calldata  | bytes                     | A function call, including function selector and arguments \_calldata is executed with delegatecall on \_init |
+
+### interfaceCut
+
+```solidity
+function interfaceCut(struct IDiamond.ItemCut[] _interfaceCuts) external
+```
 
 ### facetUpdates
 
 ```solidity
-function facetUpdates(address[] _facetAddresses, address _init, bytes _calldata) external
+function facetUpdates(address[] _newFacetAddresses, address _init, bytes _calldata) external
 ```
 
 Update the facets of the diamond by specifying facet addresses,
@@ -89,11 +107,28 @@ optionally executing a function with `delegatecall` for initialization or other 
 
 #### Parameters
 
-| Name             | Type      | Description                                                                                                                                                                                |
-| ---------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| \_facetAddresses | address[] | An array of facet addresses to be updated or initialized.                                                                                                                                  |
-| \_init           | address   | The address of the contract or facet to execute `_calldata` with `delegatecall`. If `_init` is the zero address, no initialization function is called.                                     |
-| \_calldata       | bytes     | The data for the function call, including the function selector and arguments. This is executed using `delegatecall` on the `_init` address. If `_calldata` is empty, no call is executed. |
+| Name                | Type      | Description                                                                                                                                                                                |
+| ------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| \_newFacetAddresses | address[] | An array of facet addresses to be updated or initialized.                                                                                                                                  |
+| \_init              | address   | The address of the contract or facet to execute `_calldata` with `delegatecall`. If `_init` is the zero address, no initialization function is called.                                     |
+| \_calldata          | bytes     | The data for the function call, including the function selector and arguments. This is executed using `delegatecall` on the `_init` address. If `_calldata` is empty, no call is executed. |
+
+### interfacesIntrospection
+
+```solidity
+function interfacesIntrospection() external pure returns (bytes4[] interfaces_)
+```
+
+Retrieves the interfaces supported by the EIP-2535 Diamond Standard.
+
+_Returns a static list of interfaces supported by the contract. It is a view function and does not
+modify or depend on contract state._
+
+#### Return Values
+
+| Name         | Type     | Description                                                                         |
+| ------------ | -------- | ----------------------------------------------------------------------------------- |
+| interfaces\_ | bytes4[] | An array of interface identifiers (`bytes4[]`) compliant with the EIP-165 standard. |
 
 ### businessIdIntrospection
 
@@ -195,8 +230,32 @@ _If facet is not found return address(0)._
 ### supportsInterface
 
 ```solidity
-function supportsInterface(bytes4 _interfaceId) external view returns (bool)
+function supportsInterface(bytes4 interfaceId) external view virtual returns (bool)
 ```
+
+\_Returns true if this contract implements the interface defined by
+`interfaceId`. See the corresponding
+https://eips.ethereum.org/EIPS/eip-165#how-interfaces-are-identified[EIP section]
+to learn more about how these ids are created.
+
+This function call must use less than 30 000 gas.\_
+
+### interfacesIntrospection
+
+```solidity
+function interfacesIntrospection() external pure returns (bytes4[] interfaces_)
+```
+
+Retrieves the interfaces supported by the EIP-2535 Diamond Standard.
+
+_Returns a static list of interfaces supported by the contract. It is a view function and does not
+modify or depend on contract state._
+
+#### Return Values
+
+| Name         | Type     | Description                                                                         |
+| ------------ | -------- | ----------------------------------------------------------------------------------- |
+| interfaces\_ | bytes4[] | An array of interface identifiers (`bytes4[]`) compliant with the EIP-165 standard. |
 
 ### businessIdIntrospection
 
@@ -220,3 +279,9 @@ modify or depend on contract state._
 | Name        | Type     | Description                                                                       |
 | ----------- | -------- | --------------------------------------------------------------------------------- |
 | selectors\_ | bytes4[] | An array of function selectors (`bytes4[]`) compliant with the EIP-2535 standard. |
+
+### \_implementedInterfaces
+
+```solidity
+function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
+```

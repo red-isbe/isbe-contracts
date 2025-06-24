@@ -4,7 +4,7 @@ _Defines the interface for the Diamond Standard (EIP-2535).
 This interface provides structures, enums, and events required for managing facets
 in a diamond (a modular and upgradable contract system)._
 
-### FacetCutAction
+### ItemCutAction
 
 \_Enum that defines the type of action to perform on a facet.
 
@@ -13,34 +13,36 @@ in a diamond (a modular and upgradable contract system)._
 - Remove: Remove a facet's selectors from the diamond.\_
 
 ```solidity
-enum FacetCutAction {
+enum ItemCutAction {
     Add,
     Replace,
     Remove
 }
 ```
 
-### FacetCut
-
-_Struct used to define a facet and the action to be performed on it._
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+### ItemsType
 
 ```solidity
-struct FacetCut {
+enum ItemsType {
+    Selectors,
+    Interfaces
+}
+```
+
+### ItemCut
+
+```solidity
+struct ItemCut {
   address facetAddress;
-  enum IDiamond.FacetCutAction action;
-  bytes4[] functionSelectors;
+  enum IDiamond.ItemCutAction action;
+  bytes4[] items;
 }
 ```
 
 ### DiamondCut
 
 ```solidity
-event DiamondCut(struct IDiamond.FacetCut[] _diamondCut, address _init, bytes _calldata)
+event DiamondCut(struct IDiamond.ItemCut[] _diamondCut, address _init, bytes _calldata)
 ```
 
 _Emitted when the diamond's facets are updated.
@@ -48,11 +50,26 @@ This event signals changes to the diamond's state (e.g., adding, replacing, or r
 
 #### Parameters
 
-| Name         | Type                       | Description                                                        |
-| ------------ | -------------------------- | ------------------------------------------------------------------ |
-| \_diamondCut | struct IDiamond.FacetCut[] | An array of FacetCut defining the actions performed on facets.     |
-| \_init       | address                    | The address of a contract or facet to execute initialization code. |
-| \_calldata   | bytes                      | The calldata for the initialization function called on `_init`.    |
+| Name         | Type                      | Description                                                        |
+| ------------ | ------------------------- | ------------------------------------------------------------------ |
+| \_diamondCut | struct IDiamond.ItemCut[] | An array of FacetCut defining the actions performed on facets.     |
+| \_init       | address                   | The address of a contract or facet to execute initialization code. |
+| \_calldata   | bytes                     | The calldata for the initialization function called on `_init`.    |
+
+### InterfacesUpdate
+
+```solidity
+event InterfacesUpdate(struct IDiamond.ItemCut[] _interfaceCut)
+```
+
+_Emitted when the diamond's interfaces are updated.
+This event signals changes to the diamond's state (e.g., adding, replacing or removing interfaces)._
+
+#### Parameters
+
+| Name           | Type                      | Description                                                            |
+| -------------- | ------------------------- | ---------------------------------------------------------------------- |
+| \_interfaceCut | struct IDiamond.ItemCut[] | An array of InterfaceCut defining the actions performed on interfaces. |
 
 ---
 
@@ -64,7 +81,7 @@ in a modular contract system (Diamond Standard, EIP-2535)._
 ### diamondCut
 
 ```solidity
-function diamondCut(struct IDiamond.FacetCut[] _diamondCut, address _init, bytes _calldata) external
+function diamondCut(struct IDiamond.ItemCut[] _diamondCut, address _init, bytes _calldata) external
 ```
 
 Add, replace, or remove any number of functions, and optionally execute
@@ -72,16 +89,22 @@ a function with `delegatecall` for initialization or other purposes.
 
 #### Parameters
 
-| Name         | Type                       | Description                                                                                                                                                                                                            |
-| ------------ | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| \_diamondCut | struct IDiamond.FacetCut[] | An array of FacetCut structures, each containing: - The facet address to add, replace, or remove. - The type of action to perform (add, replace, remove). - An array of function selectors to add, replace, or remove. |
-| \_init       | address                    | The address of the contract or facet to execute `_calldata` with `delegatecall`. Can be used for initialization or setup after a diamond update. If `_init` is the zero address, no initialization function is called. |
-| \_calldata   | bytes                      | The data for the function call, including the function selector and arguments. This is executed using `delegatecall` on the `_init` address. If `_calldata` is empty, no call is executed.                             |
+| Name         | Type                      | Description                                                                                                                                                                                                            |
+| ------------ | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| \_diamondCut | struct IDiamond.ItemCut[] | An array of FacetCut structures, each containing: - The facet address to add, replace, or remove. - The type of action to perform (add, replace, remove). - An array of function selectors to add, replace, or remove. |
+| \_init       | address                   | The address of the contract or facet to execute `_calldata` with `delegatecall`. Can be used for initialization or setup after a diamond update. If `_init` is the zero address, no initialization function is called. |
+| \_calldata   | bytes                     | The data for the function call, including the function selector and arguments. This is executed using `delegatecall` on the `_init` address. If `_calldata` is empty, no call is executed.                             |
+
+### interfaceCut
+
+```solidity
+function interfaceCut(struct IDiamond.ItemCut[] _interfaceCuts) external
+```
 
 ### facetUpdates
 
 ```solidity
-function facetUpdates(address[] _facetAddresses, address _init, bytes _calldata) external
+function facetUpdates(address[] _newFacetAddresses, address _init, bytes _calldata) external
 ```
 
 Update the facets of the diamond by specifying facet addresses,
@@ -89,11 +112,11 @@ optionally executing a function with `delegatecall` for initialization or other 
 
 #### Parameters
 
-| Name             | Type      | Description                                                                                                                                                                                |
-| ---------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| \_facetAddresses | address[] | An array of facet addresses to be updated or initialized.                                                                                                                                  |
-| \_init           | address   | The address of the contract or facet to execute `_calldata` with `delegatecall`. If `_init` is the zero address, no initialization function is called.                                     |
-| \_calldata       | bytes     | The data for the function call, including the function selector and arguments. This is executed using `delegatecall` on the `_init` address. If `_calldata` is empty, no call is executed. |
+| Name                | Type      | Description                                                                                                                                                                                |
+| ------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| \_newFacetAddresses | address[] | An array of facet addresses to be updated or initialized.                                                                                                                                  |
+| \_init              | address   | The address of the contract or facet to execute `_calldata` with `delegatecall`. If `_init` is the zero address, no initialization function is called.                                     |
+| \_calldata          | bytes     | The data for the function call, including the function selector and arguments. This is executed using `delegatecall` on the `_init` address. If `_calldata` is empty, no call is executed. |
 
 ---
 
@@ -197,6 +220,23 @@ _If no facet supports the selector, the function will return the zero address (`
 
 _Defines a function to introspect the function selectors supported by the EIP-2535 Diamond Standard interface.
 This interface enables tools and developers to retrieve function selectors for compatibility and inspection._
+
+### interfacesIntrospection
+
+```solidity
+function interfacesIntrospection() external pure returns (bytes4[] interfaces_)
+```
+
+Retrieves the interfaces supported by the EIP-2535 Diamond Standard.
+
+_Returns a static list of interfaces supported by the contract. It is a view function and does not
+modify or depend on contract state._
+
+#### Return Values
+
+| Name         | Type     | Description                                                                         |
+| ------------ | -------- | ----------------------------------------------------------------------------------- |
+| interfaces\_ | bytes4[] | An array of interface identifiers (`bytes4[]`) compliant with the EIP-165 standard. |
 
 ### businessIdIntrospection
 
