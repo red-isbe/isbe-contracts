@@ -7,6 +7,7 @@ import {
     ISBE_ROLE,
     ISBE_AUTHORIZATION_LEVEL,
     PAUSER_AUTHORIZATION_LEVEL,
+    DEFAULT_ADMIN_ROLE,
 } from './constants'
 import { deployAll } from './initialization'
 
@@ -32,15 +33,26 @@ describe('Pause', function () {
         pause = result.pause
         accessControl = result.accessControl
         pauseFacet = result.pauseFacet
+        const adminAccountAddress = await adminAccount.getAddress()
 
-        await accessControl.initializeAccessControl(adminAccount)
+        const rbacs = [
+            {
+                role: DEFAULT_ADMIN_ROLE,
+                members: [adminAccountAddress],
+            },
+        ]
 
         if (addRole && user) {
-            accessControl = accessControl.connect(adminAccount)
             for (let i = 0; i < addRole.length; i++) {
-                await accessControl.grantRole(addRole[i], user[i])
+                const userAddress = await user[i].getAddress()
+                rbacs.push({
+                    role: addRole[i],
+                    members: [userAddress],
+                })
             }
         }
+
+        await accessControl.initializeAccessControl(rbacs)
 
         await pause.initializePause(init_pause)
     }
@@ -124,12 +136,13 @@ describe('Pause', function () {
         })
 
         it('GIVEN a Pause WHEN using account with pauser and ISBE role to unpause an already unpaused token THEN fails', async function () {
-            await deploy()
+            await deploy(
+                false,
+                [PAUSER_ROLE, ISBE_ROLE],
+                [adminAccount, adminAccount]
+            )
 
             pause = pause.connect(adminAccount)
-
-            await accessControl.grantRole(PAUSER_ROLE, adminAccount)
-            await accessControl.grantRole(ISBE_ROLE, adminAccount)
 
             await expect(pause.unpause()).to.be.revertedWithCustomError(
                 pause,
@@ -181,11 +194,9 @@ describe('Pause', function () {
         })
 
         it('GIVEN a Pause WHEN using account with ISBE role to pause THEN succeeds', async function () {
-            await deploy()
+            await deploy(false, [ISBE_ROLE], [adminAccount])
 
             pause = pause.connect(adminAccount)
-
-            await accessControl.grantRole(ISBE_ROLE, adminAccount)
 
             await expect(pause.pause())
                 .to.emit(pause, 'Paused')

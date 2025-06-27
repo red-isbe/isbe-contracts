@@ -5,6 +5,7 @@ import {
     IEIP2535Introspection
 } from '../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 import {_RESOLVER_KEY, CounterFacetInternal} from './CounterFacetInternal.sol';
+import {_DEFAULT_ADMIN_ROLE} from '../../../constants/roles.sol';
 
 contract CounterV2FacetTestWrapper is
     CounterFacetInternal,
@@ -23,7 +24,7 @@ contract CounterV2FacetTestWrapper is
 
     function increment(
         uint256 amount
-    ) external whenNotPaused onlyRole(DEFAULT_ADMIN_ROLE) {
+    ) external whenNotPaused onlyRole(_DEFAULT_ADMIN_ROLE) {
         _counterStorage().counter += amount;
     }
 

@@ -20,13 +20,9 @@ contract AccessControl is IAccessControl, Common {
     }
 
     function initializeAccessControl(
-        address admin
-    )
-        external
-        initializer(_ACCESS_CONTROL_RESOLVER_KEY)
-        addressIsNotZero(admin)
-    {
-        _grantRole(DEFAULT_ADMIN_ROLE, admin);
+        IAccessControl.Rbac[] memory rbacs
+    ) external initializer(_ACCESS_CONTROL_RESOLVER_KEY) {
+        _initializeRbacs(rbacs);
     }
 
     function grantRole(

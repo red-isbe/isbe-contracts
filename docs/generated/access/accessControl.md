@@ -4,6 +4,12 @@ Implements role-based access control mechanisms
 
 _Inherits from IAccessControl and Common, providing external role management functions_
 
+### protectISBERole
+
+```solidity
+modifier protectISBERole(bytes32 _role)
+```
+
 ### constructor
 
 ```solidity
@@ -15,16 +21,16 @@ Constructor that disables the initializer
 ### initializeAccessControl
 
 ```solidity
-function initializeAccessControl(address admin) external
+function initializeAccessControl(struct IAccessControl.Rbac[] rbacs) external
 ```
 
-Initializes the Access Control contrl grating admin right to an account
+Initializes the Access Control contrl grating roles
 
 #### Parameters
 
-| Name  | Type    | Description                            |
-| ----- | ------- | -------------------------------------- |
-| admin | address | The address to grant the admin role to |
+| Name  | Type                         | Description                       |
+| ----- | ---------------------------- | --------------------------------- |
+| rbacs | struct IAccessControl.Rbac[] | Addresses and roles to be granted |
 
 ### grantRole
 
@@ -132,6 +138,18 @@ Returns the admin role controlling a given role
 function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
 ```
 
+### \_protectISBERole
+
+```solidity
+function _protectISBERole(bytes32 _role) internal pure
+```
+
+### \_isISBERole
+
+```solidity
+function _isISBERole(bytes32 _role) internal pure returns (bool)
+```
+
 ---
 
 ## AccessControlFacet
@@ -214,14 +232,6 @@ struct RoleData {
     bytes32 adminRole;
 }
 ```
-
-### DEFAULT_ADMIN_ROLE
-
-```solidity
-bytes32 DEFAULT_ADMIN_ROLE
-```
-
-Constant value representing the default admin role
 
 ### onlyRole
 
@@ -388,6 +398,12 @@ Emitted when a role is revoked from an account
 | account | address | The account losing the role               |
 | sender  | address | The address that performed the revocation |
 
+### MissingAdminRole
+
+```solidity
+error MissingAdminRole()
+```
+
 ### RoleMustBeUnique
 
 ```solidity
@@ -430,19 +446,33 @@ Error indicating an account does not hold any of the required roles
 | account | address   | The account being checked |
 | roles   | bytes32[] | The roles required        |
 
-### initializeAccessControl
+### RoleIsImmutable
 
 ```solidity
-function initializeAccessControl(address admin) external
+error RoleIsImmutable(bytes32 role)
 ```
 
-Initializes the Access Control contrl grating admin right to an account
+Error indicating that a role is immutable and it's members cannot be changed
 
 #### Parameters
 
-| Name  | Type    | Description                            |
-| ----- | ------- | -------------------------------------- |
-| admin | address | The address to grant the admin role to |
+| Name | Type    | Description                   |
+| ---- | ------- | ----------------------------- |
+| role | bytes32 | The immutable role identifier |
+
+### initializeAccessControl
+
+```solidity
+function initializeAccessControl(struct IAccessControl.Rbac[] rbacs) external
+```
+
+Initializes the Access Control contrl grating roles
+
+#### Parameters
+
+| Name  | Type                         | Description                       |
+| ----- | ---------------------------- | --------------------------------- |
+| rbacs | struct IAccessControl.Rbac[] | Addresses and roles to be granted |
 
 ### grantRole
 

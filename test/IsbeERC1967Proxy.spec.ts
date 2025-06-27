@@ -5,7 +5,7 @@ import {
     ERC20TestWrapperUUPS__factory,
     ERC20TestWrapperUUPS,
 } from '../typechain-types'
-import { MINTER_ROLE } from './constants'
+import { DEFAULT_ADMIN_ROLE, MINTER_ROLE } from './constants'
 import { Signer } from 'ethers'
 
 const NAME = 'My Token'
@@ -50,7 +50,12 @@ describe('IsbeERC1967Proxy', function () {
         await erc20UUPS.initializeErc20(NAME, SYMBOL, DECIMALS)
         await erc20UUPS.initializeCap(10000)
         const adminAddress = await admin.getAddress()
-        await erc20UUPS.initializeAccessControl(adminAddress)
+        await erc20UUPS.initializeAccessControl([
+            {
+                role: DEFAULT_ADMIN_ROLE,
+                members: [adminAddress],
+            },
+        ])
         await erc20UUPS.grantRole(MINTER_ROLE, adminAddress)
     })
 

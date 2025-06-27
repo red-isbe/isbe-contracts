@@ -20,16 +20,30 @@ describe('Access Control', function () {
         accessControl = result.accessControl
         accessControlFacet = result.accessControlFacet
 
+        const adminAccountAddress = await adminAccount.getAddress()
+
         if (initialize)
-            await accessControl.initializeAccessControl(adminAccount)
+            await accessControl.initializeAccessControl([
+                {
+                    role: DEFAULT_ADMIN_ROLE,
+                    members: [adminAccountAddress],
+                },
+            ])
     }
 
     describe('Testing initialization and constructor', function () {
         it('GIVEN an Access Control WHEN initializing it THEN fails', async function () {
             await deploy()
 
+            const account2Address = await account_2.getAddress()
+
             await expect(
-                accessControlFacet.initializeAccessControl(account_2)
+                accessControlFacet.initializeAccessControl([
+                    {
+                        role: DEFAULT_ADMIN_ROLE,
+                        members: [account2Address],
+                    },
+                ])
             ).to.be.revertedWithCustomError(
                 accessControlFacet,
                 'ContractIsAlreadyInitialized'
@@ -39,8 +53,15 @@ describe('Access Control', function () {
         it('GIVEN a Proxy pointing to an Access Control WHEN initializing it THEN fails', async function () {
             await deploy()
 
+            const account2Address = await account_2.getAddress()
+
             await expect(
-                accessControl.initializeAccessControl(account_2)
+                accessControl.initializeAccessControl([
+                    {
+                        role: DEFAULT_ADMIN_ROLE,
+                        members: [account2Address],
+                    },
+                ])
             ).to.be.revertedWithCustomError(
                 accessControl,
                 'ContractIsAlreadyInitialized'
@@ -51,8 +72,28 @@ describe('Access Control', function () {
             await deploy(false)
 
             await expect(
-                accessControl.initializeAccessControl(ethers.ZeroAddress)
+                accessControl.initializeAccessControl([
+                    {
+                        role: DEFAULT_ADMIN_ROLE,
+                        members: [ethers.ZeroAddress],
+                    },
+                ])
             ).to.be.revertedWithCustomError(accessControl, 'AddressZero')
+        })
+
+        it('GIVEN a new Proxy pointing to an Access Control WHEN initializing it without adding DEFAULT_ADMIN_ROLE THEN fails', async function () {
+            await deploy(false)
+
+            const account2Address = await account_2.getAddress()
+
+            await expect(
+                accessControl.initializeAccessControl([
+                    {
+                        role: ROLE_1,
+                        members: [account2Address],
+                    },
+                ])
+            ).to.be.revertedWithCustomError(accessControl, 'MissingAdminRole')
         })
     })
 
