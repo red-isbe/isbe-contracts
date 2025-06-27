@@ -67,6 +67,10 @@ interface IAccessControl {
     /// @param roles The roles required
     error AccountHasNoRoles(address account, bytes32[] roles);
 
+    /// @notice Error indicating that a role is immutable and it's members cannot be changed
+    /// @param role The immutable role identifier
+    error RoleIsImmutable(bytes32 role);
+
     /// @notice Initializes the Access Control contrl grating admin right to an account
     /// @param admin The address to grant the admin role to
     function initializeAccessControl(address admin) external;

@@ -2,7 +2,7 @@ import { expect } from 'chai'
 import { Signer } from 'ethers'
 import { ethers } from 'hardhat'
 import { AccessControl, AccessControlFacet } from '../typechain-types'
-import { DEFAULT_ADMIN_ROLE, ROLE_1, ROLE_2 } from './constants'
+import { DEFAULT_ADMIN_ROLE, ROLE_1, ROLE_2, ISBE_ROLE } from './constants'
 import { deployAll } from './initialization'
 
 describe('Access Control', function () {
@@ -102,6 +102,36 @@ describe('Access Control', function () {
             await expect(
                 accessControl.revokeRole(DEFAULT_ADMIN_ROLE, adminAccount)
             ).to.be.revertedWithCustomError(accessControl, 'AccountHasNoRole')
+        })
+
+        it('GIVEN an Access Control WHEN using account with admin role to grant ISBE role THEN fails', async function () {
+            await deploy()
+
+            accessControl = accessControl.connect(adminAccount)
+
+            await expect(accessControl.grantRole(ISBE_ROLE, account_2))
+                .to.be.revertedWithCustomError(accessControl, 'RoleIsImmutable')
+                .withArgs(ISBE_ROLE)
+        })
+
+        it('GIVEN an Access Control WHEN using account with admin role to revoke ISBE role THEN fails', async function () {
+            await deploy()
+
+            accessControl = accessControl.connect(adminAccount)
+
+            await expect(accessControl.revokeRole(ISBE_ROLE, adminAccount))
+                .to.be.revertedWithCustomError(accessControl, 'RoleIsImmutable')
+                .withArgs(ISBE_ROLE)
+        })
+
+        it('GIVEN an Access Control WHEN renouncing ISBE role THEN fails', async function () {
+            await deploy()
+
+            accessControl = accessControl.connect(adminAccount)
+
+            await expect(accessControl.renounceRole(ISBE_ROLE))
+                .to.be.revertedWithCustomError(accessControl, 'RoleIsImmutable')
+                .withArgs(ISBE_ROLE)
         })
 
         it('GIVEN an Access Control WHEN using account with admin role to grant role THEN succeeds', async function () {
