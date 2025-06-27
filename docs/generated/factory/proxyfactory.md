@@ -347,8 +347,14 @@ function _getDeployedProxiesByBusinessId(bytes32 businessId) internal view retur
 function _getBusinessIdsByProxy(address proxy) internal view returns (bytes32[] businessIds)
 ```
 
+### \_isProxyDeployed
+
+```solidity
+function _isProxyDeployed(address proxy) internal view returns (bool deployed_)
+```
+
 ### \_implementedInterfaces
 
 ```solidity
-function _implementedInterfaces() internal pure returns (bytes4[] interfaces_)
+function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
 ```

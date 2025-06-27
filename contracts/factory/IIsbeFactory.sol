@@ -1,16 +1,24 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
+import {IGlobalIsbePause} from './globalisbepause/IGlobalIsbePause.sol';
 import {IBusinessLogicFactory} from './businesslogic/IBusinessLogicFactory.sol';
 import {IProxyFactory} from './proxyfactory/IProxyFactory.sol';
 
-/// @title ISBE Universal Factory Interface
-/// @author ISBE
-/// @notice A comprehensive factory interface that unifies business logic and proxy deployment.
-/// @dev This interface consolidates the `IBusinessLogicFactory` and `IProxyFactory` interfaces,
-///      providing a single point of entry for all contract deployment and management operations
-///      within the ISBE ecosystem. It inherits all functions, events, and errors from its
-///      parent interfaces and does not introduce any new elements. For implementation details,
-///      please refer to the `IBusinessLogicFactory` and `IProxyFactory` documentation.
+/**
+ * @title ISBE Universal Factory Interface
+ * @author ISBE
+ * @notice A unified interface that aggregates core factory functionalities.
+ *         It combines business logic deployment, proxy creation, and global
+ *         pausing capabilities into a single, comprehensive API.
+ * @dev This interface inherits from `IBusinessLogicFactory`, `IProxyFactory`,
+ *      and `IGlobalIsbePause`. It serves as the primary entry point for
+ *      all interactions with the ISBE factory contract, defining its
+ *      complete external surface.
+ */
 // solhint-disable-next-line no-empty-blocks
-interface IIsbeFactory is IBusinessLogicFactory, IProxyFactory {}
+interface IIsbeFactory is
+    IBusinessLogicFactory,
+    IProxyFactory,
+    IGlobalIsbePause
+{}

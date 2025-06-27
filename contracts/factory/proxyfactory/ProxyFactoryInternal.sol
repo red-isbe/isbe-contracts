@@ -90,9 +90,18 @@ abstract contract ProxyFactoryInternal is
             .values();
     }
 
+    function _isProxyDeployed(
+        address proxy
+    ) internal view returns (bool deployed_) {
+        deployed_ =
+            _proxyFactoryStorage().proxyAddressToBusinessIds[proxy].length() >
+            0;
+    }
+
     function _implementedInterfaces()
         internal
         pure
+        virtual
         override
         returns (bytes4[] memory interfaces_)
     {

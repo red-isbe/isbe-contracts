@@ -51,4 +51,7 @@ bytes32 constant _ERC165_RESOLVER_KEY = 0x0d211187337a25b55ba62c44fbaaff686007a4
 // keccak256('isbe.contracts.proxy.factory.resolver.key');
 bytes32 constant _PROXY_FACTORY_RESOLVER_KEY = 0x949f2c59318fff1925835e4fd22837f508de87f71875ac3e71a5f5c7e4c74d10;
 
+// keccak256('isbe.contracts.global.isbe.pausable.resolver.key');
+bytes32 constant _GLOBAL_ISBE_PAUSABLE_RESOLVER_KEY = 0x95abb588e90c3cf7e85016cd7eef6fcbf9073b2a59c113a2f59ef664c86cf3f3;
+
 // solhint-enable max-line-length

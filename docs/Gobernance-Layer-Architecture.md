@@ -126,7 +126,7 @@ The Diamond contract is composed of the following facets, each with a unique res
 
     - **Access**: Proxy deployment is permitted for the `PROXY_DEPLOYER_ROLE`.
 
-- **`GlobalIsbePausable`**:
+- **`GlobalIsbePause`**:
 
     - **Function**: Allows for the centralised pausing and unpausing of any proxy contract deployed via the `ProxyFactoryFacet`.
     - **Access**: Restricted exclusively to the `ISBE_PAUSER_ROLE` to facilitate rapid responses to security incidents.
