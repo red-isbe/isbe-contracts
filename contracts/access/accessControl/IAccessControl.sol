@@ -54,6 +54,8 @@ interface IAccessControl {
         address indexed sender
     );
 
+    error MissingAdminRole();
+
     error RoleMustBeUnique(bytes32 role);
     error RoleMemberMustBeUnique(bytes32 role, address member);
 
@@ -67,9 +69,17 @@ interface IAccessControl {
     /// @param roles The roles required
     error AccountHasNoRoles(address account, bytes32[] roles);
 
-    /// @notice Initializes the Access Control contrl grating admin right to an account
-    /// @param admin The address to grant the admin role to
-    function initializeAccessControl(address admin) external;
+    /// @notice Error indicating that a role is immutable and it's members cannot be changed
+    /// @param role The immutable role identifier
+    error RoleIsImmutable(bytes32 role);
+
+    /// @notice Error indicating that there has to be at least one member for a role
+    /// @param role The role identifier
+    error AtLeastOneMemberForRole(bytes32 role);
+
+    /// @notice Initializes the Access Control contrl grating roles
+    /// @param rbacs Addresses and roles to be granted
+    function initializeAccessControl(Rbac[] memory rbacs) external;
 
     /// @notice Grants a role to an account
     /// @param role The role identifier

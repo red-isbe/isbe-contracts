@@ -16,6 +16,7 @@ import {
     SNAPSHOT_ROLE,
     CONTROLLER_ROLE,
     ERC20_RESOLVER_KEY,
+    DEFAULT_ADMIN_ROLE,
 } from './constants'
 import { deployAll } from './initialization'
 describe('ERC20', function () {
@@ -238,7 +239,12 @@ describe('ERC20', function () {
             await deploy(true)
             const totalSupply = 10
 
-            await accessControl.initializeAccessControl(ownerAddress)
+            await accessControl.initializeAccessControl([
+                {
+                    role: DEFAULT_ADMIN_ROLE,
+                    members: [ownerAddress],
+                },
+            ])
             await accessControl.grantRole(MINTER_ROLE, ownerAddress)
             await accessControl.grantRole(CAP_ROLE, ownerAddress)
 
@@ -278,7 +284,12 @@ describe('ERC20', function () {
             await deploy(true)
             const totalSupply = 10
 
-            await accessControl.initializeAccessControl(ownerAddress)
+            await accessControl.initializeAccessControl([
+                {
+                    role: DEFAULT_ADMIN_ROLE,
+                    members: [ownerAddress],
+                },
+            ])
             await accessControl.grantRole(MINTER_ROLE, ownerAddress)
             await accessControl.grantRole(CAP_ROLE, ownerAddress)
 
@@ -296,7 +307,12 @@ describe('ERC20', function () {
         it('GIVEN an initialized ERC20 WHEN mint to zero address THEN fails', async () => {
             await deploy(true)
 
-            await accessControl.initializeAccessControl(ownerAddress)
+            await accessControl.initializeAccessControl([
+                {
+                    role: DEFAULT_ADMIN_ROLE,
+                    members: [ownerAddress],
+                },
+            ])
             await accessControl.grantRole(MINTER_ROLE, ownerAddress)
 
             await expect(
@@ -325,7 +341,12 @@ describe('ERC20', function () {
         it('GIVEN an ERC20 WHEN it is initialized THEN mint can be made', async () => {
             await deploy(true)
 
-            await accessControl.initializeAccessControl(ownerAddress)
+            await accessControl.initializeAccessControl([
+                {
+                    role: DEFAULT_ADMIN_ROLE,
+                    members: [ownerAddress],
+                },
+            ])
             await accessControl.grantRole(MINTER_ROLE, ownerAddress)
 
             await expect(erc20Capped.mint(ownerAddress, 100))
@@ -338,7 +359,12 @@ describe('ERC20', function () {
         const prepare = async () => {
             await deploy(true)
 
-            await accessControl.initializeAccessControl(ownerAddress)
+            await accessControl.initializeAccessControl([
+                {
+                    role: DEFAULT_ADMIN_ROLE,
+                    members: [ownerAddress],
+                },
+            ])
             await accessControl.grantRole(MINTER_ROLE, ownerAddress)
 
             await erc20Capped.mint(ownerAddress, 100)
@@ -377,7 +403,12 @@ describe('ERC20', function () {
     describe('BurnFrom', () => {
         const prepare = async () => {
             await deploy(true)
-            await accessControl.initializeAccessControl(ownerAddress)
+            await accessControl.initializeAccessControl([
+                {
+                    role: DEFAULT_ADMIN_ROLE,
+                    members: [ownerAddress],
+                },
+            ])
             await accessControl.grantRole(MINTER_ROLE, ownerAddress)
             await erc20Capped.mint(otherAccountAddress, 50)
             await erc20.connect(otherAccount).approve(ownerAddress, 100)
@@ -427,7 +458,12 @@ describe('ERC20', function () {
     describe('Transfer', () => {
         const prepare = async () => {
             await deploy(true)
-            await accessControl.initializeAccessControl(ownerAddress)
+            await accessControl.initializeAccessControl([
+                {
+                    role: DEFAULT_ADMIN_ROLE,
+                    members: [ownerAddress],
+                },
+            ])
             await accessControl.grantRole(MINTER_ROLE, ownerAddress)
             await erc20Capped.mint(ownerAddress, 100)
             return { erc20, owner, otherAccount }
@@ -477,7 +513,12 @@ describe('ERC20', function () {
     describe('TransferFrom', () => {
         const prepare = async () => {
             await deploy(true)
-            await accessControl.initializeAccessControl(ownerAddress)
+            await accessControl.initializeAccessControl([
+                {
+                    role: DEFAULT_ADMIN_ROLE,
+                    members: [ownerAddress],
+                },
+            ])
             await accessControl.grantRole(MINTER_ROLE, ownerAddress)
             await erc20Capped.mint(ownerAddress, 100)
             await erc20Capped.mint(otherAccountAddress, 100)
@@ -558,7 +599,12 @@ describe('ERC20', function () {
     describe('Snapshot', () => {
         const prepare = async () => {
             await deploy(true)
-            await accessControl.initializeAccessControl(ownerAddress)
+            await accessControl.initializeAccessControl([
+                {
+                    role: DEFAULT_ADMIN_ROLE,
+                    members: [ownerAddress],
+                },
+            ])
             await accessControl.grantRole(MINTER_ROLE, ownerAddress)
             await erc20Capped.mint(ownerAddress, 100)
             return { erc20, owner, otherAccount }
@@ -635,7 +681,12 @@ describe('ERC20', function () {
         const prepare = async () => {
             await deploy(true)
 
-            await accessControl.initializeAccessControl(ownerAddress)
+            await accessControl.initializeAccessControl([
+                {
+                    role: DEFAULT_ADMIN_ROLE,
+                    members: [ownerAddress],
+                },
+            ])
             await accessControl.grantRole(MINTER_ROLE, ownerAddress)
             await accessControl.grantRole(CONTROLLER_ROLE, ownerAddress)
 

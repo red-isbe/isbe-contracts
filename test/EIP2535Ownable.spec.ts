@@ -26,6 +26,7 @@ import {
     ERC20_RESOLVER_KEY,
     DIAMOND_LOUPE_RESOLVER_KEY,
     PAUSER_ROLE,
+    DEFAULT_ADMIN_ROLE,
 } from './constants'
 
 const NAME = 'My Token'
@@ -140,7 +141,12 @@ describe('EIP2535OwnableProxy', function () {
         accessControl = AccessControlFacetFactory.attach(
             await diamondProxy.getAddress()
         ) as AccessControlFacet
-        await accessControl.initializeAccessControl(adminAddress)
+        await accessControl.initializeAccessControl([
+            {
+                role: DEFAULT_ADMIN_ROLE,
+                members: [adminAddress],
+            },
+        ])
         await accessControl.grantRole(PAUSER_ROLE, adminAddress)
     })
 

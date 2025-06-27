@@ -4,37 +4,50 @@ pragma solidity ^0.8.28;
 import {Common} from '../../core/Common.sol';
 import {IAccessControl} from './IAccessControl.sol';
 import {_ACCESS_CONTROL_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
+import {_ISBE_ROLE} from '../../constants/roles.sol';
 
 /// @title AccessControl
 /// @notice Implements role-based access control mechanisms
 /// @dev Inherits from IAccessControl and Common, providing external role management functions
 contract AccessControl is IAccessControl, Common {
+    modifier protectISBERole(bytes32 _role) {
+        _protectISBERole(_role);
+        _;
+    }
     /// @notice Constructor that disables the initializer
     constructor() {
         _disableInitializers(_ACCESS_CONTROL_RESOLVER_KEY);
     }
 
     function initializeAccessControl(
-        address admin
-    )
-        external
-        initializer(_ACCESS_CONTROL_RESOLVER_KEY)
-        addressIsNotZero(admin)
-    {
-        _grantRole(DEFAULT_ADMIN_ROLE, admin);
+        IAccessControl.Rbac[] memory rbacs
+    ) external initializer(_ACCESS_CONTROL_RESOLVER_KEY) {
+        _initializeRbacs(rbacs);
     }
 
     function grantRole(
         bytes32 role,
         address account
-    ) external override onlyRole(_getRoleAdmin(role)) whenNotPaused {
+    )
+        external
+        override
+        protectISBERole(role)
+        onlyRole(_getRoleAdmin(role))
+        whenNotPaused
+    {
         _grantRole(role, account);
     }
 
     function revokeRole(
         bytes32 role,
         address account
-    ) external override onlyRole(_getRoleAdmin(role)) whenNotPaused {
+    )
+        external
+        override
+        protectISBERole(role)
+        onlyRole(_getRoleAdmin(role))
+        whenNotPaused
+    {
         _revokeRole(role, account);
     }
 
@@ -46,6 +59,11 @@ contract AccessControl is IAccessControl, Common {
     }
 
     function renounceRole(bytes32 role) external override whenNotPaused {
+        if (_isISBERole(role)) {
+            if (_getRoleMembersCount(role) < 2) {
+                revert AtLeastOneMemberForRole(role);
+            }
+        }
         _revokeRole(role, _msgSender());
     }
 
@@ -72,5 +90,13 @@ contract AccessControl is IAccessControl, Common {
         uint256 interfacesLength = 1;
         interfaces_ = new bytes4[](interfacesLength);
         interfaces_[--interfacesLength] = type(IAccessControl).interfaceId;
+    }
+
+    function _protectISBERole(bytes32 _role) internal pure {
+        if (_isISBERole(_role)) revert RoleIsImmutable(_role);
+    }
+
+    function _isISBERole(bytes32 _role) internal pure returns (bool) {
+        return _role == _ISBE_ROLE;
     }
 }

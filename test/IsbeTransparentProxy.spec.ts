@@ -7,7 +7,7 @@ import {
     ERC20TestWrapperTransparent__factory,
     ERC20TestWrapperTransparent,
 } from '../typechain-types'
-import { MINTER_ROLE } from './constants'
+import { DEFAULT_ADMIN_ROLE, MINTER_ROLE } from './constants'
 import { Signer } from 'ethers'
 
 const NAME = 'My Token'
@@ -62,7 +62,12 @@ describe('TransparentProxy', function () {
         await erc20Transparent.initializeErc20(NAME, SYMBOL, DECIMALS)
         await erc20Transparent.initializeCap(10000)
         const adminAddress = await admin.getAddress()
-        await erc20Transparent.initializeAccessControl(adminAddress)
+        await erc20Transparent.initializeAccessControl([
+            {
+                role: DEFAULT_ADMIN_ROLE,
+                members: [adminAddress],
+            },
+        ])
         await erc20Transparent.grantRole(MINTER_ROLE, adminAddress)
     })
 
