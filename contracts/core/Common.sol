@@ -9,6 +9,15 @@ import {PauseInternalCommon} from '../pause/PauseInternalCommon.sol';
 import {OwnableInternal} from '../access/ownable/OwnableInternal.sol';
 import {ERC165Internal} from './ERC165Internal.sol';
 
+/**
+ * @title Common
+ * @author ISBE
+ * @notice A foundational abstract contract that bundles common functionalities and utility modifiers.
+ * @dev This contract serves as a base layer for other contracts, inheriting from `Initializable`,
+ * `ERC165Internal`, `AccessControlInternal`, `PauseInternalCommon`, and `OwnableInternal`.
+ * It aggregates essential features like access control, pausable behaviour, and ownership,
+ * and provides convenient modifiers for common validation checks to reduce boilerplate code.
+ */
 abstract contract Common is
     Initializable,
     ERC165Internal,

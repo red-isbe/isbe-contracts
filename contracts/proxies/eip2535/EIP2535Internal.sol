@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {IDiamondLoupe} from './interfaces/IDiamondLoupe.sol';
 import {IDiamondCut} from './interfaces/IDiamondCut.sol';
+import {IDiamondLoupe} from './interfaces/IDiamondLoupe.sol';
 import {IDiamond} from './interfaces/IDiamond.sol';
 import {IEIP2535Introspection} from './interfaces/IEIP2535Introspection.sol';
+import {InitializeBusinessLogic} from '../../utils/InitializeBusinessLogic.sol';
 import {_DIAMOND_STORAGE_POSITION} from '../../constants/storagePositions.sol';
 import {PauseInternalCommon} from '../../pause/PauseInternalCommon.sol';
 
@@ -18,7 +19,10 @@ import {PauseInternalCommon} from '../../pause/PauseInternalCommon.sol';
  *      uses a dedicated storage slot (`_DIAMOND_STORAGE_POSITION`) to prevent storage layout collisions.
  *      It contains the logic for the `diamondCut`, interface management, and the Diamond Loupe introspection functions.
  */
-abstract contract EIP2535Internal is PauseInternalCommon {
+abstract contract EIP2535Internal is
+    PauseInternalCommon,
+    InitializeBusinessLogic
+{
     /**
      * @dev A struct that associates a facet's address with its position within an array.
      * @param facetAddress The address of the facet contract.
@@ -50,12 +54,6 @@ abstract contract EIP2535Internal is PauseInternalCommon {
     error NoBytecodeAtAddress(address _contractAddress, string _message);
     /// @param _facetAddress The address provided for the removal action, which must be the zero address.
     error RemoveFacetAddressMustBeZeroAddress(address _facetAddress);
-    /// @param _initializationContractAddress The address of the contract that failed to initialise.
-    /// @param _calldata The calldata passed to the initialisation function.
-    error InitializationFunctionReverted(
-        address _initializationContractAddress,
-        bytes _calldata
-    );
     /// @param _facetAddress The facet address for which an empty items array was provided.
     error NoItemsProvidedForUpdate(address _facetAddress);
     /// @param facetAddress The address of the facet containing the invalid item.
@@ -327,22 +325,7 @@ abstract contract EIP2535Internal is PauseInternalCommon {
             _init,
             'LibDiamondCut: _init address has no code'
         );
-        // solhint-disable avoid-low-level-calls
-        // slither-disable-next-line controlled-delegatecall
-        (bool success, bytes memory error) = _init.delegatecall(_calldata);
-        // solhint-enable avoid-low-level-calls
-        if (success) {
-            return;
-        }
-        if (error.length == 0) {
-            revert InitializationFunctionReverted(_init, _calldata);
-        }
-        // bubble up error
-        /// @solidity memory-safe-assembly
-        assembly {
-            let returndata_size := mload(error)
-            revert(add(32, error), returndata_size)
-        }
+        _initializeBusinessLogic(_init, _calldata);
     }
 
     function _enforceHasContractCode(

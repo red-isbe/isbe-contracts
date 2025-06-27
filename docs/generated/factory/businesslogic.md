@@ -94,16 +94,15 @@ this facet exposes and what its unique identifier is._
 function interfacesIntrospection() external pure returns (bytes4[] interfaces_)
 ```
 
-Retrieves the interfaces supported by the EIP-2535 Diamond Standard.
+Gets the list of ERC-165 interface IDs the facet supports.
 
-_Returns a static list of interfaces supported by the contract. It is a view function and does not
-modify or depend on contract state._
+_A pure function that returns an array of supported `bytes4` IDs._
 
 #### Return Values
 
-| Name         | Type     | Description                                                                         |
-| ------------ | -------- | ----------------------------------------------------------------------------------- |
-| interfaces\_ | bytes4[] | An array of interface identifiers (`bytes4[]`) compliant with the EIP-165 standard. |
+| Name         | Type     | Description                                  |
+| ------------ | -------- | -------------------------------------------- |
+| interfaces\_ | bytes4[] | An array of supported interface identifiers. |
 
 ### businessIdIntrospection
 
@@ -111,46 +110,50 @@ modify or depend on contract state._
 function businessIdIntrospection() external pure returns (bytes32 businessId_)
 ```
 
+Retrieves the unique business identifier for this facet.
+
+_Returns a `bytes32` key identifying the facet's purpose._
+
+#### Return Values
+
+| Name         | Type    | Description                              |
+| ------------ | ------- | ---------------------------------------- |
+| businessId\_ | bytes32 | The `bytes32` ID for the business logic. |
+
 ### selectorsIntrospection
 
 ```solidity
 function selectorsIntrospection() external pure returns (bytes4[] selectors_)
 ```
 
-Retrieves the function selectors supported by the EIP-2535 Diamond Standard.
+Gets all function selectors implemented by this facet.
 
-_Returns a static list of function selectors supported by the interface. It is a pure function and does not
-modify or depend on contract state._
+_A pure function that returns a `bytes4[]` array of selectors._
 
 #### Return Values
 
-| Name        | Type     | Description                                                                       |
-| ----------- | -------- | --------------------------------------------------------------------------------- |
-| selectors\_ | bytes4[] | An array of function selectors (`bytes4[]`) compliant with the EIP-2535 standard. |
+| Name        | Type     | Description                              |
+| ----------- | -------- | ---------------------------------------- |
+| selectors\_ | bytes4[] | An array of `bytes4` function selectors. |
 
 ---
 
 ## BusinessLogicFactoryInternal
 
-An abstract contract containing the internal logic to deploy and manage
+Abstract contract with internal logic to deploy and manage
 versioned business logic (implementation) contracts.
 
-_This contract uses an unstructured storage layout (akin to Diamond Storage)
-to ensure its logic is reusable across different contexts, such as within a proxy
-facet. It handles the deployment of contracts via the CREATE opcode and maintains
-a versioned record of each business logic._
+_Uses unstructured storage to be reusable across different contexts.
+It handles contract deployment via the CREATE opcode and maintains
+a versioned record of each business logic contract._
 
 ### BusinessLogicStorage
 
-_Defines the storage structure for the business logic factory._
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+_Holds all data related to business logic deployments._
 
 ```solidity
 struct BusinessLogicStorage {
+    mapping(bytes32 => address) latestVersions;
     mapping(bytes32 => address[]) businessLogicVersions;
     bytes32[] businessLogics;
 }
@@ -194,6 +197,12 @@ function _deploy(bytes32 businessId, bytes code) internal returns (address busin
 
 ```solidity
 function _getBusinessLogicAddress(bytes32 businessId, uint256 versionNumber) internal view returns (address businessLogicAddress_)
+```
+
+### \_isDeployedBusinessLogic
+
+```solidity
+function _isDeployedBusinessLogic(bytes32 businessId) internal view returns (bool)
 ```
 
 ### \_getBusinessLogics

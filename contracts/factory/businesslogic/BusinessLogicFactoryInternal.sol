@@ -10,26 +10,22 @@ import {
 import {Common} from '../../core/Common.sol';
 
 /**
- * @title BusinessLogicFactoryInternal
+ * @title Business Logic Factory Internal
  * @author ISBE
- * @notice An abstract contract containing the internal logic to deploy and manage
- * versioned business logic (implementation) contracts.
- * @dev This contract uses an unstructured storage layout (akin to Diamond Storage)
- * to ensure its logic is reusable across different contexts, such as within a proxy
- * facet. It handles the deployment of contracts via the CREATE opcode and maintains
- * a versioned record of each business logic.
+ * @notice Abstract contract with internal logic to deploy and manage
+ *         versioned business logic (implementation) contracts.
+ * @dev Uses unstructured storage to be reusable across different contexts.
+ *      It handles contract deployment via the CREATE opcode and maintains
+ *      a versioned record of each business logic contract.
  */
 abstract contract BusinessLogicFactoryInternal is Common {
-    /**
-     * @dev Defines the storage structure for the business logic factory.
-     * @param businessLogicVersions A mapping from a business ID to an array of addresses.
-     * Index 0 always holds the address of the most recent version. Indices from 1
-     * onwards correspond to the version number (e.g., index 1 is version 1).
-     * @param businessLogics An array containing all unique business IDs that have been deployed.
-     */
+    /// @dev Holds all data related to business logic deployments.
     struct BusinessLogicStorage {
-        // latestVersion = 0. The array position indicates the version deployed
+        // Maps a business logic ID to its latest version's address.
+        mapping(bytes32 => address) latestVersions;
+        // Maps a business logic ID to an array of its version addresses.
         mapping(bytes32 => address[]) businessLogicVersions;
+        // An array of all unique business logic IDs.
         bytes32[] businessLogics;
     }
 
@@ -62,16 +58,10 @@ abstract contract BusinessLogicFactoryInternal is Common {
                 .businessIdIntrospection() == businessId,
             BadBusinessId(businessId)
         );
-        address[] storage versions = $.businessLogicVersions[businessId];
-        currentVersion_ = versions.length;
-        if (currentVersion_ == 0) {
-            versions.push(businessLogicAddress_);
-            versions.push(businessLogicAddress_);
-            $.businessLogics.push(businessId);
-            return (businessLogicAddress_, 1);
-        }
-        versions[0] = businessLogicAddress_;
-        versions.push(businessLogicAddress_);
+        $.latestVersions[businessId] = businessLogicAddress_;
+        $.businessLogicVersions[businessId].push(businessLogicAddress_);
+        currentVersion_ = $.businessLogicVersions[businessId].length;
+        if (currentVersion_ == 1) $.businessLogics.push(businessId);
     }
 
     // TODO: To paginated when needed
@@ -79,11 +69,19 @@ abstract contract BusinessLogicFactoryInternal is Common {
         bytes32 businessId,
         uint256 versionNumber
     ) internal view returns (address businessLogicAddress_) {
-        address[] storage versions = _businessLogicStorage()
-            .businessLogicVersions[businessId];
-        businessLogicAddress_ = versions.length > versionNumber
-            ? versions[versionNumber]
-            : address(0);
+        businessLogicAddress_ = _getAddress(
+            _businessLogicStorage(),
+            businessId,
+            versionNumber
+        );
+    }
+
+    function _isDeployedBusinessLogic(
+        bytes32 businessId
+    ) internal view returns (bool) {
+        return
+            _businessLogicStorage().businessLogicVersions[businessId].length >
+            0;
     }
 
     function _getBusinessLogics()
@@ -129,5 +127,18 @@ abstract contract BusinessLogicFactoryInternal is Common {
         }
         // slither-disable-end assembly
         require(allGood > 0, DeployFailed());
+    }
+
+    function _getAddress(
+        BusinessLogicStorage storage $,
+        bytes32 businessId,
+        uint256 versionNumber
+    ) private view returns (address address_) {
+        if (versionNumber == 0) return $.latestVersions[businessId];
+        unchecked {
+            --versionNumber;
+        }
+        if ($.businessLogicVersions[businessId].length > versionNumber)
+            return $.businessLogicVersions[businessId][versionNumber];
     }
 }

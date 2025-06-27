@@ -39,7 +39,7 @@ contract EIP2535AccessControl is EIP2535, AccessControlInternal {
      */
     constructor(address[] memory _facets, DiamondArgs memory _args) payable {
         // Set up role-based access control
-        _initializeRbac(_args.rbacs);
+        _initializeRbacs(_args.rbacs);
         // Configure facets and execute initialization logic
         _configureFacets(_facets, _args.init, _args.initCalldata);
     }

@@ -130,3 +130,57 @@ _Reverts with `EmptyBytes` error if the byte array's length is zero._
 | Name | Type  | Description                 |
 | ---- | ----- | --------------------------- |
 | code | bytes | The `bytes` array to check. |
+
+---
+
+## InitializeBusinessLogic
+
+This is an abstract contract that provides a safe way to run setup instructions
+from a separate "business logic" contract.
+
+_This contract is designed to be inherited by another contract, typically a proxy,
+that needs to delegate its initialisation to an implementation contract.
+It provides a standardised internal function, `_initialize`, which performs a
+`delegatecall`. This allows the inheriting contract to execute code from another
+address as if it were its own, ensuring state is initialised in the proxy's context._
+
+### InitializationFunctionReverted
+
+```solidity
+error InitializationFunctionReverted(address _initializationContractAddress, bytes _calldata, bytes _error)
+```
+
+Emitted when the initialisation function call failed without returning a specific error message.
+
+_This error is reverted when the `delegatecall` within `_initialize` returns `success = false`
+but provides no specific error data (i.e., the return data size is zero)._
+
+#### Parameters
+
+| Name                            | Type    | Description                                                              |
+| ------------------------------- | ------- | ------------------------------------------------------------------------ |
+| \_initializationContractAddress | address | The address of the contract that was meant to handle the initialisation. |
+| \_calldata                      | bytes   | The raw call data that was sent in the failed delegate call.             |
+| \_error                         | bytes   | The empty byte string returned from the failed call.                     |
+
+### \_initializeBusinessLogic
+
+```solidity
+function _initializeBusinessLogic(address _init, bytes _calldata) internal
+```
+
+Internally executes the initialisation logic using a delegate call.
+
+_This function makes a low-level `delegatecall` to a specified address (`_init`)
+with provided call data (`_calldata`). It is a core mechanism for proxy patterns,
+allowing an implementation contract to set the initial state of the proxy's storage.
+If the delegate call fails, this function will "bubble up" (re-throw) the original
+revert message from the target contract. If the call fails without providing such a
+message, it reverts with the custom `InitializationFunctionReverted` error instead._
+
+#### Parameters
+
+| Name       | Type    | Description                                                                     |
+| ---------- | ------- | ------------------------------------------------------------------------------- |
+| \_init     | address | The address of the implementation contract containing the logic to be executed. |
+| \_calldata | bytes   | The encoded function call and arguments to be executed by the `_init` contract. |

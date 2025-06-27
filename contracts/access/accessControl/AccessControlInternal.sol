@@ -32,7 +32,7 @@ abstract contract AccessControlInternal is ISBEContext {
         _;
     }
 
-    function _initializeRbac(
+    function _initializeRbacs(
         IAccessControl.Rbac[] memory rbacs
     ) internal virtual {
         _checkRbacs(rbacs);

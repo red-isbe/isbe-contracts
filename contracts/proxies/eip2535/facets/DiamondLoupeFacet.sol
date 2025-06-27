@@ -15,6 +15,15 @@ import {EIP2535Internal} from '../EIP2535Internal.sol';
 import {IERC165} from '@openzeppelin/contracts/utils/introspection/IERC165.sol';
 import {ERC165Internal} from '../../../core/ERC165Internal.sol';
 
+/**
+ * @title Diamond Loupe Facet
+ * @author ISBE
+ * @notice Offers standard EIP-2535 "loupe" functions for inspection.
+ * @dev An essential facet for inspecting a diamond's structure.
+ *      It implements `IDiamondLoupe` and `IERC165` for discovery.
+ *      Callers can view facets, their functions, and addresses.
+ *      It also supports `IEIP2535Introspection` to declare its role.
+ */
 // solhint-disable no-inline-assembly
 contract DiamondLoupeFacet is
     IERC165,

@@ -1,5 +1,12 @@
 ## DiamondCutAccessControlFacet
 
+Manages the diamond's structure via role-based facet updates.
+
+_A facet for EIP-2535 diamond cuts, secured by access control.
+It implements `IDiamondCut` and uses `AccessControlInternal`.
+Only accounts with `DEFAULT_ADMIN_ROLE` can perform modifications.
+It also complies with `IEIP2535Introspection` for discovery._
+
 ### diamondCut
 
 ```solidity
@@ -35,16 +42,15 @@ function facetUpdates(address[] _facetAddresses, address _init, bytes _calldata)
 function interfacesIntrospection() external pure returns (bytes4[] interfaces_)
 ```
 
-Retrieves the interfaces supported by the EIP-2535 Diamond Standard.
+Gets the list of ERC-165 interface IDs the facet supports.
 
-_Returns a static list of interfaces supported by the contract. It is a view function and does not
-modify or depend on contract state._
+_A pure function that returns an array of supported `bytes4` IDs._
 
 #### Return Values
 
-| Name         | Type     | Description                                                                         |
-| ------------ | -------- | ----------------------------------------------------------------------------------- |
-| interfaces\_ | bytes4[] | An array of interface identifiers (`bytes4[]`) compliant with the EIP-165 standard. |
+| Name         | Type     | Description                                  |
+| ------------ | -------- | -------------------------------------------- |
+| interfaces\_ | bytes4[] | An array of supported interface identifiers. |
 
 ### businessIdIntrospection
 
@@ -52,26 +58,42 @@ modify or depend on contract state._
 function businessIdIntrospection() external pure returns (bytes32 businessId_)
 ```
 
+Retrieves the unique business identifier for this facet.
+
+_Returns a `bytes32` key identifying the facet's purpose._
+
+#### Return Values
+
+| Name         | Type    | Description                              |
+| ------------ | ------- | ---------------------------------------- |
+| businessId\_ | bytes32 | The `bytes32` ID for the business logic. |
+
 ### selectorsIntrospection
 
 ```solidity
 function selectorsIntrospection() external pure returns (bytes4[] selectors_)
 ```
 
-Retrieves the function selectors supported by the EIP-2535 Diamond Standard.
+Gets all function selectors implemented by this facet.
 
-_Returns a static list of function selectors supported by the interface. It is a pure function and does not
-modify or depend on contract state._
+_A pure function that returns a `bytes4[]` array of selectors._
 
 #### Return Values
 
-| Name        | Type     | Description                                                                       |
-| ----------- | -------- | --------------------------------------------------------------------------------- |
-| selectors\_ | bytes4[] | An array of function selectors (`bytes4[]`) compliant with the EIP-2535 standard. |
+| Name        | Type     | Description                              |
+| ----------- | -------- | ---------------------------------------- |
+| selectors\_ | bytes4[] | An array of `bytes4` function selectors. |
 
 ---
 
 ## DiamondCutOwnableFacet
+
+Manages diamond cuts, restricting modifications to the owner.
+
+_A dedicated facet for EIP-2535 diamond cuts, secured by ownership.
+It implements `IDiamondCut` and uses the `onlyOwner` modifier.
+Only the owner can add, replace, or remove facets.
+It also complies with `IEIP2535Introspection` for discovery._
 
 ### diamondCut
 
@@ -119,16 +141,15 @@ optionally executing a function with `delegatecall` for initialization or other 
 function interfacesIntrospection() external pure returns (bytes4[] interfaces_)
 ```
 
-Retrieves the interfaces supported by the EIP-2535 Diamond Standard.
+Gets the list of ERC-165 interface IDs the facet supports.
 
-_Returns a static list of interfaces supported by the contract. It is a view function and does not
-modify or depend on contract state._
+_A pure function that returns an array of supported `bytes4` IDs._
 
 #### Return Values
 
-| Name         | Type     | Description                                                                         |
-| ------------ | -------- | ----------------------------------------------------------------------------------- |
-| interfaces\_ | bytes4[] | An array of interface identifiers (`bytes4[]`) compliant with the EIP-165 standard. |
+| Name         | Type     | Description                                  |
+| ------------ | -------- | -------------------------------------------- |
+| interfaces\_ | bytes4[] | An array of supported interface identifiers. |
 
 ### businessIdIntrospection
 
@@ -136,26 +157,42 @@ modify or depend on contract state._
 function businessIdIntrospection() external pure returns (bytes32 businessId_)
 ```
 
+Retrieves the unique business identifier for this facet.
+
+_Returns a `bytes32` key identifying the facet's purpose._
+
+#### Return Values
+
+| Name         | Type    | Description                              |
+| ------------ | ------- | ---------------------------------------- |
+| businessId\_ | bytes32 | The `bytes32` ID for the business logic. |
+
 ### selectorsIntrospection
 
 ```solidity
 function selectorsIntrospection() external pure returns (bytes4[] selectors_)
 ```
 
-Retrieves the function selectors supported by the EIP-2535 Diamond Standard.
+Gets all function selectors implemented by this facet.
 
-_Returns a static list of function selectors supported by the interface. It is a pure function and does not
-modify or depend on contract state._
+_A pure function that returns a `bytes4[]` array of selectors._
 
 #### Return Values
 
-| Name        | Type     | Description                                                                       |
-| ----------- | -------- | --------------------------------------------------------------------------------- |
-| selectors\_ | bytes4[] | An array of function selectors (`bytes4[]`) compliant with the EIP-2535 standard. |
+| Name        | Type     | Description                              |
+| ----------- | -------- | ---------------------------------------- |
+| selectors\_ | bytes4[] | An array of `bytes4` function selectors. |
 
 ---
 
 ## DiamondLoupeFacet
+
+Offers standard EIP-2535 "loupe" functions for inspection.
+
+_An essential facet for inspecting a diamond's structure.
+It implements `IDiamondLoupe` and `IERC165` for discovery.
+Callers can view facets, their functions, and addresses.
+It also supports `IEIP2535Introspection` to declare its role._
 
 ### facets
 
@@ -246,16 +283,15 @@ This function call must use less than 30 000 gas.\_
 function interfacesIntrospection() external pure returns (bytes4[] interfaces_)
 ```
 
-Retrieves the interfaces supported by the EIP-2535 Diamond Standard.
+Gets the list of ERC-165 interface IDs the facet supports.
 
-_Returns a static list of interfaces supported by the contract. It is a view function and does not
-modify or depend on contract state._
+_A pure function that returns an array of supported `bytes4` IDs._
 
 #### Return Values
 
-| Name         | Type     | Description                                                                         |
-| ------------ | -------- | ----------------------------------------------------------------------------------- |
-| interfaces\_ | bytes4[] | An array of interface identifiers (`bytes4[]`) compliant with the EIP-165 standard. |
+| Name         | Type     | Description                                  |
+| ------------ | -------- | -------------------------------------------- |
+| interfaces\_ | bytes4[] | An array of supported interface identifiers. |
 
 ### businessIdIntrospection
 
@@ -263,22 +299,31 @@ modify or depend on contract state._
 function businessIdIntrospection() external pure returns (bytes32 businessId_)
 ```
 
+Retrieves the unique business identifier for this facet.
+
+_Returns a `bytes32` key identifying the facet's purpose._
+
+#### Return Values
+
+| Name         | Type    | Description                              |
+| ------------ | ------- | ---------------------------------------- |
+| businessId\_ | bytes32 | The `bytes32` ID for the business logic. |
+
 ### selectorsIntrospection
 
 ```solidity
 function selectorsIntrospection() external pure returns (bytes4[] selectors_)
 ```
 
-Retrieves the function selectors supported by the EIP-2535 Diamond Standard.
+Gets all function selectors implemented by this facet.
 
-_Returns a static list of function selectors supported by the interface. It is a pure function and does not
-modify or depend on contract state._
+_A pure function that returns a `bytes4[]` array of selectors._
 
 #### Return Values
 
-| Name        | Type     | Description                                                                       |
-| ----------- | -------- | --------------------------------------------------------------------------------- |
-| selectors\_ | bytes4[] | An array of function selectors (`bytes4[]`) compliant with the EIP-2535 standard. |
+| Name        | Type     | Description                              |
+| ----------- | -------- | ---------------------------------------- |
+| selectors\_ | bytes4[] | An array of `bytes4` function selectors. |
 
 ### \_implementedInterfaces
 
