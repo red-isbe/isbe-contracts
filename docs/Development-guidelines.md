@@ -158,22 +158,14 @@ In order for this introspection method to work, you will need to implement the f
   }
 ```
 
-## Transparent proxy guidelines
+## Transparent proxy
 
-- **All contracts using a transparent proxy must extend from `AccessControl`:**  
-  This means that the implemented contract for the use case must inherit from `AccessControl.sol`, which is available in the ISBE-contracts project. This requirement is essential to comply with ISBE network governance rules. Any contract intended to be deployed using a transparent proxy that does not include `AccessControl` will not be allowed to deploy on the network.
-- **All contracts using a transparent proxy must extend from `ISBEPause`:**  
-  This means that the implemented contract for the use case must inherit from `ISBEPause.sol`, which is available in the ISBE-contracts project. This requirement is essential to comply with ISBE network governance rules. Any contract intended to be deployed using a transparent proxy that does not include `ISBEPause` will not be allowed to deploy on the network.
+- Not able to deploy Transparent proxies because the governance contracts can't update transparent logic and pause the token.
 
-Here you have a contract example using transparent proxy:
+## UUPS proxy
 
-```
-import {AccessControl} from '../access/accessControl/AccessControl.sol';
-import {ISBEPause} from '../pause/ISBEPause.sol';
-import {ERC20InternalCommon} from './extensions/ERC20InternalCommon.sol';
-import {IERC20Isbe} from './IERC20Isbe.sol';
+- Not able to deploy UUPS proxies because the logic related with upgrade ability must be assigned easily to the ProxyFactory address and can be manipulated by the use case.
 
-contract ERC20 is AccessControl, ISBEPause, IERC20Isbe, ERC20InternalCommon {
-  //ERC20 Implementation...
-)
-```
+## Beacon proxy
+
+- Not able to deploy Beacon proxies becaus it only manage 1 business logic at a time and we need to manage a set of them.

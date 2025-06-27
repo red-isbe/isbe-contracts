@@ -3,6 +3,16 @@ pragma solidity ^0.8.28;
 
 import {IERC165} from '@openzeppelin/contracts/utils/introspection/IERC165.sol';
 
+/**
+ * @title ERC165 Internal Logic
+ * @author ISBE
+ * @notice Provides the core internal functions for the ERC-165 interface detection standard.
+ * @dev This abstract contract supplies the foundational logic for ERC-165. It offers internal
+ * helper functions to validate interface IDs, check for support of a specific interface
+ * within an array, and aggregate multiple interface lists. Contracts inheriting from this must
+ * implement the `_implementedInterfaces` function to declare which interfaces they support,
+ * enabling standardised interface detection.
+ */
 abstract contract ERC165Internal {
     function _checkERC165ForbiddenInterfaces(
         bytes4 _interfaceId

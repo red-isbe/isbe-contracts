@@ -7,6 +7,15 @@ import {
     IEIP2535Introspection
 } from '../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 
+/**
+ * @title ISBE Pause Facet
+ * @author ISBE
+ * @notice Provides the external interface and introspection logic for the pausable functionality within a diamond.
+ * @dev This contract serves as a facet for an EIP-2535 diamond, implementing the `ISBEPause` interface and the
+ * necessary introspection functions from `IEIP2535Introspection`. It exposes the selectors for initialising the
+ * pause mechanism, pausing and unpausing the contract, and querying its state. The `businessIdIntrospection`
+ * function links this facet to a specific resolver key, identifying its role in the system.
+ */
 contract ISBEPauseFacet is ISBEPause, IEIP2535Introspection {
     function interfacesIntrospection()
         external

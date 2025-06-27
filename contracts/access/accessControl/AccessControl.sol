@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {IAccessControl} from './IAccessControl.sol';
 import {Common} from '../../core/Common.sol';
+import {IAccessControl} from './IAccessControl.sol';
 import {_ACCESS_CONTROL_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
 
 /// @title AccessControl

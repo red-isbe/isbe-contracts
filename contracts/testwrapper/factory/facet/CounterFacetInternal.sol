@@ -14,9 +14,9 @@ abstract contract CounterFacetInternal is Common {
         uint256 counter;
     }
 
-    /// @notice Returns the storage slot for access control
+    /// @notice Returns the storage slot for counter
     /// @dev Uses inline assembly to return storage struct at predefined slot
-    /// @return storage_ The access control storage struct
+    /// @return storage_ The counter storage struct
     function _counterStorage()
         internal
         pure

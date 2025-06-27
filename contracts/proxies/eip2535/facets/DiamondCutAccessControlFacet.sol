@@ -14,9 +14,15 @@ import {
     AccessControlInternal
 } from '../../../access/accessControl/AccessControlInternal.sol';
 
-// Remember to add the loupe functions from DiamondLoupeFacet to the diamond.
-// The loupe functions are required by the EIP2535 Diamonds standard
-
+/**
+ * @title Diamond Cut Access Control Facet
+ * @author ISBE
+ * @notice Manages the diamond's structure via role-based facet updates.
+ * @dev A facet for EIP-2535 diamond cuts, secured by access control.
+ *      It implements `IDiamondCut` and uses `AccessControlInternal`.
+ *      Only accounts with `DEFAULT_ADMIN_ROLE` can perform modifications.
+ *      It also complies with `IEIP2535Introspection` for discovery.
+ */
 contract DiamondCutAccessControlFacet is
     IDiamondCut,
     EIP2535Internal,

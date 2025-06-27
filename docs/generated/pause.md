@@ -149,22 +149,28 @@ function _getAuthorityLevel(address _account) internal view returns (uint256)
 
 ## ISBEPauseFacet
 
+Provides the external interface and introspection logic for the pausable functionality within a diamond.
+
+_This contract serves as a facet for an EIP-2535 diamond, implementing the `ISBEPause` interface and the
+necessary introspection functions from `IEIP2535Introspection`. It exposes the selectors for initialising the
+pause mechanism, pausing and unpausing the contract, and querying its state. The `businessIdIntrospection`
+function links this facet to a specific resolver key, identifying its role in the system._
+
 ### interfacesIntrospection
 
 ```solidity
 function interfacesIntrospection() external pure returns (bytes4[] interfaces_)
 ```
 
-Retrieves the interfaces supported by the EIP-2535 Diamond Standard.
+Gets the list of ERC-165 interface IDs the facet supports.
 
-_Returns a static list of interfaces supported by the contract. It is a view function and does not
-modify or depend on contract state._
+_A pure function that returns an array of supported `bytes4` IDs._
 
 #### Return Values
 
-| Name         | Type     | Description                                                                         |
-| ------------ | -------- | ----------------------------------------------------------------------------------- |
-| interfaces\_ | bytes4[] | An array of interface identifiers (`bytes4[]`) compliant with the EIP-165 standard. |
+| Name         | Type     | Description                                  |
+| ------------ | -------- | -------------------------------------------- |
+| interfaces\_ | bytes4[] | An array of supported interface identifiers. |
 
 ### businessIdIntrospection
 
@@ -172,22 +178,31 @@ modify or depend on contract state._
 function businessIdIntrospection() external pure returns (bytes32 businessId_)
 ```
 
+Retrieves the unique business identifier for this facet.
+
+_Returns a `bytes32` key identifying the facet's purpose._
+
+#### Return Values
+
+| Name         | Type    | Description                              |
+| ------------ | ------- | ---------------------------------------- |
+| businessId\_ | bytes32 | The `bytes32` ID for the business logic. |
+
 ### selectorsIntrospection
 
 ```solidity
 function selectorsIntrospection() external pure returns (bytes4[] selectors_)
 ```
 
-Retrieves the function selectors supported by the EIP-2535 Diamond Standard.
+Gets all function selectors implemented by this facet.
 
-_Returns a static list of function selectors supported by the interface. It is a pure function and does not
-modify or depend on contract state._
+_A pure function that returns a `bytes4[]` array of selectors._
 
 #### Return Values
 
-| Name        | Type     | Description                                                                       |
-| ----------- | -------- | --------------------------------------------------------------------------------- |
-| selectors\_ | bytes4[] | An array of function selectors (`bytes4[]`) compliant with the EIP-2535 standard. |
+| Name        | Type     | Description                              |
+| ----------- | -------- | ---------------------------------------- |
+| selectors\_ | bytes4[] | An array of `bytes4` function selectors. |
 
 ---
 

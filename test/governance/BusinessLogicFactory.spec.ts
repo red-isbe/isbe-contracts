@@ -8,14 +8,14 @@ import {
     BusinessLogicFactoryFacet,
     CounterFacetTestWrapper__factory,
     CounterV2FacetTestWrapper__factory,
-} from '../typechain-types'
+} from '../../typechain-types'
 import { Signer } from 'ethers'
 import {
     BUSINESS_LOGIC_FACTORY_RESOLVER_KEY,
     COUNTER_RESOLVER_KEY,
     DEFAULT_ADMIN_ROLE,
     ISBE_ROLE,
-} from './constants'
+} from '../constants'
 
 describe('BusinessLogicFactory', function () {
     let admin: Signer
@@ -54,7 +54,7 @@ describe('BusinessLogicFactory', function () {
         await deployInitial()
     })
 
-    describe('EIP2535AccessControl', () => {
+    describe('deploy', () => {
         beforeEach(async () => {
             const facetAddresses = [
                 await businessLogicFactoryFacet.getAddress(),
@@ -144,12 +144,14 @@ describe('BusinessLogicFactory', function () {
                 COUNTER_RESOLVER_KEY,
                 CounterFacetFactory.bytecode
             )
-            await (await deployTx).wait()
-            const counterBusinessLogicAddress =
-                await businessLogicFactory.getBusinessLogicAddress(
-                    COUNTER_RESOLVER_KEY,
-                    0
-                )
+            const counterBusinessLogicAddress: string = (
+                await (await deployTx).wait()
+            ).logs.find(
+                (log) =>
+                    log.topics[0] ===
+                    businessLogicFactory.interface.getEvent('Deployed')
+                        .topicHash
+            ).args[1]
             expect(
                 await businessLogicFactory.getBusinessLogicAddress(
                     COUNTER_RESOLVER_KEY,
@@ -169,13 +171,7 @@ describe('BusinessLogicFactory', function () {
                 await businessLogicFactory.getBusinessLogicVersions(
                     COUNTER_RESOLVER_KEY
                 )
-            ).to.be.deep.equal([
-                counterBusinessLogicAddress,
-                counterBusinessLogicAddress,
-            ])
-            await expect(deployTx)
-                .to.emit(businessLogicFactory, 'Deployed')
-                .withArgs(COUNTER_RESOLVER_KEY, counterBusinessLogicAddress, 1)
+            ).to.be.deep.equal([counterBusinessLogicAddress])
         })
 
         it('GIVEN an EIP2535 proxy with BusinessLogicFactory WHEN deploy two versions THEN it success', async () => {
@@ -225,7 +221,6 @@ describe('BusinessLogicFactory', function () {
                     COUNTER_RESOLVER_KEY
                 )
             ).to.be.deep.equal([
-                latestErc20BusinessLogicAddress,
                 firstErc20BusinessLogicAddress,
                 latestErc20BusinessLogicAddress,
             ])

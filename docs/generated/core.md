@@ -1,5 +1,12 @@
 ## Common
 
+A foundational abstract contract that bundles common functionalities and utility modifiers.
+
+_This contract serves as a base layer for other contracts, inheriting from `Initializable`,
+`ERC165Internal`, `AccessControlInternal`, `PauseInternalCommon`, and `OwnableInternal`.
+It aggregates essential features like access control, pausable behaviour, and ownership,
+and provides convenient modifiers for common validation checks to reduce boilerplate code._
+
 ### addressIsNotZero
 
 ```solidity
@@ -48,6 +55,14 @@ function supportsInterface(bytes4 _interfaceId) external pure returns (bool)
 
 ## ERC165Internal
 
+Provides the core internal functions for the ERC-165 interface detection standard.
+
+_This abstract contract supplies the foundational logic for ERC-165. It offers internal
+helper functions to validate interface IDs, check for support of a specific interface
+within an array, and aggregate multiple interface lists. Contracts inheriting from this must
+implement the `_implementedInterfaces` function to declare which interfaces they support,
+enabling standardised interface detection._
+
 ### \_checkERC165ForbiddenInterfaces
 
 ```solidity
@@ -81,6 +96,15 @@ function _implementedInterfaces() internal pure virtual returns (bytes4[] interf
 ---
 
 ## Initializable
+
+Provides a mechanism to ensure an initialisation function is executed only once per facet.
+
+_This abstract contract manages the initialisation state of contracts, particularly for facets
+within a diamond proxy pattern. It employs a unique key (`_facetKey`) to track whether a specific
+part of the contract has been initialised, thereby preventing re-entrancy and unauthorised
+re-initialisation. The core logic is handled by the `initializer` modifier, which safeguards
+functions to ensure they run only a single time. It also includes a function to permanently
+disable initialisers, a critical security measure for implementation contracts in a proxy setup._
 
 ### InitializableStorage
 

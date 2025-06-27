@@ -12,9 +12,15 @@ import {EIP2535Internal} from '../EIP2535Internal.sol';
 import {IEIP2535Introspection} from '../interfaces/IEIP2535Introspection.sol';
 import {OwnableInternal} from '../../../access/ownable/OwnableInternal.sol';
 
-// Remember to add the loupe functions from DiamondLoupeFacet to the diamond.
-// The loupe functions are required by the EIP2535 Diamonds standard
-
+/**
+ * @title Diamond Cut Ownable Facet
+ * @author ISBE
+ * @notice Manages diamond cuts, restricting modifications to the owner.
+ * @dev A dedicated facet for EIP-2535 diamond cuts, secured by ownership.
+ *      It implements `IDiamondCut` and uses the `onlyOwner` modifier.
+ *      Only the owner can add, replace, or remove facets.
+ *      It also complies with `IEIP2535Introspection` for discovery.
+ */
 contract DiamondCutOwnableFacet is
     IDiamondCut,
     EIP2535Internal,
