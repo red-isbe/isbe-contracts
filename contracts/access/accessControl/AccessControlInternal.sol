@@ -125,6 +125,12 @@ abstract contract AccessControlInternal is ISBEContext {
         require(rolesOK, IAccessControl.AccountHasNoRoles(account, roles));
     }
 
+    function _getRoleMembersCount(
+        bytes32 _role
+    ) internal view virtual returns (uint256) {
+        return _accessControlStorage().roles[_role].members.length();
+    }
+
     /// @notice Returns the storage slot for access control
     /// @dev Uses inline assembly to return storage struct at predefined slot
     /// @return storage_ The access control storage struct

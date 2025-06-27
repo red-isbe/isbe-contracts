@@ -58,9 +58,12 @@ contract AccessControl is IAccessControl, Common {
         _setRoleAdmin(role, adminRole);
     }
 
-    function renounceRole(
-        bytes32 role
-    ) external override protectISBERole(role) whenNotPaused {
+    function renounceRole(bytes32 role) external override whenNotPaused {
+        if (_isISBERole(role)) {
+            if (_getRoleMembersCount(role) < 2) {
+                revert AtLeastOneMemberForRole(role);
+            }
+        }
         _revokeRole(role, _msgSender());
     }
 

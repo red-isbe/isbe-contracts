@@ -315,6 +315,12 @@ function _checkRoles(bytes32[] roles) internal view virtual
 function _checkRoles(bytes32[] roles, address account) internal view virtual
 ```
 
+### \_getRoleMembersCount
+
+```solidity
+function _getRoleMembersCount(bytes32 _role) internal view virtual returns (uint256)
+```
+
 ### \_accessControlStorage
 
 ```solidity
@@ -459,6 +465,20 @@ Error indicating that a role is immutable and it's members cannot be changed
 | Name | Type    | Description                   |
 | ---- | ------- | ----------------------------- |
 | role | bytes32 | The immutable role identifier |
+
+### AtLeastOneMemberForRole
+
+```solidity
+error AtLeastOneMemberForRole(bytes32 role)
+```
+
+Error indicating that there has to be at least one member for a role
+
+#### Parameters
+
+| Name | Type    | Description         |
+| ---- | ------- | ------------------- |
+| role | bytes32 | The role identifier |
 
 ### initializeAccessControl
 

@@ -15,20 +15,41 @@ describe('Access Control', function () {
         ;[adminAccount, account_2] = await ethers.getSigners()
     })
 
-    async function deploy(initialize: boolean = true) {
+    async function deploy(
+        initialize: boolean = true,
+        addRole?: string[],
+        user?: Signer[][]
+    ) {
         const result = await deployAll()
         accessControl = result.accessControl
         accessControlFacet = result.accessControlFacet
 
-        const adminAccountAddress = await adminAccount.getAddress()
+        if (initialize) {
+            const adminAccountAddress = await adminAccount.getAddress()
 
-        if (initialize)
-            await accessControl.initializeAccessControl([
+            const rbacs = [
                 {
                     role: DEFAULT_ADMIN_ROLE,
                     members: [adminAccountAddress],
                 },
-            ])
+            ]
+
+            if (addRole && user) {
+                for (let i = 0; i < addRole.length; i++) {
+                    const users: string[] = []
+                    for (let j = 0; j < user[i].length; j++) {
+                        const userAddress = await user[i][j].getAddress()
+                        users.push(userAddress)
+                    }
+                    rbacs.push({
+                        role: addRole[i],
+                        members: users,
+                    })
+                }
+            }
+
+            await accessControl.initializeAccessControl(rbacs)
+        }
     }
 
     describe('Testing initialization and constructor', function () {
@@ -171,7 +192,10 @@ describe('Access Control', function () {
             accessControl = accessControl.connect(adminAccount)
 
             await expect(accessControl.renounceRole(ISBE_ROLE))
-                .to.be.revertedWithCustomError(accessControl, 'RoleIsImmutable')
+                .to.be.revertedWithCustomError(
+                    accessControl,
+                    'AtLeastOneMemberForRole'
+                )
                 .withArgs(ISBE_ROLE)
         })
 
@@ -247,6 +271,20 @@ describe('Access Control', function () {
             await expect(
                 accessControl.renounceRole(DEFAULT_ADMIN_ROLE)
             ).to.not.emit(accessControl, 'RoleRevoked')
+        })
+
+        it('GIVEN an Access Control WHEN renouncing ISBE role when there are more than 1 ISBE role members THEN succeeds', async function () {
+            await deploy(true, [ISBE_ROLE], [[account_2, adminAccount]])
+
+            accessControl = accessControl.connect(account_2)
+
+            await expect(accessControl.renounceRole(ISBE_ROLE))
+                .to.emit(accessControl, 'RoleRevoked')
+                .withArgs(ISBE_ROLE, account_2, account_2)
+
+            expect(await accessControl.hasRole(ISBE_ROLE, account_2)).to.equal(
+                false
+            )
         })
     })
 

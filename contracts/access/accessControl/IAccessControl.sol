@@ -73,6 +73,10 @@ interface IAccessControl {
     /// @param role The immutable role identifier
     error RoleIsImmutable(bytes32 role);
 
+    /// @notice Error indicating that there has to be at least one member for a role
+    /// @param role The role identifier
+    error AtLeastOneMemberForRole(bytes32 role);
+
     /// @notice Initializes the Access Control contrl grating roles
     /// @param rbacs Addresses and roles to be granted
     function initializeAccessControl(Rbac[] memory rbacs) external;
