@@ -228,8 +228,8 @@ Struct storing members and admin role for a specific role
 
 ```solidity
 struct RoleData {
-    mapping(address => bool) members;
-    bytes32 adminRole;
+  struct EnumerableSet.AddressSet members;
+  bytes32 adminRole;
 }
 ```
 

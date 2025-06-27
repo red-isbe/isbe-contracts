@@ -7,10 +7,15 @@ import {
 import {IAccessControl} from './IAccessControl.sol';
 import {ISBEContext} from '../../utils/ISBEContext.sol';
 import {_DEFAULT_ADMIN_ROLE} from '../../constants/roles.sol';
+import {
+    EnumerableSet
+} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 
 /// @title AccessControlInternal
 /// @notice Internal logic for role-based access control
 abstract contract AccessControlInternal is ISBEContext {
+    using EnumerableSet for EnumerableSet.AddressSet;
+
     /// @notice Struct storing all roles and their data
     struct AccessControlStorage {
         mapping(bytes32 => RoleData) roles;
@@ -18,7 +23,7 @@ abstract contract AccessControlInternal is ISBEContext {
 
     /// @notice Struct storing members and admin role for a specific role
     struct RoleData {
-        mapping(address => bool) members;
+        EnumerableSet.AddressSet members;
         bytes32 adminRole;
     }
 
@@ -55,7 +60,7 @@ abstract contract AccessControlInternal is ISBEContext {
     function _grantRole(bytes32 role, address account) internal virtual {
         if (_hasRole(role, account)) return;
 
-        _accessControlStorage().roles[role].members[account] = true;
+        _accessControlStorage().roles[role].members.add(account);
         emit IAccessControl.RoleGranted(role, account, _msgSender());
     }
 
@@ -72,7 +77,7 @@ abstract contract AccessControlInternal is ISBEContext {
     function _revokeRole(bytes32 role, address account) internal virtual {
         if (!_hasRole(role, account)) return;
 
-        _accessControlStorage().roles[role].members[account] = false;
+        _accessControlStorage().roles[role].members.remove(account);
         emit IAccessControl.RoleRevoked(role, account, _msgSender());
     }
 
@@ -80,7 +85,7 @@ abstract contract AccessControlInternal is ISBEContext {
         bytes32 role,
         address account
     ) internal view virtual returns (bool) {
-        return _accessControlStorage().roles[role].members[account];
+        return _accessControlStorage().roles[role].members.contains(account);
     }
 
     function _getRoleAdmin(
