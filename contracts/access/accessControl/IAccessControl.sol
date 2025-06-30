@@ -113,4 +113,38 @@ interface IAccessControl {
     /// @param role The role to query
     /// @return The admin role associated with the role
     function getRoleAdmin(bytes32 role) external view returns (bytes32);
+
+    /// @notice Returns the number of members assigned to a specific role
+    /// @param _role The role identifier
+    /// @return The total number of accounts that have been granted the role
+    function getRoleMembersCount(bytes32 _role) external view returns (uint256);
+
+    /// @notice Returns a paginated list of addresses that hold a specific role
+    /// @param _role The role identifier
+    /// @param _pageIndex The index of the page to fetch (starting from 0)
+    /// @param _pageLength The number of members to return per page
+    /// @return members_ A list of addresses that have been granted the role
+    function getRoleMembers(
+        bytes32 _role,
+        uint256 _pageIndex,
+        uint256 _pageLength
+    ) external view returns (address[] memory members_);
+
+    /// @notice Returns the number of roles assigned to a specific account
+    /// @param _account The address whose roles are being queried
+    /// @return The total number of roles the account has
+    function getRolesByAccountCount(
+        address _account
+    ) external view returns (uint256);
+
+    /// @notice Returns a paginated list of roles assigned to a specific account
+    /// @param _account The address whose roles are being queried
+    /// @param _pageIndex The index of the page to fetch (starting from 0)
+    /// @param _pageLength The number of roles to return per page
+    /// @return roles_ A list of role identifiers that the account holds
+    function getRolesByAccount(
+        address _account,
+        uint256 _pageIndex,
+        uint256 _pageLength
+    ) external view returns (bytes32[] memory roles_);
 }

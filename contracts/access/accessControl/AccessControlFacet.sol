@@ -34,7 +34,7 @@ contract AccessControlFacet is AccessControl, IEIP2535Introspection {
         override
         returns (bytes4[] memory selectors_)
     {
-        uint256 selectorsLength = 7;
+        uint256 selectorsLength = 11;
         selectors_ = new bytes4[](selectorsLength);
         selectors_[--selectorsLength] = this.initializeAccessControl.selector;
         selectors_[--selectorsLength] = this.grantRole.selector;
@@ -43,5 +43,9 @@ contract AccessControlFacet is AccessControl, IEIP2535Introspection {
         selectors_[--selectorsLength] = this.renounceRole.selector;
         selectors_[--selectorsLength] = this.hasRole.selector;
         selectors_[--selectorsLength] = this.getRoleAdmin.selector;
+        selectors_[--selectorsLength] = this.getRoleMembersCount.selector;
+        selectors_[--selectorsLength] = this.getRoleMembers.selector;
+        selectors_[--selectorsLength] = this.getRolesByAccountCount.selector;
+        selectors_[--selectorsLength] = this.getRolesByAccount.selector;
     }
 }
