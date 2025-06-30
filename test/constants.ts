@@ -4,6 +4,9 @@ export const PAUSER_ROLE =
 export const ISBE_ROLE =
     '0xe02d3eaf0b5fb24a2d637286804770bf2618aa6d3b40cbf443b93f6cd1aac239'
 
+export const GOVERNANCE_CONFIGURATION_MANAGER_ROLE =
+    '0xc4fca0e2ae1ffe7494d7a1a0ee458ac6b6d84e022ad4f87c1742be5599e5e7fb'
+
 export const ASSET_EVENT_TRACKER_ROLE =
     '0x46ffae7721ce7c213dfc98101d48d6a7f58e3c12f2945ae1fb4f2e2862a44ff1'
 

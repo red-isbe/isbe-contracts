@@ -9,6 +9,9 @@ bytes32 constant _DEFAULT_ADMIN_ROLE = 0x00;
 // keccak256('isbe.contracts.role.pauser');
 bytes32 constant _PAUSER_ROLE = 0x8c911f4537972e7549dbbd37a96b929a4b480f4fb156fc6344524bdf2ca50aa1;
 
+// keccak256('isbe.contracts.role.governance.configuration.manager');
+bytes32 constant _GOVERNANCE_CONFIGURATION_MANAGER_ROLE = 0xc4fca0e2ae1ffe7494d7a1a0ee458ac6b6d84e022ad4f87c1742be5599e5e7fb;
+
 // keccak256('isbe.contracts.role.isbe.pauser');
 bytes32 constant _ISBE_PAUSER_ROLE = 0x643e67198985fdbcfc2807234f580aa2cab96bb7efe1ab3158da79255d493114;
 
