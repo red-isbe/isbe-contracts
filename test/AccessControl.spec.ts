@@ -204,6 +204,8 @@ describe('Access Control', function () {
 
             accessControl = accessControl.connect(adminAccount)
 
+            const account2Address = await account_2.getAddress()
+
             await expect(accessControl.grantRole(ROLE_1, account_2))
                 .to.emit(accessControl, 'RoleGranted')
                 .withArgs(ROLE_1, account_2, adminAccount)
@@ -211,6 +213,20 @@ describe('Access Control', function () {
             expect(await accessControl.hasRole(ROLE_1, account_2)).to.equal(
                 true
             )
+
+            expect(await accessControl.getRoleMembersCount(ROLE_1)).to.equal(1)
+            expect(
+                await accessControl.getRoleMembers(ROLE_1, 0, 1)
+            ).to.deep.equal([account2Address])
+            expect(
+                await accessControl.getRoleMembers(ROLE_1, 100, 1)
+            ).to.deep.equal([])
+            expect(
+                await accessControl.getRolesByAccountCount(account_2)
+            ).to.equal(1)
+            expect(
+                await accessControl.getRolesByAccount(account_2, 0, 100)
+            ).to.deep.equal([ROLE_1])
         })
 
         it('GIVEN an Access Control WHEN using account with admin role to revoke role THEN succeeds', async function () {
@@ -227,6 +243,13 @@ describe('Access Control', function () {
             expect(
                 await accessControl.hasRole(DEFAULT_ADMIN_ROLE, adminAccount)
             ).to.equal(false)
+
+            expect(
+                await accessControl.getRoleMembersCount(DEFAULT_ADMIN_ROLE)
+            ).to.equal(0)
+            expect(
+                await accessControl.getRolesByAccountCount(adminAccount)
+            ).to.equal(0)
         })
 
         it('GIVEN an Access Control WHEN renouncing role THEN succeeds', async function () {
@@ -241,6 +264,13 @@ describe('Access Control', function () {
             expect(
                 await accessControl.hasRole(DEFAULT_ADMIN_ROLE, adminAccount)
             ).to.equal(false)
+
+            expect(
+                await accessControl.getRoleMembersCount(DEFAULT_ADMIN_ROLE)
+            ).to.equal(0)
+            expect(
+                await accessControl.getRolesByAccountCount(adminAccount)
+            ).to.equal(0)
         })
 
         it('GIVEN an Access Control WHEN using account with admin role to grant role that was already granted THEN succeeds', async function () {

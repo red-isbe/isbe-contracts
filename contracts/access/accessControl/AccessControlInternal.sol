@@ -10,15 +10,20 @@ import {_DEFAULT_ADMIN_ROLE} from '../../constants/roles.sol';
 import {
     EnumerableSet
 } from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
+import {LibCommon} from '../../core/LibCommon.sol';
 
 /// @title AccessControlInternal
 /// @notice Internal logic for role-based access control
 abstract contract AccessControlInternal is ISBEContext {
     using EnumerableSet for EnumerableSet.AddressSet;
+    using EnumerableSet for EnumerableSet.Bytes32Set;
+    using LibCommon for EnumerableSet.Bytes32Set;
+    using LibCommon for EnumerableSet.AddressSet;
 
     /// @notice Struct storing all roles and their data
     struct AccessControlStorage {
         mapping(bytes32 => RoleData) roles;
+        mapping(address => EnumerableSet.Bytes32Set) rolesByAccount;
     }
 
     /// @notice Struct storing members and admin role for a specific role
@@ -61,6 +66,8 @@ abstract contract AccessControlInternal is ISBEContext {
         if (_hasRole(role, account)) return;
 
         _accessControlStorage().roles[role].members.add(account);
+        _accessControlStorage().rolesByAccount[account].add(role);
+
         emit IAccessControl.RoleGranted(role, account, _msgSender());
     }
 
@@ -78,6 +85,8 @@ abstract contract AccessControlInternal is ISBEContext {
         if (!_hasRole(role, account)) return;
 
         _accessControlStorage().roles[role].members.remove(account);
+        _accessControlStorage().rolesByAccount[account].remove(role);
+
         emit IAccessControl.RoleRevoked(role, account, _msgSender());
     }
 
@@ -129,6 +138,36 @@ abstract contract AccessControlInternal is ISBEContext {
         bytes32 _role
     ) internal view virtual returns (uint256) {
         return _accessControlStorage().roles[_role].members.length();
+    }
+
+    function _getRoleMembers(
+        bytes32 _role,
+        uint256 _pageIndex,
+        uint256 _pageLength
+    ) internal view virtual returns (address[] memory members_) {
+        return
+            _accessControlStorage().roles[_role].members.getFromSet(
+                _pageIndex,
+                _pageLength
+            );
+    }
+
+    function _getRolesByAccountCount(
+        address _account
+    ) internal view virtual returns (uint256) {
+        return _accessControlStorage().rolesByAccount[_account].length();
+    }
+
+    function _getRolesByAccount(
+        address _account,
+        uint256 _pageIndex,
+        uint256 _pageLength
+    ) internal view virtual returns (bytes32[] memory roles_) {
+        return
+            _accessControlStorage().rolesByAccount[_account].getFromSet(
+                _pageIndex,
+                _pageLength
+            );
     }
 
     /// @notice Returns the storage slot for access control

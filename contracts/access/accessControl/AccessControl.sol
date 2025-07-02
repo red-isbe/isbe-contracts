@@ -80,6 +80,34 @@ contract AccessControl is IAccessControl, Common {
         return _getRoleAdmin(role);
     }
 
+    function getRoleMembersCount(
+        bytes32 _role
+    ) external view override returns (uint256) {
+        return _getRoleMembersCount(_role);
+    }
+
+    function getRoleMembers(
+        bytes32 _role,
+        uint256 _pageIndex,
+        uint256 _pageLength
+    ) external view override returns (address[] memory members_) {
+        return _getRoleMembers(_role, _pageIndex, _pageLength);
+    }
+
+    function getRolesByAccountCount(
+        address _account
+    ) external view override returns (uint256) {
+        return _getRolesByAccountCount(_account);
+    }
+
+    function getRolesByAccount(
+        address _account,
+        uint256 _pageIndex,
+        uint256 _pageLength
+    ) external view override returns (bytes32[] memory roles_) {
+        return _getRolesByAccount(_account, _pageIndex, _pageLength);
+    }
+
     function _implementedInterfaces()
         internal
         pure

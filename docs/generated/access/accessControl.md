@@ -132,6 +132,90 @@ Returns the admin role controlling a given role
 | ---- | ------- | --------------------------------------- |
 | [0]  | bytes32 | The admin role associated with the role |
 
+### getRoleMembersCount
+
+```solidity
+function getRoleMembersCount(bytes32 _role) external view returns (uint256)
+```
+
+Returns the number of members assigned to a specific role
+
+#### Parameters
+
+| Name   | Type    | Description         |
+| ------ | ------- | ------------------- |
+| \_role | bytes32 | The role identifier |
+
+#### Return Values
+
+| Name | Type    | Description                                                  |
+| ---- | ------- | ------------------------------------------------------------ |
+| [0]  | uint256 | The total number of accounts that have been granted the role |
+
+### getRoleMembers
+
+```solidity
+function getRoleMembers(bytes32 _role, uint256 _pageIndex, uint256 _pageLength) external view returns (address[] members_)
+```
+
+Returns a paginated list of addresses that hold a specific role
+
+#### Parameters
+
+| Name         | Type    | Description                                      |
+| ------------ | ------- | ------------------------------------------------ |
+| \_role       | bytes32 | The role identifier                              |
+| \_pageIndex  | uint256 | The index of the page to fetch (starting from 0) |
+| \_pageLength | uint256 | The number of members to return per page         |
+
+#### Return Values
+
+| Name      | Type      | Description                                         |
+| --------- | --------- | --------------------------------------------------- |
+| members\_ | address[] | A list of addresses that have been granted the role |
+
+### getRolesByAccountCount
+
+```solidity
+function getRolesByAccountCount(address _account) external view returns (uint256)
+```
+
+Returns the number of roles assigned to a specific account
+
+#### Parameters
+
+| Name      | Type    | Description                               |
+| --------- | ------- | ----------------------------------------- |
+| \_account | address | The address whose roles are being queried |
+
+#### Return Values
+
+| Name | Type    | Description                               |
+| ---- | ------- | ----------------------------------------- |
+| [0]  | uint256 | The total number of roles the account has |
+
+### getRolesByAccount
+
+```solidity
+function getRolesByAccount(address _account, uint256 _pageIndex, uint256 _pageLength) external view returns (bytes32[] roles_)
+```
+
+Returns a paginated list of roles assigned to a specific account
+
+#### Parameters
+
+| Name         | Type    | Description                                      |
+| ------------ | ------- | ------------------------------------------------ |
+| \_account    | address | The address whose roles are being queried        |
+| \_pageIndex  | uint256 | The index of the page to fetch (starting from 0) |
+| \_pageLength | uint256 | The number of roles to return per page           |
+
+#### Return Values
+
+| Name    | Type      | Description                                       |
+| ------- | --------- | ------------------------------------------------- |
+| roles\_ | bytes32[] | A list of role identifiers that the account holds |
+
 ### \_implementedInterfaces
 
 ```solidity
@@ -219,6 +303,7 @@ Struct storing all roles and their data
 ```solidity
 struct AccessControlStorage {
   mapping(bytes32 => struct AccessControlInternal.RoleData) roles;
+  mapping(address => struct EnumerableSet.Bytes32Set) rolesByAccount;
 }
 ```
 
@@ -319,6 +404,24 @@ function _checkRoles(bytes32[] roles, address account) internal view virtual
 
 ```solidity
 function _getRoleMembersCount(bytes32 _role) internal view virtual returns (uint256)
+```
+
+### \_getRoleMembers
+
+```solidity
+function _getRoleMembers(bytes32 _role, uint256 _pageIndex, uint256 _pageLength) internal view virtual returns (address[] members_)
+```
+
+### \_getRolesByAccountCount
+
+```solidity
+function _getRolesByAccountCount(address _account) internal view virtual returns (uint256)
+```
+
+### \_getRolesByAccount
+
+```solidity
+function _getRolesByAccount(address _account, uint256 _pageIndex, uint256 _pageLength) internal view virtual returns (bytes32[] roles_)
 ```
 
 ### \_accessControlStorage
@@ -593,3 +696,87 @@ Returns the admin role controlling a given role
 | Name | Type    | Description                             |
 | ---- | ------- | --------------------------------------- |
 | [0]  | bytes32 | The admin role associated with the role |
+
+### getRoleMembersCount
+
+```solidity
+function getRoleMembersCount(bytes32 _role) external view returns (uint256)
+```
+
+Returns the number of members assigned to a specific role
+
+#### Parameters
+
+| Name   | Type    | Description         |
+| ------ | ------- | ------------------- |
+| \_role | bytes32 | The role identifier |
+
+#### Return Values
+
+| Name | Type    | Description                                                  |
+| ---- | ------- | ------------------------------------------------------------ |
+| [0]  | uint256 | The total number of accounts that have been granted the role |
+
+### getRoleMembers
+
+```solidity
+function getRoleMembers(bytes32 _role, uint256 _pageIndex, uint256 _pageLength) external view returns (address[] members_)
+```
+
+Returns a paginated list of addresses that hold a specific role
+
+#### Parameters
+
+| Name         | Type    | Description                                      |
+| ------------ | ------- | ------------------------------------------------ |
+| \_role       | bytes32 | The role identifier                              |
+| \_pageIndex  | uint256 | The index of the page to fetch (starting from 0) |
+| \_pageLength | uint256 | The number of members to return per page         |
+
+#### Return Values
+
+| Name      | Type      | Description                                         |
+| --------- | --------- | --------------------------------------------------- |
+| members\_ | address[] | A list of addresses that have been granted the role |
+
+### getRolesByAccountCount
+
+```solidity
+function getRolesByAccountCount(address _account) external view returns (uint256)
+```
+
+Returns the number of roles assigned to a specific account
+
+#### Parameters
+
+| Name      | Type    | Description                               |
+| --------- | ------- | ----------------------------------------- |
+| \_account | address | The address whose roles are being queried |
+
+#### Return Values
+
+| Name | Type    | Description                               |
+| ---- | ------- | ----------------------------------------- |
+| [0]  | uint256 | The total number of roles the account has |
+
+### getRolesByAccount
+
+```solidity
+function getRolesByAccount(address _account, uint256 _pageIndex, uint256 _pageLength) external view returns (bytes32[] roles_)
+```
+
+Returns a paginated list of roles assigned to a specific account
+
+#### Parameters
+
+| Name         | Type    | Description                                      |
+| ------------ | ------- | ------------------------------------------------ |
+| \_account    | address | The address whose roles are being queried        |
+| \_pageIndex  | uint256 | The index of the page to fetch (starting from 0) |
+| \_pageLength | uint256 | The number of roles to return per page           |
+
+#### Return Values
+
+| Name    | Type      | Description                                       |
+| ------- | --------- | ------------------------------------------------- |
+| roles\_ | bytes32[] | A list of role identifiers that the account holds |

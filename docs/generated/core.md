@@ -149,3 +149,31 @@ to any version. It is recommended to use this to lock implementation contracts t
 through proxies.
 
 Emits an {Initialized} event the first time it is successfully executed.\_
+
+---
+
+## LibCommon
+
+### getFromSet
+
+```solidity
+function getFromSet(struct EnumerableSet.Bytes32Set _set, uint256 _pageIndex, uint256 _pageLength) internal view returns (bytes32[] items_)
+```
+
+### getFromSet
+
+```solidity
+function getFromSet(struct EnumerableSet.AddressSet _set, uint256 _pageIndex, uint256 _pageLength) internal view returns (address[] items_)
+```
+
+### getSize
+
+```solidity
+function getSize(uint256 _start, uint256 _end, uint256 _listCount) internal pure returns (uint256)
+```
+
+### getStartAndEnd
+
+```solidity
+function getStartAndEnd(uint256 _pageIndex, uint256 _pageLength) internal pure returns (uint256 start_, uint256 end_)
+```
