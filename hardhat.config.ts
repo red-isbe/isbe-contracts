@@ -4,6 +4,8 @@ import '@nomicfoundation/hardhat-chai-matchers'
 import '@typechain/hardhat'
 import 'hardhat-contract-sizer'
 import 'solidity-docgen'
+import './tasks/deployIsbeFactory'
+import './tasks/deployBusinessLogic'
 
 const config: HardhatUserConfig = {
     solidity: {

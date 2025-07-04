@@ -67,7 +67,8 @@
         "@nomicfoundation/hardhat-toolbox": "^5.0.0",
         "@openzeppelin/contracts": "^4.9.6",
         "eslint": "^9.25.1",
-        "hardhat": "^2.23.0",
+        "ethers": "^6.15.0",
+        "hardhat": "^2.25.0",
         "hardhat-contract-sizer": "^2.10.0",
         "husky": "^9.1.7",
         "lint-staged": "^15.5.1",
@@ -108,7 +109,6 @@
         "contracts"
     ],
     "dependencies": {
-        "dotenv": "^17.0.1",
-        "ethers": "^6.15.0"
+        "dotenv": "^17.0.1"
     }
 }

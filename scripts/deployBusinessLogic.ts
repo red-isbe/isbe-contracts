@@ -10,7 +10,7 @@
  */
 
 // For ethers v6:
-import { Signer } from 'ethers'
+import { BigNumberish, Signer } from 'ethers'
 import { getBusinessLogicFactory } from './utils/getBusinessLogicFactory'
 
 export async function deployBusinessLogic(
@@ -18,7 +18,11 @@ export async function deployBusinessLogic(
     bytecode: string,
     factory: string,
     signer: Signer
-): Promise<{ businessId: string; businessAddress: string; version: string }> {
+): Promise<{
+    businessId: string
+    businessAddress: string
+    version: BigNumberish
+}> {
     let businessLogicFactory = await getBusinessLogicFactory(factory)
     businessLogicFactory = businessLogicFactory.connect(signer)
 
@@ -56,6 +60,6 @@ export async function deployBusinessLogic(
     return {
         businessId: deployedBusinessId,
         businessAddress,
-        version,
+        version: version.toString(),
     }
 }

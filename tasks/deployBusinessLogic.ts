@@ -6,9 +6,9 @@ import fs from 'fs'
 
 /**
  npx hardhat deployBusinessLogic --network localhost \
-  --business-id "123" \
-  --factory "0xFactoryAddressHere" \
-  --bytecode-path "./artifacts/contracts/Logic.sol/Logic.json"
+  --business-id "0xf4e751bf7e74c25f287942d8743e3d0fdfb08f29556e786178a50e2d69dc403a" \
+  --factory "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6" \
+  --bytecode-path "./artifacts/contracts/hashtimestamp/HashTimestampFacet.sol/HashTimestampFacet.json"
  */
 
 dotenv.config()
@@ -29,9 +29,11 @@ task('deployBusinessLogic', 'Deploys business logic contract')
         const signer = new hre.ethers.Wallet(privateKey, hre.ethers.provider)
 
         // retrieves the bytecode from the bytecodePath
-        const bytecode = fs
+        const bytecodeContent = fs
             .readFileSync(path.resolve(bytecodePath), 'utf8')
             .trim()
+
+        const bytecode = JSON.parse(bytecodeContent).bytecode
 
         // Call the deploy script and display the result
         const result = await deployBusinessLogic(
