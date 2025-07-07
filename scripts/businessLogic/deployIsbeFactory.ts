@@ -5,6 +5,16 @@ import {
     BusinessLogicFactoryFacet,
     ProxyFactoryFacet__factory,
     ProxyFactoryFacet,
+    AccessControlFacet__factory,
+    ISBEPauseFacet__factory,
+    DiamondCutAccessControlFacet__factory,
+    DiamondLoupeFacet__factory,
+    GlobalIsbePauseFacet__factory,
+    GlobalIsbePauseFacet,
+    AccessControlFacet,
+    ISBEPauseFacet,
+    DiamondCutAccessControlFacet,
+    DiamondLoupeFacet,
 } from '../../typechain-types'
 import {
     DEFAULT_ADMIN_ROLE,
@@ -12,19 +22,22 @@ import {
     PROXY_DEPLOYER_ROLE,
 } from '../../test/constants'
 
-/*let AccessControlFactory: AccessControlFacet__factory
-let IsbePausableFactory: ISBEPause__factory*/
+let AccessControlFacetFactory: AccessControlFacet__factory
+let IsbePausableFacetFactory: ISBEPauseFacet__factory
+let GlobalIsbePauseFacetFactory: GlobalIsbePauseFacet__factory
 let EIP2535AccessControlFactory: EIP2535AccessControl__factory
 let BusinessLogicFactoryFactory: BusinessLogicFactoryFacet__factory
 let ProxyFactoryFacetFactory: ProxyFactoryFacet__factory
-/*let DiamondCutFacetFactory: DiamondCutAccessControlFacet__factory
+let DiamondCutFacetFactory: DiamondCutAccessControlFacet__factory
 let DiamondLoupeFacetFactory: DiamondLoupeFacet__factory
-let HashTimestampFactory: HashTimestampFacet__factory
-let AssetEventTrackerFactory: AssetEventTrackerTestWrapper__factory
-let Ownable2StepFacetFactory: Ownable2StepFacet__factory*/
 let diamondProxy: EIP2535AccessControl
 let businessLogicFactoryFacet: BusinessLogicFactoryFacet
 let proxyFactoryFacet: ProxyFactoryFacet
+let globalIsbePauseFacet: GlobalIsbePauseFacet
+let accessControlFacet: AccessControlFacet
+let pauseFacet: ISBEPauseFacet
+let diamondCutFacet: DiamondCutAccessControlFacet
+let diamondLoupeFacet: DiamondLoupeFacet
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function deployInitial(ethers: any) {
@@ -36,10 +49,33 @@ async function deployInitial(ethers: any) {
     EIP2535AccessControlFactory = await ethers.getContractFactory(
         'EIP2535AccessControl'
     )
+    GlobalIsbePauseFacetFactory = await ethers.getContractFactory(
+        'GlobalIsbePauseFacet'
+    )
+    AccessControlFacetFactory =
+        await ethers.getContractFactory('AccessControlFacet')
+    IsbePausableFacetFactory = await ethers.getContractFactory('ISBEPauseFacet')
+    DiamondCutFacetFactory = await ethers.getContractFactory(
+        'DiamondCutAccessControlFacet'
+    )
+    DiamondLoupeFacetFactory =
+        await ethers.getContractFactory('DiamondLoupeFacet')
+
     businessLogicFactoryFacet = await BusinessLogicFactoryFactory.deploy()
     proxyFactoryFacet = await ProxyFactoryFacetFactory.deploy()
+    globalIsbePauseFacet = await GlobalIsbePauseFacetFactory.deploy()
+    accessControlFacet = await AccessControlFacetFactory.deploy()
+    pauseFacet = await IsbePausableFacetFactory.deploy()
+    diamondCutFacet = await DiamondCutFacetFactory.deploy()
+    diamondLoupeFacet = await DiamondLoupeFacetFactory.deploy()
+
     await businessLogicFactoryFacet.waitForDeployment()
     await proxyFactoryFacet.waitForDeployment()
+    await globalIsbePauseFacet.waitForDeployment()
+    await accessControlFacet.waitForDeployment()
+    await pauseFacet.waitForDeployment()
+    await diamondCutFacet.waitForDeployment()
+    await diamondLoupeFacet.waitForDeployment()
 }
 
 export async function deployIsbeFactory(
@@ -50,10 +86,16 @@ export async function deployIsbeFactory(
 ): Promise<string> {
     const ethers = hre.ethers
     await deployInitial(ethers)
-    const proxyFactoryAddress = await proxyFactoryFacet.getAddress()
+
     const facetAddresses = [
         await businessLogicFactoryFacet.getAddress(),
-        proxyFactoryAddress,
+        await globalIsbePauseFacet.getAddress(),
+        await accessControlFacet.getAddress(),
+        await pauseFacet.getAddress(),
+        await proxyFactoryFacet.getAddress(),
+        //await configurationManagementFacet.getAddress(),
+        await diamondCutFacet.getAddress(),
+        await diamondLoupeFacet.getAddress(),
     ]
     diamondProxy = await EIP2535AccessControlFactory.deploy(facetAddresses, {
         rbacs: [
@@ -74,8 +116,6 @@ export async function deployIsbeFactory(
         initCalldata: initCalldata,
     })
     const address = await diamondProxy.getAddress()
-
-    console.log(address)
 
     return address
 }

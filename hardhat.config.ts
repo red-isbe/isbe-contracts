@@ -9,6 +9,7 @@ import './tasks/deployBusinessLogic'
 import './tasks/getBusinessLogicAddress'
 import './tasks/getBusinessLogicVersions'
 import './tasks/getBusinessLogics'
+import './tasks/getIsbeFactoryFacets'
 
 const config: HardhatUserConfig = {
     solidity: {

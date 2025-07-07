@@ -1,4 +1,5 @@
 import { Signer } from 'ethers'
+import { getContract } from './getContract'
 
 export async function getBusinessLogicFactory(
     factoryAddress: string,
@@ -7,9 +8,6 @@ export async function getBusinessLogicFactory(
     const { IBusinessLogicFactory__factory } = await import(
         '../../typechain-types'
     )
-    let businessLogicFactory =
-        await IBusinessLogicFactory__factory.connect(factoryAddress)
-    businessLogicFactory = businessLogicFactory.connect(signer)
 
-    return businessLogicFactory
+    return getContract(IBusinessLogicFactory__factory, factoryAddress, signer)
 }
