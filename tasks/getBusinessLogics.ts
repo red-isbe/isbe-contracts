@@ -1,6 +1,7 @@
 import { task } from 'hardhat/config'
 import * as dotenv from 'dotenv'
 import { getBusinessLogics } from '../scripts/businessLogic/getBusinessLogics'
+import { getSigner } from '../scripts/utils/getSigner'
 
 /**
  npx hardhat getBusinessLogics --network localhost \
@@ -13,14 +14,8 @@ task('getBusinessLogics', 'Deploys business logic contract')
     .addParam('factory', 'The factory contract address')
     .setAction(async (taskArgs, hre) => {
         const { factory } = taskArgs
-        const privateKey = process.env.ACCOUNT_PRIVATE_KEY
 
-        if (!privateKey) {
-            throw new Error('ACCOUNT_PRIVATE_KEY not set in .env')
-        }
-
-        // Create a signer using the private key and Hardhat's ethers provider
-        const signer = new hre.ethers.Wallet(privateKey, hre.ethers.provider)
+        const signer = getSigner(hre)
 
         // Call the deploy script and display the result
         const result = await getBusinessLogics(factory, signer)

@@ -12,8 +12,7 @@ export async function deployBusinessLogic(
     businessAddress: string
     version: BigNumberish
 }> {
-    let businessLogicFactory = await getBusinessLogicFactory(factory)
-    businessLogicFactory = businessLogicFactory.connect(signer)
+    const businessLogicFactory = await getBusinessLogicFactory(factory, signer)
 
     const tx = await businessLogicFactory.deploy(businessId, bytecode)
     const receipt = await tx.wait()

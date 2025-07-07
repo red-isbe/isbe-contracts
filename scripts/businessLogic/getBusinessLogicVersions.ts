@@ -8,8 +8,7 @@ export async function getBusinessLogicVersions(
 ): Promise<{
     businessIdVersions: string[]
 }> {
-    let businessLogicFactory = await getBusinessLogicFactory(factory)
-    businessLogicFactory = businessLogicFactory.connect(signer)
+    const businessLogicFactory = await getBusinessLogicFactory(factory, signer)
 
     const result =
         await businessLogicFactory.getBusinessLogicVersions(businessId)

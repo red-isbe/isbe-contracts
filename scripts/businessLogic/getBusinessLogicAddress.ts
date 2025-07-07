@@ -9,8 +9,7 @@ export async function getBusinessLogicAddress(
 ): Promise<{
     businessAddress: string
 }> {
-    let businessLogicFactory = await getBusinessLogicFactory(factory)
-    businessLogicFactory = businessLogicFactory.connect(signer)
+    const businessLogicFactory = await getBusinessLogicFactory(factory, signer)
 
     const result = await businessLogicFactory.getBusinessLogicAddress(
         businessId,

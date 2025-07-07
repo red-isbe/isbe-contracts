@@ -3,11 +3,12 @@ import * as dotenv from 'dotenv'
 import path from 'path'
 import { deployBusinessLogic } from '../scripts/businessLogic/deployBusinessLogic'
 import fs from 'fs'
+import { getSigner } from '../scripts/utils/getSigner'
 
 /**
  npx hardhat deployBusinessLogic --network localhost \
   --business-id "0xf4e751bf7e74c25f287942d8743e3d0fdfb08f29556e786178a50e2d69dc403a" \
-  --factory "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6" \
+  --factory "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0" \
   --bytecode-path "./artifacts/contracts/hashtimestamp/HashTimestampFacet.sol/HashTimestampFacet.json"
  */
 
@@ -19,14 +20,8 @@ task('deployBusinessLogic', 'Deploys business logic contract')
     .addParam('bytecodePath', 'Path to the business logic bytecode')
     .setAction(async (taskArgs, hre) => {
         const { businessId, factory, bytecodePath } = taskArgs
-        const privateKey = process.env.ACCOUNT_PRIVATE_KEY
 
-        if (!privateKey) {
-            throw new Error('ACCOUNT_PRIVATE_KEY not set in .env')
-        }
-
-        // Create a signer using the private key and Hardhat's ethers provider
-        const signer = new hre.ethers.Wallet(privateKey, hre.ethers.provider)
+        const signer = getSigner(hre)
 
         // retrieves the bytecode from the bytecodePath
         const bytecodeContent = fs

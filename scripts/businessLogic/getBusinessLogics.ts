@@ -5,14 +5,13 @@ export async function getBusinessLogics(
     factory: string,
     signer: Signer
 ): Promise<{
-    businessIdVersions: string[]
+    businessId: string[]
 }> {
-    let businessLogicFactory = await getBusinessLogicFactory(factory)
-    businessLogicFactory = businessLogicFactory.connect(signer)
+    const businessLogicFactory = await getBusinessLogicFactory(factory, signer)
 
     const result = await businessLogicFactory.getBusinessLogics()
 
     return {
-        businessIdVersions: result,
+        businessId: result,
     }
 }

@@ -1,6 +1,15 @@
-export async function getBusinessLogicFactory(factoryAddress: string) {
+import { Signer } from 'ethers'
+
+export async function getBusinessLogicFactory(
+    factoryAddress: string,
+    signer: Signer
+) {
     const { IBusinessLogicFactory__factory } = await import(
         '../../typechain-types'
     )
-    return await IBusinessLogicFactory__factory.connect(factoryAddress)
+    let businessLogicFactory =
+        await IBusinessLogicFactory__factory.connect(factoryAddress)
+    businessLogicFactory = businessLogicFactory.connect(signer)
+
+    return businessLogicFactory
 }
