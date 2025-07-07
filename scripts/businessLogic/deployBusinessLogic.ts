@@ -1,17 +1,6 @@
-/**
- * This script deploys new business logics.
- * In order to do it, it will invoke the "deploy(bytes32 businessId, bytes calldata bytecode)" method from the "IBusinessLogicFactory.sol" contract.
- * The script will get the following input parameters :
- *  - the "businessId" of the business logic to deploy.
- *  - the "bytecode" of the business logic to deploy.
- *  - the "factory" address of the "IBusinessLogicFactory" contract.
- * It will wait for the transaction to be mined then read the expected emitted event : event Deployed(bytes32 businessId,address businessAddress,uint256 version);
- * Finally it will return the business Id, address and version of the deployed business logic.
- */
-
 // For ethers v6:
 import { BigNumberish, Signer } from 'ethers'
-import { getBusinessLogicFactory } from './utils/getBusinessLogicFactory'
+import { getBusinessLogicFactory } from '../utils/getBusinessLogicFactory'
 
 export async function deployBusinessLogic(
     businessId: string,

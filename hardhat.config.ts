@@ -6,6 +6,9 @@ import 'hardhat-contract-sizer'
 import 'solidity-docgen'
 import './tasks/deployIsbeFactory'
 import './tasks/deployBusinessLogic'
+import './tasks/getBusinessLogicAddress'
+import './tasks/getBusinessLogicVersions'
+import './tasks/getBusinessLogics'
 
 const config: HardhatUserConfig = {
     solidity: {

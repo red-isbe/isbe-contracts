@@ -5,12 +5,12 @@ import {
     BusinessLogicFactoryFacet,
     ProxyFactoryFacet__factory,
     ProxyFactoryFacet,
-} from '../typechain-types'
+} from '../../typechain-types'
 import {
     DEFAULT_ADMIN_ROLE,
     ISBE_ROLE,
     PROXY_DEPLOYER_ROLE,
-} from '../test/constants'
+} from '../../test/constants'
 
 /*let AccessControlFactory: AccessControlFacet__factory
 let IsbePausableFactory: ISBEPause__factory*/
