@@ -83,7 +83,10 @@ async function deployBusinessLogicFromFactory(
     return contractFactory.attach(businessAddress)
 }
 
-export async function deployAll(isOwnable: boolean = false) {
+export async function deployAll(
+    isOwnable: boolean = false,
+    isGovernance: boolean = false
+) {
     const [owner] = await ethers.getSigners()
 
     BusinessLogicFactoryFacetFactory = await ethers.getContractFactory(
@@ -100,6 +103,9 @@ export async function deployAll(isOwnable: boolean = false) {
 
     const AccessControlFacetFactory =
         await ethers.getContractFactory('AccessControlFacet')
+    const AccessControlGovernanceFacetFactory = await ethers.getContractFactory(
+        'AccessControlGovernanceFacet'
+    )
     const Ownable2StepFacetFactory =
         await ethers.getContractFactory('Ownable2StepFacet')
     const OwnableFacetFactory = await ethers.getContractFactory('OwnableFacet')
@@ -139,10 +145,15 @@ export async function deployAll(isOwnable: boolean = false) {
         DIAMOND_LOUPE_RESOLVER_KEY,
         DiamondLoupeFacetFactory
     )
-    const accessControlFacet = await deployBusinessLogicFromFactory(
-        ACCESS_CONTROL_RESOLVER_KEY,
-        AccessControlFacetFactory
-    )
+    const accessControlFacet = !isGovernance
+        ? await deployBusinessLogicFromFactory(
+              ACCESS_CONTROL_RESOLVER_KEY,
+              AccessControlFacetFactory
+          )
+        : await deployBusinessLogicFromFactory(
+              ACCESS_CONTROL_RESOLVER_KEY,
+              AccessControlGovernanceFacetFactory
+          )
     const ownable2StepFacet = await deployBusinessLogicFromFactory(
         OWNABLE_RESOLVER_KEY,
         Ownable2StepFacetFactory
