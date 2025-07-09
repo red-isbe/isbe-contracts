@@ -1,8 +1,8 @@
 import { Signer } from 'ethers'
-import { getDiamondLoupe } from '../utils/getDiamondLoupe'
+import { getDiamondLoupe } from '../../utils/getDiamondLoupe'
 
-export async function getIsbeFactoryFacets(
-    factory: string,
+export async function getFacets(
+    diamond: string,
     signer: Signer
 ): Promise<{
     facets: {
@@ -10,7 +10,7 @@ export async function getIsbeFactoryFacets(
         functionSelectors: string[]
     }[]
 }> {
-    const diamondLoupe = await getDiamondLoupe(factory, signer)
+    const diamondLoupe = await getDiamondLoupe(diamond, signer)
 
     const result = await diamondLoupe.facets()
 

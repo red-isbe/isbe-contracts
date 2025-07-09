@@ -1,26 +1,25 @@
 import { task } from 'hardhat/config'
 import * as dotenv from 'dotenv'
-import { getIsbeFactoryFacets } from '../../scripts/diamond/getIsbeFactoryFacets'
+import { getFacets } from '../../scripts/diamond/loupe/getFacets'
 import { getSigner } from '../../scripts/utils/getSigner'
 
 /**
- npx hardhat getIsbeFactoryFacets --network localhost \
-  --factory "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0" \
+ npx hardhat getFacets --network localhost \
+  --diamond "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0" \
  */
 
 dotenv.config()
 
-task('getIsbeFactoryFacets', 'Deploys business logic contract')
-    .addParam('factory', 'The factory contract address')
+task('getFacets', 'Deploys business logic contract')
+    .addParam('diamond', 'The diamond contract address')
     .setAction(async (taskArgs, hre) => {
-        const { factory } = taskArgs
+        const { diamond } = taskArgs
 
         const signer = getSigner(hre)
 
-        // Call the deploy script and display the result
-        const result = await getIsbeFactoryFacets(factory, signer)
+        const result = await getFacets(diamond, signer)
 
-        console.log('Isbe Factory facets:')
+        console.log('Diamond facets:')
 
         for (let i = 0; i < result.facets.length; i++) {
             console.log('  Facet :', result.facets[i].facetAddress)
