@@ -1,5 +1,5 @@
 import { Signer } from 'ethers'
-import { getBusinessLogicFactory } from '../utils/getBusinessLogicFactory'
+import { getIsbeFactory } from '../utils/getIsbeFactory'
 
 export async function getBusinessLogics(
     factory: string,
@@ -7,7 +7,7 @@ export async function getBusinessLogics(
 ): Promise<{
     businessId: string[]
 }> {
-    const businessLogicFactory = await getBusinessLogicFactory(factory, signer)
+    const businessLogicFactory = await getIsbeFactory(factory, signer)
 
     const result = await businessLogicFactory.getBusinessLogics()
 

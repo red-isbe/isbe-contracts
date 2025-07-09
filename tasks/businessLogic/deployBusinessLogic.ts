@@ -1,9 +1,9 @@
 import { task } from 'hardhat/config'
 import * as dotenv from 'dotenv'
 import path from 'path'
-import { deployBusinessLogic } from '../scripts/businessLogic/deployBusinessLogic'
+import { deployBusinessLogic } from '../../scripts/businessLogic/deployBusinessLogic'
 import fs from 'fs'
-import { getSigner } from '../scripts/utils/getSigner'
+import { getSigner } from '../../scripts/utils/getSigner'
 
 /**
  npx hardhat deployBusinessLogic --network localhost \

@@ -1,7 +1,7 @@
 import { task } from 'hardhat/config'
 import * as dotenv from 'dotenv'
-import { getBusinessLogics } from '../scripts/businessLogic/getBusinessLogics'
-import { getSigner } from '../scripts/utils/getSigner'
+import { getBusinessLogics } from '../../scripts/businessLogic/getBusinessLogics'
+import { getSigner } from '../../scripts/utils/getSigner'
 
 /**
  npx hardhat getBusinessLogics --network localhost \

@@ -1,6 +1,7 @@
 // For ethers v6:
 import { BigNumberish, Signer } from 'ethers'
-import { getBusinessLogicFactory } from '../utils/getBusinessLogicFactory'
+import { getIsbeFactory } from '../utils/getIsbeFactory'
+import { getEvent } from '../utils/getEvent'
 
 export async function deployBusinessLogic(
     businessId: string,
@@ -12,32 +13,11 @@ export async function deployBusinessLogic(
     businessAddress: string
     version: BigNumberish
 }> {
-    const businessLogicFactory = await getBusinessLogicFactory(factory, signer)
+    const businessLogicFactory = await getIsbeFactory(factory, signer)
 
     const tx = await businessLogicFactory.deploy(businessId, bytecode)
-    const receipt = await tx.wait()
 
-    if (!receipt) {
-        throw new Error('Transaction receipt is null')
-    }
-
-    // Parse logs to find the Deployed event
-    let deployedEvent = null
-    for (const log of receipt.logs) {
-        try {
-            const parsed = businessLogicFactory.interface.parseLog(log)
-            if (parsed && parsed.name === 'Deployed') {
-                deployedEvent = parsed
-                break
-            }
-        } catch (e) {
-            throw new Error(`Error parsing through logs : ${e}`)
-        }
-    }
-
-    if (!deployedEvent) {
-        throw new Error('Deployed event not found in transaction receipt')
-    }
+    const deployedEvent = await getEvent('Deployed', tx, businessLogicFactory)
 
     const {
         businessId: deployedBusinessId,

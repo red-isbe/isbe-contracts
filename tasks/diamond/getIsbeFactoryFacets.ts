@@ -1,7 +1,7 @@
 import { task } from 'hardhat/config'
 import * as dotenv from 'dotenv'
-import { getIsbeFactoryFacets } from '../scripts/businessLogic/getIsbeFactoryFacets'
-import { getSigner } from '../scripts/utils/getSigner'
+import { getIsbeFactoryFacets } from '../../scripts/diamond/getIsbeFactoryFacets'
+import { getSigner } from '../../scripts/utils/getSigner'
 
 /**
  npx hardhat getIsbeFactoryFacets --network localhost \
