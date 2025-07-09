@@ -1,0 +1,20 @@
+export function isValidBytes(input: string): boolean {
+    if (!/^0x[0-9a-fA-F]+$/.test(input)) {
+        return false
+    }
+
+    const hexPart = input.slice(2)
+    return hexPart.length % 2 === 0
+}
+
+export function isValidBytesAndLength(
+    input: string,
+    byteLength: number
+): boolean {
+    if (!isValidBytes(input)) {
+        return false
+    }
+
+    // Check if length matches exactly the required byte length
+    return input.length === 2 + byteLength * 2
+}

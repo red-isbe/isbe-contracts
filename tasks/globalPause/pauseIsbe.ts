@@ -19,7 +19,6 @@ task('pauseIsbe', 'Pauses a deployed smart contract')
 
         const signer = getSigner(hre)
 
-        // Call the deploy script and display the result
         const result = await pauseIsbe(proxyAddress, factory, signer)
 
         console.log('Pause result:', result)

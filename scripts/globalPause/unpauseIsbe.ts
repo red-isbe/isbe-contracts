@@ -1,7 +1,7 @@
-// For ethers v6:
 import { Signer } from 'ethers'
 import { getIsbeFactory } from '../utils/getIsbeFactory'
 import { getEvent } from '../utils/getEvent'
+import { isValidBytesAndLength } from '../utils/validation'
 
 export async function unpauseIsbe(
     proxyAddress: string,
@@ -10,6 +10,9 @@ export async function unpauseIsbe(
 ): Promise<{
     unpausedProxyAddress: string
 }> {
+    if (!isValidBytesAndLength(proxyAddress, 20))
+        throw new Error('Invalid proxy address format : ' + proxyAddress)
+
     const globalIsbePause = await getIsbeFactory(factory, signer)
 
     const tx = await globalIsbePause.unpauseIsbe(proxyAddress)

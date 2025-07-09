@@ -1,5 +1,6 @@
 import { Signer } from 'ethers'
 import { getIsbeFactory } from '../utils/getIsbeFactory'
+import { isValidBytesAndLength } from '../utils/validation'
 
 export async function getBusinessLogicVersions(
     businessId: string,
@@ -8,6 +9,9 @@ export async function getBusinessLogicVersions(
 ): Promise<{
     businessIdVersions: string[]
 }> {
+    if (!isValidBytesAndLength(businessId, 32))
+        throw new Error('Invalid business Id format : ' + businessId)
+
     const businessLogicFactory = await getIsbeFactory(factory, signer)
 
     const result =

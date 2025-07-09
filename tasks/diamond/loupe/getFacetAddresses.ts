@@ -1,7 +1,7 @@
 import { task } from 'hardhat/config'
 import * as dotenv from 'dotenv'
-import { getFacetAddresses } from '../../scripts/diamond/loupe/getFacetAddresses'
-import { getSigner } from '../../scripts/utils/getSigner'
+import { getFacetAddresses } from '../../../scripts/diamond/loupe/getFacetAddresses'
+import { getSigner } from '../../../scripts/utils/getSigner'
 
 /**
  npx hardhat getFacetAddresses --network localhost \

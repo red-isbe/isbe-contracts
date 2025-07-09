@@ -1,7 +1,7 @@
-// For ethers v6:
 import { BigNumberish, Signer } from 'ethers'
 import { getIsbeFactory } from '../utils/getIsbeFactory'
 import { getEvent } from '../utils/getEvent'
+import { isValidBytes, isValidBytesAndLength } from '../utils/validation'
 
 export async function deployBusinessLogic(
     businessId: string,
@@ -13,6 +13,12 @@ export async function deployBusinessLogic(
     businessAddress: string
     version: BigNumberish
 }> {
+    if (!isValidBytesAndLength(businessId, 32))
+        throw new Error('Invalid business Id format : ' + businessId)
+
+    if (!isValidBytes(bytecode))
+        throw new Error('Invalid byte code format : ' + bytecode)
+
     const businessLogicFactory = await getIsbeFactory(factory, signer)
 
     const tx = await businessLogicFactory.deploy(businessId, bytecode)
