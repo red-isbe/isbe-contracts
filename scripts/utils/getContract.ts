@@ -11,7 +11,7 @@ export async function getContract<T>(
     signer: Signer
 ) {
     if (!isValidBytesAndLength(address, 20))
-        throw new Error('Invalid address format : ' + address)
+        throw new Error('Invalid contract address format : ' + address)
 
     const factory = await factoryType.connect(address, signer)
 

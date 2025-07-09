@@ -21,6 +21,16 @@ import './tasks/globalPause/unpauseIsbe'
 import './tasks/pause/pause'
 import './tasks/pause/unpause'
 import './tasks/pause/isPaused'
+import './tasks/access/accessControl/getRoleAdmin'
+import './tasks/access/accessControl/getRoleMembers'
+import './tasks/access/accessControl/getRoleMembersCount'
+import './tasks/access/accessControl/getRolesByAccount'
+import './tasks/access/accessControl/getRolesByAccountCount'
+import './tasks/access/accessControl/grantRole'
+import './tasks/access/accessControl/hasRole'
+import './tasks/access/accessControl/renounceRole'
+import './tasks/access/accessControl/revokeRole'
+import './tasks/access/accessControl/setRoleAdmin'
 
 const config: HardhatUserConfig = {
     solidity: {
