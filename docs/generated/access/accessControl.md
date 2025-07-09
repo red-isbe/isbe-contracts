@@ -225,7 +225,7 @@ function _implementedInterfaces() internal pure virtual returns (bytes4[] interf
 ### \_protectISBERole
 
 ```solidity
-function _protectISBERole(bytes32 _role) internal pure
+function _protectISBERole(bytes32 _role) internal pure virtual
 ```
 
 ### \_isISBERole

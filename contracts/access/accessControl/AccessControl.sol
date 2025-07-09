@@ -120,7 +120,7 @@ contract AccessControl is IAccessControl, Common {
         interfaces_[--interfacesLength] = type(IAccessControl).interfaceId;
     }
 
-    function _protectISBERole(bytes32 _role) internal pure {
+    function _protectISBERole(bytes32 _role) internal pure virtual {
         if (_isISBERole(_role)) revert RoleIsImmutable(_role);
     }
 
