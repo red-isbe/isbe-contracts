@@ -21,7 +21,6 @@ task('getBusinessLogicAddress', 'Deploys business logic contract')
 
         const signer = getSigner(hre)
 
-        // Call the deploy script and display the result
         const result = await getBusinessLogicAddress(
             businessId,
             factory,

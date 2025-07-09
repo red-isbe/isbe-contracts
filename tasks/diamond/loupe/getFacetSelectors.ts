@@ -6,7 +6,7 @@ import { getSigner } from '../../../scripts/utils/getSigner'
 /**
  npx hardhat getFacetSelectors --network localhost \
   --diamond "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0" \
-    --facetAddress "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0" \
+  --facet-address "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0"
  */
 
 dotenv.config()

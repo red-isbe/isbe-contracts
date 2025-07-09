@@ -5,7 +5,7 @@ import { getSigner } from '../../scripts/utils/getSigner'
 
 /**
  npx hardhat getBusinessLogics --network localhost \
-  --factory "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0" \
+  --factory "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0"
  */
 
 dotenv.config()
@@ -17,7 +17,6 @@ task('getBusinessLogics', 'Deploys business logic contract')
 
         const signer = getSigner(hre)
 
-        // Call the deploy script and display the result
         const result = await getBusinessLogics(factory, signer)
 
         console.log('Business Logics:', result)

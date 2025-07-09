@@ -23,14 +23,12 @@ task('deployBusinessLogic', 'Deploys business logic contract')
 
         const signer = getSigner(hre)
 
-        // retrieves the bytecode from the bytecodePath
         const bytecodeContent = fs
             .readFileSync(path.resolve(bytecodePath), 'utf8')
             .trim()
 
         const bytecode = JSON.parse(bytecodeContent).bytecode
 
-        // Call the deploy script and display the result
         const result = await deployBusinessLogic(
             businessId,
             bytecode,

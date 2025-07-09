@@ -18,6 +18,9 @@ import './tasks/diamond/cut/facetUpdates'
 import './tasks/diamond/cut/interfaceCut'
 import './tasks/globalPause/pauseIsbe'
 import './tasks/globalPause/unpauseIsbe'
+import './tasks/pause/pause'
+import './tasks/pause/unpause'
+import './tasks/pause/isPaused'
 
 const config: HardhatUserConfig = {
     solidity: {
