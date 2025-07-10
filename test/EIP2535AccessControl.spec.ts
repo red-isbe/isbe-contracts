@@ -20,7 +20,7 @@ import {
     DEFAULT_ADMIN_ROLE,
     DIAMOND_CUT_RESOLVER_KEY,
     DIAMOND_LOUPE_RESOLVER_KEY,
-    GOVERNANCE_CONFIGURATION_MANAGER_ROLE,
+    GOVERNANCE_MANAGER_ROLE,
     ISBE_ROLE,
     PAUSER_ROLE,
 } from './constants'
@@ -33,7 +33,7 @@ describe('EIP2535AccessControlProxy', function () {
     let admin: Signer
     let nonAdmin: Signer
     let pauser: Signer
-    let governanceConfigurationManager: Signer
+    let governanceManager: Signer
     let EIP2535AccessControlFactory: EIP2535AccessControl__factory
     let DiamondCutAccessControlFacetFactory: DiamondCutAccessControlFacet__factory
     let DiamondLoupeFacetFactory: DiamondLoupeFacet__factory
@@ -49,7 +49,7 @@ describe('EIP2535AccessControlProxy', function () {
     let facetAddresses: string[]
 
     async function deployInitial() {
-        ;[admin, nonAdmin, pauser, governanceConfigurationManager] =
+        ;[admin, nonAdmin, pauser, governanceManager] =
             await ethers.getSigners()
         // Despliegue AccessControl logic
         ERC20TestWrapperFactory =
@@ -228,10 +228,8 @@ describe('EIP2535AccessControlProxy', function () {
                                 members: [await admin.getAddress()],
                             },
                             {
-                                role: GOVERNANCE_CONFIGURATION_MANAGER_ROLE,
-                                members: [
-                                    await governanceConfigurationManager.getAddress(),
-                                ],
+                                role: GOVERNANCE_MANAGER_ROLE,
+                                members: [await governanceManager.getAddress()],
                             },
                         ],
                         init: ethers.ZeroAddress,
@@ -246,19 +244,17 @@ describe('EIP2535AccessControlProxy', function () {
 
             it('GIVEN a deployed EIP2535 WHEN functionSelectos is empty THEN revert', async () => {
                 await expect(
-                    diamondCut
-                        .connect(governanceConfigurationManager)
-                        .diamondCut(
-                            [
-                                {
-                                    facetAddress: ethers.ZeroAddress,
-                                    action: 0,
-                                    items: [],
-                                },
-                            ],
-                            ethers.ZeroAddress,
-                            '0x'
-                        )
+                    diamondCut.connect(governanceManager).diamondCut(
+                        [
+                            {
+                                facetAddress: ethers.ZeroAddress,
+                                action: 0,
+                                items: [],
+                            },
+                        ],
+                        ethers.ZeroAddress,
+                        '0x'
+                    )
                 )
                     .to.be.revertedWithCustomError(
                         diamondCut,
@@ -269,15 +265,13 @@ describe('EIP2535AccessControlProxy', function () {
 
             it('GIVEN a deployed EIP2535 WHEN interfaces is empty THEN revert', async () => {
                 await expect(
-                    diamondCut
-                        .connect(governanceConfigurationManager)
-                        .interfaceCut([
-                            {
-                                facetAddress: ethers.ZeroAddress,
-                                action: 0,
-                                items: [],
-                            },
-                        ])
+                    diamondCut.connect(governanceManager).interfaceCut([
+                        {
+                            facetAddress: ethers.ZeroAddress,
+                            action: 0,
+                            items: [],
+                        },
+                    ])
                 )
                     .to.be.revertedWithCustomError(
                         diamondCut,
@@ -288,19 +282,17 @@ describe('EIP2535AccessControlProxy', function () {
 
             it('GIVEN a deployed EIP2535 WHEN Zero facetAddress for selectors is empty THEN revert', async () => {
                 await expect(
-                    diamondCut
-                        .connect(governanceConfigurationManager)
-                        .diamondCut(
-                            [
-                                {
-                                    facetAddress: ethers.ZeroAddress,
-                                    action: 0,
-                                    items: ['0x01234567'],
-                                },
-                            ],
-                            ethers.ZeroAddress,
-                            '0x'
-                        )
+                    diamondCut.connect(governanceManager).diamondCut(
+                        [
+                            {
+                                facetAddress: ethers.ZeroAddress,
+                                action: 0,
+                                items: ['0x01234567'],
+                            },
+                        ],
+                        ethers.ZeroAddress,
+                        '0x'
+                    )
                 )
                     .to.be.revertedWithCustomError(
                         diamondCut,
@@ -311,15 +303,13 @@ describe('EIP2535AccessControlProxy', function () {
 
             it('GIVEN a deployed EIP2535 WHEN Zero facetAddress for interfaces is empty THEN revert', async () => {
                 await expect(
-                    diamondCut
-                        .connect(governanceConfigurationManager)
-                        .interfaceCut([
-                            {
-                                facetAddress: ethers.ZeroAddress,
-                                action: 0,
-                                items: ['0x01234567'],
-                            },
-                        ])
+                    diamondCut.connect(governanceManager).interfaceCut([
+                        {
+                            facetAddress: ethers.ZeroAddress,
+                            action: 0,
+                            items: ['0x01234567'],
+                        },
+                    ])
                 )
                     .to.be.revertedWithCustomError(
                         diamondCut,
@@ -334,19 +324,17 @@ describe('EIP2535AccessControlProxy', function () {
                     (await diamondCutFacet.selectorsIntrospection())[0],
                 ]
                 await expect(
-                    diamondCut
-                        .connect(governanceConfigurationManager)
-                        .diamondCut(
-                            [
-                                {
-                                    facetAddress,
-                                    action: 0,
-                                    items,
-                                },
-                            ],
-                            ethers.ZeroAddress,
-                            '0x'
-                        )
+                    diamondCut.connect(governanceManager).diamondCut(
+                        [
+                            {
+                                facetAddress,
+                                action: 0,
+                                items,
+                            },
+                        ],
+                        ethers.ZeroAddress,
+                        '0x'
+                    )
                 )
                     .to.be.revertedWithCustomError(
                         diamondCut,
@@ -361,15 +349,13 @@ describe('EIP2535AccessControlProxy', function () {
                     (await diamondCutFacet.interfacesIntrospection())[0],
                 ]
                 await expect(
-                    diamondCut
-                        .connect(governanceConfigurationManager)
-                        .interfaceCut([
-                            {
-                                facetAddress,
-                                action: 0,
-                                items,
-                            },
-                        ])
+                    diamondCut.connect(governanceManager).interfaceCut([
+                        {
+                            facetAddress,
+                            action: 0,
+                            items,
+                        },
+                    ])
                 )
                     .to.be.revertedWithCustomError(
                         diamondCut,
@@ -382,19 +368,17 @@ describe('EIP2535AccessControlProxy', function () {
                 const facetAddress = await diamondCutFacet.getAddress()
                 const items = ['0x00000000']
                 await expect(
-                    diamondCut
-                        .connect(governanceConfigurationManager)
-                        .diamondCut(
-                            [
-                                {
-                                    facetAddress,
-                                    action: 0,
-                                    items,
-                                },
-                            ],
-                            ethers.ZeroAddress,
-                            '0x'
-                        )
+                    diamondCut.connect(governanceManager).diamondCut(
+                        [
+                            {
+                                facetAddress,
+                                action: 0,
+                                items,
+                            },
+                        ],
+                        ethers.ZeroAddress,
+                        '0x'
+                    )
                 )
                     .to.be.revertedWithCustomError(diamondCut, 'ZeroItem')
                     .withArgs(facetAddress, 0)
@@ -404,15 +388,13 @@ describe('EIP2535AccessControlProxy', function () {
                 const facetAddress = await diamondCutFacet.getAddress()
                 const items = ['0x00000000']
                 await expect(
-                    diamondCut
-                        .connect(governanceConfigurationManager)
-                        .interfaceCut([
-                            {
-                                facetAddress,
-                                action: 0,
-                                items,
-                            },
-                        ])
+                    diamondCut.connect(governanceManager).interfaceCut([
+                        {
+                            facetAddress,
+                            action: 0,
+                            items,
+                        },
+                    ])
                 )
                     .to.be.revertedWithCustomError(diamondCut, 'ZeroItem')
                     .withArgs(facetAddress, 0)
@@ -424,19 +406,17 @@ describe('EIP2535AccessControlProxy', function () {
                     (await diamondCutFacet.selectorsIntrospection())[0],
                 ]
                 await expect(
-                    diamondCut
-                        .connect(governanceConfigurationManager)
-                        .diamondCut(
-                            [
-                                {
-                                    facetAddress,
-                                    action: 0,
-                                    items,
-                                },
-                            ],
-                            ethers.ZeroAddress,
-                            '0x'
-                        )
+                    diamondCut.connect(governanceManager).diamondCut(
+                        [
+                            {
+                                facetAddress,
+                                action: 0,
+                                items,
+                            },
+                        ],
+                        ethers.ZeroAddress,
+                        '0x'
+                    )
                 )
                     .to.be.revertedWithCustomError(
                         diamondCut,
@@ -454,15 +434,13 @@ describe('EIP2535AccessControlProxy', function () {
                     (await diamondCutFacet.interfacesIntrospection())[0],
                 ]
                 await expect(
-                    diamondCut
-                        .connect(governanceConfigurationManager)
-                        .interfaceCut([
-                            {
-                                facetAddress,
-                                action: 0,
-                                items,
-                            },
-                        ])
+                    diamondCut.connect(governanceManager).interfaceCut([
+                        {
+                            facetAddress,
+                            action: 0,
+                            items,
+                        },
+                    ])
                 )
                     .to.be.revertedWithCustomError(
                         diamondCut,
@@ -480,19 +458,17 @@ describe('EIP2535AccessControlProxy', function () {
                     (await diamondCutFacet.selectorsIntrospection())[0],
                 ]
                 await expect(
-                    diamondCut
-                        .connect(governanceConfigurationManager)
-                        .diamondCut(
-                            [
-                                {
-                                    facetAddress,
-                                    action: 1,
-                                    items,
-                                },
-                            ],
-                            ethers.ZeroAddress,
-                            '0x'
-                        )
+                    diamondCut.connect(governanceManager).diamondCut(
+                        [
+                            {
+                                facetAddress,
+                                action: 1,
+                                items,
+                            },
+                        ],
+                        ethers.ZeroAddress,
+                        '0x'
+                    )
                 )
                     .to.be.revertedWithCustomError(
                         diamondCut,
@@ -507,15 +483,13 @@ describe('EIP2535AccessControlProxy', function () {
                     (await diamondCutFacet.interfacesIntrospection())[0],
                 ]
                 await expect(
-                    diamondCut
-                        .connect(governanceConfigurationManager)
-                        .interfaceCut([
-                            {
-                                facetAddress,
-                                action: 1,
-                                items,
-                            },
-                        ])
+                    diamondCut.connect(governanceManager).interfaceCut([
+                        {
+                            facetAddress,
+                            action: 1,
+                            items,
+                        },
+                    ])
                 )
                     .to.be.revertedWithCustomError(
                         diamondCut,
@@ -530,19 +504,17 @@ describe('EIP2535AccessControlProxy', function () {
                     (await diamondCutFacet.selectorsIntrospection())[0],
                 ]
                 await expect(
-                    diamondCut
-                        .connect(governanceConfigurationManager)
-                        .diamondCut(
-                            [
-                                {
-                                    facetAddress,
-                                    action: 1,
-                                    items,
-                                },
-                            ],
-                            ethers.ZeroAddress,
-                            '0x'
-                        )
+                    diamondCut.connect(governanceManager).diamondCut(
+                        [
+                            {
+                                facetAddress,
+                                action: 1,
+                                items,
+                            },
+                        ],
+                        ethers.ZeroAddress,
+                        '0x'
+                    )
                 )
                     .to.be.revertedWithCustomError(
                         diamondCut,
@@ -560,15 +532,13 @@ describe('EIP2535AccessControlProxy', function () {
                     (await diamondCutFacet.interfacesIntrospection())[0],
                 ]
                 await expect(
-                    diamondCut
-                        .connect(governanceConfigurationManager)
-                        .interfaceCut([
-                            {
-                                facetAddress,
-                                action: 1,
-                                items,
-                            },
-                        ])
+                    diamondCut.connect(governanceManager).interfaceCut([
+                        {
+                            facetAddress,
+                            action: 1,
+                            items,
+                        },
+                    ])
                 )
                     .to.be.revertedWithCustomError(
                         diamondCut,
@@ -583,33 +553,29 @@ describe('EIP2535AccessControlProxy', function () {
             it('GIVEN a deployed EIP2535 WHEN try to replace self assigned selector THEN revert', async () => {
                 const facetAddress = await diamondProxy.getAddress()
                 const items = ['0x98765432']
-                await diamondCut
-                    .connect(governanceConfigurationManager)
-                    .diamondCut(
+                await diamondCut.connect(governanceManager).diamondCut(
+                    [
+                        {
+                            facetAddress,
+                            action: 0,
+                            items,
+                        },
+                    ],
+                    ethers.ZeroAddress,
+                    '0x'
+                )
+                await expect(
+                    diamondCut.connect(governanceManager).diamondCut(
                         [
                             {
                                 facetAddress,
-                                action: 0,
+                                action: 1,
                                 items,
                             },
                         ],
                         ethers.ZeroAddress,
                         '0x'
                     )
-                await expect(
-                    diamondCut
-                        .connect(governanceConfigurationManager)
-                        .diamondCut(
-                            [
-                                {
-                                    facetAddress,
-                                    action: 1,
-                                    items,
-                                },
-                            ],
-                            ethers.ZeroAddress,
-                            '0x'
-                        )
                 )
                     .to.be.revertedWithCustomError(
                         diamondCut,
@@ -621,25 +587,21 @@ describe('EIP2535AccessControlProxy', function () {
             it('GIVEN a deployed EIP2535 WHEN try to replace self assigned interface THEN revert', async () => {
                 const facetAddress = await diamondProxy.getAddress()
                 const items = ['0x98765432']
-                await diamondCut
-                    .connect(governanceConfigurationManager)
-                    .interfaceCut([
+                await diamondCut.connect(governanceManager).interfaceCut([
+                    {
+                        facetAddress,
+                        action: 0,
+                        items,
+                    },
+                ])
+                await expect(
+                    diamondCut.connect(governanceManager).interfaceCut([
                         {
                             facetAddress,
-                            action: 0,
+                            action: 1,
                             items,
                         },
                     ])
-                await expect(
-                    diamondCut
-                        .connect(governanceConfigurationManager)
-                        .interfaceCut([
-                            {
-                                facetAddress,
-                                action: 1,
-                                items,
-                            },
-                        ])
                 )
                     .to.be.revertedWithCustomError(
                         diamondCut,
@@ -654,19 +616,17 @@ describe('EIP2535AccessControlProxy', function () {
                     (await diamondCutFacet.selectorsIntrospection())[0],
                 ]
                 await expect(
-                    diamondCut
-                        .connect(governanceConfigurationManager)
-                        .diamondCut(
-                            [
-                                {
-                                    facetAddress,
-                                    action: 1,
-                                    items,
-                                },
-                            ],
-                            ethers.ZeroAddress,
-                            '0x'
-                        )
+                    diamondCut.connect(governanceManager).diamondCut(
+                        [
+                            {
+                                facetAddress,
+                                action: 1,
+                                items,
+                            },
+                        ],
+                        ethers.ZeroAddress,
+                        '0x'
+                    )
                 )
                     .to.be.revertedWithCustomError(
                         diamondCut,
@@ -681,15 +641,13 @@ describe('EIP2535AccessControlProxy', function () {
                     (await diamondCutFacet.interfacesIntrospection())[0],
                 ]
                 await expect(
-                    diamondCut
-                        .connect(governanceConfigurationManager)
-                        .interfaceCut([
-                            {
-                                facetAddress,
-                                action: 1,
-                                items,
-                            },
-                        ])
+                    diamondCut.connect(governanceManager).interfaceCut([
+                        {
+                            facetAddress,
+                            action: 1,
+                            items,
+                        },
+                    ])
                 )
                     .to.be.revertedWithCustomError(
                         diamondCut,
@@ -702,19 +660,17 @@ describe('EIP2535AccessControlProxy', function () {
                 const facetAddress = await diamondCutFacet.getAddress()
                 const items = ['0x98765432']
                 await expect(
-                    diamondCut
-                        .connect(governanceConfigurationManager)
-                        .diamondCut(
-                            [
-                                {
-                                    facetAddress,
-                                    action: 1,
-                                    items,
-                                },
-                            ],
-                            ethers.ZeroAddress,
-                            '0x'
-                        )
+                    diamondCut.connect(governanceManager).diamondCut(
+                        [
+                            {
+                                facetAddress,
+                                action: 1,
+                                items,
+                            },
+                        ],
+                        ethers.ZeroAddress,
+                        '0x'
+                    )
                 )
                     .to.be.revertedWithCustomError(
                         diamondCut,
@@ -727,15 +683,13 @@ describe('EIP2535AccessControlProxy', function () {
                 const facetAddress = await diamondCutFacet.getAddress()
                 const items = ['0x98765432']
                 await expect(
-                    diamondCut
-                        .connect(governanceConfigurationManager)
-                        .interfaceCut([
-                            {
-                                facetAddress,
-                                action: 1,
-                                items,
-                            },
-                        ])
+                    diamondCut.connect(governanceManager).interfaceCut([
+                        {
+                            facetAddress,
+                            action: 1,
+                            items,
+                        },
+                    ])
                 )
                     .to.be.revertedWithCustomError(
                         diamondCut,
@@ -748,19 +702,17 @@ describe('EIP2535AccessControlProxy', function () {
                 const facetAddress = await diamondCutFacet.getAddress()
                 const items = ['0x98765432']
                 await expect(
-                    diamondCut
-                        .connect(governanceConfigurationManager)
-                        .diamondCut(
-                            [
-                                {
-                                    facetAddress,
-                                    action: 2,
-                                    items,
-                                },
-                            ],
-                            ethers.ZeroAddress,
-                            '0x'
-                        )
+                    diamondCut.connect(governanceManager).diamondCut(
+                        [
+                            {
+                                facetAddress,
+                                action: 2,
+                                items,
+                            },
+                        ],
+                        ethers.ZeroAddress,
+                        '0x'
+                    )
                 )
                     .to.be.revertedWithCustomError(
                         diamondCut,
@@ -773,15 +725,13 @@ describe('EIP2535AccessControlProxy', function () {
                 const facetAddress = await diamondCutFacet.getAddress()
                 const items = ['0x98765432']
                 await expect(
-                    diamondCut
-                        .connect(governanceConfigurationManager)
-                        .interfaceCut([
-                            {
-                                facetAddress,
-                                action: 2,
-                                items,
-                            },
-                        ])
+                    diamondCut.connect(governanceManager).interfaceCut([
+                        {
+                            facetAddress,
+                            action: 2,
+                            items,
+                        },
+                    ])
                 )
                     .to.be.revertedWithCustomError(
                         diamondCut,
@@ -794,19 +744,17 @@ describe('EIP2535AccessControlProxy', function () {
                 const facetAddress = ethers.ZeroAddress
                 const items = ['0x98765432']
                 await expect(
-                    diamondCut
-                        .connect(governanceConfigurationManager)
-                        .diamondCut(
-                            [
-                                {
-                                    facetAddress,
-                                    action: 2,
-                                    items,
-                                },
-                            ],
-                            ethers.ZeroAddress,
-                            '0x'
-                        )
+                    diamondCut.connect(governanceManager).diamondCut(
+                        [
+                            {
+                                facetAddress,
+                                action: 2,
+                                items,
+                            },
+                        ],
+                        ethers.ZeroAddress,
+                        '0x'
+                    )
                 )
                     .to.be.revertedWithCustomError(
                         diamondCut,
@@ -819,15 +767,13 @@ describe('EIP2535AccessControlProxy', function () {
                 const facetAddress = ethers.ZeroAddress
                 const items = ['0x98765432']
                 await expect(
-                    diamondCut
-                        .connect(governanceConfigurationManager)
-                        .interfaceCut([
-                            {
-                                facetAddress,
-                                action: 2,
-                                items,
-                            },
-                        ])
+                    diamondCut.connect(governanceManager).interfaceCut([
+                        {
+                            facetAddress,
+                            action: 2,
+                            items,
+                        },
+                    ])
                 )
                     .to.be.revertedWithCustomError(
                         diamondCut,
@@ -839,33 +785,29 @@ describe('EIP2535AccessControlProxy', function () {
             it('GIVEN a deployed EIP2535 WHEN try to remove self assigned selector THEN revert', async () => {
                 const facetAddress = await diamondProxy.getAddress()
                 const items = ['0x98765432']
-                await diamondCut
-                    .connect(governanceConfigurationManager)
-                    .diamondCut(
+                await diamondCut.connect(governanceManager).diamondCut(
+                    [
+                        {
+                            facetAddress,
+                            action: 0,
+                            items,
+                        },
+                    ],
+                    ethers.ZeroAddress,
+                    '0x'
+                )
+                await expect(
+                    diamondCut.connect(governanceManager).diamondCut(
                         [
                             {
-                                facetAddress,
-                                action: 0,
+                                facetAddress: ethers.ZeroAddress,
+                                action: 2,
                                 items,
                             },
                         ],
                         ethers.ZeroAddress,
                         '0x'
                     )
-                await expect(
-                    diamondCut
-                        .connect(governanceConfigurationManager)
-                        .diamondCut(
-                            [
-                                {
-                                    facetAddress: ethers.ZeroAddress,
-                                    action: 2,
-                                    items,
-                                },
-                            ],
-                            ethers.ZeroAddress,
-                            '0x'
-                        )
                 )
                     .to.be.revertedWithCustomError(
                         diamondCut,
@@ -877,25 +819,21 @@ describe('EIP2535AccessControlProxy', function () {
             it('GIVEN a deployed EIP2535 WHEN try to remove self assigned interface THEN revert', async () => {
                 const facetAddress = await diamondProxy.getAddress()
                 const items = ['0x98765432']
-                await diamondCut
-                    .connect(governanceConfigurationManager)
-                    .interfaceCut([
+                await diamondCut.connect(governanceManager).interfaceCut([
+                    {
+                        facetAddress,
+                        action: 0,
+                        items,
+                    },
+                ])
+                await expect(
+                    diamondCut.connect(governanceManager).interfaceCut([
                         {
-                            facetAddress,
-                            action: 0,
+                            facetAddress: ethers.ZeroAddress,
+                            action: 2,
                             items,
                         },
                     ])
-                await expect(
-                    diamondCut
-                        .connect(governanceConfigurationManager)
-                        .interfaceCut([
-                            {
-                                facetAddress: ethers.ZeroAddress,
-                                action: 2,
-                                items,
-                            },
-                        ])
                 )
                     .to.be.revertedWithCustomError(
                         diamondCut,
@@ -928,10 +866,8 @@ describe('EIP2535AccessControlProxy', function () {
                             members: [await admin.getAddress()],
                         },
                         {
-                            role: GOVERNANCE_CONFIGURATION_MANAGER_ROLE,
-                            members: [
-                                await governanceConfigurationManager.getAddress(),
-                            ],
+                            role: GOVERNANCE_MANAGER_ROLE,
+                            members: [await governanceManager.getAddress()],
                         },
                     ],
                     init: await erc20Impl.getAddress(),
@@ -960,20 +896,14 @@ describe('EIP2535AccessControlProxy', function () {
                     .diamondCut([], ethers.ZeroAddress, '0x')
             )
                 .to.be.revertedWithCustomError(diamondCut, 'AccountHasNoRole')
-                .withArgs(
-                    await nonAdmin.getAddress(),
-                    GOVERNANCE_CONFIGURATION_MANAGER_ROLE
-                )
+                .withArgs(await nonAdmin.getAddress(), GOVERNANCE_MANAGER_ROLE)
             await expect(
                 diamondCut
                     .connect(nonAdmin)
                     .facetUpdates([], ethers.ZeroAddress, '0x')
             )
                 .to.be.revertedWithCustomError(diamondCut, 'AccountHasNoRole')
-                .withArgs(
-                    await nonAdmin.getAddress(),
-                    GOVERNANCE_CONFIGURATION_MANAGER_ROLE
-                )
+                .withArgs(await nonAdmin.getAddress(), GOVERNANCE_MANAGER_ROLE)
         })
 
         it('GIVEN an ERC20 deployed WHEN deploy a EIP2535 proxy THEN cant use InterfaceCut without GOVERNANCE_CONFIGURATION_MANAGER_ROLE', async () => {
@@ -983,20 +913,14 @@ describe('EIP2535AccessControlProxy', function () {
                 )
             await expect(diamondCut.connect(nonAdmin).interfaceCut([]))
                 .to.be.revertedWithCustomError(diamondCut, 'AccountHasNoRole')
-                .withArgs(
-                    await nonAdmin.getAddress(),
-                    GOVERNANCE_CONFIGURATION_MANAGER_ROLE
-                )
+                .withArgs(await nonAdmin.getAddress(), GOVERNANCE_MANAGER_ROLE)
             await expect(
                 diamondCut
                     .connect(nonAdmin)
                     .facetUpdates([], ethers.ZeroAddress, '0x')
             )
                 .to.be.revertedWithCustomError(diamondCut, 'AccountHasNoRole')
-                .withArgs(
-                    await nonAdmin.getAddress(),
-                    GOVERNANCE_CONFIGURATION_MANAGER_ROLE
-                )
+                .withArgs(await nonAdmin.getAddress(), GOVERNANCE_MANAGER_ROLE)
         })
 
         it('GIVEN deployed EIP2535 proxy WHEN pause THEN cant use DiamondCut', async () => {
@@ -1010,14 +934,14 @@ describe('EIP2535AccessControlProxy', function () {
                 )
             await expect(
                 diamondCut
-                    .connect(governanceConfigurationManager)
+                    .connect(governanceManager)
                     .diamondCut([], ethers.ZeroAddress, '0x')
             )
                 .to.be.revertedWithCustomError(diamondCut, 'IsPaused')
                 .withArgs()
             await expect(
                 diamondCut
-                    .connect(governanceConfigurationManager)
+                    .connect(governanceManager)
                     .facetUpdates([], ethers.ZeroAddress, '0x')
             )
                 .to.be.revertedWithCustomError(diamondCut, 'IsPaused')
@@ -1033,16 +957,12 @@ describe('EIP2535AccessControlProxy', function () {
                 DiamondCutAccessControlFacetFactory.attach(
                     await diamondProxy.getAddress()
                 )
-            await expect(
-                diamondCut
-                    .connect(governanceConfigurationManager)
-                    .interfaceCut([])
-            )
+            await expect(diamondCut.connect(governanceManager).interfaceCut([]))
                 .to.be.revertedWithCustomError(diamondCut, 'IsPaused')
                 .withArgs()
             await expect(
                 diamondCut
-                    .connect(governanceConfigurationManager)
+                    .connect(governanceManager)
                     .facetUpdates([], ethers.ZeroAddress, '0x')
             )
                 .to.be.revertedWithCustomError(diamondCut, 'IsPaused')
@@ -1089,7 +1009,7 @@ describe('EIP2535AccessControlProxy', function () {
                 await diamondProxy.getAddress()
             ) as DiamondCutAccessControlFacet
             await diamondCut
-                .connect(governanceConfigurationManager)
+                .connect(governanceManager)
                 .facetUpdates(
                     [
                         await diamondCutFacet.getAddress(),
@@ -1113,7 +1033,7 @@ describe('EIP2535AccessControlProxy', function () {
             const diamondCut = DiamondCutAccessControlFacetFactory.attach(
                 await diamondProxy.getAddress()
             ) as DiamondCutAccessControlFacet
-            await diamondCut.connect(governanceConfigurationManager).diamondCut(
+            await diamondCut.connect(governanceManager).diamondCut(
                 [
                     {
                         facetAddress: await accessControlFacetImpl.getAddress(),
@@ -1199,17 +1119,15 @@ describe('EIP2535AccessControlProxy', function () {
             const diamondCut = DiamondCutAccessControlFacetFactory.attach(
                 await diamondProxy.getAddress()
             ) as DiamondCutAccessControlFacet
-            await diamondCut
-                .connect(governanceConfigurationManager)
-                .interfaceCut([
-                    {
-                        facetAddress: await accessControlFacetImpl.getAddress(),
-                        action: 0,
-                        items: [
-                            ...(await accessControlFacetImpl.interfacesIntrospection()),
-                        ],
-                    },
-                ])
+            await diamondCut.connect(governanceManager).interfaceCut([
+                {
+                    facetAddress: await accessControlFacetImpl.getAddress(),
+                    action: 0,
+                    items: [
+                        ...(await accessControlFacetImpl.interfacesIntrospection()),
+                    ],
+                },
+            ])
         })
 
         describe('diamondCut success', () => {
@@ -1223,19 +1141,17 @@ describe('EIP2535AccessControlProxy', function () {
 
                 const facetAddress = await erc20Impl_2.getAddress()
                 const items = [(await erc20Impl_2.selectorsIntrospection())[2]]
-                await diamondCut
-                    .connect(governanceConfigurationManager)
-                    .diamondCut(
-                        [
-                            {
-                                facetAddress,
-                                action: 1,
-                                items,
-                            },
-                        ],
-                        ethers.ZeroAddress,
-                        '0x'
-                    )
+                await diamondCut.connect(governanceManager).diamondCut(
+                    [
+                        {
+                            facetAddress,
+                            action: 1,
+                            items,
+                        },
+                    ],
+                    ethers.ZeroAddress,
+                    '0x'
+                )
                 const diamondLoupe: DiamondLoupeFacet =
                     DiamondLoupeFacetFactory.attach(
                         await diamondProxy.getAddress()
@@ -1262,19 +1178,17 @@ describe('EIP2535AccessControlProxy', function () {
                         await diamondProxy.getAddress()
                     )
                 await expect(
-                    diamondCut
-                        .connect(governanceConfigurationManager)
-                        .diamondCut(
-                            [
-                                {
-                                    facetAddress,
-                                    action: 2,
-                                    items,
-                                },
-                            ],
-                            ethers.ZeroAddress,
-                            '0x'
-                        )
+                    diamondCut.connect(governanceManager).diamondCut(
+                        [
+                            {
+                                facetAddress,
+                                action: 2,
+                                items,
+                            },
+                        ],
+                        ethers.ZeroAddress,
+                        '0x'
+                    )
                 ).to.emit(diamondCut, 'DiamondCut')
                 await expect(erc20.initializeErc20('newName', 'newSymbol', 8))
                     .to.revertedWithCustomError(

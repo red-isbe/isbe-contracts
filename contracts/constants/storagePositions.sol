@@ -41,6 +41,9 @@ bytes32 constant _BUSINESS_LOGIC_STORAGE_POSITION = 0xcc909a7aa58395856caf7fad6a
 // keccak256('isbe.contracts.erc165.storage');
 bytes32 constant _ERC165_STORAGE_POSITION = 0x5a9f265fc8293625a32b1b511d224627edb2b19485eec7afa363a8bc332ee1c9;
 
+// keccak256('isbe.contracts.configuration.management.storage');
+bytes32 constant _CONFIGURATION_MANAGEMENT_STORAGE_POSITION = 0x4beef12830ad37dac464f5aea92542e2dc4726542294394da538b824bc1f19f0;
+
 // keccak256('isbe.contracts.proxy.factory.storage');
 bytes32 constant _PROXY_FACTORY_STORAGE_POSITION = 0xaa8d33df53b16b2997ff500eedf8d4d1e966355596b60403562e732c9efb474a;
 

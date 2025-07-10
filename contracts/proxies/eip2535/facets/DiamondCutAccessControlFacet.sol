@@ -13,9 +13,7 @@ import {IEIP2535Introspection} from '../interfaces/IEIP2535Introspection.sol';
 import {
     AccessControlInternal
 } from '../../../access/accessControl/AccessControlInternal.sol';
-import {
-    _GOVERNANCE_CONFIGURATION_MANAGER_ROLE
-} from '../../../constants/roles.sol';
+import {_GOVERNANCE_MANAGER_ROLE} from '../../../constants/roles.sol';
 
 /**
  * @title Diamond Cut Access Control Facet
@@ -42,23 +40,13 @@ contract DiamondCutAccessControlFacet is
         ItemCut[] calldata _facetCuts,
         address _init,
         bytes calldata _calldata
-    )
-        external
-        override
-        onlyRole(_GOVERNANCE_CONFIGURATION_MANAGER_ROLE)
-        whenNotPaused
-    {
+    ) external override onlyRole(_GOVERNANCE_MANAGER_ROLE) whenNotPaused {
         _diamondCut(_facetCuts, _init, _calldata);
     }
 
     function interfaceCut(
         ItemCut[] calldata _interfaceCuts
-    )
-        external
-        override
-        onlyRole(_GOVERNANCE_CONFIGURATION_MANAGER_ROLE)
-        whenNotPaused
-    {
+    ) external override onlyRole(_GOVERNANCE_MANAGER_ROLE) whenNotPaused {
         _interfaceCut(_interfaceCuts);
     }
 
@@ -66,12 +54,7 @@ contract DiamondCutAccessControlFacet is
         address[] memory _facetAddresses,
         address _init,
         bytes calldata _calldata
-    )
-        external
-        override
-        onlyRole(_GOVERNANCE_CONFIGURATION_MANAGER_ROLE)
-        whenNotPaused
-    {
+    ) external override onlyRole(_GOVERNANCE_MANAGER_ROLE) whenNotPaused {
         _facetUpdates(_facetAddresses, _init, _calldata);
     }
 

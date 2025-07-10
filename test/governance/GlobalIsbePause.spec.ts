@@ -29,7 +29,7 @@ import {
     HASH_TIMESTAMP_RESOLVER_KEY,
     HASH_TIMESTAMP_ROLE,
     ISBE_PAUSER_ROLE,
-    ISBE_ROLE,
+    BUSINESS_LOGIC_DEPLOYER_ROLE,
     OWNABLE_RESOLVER_KEY,
     PAUSE_RESOLVER_KEY,
     PROXY_DEPLOYER_ROLE,
@@ -130,7 +130,7 @@ describe('GlobalIsbePause', function () {
                         members: [adminAddress],
                     },
                     {
-                        role: ISBE_ROLE,
+                        role: BUSINESS_LOGIC_DEPLOYER_ROLE,
                         members: [isbeAddress],
                     },
                     {

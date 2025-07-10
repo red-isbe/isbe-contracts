@@ -7,6 +7,7 @@
 - [factory](factory.md)
 - [factory/accessControl](factory/accessControl.md)
 - [factory/businesslogic](factory/businesslogic.md)
+- [factory/configurationmanagement](factory/configurationmanagement.md)
 - [factory/globalisbepause](factory/globalisbepause.md)
 - [factory/proxyfactory](factory/proxyfactory.md)
 - [hashtimestamp](hashtimestamp.md)

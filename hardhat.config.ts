@@ -4,6 +4,7 @@ import '@nomicfoundation/hardhat-chai-matchers'
 import '@typechain/hardhat'
 import 'hardhat-contract-sizer'
 import 'solidity-docgen'
+import 'hardhat-gas-reporter'
 
 const config: HardhatUserConfig = {
     solidity: {
