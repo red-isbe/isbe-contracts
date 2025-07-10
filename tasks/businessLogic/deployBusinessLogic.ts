@@ -8,7 +8,7 @@ import { getSigner } from '../../scripts/utils/getSigner'
 /**
  npx hardhat deployBusinessLogic --network localhost \
   --business-id "0xf4e751bf7e74c25f287942d8743e3d0fdfb08f29556e786178a50e2d69dc403a" \
-  --factory "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0" \
+  --factory "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6" \
   --bytecode-path "./artifacts/contracts/hashtimestamp/HashTimestampFacet.sol/HashTimestampFacet.json"
  */
 

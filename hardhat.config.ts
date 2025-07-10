@@ -32,6 +32,12 @@ import './tasks/access/accessControl/hasRole'
 import './tasks/access/accessControl/renounceRole'
 import './tasks/access/accessControl/revokeRole'
 import './tasks/access/accessControl/setRoleAdmin'
+import './tasks/configMgmt/facets'
+import './tasks/configMgmt/facetAddress'
+import './tasks/configMgmt/facetAddresses'
+import './tasks/configMgmt/facetSelectors'
+import './tasks/configMgmt/getConfig'
+import './tasks/configMgmt/setConfig'
 
 const config: HardhatUserConfig = {
     solidity: {

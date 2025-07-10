@@ -8,7 +8,7 @@ import { getSigner } from '../../../scripts/utils/getSigner'
   --facet-addresses '["0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0", "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0"]' \
   --actions '[1,1]' \
   --items '[["0x12345678","0x12345678"],["0x12345678","0x12345678"]]' \
-  --diamond "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0"
+  --diamond "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6"
  */
 
 dotenv.config()

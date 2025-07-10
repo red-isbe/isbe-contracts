@@ -6,7 +6,7 @@ import { setRoleAdmin } from '../../../scripts/access/accessControl/setRoleAdmin
  npx hardhat setRoleAdmin --network localhost \
   --role "0x8c911f4537972e7549dbbd37a96b929a4b480f4fb156fc6344524bdf2ca50aa1" \
   --admin-role "0xc4fca0e2ae1ffe7494d7a1a0ee458ac6b6d84e022ad4f87c1742be5599e5e7fb" \
-  --diamond "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0"
+  --diamond "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6"
  */
 
 task('setRoleAdmin', 'Grants a role to an account')

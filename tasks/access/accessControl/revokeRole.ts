@@ -6,7 +6,7 @@ import { revokeRole } from '../../../scripts/access/accessControl/revokeRole'
  npx hardhat revokeRole --network localhost \
   --role "0x8c911f4537972e7549dbbd37a96b929a4b480f4fb156fc6344524bdf2ca50aa1" \
   --account "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266" \
-  --diamond "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0"
+  --diamond "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6"
  */
 
 task('revokeRole', 'Grants a role to an account')

@@ -15,9 +15,15 @@ import {
     ISBEPauseFacet,
     DiamondCutAccessControlFacet,
     DiamondLoupeFacet,
+    ConfigurationManagementFacet,
+    ConfigurationManagementFacet__factory,
 } from '../../typechain-types'
 import {
+    BUSINESS_LOGIC_DEPLOYER_ROLE,
     DEFAULT_ADMIN_ROLE,
+    GOVERNANCE_CONFIGURATION_MANAGER_ROLE,
+    GOVERNANCE_MANAGER_ROLE,
+    ISBE_PAUSER_ROLE,
     ISBE_ROLE,
     PROXY_DEPLOYER_ROLE,
 } from '../../test/constants'
@@ -30,6 +36,7 @@ let BusinessLogicFactoryFactory: BusinessLogicFactoryFacet__factory
 let ProxyFactoryFacetFactory: ProxyFactoryFacet__factory
 let DiamondCutFacetFactory: DiamondCutAccessControlFacet__factory
 let DiamondLoupeFacetFactory: DiamondLoupeFacet__factory
+let ConfigMgmtFacetFactory: ConfigurationManagementFacet__factory
 let diamondProxy: EIP2535AccessControl
 let businessLogicFactoryFacet: BusinessLogicFactoryFacet
 let proxyFactoryFacet: ProxyFactoryFacet
@@ -38,6 +45,7 @@ let accessControlFacet: AccessControlGovernanceFacet
 let pauseFacet: ISBEPauseFacet
 let diamondCutFacet: DiamondCutAccessControlFacet
 let diamondLoupeFacet: DiamondLoupeFacet
+let configMgmtFacet: ConfigurationManagementFacet
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function deployInitial(ethers: any) {
@@ -61,6 +69,9 @@ async function deployInitial(ethers: any) {
     )
     DiamondLoupeFacetFactory =
         await ethers.getContractFactory('DiamondLoupeFacet')
+    ConfigMgmtFacetFactory = await ethers.getContractFactory(
+        'ConfigurationManagementFacet'
+    )
 
     businessLogicFactoryFacet = await BusinessLogicFactoryFactory.deploy()
     proxyFactoryFacet = await ProxyFactoryFacetFactory.deploy()
@@ -69,6 +80,7 @@ async function deployInitial(ethers: any) {
     pauseFacet = await IsbePausableFacetFactory.deploy()
     diamondCutFacet = await DiamondCutFacetFactory.deploy()
     diamondLoupeFacet = await DiamondLoupeFacetFactory.deploy()
+    configMgmtFacet = await ConfigMgmtFacetFactory.deploy()
 
     await businessLogicFactoryFacet.waitForDeployment()
     await proxyFactoryFacet.waitForDeployment()
@@ -77,6 +89,7 @@ async function deployInitial(ethers: any) {
     await pauseFacet.waitForDeployment()
     await diamondCutFacet.waitForDeployment()
     await diamondLoupeFacet.waitForDeployment()
+    await configMgmtFacet.waitForDeployment()
 }
 
 export async function deployIsbeFactory(
@@ -94,9 +107,9 @@ export async function deployIsbeFactory(
         await accessControlFacet.getAddress(),
         await pauseFacet.getAddress(),
         await proxyFactoryFacet.getAddress(),
-        //await configurationManagementFacet.getAddress(),
         await diamondCutFacet.getAddress(),
         await diamondLoupeFacet.getAddress(),
+        await configMgmtFacet.getAddress(),
     ]
     diamondProxy = await EIP2535AccessControlFactory.deploy(facetAddresses, {
         rbacs: [
@@ -110,6 +123,22 @@ export async function deployIsbeFactory(
             },
             {
                 role: PROXY_DEPLOYER_ROLE,
+                members: [accountAddress],
+            },
+            {
+                role: GOVERNANCE_CONFIGURATION_MANAGER_ROLE,
+                members: [accountAddress],
+            },
+            {
+                role: BUSINESS_LOGIC_DEPLOYER_ROLE,
+                members: [accountAddress],
+            },
+            {
+                role: ISBE_PAUSER_ROLE,
+                members: [accountAddress],
+            },
+            {
+                role: GOVERNANCE_MANAGER_ROLE,
                 members: [accountAddress],
             },
         ],

@@ -5,7 +5,7 @@ import { getRolesByAccountCount } from '../../../scripts/access/accessControl/ge
 /**
  npx hardhat getRolesByAccountCount --network localhost \
   --account "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266" \
-  --diamond "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0"
+  --diamond "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6"
  */
 
 task('getRolesByAccountCount', 'Grants a role to an account')
