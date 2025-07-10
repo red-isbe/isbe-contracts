@@ -21,6 +21,7 @@ import {
 import {
     ACCESS_CONTROL_RESOLVER_KEY,
     ASSET_EVENT_TRACKER_RESOLVER_KEY,
+    BUSINESS_LOGIC_DEPLOYER_ROLE,
     DEFAULT_ADMIN_ROLE,
     DIAMOND_CUT_RESOLVER_KEY,
     DIAMOND_LOUPE_RESOLVER_KEY,
@@ -30,7 +31,6 @@ import {
     ERC20_RESOLVER_KEY,
     ERC20_SNAPSHOT_RESOLVER_KEY,
     HASH_TIMESTAMP_RESOLVER_KEY,
-    ISBE_ROLE,
     MOCK_TIMESTAMP_RESOLVER_KEY,
     OWNABLE_RESOLVER_KEY,
     PAUSE_RESOLVER_KEY,
@@ -54,7 +54,7 @@ async function deployFactory(
                 members: owners,
             },
             {
-                role: ISBE_ROLE,
+                role: BUSINESS_LOGIC_DEPLOYER_ROLE,
                 members: owners,
             },
             {
