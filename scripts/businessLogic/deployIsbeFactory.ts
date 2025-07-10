@@ -5,13 +5,13 @@ import {
     BusinessLogicFactoryFacet,
     ProxyFactoryFacet__factory,
     ProxyFactoryFacet,
-    AccessControlFacet__factory,
+    AccessControlGovernanceFacet__factory,
     ISBEPauseFacet__factory,
     DiamondCutAccessControlFacet__factory,
     DiamondLoupeFacet__factory,
     GlobalIsbePauseFacet__factory,
     GlobalIsbePauseFacet,
-    AccessControlFacet,
+    AccessControlGovernanceFacet,
     ISBEPauseFacet,
     DiamondCutAccessControlFacet,
     DiamondLoupeFacet,
@@ -22,7 +22,7 @@ import {
     PROXY_DEPLOYER_ROLE,
 } from '../../test/constants'
 
-let AccessControlFacetFactory: AccessControlFacet__factory
+let AccessControlFacetFactory: AccessControlGovernanceFacet__factory
 let IsbePausableFacetFactory: ISBEPauseFacet__factory
 let GlobalIsbePauseFacetFactory: GlobalIsbePauseFacet__factory
 let EIP2535AccessControlFactory: EIP2535AccessControl__factory
@@ -34,7 +34,7 @@ let diamondProxy: EIP2535AccessControl
 let businessLogicFactoryFacet: BusinessLogicFactoryFacet
 let proxyFactoryFacet: ProxyFactoryFacet
 let globalIsbePauseFacet: GlobalIsbePauseFacet
-let accessControlFacet: AccessControlFacet
+let accessControlFacet: AccessControlGovernanceFacet
 let pauseFacet: ISBEPauseFacet
 let diamondCutFacet: DiamondCutAccessControlFacet
 let diamondLoupeFacet: DiamondLoupeFacet
@@ -52,8 +52,9 @@ async function deployInitial(ethers: any) {
     GlobalIsbePauseFacetFactory = await ethers.getContractFactory(
         'GlobalIsbePauseFacet'
     )
-    AccessControlFacetFactory =
-        await ethers.getContractFactory('AccessControlFacet')
+    AccessControlFacetFactory = await ethers.getContractFactory(
+        'AccessControlGovernanceFacet'
+    )
     IsbePausableFacetFactory = await ethers.getContractFactory('ISBEPauseFacet')
     DiamondCutFacetFactory = await ethers.getContractFactory(
         'DiamondCutAccessControlFacet'
