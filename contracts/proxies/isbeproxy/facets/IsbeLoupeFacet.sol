@@ -1,35 +1,24 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
-/******************************************************************************\
-* Author: Nick Mudge <nick@perfectabstractions.com>, Twitter/Github: @mudgen
-* EIP-2535 Diamonds
-/******************************************************************************/
 
-// The functions in DiamondLoupeFacet MUST be added to a diamond.
-// The EIP-2535 Diamond standard requires these functions.
-
-import {_DIAMOND_LOUPE_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
-import {IDiamondLoupe} from '../interfaces/IDiamondLoupe.sol';
-import {IEIP2535Introspection} from '../interfaces/IEIP2535Introspection.sol';
-import {EIP2535Internal} from '../EIP2535Internal.sol';
+import {_ISBE_LOUPE_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
+import {IsbeProxyInternal} from '../IsbeProxyInternal.sol';
+import {IEIP2535Introspection} from '../../eip2535/interfaces/IEIP2535Introspection.sol';
+import {IDiamondLoupe} from '../../eip2535/interfaces/IDiamondLoupe.sol';
 import {IERC165} from '@openzeppelin/contracts/utils/introspection/IERC165.sol';
 import {ERC165Internal} from '../../../core/ERC165Internal.sol';
 
 /**
- * @title Diamond Loupe Facet
+ * @title IsbeLoupeFacet
+ * @notice Diamond facet providing introspection capabilities for ISBE proxies
+ * @dev Implements Diamond Loupe functions for EIP-2535 compliance with ERC-165 support
  * @author ISBE
- * @notice Offers standard EIP-2535 "loupe" functions for inspection.
- * @dev An essential facet for inspecting a diamond's structure.
- *      It implements `IDiamondLoupe` and `IERC165` for discovery.
- *      Callers can view facets, their functions, and addresses.
- *      It also supports `IEIP2535Introspection` to declare its role.
  */
-// solhint-disable no-inline-assembly
-contract DiamondLoupeFacet is
+contract IsbeLoupeFacet is
     IERC165,
-    ERC165Internal,
-    EIP2535Internal,
     IDiamondLoupe,
+    IsbeProxyInternal,
+    ERC165Internal,
     IEIP2535Introspection
 {
     // Diamond Loupe Functions
@@ -88,9 +77,10 @@ contract DiamondLoupeFacet is
     function interfacesIntrospection()
         external
         pure
+        override
         returns (bytes4[] memory interfaces_)
     {
-        return _implementedInterfaces();
+        interfaces_ = _implementedInterfaces();
     }
 
     function businessIdIntrospection()
@@ -99,7 +89,7 @@ contract DiamondLoupeFacet is
         override
         returns (bytes32 businessId_)
     {
-        businessId_ = _DIAMOND_LOUPE_RESOLVER_KEY;
+        businessId_ = _ISBE_LOUPE_RESOLVER_KEY;
     }
 
     function selectorsIntrospection()
@@ -120,7 +110,6 @@ contract DiamondLoupeFacet is
     function _implementedInterfaces()
         internal
         pure
-        virtual
         override
         returns (bytes4[] memory interfaces_)
     {
@@ -130,4 +119,3 @@ contract DiamondLoupeFacet is
         interfaces_[--interfacesLength] = type(IERC165).interfaceId;
     }
 }
-// solhint-enable no-inline-assembly

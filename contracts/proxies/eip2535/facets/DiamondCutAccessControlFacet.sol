@@ -10,9 +10,7 @@ import {_DIAMOND_CUT_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
 import {IDiamondCut} from '../interfaces/IDiamondCut.sol';
 import {EIP2535Internal} from '../EIP2535Internal.sol';
 import {IEIP2535Introspection} from '../interfaces/IEIP2535Introspection.sol';
-import {
-    AccessControlInternal
-} from '../../../access/accessControl/AccessControlInternal.sol';
+import {AccessControlInternal} from '../../../access/accessControl/AccessControlInternal.sol';
 import {_GOVERNANCE_MANAGER_ROLE} from '../../../constants/roles.sol';
 
 /**

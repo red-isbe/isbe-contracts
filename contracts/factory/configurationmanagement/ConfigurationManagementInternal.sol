@@ -10,7 +10,13 @@ import {
     _DIAMOND_LOUPE_RESOLVER_KEY,
     _DIAMOND_CUT_RESOLVER_KEY,
     _ACCESS_CONTROL_RESOLVER_KEY,
-    _PAUSE_RESOLVER_KEY
+    _PAUSE_RESOLVER_KEY,
+    _ISBE_LOUPE_RESOLVER_KEY,
+    _ISBE_CUT_RESOLVER_KEY,
+    _BUSINESS_LOGIC_FACTORY_RESOLVER_KEY,
+    _CONFIGURATION_MANAGEMENT_RESOLVER_KEY,
+    _GLOBAL_ISBE_PAUSABLE_RESOLVER_KEY,
+    _PROXY_FACTORY_RESOLVER_KEY
 } from '../../constants/resolverKeys.sol';
 import {IConfigurationManagement} from './IConfigurationManagement.sol';
 import {IProxyFactory} from '../proxyfactory/IProxyFactory.sol';
@@ -28,7 +34,6 @@ abstract contract ConfigurationManagementInternal is
     BusinessLogicFactoryInternal,
     InitializeBusinessLogic
 {
-    using EnumerableSet for EnumerableSet.AddressSet;
     using EnumerableSet for EnumerableSet.Bytes32Set;
     using EnumerableSet for EnumerableSet.AddressSet;
 
@@ -104,6 +109,29 @@ abstract contract ConfigurationManagementInternal is
                 ++index;
             }
         }
+    }
+
+    function _checkConfiguration(
+        bytes32 configurationId,
+        uint256 version
+    ) internal view {
+        require(
+            _existsConfiguration(configurationId, version),
+            IConfigurationManagement.InvalidConfiguration(
+                configurationId,
+                version
+            )
+        );
+    }
+
+    function _existsConfiguration(
+        bytes32 configurationId,
+        uint256 version
+    ) internal view returns (bool) {
+        return
+            _configurationManagementStorage()
+                .businessIds[configurationId][_latest(configurationId, version)]
+                .length() > 0;
     }
 
     function _getFacets(
@@ -296,11 +324,11 @@ abstract contract ConfigurationManagementInternal is
         (
             businessAddresses_[--businessAddressesLength],
             businessData_[businessAddressesLength]
-        ) = _getBusinessData(_DIAMOND_LOUPE_RESOLVER_KEY);
+        ) = _getBusinessData(_ISBE_LOUPE_RESOLVER_KEY);
         (
             businessAddresses_[--businessAddressesLength],
             businessData_[businessAddressesLength]
-        ) = _getBusinessData(_DIAMOND_CUT_RESOLVER_KEY);
+        ) = _getBusinessData(_ISBE_CUT_RESOLVER_KEY);
         (
             businessAddresses_[--businessAddressesLength],
             businessData_[businessAddressesLength]
@@ -378,7 +406,13 @@ abstract contract ConfigurationManagementInternal is
             businessId != _DIAMOND_CUT_RESOLVER_KEY &&
             businessId != _DIAMOND_LOUPE_RESOLVER_KEY &&
             businessId != _ACCESS_CONTROL_RESOLVER_KEY &&
-            businessId != _PAUSE_RESOLVER_KEY;
+            businessId != _PAUSE_RESOLVER_KEY &&
+            businessId != _ISBE_LOUPE_RESOLVER_KEY &&
+            businessId != _ISBE_CUT_RESOLVER_KEY &&
+            businessId != _BUSINESS_LOGIC_FACTORY_RESOLVER_KEY &&
+            businessId != _CONFIGURATION_MANAGEMENT_RESOLVER_KEY &&
+            businessId != _GLOBAL_ISBE_PAUSABLE_RESOLVER_KEY &&
+            businessId != _PROXY_FACTORY_RESOLVER_KEY;
     }
 
     function _configurationManagementStorage()

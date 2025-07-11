@@ -1,16 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {
-    ConfigurationManagementInternal
-} from './ConfigurationManagementInternal.sol';
+import {ConfigurationManagementInternal} from './ConfigurationManagementInternal.sol';
 import {IConfigurationManagement} from './IConfigurationManagement.sol';
-import {
-    IDiamondLoupe
-} from '../../proxies/eip2535/interfaces/IDiamondLoupe.sol';
-import {
-    _GOVERNANCE_CONFIGURATION_MANAGER_ROLE
-} from '../../constants/roles.sol';
+import {IDiamondLoupe} from '../../proxies/eip2535/interfaces/IDiamondLoupe.sol';
+import {_GOVERNANCE_CONFIGURATION_MANAGER_ROLE} from '../../constants/roles.sol';
 
 /**
  * @title Configuration Management
@@ -48,6 +42,13 @@ contract ConfigurationManagement is
         uint256 version
     ) external view override returns (BusinessData[] memory businessData_) {
         businessData_ = _getConfiguration(configurationId, version);
+    }
+
+    function checkConfiguration(
+        bytes32 configurationId,
+        uint256 version
+    ) external view override {
+        _checkConfiguration(configurationId, version);
     }
 
     function facets(

@@ -163,6 +163,19 @@ but provides no specific error data (i.e., the return data size is zero)._
 | \_calldata                      | bytes   | The raw call data that was sent in the failed delegate call.             |
 | \_error                         | bytes   | The empty byte string returned from the failed call.                     |
 
+### NoBytecodeAtAddress
+
+```solidity
+error NoBytecodeAtAddress(address _contractAddress, string _message)
+```
+
+#### Parameters
+
+| Name              | Type    | Description                                        |
+| ----------------- | ------- | -------------------------------------------------- |
+| \_contractAddress | address | The address that was expected to contain bytecode. |
+| \_message         | string  | A descriptive error message.                       |
+
 ### \_initializeBusinessLogic
 
 ```solidity
@@ -184,3 +197,9 @@ message, it reverts with the custom `InitializationFunctionReverted` error inste
 | ---------- | ------- | ------------------------------------------------------------------------------- |
 | \_init     | address | The address of the implementation contract containing the logic to be executed. |
 | \_calldata | bytes   | The encoded function call and arguments to be executed by the `_init` contract. |
+
+### \_enforceHasContractCode
+
+```solidity
+function _enforceHasContractCode(address _contract, string _errorMessage) internal view
+```

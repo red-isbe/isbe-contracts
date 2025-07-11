@@ -14,13 +14,10 @@ import {IERC165} from '@openzeppelin/contracts/utils/introspection/IERC165.sol';
  * enabling standardised interface detection.
  */
 abstract contract ERC165Internal {
-    function _checkERC165ForbiddenInterfaces(
+    function _isERC165ForbiddenInterfaces(
         bytes4 _interfaceId
     ) internal pure virtual returns (bool) {
-        if (_interfaceId == 0xffffffff) {
-            return false; // 0xffffffff is not a valid interface ID
-        }
-        return true;
+        return _interfaceId != 0xffffffff;
     }
 
     function _supportsERC165Interface(

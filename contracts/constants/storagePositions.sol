@@ -5,6 +5,9 @@ pragma solidity ^0.8.28;
 // keccak256('isbe.contracts.diamond.storage')
 bytes32 constant _DIAMOND_STORAGE_POSITION = 0x14a872dcf5b21c7ac5c7a21241cb3088ada7d77b91d45cb734d07fb6e61a0e4e;
 
+// keccak256('isbe.contracts.isbe.proxy.storage')
+bytes32 constant _ISBE_PROXY_STORAGE_POSITION = 0x04fb5b1674918eac185959cfae932d99373bdf254d85286d6561bd7c87ae22e8;
+
 // keccak256('isbe.contracts.erc20.storage');
 bytes32 constant _ERC20_STORAGE_POSITION = 0xd93ac5c223af8b55b10aca6a04761f021176cb4baf866e7484f3c8d7325c3a93;
 

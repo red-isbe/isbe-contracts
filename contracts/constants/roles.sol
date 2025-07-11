@@ -18,6 +18,9 @@ bytes32 constant _GOVERNANCE_MANAGER_ROLE = 0x44c016b7c7762ceb1f7aab96b102f73313
 // keccak256('isbe.contracts.role.governance.configuration.manager');
 bytes32 constant _GOVERNANCE_CONFIGURATION_MANAGER_ROLE = 0xc4fca0e2ae1ffe7494d7a1a0ee458ac6b6d84e022ad4f87c1742be5599e5e7fb;
 
+// keccak256('isbe.contracts.role.configuration.manager');
+bytes32 constant _CONFIGURATION_MANAGER_ROLE = 0xdc4b85a1ab8a3dbc4b47e1626cb620f2a5a5e4753d049a2d71f76e2cf26b1e0b;
+
 // keccak256('isbe.contracts.role.isbe.pauser');
 bytes32 constant _ISBE_PAUSER_ROLE = 0x643e67198985fdbcfc2807234f580aa2cab96bb7efe1ab3158da79255d493114;
 

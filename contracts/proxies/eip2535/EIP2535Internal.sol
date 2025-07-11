@@ -6,22 +6,21 @@ import {IDiamondLoupe} from './interfaces/IDiamondLoupe.sol';
 import {IDiamond} from './interfaces/IDiamond.sol';
 import {IEIP2535Introspection} from './interfaces/IEIP2535Introspection.sol';
 import {InitializeBusinessLogic} from '../../utils/InitializeBusinessLogic.sol';
-import {_DIAMOND_STORAGE_POSITION} from '../../constants/storagePositions.sol';
 import {PauseInternalCommon} from '../../pause/PauseInternalCommon.sol';
+import {_DIAMOND_STORAGE_POSITION} from '../../constants/storagePositions.sol';
+import {FacetAddressResolver} from './FacetAddressResolver.sol';
 
 // solhint-disable no-inline-assembly
 /**
- * @title Internal EIP-2535 Diamond Logic
+ * @title EIP2535Internal
+ * @notice Internal implementation of the EIP-2535 Diamond Standard
+ * @dev Manages facets, selectors, and interfaces for Diamond proxy contracts
  * @author ISBE
- * @notice Provides the core internal functions and storage for managing facets and interfaces in an EIP-2535 Diamond.
- * @dev This abstract contract is the engine of the diamond, handling the addition, replacement, and removal of
- *      functions (selectors) and supported interfaces. It is designed to be inherited by other contracts and
- *      uses a dedicated storage slot (`_DIAMOND_STORAGE_POSITION`) to prevent storage layout collisions.
- *      It contains the logic for the `diamondCut`, interface management, and the Diamond Loupe introspection functions.
  */
 abstract contract EIP2535Internal is
     PauseInternalCommon,
-    InitializeBusinessLogic
+    InitializeBusinessLogic,
+    FacetAddressResolver
 {
     /**
      * @dev A struct that associates a facet's address with its position within an array.
@@ -49,9 +48,6 @@ abstract contract EIP2535Internal is
         bytes4[] interfaces;
     }
 
-    /// @param _contractAddress The address that was expected to contain bytecode.
-    /// @param _message A descriptive error message.
-    error NoBytecodeAtAddress(address _contractAddress, string _message);
     /// @param _facetAddress The address provided for the removal action, which must be the zero address.
     error RemoveFacetAddressMustBeZeroAddress(address _facetAddress);
     /// @param _facetAddress The facet address for which an empty items array was provided.
@@ -328,19 +324,6 @@ abstract contract EIP2535Internal is
         _initializeBusinessLogic(_init, _calldata);
     }
 
-    function _enforceHasContractCode(
-        address _contract,
-        string memory _errorMessage
-    ) internal view {
-        uint256 contractSize;
-        assembly {
-            contractSize := extcodesize(_contract)
-        }
-        if (contractSize == 0) {
-            revert NoBytecodeAtAddress(_contract, _errorMessage);
-        }
-    }
-
     function _facets()
         internal
         view
@@ -482,7 +465,9 @@ abstract contract EIP2535Internal is
         }
     }
 
-    function _facetAddress(bytes4 _signature) internal view returns (address) {
+    function _facetAddress(
+        bytes4 _signature
+    ) internal view override returns (address) {
         return
             _diamondStorage()
                 .facetAddressAndSelectorPosition[_signature]

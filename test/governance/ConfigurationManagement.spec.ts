@@ -12,10 +12,10 @@ import {
     HashTimestampFacet__factory,
     AssetEventTrackerTestWrapper__factory,
     Ownable2StepFacet__factory,
-    DiamondCutAccessControlFacet__factory,
-    DiamondLoupeFacet__factory,
     ConfigurationManagementFacet__factory,
     ConfigurationManagementFacet,
+    IsbeCutFacet__factory,
+    IsbeLoupeFacet__factory,
 } from '../../typechain-types'
 import { Signer } from 'ethers'
 import {
@@ -32,6 +32,8 @@ import {
     GOVERNANCE_CONFIGURATION_MANAGER_ROLE,
     CONFIGURATION_MANAGEMENT_RESOLVER_KEY,
     RANDOM_HASH_FOR_CONFIGURATION_ID,
+    ISBE_CUT_RESOLVER_KEY,
+    ISBE_LOUPE_RESOLVER_KEY,
 } from '../constants'
 
 describe('ConfigurationManagement', function () {
@@ -50,8 +52,8 @@ describe('ConfigurationManagement', function () {
     let EIP2535AccessControlFactory: EIP2535AccessControl__factory
     let BusinessLogicFactoryFactory: BusinessLogicFactoryFacet__factory
     let ConfigurationManagerFacetFactory: ConfigurationManagementFacet__factory
-    let DiamondCutFacetFactory: DiamondCutAccessControlFacet__factory
-    let DiamondLoupeFacetFactory: DiamondLoupeFacet__factory
+    let IsbeCutFacetFactory: IsbeCutFacet__factory
+    let IsbeLoupeFacetFactory: IsbeLoupeFacet__factory
     let HashTimestampFactory: HashTimestampFacet__factory
     let AssetEventTrackerFactory: AssetEventTrackerTestWrapper__factory
     let Ownable2StepFacetFactory: Ownable2StepFacet__factory
@@ -75,11 +77,9 @@ describe('ConfigurationManagement', function () {
         ConfigurationManagerFacetFactory = await ethers.getContractFactory(
             'ConfigurationManagementFacet'
         )
-        DiamondCutFacetFactory = await ethers.getContractFactory(
-            'DiamondCutAccessControlFacet'
-        )
-        DiamondLoupeFacetFactory =
-            await ethers.getContractFactory('DiamondLoupeFacet')
+        IsbeCutFacetFactory = await ethers.getContractFactory('IsbeCutFacet')
+        IsbeLoupeFacetFactory =
+            await ethers.getContractFactory('IsbeLoupeFacet')
         EIP2535AccessControlFactory = await ethers.getContractFactory(
             'EIP2535AccessControl'
         )
@@ -103,7 +103,7 @@ describe('ConfigurationManagement', function () {
         ).to.be.equal(CONFIGURATION_MANAGEMENT_RESOLVER_KEY)
         expect(
             await configurationManagementFacet.interfacesIntrospection()
-        ).to.be.deep.equal(['0x41ac63ff'])
+        ).to.be.deep.equal(['0x65f33a1f'])
     }
 
     async function deployIsbeFactory(initCalldata: string = '0x') {
@@ -154,16 +154,10 @@ describe('ConfigurationManagement', function () {
             await deployIsbeFactory()
             await isbeFactory
                 .connect(businessLogicDeployer)
-                .deploy(
-                    DIAMOND_CUT_RESOLVER_KEY,
-                    DiamondCutFacetFactory.bytecode
-                )
+                .deploy(ISBE_CUT_RESOLVER_KEY, IsbeCutFacetFactory.bytecode)
             await isbeFactory
                 .connect(businessLogicDeployer)
-                .deploy(
-                    DIAMOND_LOUPE_RESOLVER_KEY,
-                    DiamondLoupeFacetFactory.bytecode
-                )
+                .deploy(ISBE_LOUPE_RESOLVER_KEY, IsbeLoupeFacetFactory.bytecode)
             await isbeFactory
                 .connect(businessLogicDeployer)
                 .deploy(
@@ -418,11 +412,11 @@ describe('ConfigurationManagement', function () {
                             version: 0,
                         },
                         {
-                            businessId: DIAMOND_CUT_RESOLVER_KEY,
+                            businessId: ISBE_CUT_RESOLVER_KEY,
                             version: 0,
                         },
                         {
-                            businessId: DIAMOND_LOUPE_RESOLVER_KEY,
+                            businessId: ISBE_LOUPE_RESOLVER_KEY,
                             version: 0,
                         },
                     ]
@@ -560,6 +554,17 @@ describe('ConfigurationManagement', function () {
                         2
                     )
                 ).to.be.deep.equal([])
+                await expect(
+                    isbeFactory.checkConfiguration(
+                        RANDOM_HASH_FOR_CONFIGURATION_ID,
+                        3
+                    )
+                )
+                    .to.be.revertedWithCustomError(
+                        isbeFactory,
+                        'InvalidConfiguration'
+                    )
+                    .withArgs(RANDOM_HASH_FOR_CONFIGURATION_ID, 3)
             })
         })
     })

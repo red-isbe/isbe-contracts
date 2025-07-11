@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {
-    _HASH_TIMESTAMP_STORAGE_POSITION
-} from '../constants/storagePositions.sol';
+import {_HASH_TIMESTAMP_STORAGE_POSITION} from '../constants/storagePositions.sol';
 import {IHashTimestamp} from './IHashTimestamp.sol';
 import {Common} from '../core/Common.sol';
 

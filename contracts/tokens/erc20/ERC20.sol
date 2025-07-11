@@ -5,9 +5,7 @@ import {ERC20InternalCommon} from './extensions/ERC20InternalCommon.sol';
 import {IERC20Isbe} from './IERC20Isbe.sol';
 import {_ERC20_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
-import {
-    IERC20Metadata
-} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
+import {IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
 
 /**
  * @title ERC20 Token Contract

@@ -2,9 +2,7 @@
 pragma solidity ^0.8.28;
 
 import {ERC20InternalCommon} from '../ERC20InternalCommon.sol';
-import {
-    _ERC20_CAPPED_RESOLVER_KEY
-} from '../../../../constants/resolverKeys.sol';
+import {_ERC20_CAPPED_RESOLVER_KEY} from '../../../../constants/resolverKeys.sol';
 import {IERC20Capped} from './IERC20Capped.sol';
 import {_CAP_ROLE, _MINTER_ROLE} from '../../../../constants/roles.sol';
 
