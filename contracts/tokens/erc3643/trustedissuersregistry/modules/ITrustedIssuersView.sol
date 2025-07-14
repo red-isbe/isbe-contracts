@@ -3,6 +3,12 @@ pragma solidity ^0.8.28;
 
 //TODO
 import {IClaimIssuer} from '../../../../identity/IClaimIssuer.sol';
+/**
+ * @title ITrustedIssuersView
+ * @dev Interface for viewing trusted claim issuers in a registry.
+ *      Provides functions to retrieve all trusted issuers, issuers for specific claim topics,
+ *      and to check if an issuer is trusted or has a specific claim topic.
+ */
 interface ITrustedIssuersView {
     /**
      *  @dev Function for getting all the trusted claim issuers stored.
