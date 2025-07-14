@@ -11,6 +11,13 @@ import {
     IIdentityRegistryStorage
 } from '../../../identityregistrystorage/IIdentityRegistryStorage.sol';
 
+
+/**
+ * @title IRegistriesManagement
+ * @notice Interface for registries management
+ * @dev  Management of the ClaimTopicsRegistry, TrustedIssuersRegistry, and IdentityRegistryStorage
+ * @author ISBE
+ */
 // solhint-disable-next-line no-empty-blocks
 interface IRegistriesManagement {
     /**

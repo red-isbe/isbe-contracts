@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
+/**
+ * @title IVerification
+ * @notice Exposes identity verification logic based on registered claims and trusted issuers
+ * @dev Implements methods to check if a user is verified
+ * @author ISBE
+ */
 // solhint-disable-next-line no-empty-blocks
 interface IVerification {
     /**

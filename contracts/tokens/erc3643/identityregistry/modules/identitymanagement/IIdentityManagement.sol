@@ -4,6 +4,13 @@ pragma solidity ^0.8.28;
 //TODO
 import {IIdentity} from '../../../../../identity/IIdentity.sol';
 
+
+/**
+ * @title IIdentityManagement
+ * @notice Interface to handle the registration, update, and removal of user identities and country
+ * @dev Defines the core lifecycle operations for managing investor identity data
+ * @author ISBE
+ */
 // solhint-disable-next-line no-empty-blocks
 interface IIdentityManagement {
     /**
