@@ -1,3 +1,12 @@
+## IClaimIssuer
+
+@title
+@notice
+@dev
+@author
+
+---
+
 ## IIdentity
 
 @title
