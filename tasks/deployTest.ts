@@ -9,6 +9,20 @@ import { unpause } from '../scripts/pause/unpause'
 import { isPaused } from '../scripts/pause/isPaused'
 import { getFacets } from '../scripts/diamond/loupe/getFacets'
 import { setConfig } from '../scripts/configMgmt/setConfig'
+import { getConfig } from '../scripts/configMgmt/getConfig'
+import { getFacets as getConfigFacets } from '../scripts/configMgmt/getFacets'
+
+import { getRoleAdmin } from '../scripts/access/accessControl/getRoleAdmin'
+import { getRoleMembers } from '../scripts/access/accessControl/getRoleMembers'
+import { getRolesByAccount } from '../scripts/access/accessControl/getRolesByAccount'
+/*import { grantRole } from '../scripts/access/accessControl/grantRole'
+import { hasRole } from '../scripts/access/accessControl/hasRole'
+import { renounceRole } from '../scripts/access/accessControl/renounceRole'
+import { revokeRole } from '../scripts/access/accessControl/revokeRole'
+import { setRoleAdmin } from '../scripts/access/accessControl/setRoleAdmin'*/
+import { getBusinessLogicAddress } from '../scripts/businessLogic/getBusinessLogicAddress'
+import { getBusinessLogicVersions } from '../scripts/businessLogic/getBusinessLogicVersions'
+import { getBusinessLogics } from '../scripts/businessLogic/getBusinessLogics'
 
 /**
  npx hardhat deployTest --network localhost \
@@ -40,6 +54,8 @@ task('deployTest', 'deploys a governance factory and tests all the scripts')
         const { businessId, bytecodePath } = taskArgs
 
         // deploy governance
+        console.log('GOVERNANCE')
+
         const accountAddress = process.env.ACCOUNT_ADDRESS ?? ''
 
         const GovernanceAddress = await deployIsbeFactory(
@@ -77,6 +93,30 @@ task('deployTest', 'deploys a governance factory and tests all the scripts')
             }
         }
 
+        // check governance accesses and roles
+        const resultRolesByAccount = await getRolesByAccount(
+            accountAddress,
+            GovernanceAddress,
+            signer
+        )
+
+        for (let i = 0; i < resultRolesByAccount.roles.length; i++) {
+            const resultRoleMembers = await getRoleMembers(
+                resultRolesByAccount.roles[i],
+                GovernanceAddress,
+                signer
+            )
+            const resultRoleAdmin = await getRoleAdmin(
+                resultRolesByAccount.roles[i],
+                GovernanceAddress,
+                signer
+            )
+
+            console.log('Governance Role : ' + resultRolesByAccount.roles[i])
+            console.log('    Role Admin : ' + resultRoleAdmin.roleAdmin)
+            console.log('    Members : ' + resultRoleMembers.members)
+        }
+
         // pause and unpause governance
         const resultPauseGovernance = await pause(GovernanceAddress, signer)
 
@@ -102,7 +142,13 @@ task('deployTest', 'deploys a governance factory and tests all the scripts')
         if (resultIsPauseGovernance_2.isPaused == true)
             throw Error('Governance unpause did not work')
 
+        console.log('')
+        console.log('')
+        console.log('')
+
         // deploy default business logics
+        console.log('BUSINESS LOGICS')
+
         for (let i = 0; i < DEFAULT_BUSINESS_LOGICS_CODE_PATHS.length; i++) {
             const bytecodeContentDefault = fs
                 .readFileSync(
@@ -121,6 +167,40 @@ task('deployTest', 'deploys a governance factory and tests all the scripts')
             )
 
             console.log('Default deployment result:', resultDeployDefaultBL)
+
+            const resultBLVersion = await getBusinessLogicVersions(
+                DEFAULT_BUSINESS_LOGICS_IDS[i],
+                GovernanceAddress,
+                signer
+            )
+
+            const resultBLAddress = await getBusinessLogicAddress(
+                DEFAULT_BUSINESS_LOGICS_IDS[i],
+                GovernanceAddress,
+                '1',
+                signer
+            )
+
+            if (
+                resultBLAddress.businessAddress !=
+                resultDeployDefaultBL.businessAddress
+            )
+                throw new Error(
+                    'BL address not the same ' +
+                        resultBLAddress.businessAddress +
+                        ' != ' +
+                        resultDeployDefaultBL.businessAddress
+                )
+            if (
+                resultBLVersion.businessIdVersions[0] !=
+                resultDeployDefaultBL.businessAddress
+            )
+                throw new Error(
+                    'BL address version not the same ' +
+                        resultBLVersion.businessIdVersions[0] +
+                        ' != ' +
+                        resultDeployDefaultBL.businessAddress
+                )
         }
 
         // deploy custom business logic
@@ -139,7 +219,17 @@ task('deployTest', 'deploys a governance factory and tests all the scripts')
 
         console.log('Deployment result:', resultDeployBL)
 
+        const resultBLs = await getBusinessLogics(GovernanceAddress, signer)
+
+        console.log('All Business Ids : ' + resultBLs.businessId)
+
+        console.log('')
+        console.log('')
+        console.log('')
+
         // set configuration
+        console.log('CONFIGURATION MANAGEMENT')
+
         const resultSetConfiguration = await setConfig(
             CONFIG_ID,
             [resultDeployBL.businessId],
@@ -149,19 +239,52 @@ task('deployTest', 'deploys a governance factory and tests all the scripts')
         )
 
         console.log('Set Configuration result:')
+        console.log('   configId: ' + resultSetConfiguration.configurationId)
         console.log(
-            '             configId: ' + resultSetConfiguration.configurationId
+            '   businessData: ' + resultSetConfiguration.businessData[0]
         )
-        console.log('             businessData: ')
-        console.log(
-            '                           business Id: ' +
-                resultSetConfiguration.businessData[0].businessId
+        console.log('   version: ' + resultSetConfiguration.version)
+
+        const resultGetConfiguration = await getConfig(
+            CONFIG_ID,
+            Number.parseInt(resultSetConfiguration.version.toString()),
+            GovernanceAddress,
+            signer
         )
-        console.log(
-            '                           business version: ' +
-                resultSetConfiguration.businessData[0].version
+
+        console.log('Configuration : ' + CONFIG_ID)
+
+        for (let i = 0; i < resultGetConfiguration.businessData.length; i++) {
+            console.log(
+                '   business Id: ' +
+                    resultGetConfiguration.businessData[i].businessId
+            )
+            console.log(
+                '   business version: ' +
+                    resultGetConfiguration.businessData[i].version
+            )
+        }
+
+        const resultConfigFacets = await getConfigFacets(
+            CONFIG_ID,
+            Number.parseInt(resultSetConfiguration.version.toString()),
+            GovernanceAddress,
+            signer
         )
-        console.log('             version: ' + resultSetConfiguration.version)
+
+        for (let i = 0; i < resultConfigFacets.facets.length; i++) {
+            console.log('   Facet :', resultConfigFacets.facets[i].facetAddress)
+            for (
+                let j = 0;
+                j < resultConfigFacets.facets[i].functionSelectors.length;
+                j++
+            ) {
+                console.log(
+                    '     Selector : ',
+                    resultConfigFacets.facets[i].functionSelectors[j]
+                )
+            }
+        }
 
         // deploy use case
 
