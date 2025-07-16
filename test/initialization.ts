@@ -14,6 +14,7 @@ import {
     ERC20Capped,
     ERC20Controller,
     ERC20,
+    ERC721,
     MockTimestampFacet,
     EIP2535AccessControl__factory,
     BusinessLogicFactoryFacet__factory,
@@ -29,6 +30,7 @@ import {
     ERC20_CAPPED_RESOLVER_KEY,
     ERC20_CONTROLLER_RESOLVER_KEY,
     ERC20_RESOLVER_KEY,
+    ERC721_RESOLVER_KEY,
     ERC20_SNAPSHOT_RESOLVER_KEY,
     HASH_TIMESTAMP_RESOLVER_KEY,
     MOCK_TIMESTAMP_RESOLVER_KEY,
@@ -121,6 +123,8 @@ export async function deployAll(
         'ERC20ControllerFacet'
     )
     const ERC20FacetFactory = await ethers.getContractFactory('ERC20Facet')
+    const ERC721FacetFactory = await ethers.getContractFactory('ERC721Facet')
+
     const AssetEventTrackerTestWrapperFactory = await ethers.getContractFactory(
         'AssetEventTrackerTestWrapper'
     )
@@ -186,6 +190,10 @@ export async function deployAll(
     const erc20Facet = await deployBusinessLogicFromFactory(
         ERC20_RESOLVER_KEY,
         ERC20FacetFactory
+    )
+    const erc721Facet = await deployBusinessLogicFromFactory(
+        ERC721_RESOLVER_KEY,
+        ERC721FacetFactory
     )
     const assetEventTrackerFacet = await deployBusinessLogicFromFactory(
         ASSET_EVENT_TRACKER_RESOLVER_KEY,
@@ -288,6 +296,77 @@ export async function deployAll(
         await diamondProxy.getAddress()
     ) as MockTimestampFacet
 
+    const erc721facetAddresses = [
+        await diamondCutFacet.getAddress(),
+        await diamondLoupeFacet.getAddress(),
+        await accessControlFacet.getAddress(),
+        isOwnable
+            ? await ownableFacet.getAddress()
+            : await ownable2StepFacet.getAddress(),
+        await pauseFacet.getAddress(),
+        await erc721Facet.getAddress(),
+        await assetEventTrackerFacet.getAddress(),
+        await hashTimestampFacet.getAddress(),
+        await mockTimestampFacet.getAddress(),
+    ]
+
+    const erc721DiamondProxy = await EIP2535AccessControlFactory.deploy(
+        erc721facetAddresses,
+        {
+            rbacs: [
+                {
+                    role: DEFAULT_ADMIN_ROLE,
+                    members: [owner],
+                },
+            ],
+            init: ethers.ZeroAddress,
+            initCalldata: '0x',
+        }
+    )
+    await erc721DiamondProxy.waitForDeployment()
+
+    //ERC721
+    const erc721 = ERC721FacetFactory.attach(
+        await erc721DiamondProxy.getAddress()
+    ) as ERC721
+
+    const pause721 = ISBEPauseFacetFactory.attach(
+        await erc721DiamondProxy.getAddress()
+    ) as ISBEPause
+
+    const accessControl721 = AccessControlFacetFactory.attach(
+        await erc721DiamondProxy.getAddress()
+    ) as AccessControl
+
+    const ownable2Step721 = Ownable2StepFacetFactory.attach(
+        await erc721DiamondProxy.getAddress()
+    ) as Ownable2Step
+
+    const ownable721 = OwnableFacetFactory.attach(
+        await erc721DiamondProxy.getAddress()
+    ) as Ownable
+
+    const assetEventTracker721 = AssetEventTrackerTestWrapperFactory.attach(
+        await erc721DiamondProxy.getAddress()
+    ) as AssetEventTrackerTestWrapper
+
+    const hashTimestamp721 = HashTimestampTestWrapperFactory.attach(
+        await erc721DiamondProxy.getAddress()
+    ) as HashTimestampTestWrapper
+
+    const diamondCutAccessControl721 =
+        DiamondCutAccessControlFacetFactory.attach(
+            await erc721DiamondProxy.getAddress()
+        ) as DiamondCutAccessControlFacet
+
+    const diamondLoupe721 = DiamondLoupeFacetFactory.attach(
+        await erc721DiamondProxy.getAddress()
+    ) as DiamondLoupeFacet
+
+    const mockTimestamp721 = MockTimestampFacetFactory.attach(
+        await erc721DiamondProxy.getAddress()
+    ) as MockTimestampFacet
+
     return {
         diamondProxy,
         erc20,
@@ -295,6 +374,16 @@ export async function deployAll(
         erc20Burnable,
         erc20Capped,
         erc20Controller,
+        erc721,
+        pause721,
+        accessControl721,
+        ownable2Step721,
+        ownable721,
+        assetEventTracker721,
+        hashTimestamp721,
+        diamondCutAccessControl721,
+        diamondLoupe721,
+        mockTimestamp721,
         pause,
         accessControl,
         ownable2Step,
@@ -305,6 +394,7 @@ export async function deployAll(
         diamondLoupe,
         mockTimestamp,
         erc20Facet,
+        erc721Facet,
         erc20SnapshotFacet,
         erc20BurnableFacet,
         erc20CappedFacet,

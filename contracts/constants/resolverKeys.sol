@@ -66,4 +66,30 @@ bytes32 constant _PROXY_FACTORY_RESOLVER_KEY = 0x949f2c59318fff1925835e4fd22837f
 // keccak256('isbe.contracts.global.isbe.pausable.resolver.key');
 bytes32 constant _GLOBAL_ISBE_PAUSABLE_RESOLVER_KEY = 0x95abb588e90c3cf7e85016cd7eef6fcbf9073b2a59c113a2f59ef664c86cf3f3;
 
+//ERC721 ResolverKeys
+// keccak256('isbe.contracts.erc721.burnable.resolver.key');
+bytes32 constant _ERC721_BURNABLE_RESOLVER_KEY = 0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731;
+
+// keccak256('isbe.contracts.erc721.capped.resolver.key');
+bytes32 constant _ERC721_CAPPED_RESOLVER_KEY = 0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c;
+
+// keccak256('isbe.contracts.erc721.controller.resolver.key');
+bytes32 constant _ERC721_CONTROLLER_RESOLVER_KEY = 0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367;
+
+// keccak256('isbe.contracts.erc721.snapshot.resolver.key');
+bytes32 constant _ERC721_SNAPSHOT_RESOLVER_KEY = 0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d;
+
+// keccak256('isbe.contracts.erc721.resolver.key');
+bytes32 constant _ERC721_RESOLVER_KEY = 0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413;
+
+// keccak256("safeTransferFrom(address,address,uint256)")
+bytes4 constant _SAFE_TRANSFER_FROM_SELECTOR_1 = bytes4(
+    keccak256('safeTransferFrom(address,address,uint256)')
+);
+
+// keccak256("safeTransferFrom(address,address,uint256,bytes)")
+bytes4 constant _SAFE_TRANSFER_FROM_SELECTOR_2 = bytes4(
+    keccak256('safeTransferFrom(address,address,uint256,bytes)')
+);
+
 // solhint-enable max-line-length
