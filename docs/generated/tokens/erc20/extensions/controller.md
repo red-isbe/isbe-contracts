@@ -7,7 +7,7 @@ _Inherits from IERC20Controller and ERC20InternalCommon_
 ### forceTransfer
 
 ```solidity
-function forceTransfer(address from, address to, uint256 amount) external
+function forceTransfer(address _from, address _to, uint256 _amount) external
 ```
 
 Transfers tokens from one account to another without requiring approval
@@ -16,16 +16,16 @@ _This function should only be callable by an authorized controller (e.g., regula
 
 #### Parameters
 
-| Name   | Type    | Description                         |
-| ------ | ------- | ----------------------------------- |
-| from   | address | The address to transfer tokens from |
-| to     | address | The address to transfer tokens to   |
-| amount | uint256 | The number of tokens to transfer    |
+| Name     | Type    | Description                         |
+| -------- | ------- | ----------------------------------- |
+| \_from   | address | The address to transfer tokens from |
+| \_to     | address | The address to transfer tokens to   |
+| \_amount | uint256 | The number of tokens to transfer    |
 
 ### forceBurn
 
 ```solidity
-function forceBurn(address from, uint256 amount) external
+function forceBurn(address _from, uint256 _amount) external
 ```
 
 Burns tokens from an account without requiring approval
@@ -34,10 +34,10 @@ _This function should only be callable by an authorized controller (e.g., regula
 
 #### Parameters
 
-| Name   | Type    | Description                     |
-| ------ | ------- | ------------------------------- |
-| from   | address | The address to burn tokens from |
-| amount | uint256 | The number of tokens to burn    |
+| Name     | Type    | Description                     |
+| -------- | ------- | ------------------------------- |
+| \_from   | address | The address to burn tokens from |
+| \_amount | uint256 | The number of tokens to burn    |
 
 ### \_implementedInterfaces
 
@@ -141,7 +141,7 @@ Emitted when tokens are forcefully burned from an account
 ### forceTransfer
 
 ```solidity
-function forceTransfer(address from, address to, uint256 amount) external
+function forceTransfer(address _from, address _to, uint256 _amount) external
 ```
 
 Transfers tokens from one account to another without requiring approval
@@ -150,16 +150,16 @@ _This function should only be callable by an authorized controller (e.g., regula
 
 #### Parameters
 
-| Name   | Type    | Description                         |
-| ------ | ------- | ----------------------------------- |
-| from   | address | The address to transfer tokens from |
-| to     | address | The address to transfer tokens to   |
-| amount | uint256 | The number of tokens to transfer    |
+| Name     | Type    | Description                         |
+| -------- | ------- | ----------------------------------- |
+| \_from   | address | The address to transfer tokens from |
+| \_to     | address | The address to transfer tokens to   |
+| \_amount | uint256 | The number of tokens to transfer    |
 
 ### forceBurn
 
 ```solidity
-function forceBurn(address from, uint256 amount) external
+function forceBurn(address _from, uint256 _amount) external
 ```
 
 Burns tokens from an account without requiring approval
@@ -168,7 +168,7 @@ _This function should only be callable by an authorized controller (e.g., regula
 
 #### Parameters
 
-| Name   | Type    | Description                     |
-| ------ | ------- | ------------------------------- |
-| from   | address | The address to burn tokens from |
-| amount | uint256 | The number of tokens to burn    |
+| Name     | Type    | Description                     |
+| -------- | ------- | ------------------------------- |
+| \_from   | address | The address to burn tokens from |
+| \_amount | uint256 | The number of tokens to burn    |

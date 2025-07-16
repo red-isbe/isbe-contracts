@@ -109,7 +109,7 @@ initialisation facet is not in the list of facets being deployed
 ### deployUseCase
 
 ```solidity
-function deployUseCase(bytes32 configurationId, uint256 version, struct IAccessControl.Rbac[] rbacs, bytes32 initBusinessId, bytes initData) external
+function deployUseCase(bytes32 _configurationId, uint256 _version, struct IAccessControl.Rbac[] _rbacs, bytes32 _initBusinessId, bytes _initData) external
 ```
 
 Deploys a new use-case proxy with the specified configuration
@@ -119,18 +119,18 @@ control, then initialises it with the provided data_
 
 #### Parameters
 
-| Name            | Type                         | Description                                            |
-| --------------- | ---------------------------- | ------------------------------------------------------ |
-| configurationId | bytes32                      | The unique identifier for the configuration            |
-| version         | uint256                      | The version number of the configuration (0 for latest) |
-| rbacs           | struct IAccessControl.Rbac[] | Array of role-based access control configurations      |
-| initBusinessId  | bytes32                      | The business ID of the facet to use for init           |
-| initData        | bytes                        | The calldata for the initialisation function           |
+| Name              | Type                         | Description                                            |
+| ----------------- | ---------------------------- | ------------------------------------------------------ |
+| \_configurationId | bytes32                      | The unique identifier for the configuration            |
+| \_version         | uint256                      | The version number of the configuration (0 for latest) |
+| \_rbacs           | struct IAccessControl.Rbac[] | Array of role-based access control configurations      |
+| \_initBusinessId  | bytes32                      | The business ID of the facet to use for init           |
+| \_initData        | bytes                        | The calldata for the initialisation function           |
 
 ### getDeployedProxiesByConfiguration
 
 ```solidity
-function getDeployedProxiesByConfiguration(bytes32 configurationId, uint256 version) external view returns (address[] proxies)
+function getDeployedProxiesByConfiguration(bytes32 _configurationId, uint256 _version) external view returns (address[] proxies_)
 ```
 
 Retrieves all deployed proxies for a specific configuration
@@ -140,21 +140,21 @@ given configuration and version_
 
 #### Parameters
 
-| Name            | Type    | Description                                 |
-| --------------- | ------- | ------------------------------------------- |
-| configurationId | bytes32 | The unique identifier for the configuration |
-| version         | uint256 | The version number of the configuration     |
+| Name              | Type    | Description                                 |
+| ----------------- | ------- | ------------------------------------------- |
+| \_configurationId | bytes32 | The unique identifier for the configuration |
+| \_version         | uint256 | The version number of the configuration     |
 
 #### Return Values
 
-| Name    | Type      | Description                       |
-| ------- | --------- | --------------------------------- |
-| proxies | address[] | Array of deployed proxy addresses |
+| Name      | Type      | Description                       |
+| --------- | --------- | --------------------------------- |
+| proxies\_ | address[] | Array of deployed proxy addresses |
 
 ### getConfigurationByProxy
 
 ```solidity
-function getConfigurationByProxy(address proxy) external view returns (bytes32 configurationId, uint256 version)
+function getConfigurationByProxy(address _proxy) external view returns (bytes32 configurationId_, uint256 version_)
 ```
 
 Gets the configuration details for a specific proxy
@@ -163,16 +163,16 @@ _Returns the configuration ID and version used to deploy the proxy_
 
 #### Parameters
 
-| Name  | Type    | Description                                |
-| ----- | ------- | ------------------------------------------ |
-| proxy | address | The address of the deployed proxy contract |
+| Name    | Type    | Description                                |
+| ------- | ------- | ------------------------------------------ |
+| \_proxy | address | The address of the deployed proxy contract |
 
 #### Return Values
 
-| Name            | Type    | Description                                 |
-| --------------- | ------- | ------------------------------------------- |
-| configurationId | bytes32 | The unique identifier for the configuration |
-| version         | uint256 | The version number of the configuration     |
+| Name              | Type    | Description                                 |
+| ----------------- | ------- | ------------------------------------------- |
+| configurationId\_ | bytes32 | The unique identifier for the configuration |
+| version\_         | uint256 | The version number of the configuration     |
 
 ---
 
@@ -206,17 +206,67 @@ _Modifier to validate that a configuration exists and is valid_
 function deployUseCase(bytes32 _configurationId, uint256 _version, struct IAccessControl.Rbac[] _rbacs, bytes32 _initBusinessId, bytes _initData) external
 ```
 
+Deploys a new use-case proxy with the specified configuration
+
+_Creates a diamond proxy with business logic facets and access
+control, then initialises it with the provided data_
+
+#### Parameters
+
+| Name              | Type                         | Description                                            |
+| ----------------- | ---------------------------- | ------------------------------------------------------ |
+| \_configurationId | bytes32                      | The unique identifier for the configuration            |
+| \_version         | uint256                      | The version number of the configuration (0 for latest) |
+| \_rbacs           | struct IAccessControl.Rbac[] | Array of role-based access control configurations      |
+| \_initBusinessId  | bytes32                      | The business ID of the facet to use for init           |
+| \_initData        | bytes                        | The calldata for the initialisation function           |
+
 ### getDeployedProxiesByConfiguration
 
 ```solidity
-function getDeployedProxiesByConfiguration(bytes32 _configurationId, uint256 _version) external view returns (address[] proxies)
+function getDeployedProxiesByConfiguration(bytes32 _configurationId, uint256 _version) external view returns (address[] proxies_)
 ```
+
+Retrieves all deployed proxies for a specific configuration
+
+_Returns an array of proxy addresses that were deployed with the
+given configuration and version_
+
+#### Parameters
+
+| Name              | Type    | Description                                 |
+| ----------------- | ------- | ------------------------------------------- |
+| \_configurationId | bytes32 | The unique identifier for the configuration |
+| \_version         | uint256 | The version number of the configuration     |
+
+#### Return Values
+
+| Name      | Type      | Description                       |
+| --------- | --------- | --------------------------------- |
+| proxies\_ | address[] | Array of deployed proxy addresses |
 
 ### getConfigurationByProxy
 
 ```solidity
-function getConfigurationByProxy(address _proxy) external view returns (bytes32 configurationId, uint256 version)
+function getConfigurationByProxy(address _proxy) external view returns (bytes32 configurationId_, uint256 version_)
 ```
+
+Gets the configuration details for a specific proxy
+
+_Returns the configuration ID and version used to deploy the proxy_
+
+#### Parameters
+
+| Name    | Type    | Description                                |
+| ------- | ------- | ------------------------------------------ |
+| \_proxy | address | The address of the deployed proxy contract |
+
+#### Return Values
+
+| Name              | Type    | Description                                 |
+| ----------------- | ------- | ------------------------------------------- |
+| configurationId\_ | bytes32 | The unique identifier for the configuration |
+| version\_         | uint256 | The version number of the configuration     |
 
 ---
 

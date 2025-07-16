@@ -5,5 +5,5 @@ import {BeaconProxy} from '@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol'
 
 // solhint-disable-next-line
 contract IsbeBeaconProxy is BeaconProxy {
-    constructor(address beacon) BeaconProxy(beacon, '') {}
+    constructor(address _beacon) BeaconProxy(_beacon, '') {}
 }

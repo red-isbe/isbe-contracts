@@ -20,64 +20,64 @@ contract AccessControl is IAccessControl, Common {
     }
 
     function initializeAccessControl(
-        IAccessControl.Rbac[] memory rbacs
+        IAccessControl.Rbac[] memory _rbacs
     ) external initializer(_ACCESS_CONTROL_RESOLVER_KEY) {
-        _initializeRbacs(rbacs);
+        _initializeRbacs(_rbacs);
     }
 
     function grantRole(
-        bytes32 role,
-        address account
+        bytes32 _role,
+        address _account
     )
         external
         override
-        protectISBERole(role)
-        onlyRole(_getRoleAdmin(role))
+        protectISBERole(_role)
+        onlyRole(_getRoleAdmin(_role))
         whenNotPaused
     {
-        _grantRole(role, account);
+        _grantRole(_role, _account);
     }
 
     function revokeRole(
-        bytes32 role,
-        address account
+        bytes32 _role,
+        address _account
     )
         external
         override
-        protectISBERole(role)
-        onlyRole(_getRoleAdmin(role))
+        protectISBERole(_role)
+        onlyRole(_getRoleAdmin(_role))
         whenNotPaused
     {
-        _revokeRole(role, account);
+        _revokeRole(_role, _account);
     }
 
     function setRoleAdmin(
-        bytes32 role,
-        bytes32 adminRole
-    ) external override onlyRole(_getRoleAdmin(role)) whenNotPaused {
-        _setRoleAdmin(role, adminRole);
+        bytes32 _role,
+        bytes32 _adminRole
+    ) external override onlyRole(_getRoleAdmin(_role)) whenNotPaused {
+        _setRoleAdmin(_role, _adminRole);
     }
 
-    function renounceRole(bytes32 role) external override whenNotPaused {
-        if (_isISBERole(role)) {
-            if (_getRoleMembersCount(role) < 2) {
-                revert AtLeastOneMemberForRole(role);
+    function renounceRole(bytes32 _role) external override whenNotPaused {
+        if (_isISBERole(_role)) {
+            if (_getRoleMembersCount(_role) < 2) {
+                revert AtLeastOneMemberForRole(_role);
             }
         }
-        _revokeRole(role, _msgSender());
+        _revokeRole(_role, _msgSender());
     }
 
     function hasRole(
-        bytes32 role,
-        address account
+        bytes32 _role,
+        address _account
     ) external view override returns (bool) {
-        return _hasRole(role, account);
+        return _hasRole(_role, _account);
     }
 
     function getRoleAdmin(
-        bytes32 role
+        bytes32 _role
     ) external view override returns (bytes32) {
-        return _getRoleAdmin(role);
+        return _getRoleAdmin(_role);
     }
 
     function getRoleMembersCount(

@@ -20,8 +20,8 @@ abstract contract OwnableInternal is ISBEContext {
         _;
     }
 
-    function _transferOwnership(address newOwner) internal virtual {
-        _ownableStorage().owner = newOwner;
+    function _transferOwnership(address _newOwner) internal virtual {
+        _ownableStorage().owner = _newOwner;
     }
 
     function _owner() internal view virtual returns (address) {

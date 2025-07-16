@@ -23,20 +23,20 @@ contract IsbeProxy is EIP2535, IsbeProxyInternal {
     }
 
     constructor(
-        IsbeProxyArgs memory args
+        IsbeProxyArgs memory _args
     )
         onlyValidConfiguration(
-            args.configurationManagement,
-            args.configurationId,
-            args.version
+            _args.configurationManagement,
+            _args.configurationId,
+            _args.version
         )
     {
-        _initializeRbacs(args.rbacs);
+        _initializeRbacs(_args.rbacs);
         _setIsbeProxyConfiguration(
-            args.configurationManagement,
-            args.configurationId,
-            args.version
+            _args.configurationManagement,
+            _args.configurationId,
+            _args.version
         );
-        _initializeDiamondCut(args.init, args.data);
+        _initializeDiamondCut(_args.init, _args.data);
     }
 }

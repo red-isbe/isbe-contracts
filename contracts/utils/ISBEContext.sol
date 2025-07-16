@@ -60,27 +60,27 @@ abstract contract ISBEContext is Context {
      * @notice Checks that a given address is not the zero address.
      * @dev Reverts with `AddressZero` error if the condition is not met.
      * This is an internal helper function intended to be used like a modifier.
-     * @param addr The address to check.
+     * @param _addr The address to check.
      */
-    function _addressIsNotZero(address addr) internal pure {
-        require(addr != address(0), AddressZero(addr));
+    function _addressIsNotZero(address _addr) internal pure {
+        require(_addr != address(0), AddressZero(_addr));
     }
 
     /**
      * @notice Checks that a `bytes32` value is not empty (all zeros).
      * @dev Reverts with `EmptyBytes32` error if the condition is not met.
-     * @param hash The `bytes32` value to check.
+     * @param _hash The `bytes32` value to check.
      */
-    function _bytes32IsNotZero(bytes32 hash) internal pure {
-        require(hash != bytes32(0), EmptyBytes32());
+    function _bytes32IsNotZero(bytes32 _hash) internal pure {
+        require(_hash != bytes32(0), EmptyBytes32());
     }
 
     /**
      * @notice Checks that a `bytes` array is not empty.
      * @dev Reverts with `EmptyBytes` error if the byte array's length is zero.
-     * @param code The `bytes` array to check.
+     * @param _code The `bytes` array to check.
      */
-    function _emptyBytes(bytes memory code) internal pure {
-        require(code.length != 0, EmptyBytes());
+    function _emptyBytes(bytes memory _code) internal pure {
+        require(_code.length != 0, EmptyBytes());
     }
 }

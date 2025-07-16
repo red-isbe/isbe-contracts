@@ -24,7 +24,7 @@ Emitted when an ISBE proxy configuration is set
 ### setIsbeProxyConfiguration
 
 ```solidity
-function setIsbeProxyConfiguration(contract IConfigurationManagement configurationManagement, bytes32 configurationId, uint256 version) external
+function setIsbeProxyConfiguration(contract IConfigurationManagement _configurationManagement, bytes32 _configurationId, uint256 _version) external
 ```
 
 Sets the ISBE proxy configuration from an external management contract
@@ -33,8 +33,8 @@ _Updates the proxy configuration using the specified management contract_
 
 #### Parameters
 
-| Name                    | Type                              | Description                                      |
-| ----------------------- | --------------------------------- | ------------------------------------------------ |
-| configurationManagement | contract IConfigurationManagement | The configuration management contract instance   |
-| configurationId         | bytes32                           | The identifier of the configuration to set       |
-| version                 | uint256                           | The version number of the configuration to apply |
+| Name                      | Type                              | Description                                      |
+| ------------------------- | --------------------------------- | ------------------------------------------------ |
+| \_configurationManagement | contract IConfigurationManagement | The configuration management contract instance   |
+| \_configurationId         | bytes32                           | The identifier of the configuration to set       |
+| \_version                 | uint256                           | The version number of the configuration to apply |

@@ -19,22 +19,22 @@ abstract contract ERC20Snapshot is IERC20Snapshot, ERC20InternalCommon {
     }
 
     function balanceOfAt(
-        address account,
-        uint256 snapshotId
+        address _account,
+        uint256 _snapshotId
     ) external view override returns (uint256) {
         (bool snapshotted, uint256 value) = _valueAt(
-            snapshotId,
-            _erc20SnapshotStorage().accountBalanceSnapshots[account]
+            _snapshotId,
+            _erc20SnapshotStorage().accountBalanceSnapshots[_account]
         );
 
-        return snapshotted ? value : _balanceOf(account);
+        return snapshotted ? value : _balanceOf(_account);
     }
 
     function totalSupplyAt(
-        uint256 snapshotId
+        uint256 _snapshotId
     ) external view override returns (uint256) {
         (bool snapshotted, uint256 value) = _valueAt(
-            snapshotId,
+            _snapshotId,
             _erc20SnapshotStorage().totalSupplySnapshots
         );
 

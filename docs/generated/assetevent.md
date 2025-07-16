@@ -5,37 +5,37 @@ Implements generic state tracking for an asset using events
 ### recordState
 
 ```solidity
-function recordState(uint256 newState) external
+function recordState(uint256 _newState) external
 ```
 
 Register new asset event
 
 #### Parameters
 
-| Name     | Type    | Description                    |
-| -------- | ------- | ------------------------------ |
-| newState | uint256 | New asset state for this event |
+| Name       | Type    | Description                    |
+| ---------- | ------- | ------------------------------ |
+| \_newState | uint256 | New asset state for this event |
 
 ### getAssetEvents
 
 ```solidity
-function getAssetEvents(uint256 pageNumber, uint256 resultsPerPage) external view returns (struct IAssetEventTracker.AssetEvent[] assetEvents)
+function getAssetEvents(uint256 _pageNumber, uint256 _resultsPerPage) external view returns (struct IAssetEventTracker.AssetEvent[] assetEvents_)
 ```
 
 Return paginated events based on page number and results per page
 
 #### Parameters
 
-| Name           | Type    | Description                   |
-| -------------- | ------- | ----------------------------- |
-| pageNumber     | uint256 | Page number (starting with 0) |
-| resultsPerPage | uint256 | Number of results per page    |
+| Name             | Type    | Description                   |
+| ---------------- | ------- | ----------------------------- |
+| \_pageNumber     | uint256 | Page number (starting with 0) |
+| \_resultsPerPage | uint256 | Number of results per page    |
 
 #### Return Values
 
-| Name        | Type                                   | Description        |
-| ----------- | -------------------------------------- | ------------------ |
-| assetEvents | struct IAssetEventTracker.AssetEvent[] | Asset events array |
+| Name          | Type                                   | Description        |
+| ------------- | -------------------------------------- | ------------------ |
+| assetEvents\_ | struct IAssetEventTracker.AssetEvent[] | Asset events array |
 
 ### getLatestAssetEvent
 
@@ -68,16 +68,16 @@ Return current state
 ### isStateChangeAllowed
 
 ```solidity
-function isStateChangeAllowed(uint256 newState) external view returns (bool)
+function isStateChangeAllowed(uint256 _newState) external view returns (bool)
 ```
 
 Return if state change is allowed
 
 #### Parameters
 
-| Name     | Type    | Description               |
-| -------- | ------- | ------------------------- |
-| newState | uint256 | New asset state to change |
+| Name       | Type    | Description               |
+| ---------- | ------- | ------------------------- |
+| \_newState | uint256 | New asset state to change |
 
 #### Return Values
 
@@ -166,27 +166,27 @@ struct AssetEventTrackerStorage {
 ### onlyAllowedStateChange
 
 ```solidity
-modifier onlyAllowedStateChange(uint256 newState)
+modifier onlyAllowedStateChange(uint256 _newState)
 ```
 
 Modifier to validate state change is allowed
 
 #### Parameters
 
-| Name     | Type    | Description            |
-| -------- | ------- | ---------------------- |
-| newState | uint256 | The new state to check |
+| Name       | Type    | Description            |
+| ---------- | ------- | ---------------------- |
+| \_newState | uint256 | The new state to check |
 
 ### \_recordState
 
 ```solidity
-function _recordState(uint256 newState) internal virtual
+function _recordState(uint256 _newState) internal virtual
 ```
 
 ### \_getAssetEvents
 
 ```solidity
-function _getAssetEvents(uint256 pageNumber, uint256 resultsPerPage) internal view virtual returns (struct IAssetEventTracker.AssetEvent[] assetEvents)
+function _getAssetEvents(uint256 _pageNumber, uint256 _resultsPerPage) internal view virtual returns (struct IAssetEventTracker.AssetEvent[] assetEvents_)
 ```
 
 ### \_getLatestAssetEvent
@@ -204,16 +204,16 @@ function _getCurrentState() internal view virtual returns (uint256)
 ### \_getAssetEventByIndex
 
 ```solidity
-function _getAssetEventByIndex(uint256 index) internal view returns (struct IAssetEventTracker.AssetEvent assetEvent_)
+function _getAssetEventByIndex(uint256 _index) internal view returns (struct IAssetEventTracker.AssetEvent assetEvent_)
 ```
 
 Returns an asset event by index
 
 #### Parameters
 
-| Name  | Type    | Description         |
-| ----- | ------- | ------------------- |
-| index | uint256 | The index to obtain |
+| Name    | Type    | Description         |
+| ------- | ------- | ------------------- |
+| \_index | uint256 | The index to obtain |
 
 #### Return Values
 
@@ -224,21 +224,21 @@ Returns an asset event by index
 ### \_checkStateChange
 
 ```solidity
-function _checkStateChange(uint256 newState) internal view virtual
+function _checkStateChange(uint256 _newState) internal view virtual
 ```
 
 Check if state change is allowed
 
 #### Parameters
 
-| Name     | Type    | Description             |
-| -------- | ------- | ----------------------- |
-| newState | uint256 | The new state to change |
+| Name       | Type    | Description             |
+| ---------- | ------- | ----------------------- |
+| \_newState | uint256 | The new state to change |
 
 ### \_isStateChangeAllowed
 
 ```solidity
-function _isStateChangeAllowed(uint256 currentState, uint256 newState) internal pure virtual returns (bool)
+function _isStateChangeAllowed(uint256 _currentState, uint256 _newState) internal pure virtual returns (bool)
 ```
 
 ### \_assetEventTrackerStorage
@@ -297,37 +297,37 @@ error StateChangeNotAllowed(uint256 newState)
 ### recordState
 
 ```solidity
-function recordState(uint256 newState) external
+function recordState(uint256 _newState) external
 ```
 
 Register new asset event
 
 #### Parameters
 
-| Name     | Type    | Description                    |
-| -------- | ------- | ------------------------------ |
-| newState | uint256 | New asset state for this event |
+| Name       | Type    | Description                    |
+| ---------- | ------- | ------------------------------ |
+| \_newState | uint256 | New asset state for this event |
 
 ### getAssetEvents
 
 ```solidity
-function getAssetEvents(uint256 pageNumber, uint256 resultsPerPage) external view returns (struct IAssetEventTracker.AssetEvent[] assetEvents)
+function getAssetEvents(uint256 _pageNumber, uint256 _resultsPerPage) external view returns (struct IAssetEventTracker.AssetEvent[] assetEvents_)
 ```
 
 Return paginated events based on page number and results per page
 
 #### Parameters
 
-| Name           | Type    | Description                   |
-| -------------- | ------- | ----------------------------- |
-| pageNumber     | uint256 | Page number (starting with 0) |
-| resultsPerPage | uint256 | Number of results per page    |
+| Name             | Type    | Description                   |
+| ---------------- | ------- | ----------------------------- |
+| \_pageNumber     | uint256 | Page number (starting with 0) |
+| \_resultsPerPage | uint256 | Number of results per page    |
 
 #### Return Values
 
-| Name        | Type                                   | Description        |
-| ----------- | -------------------------------------- | ------------------ |
-| assetEvents | struct IAssetEventTracker.AssetEvent[] | Asset events array |
+| Name          | Type                                   | Description        |
+| ------------- | -------------------------------------- | ------------------ |
+| assetEvents\_ | struct IAssetEventTracker.AssetEvent[] | Asset events array |
 
 ### getLatestAssetEvent
 
@@ -360,16 +360,16 @@ Return current state
 ### isStateChangeAllowed
 
 ```solidity
-function isStateChangeAllowed(uint256 newState) external view returns (bool)
+function isStateChangeAllowed(uint256 _newState) external view returns (bool)
 ```
 
 Return if state change is allowed
 
 #### Parameters
 
-| Name     | Type    | Description               |
-| -------- | ------- | ------------------------- |
-| newState | uint256 | New asset state to change |
+| Name       | Type    | Description               |
+| ---------- | ------- | ------------------------- |
+| \_newState | uint256 | New asset state to change |
 
 #### Return Values
 

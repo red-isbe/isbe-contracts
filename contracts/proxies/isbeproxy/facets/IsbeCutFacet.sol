@@ -16,29 +16,29 @@ import {IConfigurationManagement} from '../../../factory/configurationmanagement
  */
 contract IsbeCutFacet is IIsbeCut, IsbeProxyInternal, IEIP2535Introspection {
     function setIsbeProxyConfiguration(
-        IConfigurationManagement configurationManagement,
-        bytes32 configurationId,
-        uint256 version
+        IConfigurationManagement _configurationManagement,
+        bytes32 _configurationId,
+        uint256 _version
     )
         external
         override
         onlyRole(_CONFIGURATION_MANAGER_ROLE)
         whenNotPaused
         onlyValidConfiguration(
-            configurationManagement,
-            configurationId,
-            version
+            _configurationManagement,
+            _configurationId,
+            _version
         )
     {
         _setIsbeProxyConfiguration(
-            configurationManagement,
-            configurationId,
-            version
+            _configurationManagement,
+            _configurationId,
+            _version
         );
         emit IsbeProxyConfigurationSet(
-            address(configurationManagement),
-            configurationId,
-            version
+            address(_configurationManagement),
+            _configurationId,
+            _version
         );
     }
 

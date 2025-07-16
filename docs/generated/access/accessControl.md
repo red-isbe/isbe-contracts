@@ -21,90 +21,90 @@ Constructor that disables the initializer
 ### initializeAccessControl
 
 ```solidity
-function initializeAccessControl(struct IAccessControl.Rbac[] rbacs) external
+function initializeAccessControl(struct IAccessControl.Rbac[] _rbacs) external
 ```
 
 Initializes the Access Control contrl grating roles
 
 #### Parameters
 
-| Name  | Type                         | Description                       |
-| ----- | ---------------------------- | --------------------------------- |
-| rbacs | struct IAccessControl.Rbac[] | Addresses and roles to be granted |
+| Name    | Type                         | Description                       |
+| ------- | ---------------------------- | --------------------------------- |
+| \_rbacs | struct IAccessControl.Rbac[] | Addresses and roles to be granted |
 
 ### grantRole
 
 ```solidity
-function grantRole(bytes32 role, address account) external
+function grantRole(bytes32 _role, address _account) external
 ```
 
 Grants a role to an account
 
 #### Parameters
 
-| Name    | Type    | Description                      |
-| ------- | ------- | -------------------------------- |
-| role    | bytes32 | The role identifier              |
-| account | address | The address to grant the role to |
+| Name      | Type    | Description                      |
+| --------- | ------- | -------------------------------- |
+| \_role    | bytes32 | The role identifier              |
+| \_account | address | The address to grant the role to |
 
 ### revokeRole
 
 ```solidity
-function revokeRole(bytes32 role, address account) external
+function revokeRole(bytes32 _role, address _account) external
 ```
 
 Revokes a role from an account
 
 #### Parameters
 
-| Name    | Type    | Description                         |
-| ------- | ------- | ----------------------------------- |
-| role    | bytes32 | The role identifier                 |
-| account | address | The address to revoke the role from |
+| Name      | Type    | Description                         |
+| --------- | ------- | ----------------------------------- |
+| \_role    | bytes32 | The role identifier                 |
+| \_account | address | The address to revoke the role from |
 
 ### setRoleAdmin
 
 ```solidity
-function setRoleAdmin(bytes32 role, bytes32 adminRole) external
+function setRoleAdmin(bytes32 _role, bytes32 _adminRole) external
 ```
 
 Sets the admin role of a given role
 
 #### Parameters
 
-| Name      | Type    | Description                           |
-| --------- | ------- | ------------------------------------- |
-| role      | bytes32 | The role whose admin is being changed |
-| adminRole | bytes32 | The new admin role                    |
+| Name        | Type    | Description                           |
+| ----------- | ------- | ------------------------------------- |
+| \_role      | bytes32 | The role whose admin is being changed |
+| \_adminRole | bytes32 | The new admin role                    |
 
 ### renounceRole
 
 ```solidity
-function renounceRole(bytes32 role) external
+function renounceRole(bytes32 _role) external
 ```
 
 Allows caller to renounce a role they hold
 
 #### Parameters
 
-| Name | Type    | Description          |
-| ---- | ------- | -------------------- |
-| role | bytes32 | The role to renounce |
+| Name   | Type    | Description          |
+| ------ | ------- | -------------------- |
+| \_role | bytes32 | The role to renounce |
 
 ### hasRole
 
 ```solidity
-function hasRole(bytes32 role, address account) external view returns (bool)
+function hasRole(bytes32 _role, address _account) external view returns (bool)
 ```
 
 Checks if an account holds a given role
 
 #### Parameters
 
-| Name    | Type    | Description          |
-| ------- | ------- | -------------------- |
-| role    | bytes32 | The role identifier  |
-| account | address | The address to check |
+| Name      | Type    | Description          |
+| --------- | ------- | -------------------- |
+| \_role    | bytes32 | The role identifier  |
+| \_account | address | The address to check |
 
 #### Return Values
 
@@ -115,16 +115,16 @@ Checks if an account holds a given role
 ### getRoleAdmin
 
 ```solidity
-function getRoleAdmin(bytes32 role) external view returns (bytes32)
+function getRoleAdmin(bytes32 _role) external view returns (bytes32)
 ```
 
 Returns the admin role controlling a given role
 
 #### Parameters
 
-| Name | Type    | Description       |
-| ---- | ------- | ----------------- |
-| role | bytes32 | The role to query |
+| Name   | Type    | Description       |
+| ------ | ------- | ----------------- |
+| \_role | bytes32 | The role to query |
 
 #### Return Values
 
@@ -321,7 +321,7 @@ struct RoleData {
 ### onlyRole
 
 ```solidity
-modifier onlyRole(bytes32 role)
+modifier onlyRole(bytes32 _role)
 ```
 
 Modifier to restrict function to accounts with a specific role
@@ -330,74 +330,74 @@ _Reverts with `AccountHasNoRole` error if the account does not have the specific
 
 #### Parameters
 
-| Name | Type    | Description       |
-| ---- | ------- | ----------------- |
-| role | bytes32 | The required role |
+| Name   | Type    | Description       |
+| ------ | ------- | ----------------- |
+| \_role | bytes32 | The required role |
 
 ### \_initializeRbacs
 
 ```solidity
-function _initializeRbacs(struct IAccessControl.Rbac[] rbacs) internal virtual
+function _initializeRbacs(struct IAccessControl.Rbac[] _rbacs) internal virtual
 ```
 
 ### \_setRoleAdmin
 
 ```solidity
-function _setRoleAdmin(bytes32 role, bytes32 adminRole) internal virtual
+function _setRoleAdmin(bytes32 _role, bytes32 _adminRole) internal virtual
 ```
 
 ### \_grantRole
 
 ```solidity
-function _grantRole(bytes32 role, address account) internal virtual
+function _grantRole(bytes32 _role, address _account) internal virtual
 ```
 
 ### \_grantRoles
 
 ```solidity
-function _grantRoles(bytes32 role, address[] accounts) internal virtual
+function _grantRoles(bytes32 _role, address[] _accounts) internal virtual
 ```
 
 ### \_revokeRole
 
 ```solidity
-function _revokeRole(bytes32 role, address account) internal virtual
+function _revokeRole(bytes32 _role, address _account) internal virtual
 ```
 
 ### \_hasRole
 
 ```solidity
-function _hasRole(bytes32 role, address account) internal view virtual returns (bool)
+function _hasRole(bytes32 _role, address _account) internal view virtual returns (bool)
 ```
 
 ### \_getRoleAdmin
 
 ```solidity
-function _getRoleAdmin(bytes32 role) internal view virtual returns (bytes32)
+function _getRoleAdmin(bytes32 _role) internal view virtual returns (bytes32)
 ```
 
 ### \_checkRole
 
 ```solidity
-function _checkRole(bytes32 role) internal view virtual
+function _checkRole(bytes32 _role) internal view virtual
 ```
 
 ### \_checkRole
 
 ```solidity
-function _checkRole(bytes32 role, address account) internal view virtual
+function _checkRole(bytes32 _role, address _account) internal view virtual
 ```
 
 ### \_checkRoles
 
 ```solidity
-function _checkRoles(bytes32[] roles) internal view virtual
+function _checkRoles(bytes32[] _roles) internal view virtual
 ```
 
 ### \_checkRoles
 
 ```solidity
-function _checkRoles(bytes32[] roles, address account) internal view virtual
+function _checkRoles(bytes32[] _roles, address _account) internal view virtual
 ```
 
 ### \_getRoleMembersCount
@@ -586,90 +586,90 @@ Error indicating that there has to be at least one member for a role
 ### initializeAccessControl
 
 ```solidity
-function initializeAccessControl(struct IAccessControl.Rbac[] rbacs) external
+function initializeAccessControl(struct IAccessControl.Rbac[] _rbacs) external
 ```
 
 Initializes the Access Control contrl grating roles
 
 #### Parameters
 
-| Name  | Type                         | Description                       |
-| ----- | ---------------------------- | --------------------------------- |
-| rbacs | struct IAccessControl.Rbac[] | Addresses and roles to be granted |
+| Name    | Type                         | Description                       |
+| ------- | ---------------------------- | --------------------------------- |
+| \_rbacs | struct IAccessControl.Rbac[] | Addresses and roles to be granted |
 
 ### grantRole
 
 ```solidity
-function grantRole(bytes32 role, address account) external
+function grantRole(bytes32 _role, address _account) external
 ```
 
 Grants a role to an account
 
 #### Parameters
 
-| Name    | Type    | Description                      |
-| ------- | ------- | -------------------------------- |
-| role    | bytes32 | The role identifier              |
-| account | address | The address to grant the role to |
+| Name      | Type    | Description                      |
+| --------- | ------- | -------------------------------- |
+| \_role    | bytes32 | The role identifier              |
+| \_account | address | The address to grant the role to |
 
 ### revokeRole
 
 ```solidity
-function revokeRole(bytes32 role, address account) external
+function revokeRole(bytes32 _role, address _account) external
 ```
 
 Revokes a role from an account
 
 #### Parameters
 
-| Name    | Type    | Description                         |
-| ------- | ------- | ----------------------------------- |
-| role    | bytes32 | The role identifier                 |
-| account | address | The address to revoke the role from |
+| Name      | Type    | Description                         |
+| --------- | ------- | ----------------------------------- |
+| \_role    | bytes32 | The role identifier                 |
+| \_account | address | The address to revoke the role from |
 
 ### renounceRole
 
 ```solidity
-function renounceRole(bytes32 role) external
+function renounceRole(bytes32 _role) external
 ```
 
 Allows caller to renounce a role they hold
 
 #### Parameters
 
-| Name | Type    | Description          |
-| ---- | ------- | -------------------- |
-| role | bytes32 | The role to renounce |
+| Name   | Type    | Description          |
+| ------ | ------- | -------------------- |
+| \_role | bytes32 | The role to renounce |
 
 ### setRoleAdmin
 
 ```solidity
-function setRoleAdmin(bytes32 role, bytes32 adminRole) external
+function setRoleAdmin(bytes32 _role, bytes32 _adminRole) external
 ```
 
 Sets the admin role of a given role
 
 #### Parameters
 
-| Name      | Type    | Description                           |
-| --------- | ------- | ------------------------------------- |
-| role      | bytes32 | The role whose admin is being changed |
-| adminRole | bytes32 | The new admin role                    |
+| Name        | Type    | Description                           |
+| ----------- | ------- | ------------------------------------- |
+| \_role      | bytes32 | The role whose admin is being changed |
+| \_adminRole | bytes32 | The new admin role                    |
 
 ### hasRole
 
 ```solidity
-function hasRole(bytes32 role, address account) external view returns (bool)
+function hasRole(bytes32 _role, address _account) external view returns (bool)
 ```
 
 Checks if an account holds a given role
 
 #### Parameters
 
-| Name    | Type    | Description          |
-| ------- | ------- | -------------------- |
-| role    | bytes32 | The role identifier  |
-| account | address | The address to check |
+| Name      | Type    | Description          |
+| --------- | ------- | -------------------- |
+| \_role    | bytes32 | The role identifier  |
+| \_account | address | The address to check |
 
 #### Return Values
 
@@ -680,16 +680,16 @@ Checks if an account holds a given role
 ### getRoleAdmin
 
 ```solidity
-function getRoleAdmin(bytes32 role) external view returns (bytes32)
+function getRoleAdmin(bytes32 _role) external view returns (bytes32)
 ```
 
 Returns the admin role controlling a given role
 
 #### Parameters
 
-| Name | Type    | Description       |
-| ---- | ------- | ----------------- |
-| role | bytes32 | The role to query |
+| Name   | Type    | Description       |
+| ------ | ------- | ----------------- |
+| \_role | bytes32 | The role to query |
 
 #### Return Values
 

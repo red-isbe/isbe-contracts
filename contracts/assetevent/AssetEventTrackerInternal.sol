@@ -14,47 +14,47 @@ abstract contract AssetEventTrackerInternal is Common {
     }
 
     /// @notice Modifier to validate state change is allowed
-    /// @param newState The new state to check
-    modifier onlyAllowedStateChange(uint256 newState) {
-        _checkStateChange(newState);
+    /// @param _newState The new state to check
+    modifier onlyAllowedStateChange(uint256 _newState) {
+        _checkStateChange(_newState);
         _;
     }
 
-    function _recordState(uint256 newState) internal virtual {
+    function _recordState(uint256 _newState) internal virtual {
         uint256 timestamp = _blockTimestamp();
         _assetEventTrackerStorage().assetEvents.push(
             IAssetEventTracker.AssetEvent({
-                state: newState,
+                state: _newState,
                 timestamp: timestamp
             })
         );
-        emit IAssetEventTracker.StateRecorded(newState, timestamp, msg.sender);
+        emit IAssetEventTracker.StateRecorded(_newState, timestamp, msg.sender);
     }
 
     function _getAssetEvents(
-        uint256 pageNumber,
-        uint256 resultsPerPage
+        uint256 _pageNumber,
+        uint256 _resultsPerPage
     )
         internal
         view
         virtual
-        returns (IAssetEventTracker.AssetEvent[] memory assetEvents)
+        returns (IAssetEventTracker.AssetEvent[] memory assetEvents_)
     {
-        uint256 start = pageNumber * resultsPerPage;
+        uint256 start = _pageNumber * _resultsPerPage;
         uint256 totalEvents = _assetEventTrackerStorage().assetEvents.length;
 
         if (start >= totalEvents) {
-            return assetEvents;
+            return assetEvents_;
         }
 
-        uint256 end = start + resultsPerPage;
+        uint256 end = start + _resultsPerPage;
         end = end > totalEvents ? totalEvents : end;
 
         uint256 resultLength = end - start;
-        assetEvents = new IAssetEventTracker.AssetEvent[](resultLength);
+        assetEvents_ = new IAssetEventTracker.AssetEvent[](resultLength);
 
         for (uint256 i = 0; i < resultLength; i++) {
-            assetEvents[i] = _getAssetEventByIndex(start + i);
+            assetEvents_[i] = _getAssetEventByIndex(start + i);
         }
     }
 
@@ -77,26 +77,26 @@ abstract contract AssetEventTrackerInternal is Common {
     }
 
     /// @notice Returns an asset event by index
-    /// @param index The index to obtain
+    /// @param _index The index to obtain
     /// @return assetEvent_ Asset event obtained
     function _getAssetEventByIndex(
-        uint256 index
+        uint256 _index
     ) internal view returns (IAssetEventTracker.AssetEvent memory assetEvent_) {
-        assetEvent_ = _assetEventTrackerStorage().assetEvents[index];
+        assetEvent_ = _assetEventTrackerStorage().assetEvents[_index];
     }
 
     /// @notice Check if state change is allowed
-    /// @param newState The new state to change
-    function _checkStateChange(uint256 newState) internal view virtual {
+    /// @param _newState The new state to change
+    function _checkStateChange(uint256 _newState) internal view virtual {
         require(
-            _isStateChangeAllowed(_getCurrentState(), newState),
-            IAssetEventTracker.StateChangeNotAllowed(newState)
+            _isStateChangeAllowed(_getCurrentState(), _newState),
+            IAssetEventTracker.StateChangeNotAllowed(_newState)
         );
     }
 
     function _isStateChangeAllowed(
-        uint256 currentState,
-        uint256 newState
+        uint256 _currentState,
+        uint256 _newState
     ) internal pure virtual returns (bool);
 
     /// @notice Returns the storage slot for asset event tracker

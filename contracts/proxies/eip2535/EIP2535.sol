@@ -37,9 +37,9 @@ abstract contract EIP2535 is FacetAddressResolver {
     }
 
     function _resolveFacetAddress(
-        bytes4 sig
+        bytes4 _sig
     ) private view returns (address facet_) {
-        facet_ = _facetAddress(sig);
-        require(facet_ != address(0), FunctionNotFound(sig));
+        facet_ = _facetAddress(_sig);
+        require(facet_ != address(0), FunctionNotFound(_sig));
     }
 }

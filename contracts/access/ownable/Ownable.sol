@@ -8,9 +8,9 @@ import {OwnableBase} from './OwnableBase.sol';
 /// @dev Inherits from IOwnable and OwnableInternal
 contract Ownable is OwnableBase {
     function transferOwnership(
-        address newOwner
-    ) external override onlyOwner addressIsNotZero(newOwner) whenNotPaused {
-        _transferOwnership(newOwner);
-        emit OwnershipTransferred(_msgSender(), newOwner);
+        address _newOwner
+    ) external override onlyOwner addressIsNotZero(_newOwner) whenNotPaused {
+        _transferOwnership(_newOwner);
+        emit OwnershipTransferred(_msgSender(), _newOwner);
     }
 }

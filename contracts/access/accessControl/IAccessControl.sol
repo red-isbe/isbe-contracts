@@ -78,41 +78,41 @@ interface IAccessControl {
     error AtLeastOneMemberForRole(bytes32 role);
 
     /// @notice Initializes the Access Control contrl grating roles
-    /// @param rbacs Addresses and roles to be granted
-    function initializeAccessControl(Rbac[] memory rbacs) external;
+    /// @param _rbacs Addresses and roles to be granted
+    function initializeAccessControl(Rbac[] memory _rbacs) external;
 
     /// @notice Grants a role to an account
-    /// @param role The role identifier
-    /// @param account The address to grant the role to
-    function grantRole(bytes32 role, address account) external;
+    /// @param _role The role identifier
+    /// @param _account The address to grant the role to
+    function grantRole(bytes32 _role, address _account) external;
 
     /// @notice Revokes a role from an account
-    /// @param role The role identifier
-    /// @param account The address to revoke the role from
-    function revokeRole(bytes32 role, address account) external;
+    /// @param _role The role identifier
+    /// @param _account The address to revoke the role from
+    function revokeRole(bytes32 _role, address _account) external;
 
     /// @notice Allows caller to renounce a role they hold
-    /// @param role The role to renounce
-    function renounceRole(bytes32 role) external;
+    /// @param _role The role to renounce
+    function renounceRole(bytes32 _role) external;
 
     /// @notice Sets the admin role of a given role
-    /// @param role The role whose admin is being changed
-    /// @param adminRole The new admin role
-    function setRoleAdmin(bytes32 role, bytes32 adminRole) external;
+    /// @param _role The role whose admin is being changed
+    /// @param _adminRole The new admin role
+    function setRoleAdmin(bytes32 _role, bytes32 _adminRole) external;
 
     /// @notice Checks if an account holds a given role
-    /// @param role The role identifier
-    /// @param account The address to check
+    /// @param _role The role identifier
+    /// @param _account The address to check
     /// @return True if account has the role, false otherwise
     function hasRole(
-        bytes32 role,
-        address account
+        bytes32 _role,
+        address _account
     ) external view returns (bool);
 
     /// @notice Returns the admin role controlling a given role
-    /// @param role The role to query
+    /// @param _role The role to query
     /// @return The admin role associated with the role
-    function getRoleAdmin(bytes32 role) external view returns (bytes32);
+    function getRoleAdmin(bytes32 _role) external view returns (bytes32);
 
     /// @notice Returns the number of members assigned to a specific role
     /// @param _role The role identifier

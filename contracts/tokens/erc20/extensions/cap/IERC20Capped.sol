@@ -42,7 +42,7 @@ interface IERC20Capped {
      * @notice Initializes the maximum supply cap for the token.
      * @dev This function is expected to be called once to set the total supply cap.
      *      Emits a `CapInitialized` event if successful.
-     * @param cap The desired maximum token supply cap.
+     * @param _cap The desired maximum token supply cap.
      */
-    function initializeCap(uint256 cap) external;
+    function initializeCap(uint256 _cap) external;
 }

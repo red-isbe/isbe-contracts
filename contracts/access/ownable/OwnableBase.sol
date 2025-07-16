@@ -16,10 +16,10 @@ abstract contract OwnableBase is IOwnable, Common {
     }
 
     function initializeOwnable(
-        address admin
-    ) external initializer(_OWNABLE_RESOLVER_KEY) addressIsNotZero(admin) {
-        _transferOwnership(admin);
-        emit OwnershipTransferred(_msgSender(), admin);
+        address _admin
+    ) external initializer(_OWNABLE_RESOLVER_KEY) addressIsNotZero(_admin) {
+        _transferOwnership(_admin);
+        emit OwnershipTransferred(_msgSender(), _admin);
     }
 
     function renounceOwnership() external override onlyOwner whenNotPaused {
