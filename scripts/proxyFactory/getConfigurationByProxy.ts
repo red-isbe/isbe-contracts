@@ -18,7 +18,7 @@ export async function getConfigurationByProxy(
     const result = await proxyFactory.getConfigurationByProxy(proxyAddress)
 
     return {
-        configurationId: result.configurationId,
-        version: parseInt(result.version.toString()),
+        configurationId: result.configurationId_,
+        version: parseInt(result.version_.toString()),
     }
 }
