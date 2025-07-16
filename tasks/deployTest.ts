@@ -34,15 +34,15 @@ const CONFIG_ID =
     '0x0000000000000000000000000000000000000000000000000000000000000001'
 
 const DEFAULT_BUSINESS_LOGICS_CODE_PATHS = [
-    './artifacts/contracts/proxies/eip2535/facets/DiamondCutAccessControlFacet.sol/DiamondCutAccessControlFacet.json',
-    './artifacts/contracts/proxies/eip2535/facets/DiamondLoupeFacet.sol/DiamondLoupeFacet.json',
+    './artifacts/contracts/proxies/isbeproxy/facets/IsbeCutFacet.sol/IsbeCutFacet.json',
+    './artifacts/contracts/proxies/isbeproxy/facets/IsbeLoupeFacet.sol/IsbeLoupeFacet.json',
     './artifacts/contracts/access/accessControl/AccessControlFacet.sol/AccessControlFacet.json',
     './artifacts/contracts/pause/ISBEPauseFacet.sol/ISBEPauseFacet.json',
 ]
 
 const DEFAULT_BUSINESS_LOGICS_IDS = [
-    '0xb1733495acec04f904af52509bd68775ca2e4aa31f6948d02cccd2af2adee890',
-    '0xa081a7fa2e40735a4006bc6a225e18158879b54064ab1f60045661349931c41b',
+    '0x3e325d62f8652528edf5d41ed730a283b473d9e55ee9b6631b261b52199eac25',
+    '0x360faa2d547f0a951a5b1da060a4ffb56888bf8ad05db9de4d6d09b3eae1e5e2',
     '0xa4de16c45770db08a06a2cdfeb0229e16d2ff660f7f1bf74c3dc07212770c70c',
     '0x7fabf0f3ed655fa26f86c82ae5da60e0ade03a5d35a9ff2985709278942966d3',
 ]
