@@ -9,6 +9,7 @@ export async function unpauseIsbe(
     signer: Signer
 ): Promise<{
     unpausedProxyAddress: string
+    account: string
 }> {
     if (!isValidBytesAndLength(proxyAddress, 20))
         throw new Error('Invalid proxy address format : ' + proxyAddress)
@@ -19,9 +20,11 @@ export async function unpauseIsbe(
 
     const unpauseEvent = await getEvent('IsbeUnpaused', tx, globalIsbePause)
 
-    const { proxyAddress: unpausedProxyAddress } = unpauseEvent.args
+    const { proxyAddress: unpausedProxyAddress, account: account } =
+        unpauseEvent.args
 
     return {
         unpausedProxyAddress,
+        account,
     }
 }
