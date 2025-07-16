@@ -23,6 +23,8 @@ import { setRoleAdmin } from '../scripts/access/accessControl/setRoleAdmin'*/
 import { getBusinessLogicAddress } from '../scripts/businessLogic/getBusinessLogicAddress'
 import { getBusinessLogicVersions } from '../scripts/businessLogic/getBusinessLogicVersions'
 import { getBusinessLogics } from '../scripts/businessLogic/getBusinessLogics'
+import { deployUseCase } from '../scripts/proxyFactory/deployUseCase'
+import { getConfigurationByProxy } from '../scripts/proxyFactory/getConfigurationByProxy'
 
 /**
  npx hardhat deployTest --network localhost \
@@ -32,6 +34,9 @@ import { getBusinessLogics } from '../scripts/businessLogic/getBusinessLogics'
 
 const CONFIG_ID =
     '0x0000000000000000000000000000000000000000000000000000000000000001'
+
+const PAUSE_ROLE =
+    '0x8c911f4537972e7549dbbd37a96b929a4b480f4fb156fc6344524bdf2ca50aa1'
 
 const DEFAULT_BUSINESS_LOGICS_CODE_PATHS = [
     './artifacts/contracts/proxies/isbeproxy/facets/IsbeCutFacet.sol/IsbeCutFacet.json',
@@ -286,9 +291,54 @@ task('deployTest', 'deploys a governance factory and tests all the scripts')
             }
         }
 
-        // deploy use case
+        console.log('')
+        console.log('')
+        console.log('')
 
-        //..................................
+        // deploy use case
+        console.log('PROXY FACTORY')
+
+        const resultDeployUseCase = await deployUseCase(
+            CONFIG_ID,
+            Number.parseInt(resultSetConfiguration.version.toString()),
+            [PAUSE_ROLE],
+            [[accountAddress]],
+            '0x0000000000000000000000000000000000000000000000000000000000000000',
+            '0x',
+            GovernanceAddress,
+            signer
+        )
+
+        console.log('Deployed Use Case result:')
+        console.log('  Configuration ID:', resultDeployUseCase.configurationId)
+        console.log('  Version:', resultDeployUseCase.version)
+        console.log('  RBACs:', JSON.stringify(resultDeployUseCase.rbacs))
+        console.log('  Proxy Address:', resultDeployUseCase.proxy)
+
+        const resultUseCaseConfig = await getConfigurationByProxy(
+            resultDeployUseCase.proxy,
+            GovernanceAddress,
+            signer
+        )
+
+        if (resultUseCaseConfig.configurationId != CONFIG_ID)
+            throw new Error(
+                'Config ID not the same for deployed use case' +
+                    resultUseCaseConfig.configurationId +
+                    ' != ' +
+                    CONFIG_ID
+            )
+
+        if (
+            resultUseCaseConfig.version !=
+            Number.parseInt(resultSetConfiguration.version.toString())
+        )
+            throw new Error(
+                'Config Version not the same for deployed use case' +
+                    resultUseCaseConfig.version +
+                    ' != ' +
+                    Number.parseInt(resultSetConfiguration.version.toString())
+            )
 
         // pause and unpause use case
         /*const resultPauseISBE = await pauseIsbe(proxyAddress, factory, signer)

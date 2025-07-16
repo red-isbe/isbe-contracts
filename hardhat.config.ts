@@ -39,6 +39,7 @@ import './tasks/configMgmt/facetSelectors'
 import './tasks/configMgmt/getConfig'
 import './tasks/configMgmt/setConfig'
 import './tasks/proxyFactory/deployUseCase'
+import './tasks/proxyFactory/getConfigurationByProxy'
 import './tasks/deployTest'
 
 const config: HardhatUserConfig = {

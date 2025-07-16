@@ -65,7 +65,7 @@ task('deployUseCase', 'Sets config')
                 signer
             )
 
-            console.log('Deploy Use Case result:')
+            console.log('Deployed Use Case result:')
             console.log('    Configuration ID:', result.configurationId)
             console.log('    Version:', result.version)
             console.log('    RBACs:', JSON.stringify(result.rbacs))
