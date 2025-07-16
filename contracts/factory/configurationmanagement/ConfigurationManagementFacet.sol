@@ -45,10 +45,11 @@ contract ConfigurationManagementFacet is
         override
         returns (bytes4[] memory selectors_)
     {
-        uint256 selectorsLength = 7;
+        uint256 selectorsLength = 8;
         selectors_ = new bytes4[](selectorsLength);
         selectors_[--selectorsLength] = this.setConfiguration.selector;
         selectors_[--selectorsLength] = this.getConfiguration.selector;
+        selectors_[--selectorsLength] = this.checkConfiguration.selector;
         selectors_[--selectorsLength] = this.facets.selector;
         selectors_[--selectorsLength] = this.facetFunctionSelectors.selector;
         selectors_[--selectorsLength] = this.facetAddresses.selector;

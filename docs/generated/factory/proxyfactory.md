@@ -1,27 +1,26 @@
 ## IProxyFactory
 
-Defines a standard factory for deploying different kinds of proxy contracts,
-including Transparent and Diamond proxies.
+Interface for deploying and managing diamond proxy contracts
 
-_This interface specifies the functions, events, and errors that a proxy factory must
-implement. It provides a consistent API for creating and initialising complex proxy
-setups, ensuring that any implementing contract is predictable and interoperable._
+_Provides functionality to deploy use-case proxies with business logic
+facets and manage their configurations through diamond patterns_
 
-### DiamondDeployed
+### UseCaseDeployed
 
 ```solidity
-event DiamondDeployed(bytes32[] businessIds, struct IAccessControl.Rbac[] rbacs, address proxy)
+event UseCaseDeployed(bytes32 configurationId, uint256 version, struct IAccessControl.Rbac[] rbacs, address proxy)
 ```
 
-Emitted when a new diamond proxy has been successfully deployed and initialised.
+Emitted when a new use-case proxy is successfully deployed
 
 #### Parameters
 
-| Name        | Type                         | Description                                                                  |
-| ----------- | ---------------------------- | ---------------------------------------------------------------------------- |
-| businessIds | bytes32[]                    | Identifiers for all the business logic facets attached to the diamond.       |
-| rbacs       | struct IAccessControl.Rbac[] | The Role-Based Access Control (RBAC) settings applied during initialisation. |
-| proxy       | address                      | The address of the newly created diamond proxy contract.                     |
+| Name            | Type                         | Description                                       |
+| --------------- | ---------------------------- | ------------------------------------------------- |
+| configurationId | bytes32                      | The unique identifier for the configuration       |
+| version         | uint256                      | The version number of the configuration used      |
+| rbacs           | struct IAccessControl.Rbac[] | Array of role-based access control configurations |
+| proxy           | address                      | The address of the deployed proxy contract        |
 
 ### NotEmptyBusinessIds
 
@@ -29,7 +28,8 @@ Emitted when a new diamond proxy has been successfully deployed and initialised.
 error NotEmptyBusinessIds()
 ```
 
-Reverted when attempting to deploy a diamond proxy with an empty list of business IDs.
+Reverted when attempting to deploy a diamond proxy with an
+empty list of business IDs
 
 ### ForbiddenRole
 
@@ -37,13 +37,14 @@ Reverted when attempting to deploy a diamond proxy with an empty list of busines
 error ForbiddenRole(bytes32 role)
 ```
 
-Reverted when a caller attempts an action with a role that is not permitted.
+Reverted when a caller attempts an action with a role that is
+not permitted
 
 #### Parameters
 
-| Name | Type    | Description                                          |
-| ---- | ------- | ---------------------------------------------------- |
-| role | bytes32 | The specific role that was found to be unauthorised. |
+| Name | Type    | Description                                         |
+| ---- | ------- | --------------------------------------------------- |
+| role | bytes32 | The specific role that was found to be unauthorised |
 
 ### FacetNotPermitted
 
@@ -51,13 +52,14 @@ Reverted when a caller attempts an action with a role that is not permitted.
 error FacetNotPermitted(bytes32 businessId)
 ```
 
-Reverted if a requested facet is not on the list of permitted facets for deployment.
+Reverted if a requested facet is not on the list of permitted
+facets for deployment
 
 #### Parameters
 
-| Name       | Type    | Description                                        |
-| ---------- | ------- | -------------------------------------------------- |
-| businessId | bytes32 | The identifier of the facet that is not permitted. |
+| Name       | Type    | Description                                       |
+| ---------- | ------- | ------------------------------------------------- |
+| businessId | bytes32 | The identifier of the facet that is not permitted |
 
 ### DuplicatedBusinessId
 
@@ -65,13 +67,14 @@ Reverted if a requested facet is not on the list of permitted facets for deploym
 error DuplicatedBusinessId(bytes32 businessId)
 ```
 
-Reverted if the list of business logic identifiers contains a duplicate entry.
+Reverted if the list of business logic identifiers contains
+a duplicate entry
 
 #### Parameters
 
-| Name       | Type    | Description                                     |
-| ---------- | ------- | ----------------------------------------------- |
-| businessId | bytes32 | The identifier that was duplicated in the list. |
+| Name       | Type    | Description                                    |
+| ---------- | ------- | ---------------------------------------------- |
+| businessId | bytes32 | The identifier that was duplicated in the list |
 
 ### CurrentIdNotRegistered
 
@@ -79,176 +82,152 @@ Reverted if the list of business logic identifiers contains a duplicate entry.
 error CurrentIdNotRegistered(bytes32 businessId)
 ```
 
-Reverted if a specified business logic identifier has not been registered with the factory.
+Reverted if a specified business logic identifier has not been
+registered with the factory
 
 #### Parameters
 
-| Name       | Type    | Description                  |
-| ---------- | ------- | ---------------------------- |
-| businessId | bytes32 | The unregistered identifier. |
+| Name       | Type    | Description                 |
+| ---------- | ------- | --------------------------- |
+| businessId | bytes32 | The unregistered identifier |
 
-### InitializationFacetNotFound
+### FacetNotFound
 
 ```solidity
-error InitializationFacetNotFound(bytes32 businessId)
+error FacetNotFound(bytes32 businessId)
 ```
 
-Reverted during diamond deployment if the specified initialisation facet is not
-in the list of facets being deployed.
+Reverted during diamond deployment if the specified
+initialisation facet is not in the list of facets being deployed
 
 #### Parameters
 
-| Name       | Type    | Description                                                    |
-| ---------- | ------- | -------------------------------------------------------------- |
-| businessId | bytes32 | The identifier of the initialisation facet that was not found. |
+| Name       | Type    | Description                                                   |
+| ---------- | ------- | ------------------------------------------------------------- |
+| businessId | bytes32 | The identifier of the initialisation facet that was not found |
 
-### deployDiamond
+### deployUseCase
 
 ```solidity
-function deployDiamond(bytes32[] businessIds, struct IAccessControl.Rbac[] rbacs, bytes32 initBusinessId, bytes initData) external
+function deployUseCase(bytes32 configurationId, uint256 version, struct IAccessControl.Rbac[] rbacs, bytes32 initBusinessId, bytes initData) external
 ```
 
-Deploys a new EIP-2535 Diamond proxy with a specified set of facets and access control.
+Deploys a new use-case proxy with the specified configuration
 
-_This function should handle the creation of a diamond proxy, attach a set of facets
-(identified by `businessIds`), and configure the access control roles. It must also
-be able to execute an initialisation function on one of the specified facets._
+_Creates a diamond proxy with business logic facets and access
+control, then initialises it with the provided data_
 
 #### Parameters
 
-| Name           | Type                         | Description                                                             |
-| -------------- | ---------------------------- | ----------------------------------------------------------------------- |
-| businessIds    | bytes32[]                    | A list of identifiers for the specific business logic facets to attach. |
-| rbacs          | struct IAccessControl.Rbac[] | An array of access control roles to configure on the new diamond.       |
-| initBusinessId | bytes32                      | The identifier of the facet that contains the initialisation function.  |
-| initData       | bytes                        | The encoded call data for the initialisation function.                  |
+| Name            | Type                         | Description                                            |
+| --------------- | ---------------------------- | ------------------------------------------------------ |
+| configurationId | bytes32                      | The unique identifier for the configuration            |
+| version         | uint256                      | The version number of the configuration (0 for latest) |
+| rbacs           | struct IAccessControl.Rbac[] | Array of role-based access control configurations      |
+| initBusinessId  | bytes32                      | The business ID of the facet to use for init           |
+| initData        | bytes                        | The calldata for the initialisation function           |
 
-### getDeployedProxiesByBusinessId
+### getDeployedProxiesByConfiguration
 
 ```solidity
-function getDeployedProxiesByBusinessId(bytes32 businessId) external view returns (address[] proxies)
+function getDeployedProxiesByConfiguration(bytes32 configurationId, uint256 version) external view returns (address[] proxies)
 ```
 
-Finds all proxy addresses that have been deployed incorporating a specific business logic facet.
+Retrieves all deployed proxies for a specific configuration
+
+_Returns an array of proxy addresses that were deployed with the
+given configuration and version_
 
 #### Parameters
 
-| Name       | Type    | Description                                         |
-| ---------- | ------- | --------------------------------------------------- |
-| businessId | bytes32 | The identifier of the business logic to search for. |
+| Name            | Type    | Description                                 |
+| --------------- | ------- | ------------------------------------------- |
+| configurationId | bytes32 | The unique identifier for the configuration |
+| version         | uint256 | The version number of the configuration     |
 
 #### Return Values
 
-| Name    | Type      | Description                                                                 |
-| ------- | --------- | --------------------------------------------------------------------------- |
-| proxies | address[] | An array of deployed proxy addresses associated with the given business ID. |
+| Name    | Type      | Description                       |
+| ------- | --------- | --------------------------------- |
+| proxies | address[] | Array of deployed proxy addresses |
 
-### getBusinessIdsByProxy
+### getConfigurationByProxy
 
 ```solidity
-function getBusinessIdsByProxy(address proxy) external view returns (bytes32[] businessIds)
+function getConfigurationByProxy(address proxy) external view returns (bytes32 configurationId, uint256 version)
 ```
 
-Retrieves all business logic identifiers associated with a specific deployed proxy address.
+Gets the configuration details for a specific proxy
+
+_Returns the configuration ID and version used to deploy the proxy_
 
 #### Parameters
 
-| Name  | Type    | Description                                 |
-| ----- | ------- | ------------------------------------------- |
-| proxy | address | The address of the deployed proxy to query. |
+| Name  | Type    | Description                                |
+| ----- | ------- | ------------------------------------------ |
+| proxy | address | The address of the deployed proxy contract |
 
 #### Return Values
 
-| Name        | Type      | Description                                               |
-| ----------- | --------- | --------------------------------------------------------- |
-| businessIds | bytes32[] | An array of business IDs attached to the specified proxy. |
+| Name            | Type    | Description                                 |
+| --------------- | ------- | ------------------------------------------- |
+| configurationId | bytes32 | The unique identifier for the configuration |
+| version         | uint256 | The version number of the configuration     |
 
 ---
 
 ## ProxyFactory
 
-This contract is the primary implementation of the IProxyFactory interface. It serves
-as a factory for deploying and managing various types of proxy contracts, such as
-Diamond proxies (EIP-2535).
+Main contract for deploying diamond proxy contracts with business
+logic configurations
 
-_An upgradeable contract that provides the concrete logic for deploying proxies. It inherits
-from ProxyFactoryInternal, which contains the core implementation details, and strictly
-adheres to the IProxyFactory interface. Access to key functions is restricted through
-role-based access control._
+_Inherits from ProxyFactoryInternal and implements the IProxyFactory
+interface. Provides role-based access control for proxy deployment
+and configuration management functionality_
 
-### deployDiamond
+### onlyValidConfiguration
 
 ```solidity
-function deployDiamond(bytes32[] businessIds, struct IAccessControl.Rbac[] rbacs, bytes32 initBusinessId, bytes initData) external
+modifier onlyValidConfiguration(bytes32 _configurationId, uint256 _version)
 ```
 
-Deploys a new EIP-2535 Diamond proxy with a specified set of facets and access control.
-
-_This function should handle the creation of a diamond proxy, attach a set of facets
-(identified by `businessIds`), and configure the access control roles. It must also
-be able to execute an initialisation function on one of the specified facets._
+_Modifier to validate that a configuration exists and is valid_
 
 #### Parameters
 
-| Name           | Type                         | Description                                                             |
-| -------------- | ---------------------------- | ----------------------------------------------------------------------- |
-| businessIds    | bytes32[]                    | A list of identifiers for the specific business logic facets to attach. |
-| rbacs          | struct IAccessControl.Rbac[] | An array of access control roles to configure on the new diamond.       |
-| initBusinessId | bytes32                      | The identifier of the facet that contains the initialisation function.  |
-| initData       | bytes                        | The encoded call data for the initialisation function.                  |
+| Name              | Type    | Description                                 |
+| ----------------- | ------- | ------------------------------------------- |
+| \_configurationId | bytes32 | The unique identifier for the configuration |
+| \_version         | uint256 | The version number to validate              |
 
-### getDeployedProxiesByBusinessId
+### deployUseCase
 
 ```solidity
-function getDeployedProxiesByBusinessId(bytes32 businessId) external view returns (address[] proxies)
+function deployUseCase(bytes32 _configurationId, uint256 _version, struct IAccessControl.Rbac[] _rbacs, bytes32 _initBusinessId, bytes _initData) external
 ```
 
-Finds all proxy addresses that have been deployed incorporating a specific business logic facet.
-
-#### Parameters
-
-| Name       | Type    | Description                                         |
-| ---------- | ------- | --------------------------------------------------- |
-| businessId | bytes32 | The identifier of the business logic to search for. |
-
-#### Return Values
-
-| Name    | Type      | Description                                                                 |
-| ------- | --------- | --------------------------------------------------------------------------- |
-| proxies | address[] | An array of deployed proxy addresses associated with the given business ID. |
-
-### getBusinessIdsByProxy
+### getDeployedProxiesByConfiguration
 
 ```solidity
-function getBusinessIdsByProxy(address proxy) external view returns (bytes32[] businessIds)
+function getDeployedProxiesByConfiguration(bytes32 _configurationId, uint256 _version) external view returns (address[] proxies)
 ```
 
-Retrieves all business logic identifiers associated with a specific deployed proxy address.
+### getConfigurationByProxy
 
-#### Parameters
-
-| Name  | Type    | Description                                 |
-| ----- | ------- | ------------------------------------------- |
-| proxy | address | The address of the deployed proxy to query. |
-
-#### Return Values
-
-| Name        | Type      | Description                                               |
-| ----------- | --------- | --------------------------------------------------------- |
-| businessIds | bytes32[] | An array of business IDs attached to the specified proxy. |
+```solidity
+function getConfigurationByProxy(address _proxy) external view returns (bytes32 configurationId, uint256 version)
+```
 
 ---
 
 ## ProxyFactoryFacet
 
-This contract serves as the EIP-2535 Diamond facet for the proxy factory functionality.
-It exposes all the features of the ProxyFactory through a Diamond proxy.
+EIP-2535 diamond facet for proxy factory functionality
 
-_This contract inherits from ProxyFactory and implements the IEIP2535Introspection
-interface. It is designed to be deployed as a logic contract (facet) that can be
-added to a Diamond proxy. The constructor disables the initialiser to prevent this
-implementation contract from being initialised directly; it must be done through
-the storage context of a proxy._
+_Inherits from ProxyFactory and implements IEIP2535Introspection
+interface. Designed to be deployed as a logic contract (facet) that
+can be added to a diamond proxy. The constructor disables the
+initialiser to prevent direct initialisation of this implementation_
 
 ### constructor
 
@@ -308,49 +287,44 @@ _A pure function that returns an array of supported `bytes4` IDs._
 
 ## ProxyFactoryInternal
 
-This abstract contract contains the internal functions and storage for creating and
-managing proxy contracts. It is not intended for direct deployment but serves as the
-core implementation layer for the public-facing `ProxyFactory`.
+Abstract contract providing internal proxy factory functionality
 
-_Implements the internal logic required by `ProxyFactory`. It manages storage using a
-dedicated struct to prevent storage collisions in an upgradeable context. It inherits
-from `BusinessLogicFactoryInternal` to access business logic registration and from
-`InitializeBusinessLogic` for initialisation capabilities._
+_Inherits from ConfigurationManagementInternal and provides core
+logic for deploying and managing ISBE proxy contracts. Contains
+storage mappings and internal functions for proxy deployment_
 
 ### ProxyFactoryStorage
 
-_Defines the storage layout for the proxy factory. Using a struct at a fixed
-storage slot helps prevent storage collisions across upgrades._
-
 ```solidity
 struct ProxyFactoryStorage {
-  mapping(bytes32 => struct EnumerableSet.AddressSet) businessIdToProxyAddress;
-  mapping(address => struct EnumerableSet.Bytes32Set) proxyAddressToBusinessIds;
+  mapping(bytes32 => mapping(uint256 => struct EnumerableSet.AddressSet)) configurationToProxyAddress;
+  mapping(address => bytes32) proxyAddressToConfigurationId;
+  mapping(address => uint256) proxyAddressToVersion;
 }
 ```
 
-### \_deployDiamond
+### \_deployUseCase
 
 ```solidity
-function _deployDiamond(bytes32[] businessIds, struct IAccessControl.Rbac[] rbacs, bytes32 initBusinessId, bytes initData) internal returns (address proxyAddress)
+function _deployUseCase(bytes32 _configurationId, uint256 _version, struct IAccessControl.Rbac[] _rbacs, bytes32 _initBusinessId, bytes _initData) internal returns (address proxyAddress_)
 ```
 
-### \_getDeployedProxiesByBusinessId
+### \_getDeployedProxiesByConfiguration
 
 ```solidity
-function _getDeployedProxiesByBusinessId(bytes32 businessId) internal view returns (address[] proxies)
+function _getDeployedProxiesByConfiguration(bytes32 _configurationId, uint256 _version) internal view returns (address[] proxies_)
 ```
 
-### \_getBusinessIdsByProxy
+### \_getConfigurationByProxy
 
 ```solidity
-function _getBusinessIdsByProxy(address proxy) internal view returns (bytes32[] businessIds)
+function _getConfigurationByProxy(address _proxy) internal view returns (bytes32 configurationId_, uint256 version_)
 ```
 
 ### \_isProxyDeployed
 
 ```solidity
-function _isProxyDeployed(address proxy) internal view returns (bool deployed_)
+function _isProxyDeployed(address _proxy) internal view returns (bool deployed_)
 ```
 
 ### \_implementedInterfaces

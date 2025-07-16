@@ -28,75 +28,82 @@ contract ConfigurationManagement is
     IConfigurationManagement
 {
     function setConfiguration(
-        bytes32 configurationId,
-        BusinessData[] calldata businessIds
+        bytes32 _configurationId,
+        BusinessData[] calldata _businessIds
     )
         external
         override
         onlyRole(_GOVERNANCE_CONFIGURATION_MANAGER_ROLE)
-        bytes32IsNotZero(configurationId)
+        bytes32IsNotZero(_configurationId)
     {
         emit ConfigurationSet(
-            configurationId,
-            businessIds,
-            _setConfiguration(configurationId, businessIds)
+            _configurationId,
+            _businessIds,
+            _setConfiguration(_configurationId, _businessIds)
         );
     }
 
     function getConfiguration(
-        bytes32 configurationId,
-        uint256 version
+        bytes32 _configurationId,
+        uint256 _version
     ) external view override returns (BusinessData[] memory businessData_) {
-        businessData_ = _getConfiguration(configurationId, version);
+        businessData_ = _getConfiguration(_configurationId, _version);
+    }
+
+    function checkConfiguration(
+        bytes32 _configurationId,
+        uint256 _version
+    ) external view override {
+        _checkConfiguration(_configurationId, _version);
     }
 
     function facets(
-        bytes32 configurationId,
-        uint256 version
+        bytes32 _configurationId,
+        uint256 _version
     ) external view override returns (IDiamondLoupe.Facet[] memory facets_) {
-        facets_ = _getFacets(configurationId, version);
+        facets_ = _getFacets(_configurationId, _version);
     }
 
     function facetFunctionSelectors(
-        bytes32 configurationId,
-        uint256 version,
-        address facet
+        bytes32 _configurationId,
+        uint256 _version,
+        address _facet
     ) external view override returns (bytes4[] memory facetFunctionSelectors_) {
         facetFunctionSelectors_ = _facetFunctionSelectors(
-            configurationId,
-            version,
-            facet
+            _configurationId,
+            _version,
+            _facet
         );
     }
 
     function facetAddresses(
-        bytes32 configurationId,
-        uint256 version
+        bytes32 _configurationId,
+        uint256 _version
     ) external view override returns (address[] memory facetAddresses_) {
-        facetAddresses_ = _facetAddresses(configurationId, version);
+        facetAddresses_ = _facetAddresses(_configurationId, _version);
     }
 
     function facetAddress(
-        bytes32 configurationId,
-        uint256 version,
-        bytes4 functionSelector
+        bytes32 _configurationId,
+        uint256 _version,
+        bytes4 _functionSelector
     ) external view override returns (address facetAddress_) {
         facetAddress_ = _facetAddress(
-            configurationId,
-            version,
-            functionSelector
+            _configurationId,
+            _version,
+            _functionSelector
         );
     }
 
     function facetSupportsInterface(
-        bytes32 configurationId,
-        uint256 version,
-        bytes4 interfaceId
+        bytes32 _configurationId,
+        uint256 _version,
+        bytes4 _interfaceId
     ) external view override returns (bool supported_) {
         supported_ = _facetSupportsInterface(
-            configurationId,
-            version,
-            interfaceId
+            _configurationId,
+            _version,
+            _interfaceId
         );
     }
 

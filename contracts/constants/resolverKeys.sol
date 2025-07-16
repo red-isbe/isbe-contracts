@@ -42,6 +42,15 @@ bytes32 constant _DIAMOND_CUT_RESOLVER_KEY = 0xb1733495acec04f904af52509bd68775c
 // keccak256('isbe.contracts.diamond.loupe.resolver.key');
 bytes32 constant _DIAMOND_LOUPE_RESOLVER_KEY = 0xa081a7fa2e40735a4006bc6a225e18158879b54064ab1f60045661349931c41b;
 
+// keccak256('isbe.contracts.isbe,proxy.resolver.key');
+bytes32 constant _ISBE_PROXY_RESOLVER_KEY = 0x10439eb60928efcdb5c19aae420e0787ddd18f1245bf81925d0338db838c39b1;
+
+// keccak256('isbe.contracts.isbe.cut.resolver.key');
+bytes32 constant _ISBE_CUT_RESOLVER_KEY = 0x3e325d62f8652528edf5d41ed730a283b473d9e55ee9b6631b261b52199eac25;
+
+// keccak256('isbe.contracts.isbe.loupe.resolver.key');
+bytes32 constant _ISBE_LOUPE_RESOLVER_KEY = 0x360faa2d547f0a951a5b1da060a4ffb56888bf8ad05db9de4d6d09b3eae1e5e2;
+
 // keccak256('isbe.contracts.business.logic.factory.resolver.key');
 bytes32 constant _BUSINESS_LOGIC_FACTORY_RESOLVER_KEY = 0xc6315ad82a957243645764f5542166d6ca27427e14eee4c56d66d963349845f4;
 

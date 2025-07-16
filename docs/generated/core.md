@@ -63,10 +63,10 @@ within an array, and aggregate multiple interface lists. Contracts inheriting fr
 implement the `_implementedInterfaces` function to declare which interfaces they support,
 enabling standardised interface detection._
 
-### \_checkERC165ForbiddenInterfaces
+### \_isERC165ForbiddenInterfaces
 
 ```solidity
-function _checkERC165ForbiddenInterfaces(bytes4 _interfaceId) internal pure virtual returns (bool)
+function _isERC165ForbiddenInterfaces(bytes4 _interfaceId) internal pure virtual returns (bool)
 ```
 
 ### \_supportsERC165Interface
