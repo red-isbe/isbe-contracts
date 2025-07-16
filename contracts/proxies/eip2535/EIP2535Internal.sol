@@ -475,11 +475,11 @@ abstract contract EIP2535Internal is
     }
 
     function _supportsInterface(
-        bytes4 interfaceId
+        bytes4 _interfaceId
     ) internal view virtual returns (bool) {
         DiamondStorage storage $ = _diamondStorage();
         return
-            $.facetAddressAndInterfacePosition[interfaceId].facetAddress !=
+            $.facetAddressAndInterfacePosition[_interfaceId].facetAddress !=
             address(0);
     }
 
@@ -514,30 +514,29 @@ abstract contract EIP2535Internal is
     }
 
     function _buildItemUpdatesFromIntrospection(
-        address[] memory facetAddresses,
-        IDiamond.ItemsType itemType
-    ) private pure returns (IDiamondCut.ItemCut[] memory itemCut) {
-        uint256 facetAddressesLength = facetAddresses.length;
-        itemCut = new IDiamondCut.ItemCut[](facetAddressesLength);
+        address[] memory _facetAddressList,
+        IDiamond.ItemsType _itemType
+    ) private pure returns (IDiamondCut.ItemCut[] memory itemCut_) {
+        uint256 facetAddressesLength = _facetAddressList.length;
+        itemCut_ = new IDiamondCut.ItemCut[](facetAddressesLength);
         for (uint256 index; index < facetAddressesLength; ++index) {
-            itemCut[index] = IDiamond.ItemCut({
-                facetAddress: facetAddresses[index],
+            itemCut_[index] = IDiamond.ItemCut({
+                facetAddress: _facetAddressList[index],
                 action: IDiamond.ItemCutAction.Add,
-                items: _introspectItems(facetAddresses[index], itemType)
+                items: _introspectItems(_facetAddressList[index], _itemType)
             });
-            _checkNonZeroItem(facetAddresses[index], itemCut[index].items);
+            _checkNonZeroItem(_facetAddressList[index], itemCut_[index].items);
         }
     }
 
     function _introspectItems(
-        address facetAddress,
+        address _facetAddr,
         IDiamond.ItemsType itemType
-    ) private pure returns (bytes4[] memory items) {
+    ) private pure returns (bytes4[] memory items_) {
         if (itemType == IDiamond.ItemsType.Selectors) {
-            items = IEIP2535Introspection(facetAddress)
-                .selectorsIntrospection();
+            items_ = IEIP2535Introspection(_facetAddr).selectorsIntrospection();
         } else {
-            items = IEIP2535Introspection(facetAddress)
+            items_ = IEIP2535Introspection(_facetAddr)
                 .interfacesIntrospection();
         }
     }

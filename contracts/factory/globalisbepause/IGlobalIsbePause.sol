@@ -30,14 +30,14 @@ interface IGlobalIsbePause {
     /**
      * @notice Pauses a specific use-case proxy contract.
      * @dev This can only be called by an account with the appropriate role.
-     * @param proxyAddress The address of the proxy contract to pause.
+     * @param _proxyAddress The address of the proxy contract to pause.
      */
-    function pauseIsbe(address proxyAddress) external;
+    function pauseIsbe(address _proxyAddress) external;
 
     /**
      * @notice Unpauses a specific use-case proxy contract.
      * @dev This can only be called by an account with the appropriate role.
-     * @param proxyAddress The address of the proxy contract to unpause.
+     * @param _proxyAddress The address of the proxy contract to unpause.
      */
-    function unpauseIsbe(address proxyAddress) external;
+    function unpauseIsbe(address _proxyAddress) external;
 }

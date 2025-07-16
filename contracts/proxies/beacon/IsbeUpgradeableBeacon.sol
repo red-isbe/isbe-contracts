@@ -5,5 +5,5 @@ import {UpgradeableBeacon} from '@openzeppelin/contracts/proxy/beacon/Upgradeabl
 
 // solhint-disable-next-line
 contract IsbeUpgradeableBeacon is UpgradeableBeacon {
-    constructor(address implementation) UpgradeableBeacon(implementation) {}
+    constructor(address _implementation) UpgradeableBeacon(_implementation) {}
 }

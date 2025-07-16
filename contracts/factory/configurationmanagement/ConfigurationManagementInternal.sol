@@ -129,12 +129,14 @@ abstract contract ConfigurationManagementInternal is
     }
 
     function _existsConfiguration(
-        bytes32 configurationId,
-        uint256 version
+        bytes32 _configurationId,
+        uint256 _version
     ) internal view returns (bool) {
         return
             _configurationManagementStorage()
-                .businessIds[configurationId][_latest(configurationId, version)]
+                .businessIds[_configurationId][
+                    _latest(_configurationId, _version)
+                ]
                 .length() > 0;
     }
 
@@ -162,7 +164,7 @@ abstract contract ConfigurationManagementInternal is
     function _getFacets(
         bytes32 _configurationId,
         uint256 _version
-    ) internal view returns (IDiamondLoupe.Facet[] memory facets) {
+    ) internal view returns (IDiamondLoupe.Facet[] memory facets_) {
         ConfigurationManagementStorage
             storage $ = _configurationManagementStorage();
         uint256 version = _latest(_configurationId, _version);
@@ -170,10 +172,10 @@ abstract contract ConfigurationManagementInternal is
             .facetAddresses[_configurationId][version]
             .values();
         uint256 length = facetAddresses.length;
-        facets = new IDiamondLoupe.Facet[](length);
+        facets_ = new IDiamondLoupe.Facet[](length);
         for (uint256 index; index < length; ) {
             address current = facetAddresses[index];
-            facets[index] = _buildFacet(
+            facets_[index] = _buildFacet(
                 current,
                 $.functionSelectors[_configurationId][
                     _latest(_configurationId, version)
@@ -188,12 +190,12 @@ abstract contract ConfigurationManagementInternal is
     function _facetFunctionSelectors(
         bytes32 _configurationId,
         uint256 _version,
-        address facetAddress
+        address _facetAddr
     ) internal view returns (bytes4[] memory facetFunctionSelectors_) {
         facetFunctionSelectors_ = _configurationManagementStorage()
             .functionSelectors[_configurationId][
                 _latest(_configurationId, _version)
-            ][facetAddress];
+            ][_facetAddr];
     }
 
     function _facetAddresses(
@@ -228,7 +230,7 @@ abstract contract ConfigurationManagementInternal is
     }
 
     function _storeFunctionSelectors(
-        ConfigurationManagementStorage storage $,
+        ConfigurationManagementStorage storage _$,
         bytes32 _configurationId,
         uint256 _version,
         address _currentFacetAddress
@@ -240,12 +242,12 @@ abstract contract ConfigurationManagementInternal is
         uint256 selectorsLength = selectors.length;
         for (uint256 selectorsIndex; selectorsIndex < selectorsLength; ) {
             bytes4 selector = selectors[selectorsIndex];
-            $
+            _$
                 .functionSelectors[_configurationId][_version][
                     _currentFacetAddress
                 ]
                 .push(selector);
-            $.selectorToFacet[_configurationId][_version][
+            _$.selectorToFacet[_configurationId][_version][
                 selector
             ] = _currentFacetAddress;
             unchecked {
@@ -255,7 +257,7 @@ abstract contract ConfigurationManagementInternal is
     }
 
     function _storeSupportedInterfaces(
-        ConfigurationManagementStorage storage $,
+        ConfigurationManagementStorage storage _$,
         bytes32 _configurationId,
         uint256 _version,
         address _currentFacetAddress
@@ -266,7 +268,7 @@ abstract contract ConfigurationManagementInternal is
         bytes4[] memory interfaces = introspection.interfacesIntrospection();
         uint256 interfacesLength = interfaces.length;
         for (uint256 interfacesIndex; interfacesIndex < interfacesLength; ) {
-            $.supportsInterface[_configurationId][_version][
+            _$.supportsInterface[_configurationId][_version][
                 interfaces[interfacesIndex]
             ] = true;
             unchecked {
@@ -374,11 +376,11 @@ abstract contract ConfigurationManagementInternal is
         private
         view
         returns (
-            address facetAddress,
+            address facetAddress_,
             IConfigurationManagement.BusinessData memory businessData_
         )
     {
-        facetAddress = _getBusinessLogicAddress(_businessId, 0);
+        facetAddress_ = _getBusinessLogicAddress(_businessId, 0);
         businessData_ = _buildBusinessData(_businessId);
     }
 

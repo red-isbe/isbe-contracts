@@ -14,16 +14,16 @@ contract CounterV2FacetTestWrapper is
     }
 
     function initializeCounter(
-        uint256 startingValue
+        uint256 _startingValue
     ) external initializer(_RESOLVER_KEY) {
         CounterStorage storage $ = _counterStorage();
-        $.counter = startingValue;
+        $.counter = _startingValue;
     }
 
     function increment(
-        uint256 amount
+        uint256 _amount
     ) external whenNotPaused onlyRole(_DEFAULT_ADMIN_ROLE) {
-        _counterStorage().counter += amount;
+        _counterStorage().counter += _amount;
     }
 
     function counter() external view returns (uint256) {

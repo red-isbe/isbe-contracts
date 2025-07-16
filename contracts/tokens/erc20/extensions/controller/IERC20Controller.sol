@@ -29,14 +29,18 @@ interface IERC20Controller {
 
     /// @notice Transfers tokens from one account to another without requiring approval
     /// @dev This function should only be callable by an authorized controller (e.g., regulator or admin contract)
-    /// @param from The address to transfer tokens from
-    /// @param to The address to transfer tokens to
-    /// @param amount The number of tokens to transfer
-    function forceTransfer(address from, address to, uint256 amount) external;
+    /// @param _from The address to transfer tokens from
+    /// @param _to The address to transfer tokens to
+    /// @param _amount The number of tokens to transfer
+    function forceTransfer(
+        address _from,
+        address _to,
+        uint256 _amount
+    ) external;
 
     /// @notice Burns tokens from an account without requiring approval
     /// @dev This function should only be callable by an authorized controller (e.g., regulator or admin contract)
-    /// @param from The address to burn tokens from
-    /// @param amount The number of tokens to burn
-    function forceBurn(address from, uint256 amount) external;
+    /// @param _from The address to burn tokens from
+    /// @param _amount The number of tokens to burn
+    function forceBurn(address _from, uint256 _amount) external;
 }

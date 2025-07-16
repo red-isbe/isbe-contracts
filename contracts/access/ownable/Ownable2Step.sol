@@ -10,10 +10,10 @@ import {Ownable2StepInternal} from './Ownable2StepInternal.sol';
 /// @dev Inherits from IOwnable2Step, Ownable and Ownable2StepInternal
 contract Ownable2Step is IOwnable2Step, OwnableBase, Ownable2StepInternal {
     function transferOwnership(
-        address newOwner
-    ) external override onlyOwner addressIsNotZero(newOwner) whenNotPaused {
-        _initiateTransferOwnership(newOwner);
-        emit OwnershipTransferStarted(_msgSender(), newOwner);
+        address _newOwner
+    ) external override onlyOwner addressIsNotZero(_newOwner) whenNotPaused {
+        _initiateTransferOwnership(_newOwner);
+        emit OwnershipTransferStarted(_msgSender(), _newOwner);
     }
 
     function acceptOwnership() external onlyPendingOwner whenNotPaused {

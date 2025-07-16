@@ -22,17 +22,17 @@ interface IAssetEventTracker {
     error StateChangeNotAllowed(uint256 newState);
 
     /// @notice Register new asset event
-    /// @param newState New asset state for this event
-    function recordState(uint256 newState) external;
+    /// @param _newState New asset state for this event
+    function recordState(uint256 _newState) external;
 
     /// @notice Return paginated events based on page number and results per page
-    /// @param pageNumber Page number (starting with 0)
-    /// @param resultsPerPage Number of results per page
-    /// @return assetEvents Asset events array
+    /// @param _pageNumber Page number (starting with 0)
+    /// @param _resultsPerPage Number of results per page
+    /// @return assetEvents_ Asset events array
     function getAssetEvents(
-        uint256 pageNumber,
-        uint256 resultsPerPage
-    ) external view returns (AssetEvent[] memory assetEvents);
+        uint256 _pageNumber,
+        uint256 _resultsPerPage
+    ) external view returns (AssetEvent[] memory assetEvents_);
 
     /// @notice Return latest asset event
     /// @return Latest asset event registered
@@ -43,9 +43,9 @@ interface IAssetEventTracker {
     function getCurrentState() external view returns (uint256);
 
     /// @notice Return if state change is allowed
-    /// @param newState New asset state to change
+    /// @param _newState New asset state to change
     /// @return True or false if is allowed
     function isStateChangeAllowed(
-        uint256 newState
+        uint256 _newState
     ) external view returns (bool);
 }

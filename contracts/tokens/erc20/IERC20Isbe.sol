@@ -35,13 +35,13 @@ interface IERC20Isbe is IERC20, IERC20Metadata {
 
     /**
      * @notice Initializes the ERC20 token with the given name, symbol, and decimals.
-     * @param newName The name of the ERC20 token to be initialized.
-     * @param newSymbol The symbol of the ERC20 token to be initialized.
-     * @param newDecimals The number of decimal places for the ERC20 token.
+     * @param _newName The name of the ERC20 token to be initialized.
+     * @param _newSymbol The symbol of the ERC20 token to be initialized.
+     * @param _newDecimals The number of decimal places for the ERC20 token.
      */
     function initializeErc20(
-        string memory newName,
-        string memory newSymbol,
-        uint8 newDecimals
+        string memory _newName,
+        string memory _newSymbol,
+        uint8 _newDecimals
     ) external;
 }

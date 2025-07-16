@@ -20,7 +20,7 @@ struct IsbeProxyArgs {
 ### constructor
 
 ```solidity
-constructor(struct IsbeProxy.IsbeProxyArgs args) public
+constructor(struct IsbeProxy.IsbeProxyArgs _args) public
 ```
 
 ---
@@ -48,7 +48,7 @@ struct IsbeProxyStorage {
 ### onlyValidConfiguration
 
 ```solidity
-modifier onlyValidConfiguration(contract IConfigurationManagement configurationManager, bytes32 configurationId, uint256 version)
+modifier onlyValidConfiguration(contract IConfigurationManagement _configurationManager, bytes32 _configurationId, uint256 _version)
 ```
 
 Validates configuration exists before function execution
@@ -57,16 +57,16 @@ _Modifier that checks configuration validity via management contract_
 
 #### Parameters
 
-| Name                 | Type                              | Description                                    |
-| -------------------- | --------------------------------- | ---------------------------------------------- |
-| configurationManager | contract IConfigurationManagement | The configuration management contract instance |
-| configurationId      | bytes32                           | The configuration identifier to validate       |
-| version              | uint256                           | The configuration version to validate          |
+| Name                   | Type                              | Description                                    |
+| ---------------------- | --------------------------------- | ---------------------------------------------- |
+| \_configurationManager | contract IConfigurationManagement | The configuration management contract instance |
+| \_configurationId      | bytes32                           | The configuration identifier to validate       |
+| \_version              | uint256                           | The configuration version to validate          |
 
 ### \_setIsbeProxyConfiguration
 
 ```solidity
-function _setIsbeProxyConfiguration(contract IConfigurationManagement configurationManager, bytes32 configurationId, uint256 version) internal
+function _setIsbeProxyConfiguration(contract IConfigurationManagement _configurationManager, bytes32 _configurationId, uint256 _version) internal
 ```
 
 ### \_initializeDiamondCut
@@ -118,5 +118,5 @@ _Must be implemented by inheriting contracts to provide resolution logic_
 ### \_supportsInterface
 
 ```solidity
-function _supportsInterface(bytes4 interfaceId) internal view virtual returns (bool)
+function _supportsInterface(bytes4 _interfaceId) internal view virtual returns (bool)
 ```

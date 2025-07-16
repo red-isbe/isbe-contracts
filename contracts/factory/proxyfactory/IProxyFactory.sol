@@ -71,41 +71,41 @@ interface IProxyFactory {
      * @notice Deploys a new use-case proxy with the specified configuration
      * @dev Creates a diamond proxy with business logic facets and access
      *      control, then initialises it with the provided data
-     * @param configurationId The unique identifier for the configuration
-     * @param version The version number of the configuration (0 for latest)
-     * @param rbacs Array of role-based access control configurations
-     * @param initBusinessId The business ID of the facet to use for init
-     * @param initData The calldata for the initialisation function
+     * @param _configurationId The unique identifier for the configuration
+     * @param _version The version number of the configuration (0 for latest)
+     * @param _rbacs Array of role-based access control configurations
+     * @param _initBusinessId The business ID of the facet to use for init
+     * @param _initData The calldata for the initialisation function
      */
     function deployUseCase(
-        bytes32 configurationId,
-        uint256 version,
-        IAccessControl.Rbac[] calldata rbacs,
-        bytes32 initBusinessId,
-        bytes calldata initData
+        bytes32 _configurationId,
+        uint256 _version,
+        IAccessControl.Rbac[] calldata _rbacs,
+        bytes32 _initBusinessId,
+        bytes calldata _initData
     ) external;
 
     /**
      * @notice Retrieves all deployed proxies for a specific configuration
      * @dev Returns an array of proxy addresses that were deployed with the
      *      given configuration and version
-     * @param configurationId The unique identifier for the configuration
-     * @param version The version number of the configuration
-     * @return proxies Array of deployed proxy addresses
+     * @param _configurationId The unique identifier for the configuration
+     * @param _version The version number of the configuration
+     * @return proxies_ Array of deployed proxy addresses
      */
     function getDeployedProxiesByConfiguration(
-        bytes32 configurationId,
-        uint256 version
-    ) external view returns (address[] memory proxies);
+        bytes32 _configurationId,
+        uint256 _version
+    ) external view returns (address[] memory proxies_);
 
     /**
      * @notice Gets the configuration details for a specific proxy
      * @dev Returns the configuration ID and version used to deploy the proxy
-     * @param proxy The address of the deployed proxy contract
-     * @return configurationId The unique identifier for the configuration
-     * @return version The version number of the configuration
+     * @param _proxy The address of the deployed proxy contract
+     * @return configurationId_ The unique identifier for the configuration
+     * @return version_ The version number of the configuration
      */
     function getConfigurationByProxy(
-        address proxy
-    ) external view returns (bytes32 configurationId, uint256 version);
+        address _proxy
+    ) external view returns (bytes32 configurationId_, uint256 version_);
 }

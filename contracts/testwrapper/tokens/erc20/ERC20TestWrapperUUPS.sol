@@ -56,5 +56,5 @@ contract ERC20TestWrapperUUPS is
     }
 
     // solhint-disable-next-line
-    function _authorizeUpgrade(address newImplementation) internal override {}
+    function _authorizeUpgrade(address _newImplementation) internal override {}
 }

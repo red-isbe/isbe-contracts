@@ -35,32 +35,32 @@ abstract contract IsbeProxyInternal is
     /**
      * @notice Validates configuration exists before function execution
      * @dev Modifier that checks configuration validity via management contract
-     * @param configurationManager The configuration management contract instance
-     * @param configurationId The configuration identifier to validate
-     * @param version The configuration version to validate
+     * @param _configurationManager The configuration management contract instance
+     * @param _configurationId The configuration identifier to validate
+     * @param _version The configuration version to validate
      */
     modifier onlyValidConfiguration(
-        IConfigurationManagement configurationManager,
-        bytes32 configurationId,
-        uint256 version
+        IConfigurationManagement _configurationManager,
+        bytes32 _configurationId,
+        uint256 _version
     ) {
         _checkValidConfiguration(
-            configurationManager,
-            configurationId,
-            version
+            _configurationManager,
+            _configurationId,
+            _version
         );
         _;
     }
 
     function _setIsbeProxyConfiguration(
-        IConfigurationManagement configurationManager,
-        bytes32 configurationId,
-        uint256 version
+        IConfigurationManagement _configurationManager,
+        bytes32 _configurationId,
+        uint256 _version
     ) internal {
         IsbeProxyStorage storage $ = _isbeProxyStorage();
-        $.configurationManager = configurationManager;
-        $.configurationId = configurationId;
-        $.version = version;
+        $.configurationManager = _configurationManager;
+        $.configurationId = _configurationId;
+        $.version = _version;
     }
 
     function _initializeDiamondCut(
@@ -122,25 +122,25 @@ abstract contract IsbeProxyInternal is
     }
 
     function _supportsInterface(
-        bytes4 interfaceId
+        bytes4 _interfaceId
     ) internal view virtual returns (bool) {
         IsbeProxyStorage storage $ = _isbeProxyStorage();
         return
             $.configurationManager.facetSupportsInterface(
                 $.configurationId,
                 $.version,
-                interfaceId
+                _interfaceId
             );
     }
 
     function _checkValidConfiguration(
-        IConfigurationManagement configurationManager,
-        bytes32 configurationId,
-        uint256 version
+        IConfigurationManagement _configurationManager,
+        bytes32 _configurationId,
+        uint256 _version
     ) private view {
-        _addressIsNotZero(address(configurationManager));
-        _bytes32IsNotZero(configurationId);
-        configurationManager.checkConfiguration(configurationId, version);
+        _addressIsNotZero(address(_configurationManager));
+        _bytes32IsNotZero(_configurationId);
+        _configurationManager.checkConfiguration(_configurationId, _version);
     }
 
     function _isbeProxyStorage()

@@ -12,22 +12,22 @@ abstract contract AssetEventTracker is
     AssetEventTrackerInternal
 {
     function recordState(
-        uint256 newState
+        uint256 _newState
     )
         external
         override
-        onlyAllowedStateChange(newState)
+        onlyAllowedStateChange(_newState)
         whenNotPaused
         onlyRole(_ASSET_EVENT_TRACKER_ROLE)
     {
-        _recordState(newState);
+        _recordState(_newState);
     }
 
     function getAssetEvents(
-        uint256 pageNumber,
-        uint256 resultsPerPage
-    ) external view override returns (AssetEvent[] memory assetEvents) {
-        return _getAssetEvents(pageNumber, resultsPerPage);
+        uint256 _pageNumber,
+        uint256 _resultsPerPage
+    ) external view override returns (AssetEvent[] memory assetEvents_) {
+        return _getAssetEvents(_pageNumber, _resultsPerPage);
     }
 
     function getLatestAssetEvent()
@@ -44,9 +44,9 @@ abstract contract AssetEventTracker is
     }
 
     function isStateChangeAllowed(
-        uint256 newState
+        uint256 _newState
     ) external view returns (bool) {
-        return _isStateChangeAllowed(_getCurrentState(), newState);
+        return _isStateChangeAllowed(_getCurrentState(), _newState);
     }
 
     function _implementedInterfaces()

@@ -55,8 +55,8 @@ contract ProxyFactory is ProxyFactoryInternal, IProxyFactory {
     function getDeployedProxiesByConfiguration(
         bytes32 _configurationId,
         uint256 _version
-    ) external view override returns (address[] memory proxies) {
-        proxies = _getDeployedProxiesByConfiguration(
+    ) external view override returns (address[] memory proxies_) {
+        proxies_ = _getDeployedProxiesByConfiguration(
             _configurationId,
             _version
         );
@@ -68,8 +68,8 @@ contract ProxyFactory is ProxyFactoryInternal, IProxyFactory {
         external
         view
         override
-        returns (bytes32 configurationId, uint256 version)
+        returns (bytes32 configurationId_, uint256 version_)
     {
-        (configurationId, version) = _getConfigurationByProxy(_proxy);
+        (configurationId_, version_) = _getConfigurationByProxy(_proxy);
     }
 }

@@ -17,28 +17,28 @@ import {_ISBE_PAUSER_ROLE} from '../../constants/roles.sol';
  */
 abstract contract GlobalIsbePause is GlobalIsbePauseInternal, IGlobalIsbePause {
     function pauseIsbe(
-        address proxyAddress
+        address _proxyAddress
     )
         external
         override
         onlyRole(_ISBE_PAUSER_ROLE)
-        addressIsNotZero(proxyAddress)
-        onlyDeployedProxy(proxyAddress)
+        addressIsNotZero(_proxyAddress)
+        onlyDeployedProxy(_proxyAddress)
     {
-        ISBEPause(proxyAddress).pause();
-        emit IsbePaused(proxyAddress);
+        ISBEPause(_proxyAddress).pause();
+        emit IsbePaused(_proxyAddress);
     }
 
     function unpauseIsbe(
-        address proxyAddress
+        address _proxyAddress
     )
         external
         override
         onlyRole(_ISBE_PAUSER_ROLE)
-        addressIsNotZero(proxyAddress)
-        onlyDeployedProxy(proxyAddress)
+        addressIsNotZero(_proxyAddress)
+        onlyDeployedProxy(_proxyAddress)
     {
-        ISBEPause(proxyAddress).unpause();
-        emit IsbeUnpaused(proxyAddress);
+        ISBEPause(_proxyAddress).unpause();
+        emit IsbeUnpaused(_proxyAddress);
     }
 }

@@ -10,7 +10,7 @@ can manage the state of registered proxies._
 ### pauseIsbe
 
 ```solidity
-function pauseIsbe(address proxyAddress) external
+function pauseIsbe(address _proxyAddress) external
 ```
 
 Pauses a specific use-case proxy contract.
@@ -19,14 +19,14 @@ _This can only be called by an account with the appropriate role._
 
 #### Parameters
 
-| Name         | Type    | Description                                 |
-| ------------ | ------- | ------------------------------------------- |
-| proxyAddress | address | The address of the proxy contract to pause. |
+| Name           | Type    | Description                                 |
+| -------------- | ------- | ------------------------------------------- |
+| \_proxyAddress | address | The address of the proxy contract to pause. |
 
 ### unpauseIsbe
 
 ```solidity
-function unpauseIsbe(address proxyAddress) external
+function unpauseIsbe(address _proxyAddress) external
 ```
 
 Unpauses a specific use-case proxy contract.
@@ -35,9 +35,9 @@ _This can only be called by an account with the appropriate role._
 
 #### Parameters
 
-| Name         | Type    | Description                                   |
-| ------------ | ------- | --------------------------------------------- |
-| proxyAddress | address | The address of the proxy contract to unpause. |
+| Name           | Type    | Description                                   |
+| -------------- | ------- | --------------------------------------------- |
+| \_proxyAddress | address | The address of the proxy contract to unpause. |
 
 ---
 
@@ -118,7 +118,7 @@ is a valid proxy before applying changes. It also implements the
 ### onlyDeployedProxy
 
 ```solidity
-modifier onlyDeployedProxy(address proxyAddress)
+modifier onlyDeployedProxy(address _proxyAddress)
 ```
 
 Ensures the function is called for a deployed proxy.
@@ -127,9 +127,9 @@ _Reverts if `proxyAddress` is not a known, deployed proxy address._
 
 #### Parameters
 
-| Name         | Type    | Description                             |
-| ------------ | ------- | --------------------------------------- |
-| proxyAddress | address | The address of the proxy to be checked. |
+| Name           | Type    | Description                             |
+| -------------- | ------- | --------------------------------------- |
+| \_proxyAddress | address | The address of the proxy to be checked. |
 
 ### \_implementedInterfaces
 
@@ -191,7 +191,7 @@ Reverted if the target address is not a valid or known proxy.
 ### pauseIsbe
 
 ```solidity
-function pauseIsbe(address proxyAddress) external
+function pauseIsbe(address _proxyAddress) external
 ```
 
 Pauses a specific use-case proxy contract.
@@ -200,14 +200,14 @@ _This can only be called by an account with the appropriate role._
 
 #### Parameters
 
-| Name         | Type    | Description                                 |
-| ------------ | ------- | ------------------------------------------- |
-| proxyAddress | address | The address of the proxy contract to pause. |
+| Name           | Type    | Description                                 |
+| -------------- | ------- | ------------------------------------------- |
+| \_proxyAddress | address | The address of the proxy contract to pause. |
 
 ### unpauseIsbe
 
 ```solidity
-function unpauseIsbe(address proxyAddress) external
+function unpauseIsbe(address _proxyAddress) external
 ```
 
 Unpauses a specific use-case proxy contract.
@@ -216,6 +216,6 @@ _This can only be called by an account with the appropriate role._
 
 #### Parameters
 
-| Name         | Type    | Description                                   |
-| ------------ | ------- | --------------------------------------------- |
-| proxyAddress | address | The address of the proxy contract to unpause. |
+| Name           | Type    | Description                                   |
+| -------------- | ------- | --------------------------------------------- |
+| \_proxyAddress | address | The address of the proxy contract to unpause. |

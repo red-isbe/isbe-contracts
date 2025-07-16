@@ -7,7 +7,7 @@ _Implements IIsbeCut interface within an EIP-2535 Diamond proxy system_
 ### setIsbeProxyConfiguration
 
 ```solidity
-function setIsbeProxyConfiguration(contract IConfigurationManagement configurationManagement, bytes32 configurationId, uint256 version) external
+function setIsbeProxyConfiguration(contract IConfigurationManagement _configurationManagement, bytes32 _configurationId, uint256 _version) external
 ```
 
 Sets the ISBE proxy configuration from an external management contract
@@ -16,11 +16,11 @@ _Updates the proxy configuration using the specified management contract_
 
 #### Parameters
 
-| Name                    | Type                              | Description                                      |
-| ----------------------- | --------------------------------- | ------------------------------------------------ |
-| configurationManagement | contract IConfigurationManagement | The configuration management contract instance   |
-| configurationId         | bytes32                           | The identifier of the configuration to set       |
-| version                 | uint256                           | The version number of the configuration to apply |
+| Name                      | Type                              | Description                                      |
+| ------------------------- | --------------------------------- | ------------------------------------------------ |
+| \_configurationManagement | contract IConfigurationManagement | The configuration management contract instance   |
+| \_configurationId         | bytes32                           | The identifier of the configuration to set       |
+| \_version                 | uint256                           | The version number of the configuration to apply |
 
 ### interfacesIntrospection
 
@@ -151,15 +151,8 @@ _If facet is not found return address(0)._
 ### supportsInterface
 
 ```solidity
-function supportsInterface(bytes4 interfaceId) external view virtual returns (bool)
+function supportsInterface(bytes4 _interfaceId) external view virtual returns (bool)
 ```
-
-\_Returns true if this contract implements the interface defined by
-`interfaceId`. See the corresponding
-https://eips.ethereum.org/EIPS/eip-165#how-interfaces-are-identified[EIP section]
-to learn more about how these ids are created.
-
-This function call must use less than 30 000 gas.\_
 
 ### interfacesIntrospection
 

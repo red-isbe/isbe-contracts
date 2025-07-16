@@ -10,27 +10,27 @@ and provides convenient modifiers for common validation checks to reduce boilerp
 ### addressIsNotZero
 
 ```solidity
-modifier addressIsNotZero(address addr)
+modifier addressIsNotZero(address _addr)
 ```
 
 _Checks if an address equals to zero address_
 
 #### Parameters
 
-| Name | Type    | Description          |
-| ---- | ------- | -------------------- |
-| addr | address | The address to check |
+| Name   | Type    | Description          |
+| ------ | ------- | -------------------- |
+| \_addr | address | The address to check |
 
 ### bytes32IsNotZero
 
 ```solidity
-modifier bytes32IsNotZero(bytes32 hash)
+modifier bytes32IsNotZero(bytes32 _hash)
 ```
 
 ### emptyCode
 
 ```solidity
-modifier emptyCode(bytes code)
+modifier emptyCode(bytes _code)
 ```
 
 ---
@@ -78,13 +78,13 @@ function _supportsERC165Interface(bytes4 _interfaceId) internal pure virtual ret
 ### \_supportsInterface
 
 ```solidity
-function _supportsInterface(bytes4 _interfaceId, bytes4[] _interfaces) internal pure virtual returns (bool supported)
+function _supportsInterface(bytes4 _interfaceId, bytes4[] _interfaces) internal pure virtual returns (bool supported_)
 ```
 
 ### \_aggregateInterfaces
 
 ```solidity
-function _aggregateInterfaces(bytes4[][] interfacesArrays, bytes4[] _interfaces) internal pure returns (bytes4[] interfaces_)
+function _aggregateInterfaces(bytes4[][] _interfacesArrays, bytes4[] _interfaces) internal pure returns (bytes4[] interfaces_)
 ```
 
 ### \_implementedInterfaces
