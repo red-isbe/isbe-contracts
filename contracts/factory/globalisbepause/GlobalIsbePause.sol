@@ -26,7 +26,7 @@ abstract contract GlobalIsbePause is GlobalIsbePauseInternal, IGlobalIsbePause {
         onlyDeployedProxy(_proxyAddress)
     {
         ISBEPause(_proxyAddress).pause();
-        emit IsbePaused(_proxyAddress);
+        emit IsbePaused(_proxyAddress, _msgSender());
     }
 
     function unpauseIsbe(
@@ -39,6 +39,6 @@ abstract contract GlobalIsbePause is GlobalIsbePauseInternal, IGlobalIsbePause {
         onlyDeployedProxy(_proxyAddress)
     {
         ISBEPause(_proxyAddress).unpause();
-        emit IsbeUnpaused(_proxyAddress);
+        emit IsbeUnpaused(_proxyAddress, _msgSender());
     }
 }

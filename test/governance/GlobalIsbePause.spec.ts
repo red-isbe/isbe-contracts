@@ -380,7 +380,7 @@ describe('GlobalIsbePause', function () {
                         .pauseIsbe(deployedProxyAddress)
                 )
                     .to.emit(isbeFactory, 'IsbePaused')
-                    .withArgs(deployedProxyAddress)
+                    .withArgs(deployedProxyAddress, isbePauserAddress)
                 expect(await pause.paused()).to.be.true
             })
             it('GIVEN governance proxy WHEN try to unpause a deployed proxy THEN it is unpaused', async () => {
@@ -390,7 +390,7 @@ describe('GlobalIsbePause', function () {
                         .unpauseIsbe(deployedProxyAddress)
                 )
                     .to.emit(isbeFactory, 'IsbeUnpaused')
-                    .withArgs(deployedProxyAddress)
+                    .withArgs(deployedProxyAddress, isbePauserAddress)
                 expect(await pause.paused()).to.be.false
             })
         })

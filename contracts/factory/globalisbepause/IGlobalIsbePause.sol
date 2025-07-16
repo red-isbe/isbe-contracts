@@ -12,14 +12,16 @@ interface IGlobalIsbePause {
     /**
      * @notice Emitted when a use-case proxy is paused by the ISBE governance.
      * @param proxyAddress The address of the proxy that has been paused.
+     * @param account The address that triggered the pause
      */
-    event IsbePaused(address proxyAddress);
+    event IsbePaused(address indexed proxyAddress, address indexed account);
 
     /**
      * @notice Emitted when a use-case proxy is unpaused by the ISBE governance.
      * @param proxyAddress The address of the proxy that has been unpaused.
+     * @param account The address that triggered the pause
      */
-    event IsbeUnpaused(address proxyAddress);
+    event IsbeUnpaused(address indexed proxyAddress, address indexed account);
 
     /**
      * @notice Reverted if the target address is not a valid or known proxy.
