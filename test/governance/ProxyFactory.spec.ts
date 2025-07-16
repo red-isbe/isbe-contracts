@@ -10,29 +10,34 @@ import {
     ISBEPause__factory,
     AccessControlFacet__factory,
     IIsbeFactory,
-    HashTimestampFacet__factory,
-    AssetEventTrackerTestWrapper__factory,
-    Ownable2StepFacet__factory,
-    DiamondCutAccessControlFacet__factory,
-    DiamondLoupeFacet__factory,
+    IsbeCutFacet__factory,
+    IsbeLoupeFacet__factory,
+    ConfigurationManagementFacet,
+    ConfigurationManagementFacet__factory,
+    ERC20Facet__factory,
+    IsbeLoupeFacet,
+    IERC20Isbe,
 } from '../../typechain-types'
 import { Signer } from 'ethers'
 import {
     ACCESS_CONTROL_RESOLVER_KEY,
-    ASSET_EVENT_TRACKER_RESOLVER_KEY,
-    COUNTER_RESOLVER_KEY,
+    ERC20_RESOLVER_KEY,
     DEFAULT_ADMIN_ROLE,
-    DIAMOND_CUT_RESOLVER_KEY,
-    DIAMOND_LOUPE_RESOLVER_KEY,
-    HASH_TIMESTAMP_RESOLVER_KEY,
-    HASH_TIMESTAMP_ROLE,
     ISBE_ROLE,
     BUSINESS_LOGIC_DEPLOYER_ROLE,
-    OWNABLE_RESOLVER_KEY,
     PAUSE_RESOLVER_KEY,
     PROXY_DEPLOYER_ROLE,
     PROXY_FACTORY_RESOLVER_KEY,
+    GOVERNANCE_CONFIGURATION_MANAGER_ROLE,
+    ISBE_CUT_RESOLVER_KEY,
+    ISBE_LOUPE_RESOLVER_KEY,
+    RANDOM_HASH_FOR_CONFIGURATION_ID,
+    CONFIGURATION_MANAGER_ROLE,
 } from '../constants'
+import {
+    randomAddress,
+    randomHash,
+} from 'hardhat/internal/hardhat-network/provider/utils/random'
 
 describe('ProxyFactory', function () {
     let admin: Signer
@@ -41,73 +46,77 @@ describe('ProxyFactory', function () {
     let isbeAddress: string
     let businessLogicDeployer: Signer
     let businessLogicDeployerAddress: string
+    let configurationManager: Signer
+    let configurationManagerAddress: string
     let proxyDeployer: Signer
     let proxyDeployerAddress: string
-    let nonAdmin: Signer
-    let nonAdminAddress: string
     let AccessControlFactory: AccessControlFacet__factory
     let IsbePausableFactory: ISBEPause__factory
     let EIP2535AccessControlFactory: EIP2535AccessControl__factory
     let BusinessLogicFactoryFactory: BusinessLogicFactoryFacet__factory
+    let ConfigurationManagerFacetFactory: ConfigurationManagementFacet__factory
     let ProxyFactoryFacetFactory: ProxyFactoryFacet__factory
-    let DiamondCutFacetFactory: DiamondCutAccessControlFacet__factory
-    let DiamondLoupeFacetFactory: DiamondLoupeFacet__factory
-    let HashTimestampFactory: HashTimestampFacet__factory
-    let AssetEventTrackerFactory: AssetEventTrackerTestWrapper__factory
-    let Ownable2StepFacetFactory: Ownable2StepFacet__factory
+    let IsbeCutFacetFactory: IsbeCutFacet__factory
+    let IsbeLoupeFacetFactory: IsbeLoupeFacet__factory
+    let Erc20FacetFactory: ERC20Facet__factory
     let diamondProxy: EIP2535AccessControl
     let businessLogicFactoryFacet: BusinessLogicFactoryFacet
+    let configurationManagementFacet: ConfigurationManagementFacet
     let proxyFactoryFacet: ProxyFactoryFacet
     let isbeFactory: IIsbeFactory
 
     async function deployInitial() {
-        ;[admin, isbe, businessLogicDeployer, proxyDeployer, nonAdmin] =
-            await ethers.getSigners()
+        ;[
+            admin,
+            isbe,
+            businessLogicDeployer,
+            configurationManager,
+            proxyDeployer,
+        ] = await ethers.getSigners()
         adminAddress = await admin.getAddress()
         isbeAddress = await isbe.getAddress()
-        nonAdminAddress = await nonAdmin.getAddress()
         proxyDeployerAddress = await proxyDeployer.getAddress()
         businessLogicDeployerAddress = await businessLogicDeployer.getAddress()
+        configurationManagerAddress = await configurationManager.getAddress()
         // Despliegue AccessControl logic
         BusinessLogicFactoryFactory = await ethers.getContractFactory(
             'BusinessLogicFactoryFacet'
         )
+        ConfigurationManagerFacetFactory = await ethers.getContractFactory(
+            'ConfigurationManagementFacet'
+        )
         ProxyFactoryFacetFactory =
             await ethers.getContractFactory('ProxyFactoryFacet')
-        DiamondCutFacetFactory = await ethers.getContractFactory(
-            'DiamondCutAccessControlFacet'
-        )
-        DiamondLoupeFacetFactory =
-            await ethers.getContractFactory('DiamondLoupeFacet')
+        IsbeCutFacetFactory = await ethers.getContractFactory('IsbeCutFacet')
+        IsbeLoupeFacetFactory =
+            await ethers.getContractFactory('IsbeLoupeFacet')
         EIP2535AccessControlFactory = await ethers.getContractFactory(
             'EIP2535AccessControl'
         )
         AccessControlFactory =
             await ethers.getContractFactory('AccessControlFacet')
         IsbePausableFactory = await ethers.getContractFactory('ISBEPauseFacet')
-        HashTimestampFactory =
-            await ethers.getContractFactory('HashTimestampFacet')
-        AssetEventTrackerFactory = await ethers.getContractFactory(
-            'AssetEventTrackerTestWrapper'
-        )
-        Ownable2StepFacetFactory =
-            await ethers.getContractFactory('Ownable2StepFacet')
+        Erc20FacetFactory = await ethers.getContractFactory('ERC20Facet')
         businessLogicFactoryFacet = await BusinessLogicFactoryFactory.deploy()
+        configurationManagementFacet =
+            await ConfigurationManagerFacetFactory.deploy()
         proxyFactoryFacet = await ProxyFactoryFacetFactory.deploy()
         await businessLogicFactoryFacet.waitForDeployment()
+        await configurationManagementFacet.waitForDeployment()
         await proxyFactoryFacet.waitForDeployment()
         expect(await proxyFactoryFacet.businessIdIntrospection()).to.be.equal(
             PROXY_FACTORY_RESOLVER_KEY
         )
         expect(
             await proxyFactoryFacet.interfacesIntrospection()
-        ).to.be.deep.equal(['0xadc233cb'])
+        ).to.be.deep.equal(['0x5ec663a4'])
     }
 
     async function deployIsbeFactory(initCalldata: string = '0x') {
         const proxyFactoryAddress = await proxyFactoryFacet.getAddress()
         const facetAddresses = [
             await businessLogicFactoryFacet.getAddress(),
+            await configurationManagementFacet.getAddress(),
             proxyFactoryAddress,
         ]
         diamondProxy = await EIP2535AccessControlFactory.deploy(
@@ -125,6 +134,10 @@ describe('ProxyFactory', function () {
                     {
                         role: BUSINESS_LOGIC_DEPLOYER_ROLE,
                         members: [businessLogicDeployerAddress],
+                    },
+                    {
+                        role: GOVERNANCE_CONFIGURATION_MANAGER_ROLE,
+                        members: [configurationManagerAddress],
                     },
                     {
                         role: PROXY_DEPLOYER_ROLE,
@@ -151,16 +164,10 @@ describe('ProxyFactory', function () {
             await deployIsbeFactory()
             await isbeFactory
                 .connect(businessLogicDeployer)
-                .deploy(
-                    DIAMOND_CUT_RESOLVER_KEY,
-                    DiamondCutFacetFactory.bytecode
-                )
+                .deploy(ISBE_CUT_RESOLVER_KEY, IsbeCutFacetFactory.bytecode)
             await isbeFactory
                 .connect(businessLogicDeployer)
-                .deploy(
-                    DIAMOND_LOUPE_RESOLVER_KEY,
-                    DiamondLoupeFacetFactory.bytecode
-                )
+                .deploy(ISBE_LOUPE_RESOLVER_KEY, IsbeLoupeFacetFactory.bytecode)
             await isbeFactory
                 .connect(businessLogicDeployer)
                 .deploy(
@@ -172,28 +179,22 @@ describe('ProxyFactory', function () {
                 .deploy(PAUSE_RESOLVER_KEY, IsbePausableFactory.bytecode)
             await isbeFactory
                 .connect(businessLogicDeployer)
-                .deploy(OWNABLE_RESOLVER_KEY, Ownable2StepFacetFactory.bytecode)
+                .deploy(ERC20_RESOLVER_KEY, Erc20FacetFactory.bytecode)
             await isbeFactory
-                .connect(businessLogicDeployer)
-                .deploy(
-                    HASH_TIMESTAMP_RESOLVER_KEY,
-                    HashTimestampFactory.bytecode
-                )
-            await isbeFactory
-                .connect(businessLogicDeployer)
-                .deploy(
-                    ASSET_EVENT_TRACKER_RESOLVER_KEY,
-                    AssetEventTrackerFactory.bytecode
-                )
+                .connect(configurationManager)
+                .setConfiguration(RANDOM_HASH_FOR_CONFIGURATION_ID, [
+                    { businessId: ERC20_RESOLVER_KEY, version: 0 },
+                ])
         })
 
-        describe('Diamond proxy', () => {
+        describe('ProxyFactory', () => {
             it('GIVEN deployed isbe factory WHEN try to deploy without right THEN it fails', async () => {
                 await expect(
                     isbeFactory
                         .connect(admin)
-                        .deployDiamond(
-                            [ethers.ZeroHash],
+                        .deployUseCase(
+                            ethers.ZeroHash,
+                            0,
                             [],
                             ethers.ZeroHash,
                             '0x'
@@ -204,53 +205,14 @@ describe('ProxyFactory', function () {
                         'AccountHasNoRole'
                     )
                     .withArgs(adminAddress, PROXY_DEPLOYER_ROLE)
-                await expect(
-                    isbeFactory
-                        .connect(isbe)
-                        .deployDiamond(
-                            [ethers.ZeroHash],
-                            [],
-                            ethers.ZeroHash,
-                            '0x'
-                        )
-                )
-                    .to.be.revertedWithCustomError(
-                        proxyFactoryFacet,
-                        'AccountHasNoRole'
-                    )
-                    .withArgs(isbeAddress, PROXY_DEPLOYER_ROLE)
-                await expect(
-                    isbeFactory
-                        .connect(nonAdmin)
-                        .deployDiamond(
-                            [ethers.ZeroHash],
-                            [],
-                            ethers.ZeroHash,
-                            '0x'
-                        )
-                )
-                    .to.be.revertedWithCustomError(
-                        proxyFactoryFacet,
-                        'AccountHasNoRole'
-                    )
-                    .withArgs(nonAdminAddress, PROXY_DEPLOYER_ROLE)
             })
-            it('GIVEN deployed isbe factory WHEN try to deploy empty businessId THEN it fails', async () => {
+            it('GIVEN deployed isbe factory WHEN try to deploy empty configurationId THEN it fails', async () => {
                 await expect(
                     isbeFactory
                         .connect(proxyDeployer)
-                        .deployDiamond([], [], ethers.ZeroHash, '0x')
-                ).to.be.revertedWithCustomError(
-                    proxyFactoryFacet,
-                    'NotEmptyBusinessIds'
-                )
-            })
-            it('GIVEN deployed isbe factory WHEN try to deploy Zero businessId THEN it fails', async () => {
-                await expect(
-                    isbeFactory
-                        .connect(proxyDeployer)
-                        .deployDiamond(
-                            [ethers.ZeroHash],
+                        .deployUseCase(
+                            ethers.ZeroHash,
+                            0,
                             [],
                             ethers.ZeroHash,
                             '0x'
@@ -260,12 +222,13 @@ describe('ProxyFactory', function () {
                     'EmptyBytes32'
                 )
             })
-            it('GIVEN deployed isbe factory WHEN try to deploy with a governance businessId THEN it fails', async () => {
+            it('GIVEN deployed isbe factory WHEN try to deploy configuration than not exists THEN it fails', async () => {
                 await expect(
                     isbeFactory
                         .connect(proxyDeployer)
-                        .deployDiamond(
-                            [PAUSE_RESOLVER_KEY],
+                        .deployUseCase(
+                            RANDOM_HASH_FOR_CONFIGURATION_ID,
+                            3,
                             [],
                             ethers.ZeroHash,
                             '0x'
@@ -273,136 +236,19 @@ describe('ProxyFactory', function () {
                 )
                     .to.be.revertedWithCustomError(
                         proxyFactoryFacet,
-                        'FacetNotPermitted'
+                        'InvalidConfiguration'
                     )
-                    .withArgs(PAUSE_RESOLVER_KEY)
+                    .withArgs(RANDOM_HASH_FOR_CONFIGURATION_ID, 3)
             })
-            it('GIVEN deployed isbe factory WHEN try to deploy non existent businessId THEN it fails', async () => {
+            it('GIVEN deployed isbe factory WHEN try to deploy with invalid roles THEN it fails', async () => {
                 await expect(
-                    isbeFactory
-                        .connect(proxyDeployer)
-                        .deployDiamond(
-                            [COUNTER_RESOLVER_KEY],
-                            [],
-                            ethers.ZeroHash,
-                            '0x'
-                        )
-                )
-                    .to.be.revertedWithCustomError(
-                        proxyFactoryFacet,
-                        'CurrentIdNotRegistered'
-                    )
-                    .withArgs(COUNTER_RESOLVER_KEY)
-            })
-            it('GIVEN deployed isbe factory WHEN try to deploy with duplicated businessId THEN it fails', async () => {
-                await expect(
-                    isbeFactory
-                        .connect(proxyDeployer)
-                        .deployDiamond(
-                            [
-                                HASH_TIMESTAMP_RESOLVER_KEY,
-                                HASH_TIMESTAMP_RESOLVER_KEY,
-                            ],
-                            [],
-                            ethers.ZeroHash,
-                            '0x'
-                        )
-                )
-                    .to.be.revertedWithCustomError(
-                        proxyFactoryFacet,
-                        'DuplicatedBusinessId'
-                    )
-                    .withArgs(HASH_TIMESTAMP_RESOLVER_KEY)
-            })
-            it('GIVEN deployed isbe factory WHEN try to deploy with non valid init businessId THEN it fails', async () => {
-                await expect(
-                    isbeFactory
-                        .connect(proxyDeployer)
-                        .deployDiamond(
-                            [
-                                HASH_TIMESTAMP_RESOLVER_KEY,
-                                ASSET_EVENT_TRACKER_RESOLVER_KEY,
-                            ],
-                            [],
-                            COUNTER_RESOLVER_KEY,
-                            '0x'
-                        )
-                )
-                    .to.be.revertedWithCustomError(
-                        proxyFactoryFacet,
-                        'InitializationFacetNotFound'
-                    )
-                    .withArgs(COUNTER_RESOLVER_KEY)
-            })
-            it('GIVEN deployed isbe factory WHEN try to deploy using governance init businessId THEN it fails', async () => {
-                await expect(
-                    isbeFactory
-                        .connect(proxyDeployer)
-                        .deployDiamond(
-                            [
-                                HASH_TIMESTAMP_RESOLVER_KEY,
-                                ASSET_EVENT_TRACKER_RESOLVER_KEY,
-                            ],
-                            [],
-                            PAUSE_RESOLVER_KEY,
-                            '0x'
-                        )
-                )
-                    .to.be.revertedWithCustomError(
-                        proxyFactoryFacet,
-                        'InitializationFacetNotFound'
-                    )
-                    .withArgs(PAUSE_RESOLVER_KEY)
-                await expect(
-                    isbeFactory
-                        .connect(proxyDeployer)
-                        .deployDiamond(
-                            [
-                                HASH_TIMESTAMP_RESOLVER_KEY,
-                                ASSET_EVENT_TRACKER_RESOLVER_KEY,
-                            ],
-                            [],
-                            ACCESS_CONTROL_RESOLVER_KEY,
-                            '0x'
-                        )
-                )
-                    .to.be.revertedWithCustomError(
-                        proxyFactoryFacet,
-                        'InitializationFacetNotFound'
-                    )
-                    .withArgs(ACCESS_CONTROL_RESOLVER_KEY)
-            })
-
-            it('GIVEN deployed isbe factory WHEN try to deploy with non valid init businessId THEN it fails', async () => {
-                await expect(
-                    isbeFactory
-                        .connect(proxyDeployer)
-                        .deployDiamond(
-                            [ASSET_EVENT_TRACKER_RESOLVER_KEY],
-                            [],
-                            COUNTER_RESOLVER_KEY,
-                            '0x'
-                        )
-                )
-                    .to.be.revertedWithCustomError(
-                        proxyFactoryFacet,
-                        'InitializationFacetNotFound'
-                    )
-                    .withArgs(COUNTER_RESOLVER_KEY)
-            })
-
-            it('GIVEN deployed isbe factory WHEN try to deploy with governance roles THEN it fails', async () => {
-                await expect(
-                    isbeFactory.connect(proxyDeployer).deployDiamond(
-                        [
-                            HASH_TIMESTAMP_RESOLVER_KEY,
-                            ASSET_EVENT_TRACKER_RESOLVER_KEY,
-                            OWNABLE_RESOLVER_KEY,
-                        ],
+                    isbeFactory.connect(proxyDeployer).deployUseCase(
+                        RANDOM_HASH_FOR_CONFIGURATION_ID,
+                        1,
                         [
                             {
                                 role: DEFAULT_ADMIN_ROLE,
-                                members: [adminAddress],
+                                members: [ethers.ZeroAddress],
                             },
                         ],
                         ethers.ZeroHash,
@@ -415,12 +261,13 @@ describe('ProxyFactory', function () {
                     )
                     .withArgs(DEFAULT_ADMIN_ROLE)
                 await expect(
-                    isbeFactory.connect(proxyDeployer).deployDiamond(
-                        [OWNABLE_RESOLVER_KEY],
+                    isbeFactory.connect(proxyDeployer).deployUseCase(
+                        RANDOM_HASH_FOR_CONFIGURATION_ID,
+                        1,
                         [
                             {
                                 role: ISBE_ROLE,
-                                members: [isbeAddress],
+                                members: [ethers.ZeroAddress],
                             },
                         ],
                         ethers.ZeroHash,
@@ -432,55 +279,98 @@ describe('ProxyFactory', function () {
                         'ForbiddenRole'
                     )
                     .withArgs(ISBE_ROLE)
-            })
-
-            it('GIVEN deployed isbe factory WHEN try to deploy with bad calldata THEN it fails', async () => {
                 await expect(
-                    isbeFactory.connect(proxyDeployer).deployDiamond(
-                        [HASH_TIMESTAMP_RESOLVER_KEY],
+                    isbeFactory.connect(proxyDeployer).deployUseCase(
+                        RANDOM_HASH_FOR_CONFIGURATION_ID,
+                        1,
                         [
                             {
-                                role: HASH_TIMESTAMP_ROLE,
-                                members: [nonAdminAddress],
+                                role: CONFIGURATION_MANAGER_ROLE,
+                                members: [ethers.ZeroAddress],
                             },
                         ],
-                        HASH_TIMESTAMP_RESOLVER_KEY,
-                        '0x02030456'
+                        ethers.ZeroHash,
+                        '0x'
                     )
-                ).to.be.revertedWithCustomError(
-                    proxyFactoryFacet,
-                    'InitializationFunctionReverted'
                 )
+                    .to.be.revertedWithCustomError(
+                        proxyFactoryFacet,
+                        'ForbiddenRole'
+                    )
+                    .withArgs(CONFIGURATION_MANAGER_ROLE)
+            })
+            it('GIVEN deployed isbe factory WHEN try to deploy non existent init businessId THEN it fails', async () => {
+                const initBusinessId = randomHash().toString()
+                await expect(
+                    isbeFactory.connect(proxyDeployer).deployUseCase(
+                        RANDOM_HASH_FOR_CONFIGURATION_ID,
+                        0,
+                        [
+                            {
+                                role: randomHash().toString(),
+                                members: [randomAddress().toString()],
+                            },
+                        ],
+                        initBusinessId,
+                        '0x'
+                    )
+                )
+                    .to.be.revertedWithCustomError(
+                        proxyFactoryFacet,
+                        'FacetNotFound'
+                    )
+                    .withArgs(initBusinessId)
             })
 
             it('GIVEN deployed isbe factory WHEN deploy with correct initialization THEN it success', async () => {
-                const businessIds = [
-                    HASH_TIMESTAMP_RESOLVER_KEY,
-                    ASSET_EVENT_TRACKER_RESOLVER_KEY,
-                    OWNABLE_RESOLVER_KEY,
-                ]
+                const name = 'Test'
+                const symbol = 'TST'
+                const decimals = 18
                 const rbacs = [
                     {
-                        role: HASH_TIMESTAMP_ROLE,
-                        members: [nonAdminAddress],
+                        role: randomHash().toString(),
+                        members: [randomAddress().toString()],
                     },
                 ]
                 const deployTx = await isbeFactory
                     .connect(proxyDeployer)
-                    .deployDiamond(businessIds, rbacs, ethers.ZeroHash, '0x')
+                    .deployUseCase(
+                        RANDOM_HASH_FOR_CONFIGURATION_ID,
+                        0,
+                        rbacs,
+                        ERC20_RESOLVER_KEY,
+                        Erc20FacetFactory.interface.encodeFunctionData(
+                            'initializeErc20',
+                            [name, symbol, decimals]
+                        )
+                    )
+                expect(await deployTx)
+                    .to.emit(Erc20FacetFactory, 'Erc20Initialized')
+                    .withArgs(name, symbol, decimals)
                 const waitedTx = await deployTx.wait()
 
                 const diamondDeployedEvent = waitedTx.logs.find(
                     (l) =>
                         l.topics[0] ==
-                        isbeFactory.interface.getEvent('DiamondDeployed')
+                        isbeFactory.interface.getEvent('UseCaseDeployed')
                             .topicHash
                 )
                 const proxyAddress = diamondDeployedEvent.args.proxy
                 expect(deployTx)
                     .to.emit(isbeFactory, 'Deployed')
-                    .withArgs(businessIds, rbacs, proxyAddress)
+                    .withArgs(
+                        RANDOM_HASH_FOR_CONFIGURATION_ID,
+                        0,
+                        rbacs,
+                        proxyAddress
+                    )
                 const accessControl = AccessControlFactory.attach(proxyAddress)
+                expect(
+                    await accessControl.hasRole(
+                        rbacs[0].role,
+                        rbacs[0].members[0]
+                    )
+                ).to.be.true
                 expect(
                     await accessControl.hasRole(
                         DEFAULT_ADMIN_ROLE,
@@ -501,34 +391,29 @@ describe('ProxyFactory', function () {
                 ).to.be.true
                 expect(
                     await accessControl.hasRole(
-                        HASH_TIMESTAMP_ROLE,
-                        nonAdminAddress
+                        CONFIGURATION_MANAGER_ROLE,
+                        await isbeFactory.getAddress()
                     )
                 ).to.be.true
                 expect(await IsbePausableFactory.attach(proxyAddress).paused())
                     .to.be.false
                 expect(
-                    await isbeFactory.getDeployedProxiesByBusinessId(
-                        HASH_TIMESTAMP_RESOLVER_KEY
+                    await isbeFactory.getDeployedProxiesByConfiguration(
+                        RANDOM_HASH_FOR_CONFIGURATION_ID,
+                        0
                     )
                 ).to.be.deep.equal([proxyAddress])
                 expect(
-                    await isbeFactory.getDeployedProxiesByBusinessId(
-                        ASSET_EVENT_TRACKER_RESOLVER_KEY
-                    )
-                ).to.be.deep.equal([proxyAddress])
-                expect(
-                    await isbeFactory.getDeployedProxiesByBusinessId(
-                        OWNABLE_RESOLVER_KEY
-                    )
-                ).to.be.deep.equal([proxyAddress])
-                expect(
-                    await isbeFactory.getBusinessIdsByProxy(proxyAddress)
-                ).to.be.deep.equal([
-                    HASH_TIMESTAMP_RESOLVER_KEY,
-                    ASSET_EVENT_TRACKER_RESOLVER_KEY,
-                    OWNABLE_RESOLVER_KEY,
-                ])
+                    await isbeFactory.getConfigurationByProxy(proxyAddress)
+                ).to.be.deep.equal([RANDOM_HASH_FOR_CONFIGURATION_ID, 0])
+                const erc20: IERC20Isbe = Erc20FacetFactory.attach(proxyAddress)
+                expect(await erc20.name()).to.be.equal(name)
+                expect(await erc20.symbol()).to.be.equal(symbol)
+                expect(await erc20.decimals()).to.be.equal(decimals)
+                const loupe: IsbeLoupeFacet =
+                    IsbeLoupeFacetFactory.attach(proxyAddress)
+                const facets = await loupe.facets()
+                expect(facets.length).to.be.equal(5)
             })
         })
     })

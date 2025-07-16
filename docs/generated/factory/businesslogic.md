@@ -202,12 +202,6 @@ function _getBusinessLogicAddress(bytes32 businessId, uint256 versionNumber) int
 ### \_isDeployedBusinessLogic
 
 ```solidity
-function _isDeployedBusinessLogic(bytes32 businessId) internal view returns (bool)
-```
-
-### \_isDeployedBusinessLogic
-
-```solidity
 function _isDeployedBusinessLogic(bytes32 businessId, uint256 version) internal view returns (bool)
 ```
 

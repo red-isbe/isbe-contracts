@@ -12,161 +12,50 @@ and retrieving these configurations._
 ### setConfiguration
 
 ```solidity
-function setConfiguration(bytes32 configurationId, struct IConfigurationManagement.BusinessData[] businessIds) external
+function setConfiguration(bytes32 _configurationId, struct IConfigurationManagement.BusinessData[] _businessIds) external
 ```
-
-Registers or updates a versioned configuration of business logic facets.
-
-#### Parameters
-
-| Name            | Type                                           | Description                                               |
-| --------------- | ---------------------------------------------- | --------------------------------------------------------- |
-| configurationId | bytes32                                        | The unique identifier for the configuration.              |
-| businessIds     | struct IConfigurationManagement.BusinessData[] | An array linking business logic IDs to specific versions. |
 
 ### getConfiguration
 
 ```solidity
-function getConfiguration(bytes32 configurationId, uint256 version) external view returns (struct IConfigurationManagement.BusinessData[] businessData_)
+function getConfiguration(bytes32 _configurationId, uint256 _version) external view returns (struct IConfigurationManagement.BusinessData[] businessData_)
 ```
-
-Retrieves a configuration by its identifier and version.
-
-#### Parameters
-
-| Name            | Type    | Description                                                  |
-| --------------- | ------- | ------------------------------------------------------------ |
-| configurationId | bytes32 | The identifier of the configuration to retrieve.             |
-| version         | uint256 | The version number. Use 0 for the latest recognised version. |
-
-#### Return Values
-
-| Name           | Type                                           | Description |
-| -------------- | ---------------------------------------------- | ----------- |
-| businessData\_ | struct IConfigurationManagement.BusinessData[] |             |
 
 ### checkConfiguration
 
 ```solidity
-function checkConfiguration(bytes32 configurationId, uint256 version) external view
+function checkConfiguration(bytes32 _configurationId, uint256 _version) external view
 ```
-
-Checks that a specific configuration and version exist. Reverts if not.
-
-#### Parameters
-
-| Name            | Type    | Description                                                   |
-| --------------- | ------- | ------------------------------------------------------------- |
-| configurationId | bytes32 | The identifier of the configuration to validate.              |
-| version         | uint256 | The version number to validate. Use 0 for the latest version. |
 
 ### facets
 
 ```solidity
-function facets(bytes32 configurationId, uint256 version) external view returns (struct IDiamondLoupe.Facet[] facets_)
+function facets(bytes32 _configurationId, uint256 _version) external view returns (struct IDiamondLoupe.Facet[] facets_)
 ```
-
-Retrieves detailed facet information, including all function selectors.
-
-#### Parameters
-
-| Name            | Type    | Description                                       |
-| --------------- | ------- | ------------------------------------------------- |
-| configurationId | bytes32 | The identifier of the configuration to query.     |
-| version         | uint256 | The version number. Use 0 for the latest version. |
-
-#### Return Values
-
-| Name     | Type                         | Description |
-| -------- | ---------------------------- | ----------- |
-| facets\_ | struct IDiamondLoupe.Facet[] |             |
 
 ### facetFunctionSelectors
 
 ```solidity
-function facetFunctionSelectors(bytes32 configurationId, uint256 version, address facet) external view returns (bytes4[] facetFunctionSelectors_)
+function facetFunctionSelectors(bytes32 _configurationId, uint256 _version, address _facet) external view returns (bytes4[] facetFunctionSelectors_)
 ```
-
-Gets all function selectors for a specific facet within a configuration.
-
-#### Parameters
-
-| Name            | Type    | Description                                       |
-| --------------- | ------- | ------------------------------------------------- |
-| configurationId | bytes32 | The identifier of the configuration to query.     |
-| version         | uint256 | The version number. Use 0 for the latest version. |
-| facet           | address | The address of the facet to inspect.              |
-
-#### Return Values
-
-| Name                     | Type     | Description                                  |
-| ------------------------ | -------- | -------------------------------------------- |
-| facetFunctionSelectors\_ | bytes4[] | An array of its `bytes4` function selectors. |
 
 ### facetAddresses
 
 ```solidity
-function facetAddresses(bytes32 configurationId, uint256 version) external view returns (address[] facetAddresses_)
+function facetAddresses(bytes32 _configurationId, uint256 _version) external view returns (address[] facetAddresses_)
 ```
-
-Gets all unique facet addresses for a given configuration version.
-
-#### Parameters
-
-| Name            | Type    | Description                                       |
-| --------------- | ------- | ------------------------------------------------- |
-| configurationId | bytes32 | The identifier of the configuration to query.     |
-| version         | uint256 | The version number. Use 0 for the latest version. |
-
-#### Return Values
-
-| Name             | Type      | Description                         |
-| ---------------- | --------- | ----------------------------------- |
-| facetAddresses\_ | address[] | An array of unique facet addresses. |
 
 ### facetAddress
 
 ```solidity
-function facetAddress(bytes32 configurationId, uint256 version, bytes4 functionSelector) external view returns (address facetAddress_)
+function facetAddress(bytes32 _configurationId, uint256 _version, bytes4 _functionSelector) external view returns (address facetAddress_)
 ```
-
-Finds which facet a function selector belongs to in a configuration.
-
-#### Parameters
-
-| Name             | Type    | Description                                       |
-| ---------------- | ------- | ------------------------------------------------- |
-| configurationId  | bytes32 | The identifier of the configuration to query.     |
-| version          | uint256 | The version number. Use 0 for the latest version. |
-| functionSelector | bytes4  | The `bytes4` selector to find.                    |
-
-#### Return Values
-
-| Name           | Type    | Description                             |
-| -------------- | ------- | --------------------------------------- |
-| facetAddress\_ | address | The address of the corresponding facet. |
 
 ### facetSupportsInterface
 
 ```solidity
-function facetSupportsInterface(bytes32 configurationId, uint256 version, bytes4 interfaceId) external view returns (bool supported_)
+function facetSupportsInterface(bytes32 _configurationId, uint256 _version, bytes4 _interfaceId) external view returns (bool supported_)
 ```
-
-Checks if a configuration version supports a given EIP-165 interface.
-
-#### Parameters
-
-| Name            | Type    | Description                                       |
-| --------------- | ------- | ------------------------------------------------- |
-| configurationId | bytes32 | The identifier of the configuration to query.     |
-| version         | uint256 | The version number. Use 0 for the latest version. |
-| interfaceId     | bytes4  | The `bytes4` EIP-165 interface ID to check.       |
-
-#### Return Values
-
-| Name        | Type | Description                                                  |
-| ----------- | ---- | ------------------------------------------------------------ |
-| supported\_ | bool | Returns true if the interface is supported, otherwise false. |
 
 ### \_implementedInterfaces
 
@@ -237,11 +126,10 @@ _A pure function that returns a `bytes4[]` array of selectors._
 
 ## ConfigurationManagementInternal
 
-Handles the internal logic for creating and managing use-case configurations.
+Internal contract for managing diamond configurations and facets
 
-_This abstract contract provides the core storage and functions for use-case
-configurations. It is designed to be inherited by a public-facing contract.
-It manages versioning and the association of business logic facets._
+_Provides internal functions for storing, retrieving, and validating
+diamond proxy configurations with business logic facets_
 
 ### ConfigurationManagementStorage
 
@@ -260,19 +148,19 @@ struct ConfigurationManagementStorage {
 ### \_setConfiguration
 
 ```solidity
-function _setConfiguration(bytes32 configurationId, struct IConfigurationManagement.BusinessData[] businessData) internal returns (uint256 version_)
+function _setConfiguration(bytes32 _configurationId, struct IConfigurationManagement.BusinessData[] _businessData) internal returns (uint256 version_)
 ```
 
 ### \_getConfiguration
 
 ```solidity
-function _getConfiguration(bytes32 configurationId, uint256 configurationVersion) internal view returns (struct IConfigurationManagement.BusinessData[] businessData_)
+function _getConfiguration(bytes32 _configurationId, uint256 _configurationVersion) internal view returns (struct IConfigurationManagement.BusinessData[] businessData_)
 ```
 
 ### \_checkConfiguration
 
 ```solidity
-function _checkConfiguration(bytes32 configurationId, uint256 version) internal view
+function _checkConfiguration(bytes32 _configurationId, uint256 _version) internal view
 ```
 
 ### \_existsConfiguration
@@ -281,34 +169,40 @@ function _checkConfiguration(bytes32 configurationId, uint256 version) internal 
 function _existsConfiguration(bytes32 configurationId, uint256 version) internal view returns (bool)
 ```
 
+### \_getFacetAddress
+
+```solidity
+function _getFacetAddress(bytes32 _configurationId, uint256 _version, bytes32 _businessId) internal view returns (address facetAddress_)
+```
+
 ### \_getFacets
 
 ```solidity
-function _getFacets(bytes32 configurationId, uint256 _version) internal view returns (struct IDiamondLoupe.Facet[] facets)
+function _getFacets(bytes32 _configurationId, uint256 _version) internal view returns (struct IDiamondLoupe.Facet[] facets)
 ```
 
 ### \_facetFunctionSelectors
 
 ```solidity
-function _facetFunctionSelectors(bytes32 configurationId, uint256 version, address facetAddress) internal view returns (bytes4[] facetFunctionSelectors_)
+function _facetFunctionSelectors(bytes32 _configurationId, uint256 _version, address facetAddress) internal view returns (bytes4[] facetFunctionSelectors_)
 ```
 
 ### \_facetAddresses
 
 ```solidity
-function _facetAddresses(bytes32 configurationId, uint256 version) internal view returns (address[] facetAddresses_)
+function _facetAddresses(bytes32 _configurationId, uint256 _version) internal view returns (address[] facetAddresses_)
 ```
 
 ### \_facetAddress
 
 ```solidity
-function _facetAddress(bytes32 configurationId, uint256 version, bytes4 functionSelector) internal view returns (address facetAddress_)
+function _facetAddress(bytes32 _configurationId, uint256 _version, bytes4 _functionSelector) internal view returns (address facetAddress_)
 ```
 
 ### \_facetSupportsInterface
 
 ```solidity
-function _facetSupportsInterface(bytes32 configurationId, uint256 version, bytes4 interfaceId) internal view returns (bool supported_)
+function _facetSupportsInterface(bytes32 _configurationId, uint256 _version, bytes4 _interfaceId) internal view returns (bool supported_)
 ```
 
 ---

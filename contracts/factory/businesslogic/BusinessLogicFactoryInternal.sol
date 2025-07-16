@@ -73,12 +73,6 @@ abstract contract BusinessLogicFactoryInternal is Common {
     }
 
     function _isDeployedBusinessLogic(
-        bytes32 businessId
-    ) internal view returns (bool) {
-        return _isDeployedBusinessLogic(businessId, 0);
-    }
-
-    function _isDeployedBusinessLogic(
         bytes32 businessId,
         uint256 version
     ) internal view returns (bool) {

@@ -1,11 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {BusinessLogicFactoryInternal} from '../businesslogic/BusinessLogicFactoryInternal.sol';
-import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
-import {IDiamondLoupe} from '../../proxies/eip2535/interfaces/IDiamondLoupe.sol';
-import {IEIP2535Introspection} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
-import {_CONFIGURATION_MANAGEMENT_STORAGE_POSITION} from '../../constants/storagePositions.sol';
 import {
     _DIAMOND_LOUPE_RESOLVER_KEY,
     _DIAMOND_CUT_RESOLVER_KEY,
@@ -18,17 +13,21 @@ import {
     _GLOBAL_ISBE_PAUSABLE_RESOLVER_KEY,
     _PROXY_FACTORY_RESOLVER_KEY
 } from '../../constants/resolverKeys.sol';
+import {BusinessLogicFactoryInternal} from '../businesslogic/BusinessLogicFactoryInternal.sol';
+import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 import {IConfigurationManagement} from './IConfigurationManagement.sol';
+import {IDiamondLoupe} from '../../proxies/eip2535/interfaces/IDiamondLoupe.sol';
+import {IEIP2535Introspection} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 import {IProxyFactory} from '../proxyfactory/IProxyFactory.sol';
 import {InitializeBusinessLogic} from '../../utils/InitializeBusinessLogic.sol';
+import {_CONFIGURATION_MANAGEMENT_STORAGE_POSITION} from '../../constants/storagePositions.sol';
 
 /**
- * @title Internal Configuration Management Logic
+ * @title Configuration Management Internal
  * @author ISBE
- * @notice Handles the internal logic for creating and managing use-case configurations.
- * @dev This abstract contract provides the core storage and functions for use-case
- *      configurations. It is designed to be inherited by a public-facing contract.
- *      It manages versioning and the association of business logic facets.
+ * @notice Internal contract for managing diamond configurations and facets
+ * @dev Provides internal functions for storing, retrieving, and validating
+ *      diamond proxy configurations with business logic facets
  */
 abstract contract ConfigurationManagementInternal is
     BusinessLogicFactoryInternal,
@@ -48,31 +47,36 @@ abstract contract ConfigurationManagementInternal is
     }
 
     function _setConfiguration(
-        bytes32 configurationId,
-        IConfigurationManagement.BusinessData[] calldata businessData
+        bytes32 _configurationId,
+        IConfigurationManagement.BusinessData[] calldata _businessData
     ) internal returns (uint256 version_) {
         ConfigurationManagementStorage
             storage $ = _configurationManagementStorage();
         (
             IConfigurationManagement.BusinessData[] memory integratedBusinessData,
             address[] memory facetAddresses
-        ) = _validateAndBuildBusinessAddresses(businessData);
-        version_ = ++$.latestVersion[configurationId];
+        ) = _validateAndBuildBusinessAddresses(_businessData);
+        version_ = ++$.latestVersion[_configurationId];
         uint256 length = integratedBusinessData.length;
         IConfigurationManagement.BusinessData memory data;
         address facetAddress;
         for (uint256 index; index < length; ) {
             data = integratedBusinessData[index];
             facetAddress = facetAddresses[index];
-            $.businessIds[configurationId][version_].add(data.businessId);
-            $.businessVersions[configurationId][version_][
+            $.businessIds[_configurationId][version_].add(data.businessId);
+            $.businessVersions[_configurationId][version_][
                 data.businessId
             ] = data.version;
-            $.facetAddresses[configurationId][version_].add(facetAddress);
-            _storeFunctionSelectors($, configurationId, version_, facetAddress);
+            $.facetAddresses[_configurationId][version_].add(facetAddress);
+            _storeFunctionSelectors(
+                $,
+                _configurationId,
+                version_,
+                facetAddress
+            );
             _storeSupportedInterfaces(
                 $,
-                configurationId,
+                _configurationId,
                 version_,
                 facetAddress
             );
@@ -83,8 +87,8 @@ abstract contract ConfigurationManagementInternal is
     }
 
     function _getConfiguration(
-        bytes32 configurationId,
-        uint256 configurationVersion
+        bytes32 _configurationId,
+        uint256 _configurationVersion
     )
         internal
         view
@@ -92,9 +96,9 @@ abstract contract ConfigurationManagementInternal is
     {
         ConfigurationManagementStorage
             storage $ = _configurationManagementStorage();
-        uint256 version = _latest(configurationId, configurationVersion);
+        uint256 version = _latest(_configurationId, _configurationVersion);
         EnumerableSet.Bytes32Set storage businessIds = $.businessIds[
-            configurationId
+            _configurationId
         ][version];
         uint256 length = businessIds.length();
         businessData_ = new IConfigurationManagement.BusinessData[](length);
@@ -103,7 +107,7 @@ abstract contract ConfigurationManagementInternal is
             businessId = businessIds.at(index);
             businessData_[index] = _buildBusinessData(
                 businessId,
-                $.businessVersions[configurationId][version][businessId]
+                $.businessVersions[_configurationId][version][businessId]
             );
             unchecked {
                 ++index;
@@ -112,14 +116,14 @@ abstract contract ConfigurationManagementInternal is
     }
 
     function _checkConfiguration(
-        bytes32 configurationId,
-        uint256 version
+        bytes32 _configurationId,
+        uint256 _version
     ) internal view {
         require(
-            _existsConfiguration(configurationId, version),
+            _existsConfiguration(_configurationId, _version),
             IConfigurationManagement.InvalidConfiguration(
-                configurationId,
-                version
+                _configurationId,
+                _version
             )
         );
     }
@@ -134,15 +138,36 @@ abstract contract ConfigurationManagementInternal is
                 .length() > 0;
     }
 
+    function _getFacetAddress(
+        bytes32 _configurationId,
+        uint256 _version,
+        bytes32 _businessId
+    ) internal view returns (address facetAddress_) {
+        if (_businessId == bytes32(0)) {
+            return address(0);
+        }
+        ConfigurationManagementStorage
+            storage $ = _configurationManagementStorage();
+        uint256 version = _latest(_configurationId, _version);
+        require(
+            $.businessIds[_configurationId][version].contains(_businessId),
+            IProxyFactory.FacetNotFound(_businessId)
+        );
+        facetAddress_ = _getBusinessLogicAddress(
+            _businessId,
+            $.businessVersions[_configurationId][version][_businessId]
+        );
+    }
+
     function _getFacets(
-        bytes32 configurationId,
+        bytes32 _configurationId,
         uint256 _version
     ) internal view returns (IDiamondLoupe.Facet[] memory facets) {
         ConfigurationManagementStorage
             storage $ = _configurationManagementStorage();
-        uint256 version = _latest(configurationId, _version);
+        uint256 version = _latest(_configurationId, _version);
         address[] memory facetAddresses = $
-            .facetAddresses[configurationId][version]
+            .facetAddresses[_configurationId][version]
             .values();
         uint256 length = facetAddresses.length;
         facets = new IDiamondLoupe.Facet[](length);
@@ -150,8 +175,8 @@ abstract contract ConfigurationManagementInternal is
             address current = facetAddresses[index];
             facets[index] = _buildFacet(
                 current,
-                $.functionSelectors[configurationId][
-                    _latest(configurationId, version)
+                $.functionSelectors[_configurationId][
+                    _latest(_configurationId, version)
                 ][current]
             );
             unchecked {
@@ -161,64 +186,68 @@ abstract contract ConfigurationManagementInternal is
     }
 
     function _facetFunctionSelectors(
-        bytes32 configurationId,
-        uint256 version,
+        bytes32 _configurationId,
+        uint256 _version,
         address facetAddress
     ) internal view returns (bytes4[] memory facetFunctionSelectors_) {
         facetFunctionSelectors_ = _configurationManagementStorage()
-            .functionSelectors[configurationId][
-                _latest(configurationId, version)
+            .functionSelectors[_configurationId][
+                _latest(_configurationId, _version)
             ][facetAddress];
     }
 
     function _facetAddresses(
-        bytes32 configurationId,
-        uint256 version
+        bytes32 _configurationId,
+        uint256 _version
     ) internal view returns (address[] memory facetAddresses_) {
         facetAddresses_ = _configurationManagementStorage()
-            .facetAddresses[configurationId][_latest(configurationId, version)]
+            .facetAddresses[_configurationId][
+                _latest(_configurationId, _version)
+            ]
             .values();
     }
 
     function _facetAddress(
-        bytes32 configurationId,
-        uint256 version,
-        bytes4 functionSelector
+        bytes32 _configurationId,
+        uint256 _version,
+        bytes4 _functionSelector
     ) internal view returns (address facetAddress_) {
         facetAddress_ = _configurationManagementStorage().selectorToFacet[
-            configurationId
-        ][_latest(configurationId, version)][functionSelector];
+            _configurationId
+        ][_latest(_configurationId, _version)][_functionSelector];
     }
 
     function _facetSupportsInterface(
-        bytes32 configurationId,
-        uint256 version,
-        bytes4 interfaceId
+        bytes32 _configurationId,
+        uint256 _version,
+        bytes4 _interfaceId
     ) internal view returns (bool supported_) {
         supported_ = _configurationManagementStorage().supportsInterface[
-            configurationId
-        ][_latest(configurationId, version)][interfaceId];
+            _configurationId
+        ][_latest(_configurationId, _version)][_interfaceId];
     }
 
     function _storeFunctionSelectors(
         ConfigurationManagementStorage storage $,
-        bytes32 configurationId,
-        uint256 version,
-        address facetAddress
+        bytes32 _configurationId,
+        uint256 _version,
+        address _currentFacetAddress
     ) private {
         IEIP2535Introspection introspection = IEIP2535Introspection(
-            facetAddress
+            _currentFacetAddress
         );
         bytes4[] memory selectors = introspection.selectorsIntrospection();
         uint256 selectorsLength = selectors.length;
         for (uint256 selectorsIndex; selectorsIndex < selectorsLength; ) {
             bytes4 selector = selectors[selectorsIndex];
-            $.functionSelectors[configurationId][version][facetAddress].push(
+            $
+                .functionSelectors[_configurationId][_version][
+                    _currentFacetAddress
+                ]
+                .push(selector);
+            $.selectorToFacet[_configurationId][_version][
                 selector
-            );
-            $.selectorToFacet[configurationId][version][
-                selector
-            ] = facetAddress;
+            ] = _currentFacetAddress;
             unchecked {
                 ++selectorsIndex;
             }
@@ -227,17 +256,17 @@ abstract contract ConfigurationManagementInternal is
 
     function _storeSupportedInterfaces(
         ConfigurationManagementStorage storage $,
-        bytes32 configurationId,
-        uint256 version,
-        address facetAddress
+        bytes32 _configurationId,
+        uint256 _version,
+        address _currentFacetAddress
     ) private {
         IEIP2535Introspection introspection = IEIP2535Introspection(
-            facetAddress
+            _currentFacetAddress
         );
         bytes4[] memory interfaces = introspection.interfacesIntrospection();
         uint256 interfacesLength = interfaces.length;
         for (uint256 interfacesIndex; interfacesIndex < interfacesLength; ) {
-            $.supportsInterface[configurationId][version][
+            $.supportsInterface[_configurationId][_version][
                 interfaces[interfacesIndex]
             ] = true;
             unchecked {
@@ -247,7 +276,7 @@ abstract contract ConfigurationManagementInternal is
     }
 
     function _validateAndBuildBusinessAddresses(
-        IConfigurationManagement.BusinessData[] memory businessIds
+        IConfigurationManagement.BusinessData[] memory _businessIds
     )
         private
         view
@@ -256,21 +285,21 @@ abstract contract ConfigurationManagementInternal is
             address[] memory businessAddresses_
         )
     {
-        _validateBusinessIds(businessIds);
+        _validateBusinessIds(_businessIds);
         (
             businessIds_,
             businessAddresses_
-        ) = _addGovernanceFacetsAndBuildAddressList(businessIds);
+        ) = _addGovernanceFacetsAndBuildAddressList(_businessIds);
     }
 
     function _validateBusinessIds(
-        IConfigurationManagement.BusinessData[] memory businessData
+        IConfigurationManagement.BusinessData[] memory _businessData
     ) private view {
-        uint256 length = businessData.length;
+        uint256 length = _businessData.length;
         require(length > 0, IProxyFactory.NotEmptyBusinessIds());
         for (uint256 index; index < length; ) {
-            bytes32 currentId = businessData[index].businessId;
-            uint256 version = businessData[index].version;
+            bytes32 currentId = _businessData[index].businessId;
+            uint256 version = _businessData[index].version;
             _bytes32IsNotZero(currentId);
             unchecked {
                 ++index;
@@ -285,7 +314,7 @@ abstract contract ConfigurationManagementInternal is
             );
             for (uint256 otherIndex = index; otherIndex < length; ) {
                 require(
-                    currentId != businessData[otherIndex].businessId,
+                    currentId != _businessData[otherIndex].businessId,
                     IProxyFactory.DuplicatedBusinessId(currentId)
                 );
                 unchecked {
@@ -296,7 +325,7 @@ abstract contract ConfigurationManagementInternal is
     }
 
     function _addGovernanceFacetsAndBuildAddressList(
-        IConfigurationManagement.BusinessData[] memory businessIds
+        IConfigurationManagement.BusinessData[] memory _businessIds
     )
         private
         view
@@ -305,16 +334,16 @@ abstract contract ConfigurationManagementInternal is
             address[] memory businessAddresses_
         )
     {
-        uint256 businessIdsLength = businessIds.length;
+        uint256 businessIdsLength = _businessIds.length;
         uint256 businessAddressesLength = businessIdsLength + 4;
         businessData_ = new IConfigurationManagement.BusinessData[](
             businessAddressesLength
         );
         businessAddresses_ = new address[](businessAddressesLength);
         for (uint256 index; index < businessIdsLength; ) {
-            businessData_[index] = businessIds[index];
+            businessData_[index] = _businessIds[index];
             businessAddresses_[index] = _getBusinessLogicAddress(
-                businessIds[index].businessId,
+                _businessIds[index].businessId,
                 0
             );
             unchecked {
@@ -340,7 +369,7 @@ abstract contract ConfigurationManagementInternal is
     }
 
     function _getBusinessData(
-        bytes32 businessId
+        bytes32 _businessId
     )
         private
         view
@@ -349,70 +378,70 @@ abstract contract ConfigurationManagementInternal is
             IConfigurationManagement.BusinessData memory businessData_
         )
     {
-        facetAddress = _getBusinessLogicAddress(businessId, 0);
-        businessData_ = _buildBusinessData(businessId);
+        facetAddress = _getBusinessLogicAddress(_businessId, 0);
+        businessData_ = _buildBusinessData(_businessId);
     }
 
     function _latest(
-        bytes32 configurationId,
-        uint256 version
+        bytes32 _configurationId,
+        uint256 _version
     ) private view returns (uint256 version_) {
-        version_ = version == 0
-            ? _configurationManagementStorage().latestVersion[configurationId]
-            : version;
+        version_ = _version == 0
+            ? _configurationManagementStorage().latestVersion[_configurationId]
+            : _version;
     }
 
     function _buildFacet(
-        address facetAddress,
-        bytes4[] memory functionSelectors
+        address _currentFacetAddress,
+        bytes4[] memory _functionSelectors
     ) private pure returns (IDiamondLoupe.Facet memory facet_) {
         facet_ = IDiamondLoupe.Facet({
-            facetAddress: facetAddress,
-            functionSelectors: functionSelectors
+            facetAddress: _currentFacetAddress,
+            functionSelectors: _functionSelectors
         });
     }
 
     function _buildBusinessData(
-        bytes32 businessId
+        bytes32 _businessId
     )
         private
         pure
         returns (IConfigurationManagement.BusinessData memory businessData_)
     {
         businessData_ = IConfigurationManagement.BusinessData({
-            businessId: businessId,
+            businessId: _businessId,
             version: 0
         });
     }
 
     function _buildBusinessData(
-        bytes32 businessId,
-        uint256 version
+        bytes32 _businessId,
+        uint256 _version
     )
         private
         pure
         returns (IConfigurationManagement.BusinessData memory businessData_)
     {
         businessData_ = IConfigurationManagement.BusinessData({
-            businessId: businessId,
-            version: version
+            businessId: _businessId,
+            version: _version
         });
     }
 
     function _isNotAGovernanceFacet(
-        bytes32 businessId
+        bytes32 _businessId
     ) private pure returns (bool) {
         return
-            businessId != _DIAMOND_CUT_RESOLVER_KEY &&
-            businessId != _DIAMOND_LOUPE_RESOLVER_KEY &&
-            businessId != _ACCESS_CONTROL_RESOLVER_KEY &&
-            businessId != _PAUSE_RESOLVER_KEY &&
-            businessId != _ISBE_LOUPE_RESOLVER_KEY &&
-            businessId != _ISBE_CUT_RESOLVER_KEY &&
-            businessId != _BUSINESS_LOGIC_FACTORY_RESOLVER_KEY &&
-            businessId != _CONFIGURATION_MANAGEMENT_RESOLVER_KEY &&
-            businessId != _GLOBAL_ISBE_PAUSABLE_RESOLVER_KEY &&
-            businessId != _PROXY_FACTORY_RESOLVER_KEY;
+            _businessId != _DIAMOND_CUT_RESOLVER_KEY &&
+            _businessId != _DIAMOND_LOUPE_RESOLVER_KEY &&
+            _businessId != _ACCESS_CONTROL_RESOLVER_KEY &&
+            _businessId != _PAUSE_RESOLVER_KEY &&
+            _businessId != _ISBE_LOUPE_RESOLVER_KEY &&
+            _businessId != _ISBE_CUT_RESOLVER_KEY &&
+            _businessId != _BUSINESS_LOGIC_FACTORY_RESOLVER_KEY &&
+            _businessId != _CONFIGURATION_MANAGEMENT_RESOLVER_KEY &&
+            _businessId != _GLOBAL_ISBE_PAUSABLE_RESOLVER_KEY &&
+            _businessId != _PROXY_FACTORY_RESOLVER_KEY;
     }
 
     function _configurationManagementStorage()
