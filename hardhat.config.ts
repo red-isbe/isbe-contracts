@@ -5,6 +5,42 @@ import '@typechain/hardhat'
 import 'hardhat-contract-sizer'
 import 'solidity-docgen'
 import 'hardhat-gas-reporter'
+import './tasks/businessLogic/deployIsbeFactory'
+import './tasks/businessLogic/deployBusinessLogic'
+import './tasks/businessLogic/getBusinessLogicAddress'
+import './tasks/businessLogic/getBusinessLogicVersions'
+import './tasks/businessLogic/getBusinessLogics'
+import './tasks/diamond/loupe/getFacets'
+import './tasks/diamond/loupe/getFacetAddress'
+import './tasks/diamond/loupe/getFacetAddresses'
+import './tasks/diamond/loupe/getFacetSelectors'
+import './tasks/diamond/cut/diamondCut'
+import './tasks/diamond/cut/facetUpdates'
+import './tasks/diamond/cut/interfaceCut'
+import './tasks/globalPause/pauseIsbe'
+import './tasks/globalPause/unpauseIsbe'
+import './tasks/pause/pause'
+import './tasks/pause/unpause'
+import './tasks/pause/isPaused'
+import './tasks/access/accessControl/getRoleAdmin'
+import './tasks/access/accessControl/getRoleMembers'
+import './tasks/access/accessControl/getRoleMembersCount'
+import './tasks/access/accessControl/getRolesByAccount'
+import './tasks/access/accessControl/getRolesByAccountCount'
+import './tasks/access/accessControl/grantRole'
+import './tasks/access/accessControl/hasRole'
+import './tasks/access/accessControl/renounceRole'
+import './tasks/access/accessControl/revokeRole'
+import './tasks/access/accessControl/setRoleAdmin'
+import './tasks/configMgmt/facets'
+import './tasks/configMgmt/facetAddress'
+import './tasks/configMgmt/facetAddresses'
+import './tasks/configMgmt/facetSelectors'
+import './tasks/configMgmt/getConfig'
+import './tasks/configMgmt/setConfig'
+import './tasks/proxyFactory/deployUseCase'
+import './tasks/proxyFactory/getConfigurationByProxy'
+import './tasks/deployTest'
 
 const config: HardhatUserConfig = {
     solidity: {
@@ -16,6 +52,13 @@ const config: HardhatUserConfig = {
             },
         },
     },
+    networks: {
+        localhost: {
+            url: 'http://127.0.0.1:8545',
+            // No need for accounts; Hardhat provides them
+        },
+    },
+
     paths: {
         sources: './contracts',
         tests: './test',
