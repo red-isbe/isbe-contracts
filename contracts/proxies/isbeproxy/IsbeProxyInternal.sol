@@ -2,17 +2,11 @@
 pragma solidity ^0.8.28;
 
 import {IDiamondLoupe} from '../eip2535/interfaces/IDiamondLoupe.sol';
-import {
-    _ISBE_PROXY_STORAGE_POSITION
-} from '../../constants/storagePositions.sol';
-import {
-    IConfigurationManagement
-} from '../../factory/configurationmanagement/IConfigurationManagement.sol';
+import {_ISBE_PROXY_STORAGE_POSITION} from '../../constants/storagePositions.sol';
+import {IConfigurationManagement} from '../../factory/configurationmanagement/IConfigurationManagement.sol';
 import {FacetAddressResolver} from '../eip2535/FacetAddressResolver.sol';
 import {InitializeBusinessLogic} from '../../utils/InitializeBusinessLogic.sol';
-import {
-    AccessControlInternal
-} from '../../access/accessControl/AccessControlInternal.sol';
+import {AccessControlInternal} from '../../access/accessControl/AccessControlInternal.sol';
 import {PauseInternalCommon} from '../../pause/PauseInternalCommon.sol';
 
 // solhint-disable no-inline-assembly

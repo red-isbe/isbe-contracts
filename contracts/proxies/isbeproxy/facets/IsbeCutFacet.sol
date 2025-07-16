@@ -4,13 +4,9 @@ pragma solidity ^0.8.28;
 import {_ISBE_CUT_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
 import {IIsbeCut} from '../interfaces/IIsbeCut.sol';
 import {IsbeProxyInternal} from '../IsbeProxyInternal.sol';
-import {
-    IEIP2535Introspection
-} from '../../eip2535/interfaces/IEIP2535Introspection.sol';
+import {IEIP2535Introspection} from '../../eip2535/interfaces/IEIP2535Introspection.sol';
 import {_CONFIGURATION_MANAGER_ROLE} from '../../../constants/roles.sol';
-import {
-    IConfigurationManagement
-} from '../../../factory/configurationmanagement/IConfigurationManagement.sol';
+import {IConfigurationManagement} from '../../../factory/configurationmanagement/IConfigurationManagement.sol';
 
 /**
  * @title IsbeCutFacet

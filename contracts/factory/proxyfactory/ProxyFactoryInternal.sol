@@ -2,12 +2,8 @@
 pragma solidity ^0.8.28;
 
 import {IsbeProxy} from '../../proxies/isbeproxy/IsbeProxy.sol';
-import {
-    EnumerableSet
-} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
-import {
-    _PROXY_FACTORY_STORAGE_POSITION
-} from '../../constants/storagePositions.sol';
+import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
+import {_PROXY_FACTORY_STORAGE_POSITION} from '../../constants/storagePositions.sol';
 import {IAccessControl} from '../../access/accessControl/IAccessControl.sol';
 import {IPause} from '../../pause/IPause.sol';
 import {IProxyFactory} from './IProxyFactory.sol';
@@ -17,12 +13,8 @@ import {
     _CONFIGURATION_MANAGER_ROLE
 } from '../../constants/roles.sol';
 import {IsbeProxy} from '../../proxies/isbeproxy/IsbeProxy.sol';
-import {
-    IConfigurationManagement
-} from '../configurationmanagement/IConfigurationManagement.sol';
-import {
-    ConfigurationManagementInternal
-} from '../configurationmanagement/ConfigurationManagementInternal.sol';
+import {IConfigurationManagement} from '../configurationmanagement/IConfigurationManagement.sol';
+import {ConfigurationManagementInternal} from '../configurationmanagement/ConfigurationManagementInternal.sol';
 
 /**
  * @title Proxy Factory Internal
@@ -85,8 +77,7 @@ abstract contract ProxyFactoryInternal is ConfigurationManagementInternal {
         deployed_ =
             uint256(
                 _proxyFactoryStorage().proxyAddressToConfigurationId[_proxy]
-            ) >
-            0;
+            ) > 0;
     }
 
     function _implementedInterfaces()

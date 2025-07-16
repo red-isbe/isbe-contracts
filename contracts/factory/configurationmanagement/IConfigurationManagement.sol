@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {
-    IDiamondLoupe
-} from '../../proxies/eip2535/interfaces/IDiamondLoupe.sol';
+import {IDiamondLoupe} from '../../proxies/eip2535/interfaces/IDiamondLoupe.sol';
 
 /**
  * @title IConfigurationManagement

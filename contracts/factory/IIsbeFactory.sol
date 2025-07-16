@@ -4,9 +4,7 @@ pragma solidity ^0.8.28;
 import {IGlobalIsbePause} from './globalisbepause/IGlobalIsbePause.sol';
 import {IBusinessLogicFactory} from './businesslogic/IBusinessLogicFactory.sol';
 import {IProxyFactory} from './proxyfactory/IProxyFactory.sol';
-import {
-    IConfigurationManagement
-} from './configurationmanagement/IConfigurationManagement.sol';
+import {IConfigurationManagement} from './configurationmanagement/IConfigurationManagement.sol';
 
 /**
  * @title ISBE Universal Factory Interface

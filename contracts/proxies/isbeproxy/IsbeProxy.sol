@@ -4,9 +4,7 @@ pragma solidity ^0.8.28;
 import {IsbeProxyInternal} from './IsbeProxyInternal.sol';
 import {EIP2535} from '../eip2535/EIP2535.sol';
 import {IAccessControl} from '../../access/accessControl/IAccessControl.sol';
-import {
-    IConfigurationManagement
-} from '../../factory/configurationmanagement/IConfigurationManagement.sol';
+import {IConfigurationManagement} from '../../factory/configurationmanagement/IConfigurationManagement.sol';
 
 /**
  * @title IsbeProxy

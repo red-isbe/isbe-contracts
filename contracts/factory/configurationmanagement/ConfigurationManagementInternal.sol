@@ -13,24 +13,14 @@ import {
     _GLOBAL_ISBE_PAUSABLE_RESOLVER_KEY,
     _PROXY_FACTORY_RESOLVER_KEY
 } from '../../constants/resolverKeys.sol';
-import {
-    BusinessLogicFactoryInternal
-} from '../businesslogic/BusinessLogicFactoryInternal.sol';
-import {
-    EnumerableSet
-} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
+import {BusinessLogicFactoryInternal} from '../businesslogic/BusinessLogicFactoryInternal.sol';
+import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 import {IConfigurationManagement} from './IConfigurationManagement.sol';
-import {
-    IDiamondLoupe
-} from '../../proxies/eip2535/interfaces/IDiamondLoupe.sol';
-import {
-    IEIP2535Introspection
-} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {IDiamondLoupe} from '../../proxies/eip2535/interfaces/IDiamondLoupe.sol';
+import {IEIP2535Introspection} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 import {IProxyFactory} from '../proxyfactory/IProxyFactory.sol';
 import {InitializeBusinessLogic} from '../../utils/InitializeBusinessLogic.sol';
-import {
-    _CONFIGURATION_MANAGEMENT_STORAGE_POSITION
-} from '../../constants/storagePositions.sol';
+import {_CONFIGURATION_MANAGEMENT_STORAGE_POSITION} from '../../constants/storagePositions.sol';
 
 /**
  * @title Configuration Management Internal

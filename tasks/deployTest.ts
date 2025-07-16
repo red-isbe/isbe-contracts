@@ -11,7 +11,8 @@ import { getFacets } from '../scripts/diamond/loupe/getFacets'
 import { setConfig } from '../scripts/configMgmt/setConfig'
 import { getConfig } from '../scripts/configMgmt/getConfig'
 import { getFacets as getConfigFacets } from '../scripts/configMgmt/getFacets'
-
+import { pauseIsbe } from '../scripts/globalPause/pauseIsbe'
+import { unpauseIsbe } from '../scripts/globalPause/unpauseIsbe'
 import { getRoleAdmin } from '../scripts/access/accessControl/getRoleAdmin'
 import { getRoleMembers } from '../scripts/access/accessControl/getRoleMembers'
 import { getRolesByAccount } from '../scripts/access/accessControl/getRolesByAccount'
@@ -50,6 +51,12 @@ const DEFAULT_BUSINESS_LOGICS_IDS = [
     '0x360faa2d547f0a951a5b1da060a4ffb56888bf8ad05db9de4d6d09b3eae1e5e2',
     '0xa4de16c45770db08a06a2cdfeb0229e16d2ff660f7f1bf74c3dc07212770c70c',
     '0x7fabf0f3ed655fa26f86c82ae5da60e0ade03a5d35a9ff2985709278942966d3',
+]
+
+const USE_CASE_ROLES = [
+    '0x0000000000000000000000000000000000000000000000000000000000000000',
+    '0x8c911f4537972e7549dbbd37a96b929a4b480f4fb156fc6344524bdf2ca50aa1',
+    '0xe02d3eaf0b5fb24a2d637286804770bf2618aa6d3b40cbf443b93f6cd1aac239',
 ]
 
 task('deployTest', 'deploys a governance factory and tests all the scripts')
@@ -309,14 +316,16 @@ task('deployTest', 'deploys a governance factory and tests all the scripts')
             signer
         )
 
+        const UseCaseAddress = resultDeployUseCase.proxy
+
         console.log('Deployed Use Case result:')
         console.log('  Configuration ID:', resultDeployUseCase.configurationId)
         console.log('  Version:', resultDeployUseCase.version)
         console.log('  RBACs:', JSON.stringify(resultDeployUseCase.rbacs))
-        console.log('  Proxy Address:', resultDeployUseCase.proxy)
+        console.log('  Proxy Address:', UseCaseAddress)
 
         const resultUseCaseConfig = await getConfigurationByProxy(
-            resultDeployUseCase.proxy,
+            UseCaseAddress,
             GovernanceAddress,
             signer
         )
@@ -340,16 +349,39 @@ task('deployTest', 'deploys a governance factory and tests all the scripts')
                     Number.parseInt(resultSetConfiguration.version.toString())
             )
 
+        // check use case accesses and roles
+
+        for (let i = 0; i < USE_CASE_ROLES.length; i++) {
+            const resultUseCaseRoleMembers = await getRoleMembers(
+                USE_CASE_ROLES[i],
+                UseCaseAddress,
+                signer
+            )
+            const resultUseCaseRoleAdmin = await getRoleAdmin(
+                USE_CASE_ROLES[i],
+                UseCaseAddress,
+                signer
+            )
+
+            console.log('Use Case Role : ' + USE_CASE_ROLES[i])
+            console.log('    Role Admin : ' + resultUseCaseRoleAdmin.roleAdmin)
+            console.log('    Members : ' + resultUseCaseRoleMembers.members)
+        }
+
         // pause and unpause use case
-        /*const resultPauseISBE = await pauseIsbe(proxyAddress, factory, signer)
+        const resultPauseISBE = await pauseIsbe(
+            UseCaseAddress,
+            GovernanceAddress,
+            signer
+        )
 
         console.log('UseCase Pause result:', resultPauseISBE)
 
         const resultUNPauseISBE = await unpauseIsbe(
-            proxyAddress,
-            factory,
+            UseCaseAddress,
+            GovernanceAddress,
             signer
         )
 
-        console.log('UseCase UnPause result:', resultUNPauseISBE)*/
+        console.log('UseCase UnPause result:', resultUNPauseISBE)
     })

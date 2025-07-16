@@ -1,15 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {
-    _ACCESS_CONTROL_STORAGE_POSITION
-} from '../../constants/storagePositions.sol';
+import {_ACCESS_CONTROL_STORAGE_POSITION} from '../../constants/storagePositions.sol';
 import {IAccessControl} from './IAccessControl.sol';
 import {ISBEContext} from '../../utils/ISBEContext.sol';
 import {_DEFAULT_ADMIN_ROLE} from '../../constants/roles.sol';
-import {
-    EnumerableSet
-} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
+import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 import {LibCommon} from '../../core/LibCommon.sol';
 
 /// @title AccessControlInternal
