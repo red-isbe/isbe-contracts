@@ -3,9 +3,7 @@ pragma solidity ^0.8.28;
 
 import {EIP2535} from './EIP2535.sol';
 import {IAccessControl} from '../../access/accessControl/IAccessControl.sol';
-import {
-    AccessControlInternal
-} from '../../access/accessControl/AccessControlInternal.sol';
+import {AccessControlInternal} from '../../access/accessControl/AccessControlInternal.sol';
 
 /**
  * @title EIP2535AccessControl Contract

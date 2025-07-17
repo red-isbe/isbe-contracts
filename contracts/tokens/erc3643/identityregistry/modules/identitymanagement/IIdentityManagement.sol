@@ -4,7 +4,6 @@ pragma solidity ^0.8.28;
 //TODO
 import {IIdentity} from '../../../../../identity/IIdentity.sol';
 
-
 /**
  * @title IIdentityManagement
  * @notice Interface to handle the registration, update, and removal of user identities and country

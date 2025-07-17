@@ -1,5 +1,9 @@
 ## IIdentityManagement
 
+Interface to handle the registration, update, and removal of user identities and country
+
+_Defines the core lifecycle operations for managing investor identity data_
+
 ### IdentityRegistered
 
 ```solidity
@@ -146,6 +150,10 @@ function investorCountry(address _userAddress) external view returns (uint16)
 
 ## IRegistriesManagement
 
+Interface for registries management
+
+_Management of the ClaimTopicsRegistry, TrustedIssuersRegistry, and IdentityRegistryStorage_
+
 ### ClaimTopicsRegistrySet
 
 ```solidity
@@ -236,6 +244,10 @@ function topicsRegistry() external view returns (contract IClaimTopicsRegistry)
 ---
 
 ## IVerification
+
+Exposes identity verification logic based on registered claims and trusted issuers
+
+_Implements methods to check if a user is verified_
 
 ### isVerified
 
