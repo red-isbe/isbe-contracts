@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {_ERC20_SNAPSHOT_RESOLVER_KEY} from '../../../../constants/resolverKeys.sol';
+import {
+    _ERC20_SNAPSHOT_RESOLVER_KEY
+} from '../../../../constants/resolverKeys.sol';
 import {ERC20Snapshot} from './ERC20Snapshot.sol';
-import {IEIP2535Introspection} from '../../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {
+    IEIP2535Introspection
+} from '../../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 
 contract ERC20SnapshotFacet is ERC20Snapshot, IEIP2535Introspection {
     function interfacesIntrospection()

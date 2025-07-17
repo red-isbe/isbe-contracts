@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {_BUSINESS_LOGIC_FACTORY_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
+import {
+    _BUSINESS_LOGIC_FACTORY_RESOLVER_KEY
+} from '../../constants/resolverKeys.sol';
 import {BusinessLogicFactory} from './BusinessLogicFactory.sol';
-import {IEIP2535Introspection} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {
+    IEIP2535Introspection
+} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 
 /**
  * @title BusinessLogicFactoryFacet

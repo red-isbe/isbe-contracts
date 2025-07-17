@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {_ERC20_BURNABLE_RESOLVER_KEY} from '../../../../constants/resolverKeys.sol';
+import {
+    _ERC20_BURNABLE_RESOLVER_KEY
+} from '../../../../constants/resolverKeys.sol';
 import {ERC20Burnable} from './ERC20Burnable.sol';
-import {IEIP2535Introspection} from '../../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {
+    IEIP2535Introspection
+} from '../../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 
 contract ERC20BurnableFacet is ERC20Burnable, IEIP2535Introspection {
     function interfacesIntrospection()

@@ -3,7 +3,9 @@ pragma solidity ^0.8.28;
 
 import {_PROXY_FACTORY_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
 import {ProxyFactory} from './ProxyFactory.sol';
-import {IEIP2535Introspection} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {
+    IEIP2535Introspection
+} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 
 /// @title Proxy Factory Facet
 /// @author ISBE

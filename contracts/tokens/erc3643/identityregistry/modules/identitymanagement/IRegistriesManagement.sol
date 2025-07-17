@@ -1,9 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {ITrustedIssuersRegistry} from '../../../trustedissuersregistry/ITrustedIssuersRegistry.sol';
-import {IClaimTopicsRegistry} from '../../../claimtopicsregistry/IClaimTopicsRegistry.sol';
-import {IIdentityRegistryStorage} from '../../../identityregistrystorage/IIdentityRegistryStorage.sol';
+import {
+    ITrustedIssuersRegistry
+} from '../../../trustedissuersregistry/ITrustedIssuersRegistry.sol';
+import {
+    IClaimTopicsRegistry
+} from '../../../claimtopicsregistry/IClaimTopicsRegistry.sol';
+import {
+    IIdentityRegistryStorage
+} from '../../../identityregistrystorage/IIdentityRegistryStorage.sol';
 
 /**
  * @title IRegistriesManagement

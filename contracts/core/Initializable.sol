@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {_INITIALIZABLE_STORAGE_POSITION} from '../constants/storagePositions.sol';
+import {
+    _INITIALIZABLE_STORAGE_POSITION
+} from '../constants/storagePositions.sol';
 
 /**
  * @title Initializable

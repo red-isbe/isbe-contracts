@@ -2,7 +2,9 @@
 pragma solidity ^0.8.28;
 
 import {Initializable} from './Initializable.sol';
-import {AccessControlInternal} from '../access/accessControl/AccessControlInternal.sol';
+import {
+    AccessControlInternal
+} from '../access/accessControl/AccessControlInternal.sol';
 import {PauseInternalCommon} from '../pause/PauseInternalCommon.sol';
 import {OwnableInternal} from '../access/ownable/OwnableInternal.sol';
 import {ERC165Internal} from './ERC165Internal.sol';

@@ -1,16 +1,24 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {BusinessLogicFactoryInternal} from '../businesslogic/BusinessLogicFactoryInternal.sol';
-import {EIP2535AccessControl} from '../../proxies/eip2535/EIP2535AccessControl.sol';
-import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
+import {
+    BusinessLogicFactoryInternal
+} from '../businesslogic/BusinessLogicFactoryInternal.sol';
+import {
+    EIP2535AccessControl
+} from '../../proxies/eip2535/EIP2535AccessControl.sol';
+import {
+    EnumerableSet
+} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 import {
     _DIAMOND_LOUPE_RESOLVER_KEY,
     _DIAMOND_CUT_RESOLVER_KEY,
     _ACCESS_CONTROL_RESOLVER_KEY,
     _PAUSE_RESOLVER_KEY
 } from '../../constants/resolverKeys.sol';
-import {_PROXY_FACTORY_STORAGE_POSITION} from '../../constants/storagePositions.sol';
+import {
+    _PROXY_FACTORY_STORAGE_POSITION
+} from '../../constants/storagePositions.sol';
 import {IAccessControl} from '../../access/accessControl/IAccessControl.sol';
 import {IPause} from '../../pause/IPause.sol';
 import {IProxyFactory} from './IProxyFactory.sol';
@@ -158,7 +166,8 @@ abstract contract ProxyFactoryInternal is
                 IProxyFactory.CurrentIdNotRegistered(currentId)
             );
             foundInitBusinessId =
-                foundInitBusinessId || currentId == initBusinessId;
+                foundInitBusinessId ||
+                currentId == initBusinessId;
             for (uint256 otherIndex = index; otherIndex < length; ) {
                 require(
                     currentId != businessIds[otherIndex],

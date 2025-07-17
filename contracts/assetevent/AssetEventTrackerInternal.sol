@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {_ASSET_EVENT_TRACKER_STORAGE_POSITION} from '../constants/storagePositions.sol';
+import {
+    _ASSET_EVENT_TRACKER_STORAGE_POSITION
+} from '../constants/storagePositions.sol';
 import {Common} from '../core/Common.sol';
 import {IAssetEventTracker} from './IAssetEventTracker.sol';
 
