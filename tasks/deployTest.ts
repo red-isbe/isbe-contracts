@@ -75,9 +75,14 @@ task(
     // deploy governance
     console.log('GOVERNANCE')
 
-    const accountAddress = process.env.ACCOUNT_ADDRESS ?? ''
+    const accountAddress = hre.ethers.getAddress(
+        process.env.ACCOUNT_ADDRESS ?? ''
+    )
 
-    const GovernanceAddress = await deployIsbeFactory(hre, accountAddress, '0x')
+    const GovernanceAddress = hre.ethers.getAddress(
+        await deployIsbeFactory(hre, accountAddress, '0x')
+    )
+
     console.log('ISBE Factory deployed at:', GovernanceAddress)
 
     // getting signer
@@ -305,7 +310,7 @@ task(
         signer
     )
 
-    const UseCaseAddress = resultDeployUseCase.proxy
+    const UseCaseAddress = hre.ethers.getAddress(resultDeployUseCase.proxy)
 
     console.log('Deployed Use Case result:')
     console.log('  Configuration ID:', resultDeployUseCase.configurationId)
