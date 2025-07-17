@@ -137,7 +137,6 @@ The Diamond contract is composed of the following facets, each with a unique res
     - **Access**: restricted to `DEFAULT_ADMIN_ROLE`.
 
 - **`ISBEPauseFacet`**:
-
     - **Function**: Pauses/Unpauses the governance diamond proxy.
     - **Access**: restricted to `PAUSER_ROLE`.
 
@@ -151,7 +150,6 @@ Each use case will have different facets based on its specific business logic. H
     - **Access**: restricted to `DEFAULT_ADMIN_ROLE`.
 
 - **`ISBEPauseFacet`**:
-
     - **Function**: Pauses/Unpauses the use case diamond proxy.
     - **Access**: restricted to `PAUSER_ROLE` and `ISBE_ROLE`.
 

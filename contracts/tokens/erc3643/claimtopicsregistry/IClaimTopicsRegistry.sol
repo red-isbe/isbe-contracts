@@ -7,7 +7,7 @@ pragma solidity ^0.8.28;
  * @dev Provides functionality to add, remove, and retrieve claim topics with a 15-topic limit
  * @author ISBE
  */
-interface IClaimTopicRegistry {
+interface IClaimTopicsRegistry {
     /**
      *  this event is emitted when a claim topic has been added to the ClaimTopicsRegistry
      *  the event is emitted by the 'addClaimTopic' function
