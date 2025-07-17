@@ -38,7 +38,7 @@
         "prettier": "npm run prettier:write",
         "prettier:write": "npx -y prettier . --write",
         "prettier:check": "npx -y prettier . --check",
-        "pre-commit": "npm run docgen && npm run prettier && npm run lint && npm run clean:cache && npm run test:coverage && npm run test:scripts",
+        "pre-commit": "npm run docgen && npm run prettier && npm run lint && npm run clean:cache  && npm run test:scripts && npm run test:coverage",
         "prepare": "husky",
         "slither:analysis": "docker run -t --rm -v /var/run/docker.sock:/var/run/docker.sock -v \"$(pwd)\":\"/home/ethsec/contracts\" -w \"/home/ethsec/contracts\" -u 0:0 trailofbits/eth-security-toolbox /bin/sh -c \"solc-select install 0.8.28  && solc-select use 0.8.28  && slither . --solc-remaps @=node_modules/@\"",
         "slither:storageLayout": "docker run -t --rm -v /var/run/docker.sock:/var/run/docker.sock -v \"$(pwd)\":\"/home/ethsec/contracts\" -w \"/home/ethsec/contracts\" -u 0:0 trailofbits/eth-security-toolbox /bin/sh -c \"solc-select install 0.8.28  && solc-select use 0.8.28  && slither . --print variable-order --solc-remaps @=node_modules/@\"",
