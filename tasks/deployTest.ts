@@ -75,9 +75,12 @@ task(
     // deploy governance
     console.log('GOVERNANCE')
 
-    const accountAddress = hre.ethers.getAddress(
-        process.env.ACCOUNT_ADDRESS ?? ''
-    )
+    const accountAddress =
+        hre.network.name === 'hardhat'
+            ? await hre.ethers
+                  .getSigners()
+                  .then((signers) => signers[0].address)
+            : hre.ethers.getAddress(process.env.ACCOUNT_ADDRESS ?? '')
 
     const GovernanceAddress = hre.ethers.getAddress(
         await deployIsbeFactory(hre, accountAddress, '0x')
@@ -86,7 +89,7 @@ task(
     console.log('ISBE Factory deployed at:', GovernanceAddress)
 
     // getting signer
-    const signer = getSigner(hre)
+    const signer = await getSigner(hre)
 
     // check governance facets and selectors
     const resultGovernanceFacets = await getFacets(GovernanceAddress, signer)
@@ -138,7 +141,7 @@ task(
 
     const resultIsPauseGovernance = await isPaused(GovernanceAddress, signer)
 
-    if (resultIsPauseGovernance.isPaused == false)
+    if (!resultIsPauseGovernance.isPaused)
         throw Error('Governance pause did not work')
 
     const resultUNPauseGovernance = await unpause(GovernanceAddress, signer)
@@ -147,7 +150,7 @@ task(
 
     const resultIsPauseGovernance_2 = await isPaused(GovernanceAddress, signer)
 
-    if (resultIsPauseGovernance_2.isPaused == true)
+    if (resultIsPauseGovernance_2.isPaused)
         throw Error('Governance unpause did not work')
 
     console.log('')
@@ -360,7 +363,7 @@ task(
         signer
     )
 
-    if (resultHasRole_1.hasRole == false) throw new Error('Role not granted')
+    if (!resultHasRole_1.hasRole) throw new Error('Role not granted')
 
     const resultRevoke = await revokeRole(
         DUMB_ROLE,
@@ -377,7 +380,7 @@ task(
         signer
     )
 
-    if (resultHasRole_2.hasRole == true) throw new Error('Role not revoked')
+    if (resultHasRole_2.hasRole) throw new Error('Role not revoked')
 
     await grantRole(DUMB_ROLE, accountAddress, UseCaseAddress, signer)
     console.log('Granted role again')

@@ -41,7 +41,11 @@ import './tasks/configMgmt/setConfig'
 import './tasks/proxyFactory/deployUseCase'
 import './tasks/proxyFactory/getConfigurationByProxy'
 import './tasks/deployTest'
+import { randomBytes } from 'crypto'
 
+const ACCOUNTS = (
+    process.env.ACCOUNTS ?? randomBytes(32).toString('hex')
+).split(',')
 const config: HardhatUserConfig = {
     solidity: {
         version: '0.8.28',
@@ -56,6 +60,22 @@ const config: HardhatUserConfig = {
         localhost: {
             url: 'http://127.0.0.1:8545',
             // No need for accounts; Hardhat provides them
+        },
+        mvp: {
+            url: 'https://besu-node-non-validator-1.mvp.envs.redisbe.com',
+            chainId: 2023,
+            accounts: ACCOUNTS,
+            gasPrice: 0,
+            gas: 100000000,
+            blockGasLimit: 0x1e84800,
+        },
+        kepler: {
+            url: 'https://regular.pre.iosec.io.builders:8565',
+            chainId: 1003,
+            accounts: ACCOUNTS,
+            gasPrice: 0,
+            gas: 100000000,
+            blockGasLimit: 18800000,
         },
     },
 

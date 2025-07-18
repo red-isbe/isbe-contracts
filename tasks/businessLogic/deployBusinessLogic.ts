@@ -21,7 +21,7 @@ task('deployBusinessLogic', 'Deploys business logic contract')
     .setAction(async (taskArgs, hre) => {
         const { businessId, factory, bytecodePath } = taskArgs
 
-        const signer = getSigner(hre)
+        const signer = await getSigner(hre)
 
         const bytecodeContent = fs
             .readFileSync(path.resolve(bytecodePath), 'utf8')

@@ -52,7 +52,7 @@ task('deployUseCase', 'Sets config')
                 factory,
             } = taskArgs
 
-            const signer = getSigner(hre)
+            const signer = await getSigner(hre)
 
             const result = await deployUseCase(
                 configId,

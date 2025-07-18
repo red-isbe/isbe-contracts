@@ -27,7 +27,7 @@ task('facetAddresses', 'Returns facet addresses from config management')
         ) => {
             const { configId, version, factory } = taskArgs
 
-            const signer = getSigner(hre)
+            const signer = await getSigner(hre)
 
             const result = await getFacetAddresses(
                 configId,

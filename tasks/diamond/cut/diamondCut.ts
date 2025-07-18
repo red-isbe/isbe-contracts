@@ -47,7 +47,7 @@ task('diamondCut', 'updates a diamond')
             const { facetAddresses, actions, items, init, calldata, diamond } =
                 taskArgs
 
-            const signer = getSigner(hre)
+            const signer = await getSigner(hre)
 
             const result = await diamondCut(
                 facetAddresses,

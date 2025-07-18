@@ -27,7 +27,7 @@ task('getConfig', 'Returns full config')
         ) => {
             const { configId, version, factory } = taskArgs
 
-            const signer = getSigner(hre)
+            const signer = await getSigner(hre)
 
             const result = await getConfig(configId, version, factory, signer)
 

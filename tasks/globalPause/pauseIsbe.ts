@@ -17,7 +17,7 @@ task('pauseIsbe', 'Pauses a deployed smart contract')
     .setAction(async (taskArgs, hre) => {
         const { proxyAddress, factory } = taskArgs
 
-        const signer = getSigner(hre)
+        const signer = await getSigner(hre)
 
         const result = await pauseIsbe(proxyAddress, factory, signer)
 

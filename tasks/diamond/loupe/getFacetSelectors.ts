@@ -17,7 +17,7 @@ task('getFacetSelectors', 'Deploys business logic contract')
     .setAction(async (taskArgs, hre) => {
         const { diamond, facetAddress } = taskArgs
 
-        const signer = getSigner(hre)
+        const signer = await getSigner(hre)
 
         const result = await getFacetSelectors(diamond, facetAddress, signer)
 

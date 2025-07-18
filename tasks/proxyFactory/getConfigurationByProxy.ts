@@ -24,7 +24,7 @@ task('getConfigurationByProxy', 'Returns full config')
         ) => {
             const { proxyAddress, factory } = taskArgs
 
-            const signer = getSigner(hre)
+            const signer = await getSigner(hre)
 
             const result = await getConfigurationByProxy(
                 proxyAddress,

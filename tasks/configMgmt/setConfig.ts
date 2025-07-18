@@ -30,7 +30,7 @@ task('setConfig', 'Sets config')
         ) => {
             const { configId, businessIds, versions, factory } = taskArgs
 
-            const signer = getSigner(hre)
+            const signer = await getSigner(hre)
 
             const result = await setConfig(
                 configId,

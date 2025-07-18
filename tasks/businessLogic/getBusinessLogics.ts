@@ -15,7 +15,7 @@ task('getBusinessLogics', 'Deploys business logic contract')
     .setAction(async (taskArgs, hre) => {
         const { factory } = taskArgs
 
-        const signer = getSigner(hre)
+        const signer = await getSigner(hre)
 
         const result = await getBusinessLogics(factory, signer)
 

@@ -37,7 +37,7 @@ task('facetUpdates', 'updates a diamond')
         ) => {
             const { facetAddresses, init, calldata, diamond } = taskArgs
 
-            const signer = getSigner(hre)
+            const signer = await getSigner(hre)
 
             const result = await facetUpdates(
                 facetAddresses,

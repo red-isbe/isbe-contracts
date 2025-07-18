@@ -145,7 +145,6 @@ export async function deployIsbeFactory(
         init: ethers.ZeroAddress,
         initCalldata: initCalldata,
     })
-    const address = await diamondProxy.getAddress()
-
-    return address
+    await diamondProxy.waitForDeployment()
+    return await diamondProxy.getAddress()
 }

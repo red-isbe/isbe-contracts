@@ -40,7 +40,7 @@ task('interfaceCut', 'updates a diamond')
         ) => {
             const { facetAddresses, actions, items, diamond } = taskArgs
 
-            const signer = getSigner(hre)
+            const signer = await getSigner(hre)
 
             const result = await interfaceCut(
                 facetAddresses,

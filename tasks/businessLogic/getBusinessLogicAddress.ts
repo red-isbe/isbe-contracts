@@ -19,7 +19,7 @@ task('getBusinessLogicAddress', 'Deploys business logic contract')
     .setAction(async (taskArgs, hre) => {
         const { businessId, factory, businessVersion } = taskArgs
 
-        const signer = getSigner(hre)
+        const signer = await getSigner(hre)
 
         const result = await getBusinessLogicAddress(
             businessId,

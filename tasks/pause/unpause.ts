@@ -15,7 +15,7 @@ task('unpause', 'Unpauses a deployed smart contract')
     .setAction(async (taskArgs, hre) => {
         const { diamond } = taskArgs
 
-        const signer = getSigner(hre)
+        const signer = await getSigner(hre)
 
         const result = await unpause(diamond, signer)
 
