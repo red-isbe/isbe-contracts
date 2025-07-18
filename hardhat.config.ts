@@ -41,6 +41,9 @@ import './tasks/configMgmt/setConfig'
 import './tasks/proxyFactory/deployUseCase'
 import './tasks/proxyFactory/getConfigurationByProxy'
 import './tasks/deployTest'
+import './tasks/extract/byteCode'
+import './tasks/extract/StorageSlots'
+
 import { randomBytes } from 'crypto'
 
 const ACCOUNTS = (
