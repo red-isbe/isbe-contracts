@@ -17,7 +17,7 @@ import {_GOVERNANCE_CONFIGURATION_MANAGER_ROLE} from '../../constants/roles.sol'
  *      use-case configuration. It relies on internal logic to handle storing
  *      and retrieving these configurations.
  */
-contract ConfigurationManagement is
+abstract contract ConfigurationManagement is
     ConfigurationManagementInternal,
     IConfigurationManagement
 {
