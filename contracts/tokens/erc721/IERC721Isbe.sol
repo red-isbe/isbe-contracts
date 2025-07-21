@@ -20,14 +20,22 @@ interface IERC721Isbe is IERC721, IERC721Metadata {
      */
     event Erc721Initialized(string name, string symbol);
 
+    /// @notice Error thrown when attempting to transfer a token from an address that is not the current owner.
+    /// @dev `from` address in a transfer operation does not match the actual owner of the token.
     error TransferFromIncorrectOwner();
 
+    /// @notice Error thrown when attempting to mint a token that already exists.
+    /// @dev Prevent minting of a token with an ID that has already been assigned.
     error TokenAlreadyMinted();
 
+    /// @notice Error thrown when the caller is neither the token owner nor an approved operator.
+    /// @dev Restrict actions to only the owner or an address with the appropriate approval.
     error CallerNotOwnerNorApproved();
 
+    /// @notice Error thrown when a token is transferred to a contract that does not implement
+    /// the ERC721 receiver interface.
+    /// @dev Prevent tokens from being locked in contracts that cannot handle ERC721 tokens.
     error TransferToNonERC721ReceiverImplementer();
-
     /**
      * @notice Initializes the ERC721 token with the given name and symbol.
      * @param newName The name of the ERC721 token to be initialized.

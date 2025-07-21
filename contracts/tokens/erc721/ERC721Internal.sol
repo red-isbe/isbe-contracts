@@ -31,7 +31,7 @@ abstract contract ERC721Internal is Common {
         address from,
         address to,
         uint256 tokenId
-    ) internal virtual addressIsNotZero(from) addressIsNotZero(to) {
+    ) internal addressIsNotZero(from) addressIsNotZero(to) {
         ERC721Storage storage $ = _erc721Storage();
         require(
             $.owners[tokenId] == from,
@@ -43,8 +43,11 @@ abstract contract ERC721Internal is Common {
         // Clear approvals from the previous owner
         delete $.tokenApprovals[tokenId];
 
-        $.balances[from] -= 1;
-        $.balances[to] += 1;
+        unchecked {
+            --$.balances[from];
+            ++$.balances[to];
+        }
+
         $.owners[tokenId] = to;
 
         emit IERC721.Transfer(from, to, tokenId);
@@ -52,28 +55,25 @@ abstract contract ERC721Internal is Common {
         _afterTokenTransfer(from, to, tokenId);
     }
 
-    function _mint(
-        address to,
-        uint256 tokenId
-    ) internal virtual addressIsNotZero(to) {
+    function _mint(address to, uint256 tokenId) internal addressIsNotZero(to) {
         ERC721Storage storage $ = _erc721Storage();
-        require(
-            $.owners[tokenId] == address(0),
-            IERC721Isbe.TokenAlreadyMinted()
-        );
+        _checkTokenMinted(tokenId);
 
         _beforeTokenTransfer(address(0), to, tokenId);
 
-        $.balances[to] += 1;
         $.owners[tokenId] = to;
-        $.totalSupply += 1;
+
+        unchecked {
+            ++$.balances[to];
+            ++$.totalSupply;
+        }
 
         emit IERC721.Transfer(address(0), to, tokenId);
 
         _afterTokenTransfer(address(0), to, tokenId);
     }
 
-    function _burn(uint256 tokenId) internal virtual {
+    function _burn(uint256 tokenId) internal {
         ERC721Storage storage $ = _erc721Storage();
         address owner = $.owners[tokenId];
 
@@ -82,9 +82,12 @@ abstract contract ERC721Internal is Common {
         // Clear approvals
         delete $.tokenApprovals[tokenId];
 
-        $.balances[owner] -= 1;
         delete $.owners[tokenId];
-        $.totalSupply -= 1;
+
+        unchecked {
+            --$.balances[owner];
+            --$.totalSupply;
+        }
 
         emit IERC721.Transfer(owner, address(0), tokenId);
 
@@ -102,8 +105,7 @@ abstract contract ERC721Internal is Common {
         address operator,
         bool approved
     ) internal virtual addressIsNotZero(owner) addressIsNotZero(operator) {
-        ERC721Storage storage $ = _erc721Storage();
-        $.operatorApprovals[owner][operator] = approved;
+        _erc721Storage().operatorApprovals[owner][operator] = approved;
         emit IERC721.ApprovalForAll(owner, operator, approved);
     }
 
@@ -129,8 +131,26 @@ abstract contract ERC721Internal is Common {
         address to,
         uint256 tokenId,
         bytes memory data
-    ) internal virtual whenNotPaused {
+    ) internal whenNotPaused {
         address owner = _ownerOf(tokenId);
+        _checkOwnedForTransferFrom(from, owner, tokenId);
+        _transfer(from, to, tokenId);
+
+        // If recipient is a contract, check that it implements IERC721Receiver
+        _checkOnERC721Received(from, to, tokenId, data);
+    }
+
+    /**
+     * @notice Checks if the caller is the owner, approved address, or an operator for the given token.
+     * @dev Reverts with CallerNotOwnerNorApproved if the caller is not authorized to transfer the token.
+     * @param owner The address of the token owner.
+     * @param tokenId The ID of the token to check.
+     */
+    function _checkOwnedForTransferFrom(
+        address from,
+        address owner,
+        uint256 tokenId
+    ) internal view {
         require(owner == from, IERC721Isbe.TransferFromIncorrectOwner());
         require(
             _msgSender() == owner ||
@@ -138,26 +158,6 @@ abstract contract ERC721Internal is Common {
                 _isApprovedForAll(owner, _msgSender()),
             IERC721Isbe.CallerNotOwnerNorApproved()
         );
-        _transfer(from, to, tokenId);
-
-        // If recipient is a contract, check that it implements IERC721Receiver
-        if (to.code.length > 0) {
-            try
-                IERC721Receiver(to).onERC721Received(
-                    _msgSender(),
-                    from,
-                    tokenId,
-                    data
-                )
-            returns (bytes4 retval) {
-                require(
-                    retval == IERC721Receiver.onERC721Received.selector,
-                    IERC721Isbe.TransferToNonERC721ReceiverImplementer()
-                );
-            } catch {
-                revert IERC721Isbe.TransferToNonERC721ReceiverImplementer();
-            }
-        }
     }
 
     function _name() internal view returns (string memory) {
@@ -189,6 +189,52 @@ abstract contract ERC721Internal is Common {
 
     function _totalSupply() internal view returns (uint256) {
         return _erc721Storage().totalSupply;
+    }
+
+    /**
+     * @notice Checks if the recipient is a contract and verifies it implements the IERC721Receiver interface.
+     * @dev Reverts if the recipient contract does not properly handle ERC721 tokens.
+     * @param from The address which previously owned the token.
+     * @param to The address receiving the token.
+     * @param tokenId The ID of the token being transferred.
+     * @param data Additional data with no specified format.
+     */
+    function _checkOnERC721Received(
+        address from,
+        address to,
+        uint256 tokenId,
+        bytes memory data
+    ) private {
+        if (to.code.length > 0) {
+            try
+                IERC721Receiver(to).onERC721Received(
+                    _msgSender(),
+                    from,
+                    tokenId,
+                    data
+                )
+            returns (bytes4 retval) {
+                require(
+                    retval == IERC721Receiver.onERC721Received.selector,
+                    IERC721Isbe.TransferToNonERC721ReceiverImplementer()
+                );
+            } catch {
+                revert IERC721Isbe.TransferToNonERC721ReceiverImplementer();
+            }
+        }
+    }
+
+    /**
+     * @notice Checks if the token with the given ID has not been minted yet.
+     * @dev Reverts with TokenAlreadyMinted if the token already exists.
+     * @param tokenId The ID of the token to check.
+     */
+    function _checkTokenMinted(uint256 tokenId) private view {
+        ERC721Storage storage $ = _erc721Storage();
+        require(
+            $.owners[tokenId] == address(0),
+            IERC721Isbe.TokenAlreadyMinted()
+        );
     }
 
     function _erc721Storage()
