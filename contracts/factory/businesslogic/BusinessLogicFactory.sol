@@ -14,7 +14,7 @@ import {_BUSINESS_LOGIC_DEPLOYER_ROLE} from '../../constants/roles.sol';
  * the core deployment and storage logic from `BusinessLogicFactoryInternal`.
  * Access to state-changing functions is restricted by role-based access control.
  */
-contract BusinessLogicFactory is
+abstract contract BusinessLogicFactory is
     BusinessLogicFactoryInternal,
     IBusinessLogicFactory
 {

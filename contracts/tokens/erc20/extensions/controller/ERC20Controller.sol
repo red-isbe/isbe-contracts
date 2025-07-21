@@ -8,7 +8,7 @@ import {_CONTROLLER_ROLE} from '../../../../constants/roles.sol';
 /// @title ERC20Controller
 /// @notice Implements force mechanism
 /// @dev Inherits from IERC20Controller and ERC20InternalCommon
-contract ERC20Controller is IERC20Controller, ERC20InternalCommon {
+abstract contract ERC20Controller is IERC20Controller, ERC20InternalCommon {
     function forceTransfer(
         address _from,
         address _to,

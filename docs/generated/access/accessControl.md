@@ -13,7 +13,7 @@ modifier protectISBERole(bytes32 _role)
 ### constructor
 
 ```solidity
-constructor() public
+constructor() internal
 ```
 
 Constructor that disables the initializer

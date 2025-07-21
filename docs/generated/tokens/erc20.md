@@ -10,7 +10,7 @@ OpenZeppelin interfaces. It includes additional helper functions such as `increa
 ### constructor
 
 ```solidity
-constructor() public
+constructor() internal
 ```
 
 Constructor that assigns the deployer as the default admin

@@ -6,7 +6,7 @@ import {OwnableBase} from './OwnableBase.sol';
 /// @title Ownable
 /// @notice Implements ownership mechanisms
 /// @dev Inherits from IOwnable and OwnableInternal
-contract Ownable is OwnableBase {
+abstract contract Ownable is OwnableBase {
     function transferOwnership(
         address _newOwner
     ) external override onlyOwner addressIsNotZero(_newOwner) whenNotPaused {

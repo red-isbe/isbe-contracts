@@ -15,7 +15,7 @@ import {_PROXY_DEPLOYER_ROLE} from '../../constants/roles.sol';
  *      interface. Provides role-based access control for proxy deployment
  *      and configuration management functionality
  */
-contract ProxyFactory is ProxyFactoryInternal, IProxyFactory {
+abstract contract ProxyFactory is ProxyFactoryInternal, IProxyFactory {
     /**
      * @dev Modifier to validate that a configuration exists and is valid
      * @param _configurationId The unique identifier for the configuration
