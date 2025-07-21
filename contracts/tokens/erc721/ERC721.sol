@@ -34,11 +34,8 @@ contract ERC721 is IERC721Isbe, ERC721InternalCommon {
         address to,
         uint256 tokenId
     ) external override whenNotPaused {
-        address owner = _ownerOf(tokenId);
-        require(
-            owner == _msgSender() || _isApprovedForAll(owner, _msgSender()),
-            IERC721Isbe.CallerNotOwnerNorApproved()
-        );
+        _checkOwnerForApprove(_ownerOf(tokenId));
+
         _approve(to, tokenId);
     }
 
@@ -63,12 +60,7 @@ contract ERC721 is IERC721Isbe, ERC721InternalCommon {
     ) external override whenNotPaused {
         address owner = _ownerOf(tokenId);
         require(owner == from, IERC721Isbe.TransferFromIncorrectOwner());
-        require(
-            _msgSender() == owner ||
-                _getApproved(tokenId) == _msgSender() ||
-                _isApprovedForAll(owner, _msgSender()),
-            IERC721Isbe.CallerNotOwnerNorApproved()
-        );
+        _checkOwnerForApprove(owner);
         _transfer(from, to, tokenId);
     }
 
@@ -165,14 +157,10 @@ contract ERC721 is IERC721Isbe, ERC721InternalCommon {
      * @notice Returns true if this contract implements the interface defined by `interfaceId`.
      * @dev Required by IERC165.
      */
+    // solhint-disable no-empty-blocks
     function supportsInterface(
         bytes4 interfaceId
-    ) external pure override returns (bool) {
-        return
-            interfaceId == type(IERC721).interfaceId ||
-            interfaceId == type(IERC721Metadata).interfaceId ||
-            interfaceId == type(IERC721Isbe).interfaceId;
-    }
+    ) external pure override returns (bool) {}
 
     function _implementedInterfaces()
         internal
@@ -186,5 +174,17 @@ contract ERC721 is IERC721Isbe, ERC721InternalCommon {
         interfaces_[--interfacesLength] = type(IERC721Isbe).interfaceId;
         interfaces_[--interfacesLength] = type(IERC721).interfaceId;
         interfaces_[--interfacesLength] = type(IERC721Metadata).interfaceId;
+    }
+
+    /**
+     * @notice Checks if the caller is the owner or an approved operator for the given owner.
+     * @dev Reverts with CallerNotOwnerNorApproved if the caller is neither the owner nor an approved operator.
+     * @param _owner The address of the token owner to check against the caller.
+     */
+    function _checkOwnerForApprove(address _owner) private view {
+        require(
+            _owner == _msgSender() || _isApprovedForAll(_owner, _msgSender()),
+            IERC721Isbe.CallerNotOwnerNorApproved()
+        );
     }
 }
