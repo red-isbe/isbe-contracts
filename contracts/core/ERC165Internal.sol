@@ -29,7 +29,7 @@ abstract contract ERC165Internal {
     function _supportsInterface(
         bytes4 _interfaceId,
         bytes4[] memory _interfaces
-    ) internal pure virtual returns (bool supported) {
+    ) internal pure virtual returns (bool supported_) {
         uint256 length = _interfaces.length;
         for (uint256 index; index < length; ) {
             if (_interfaces[index] == _interfaceId) {
@@ -42,15 +42,15 @@ abstract contract ERC165Internal {
     }
 
     function _aggregateInterfaces(
-        bytes4[][] memory interfacesArrays,
+        bytes4[][] memory _interfacesArrays,
         bytes4[] memory _interfaces
     ) internal pure returns (bytes4[] memory interfaces_) {
-        uint256 inputLength = interfacesArrays.length;
+        uint256 inputLength = _interfacesArrays.length;
         uint256 outputLength = _interfaces.length;
 
         for (uint256 index; index < inputLength; ) {
             unchecked {
-                outputLength += interfacesArrays[index].length;
+                outputLength += _interfacesArrays[index].length;
                 ++index;
             }
         }
@@ -61,7 +61,7 @@ abstract contract ERC165Internal {
         uint256 innerLength;
         uint256 subArrayIndex;
         for (uint256 inputIndex; inputIndex < inputLength; ) {
-            bytes4[] memory subArray = interfacesArrays[inputIndex];
+            bytes4[] memory subArray = _interfacesArrays[inputIndex];
             innerLength = subArray.length;
             for (; subArrayIndex < innerLength; ) {
                 interfaces_[outputIndex] = subArray[subArrayIndex];

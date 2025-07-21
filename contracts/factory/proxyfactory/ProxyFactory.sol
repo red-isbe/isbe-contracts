@@ -6,40 +6,70 @@ import {IProxyFactory} from './IProxyFactory.sol';
 import {IAccessControl} from '../../access/accessControl/IAccessControl.sol';
 import {_PROXY_DEPLOYER_ROLE} from '../../constants/roles.sol';
 
-/// @title Proxy Contract Factory
-/// @author ISBE
-/// @notice This contract is the primary implementation of the IProxyFactory interface. It serves
-///         as a factory for deploying and managing various types of proxy contracts, such as
-///         Diamond proxies (EIP-2535).
-/// @dev An upgradeable contract that provides the concrete logic for deploying proxies. It inherits
-///      from ProxyFactoryInternal, which contains the core implementation details, and strictly
-///      adheres to the IProxyFactory interface. Access to key functions is restricted through
-///      role-based access control.
+/**
+ * @title Proxy Factory
+ * @author ISBE
+ * @notice Main contract for deploying diamond proxy contracts with business
+ *         logic configurations
+ * @dev Inherits from ProxyFactoryInternal and implements the IProxyFactory
+ *      interface. Provides role-based access control for proxy deployment
+ *      and configuration management functionality
+ */
 contract ProxyFactory is ProxyFactoryInternal, IProxyFactory {
-    function deployDiamond(
-        bytes32[] calldata businessIds,
-        IAccessControl.Rbac[] calldata rbacs,
-        bytes32 initBusinessId,
-        bytes calldata initData
-    ) external override onlyRole(_PROXY_DEPLOYER_ROLE) {
-        (address proxyAddress) = _deployDiamond(
-            businessIds,
-            rbacs,
-            initBusinessId,
-            initData
+    /**
+     * @dev Modifier to validate that a configuration exists and is valid
+     * @param _configurationId The unique identifier for the configuration
+     * @param _version The version number to validate
+     */
+    modifier onlyValidConfiguration(
+        bytes32 _configurationId,
+        uint256 _version
+    ) {
+        _checkConfiguration(_configurationId, _version);
+        _;
+    }
+
+    function deployUseCase(
+        bytes32 _configurationId,
+        uint256 _version,
+        IAccessControl.Rbac[] calldata _rbacs,
+        bytes32 _initBusinessId,
+        bytes calldata _initData
+    )
+        external
+        override
+        onlyRole(_PROXY_DEPLOYER_ROLE)
+        bytes32IsNotZero(_configurationId)
+        onlyValidConfiguration(_configurationId, _version)
+    {
+        (address proxyAddress) = _deployUseCase(
+            _configurationId,
+            _version,
+            _rbacs,
+            _initBusinessId,
+            _initData
         );
-        emit DiamondDeployed(businessIds, rbacs, proxyAddress);
+        emit UseCaseDeployed(_configurationId, _version, _rbacs, proxyAddress);
     }
 
-    function getDeployedProxiesByBusinessId(
-        bytes32 businessId
-    ) external view override returns (address[] memory proxies) {
-        proxies = _getDeployedProxiesByBusinessId(businessId);
+    function getDeployedProxiesByConfiguration(
+        bytes32 _configurationId,
+        uint256 _version
+    ) external view override returns (address[] memory proxies_) {
+        proxies_ = _getDeployedProxiesByConfiguration(
+            _configurationId,
+            _version
+        );
     }
 
-    function getBusinessIdsByProxy(
-        address proxy
-    ) external view override returns (bytes32[] memory businessIds) {
-        businessIds = _getBusinessIdsByProxy(proxy);
+    function getConfigurationByProxy(
+        address _proxy
+    )
+        external
+        view
+        override
+        returns (bytes32 configurationId_, uint256 version_)
+    {
+        (configurationId_, version_) = _getConfigurationByProxy(_proxy);
     }
 }

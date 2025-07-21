@@ -7,8 +7,8 @@ import {ISBEContext} from '../../utils/ISBEContext.sol';
 contract MockTimestamp is IMockTimestamp, ISBEContext {
     uint256 private _mockedTimestamp;
 
-    function setMockedTimestamp(uint256 ts) external {
-        _mockedTimestamp = ts;
+    function setMockedTimestamp(uint256 _ts) external {
+        _mockedTimestamp = _ts;
     }
 
     function _blockTimestamp()

@@ -7,30 +7,30 @@ _Inherits from IHashTimestamp and HashTimestampInternal, providing external time
 ### timestampHash
 
 ```solidity
-function timestampHash(bytes32 hash) external
+function timestampHash(bytes32 _hash) external
 ```
 
 Timestamps a given hash
 
 #### Parameters
 
-| Name | Type    | Description                |
-| ---- | ------- | -------------------------- |
-| hash | bytes32 | The hash to be timestamped |
+| Name   | Type    | Description                |
+| ------ | ------- | -------------------------- |
+| \_hash | bytes32 | The hash to be timestamped |
 
 ### exists
 
 ```solidity
-function exists(bytes32 hash) external view returns (bool)
+function exists(bytes32 _hash) external view returns (bool)
 ```
 
 Checks whether a hash has been timestamped
 
 #### Parameters
 
-| Name | Type    | Description       |
-| ---- | ------- | ----------------- |
-| hash | bytes32 | The hash to check |
+| Name   | Type    | Description       |
+| ------ | ------- | ----------------- |
+| \_hash | bytes32 | The hash to check |
 
 #### Return Values
 
@@ -41,16 +41,16 @@ Checks whether a hash has been timestamped
 ### getTimestamp
 
 ```solidity
-function getTimestamp(bytes32 hash) external view returns (uint256)
+function getTimestamp(bytes32 _hash) external view returns (uint256)
 ```
 
 Returns the timestamp when a hash was recorded
 
 #### Parameters
 
-| Name | Type    | Description       |
-| ---- | ------- | ----------------- |
-| hash | bytes32 | The hash to query |
+| Name   | Type    | Description       |
+| ------ | ------- | ----------------- |
+| \_hash | bytes32 | The hash to query |
 
 #### Return Values
 
@@ -141,39 +141,39 @@ struct HashTimestampStorage {
 ### onlyNonExistentHash
 
 ```solidity
-modifier onlyNonExistentHash(bytes32 hash)
+modifier onlyNonExistentHash(bytes32 _hash)
 ```
 
 Modifier to validate that provided hash
 
 #### Parameters
 
-| Name | Type    | Description       |
-| ---- | ------- | ----------------- |
-| hash | bytes32 | The hash to check |
+| Name   | Type    | Description       |
+| ------ | ------- | ----------------- |
+| \_hash | bytes32 | The hash to check |
 
 ### \_timestampHash
 
 ```solidity
-function _timestampHash(bytes32 hash) internal virtual
+function _timestampHash(bytes32 _hash) internal virtual
 ```
 
 ### \_exists
 
 ```solidity
-function _exists(bytes32 hash) internal view virtual returns (bool)
+function _exists(bytes32 _hash) internal view virtual returns (bool)
 ```
 
 ### \_getTimestamp
 
 ```solidity
-function _getTimestamp(bytes32 hash) internal view virtual returns (uint256)
+function _getTimestamp(bytes32 _hash) internal view virtual returns (uint256)
 ```
 
 ### \_checkHash
 
 ```solidity
-function _checkHash(bytes32 hash) internal view virtual
+function _checkHash(bytes32 _hash) internal view virtual
 ```
 
 ### \_hashTimestampStorage
@@ -223,30 +223,30 @@ error HashAlreadyExists(bytes32 hash)
 ### timestampHash
 
 ```solidity
-function timestampHash(bytes32 hash) external
+function timestampHash(bytes32 _hash) external
 ```
 
 Timestamps a given hash
 
 #### Parameters
 
-| Name | Type    | Description                |
-| ---- | ------- | -------------------------- |
-| hash | bytes32 | The hash to be timestamped |
+| Name   | Type    | Description                |
+| ------ | ------- | -------------------------- |
+| \_hash | bytes32 | The hash to be timestamped |
 
 ### exists
 
 ```solidity
-function exists(bytes32 hash) external view returns (bool exists_)
+function exists(bytes32 _hash) external view returns (bool exists_)
 ```
 
 Checks whether a hash has been timestamped
 
 #### Parameters
 
-| Name | Type    | Description       |
-| ---- | ------- | ----------------- |
-| hash | bytes32 | The hash to check |
+| Name   | Type    | Description       |
+| ------ | ------- | ----------------- |
+| \_hash | bytes32 | The hash to check |
 
 #### Return Values
 
@@ -257,19 +257,19 @@ Checks whether a hash has been timestamped
 ### getTimestamp
 
 ```solidity
-function getTimestamp(bytes32 hash) external view returns (uint256 timestamp)
+function getTimestamp(bytes32 _hash) external view returns (uint256 timestamp_)
 ```
 
 Returns the timestamp when a hash was recorded
 
 #### Parameters
 
-| Name | Type    | Description       |
-| ---- | ------- | ----------------- |
-| hash | bytes32 | The hash to query |
+| Name   | Type    | Description       |
+| ------ | ------- | ----------------- |
+| \_hash | bytes32 | The hash to query |
 
 #### Return Values
 
-| Name      | Type    | Description                              |
-| --------- | ------- | ---------------------------------------- |
-| timestamp | uint256 | The timestamp when the hash was recorded |
+| Name        | Type    | Description                              |
+| ----------- | ------- | ---------------------------------------- |
+| timestamp\_ | uint256 | The timestamp when the hash was recorded |

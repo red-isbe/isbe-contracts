@@ -26,13 +26,13 @@ interface IIsbeCut {
     /**
      * @notice Sets the ISBE proxy configuration from an external management contract
      * @dev Updates the proxy configuration using the specified management contract
-     * @param configurationManagement The configuration management contract instance
-     * @param configurationId The identifier of the configuration to set
-     * @param version The version number of the configuration to apply
+     * @param _configurationManagement The configuration management contract instance
+     * @param _configurationId The identifier of the configuration to set
+     * @param _version The version number of the configuration to apply
      */
     function setIsbeProxyConfiguration(
-        IConfigurationManagement configurationManagement,
-        bytes32 configurationId,
-        uint256 version
+        IConfigurationManagement _configurationManagement,
+        bytes32 _configurationId,
+        uint256 _version
     ) external;
 }

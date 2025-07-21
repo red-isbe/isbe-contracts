@@ -21,10 +21,10 @@ abstract contract GlobalIsbePauseInternal is
     /**
      * @notice Ensures the function is called for a deployed proxy.
      * @dev Reverts if `proxyAddress` is not a known, deployed proxy address.
-     * @param proxyAddress The address of the proxy to be checked.
+     * @param _proxyAddress The address of the proxy to be checked.
      */
-    modifier onlyDeployedProxy(address proxyAddress) {
-        _checkDeployedProxy(proxyAddress);
+    modifier onlyDeployedProxy(address _proxyAddress) {
+        _checkDeployedProxy(_proxyAddress);
         _;
     }
 
@@ -39,10 +39,10 @@ abstract contract GlobalIsbePauseInternal is
         interfaces_[--interfacesLength] = type(IGlobalIsbePause).interfaceId;
     }
 
-    function _checkDeployedProxy(address proxyAddress) private view {
+    function _checkDeployedProxy(address _proxyAddress) private view {
         require(
-            _isProxyDeployed(proxyAddress),
-            IGlobalIsbePause.InvalidProxy(proxyAddress)
+            _isProxyDeployed(_proxyAddress),
+            IGlobalIsbePause.InvalidProxy(_proxyAddress)
         );
     }
 }

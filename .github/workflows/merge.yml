@@ -17,6 +17,9 @@ jobs:
 
             - name: Run pre-commit
               run: npm run pre-commit
+              env:
+                  ACCOUNT_PRIVATE_KEY: ${{ secrets.ACCOUNT_PRIVATE_KEY }}
+                  ACCOUNT_ADDRESS: ${{ secrets.ACCOUNT_ADDRESS }}
 
             - name: Install Slither & solc
               run: |

@@ -1,93 +1,83 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {BusinessLogicFactoryInternal} from '../businesslogic/BusinessLogicFactoryInternal.sol';
-import {EIP2535AccessControl} from '../../proxies/eip2535/EIP2535AccessControl.sol';
+import {IsbeProxy} from '../../proxies/isbeproxy/IsbeProxy.sol';
 import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
-import {
-    _DIAMOND_LOUPE_RESOLVER_KEY,
-    _DIAMOND_CUT_RESOLVER_KEY,
-    _ACCESS_CONTROL_RESOLVER_KEY,
-    _PAUSE_RESOLVER_KEY
-} from '../../constants/resolverKeys.sol';
 import {_PROXY_FACTORY_STORAGE_POSITION} from '../../constants/storagePositions.sol';
 import {IAccessControl} from '../../access/accessControl/IAccessControl.sol';
 import {IPause} from '../../pause/IPause.sol';
 import {IProxyFactory} from './IProxyFactory.sol';
-import {InitializeBusinessLogic} from '../../utils/InitializeBusinessLogic.sol';
-import {_DEFAULT_ADMIN_ROLE, _ISBE_ROLE} from '../../constants/roles.sol';
+import {
+    _DEFAULT_ADMIN_ROLE,
+    _ISBE_ROLE,
+    _CONFIGURATION_MANAGER_ROLE
+} from '../../constants/roles.sol';
+import {IsbeProxy} from '../../proxies/isbeproxy/IsbeProxy.sol';
+import {IConfigurationManagement} from '../configurationmanagement/IConfigurationManagement.sol';
+import {ConfigurationManagementInternal} from '../configurationmanagement/ConfigurationManagementInternal.sol';
 
-/// @title Internal Logic for the Proxy Factory
-/// @author ISBE
-/// @notice This abstract contract contains the internal functions and storage for creating and
-///         managing proxy contracts. It is not intended for direct deployment but serves as the
-///         core implementation layer for the public-facing `ProxyFactory`.
-/// @dev Implements the internal logic required by `ProxyFactory`. It manages storage using a
-///      dedicated struct to prevent storage collisions in an upgradeable context. It inherits
-///      from `BusinessLogicFactoryInternal` to access business logic registration and from
-///      `InitializeBusinessLogic` for initialisation capabilities.
-abstract contract ProxyFactoryInternal is
-    BusinessLogicFactoryInternal,
-    InitializeBusinessLogic
-{
+/**
+ * @title Proxy Factory Internal
+ * @author ISBE
+ * @notice Abstract contract providing internal proxy factory functionality
+ * @dev Inherits from ConfigurationManagementInternal and provides core
+ *      logic for deploying and managing ISBE proxy contracts. Contains
+ *      storage mappings and internal functions for proxy deployment
+ */
+abstract contract ProxyFactoryInternal is ConfigurationManagementInternal {
     using EnumerableSet for EnumerableSet.AddressSet;
-    using EnumerableSet for EnumerableSet.Bytes32Set;
 
-    /// @dev Defines the storage layout for the proxy factory. Using a struct at a fixed
-    ///      storage slot helps prevent storage collisions across upgrades.
     struct ProxyFactoryStorage {
-        // A mapping from a business logic ID to all proxy addresses that use it.
-        mapping(bytes32 => EnumerableSet.AddressSet) businessIdToProxyAddress;
-        // A mapping from a proxy address to all the business logic IDs it uses.
-        mapping(address => EnumerableSet.Bytes32Set) proxyAddressToBusinessIds;
+        mapping(bytes32 => mapping(uint256 => EnumerableSet.AddressSet)) configurationToProxyAddress;
+        mapping(address => bytes32) proxyAddressToConfigurationId;
+        mapping(address => uint256) proxyAddressToVersion;
     }
 
-    function _deployDiamond(
-        bytes32[] memory businessIds,
-        IAccessControl.Rbac[] memory rbacs,
-        bytes32 initBusinessId,
-        bytes memory initData
-    ) internal returns (address proxyAddress) {
-        (
-            address[] memory businessAddresses,
-            address initAddress
-        ) = _validateAndBuildBusinessAddresses(businessIds, initBusinessId);
-        EIP2535AccessControl proxy = new EIP2535AccessControl(
-            businessAddresses,
-            EIP2535AccessControl.DiamondArgs(
-                _adaptRbacWithIsbeRoles(rbacs),
-                initAddress,
-                initData
-            )
-        );
-        proxyAddress = address(proxy);
-        IPause(proxyAddress).initializePause(false);
-        _initializeBusinessLogic(initAddress, initData);
-        _storeDeployedDiamond(businessIds, proxyAddress);
+    function _deployUseCase(
+        bytes32 _configurationId,
+        uint256 _version,
+        IAccessControl.Rbac[] memory _rbacs,
+        bytes32 _initBusinessId,
+        bytes memory _initData
+    ) internal returns (address proxyAddress_) {
+        IsbeProxy.IsbeProxyArgs memory args = IsbeProxy.IsbeProxyArgs({
+            configurationManagement: IConfigurationManagement(address(this)),
+            configurationId: _configurationId,
+            version: _version,
+            rbacs: _adaptRbacWithIsbeRoles(_rbacs),
+            init: _getFacetAddress(_configurationId, _version, _initBusinessId),
+            data: _initData
+        });
+        IsbeProxy proxy = new IsbeProxy(args);
+        proxyAddress_ = address(proxy);
+        IPause(proxyAddress_).initializePause(false);
+        _storeDeployedDiamond(_configurationId, _version, proxyAddress_);
     }
 
-    function _getDeployedProxiesByBusinessId(
-        bytes32 businessId
-    ) internal view returns (address[] memory proxies) {
-        proxies = _proxyFactoryStorage()
-            .businessIdToProxyAddress[businessId]
+    function _getDeployedProxiesByConfiguration(
+        bytes32 _configurationId,
+        uint256 _version
+    ) internal view returns (address[] memory proxies_) {
+        proxies_ = _proxyFactoryStorage()
+            .configurationToProxyAddress[_configurationId][_version]
             .values();
     }
 
-    function _getBusinessIdsByProxy(
-        address proxy
-    ) internal view returns (bytes32[] memory businessIds) {
-        businessIds = _proxyFactoryStorage()
-            .proxyAddressToBusinessIds[proxy]
-            .values();
+    function _getConfigurationByProxy(
+        address _proxy
+    ) internal view returns (bytes32 configurationId_, uint256 version_) {
+        ProxyFactoryStorage storage $ = _proxyFactoryStorage();
+        configurationId_ = $.proxyAddressToConfigurationId[_proxy];
+        version_ = $.proxyAddressToVersion[_proxy];
     }
 
     function _isProxyDeployed(
-        address proxy
+        address _proxy
     ) internal view returns (bool deployed_) {
         deployed_ =
-            _proxyFactoryStorage().proxyAddressToBusinessIds[proxy].length() >
-            0;
+            uint256(
+                _proxyFactoryStorage().proxyAddressToConfigurationId[_proxy]
+            ) > 0;
     }
 
     function _implementedInterfaces()
@@ -103,115 +93,18 @@ abstract contract ProxyFactoryInternal is
     }
 
     function _storeDeployedDiamond(
-        bytes32[] memory businessIds,
-        address deployedProxyAddress
+        bytes32 _configurationId,
+        uint256 _version,
+        address _deployedProxyAddress
     ) private {
         ProxyFactoryStorage storage $ = _proxyFactoryStorage();
-        uint256 length = businessIds.length;
-        for (uint256 index; index < length; ) {
-            bytes32 current = businessIds[index];
-            $.businessIdToProxyAddress[current].add(deployedProxyAddress);
-            $.proxyAddressToBusinessIds[deployedProxyAddress].add(current);
-            unchecked {
-                ++index;
-            }
-        }
-    }
-
-    function _validateAndBuildBusinessAddresses(
-        bytes32[] memory businessIds,
-        bytes32 initBusinessId
-    )
-        private
-        view
-        returns (address[] memory businessAddresses_, address initAddress_)
-    {
-        _validateBusinessIds(businessIds, initBusinessId);
-        (
-            businessAddresses_,
-            initAddress_
-        ) = _addGovernanceFacetsAndBuildAddressList(
-                businessIds,
-                initBusinessId
-            );
-    }
-
-    function _validateBusinessIds(
-        bytes32[] memory businessIds,
-        bytes32 initBusinessId
-    ) private view {
-        uint256 length = businessIds.length;
-        require(length > 0, IProxyFactory.NotEmptyBusinessIds());
-        bool foundInitBusinessId;
-        for (uint256 index; index < length; ) {
-            bytes32 currentId = businessIds[index];
-            _bytes32IsNotZero(currentId);
-            unchecked {
-                ++index;
-            }
-            require(
-                _isNotAGovernanceFacet(currentId),
-                IProxyFactory.FacetNotPermitted(currentId)
-            );
-            require(
-                _isDeployedBusinessLogic(currentId),
-                IProxyFactory.CurrentIdNotRegistered(currentId)
-            );
-            foundInitBusinessId =
-                foundInitBusinessId || currentId == initBusinessId;
-            for (uint256 otherIndex = index; otherIndex < length; ) {
-                require(
-                    currentId != businessIds[otherIndex],
-                    IProxyFactory.DuplicatedBusinessId(currentId)
-                );
-                unchecked {
-                    ++otherIndex;
-                }
-            }
-        }
-        if (initBusinessId != bytes32(0)) {
-            require(
-                foundInitBusinessId,
-                IProxyFactory.InitializationFacetNotFound(initBusinessId)
-            );
-        }
-    }
-
-    function _addGovernanceFacetsAndBuildAddressList(
-        bytes32[] memory businessIds,
-        bytes32 initBusinessId
-    )
-        private
-        view
-        returns (address[] memory businessAddresses_, address initAddress_)
-    {
-        uint256 businessIdsLength = businessIds.length;
-        uint256 businessAddressesLength = businessIdsLength + 4;
-        businessAddresses_ = new address[](businessAddressesLength);
-        for (uint256 index; index < businessIdsLength; ) {
-            businessAddresses_[index] = _getBusinessLogicAddress(
-                businessIds[index],
-                0
-            );
-            initAddress_ = businessIds[index] == initBusinessId
-                ? businessAddresses_[index]
-                : initAddress_;
-            unchecked {
-                ++index;
-            }
-        }
-        businessAddresses_[
-            --businessAddressesLength
-        ] = _getBusinessLogicAddress(_DIAMOND_LOUPE_RESOLVER_KEY, 0);
-        businessAddresses_[
-            --businessAddressesLength
-        ] = _getBusinessLogicAddress(_DIAMOND_CUT_RESOLVER_KEY, 0);
-        businessAddresses_[
-            --businessAddressesLength
-        ] = _getBusinessLogicAddress(_PAUSE_RESOLVER_KEY, 0);
-        businessAddresses_[
-            --businessAddressesLength
-        ] = _getBusinessLogicAddress(_ACCESS_CONTROL_RESOLVER_KEY, 0);
+        $.configurationToProxyAddress[_configurationId][_version].add(
+            _deployedProxyAddress
+        );
+        $.proxyAddressToConfigurationId[
+            _deployedProxyAddress
+        ] = _configurationId;
+        $.proxyAddressToVersion[_deployedProxyAddress] = _version;
     }
 
     function _adaptRbacWithIsbeRoles(
@@ -229,10 +122,13 @@ abstract contract ProxyFactoryInternal is
         IAccessControl.Rbac[] memory _rbacs
     ) private pure {
         uint256 length = _rbacs.length;
+        bytes32 role;
         for (uint256 index; index < length; ) {
+            role = _rbacs[index].role;
             require(
-                _rbacs[index].role != _DEFAULT_ADMIN_ROLE &&
-                    _rbacs[index].role != _ISBE_ROLE,
+                role != _DEFAULT_ADMIN_ROLE &&
+                    role != _ISBE_ROLE &&
+                    role != _CONFIGURATION_MANAGER_ROLE,
                 IProxyFactory.ForbiddenRole(_rbacs[index].role)
             );
             unchecked {
@@ -247,22 +143,27 @@ abstract contract ProxyFactoryInternal is
         address[] memory _isbeRoleMembers
     ) private pure returns (IAccessControl.Rbac[] memory rbacs_) {
         uint256 length = _rbacs.length;
-        rbacs_ = new IAccessControl.Rbac[](length + 2);
+        unchecked {
+            rbacs_ = new IAccessControl.Rbac[](length + 3);
+        }
         rbacs_[0] = _buildRbac(_DEFAULT_ADMIN_ROLE, _defaultAdminRoleMenbers);
         rbacs_[1] = _buildRbac(_ISBE_ROLE, _isbeRoleMembers);
+        rbacs_[2] = _buildRbac(_CONFIGURATION_MANAGER_ROLE, _isbeRoleMembers);
+        uint256 position = 3;
         for (uint256 index; index < length; ) {
-            rbacs_[index + 2] = _rbacs[index];
+            rbacs_[position] = _rbacs[index];
             unchecked {
                 ++index;
+                ++position;
             }
         }
     }
 
     function _buildRbac(
-        bytes32 role,
-        address[] memory members
+        bytes32 _role,
+        address[] memory _members
     ) private pure returns (IAccessControl.Rbac memory rbac_) {
-        rbac_ = IAccessControl.Rbac(role, members);
+        rbac_ = IAccessControl.Rbac(_role, _members);
     }
 
     function _proxyFactoryStorage()
@@ -280,28 +181,18 @@ abstract contract ProxyFactoryInternal is
     }
 
     function _buildDefaultAdminRoleMembers(
-        address sender,
-        address proxy
-    ) private pure returns (address[] memory defaultAdminRoleMembers) {
-        defaultAdminRoleMembers = new address[](2);
-        defaultAdminRoleMembers[0] = sender;
-        defaultAdminRoleMembers[1] = proxy;
+        address _sender,
+        address _proxy
+    ) private pure returns (address[] memory defaultAdminRoleMembers_) {
+        defaultAdminRoleMembers_ = new address[](2);
+        defaultAdminRoleMembers_[0] = _sender;
+        defaultAdminRoleMembers_[1] = _proxy;
     }
 
     function _buildIsbeRoleMembers(
-        address proxy
-    ) private pure returns (address[] memory isbeRoleMembers) {
-        isbeRoleMembers = new address[](1);
-        isbeRoleMembers[0] = proxy;
-    }
-
-    function _isNotAGovernanceFacet(
-        bytes32 businessId
-    ) private pure returns (bool) {
-        return
-            businessId != _DIAMOND_CUT_RESOLVER_KEY &&
-            businessId != _DIAMOND_LOUPE_RESOLVER_KEY &&
-            businessId != _ACCESS_CONTROL_RESOLVER_KEY &&
-            businessId != _PAUSE_RESOLVER_KEY;
+        address _proxy
+    ) private pure returns (address[] memory isbeRoleMembers_) {
+        isbeRoleMembers_ = new address[](1);
+        isbeRoleMembers_[0] = _proxy;
     }
 }

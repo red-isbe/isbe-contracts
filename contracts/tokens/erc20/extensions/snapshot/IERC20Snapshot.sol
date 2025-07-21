@@ -38,21 +38,21 @@ interface IERC20Snapshot {
      * @notice Retrieves the balance of an account at the specified snapshot ID.
      * @dev Fetches the balance recorded in the snapshot for a given account.
      *      Will revert if the snapshot ID is invalid or does not exist.
-     * @param account The address of the account whose balance is being queried.
-     * @param snapshotId The ID of the snapshot to query.
+     * @param _account The address of the account whose balance is being queried.
+     * @param _snapshotId The ID of the snapshot to query.
      * @return The balance of the specified account at the queried snapshot ID.
      */
     function balanceOfAt(
-        address account,
-        uint256 snapshotId
+        address _account,
+        uint256 _snapshotId
     ) external view returns (uint256);
 
     /**
      * @notice Retrieves the total token supply at the specified snapshot ID.
      * @dev Fetches the total supply recorded in the snapshot at the given ID.
      *      Will revert if the snapshot ID is invalid or does not exist.
-     * @param snapshotId The ID of the snapshot to query.
+     * @param _snapshotId The ID of the snapshot to query.
      * @return The total token supply at the queried snapshot ID.
      */
-    function totalSupplyAt(uint256 snapshotId) external view returns (uint256);
+    function totalSupplyAt(uint256 _snapshotId) external view returns (uint256);
 }

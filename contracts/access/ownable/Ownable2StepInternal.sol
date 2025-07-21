@@ -20,8 +20,8 @@ abstract contract Ownable2StepInternal is OwnableInternal {
         _;
     }
 
-    function _initiateTransferOwnership(address newOwner) internal virtual {
-        _ownable2StepStorage().pendingOwner = newOwner;
+    function _initiateTransferOwnership(address _newOwner) internal virtual {
+        _ownable2StepStorage().pendingOwner = _newOwner;
     }
 
     function _acceptOwnership() internal virtual {

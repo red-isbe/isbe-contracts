@@ -41,67 +41,61 @@ abstract contract BusinessLogicFactoryInternal is Common {
     error BadBusinessId(bytes32 businessId);
 
     function _deploy(
-        bytes32 businessId,
-        bytes calldata code
+        bytes32 _businessId,
+        bytes calldata _code
     )
         internal
         returns (address businessLogicAddress_, uint256 currentVersion_)
     {
         BusinessLogicStorage storage $ = _businessLogicStorage();
-        businessLogicAddress_ = _deployBusinessLogic(code);
+        businessLogicAddress_ = _deployBusinessLogic(_code);
         require(
             IEIP2535Introspection(businessLogicAddress_)
-                .businessIdIntrospection() == businessId,
-            BadBusinessId(businessId)
+                .businessIdIntrospection() == _businessId,
+            BadBusinessId(_businessId)
         );
-        $.latestVersions[businessId] = businessLogicAddress_;
-        $.businessLogicVersions[businessId].push(businessLogicAddress_);
-        currentVersion_ = $.businessLogicVersions[businessId].length;
-        if (currentVersion_ == 1) $.businessLogics.push(businessId);
+        $.latestVersions[_businessId] = businessLogicAddress_;
+        $.businessLogicVersions[_businessId].push(businessLogicAddress_);
+        currentVersion_ = $.businessLogicVersions[_businessId].length;
+        if (currentVersion_ == 1) $.businessLogics.push(_businessId);
     }
 
     // TODO: To paginated when needed
     function _getBusinessLogicAddress(
-        bytes32 businessId,
-        uint256 versionNumber
+        bytes32 _businessId,
+        uint256 _versionNumber
     ) internal view returns (address businessLogicAddress_) {
         businessLogicAddress_ = _getAddress(
             _businessLogicStorage(),
-            businessId,
-            versionNumber
+            _businessId,
+            _versionNumber
         );
     }
 
     function _isDeployedBusinessLogic(
-        bytes32 businessId
+        bytes32 _businessId,
+        uint256 _version
     ) internal view returns (bool) {
-        return _isDeployedBusinessLogic(businessId, 0);
-    }
-
-    function _isDeployedBusinessLogic(
-        bytes32 businessId,
-        uint256 version
-    ) internal view returns (bool) {
-        uint256 versionCheck = version == 0 ? version : --version;
+        uint256 versionCheck = _version == 0 ? _version : --_version;
         return
-            _businessLogicStorage().businessLogicVersions[businessId].length >
+            _businessLogicStorage().businessLogicVersions[_businessId].length >
             versionCheck;
     }
 
     function _getBusinessLogics()
         internal
         view
-        returns (bytes32[] memory businessLogicIds)
+        returns (bytes32[] memory businessLogicIds_)
     {
-        businessLogicIds = _businessLogicStorage().businessLogics;
+        businessLogicIds_ = _businessLogicStorage().businessLogics;
     }
 
     // 0 position is the latest version
     // TODO: To paginated when needed
     function _getBusinessLogicVersions(
-        bytes32 businessId
+        bytes32 _businessId
     ) internal view returns (address[] memory versions_) {
-        versions_ = _businessLogicStorage().businessLogicVersions[businessId];
+        versions_ = _businessLogicStorage().businessLogicVersions[_businessId];
     }
 
     function _businessLogicStorage()
@@ -120,29 +114,29 @@ abstract contract BusinessLogicFactoryInternal is Common {
 
     // First implementation with CREATE, next versions could include CREATE2 pattern
     function _deployBusinessLogic(
-        bytes memory code
-    ) private returns (address deployedAddress) {
+        bytes memory _code
+    ) private returns (address deployedAddress_) {
         uint256 allGood;
         // slither-disable-start assembly
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            deployedAddress := create(0, add(code, 0x20), mload(code))
-            allGood := gt(extcodesize(deployedAddress), 0)
+            deployedAddress_ := create(0, add(_code, 0x20), mload(_code))
+            allGood := gt(extcodesize(deployedAddress_), 0)
         }
         // slither-disable-end assembly
         require(allGood > 0, DeployFailed());
     }
 
     function _getAddress(
-        BusinessLogicStorage storage $,
-        bytes32 businessId,
-        uint256 versionNumber
+        BusinessLogicStorage storage _$,
+        bytes32 _businessId,
+        uint256 _versionNumber
     ) private view returns (address address_) {
-        if (versionNumber == 0) return $.latestVersions[businessId];
+        if (_versionNumber == 0) return _$.latestVersions[_businessId];
         unchecked {
-            --versionNumber;
+            --_versionNumber;
         }
-        if ($.businessLogicVersions[businessId].length > versionNumber)
-            return $.businessLogicVersions[businessId][versionNumber];
+        if (_$.businessLogicVersions[_businessId].length > _versionNumber)
+            return _$.businessLogicVersions[_businessId][_versionNumber];
     }
 }

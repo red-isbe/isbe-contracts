@@ -17,18 +17,18 @@ interface IHashTimestamp {
     error HashAlreadyExists(bytes32 hash);
 
     /// @notice Timestamps a given hash
-    /// @param hash The hash to be timestamped
-    function timestampHash(bytes32 hash) external;
+    /// @param _hash The hash to be timestamped
+    function timestampHash(bytes32 _hash) external;
 
     /// @notice Checks whether a hash has been timestamped
-    /// @param hash The hash to check
+    /// @param _hash The hash to check
     /// @return exists_ True if the hash has been recorded, false in other case
-    function exists(bytes32 hash) external view returns (bool exists_);
+    function exists(bytes32 _hash) external view returns (bool exists_);
 
     /// @notice Returns the timestamp when a hash was recorded
-    /// @param hash The hash to query
-    /// @return timestamp The timestamp when the hash was recorded
+    /// @param _hash The hash to query
+    /// @return timestamp_ The timestamp when the hash was recorded
     function getTimestamp(
-        bytes32 hash
-    ) external view returns (uint256 timestamp);
+        bytes32 _hash
+    ) external view returns (uint256 timestamp_);
 }
