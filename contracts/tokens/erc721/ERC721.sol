@@ -30,11 +30,8 @@ contract ERC721 is IERC721Isbe, ERC721InternalCommon {
      * @notice Approves `to` to transfer `tokenId` token.
      * @dev Only the owner or an approved operator can call this function.
      */
-    function approve(
-        address to,
-        uint256 tokenId
-    ) external override whenNotPaused {
-        _checkOwnerForApprove(_ownerOf(tokenId));
+    function approve(address to, uint256 tokenId) external override {
+        _checkOwnerForApprove(_ownerOf(tokenId), tokenId);
 
         _approve(to, tokenId);
     }
@@ -57,34 +54,10 @@ contract ERC721 is IERC721Isbe, ERC721InternalCommon {
         address from,
         address to,
         uint256 tokenId
-    ) external override whenNotPaused {
+    ) external override {
         address owner = _ownerOf(tokenId);
-        require(owner == from, IERC721Isbe.TransferFromIncorrectOwner());
-        _checkOwnerForApprove(owner);
+        _checkOwnerForApprove(owner, tokenId);
         _transfer(from, to, tokenId);
-    }
-
-    /**
-     * @notice Safely transfers `tokenId` token from `from` to `to`.
-     */
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) external override whenNotPaused {
-        _safeTransferFrom(from, to, tokenId, '');
-    }
-
-    /**
-     * @notice Safely transfers `tokenId` token from `from` to `to` with additional data.
-     */
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId,
-        bytes memory data
-    ) external override whenNotPaused {
-        _safeTransferFrom(from, to, tokenId, data);
     }
 
     /**
@@ -162,6 +135,29 @@ contract ERC721 is IERC721Isbe, ERC721InternalCommon {
         bytes4 interfaceId
     ) external pure override returns (bool) {}
 
+    /**
+     * @notice Safely transfers `tokenId` token from `from` to `to` with additional data.
+     */
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId,
+        bytes memory data
+    ) public virtual override {
+        _safeTransferFrom(from, to, tokenId, data);
+    }
+
+    /**
+     * @notice Safely transfers `tokenId` token from `from` to `to`.
+     */
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public virtual override {
+        _safeTransferFrom(from, to, tokenId, '');
+    }
+
     function _implementedInterfaces()
         internal
         pure
@@ -181,9 +177,14 @@ contract ERC721 is IERC721Isbe, ERC721InternalCommon {
      * @dev Reverts with CallerNotOwnerNorApproved if the caller is neither the owner nor an approved operator.
      * @param _owner The address of the token owner to check against the caller.
      */
-    function _checkOwnerForApprove(address _owner) private view {
+    function _checkOwnerForApprove(
+        address _owner,
+        uint256 tokenId
+    ) private view {
         require(
-            _owner == _msgSender() || _isApprovedForAll(_owner, _msgSender()),
+            _owner == _msgSender() ||
+                _getApproved(tokenId) == _msgSender() ||
+                _isApprovedForAll(_owner, _msgSender()),
             IERC721Isbe.CallerNotOwnerNorApproved()
         );
     }

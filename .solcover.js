@@ -12,5 +12,6 @@ module.exports = {
         'testwrapper/tokens/erc20/ERC20TestWrapper.sol',
         'testwrapper/tokens/erc20/ERC20TestWrapperTransparent.sol',
         'testwrapper/tokens/erc20/ERC20TestWrapperUUPS.sol',
+        'tokens/erc721/ERC721Facet.sol',
     ],
 }

@@ -131,7 +131,7 @@ abstract contract ERC721Internal is Common {
         address to,
         uint256 tokenId,
         bytes memory data
-    ) internal whenNotPaused {
+    ) internal {
         address owner = _ownerOf(tokenId);
         _checkOwnedForTransferFrom(from, owner, tokenId);
         _transfer(from, to, tokenId);

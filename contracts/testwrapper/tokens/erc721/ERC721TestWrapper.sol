@@ -24,6 +24,14 @@ contract ERC721TestWrapper is ERC721, IEIP2535Introspection {
         _transfer(from, to, tokenId);
     }
 
+    function callSetApprovalForAll(
+        address owner,
+        address operator,
+        bool approved
+    ) external {
+        _setApprovalForAll(owner, operator, approved);
+    }
+
     function baseURI() external view returns (string memory) {
         return _baseURI();
     }
@@ -52,17 +60,46 @@ contract ERC721TestWrapper is ERC721, IEIP2535Introspection {
         override
         returns (bytes4[] memory selectors_)
     {
-        uint256 selectorsLength = 12;
+        uint256 selectorsLength = 21;
         selectors_ = new bytes4[](selectorsLength);
+
+        selectors_[--selectorsLength] = this.initializeErc721.selector;
         selectors_[--selectorsLength] = this.mint.selector;
+        selectors_[--selectorsLength] = this.name.selector;
+        selectors_[--selectorsLength] = this.symbol.selector;
+        selectors_[--selectorsLength] = this.ownerOf.selector;
+        selectors_[--selectorsLength] = this.balanceOf.selector;
+        selectors_[--selectorsLength] = this.totalSupply.selector;
         selectors_[--selectorsLength] = this.burn.selector;
         selectors_[--selectorsLength] = this.transfer.selector;
         selectors_[--selectorsLength] = this.approve.selector;
+        selectors_[--selectorsLength] = this.getApproved.selector;
+        selectors_[--selectorsLength] = this.isApprovedForAll.selector;
+        selectors_[--selectorsLength] = this.transferFrom.selector;
         selectors_[--selectorsLength] = this.setApprovalForAll.selector;
+        selectors_[--selectorsLength] = this.callSetApprovalForAll.selector;
         selectors_[--selectorsLength] = _SAFE_TRANSFER_FROM_SELECTOR_1;
         selectors_[--selectorsLength] = _SAFE_TRANSFER_FROM_SELECTOR_2;
         selectors_[--selectorsLength] = this.baseURI.selector;
+        selectors_[--selectorsLength] = this.tokenURI.selector;
         selectors_[--selectorsLength] = this.interfacesIntrospection.selector;
         selectors_[--selectorsLength] = this.businessIdIntrospection.selector;
+    }
+
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public override {
+        super.safeTransferFrom(from, to, tokenId);
+    }
+
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId,
+        bytes memory data
+    ) public override {
+        super.safeTransferFrom(from, to, tokenId, data);
     }
 }
