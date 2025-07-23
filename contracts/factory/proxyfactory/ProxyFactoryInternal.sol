@@ -37,20 +37,35 @@ abstract contract ProxyFactoryInternal is ConfigurationManagementInternal {
         bytes32 _configurationId,
         uint256 _version,
         IAccessControl.Rbac[] memory _rbacs,
-        bytes32 _initBusinessId,
-        bytes memory _initData
+        bool _initPause,
+        bytes32[] memory _initBusinessIds,
+        bytes[] memory _initData
     ) internal returns (address proxyAddress_) {
+        address[] memory _initBusinessAddresses = new address[](
+            _initBusinessIds.length
+        );
+
+        for (uint256 i = 0; i < _initBusinessIds.length; i++) {
+            _initBusinessAddresses[i] = _getFacetAddress(
+                _configurationId,
+                _version,
+                _initBusinessIds[i]
+            );
+        }
+
         IsbeProxy.IsbeProxyArgs memory args = IsbeProxy.IsbeProxyArgs({
             configurationManagement: IConfigurationManagement(address(this)),
             configurationId: _configurationId,
             version: _version,
-            rbacs: _adaptRbacWithIsbeRoles(_rbacs),
-            init: _getFacetAddress(_configurationId, _version, _initBusinessId),
+            init: _initBusinessAddresses,
             data: _initData
         });
         IsbeProxy proxy = new IsbeProxy(args);
         proxyAddress_ = address(proxy);
-        IPause(proxyAddress_).initializePause(false);
+        IAccessControl(proxyAddress_).initializeAccessControl(
+            _adaptRbacWithIsbeRoles(_rbacs)
+        );
+        IPause(proxyAddress_).initializePause(_initPause);
         _storeDeployedDiamond(_configurationId, _version, proxyAddress_);
     }
 
