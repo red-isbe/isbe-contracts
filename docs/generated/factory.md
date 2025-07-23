@@ -1,10 +1,7 @@
 ## IIsbeFactory
 
-A unified interface that aggregates core factory functionalities.
-It combines business logic deployment, proxy creation, and global
-pausing capabilities into a single, comprehensive API.
+Comprehensive interface for the ISBE governance diamond factory system
 
-_This interface inherits from `IBusinessLogicFactory`, `IProxyFactory`,
-and `IGlobalIsbePause`. It serves as the primary entry point for
-all interactions with the ISBE factory contract, defining its
-complete external surface._
+_Aggregates all core governance interfaces into a unified factory interface for
+complete ecosystem management including business logic deployment, proxy creation,
+configuration management, global pause controls, and DID registry operations_

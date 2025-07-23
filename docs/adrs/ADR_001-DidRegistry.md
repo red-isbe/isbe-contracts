@@ -1,4 +1,20 @@
-# Architecture Design Record: DidRegistryFacet Integration with Governance Diamond
+# ADR_001: DidRegistryFacet Integration with Governance Diamond
+
+# Table of contents
+
+- [Status](#status)
+- [Context](#context)
+- [Decision](#decision)
+    - [1. Conversion to DidRegistryFacet](#1-conversion-to-didregistryfacet)
+    - [2. Disabling policy registry](#2-disabling-policy-registry)
+    - [3. New Access Roles](#3-new-access-roles)
+        - [DID_REGISTRY_ROLE](#did_registry_role)
+        - [DID_REGISTRY_MANAGER_ROLE](#did_registry_manager_role)
+- [Benefits](#benefits)
+- [Consequences](#consequences)
+    - [Positive](#positive)
+    - [Negative](#negative)
+- [Implementation phases](#implementation-phases)
 
 ## Status
 
@@ -8,7 +24,7 @@ Proposal
 
 The current system has an independent DidRegistry contract that handles decentralised identity (DID) management. Integration of this functionality into the governance diamond is required to centralise access control and improve security.
 
-![DidRegistry entities](./diagrams/DidRegistry.png)
+![DidRegistry entities](../diagrams/DidRegistry.png)
 
 ## Decision
 
@@ -42,7 +58,7 @@ As it is a managed registry by ISBE, the policy registry is not necessary.
 - **Permissions**: - Assignment/revocation of DID_REGISTRY_ROLE roles - List of actions: - updateBaseDocument - revokeController - revokeVerificationMethod
   It whould be done changing the original implementation of DidDocumentDetailed.onlyControllerOrAuth.
 
-## enefits
+## Benefits
 
 1. **Centralised Control**: All access management is performed through the governance diamond
 2. **Enhanced Security**: Granular roles for different access levels
@@ -60,12 +76,11 @@ As it is a managed registry by ISBE, the policy registry is not necessary.
 
 ### Negative
 
-- Additional complexity in deployment
+- Additional complexity in gobernance deployment
 - Dependency on governance diamond for DID operations
 
-## Implementation fases
+## Implementation phases
 
-- Review Interface definition from original implementation and unify interfaces.
 - Define minimum storage layout, prepare roles and implement insertDiDDocument and getDidDocument.
 - Implement updateBaseDocument, getDids and getDidDocumentByTimestamp.
 - Implement addController, revokeController, getDidsByController & checkController.
