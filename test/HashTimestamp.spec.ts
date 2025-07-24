@@ -7,7 +7,7 @@ import {
     HashTimestampTestWrapper,
 } from '../typechain-types'
 import { HASH_TIMESTAMP_ROLE, PAUSER_ROLE } from './constants'
-import { deployAll } from './initialization'
+import { deployGovernance } from './initialization'
 
 describe('Hash Timestamp', function () {
     const HASH =
@@ -24,7 +24,8 @@ describe('Hash Timestamp', function () {
         ;[adminAccount] = await ethers.getSigners()
         const adminAccountAddress = await adminAccount.getAddress()
 
-        const result = await deployAll()
+        const result = await deployGovernance(adminAccount)
+
         hashTimestamp = result.hashTimestamp
         pause = result.pause
         accessControl = result.accessControl

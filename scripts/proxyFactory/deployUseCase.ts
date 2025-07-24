@@ -59,6 +59,7 @@ export async function deployUseCase(
         configId,
         configVersion,
         initRbacs,
+        false,
         initBusinessId,
         initData
     )
