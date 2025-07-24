@@ -1,18 +1,30 @@
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
-import { IIsbeFactory } from '../../typechain-types'
+import { IIsbeFactory, AccessControl } from '../../typechain-types'
 import { Signer } from 'ethers'
 import { deployGovernance } from '../initialization'
-import { RANDOM_HASH_FOR_CONFIGURATION_ID } from '../constants'
+import {
+    ASSET_EVENT_TRACKER_RESOLVER_KEY,
+    ERC20_RESOLVER_KEY,
+    HASH_TIMESTAMP_RESOLVER_KEY,
+    PROXY_DEPLOYER_ROLE,
+    RANDOM_HASH_FOR_CONFIGURATION_ID,
+} from '../constants'
 import { EventLog } from 'ethers'
 
 describe('ProxyFactory', function () {
     let admin: Signer
+    let adminAddress: string
     let nonAdmin: Signer
+    let nonAdminAddress: string
     let isbeFactory: IIsbeFactory
+    let accessControl: AccessControl
 
     async function deployInitial() {
         ;[admin, nonAdmin] = await ethers.getSigners()
+
+        adminAddress = await admin.getAddress()
+        nonAdminAddress = await nonAdmin.getAddress()
 
         await deployIsbeFactory()
     }
@@ -22,6 +34,11 @@ describe('ProxyFactory', function () {
 
         isbeFactory = await ethers.getContractAt(
             'IIsbeFactory',
+            await result.governanceContract.getAddress()
+        )
+
+        accessControl = await ethers.getContractAt(
+            'AccessControl',
             await result.governanceContract.getAddress()
         )
     }
@@ -39,13 +56,10 @@ describe('ProxyFactory', function () {
                         .deployUseCase(ethers.ZeroHash, 0, [], false, [], [])
                 )
                     .to.be.revertedWithCustomError(
-                        isbeFactory,
+                        accessControl,
                         'AccountHasNoRole'
                     )
-                    .withArgs(
-                        await nonAdmin.getAddress(),
-                        '0x0000000000000000000000000000000000000000000000000000000000000000'
-                    ) // PROXY_DEPLOYER_ROLE is 0
+                    .withArgs(nonAdminAddress, PROXY_DEPLOYER_ROLE)
             })
 
             it('GIVEN deployed isbe factory WHEN try to deploy empty configurationId THEN it fails', async () => {
@@ -53,7 +67,7 @@ describe('ProxyFactory', function () {
                     isbeFactory
                         .connect(admin)
                         .deployUseCase(ethers.ZeroHash, 0, [], false, [], [])
-                ).to.be.revertedWithCustomError(isbeFactory, 'EmptyBytes32')
+                ).to.be.revertedWithCustomError(accessControl, 'EmptyBytes32')
             })
 
             it('GIVEN deployed isbe factory WHEN try to deploy configuration than not exists THEN it fails', async () => {
@@ -189,7 +203,7 @@ describe('ProxyFactory', function () {
                 const rbacs = [
                     {
                         role: '0x1234567890123456789012345678901234567890123456789012345678901234',
-                        members: [ethers.ZeroAddress],
+                        members: [adminAddress],
                     },
                 ]
                 // Register configuration before deploying use case
@@ -197,8 +211,7 @@ describe('ProxyFactory', function () {
                     .connect(admin)
                     .setConfiguration(RANDOM_HASH_FOR_CONFIGURATION_ID, [
                         {
-                            businessId:
-                                '0x1234567890123456789012345678901234567890123456789012345678901234',
+                            businessId: HASH_TIMESTAMP_RESOLVER_KEY,
                             version: 1,
                         },
                     ])
@@ -304,7 +317,7 @@ describe('ProxyFactory', function () {
                 const rbacs = [
                     {
                         role: '0x1234567890123456789012345678901234567890123456789012345678901234',
-                        members: [ethers.ZeroAddress],
+                        members: [adminAddress],
                     },
                 ]
                 // Register configuration before deploying use case
@@ -312,8 +325,7 @@ describe('ProxyFactory', function () {
                     .connect(admin)
                     .setConfiguration(RANDOM_HASH_FOR_CONFIGURATION_ID, [
                         {
-                            businessId:
-                                '0x1234567890123456789012345678901234567890123456789012345678901234',
+                            businessId: HASH_TIMESTAMP_RESOLVER_KEY,
                             version: 1,
                         },
                     ])
@@ -356,11 +368,11 @@ describe('ProxyFactory', function () {
                 const rbacs = [
                     {
                         role: '0x1234567890123456789012345678901234567890123456789012345678901234',
-                        members: [ethers.ZeroAddress],
+                        members: [adminAddress],
                     },
                     {
                         role: '0x1234567890123456789012345678901234567890123456789012345678901235',
-                        members: [ethers.ZeroAddress, ethers.ZeroAddress],
+                        members: [adminAddress, nonAdminAddress],
                     },
                 ]
                 // Register configuration before deploying use case
@@ -368,8 +380,7 @@ describe('ProxyFactory', function () {
                     .connect(admin)
                     .setConfiguration(RANDOM_HASH_FOR_CONFIGURATION_ID, [
                         {
-                            businessId:
-                                '0x1234567890123456789012345678901234567890123456789012345678901234',
+                            businessId: HASH_TIMESTAMP_RESOLVER_KEY,
                             version: 1,
                         },
                     ])
@@ -421,7 +432,7 @@ describe('ProxyFactory', function () {
                 const rbacs = [
                     {
                         role: '0x1234567890123456789012345678901234567890123456789012345678901234',
-                        members: [ethers.ZeroAddress],
+                        members: [adminAddress],
                     },
                 ]
                 // Register configuration before deploying use case
@@ -429,26 +440,29 @@ describe('ProxyFactory', function () {
                     .connect(admin)
                     .setConfiguration(RANDOM_HASH_FOR_CONFIGURATION_ID, [
                         {
-                            businessId:
-                                '0x1234567890123456789012345678901234567890123456789012345678901234',
+                            businessId: ERC20_RESOLVER_KEY,
                             version: 1,
                         },
                     ])
-                const deployTx = await isbeFactory.connect(admin).deployUseCase(
-                    RANDOM_HASH_FOR_CONFIGURATION_ID,
-                    1,
-                    rbacs,
-                    false,
-                    [
-                        '0x1234567890123456789012345678901234567890123456789012345678901234',
-                    ],
-                    [
-                        // Erc20FacetFactory.interface.encodeFunctionData(
-                        //     'initializeErc20',
-                        //     ['Test', 'TST', 18]
-                        // )
-                    ]
-                )
+
+                const ERC20FacetFactory =
+                    await ethers.getContractFactory('ERC20Facet')
+
+                const deployTx = await isbeFactory
+                    .connect(admin)
+                    .deployUseCase(
+                        RANDOM_HASH_FOR_CONFIGURATION_ID,
+                        1,
+                        rbacs,
+                        false,
+                        [ERC20_RESOLVER_KEY],
+                        [
+                            ERC20FacetFactory.interface.encodeFunctionData(
+                                'initializeErc20',
+                                ['Test', 'TST', 18]
+                            ),
+                        ]
+                    )
 
                 const waitedTx = await deployTx.wait()
                 if (!waitedTx) {
@@ -490,12 +504,10 @@ describe('ProxyFactory', function () {
             })
 
             it('GIVEN deployed proxy WHEN getDeployedProxiesByConfiguration THEN returns proxy address', async () => {
-                const uniqueConfigId =
-                    '0x1234567890123456789012345678901234567890123456789012345678901235'
                 const rbacs = [
                     {
                         role: '0x1234567890123456789012345678901234567890123456789012345678901234',
-                        members: [ethers.ZeroAddress],
+                        members: [adminAddress],
                     },
                 ]
 
@@ -504,14 +516,20 @@ describe('ProxyFactory', function () {
                     .connect(admin)
                     .setConfiguration(RANDOM_HASH_FOR_CONFIGURATION_ID, [
                         {
-                            businessId:
-                                '0x1234567890123456789012345678901234567890123456789012345678901234',
+                            businessId: HASH_TIMESTAMP_RESOLVER_KEY,
                             version: 1,
                         },
                     ])
                 const deployTx = await isbeFactory
                     .connect(admin)
-                    .deployUseCase(uniqueConfigId, 1, rbacs, false, [], [])
+                    .deployUseCase(
+                        RANDOM_HASH_FOR_CONFIGURATION_ID,
+                        1,
+                        rbacs,
+                        false,
+                        [],
+                        []
+                    )
 
                 const waitedTx = await deployTx.wait()
                 if (!waitedTx) {
@@ -536,19 +554,17 @@ describe('ProxyFactory', function () {
                     .proxy
                 const proxies =
                     await isbeFactory.getDeployedProxiesByConfiguration(
-                        uniqueConfigId,
+                        RANDOM_HASH_FOR_CONFIGURATION_ID,
                         1
                     )
                 expect(proxies).to.be.deep.equal([proxyAddress])
             })
 
             it('GIVEN multiple deployed proxies WHEN getDeployedProxiesByConfiguration THEN returns all proxy addresses', async () => {
-                const uniqueConfigId =
-                    '0x1234567890123456789012345678901234567890123456789012345678901236'
                 const rbacs = [
                     {
                         role: '0x1234567890123456789012345678901234567890123456789012345678901234',
-                        members: [ethers.ZeroAddress],
+                        members: [adminAddress],
                     },
                 ]
 
@@ -557,14 +573,20 @@ describe('ProxyFactory', function () {
                     .connect(admin)
                     .setConfiguration(RANDOM_HASH_FOR_CONFIGURATION_ID, [
                         {
-                            businessId:
-                                '0x1234567890123456789012345678901234567890123456789012345678901234',
+                            businessId: HASH_TIMESTAMP_RESOLVER_KEY,
                             version: 1,
                         },
                     ])
                 const deployTx1 = await isbeFactory
                     .connect(admin)
-                    .deployUseCase(uniqueConfigId, 1, rbacs, false, [], [])
+                    .deployUseCase(
+                        RANDOM_HASH_FOR_CONFIGURATION_ID,
+                        1,
+                        rbacs,
+                        false,
+                        [],
+                        []
+                    )
 
                 const waitedTx1 = await deployTx1.wait()
                 if (!waitedTx1) {
@@ -590,7 +612,14 @@ describe('ProxyFactory', function () {
 
                 const deployTx2 = await isbeFactory
                     .connect(admin)
-                    .deployUseCase(uniqueConfigId, 1, rbacs, false, [], [])
+                    .deployUseCase(
+                        RANDOM_HASH_FOR_CONFIGURATION_ID,
+                        1,
+                        rbacs,
+                        false,
+                        [],
+                        []
+                    )
 
                 const waitedTx2 = await deployTx2.wait()
                 if (!waitedTx2) {
@@ -616,7 +645,7 @@ describe('ProxyFactory', function () {
 
                 const proxies =
                     await isbeFactory.getDeployedProxiesByConfiguration(
-                        uniqueConfigId,
+                        RANDOM_HASH_FOR_CONFIGURATION_ID,
                         1
                     )
                 expect(proxies).to.be.deep.equal([proxyAddress1, proxyAddress2])
@@ -628,7 +657,7 @@ describe('ProxyFactory', function () {
                 const rbacs = [
                     {
                         role: '0x1234567890123456789012345678901234567890123456789012345678901234',
-                        members: [ethers.ZeroAddress],
+                        members: [adminAddress],
                     },
                 ]
                 // Register configuration before deploying use case
@@ -636,8 +665,7 @@ describe('ProxyFactory', function () {
                     .connect(admin)
                     .setConfiguration(RANDOM_HASH_FOR_CONFIGURATION_ID, [
                         {
-                            businessId:
-                                '0x1234567890123456789012345678901234567890123456789012345678901234',
+                            businessId: HASH_TIMESTAMP_RESOLVER_KEY,
                             version: 1,
                         },
                     ])
@@ -696,7 +724,7 @@ describe('ProxyFactory', function () {
                 const rbacs = [
                     {
                         role: '0x1234567890123456789012345678901234567890123456789012345678901234',
-                        members: [ethers.ZeroAddress],
+                        members: [adminAddress],
                     },
                 ]
                 // Register configuration before deploying use case
@@ -704,8 +732,7 @@ describe('ProxyFactory', function () {
                     .connect(admin)
                     .setConfiguration(RANDOM_HASH_FOR_CONFIGURATION_ID, [
                         {
-                            businessId:
-                                '0x1234567890123456789012345678901234567890123456789012345678901234',
+                            businessId: HASH_TIMESTAMP_RESOLVER_KEY,
                             version: 1,
                         },
                     ])
@@ -753,17 +780,16 @@ describe('ProxyFactory', function () {
                 const rbacs = [
                     {
                         role: '0x1234567890123456789012345678901234567890123456789012345678901234',
-                        members: [ethers.ZeroAddress],
+                        members: [adminAddress],
                     },
                 ]
 
                 // Register configuration before deploying use case
                 await isbeFactory
                     .connect(admin)
-                    .setConfiguration(RANDOM_HASH_FOR_CONFIGURATION_ID, [
+                    .setConfiguration(uniqueConfigId1, [
                         {
-                            businessId:
-                                '0x1234567890123456789012345678901234567890123456789012345678901234',
+                            businessId: HASH_TIMESTAMP_RESOLVER_KEY,
                             version: 1,
                         },
                     ])
@@ -796,10 +822,9 @@ describe('ProxyFactory', function () {
                 // Register configuration before deploying use case
                 await isbeFactory
                     .connect(admin)
-                    .setConfiguration(RANDOM_HASH_FOR_CONFIGURATION_ID, [
+                    .setConfiguration(uniqueConfigId2, [
                         {
-                            businessId:
-                                '0x1234567890123456789012345678901234567890123456789012345678901234',
+                            businessId: ASSET_EVENT_TRACKER_RESOLVER_KEY,
                             version: 1,
                         },
                     ])

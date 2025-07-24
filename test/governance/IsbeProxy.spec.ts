@@ -1,12 +1,13 @@
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
-import { IIsbeFactory } from '../../typechain-types'
+import { IIsbeFactory, AccessControl } from '../../typechain-types'
 import { Signer } from 'ethers'
 import { deployGovernance } from '../initialization'
 
 describe('IsbeProxy', function () {
     let admin: Signer
     let isbeFactory: IIsbeFactory
+    let accessControl: AccessControl
 
     async function deployInitial() {
         ;[admin] = await ethers.getSigners()
@@ -19,6 +20,11 @@ describe('IsbeProxy', function () {
 
         isbeFactory = await ethers.getContractAt(
             'IIsbeFactory',
+            await result.governanceContract.getAddress()
+        )
+
+        accessControl = await ethers.getContractAt(
+            'AccessControl',
             await result.governanceContract.getAddress()
         )
     }
@@ -38,7 +44,7 @@ describe('IsbeProxy', function () {
                     [],
                     []
                 )
-            ).to.be.revertedWithCustomError(isbeFactory, 'EmptyBytes32')
+            ).to.be.revertedWithCustomError(accessControl, 'EmptyBytes32')
         })
 
         it('GIVEN deployed governance proxy WHEN deploy Zero configuration management address THEN it fails', async () => {
@@ -51,7 +57,7 @@ describe('IsbeProxy', function () {
                     [],
                     []
                 )
-            ).to.be.revertedWithCustomError(isbeFactory, 'EmptyBytes32')
+            ).to.be.revertedWithCustomError(accessControl, 'EmptyBytes32')
         })
 
         it('GIVEN deployed governance proxy WHEN deploy Zero configuration management address THEN it fails', async () => {
@@ -64,7 +70,7 @@ describe('IsbeProxy', function () {
                     [],
                     []
                 )
-            ).to.be.revertedWithCustomError(isbeFactory, 'EmptyBytes32')
+            ).to.be.revertedWithCustomError(accessControl, 'EmptyBytes32')
         })
     })
 })
