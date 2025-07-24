@@ -43,16 +43,6 @@ package "Roles" #LightCyan {
                 PAUSE / UNPASE
                 any use case proxy
             end note
-            actor DID_REGISTRY_ROLE
-            note bottom of DID_REGISTRY_ROLE
-                Permits to control DID documents
-                and its configurations
-            end note
-            actor DID_REGISTRY_MANAGER_ROLE
-            note top of DID_REGISTRY_MANAGER_ROLE
-                Permits to control DID_REGISTRY_ROLE
-                and ISBE governance issues.
-            end note
         }
         actor PROXY_DEPLOYER_ROLE
         note left of PROXY_DEPLOYER_ROLE

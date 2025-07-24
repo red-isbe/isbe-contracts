@@ -7,13 +7,7 @@
 - [Decision](#decision)
     - [1. Conversion to DidRegistryFacet](#1-conversion-to-didregistryfacet)
     - [2. Disabling policy registry](#2-disabling-policy-registry)
-    - [3. New Access Roles](#3-new-access-roles)
-        - [DID_REGISTRY_ROLE](#did_registry_role)
-        - [DID_REGISTRY_MANAGER_ROLE](#did_registry_manager_role)
 - [Benefits](#benefits)
-- [Consequences](#consequences)
-    - [Positive](#positive)
-    - [Negative](#negative)
 - [Implementation phases](#implementation-phases)
 
 ## Status
@@ -34,29 +28,11 @@ We propose to restructure the DidRegistry system following the Diamond pattern (
 
 - Transform `DidRegistry` into `DidRegistryFacet` as part of the governance diamond
 - Maintain all existing business logic in `DidDocumentDetailed`
-- Integrate role-based access control
+- Integrate role-based access control (Pending to be applied)
 
 ### 2. Disabling policy registry
 
 As it is a managed registry by ISBE, the policy registry is not necessary.
-
-### 3. New Access Roles
-
-#### DID_REGISTRY_ROLE
-
-- **Purpose**: Operational role for interacting with the registry
-- **Permissions**:
-    - Insert new DID documents
-    - Update existing documents
-    - Add/revoke controllers
-    - Manage verification methods
-    - Query registry information
-
-#### DID_REGISTRY_MANAGER_ROLE
-
-- **Purpose**: Administrative role with complete control
-- **Permissions**: - Assignment/revocation of DID_REGISTRY_ROLE roles - List of actions: - updateBaseDocument - revokeController - revokeVerificationMethod
-  It whould be done changing the original implementation of DidDocumentDetailed.onlyControllerOrAuth.
 
 ## Benefits
 
@@ -65,19 +41,6 @@ As it is a managed registry by ISBE, the policy registry is not necessary.
 3. **Compatibility**: Maintains the existing DidRegistry interface
 4. **Scalability**: Leverages Diamond architecture for future extensions
 5. **Auditability**: Centralised access control facilitates monitoring
-
-## Consequences
-
-### Positive
-
-- Greater security and centralised control
-- Better integration with the governance ecosystem
-- Flexibility for future extensions
-
-### Negative
-
-- Additional complexity in gobernance deployment
-- Dependency on governance diamond for DID operations
 
 ## Implementation phases
 

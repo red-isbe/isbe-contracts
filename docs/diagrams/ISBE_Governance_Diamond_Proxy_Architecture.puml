@@ -7,12 +7,8 @@ package Roles #LightCyan {
     actor BUSINESS_LOGIC_DEPLOYER_ROLE
     actor GOVERNANCE_CONFIGURATION_MANAGER_ROLE
     actor PROXY_DEPLOYER_ROLE
-    actor DID_REGISTRY_ROLE
-    actor DID_REGISTRY_MANAGER_ROLE
     BUSINESS_LOGIC_DEPLOYER_ROLE -[hidden]- GOVERNANCE_CONFIGURATION_MANAGER_ROLE
     GOVERNANCE_CONFIGURATION_MANAGER_ROLE -[hidden]- PROXY_DEPLOYER_ROLE
-    PROXY_DEPLOYER_ROLE -[hidden]- DID_REGISTRY_ROLE
-    DID_REGISTRY_ROLE -[hidden]- DID_REGISTRY_MANAGER_ROLE
 }
 package "ISBE Governance Diamond Proxy" #AliceBlue {
   node DiamondProxy as DP {
@@ -34,13 +30,8 @@ package "ISBE Governance Diamond Proxy" #AliceBlue {
       component "ConfigurationManagement" #LightCyan {
         database "(\n  isbeConfigurationId,\n  version,\n  selector\n)->(\n  businessIds,\n  version\n)[]"
       }
-      [DidRegistry]
-      component "DidRegistry" #LightCyan {
-        database "(did)->\n{baseDocument, controllers, controllerExist, vMethods,\n vRelationships, capabilityInvocations,\n vRelationshipsNameAndMethodIdTuple,\n vRelationshipsIndexes, capabilityInvocationMethodIdExist,\n capabilityInvocationMethodIdIndex, vMethodIdOfAddress}"
-      }
     }
     "Common Facets" -[hidden]- "Governance Facets"
-    [DidRegistry] -l[hidden]- [IsbeGlobalPause]
   }
 }
 Roles -[hidden]- "ISBE Governance Diamond Proxy"
@@ -72,9 +63,6 @@ GOVERNANCE_CONFIGURATION_MANAGER_ROLE -> [ConfigurationManagement] : 3. Create/u
 PROXY_DEPLOYER_ROLE -> [ProxyFactory] : 5. deploy an use case
 IsbeDiamond -l-> [ConfigurationManagement] : 6. \n(\nisbeConfigurationId,\nversion,\nselector\n)->businessLogicAddress
 [IsbeGlobalPause] .d.> IsbeDiamond : pause/unpause facets
-
-DID_REGISTRY_ROLE .-> [DidRegistry]
-DID_REGISTRY_MANAGER_ROLE --> [DidRegistry]
 
 "ISBE Proxy (Diamond Adaptation)" -l[hidden]- "ISBE Governance Diamond Proxy"
 
