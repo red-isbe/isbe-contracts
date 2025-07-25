@@ -334,8 +334,10 @@ describe('ProxyFactory', function () {
                     1,
                     rbacs,
                     true, // Initialize paused
-                    [],
-                    []
+                    [
+                        '0x0000000000000000000000000000000000000000000000000000000000000000',
+                    ],
+                    ['0x']
                 )
 
                 const waitedTx = await deployTx.wait()

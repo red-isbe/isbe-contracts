@@ -1,11 +1,18 @@
 import { expect } from 'chai'
 import { Signer } from 'ethers'
 import { ethers } from 'hardhat'
-import { AccessControl, GlobalIsbePause, ISBEPause } from '../typechain-types'
+import {
+    AccessControl,
+    GlobalIsbePause,
+    ISBEPause,
+    IsbeTransparentProxy,
+    IsbeTransparentProxy__factory,
+} from '../typechain-types'
 import {
     PAUSER_ROLE,
     ISBE_AUTHORIZATION_LEVEL,
     PAUSER_AUTHORIZATION_LEVEL,
+    DEFAULT_ADMIN_ROLE,
 } from './constants'
 import { deployGovernance } from './initialization'
 
@@ -13,29 +20,35 @@ describe('Pause', function () {
     const PAUSE_INIT_STATE = false
 
     let adminAccount: Signer
+    let adminAccountAddress: string
     let account_2: Signer
+    let account_2Address: string
     let pauseFacet: ISBEPause
     let pause: ISBEPause
     let globalIsbePause: GlobalIsbePause
     let accessControl: AccessControl
+    let accessControlFacet: AccessControl
+    let transparentProxyFactory: IsbeTransparentProxy__factory
 
     before(async () => {
         ;[adminAccount, account_2] = await ethers.getSigners()
+        adminAccountAddress = await adminAccount.getAddress()
+        account_2Address = await account_2.getAddress()
     })
 
     async function deploy(
         init_pause: boolean = PAUSE_INIT_STATE,
         addRole?: string[],
-        user?: Signer[]
+        users?: string[][]
     ) {
         const rbacsUseCase = []
 
-        if (addRole && user) {
+        if (addRole && users) {
             for (let i = 0; i < addRole.length; i++) {
-                const userAddress = await user[i].getAddress()
+                const userAddresses = users[i]
                 rbacsUseCase.push({
                     role: addRole[i],
-                    members: [userAddress],
+                    members: userAddresses,
                 })
             }
         }
@@ -49,6 +62,11 @@ describe('Pause', function () {
         globalIsbePause = result.globalIsbePause
         accessControl = result.accessControl
         pauseFacet = result.pauseFacet
+        accessControlFacet = result.accessControlFacet
+
+        transparentProxyFactory = await ethers.getContractFactory(
+            'IsbeTransparentProxy'
+        )
     }
 
     describe('Testing initialization and constructor', function () {
@@ -115,7 +133,7 @@ describe('Pause', function () {
         })
 
         it('GIVEN a Pause WHEN using account with pauser to pause an already paused token THEN fails', async function () {
-            await deploy(true, [PAUSER_ROLE], [adminAccount, adminAccount])
+            await deploy(true, [PAUSER_ROLE], [[adminAccountAddress]])
 
             pause = pause.connect(adminAccount)
 
@@ -126,7 +144,7 @@ describe('Pause', function () {
         })
 
         it('GIVEN a Pause WHEN using account with pauser to unpause an already unpaused token THEN fails', async function () {
-            await deploy(false, [PAUSER_ROLE], [adminAccount, adminAccount])
+            await deploy(false, [PAUSER_ROLE], [[adminAccountAddress]])
 
             pause = pause.connect(adminAccount)
 
@@ -136,20 +154,61 @@ describe('Pause', function () {
             )
         })
 
-        it.skip('GIVEN a Pause WHEN using account with pauser role to unpause a token previously paused by another account with pauser role THEN succeeds', async function () {
-            await deploy(true, [PAUSER_ROLE], [account_2])
+        it('GIVEN a Pause WHEN using account with pauser role to unpause a token previously paused by another account with pauser role THEN succeeds', async function () {
+            await deploy()
 
-            pause = pause.connect(account_2)
+            const transparentProxy: IsbeTransparentProxy =
+                await transparentProxyFactory.deploy(
+                    await accessControlFacet.getAddress(),
+                    adminAccountAddress
+                )
 
-            await expect(pause.unpause())
-                .to.emit(pause, 'Unpaused')
+            const proxy = await ethers.getContractAt(
+                'ITransparentUpgradeableProxy',
+                await transparentProxy.getAddress(),
+                adminAccount
+            )
+
+            const accessControlProxy = await ethers.getContractAt(
+                'AccessControl',
+                await transparentProxy.getAddress(),
+                account_2
+            )
+
+            await accessControlProxy.initializeAccessControl([
+                {
+                    role: DEFAULT_ADMIN_ROLE,
+                    members: [adminAccountAddress],
+                },
+                {
+                    role: PAUSER_ROLE,
+                    members: [account_2Address, adminAccountAddress],
+                },
+            ])
+
+            await proxy.upgradeTo(await pauseFacet.getAddress())
+
+            const pauseProxy = await ethers.getContractAt(
+                'ISBEPause',
+                await transparentProxy.getAddress(),
+                account_2
+            )
+
+            await pauseProxy.pause()
+
+            await expect(pauseProxy.unpause())
+                .to.emit(pauseProxy, 'Unpaused')
                 .withArgs(account_2)
 
-            expect(await pause.paused()).to.equal(false)
+            expect(await pauseProxy.paused()).to.equal(false)
         })
 
-        it.skip('GIVEN a Pause WHEN using account with pauser role to unpause a token previously paused by another account with ISBE role THEN fails', async function () {
-            await deploy(true, [PAUSER_ROLE], [adminAccount, account_2])
+        it('GIVEN a Pause WHEN using account with pauser role to unpause a token previously paused by another account with ISBE role THEN fails', async function () {
+            await deploy(
+                true,
+                [PAUSER_ROLE],
+                [[adminAccountAddress, account_2Address]]
+            )
 
             pause = pause.connect(account_2)
 
