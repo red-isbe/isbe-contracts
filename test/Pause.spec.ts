@@ -22,6 +22,7 @@ describe('Pause', function () {
     let adminAccount: Signer
     let adminAccountAddress: string
     let account_2: Signer
+    let account_3: Signer
     let account_2Address: string
     let pauseFacet: ISBEPause
     let pause: ISBEPause
@@ -31,7 +32,7 @@ describe('Pause', function () {
     let transparentProxyFactory: IsbeTransparentProxy__factory
 
     before(async () => {
-        ;[adminAccount, account_2] = await ethers.getSigners()
+        ;[adminAccount, account_2, account_3] = await ethers.getSigners()
         adminAccountAddress = await adminAccount.getAddress()
         account_2Address = await account_2.getAddress()
     })
@@ -195,6 +196,57 @@ describe('Pause', function () {
             )
 
             await pauseProxy.pause()
+
+            await expect(pauseProxy.unpause())
+                .to.emit(pauseProxy, 'Unpaused')
+                .withArgs(account_2)
+
+            expect(await pauseProxy.paused()).to.equal(false)
+        })
+
+        it('GIVEN a Pause WHEN using account with pauser role to unpause a token paused at initialization THEN succeeds', async function () {
+            await deploy()
+
+            const transparentProxy: IsbeTransparentProxy =
+                await transparentProxyFactory.deploy(
+                    await accessControlFacet.getAddress(),
+                    adminAccountAddress
+                )
+
+            const proxy = await ethers.getContractAt(
+                'ITransparentUpgradeableProxy',
+                await transparentProxy.getAddress(),
+                adminAccount
+            )
+
+            const accessControlProxy = await ethers.getContractAt(
+                'AccessControl',
+                await transparentProxy.getAddress(),
+                account_2
+            )
+
+            await accessControlProxy.initializeAccessControl([
+                {
+                    role: DEFAULT_ADMIN_ROLE,
+                    members: [adminAccountAddress],
+                },
+                {
+                    role: PAUSER_ROLE,
+                    members: [account_2Address],
+                },
+            ])
+
+            await proxy.upgradeTo(await pauseFacet.getAddress())
+
+            let pauseProxy = await ethers.getContractAt(
+                'ISBEPause',
+                await transparentProxy.getAddress(),
+                account_3
+            )
+
+            await pauseProxy.initializePause(true)
+
+            pauseProxy = pauseProxy.connect(account_2)
 
             await expect(pauseProxy.unpause())
                 .to.emit(pauseProxy, 'Unpaused')

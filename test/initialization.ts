@@ -257,6 +257,14 @@ export async function deployGovernance(
         await isbeFactory.getAddress()
     ) as AccessControlGovernanceFacet
 
+    const diamondCutAccessControl = DiamondCutAccessControlFacetFactory.attach(
+        await isbeFactory.getAddress()
+    ) as DiamondCutAccessControlFacet
+
+    const diamondLoupe = DiamondLoupeFacetFactory.attach(
+        await isbeFactory.getAddress()
+    ) as DiamondLoupeFacet
+
     const globalIsbePause = GlobalIsbePauseFacetFactory.attach(
         await isbeFactory.getAddress()
     ) as GlobalIsbePauseFacet
@@ -275,8 +283,8 @@ export async function deployGovernance(
         ownable: useCaseDeployment.ownable,
         assetEventTracker: useCaseDeployment.assetEventTracker,
         hashTimestamp: useCaseDeployment.hashTimestamp,
-        diamondCutAccessControl: useCaseDeployment.diamondCutAccessControl,
-        diamondLoupe: useCaseDeployment.diamondLoupe,
+        diamondCutAccessControl,
+        diamondLoupe,
         mockTimestamp: useCaseDeployment.mockTimestamp,
         erc20Facet: useCaseDeployment.erc20Facet,
         erc20SnapshotFacet: useCaseDeployment.erc20SnapshotFacet,
@@ -523,14 +531,6 @@ export async function deployAllUseCasesFacets(
         proxy
     ) as HashTimestampTestWrapper
 
-    const diamondCutAccessControl = DiamondCutAccessControlFacetFactory.attach(
-        proxy
-    ) as DiamondCutAccessControlFacet
-
-    const diamondLoupe = DiamondLoupeFacetFactory.attach(
-        proxy
-    ) as DiamondLoupeFacet
-
     const mockTimestamp = MockTimestampFacetFactory.attach(
         proxy
     ) as MockTimestampFacet
@@ -546,8 +546,6 @@ export async function deployAllUseCasesFacets(
         ownable,
         assetEventTracker,
         hashTimestamp,
-        diamondCutAccessControl,
-        diamondLoupe,
         mockTimestamp,
         erc20Facet,
         erc20SnapshotFacet,

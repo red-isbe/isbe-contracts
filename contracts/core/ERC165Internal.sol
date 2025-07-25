@@ -17,7 +17,7 @@ abstract contract ERC165Internal {
     function _isERC165ForbiddenInterfaces(
         bytes4 _interfaceId
     ) internal pure virtual returns (bool) {
-        return _interfaceId != 0xffffffff;
+        return _interfaceId == 0xffffffff;
     }
 
     function _supportsERC165Interface(
