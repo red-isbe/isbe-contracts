@@ -10,7 +10,7 @@ OpenZeppelin interfaces. It includes additional helper functions such as `increa
 ### constructor
 
 ```solidity
-constructor() public
+constructor() internal
 ```
 
 Constructor that assigns the deployer as the default admin
@@ -18,23 +18,23 @@ Constructor that assigns the deployer as the default admin
 ### initializeErc20
 
 ```solidity
-function initializeErc20(string newName, string newSymbol, uint8 newDecimals) external
+function initializeErc20(string _newName, string _newSymbol, uint8 _newDecimals) external
 ```
 
 Initializes the ERC20 token with the given name, symbol, and decimals.
 
 #### Parameters
 
-| Name        | Type   | Description                                       |
-| ----------- | ------ | ------------------------------------------------- |
-| newName     | string | The name of the ERC20 token to be initialized.    |
-| newSymbol   | string | The symbol of the ERC20 token to be initialized.  |
-| newDecimals | uint8  | The number of decimal places for the ERC20 token. |
+| Name          | Type   | Description                                       |
+| ------------- | ------ | ------------------------------------------------- |
+| \_newName     | string | The name of the ERC20 token to be initialized.    |
+| \_newSymbol   | string | The symbol of the ERC20 token to be initialized.  |
+| \_newDecimals | uint8  | The number of decimal places for the ERC20 token. |
 
 ### transfer
 
 ```solidity
-function transfer(address to, uint256 amount) external returns (bool)
+function transfer(address _to, uint256 _amount) external returns (bool)
 ```
 
 \_See {IERC20-transfer}.
@@ -47,7 +47,7 @@ Requirements:
 ### approve
 
 ```solidity
-function approve(address spender, uint256 amount) external returns (bool)
+function approve(address _spender, uint256 _amount) external returns (bool)
 ```
 
 \_See {IERC20-approve}.
@@ -62,7 +62,7 @@ Requirements:
 ### transferFrom
 
 ```solidity
-function transferFrom(address from, address to, uint256 amount) external returns (bool)
+function transferFrom(address _from, address _to, uint256 _amount) external returns (bool)
 ```
 
 \_See {IERC20-transferFrom}.
@@ -83,7 +83,7 @@ Requirements:
 ### increaseAllowance
 
 ```solidity
-function increaseAllowance(address spender, uint256 addedValue) external returns (bool)
+function increaseAllowance(address _spender, uint256 _addedValue) external returns (bool)
 ```
 
 \_Atomically increases the allowance granted to `spender` by the caller.
@@ -100,7 +100,7 @@ Requirements:
 ### decreaseAllowance
 
 ```solidity
-function decreaseAllowance(address spender, uint256 subtractedValue) external returns (bool)
+function decreaseAllowance(address _spender, uint256 _subtractedValue) external returns (bool)
 ```
 
 \_Atomically decreases the allowance granted to `spender` by the caller.
@@ -119,14 +119,8 @@ Requirements:
 ### allowance
 
 ```solidity
-function allowance(address owner, address spender) external view returns (uint256)
+function allowance(address _owner, address _spender) external view returns (uint256)
 ```
-
-\_Returns the remaining number of tokens that `spender` will be
-allowed to spend on behalf of `owner` through {transferFrom}. This is
-zero by default.
-
-This value changes when {approve} or {transferFrom} are called.\_
 
 ### decimals
 
@@ -163,10 +157,8 @@ _Returns the amount of tokens in existence._
 ### balanceOf
 
 ```solidity
-function balanceOf(address account) external view returns (uint256)
+function balanceOf(address _account) external view returns (uint256)
 ```
-
-_Returns the amount of tokens owned by `account`._
 
 ### \_implementedInterfaces
 
@@ -253,13 +245,13 @@ struct ERC20Storage {
 ### \_initialize
 
 ```solidity
-function _initialize(string newName, string newSymbol, uint8 newDecimals) internal
+function _initialize(string _newName, string _newSymbol, uint8 _newDecimals) internal
 ```
 
 ### \_transfer
 
 ```solidity
-function _transfer(address from, address to, uint256 amount) internal virtual
+function _transfer(address _from, address _to, uint256 _amount) internal virtual
 ```
 
 \_Moves `amount` of tokens from `from` to `to`.
@@ -278,7 +270,7 @@ Requirements:
 ### \_mint
 
 ```solidity
-function _mint(address account, uint256 amount) internal virtual
+function _mint(address _account, uint256 _amount) internal virtual
 ```
 
 \_Creates `amount` tokens and assigns them to `account`, increasing
@@ -293,7 +285,7 @@ Requirements:
 ### \_burn
 
 ```solidity
-function _burn(address account, uint256 amount) internal virtual
+function _burn(address _account, uint256 _amount) internal virtual
 ```
 
 \_Destroys `amount` tokens from `account`, reducing the
@@ -309,7 +301,7 @@ Requirements:
 ### \_approve
 
 ```solidity
-function _approve(address owner, address spender, uint256 amount) internal virtual
+function _approve(address _owner, address _spender, uint256 _amount) internal virtual
 ```
 
 \_Sets `amount` as the allowance of `spender` over the `owner` s tokens.
@@ -327,7 +319,7 @@ Requirements:
 ### \_spendAllowance
 
 ```solidity
-function _spendAllowance(address owner, address spender, uint256 amount) internal virtual
+function _spendAllowance(address _owner, address _spender, uint256 _amount) internal virtual
 ```
 
 \_Updates `owner` s allowance for `spender` based on spent `amount`.
@@ -340,7 +332,7 @@ Might emit an {Approval} event.\_
 ### \_beforeTokenTransfer
 
 ```solidity
-function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual
+function _beforeTokenTransfer(address _from, address _to, uint256 _amount) internal virtual
 ```
 
 \_Hook that is called before any transfer of tokens. This includes
@@ -359,7 +351,7 @@ To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hook
 ### \_afterTokenTransfer
 
 ```solidity
-function _afterTokenTransfer(address from, address to, uint256 amount) internal virtual
+function _afterTokenTransfer(address _from, address _to, uint256 _amount) internal virtual
 ```
 
 \_Hook that is called after any transfer of tokens. This includes
@@ -473,15 +465,15 @@ Error thrown when an operation tries to spend more tokens than the assigned allo
 ### initializeErc20
 
 ```solidity
-function initializeErc20(string newName, string newSymbol, uint8 newDecimals) external
+function initializeErc20(string _newName, string _newSymbol, uint8 _newDecimals) external
 ```
 
 Initializes the ERC20 token with the given name, symbol, and decimals.
 
 #### Parameters
 
-| Name        | Type   | Description                                       |
-| ----------- | ------ | ------------------------------------------------- |
-| newName     | string | The name of the ERC20 token to be initialized.    |
-| newSymbol   | string | The symbol of the ERC20 token to be initialized.  |
-| newDecimals | uint8  | The number of decimal places for the ERC20 token. |
+| Name          | Type   | Description                                       |
+| ------------- | ------ | ------------------------------------------------- |
+| \_newName     | string | The name of the ERC20 token to be initialized.    |
+| \_newSymbol   | string | The symbol of the ERC20 token to be initialized.  |
+| \_newDecimals | uint8  | The number of decimal places for the ERC20 token. |

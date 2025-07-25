@@ -23,6 +23,11 @@ abstract contract InitializeBusinessLogic {
         bytes _error
     );
 
+    /// @param _contractAddress The address that was expected to contain bytecode.
+    /// @param _message A descriptive error message.
+    error NoBytecodeAtAddress(address _contractAddress, string _message);
+
+    // solhint-disable no-inline-assembly
     /// @notice Internally executes the initialisation logic using a delegate call.
     /// @dev This function makes a low-level `delegatecall` to a specified address (`_init`)
     ///      with provided call data (`_calldata`). It is a core mechanism for proxy patterns,
@@ -47,13 +52,26 @@ abstract contract InitializeBusinessLogic {
             revert InitializationFunctionReverted(_init, _calldata, error);
         }
 
-        // solhint-disable no-inline-assembly
         // Bubble up the original error message from the failed delegate call.
         /// @solidity memory-safe-assembly
         assembly {
             let returndata_size := mload(error)
             revert(add(32, error), returndata_size)
         }
-        // solhint-enable no-inline-assembly
     }
+
+    function _enforceHasContractCode(
+        address _contract,
+        string memory _errorMessage
+    ) internal view {
+        uint256 contractSize;
+        assembly {
+            contractSize := extcodesize(_contract)
+        }
+        require(
+            contractSize != 0,
+            NoBytecodeAtAddress(_contract, _errorMessage)
+        );
+    }
+    // solhint-enable no-inline-assembly
 }

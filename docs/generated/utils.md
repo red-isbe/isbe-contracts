@@ -85,7 +85,7 @@ overridden in child contracts for testing purposes._
 ### \_addressIsNotZero
 
 ```solidity
-function _addressIsNotZero(address addr) internal pure
+function _addressIsNotZero(address _addr) internal pure
 ```
 
 Checks that a given address is not the zero address.
@@ -95,14 +95,14 @@ This is an internal helper function intended to be used like a modifier._
 
 #### Parameters
 
-| Name | Type    | Description           |
-| ---- | ------- | --------------------- |
-| addr | address | The address to check. |
+| Name   | Type    | Description           |
+| ------ | ------- | --------------------- |
+| \_addr | address | The address to check. |
 
 ### \_bytes32IsNotZero
 
 ```solidity
-function _bytes32IsNotZero(bytes32 hash) internal pure
+function _bytes32IsNotZero(bytes32 _hash) internal pure
 ```
 
 Checks that a `bytes32` value is not empty (all zeros).
@@ -111,14 +111,14 @@ _Reverts with `EmptyBytes32` error if the condition is not met._
 
 #### Parameters
 
-| Name | Type    | Description                   |
-| ---- | ------- | ----------------------------- |
-| hash | bytes32 | The `bytes32` value to check. |
+| Name   | Type    | Description                   |
+| ------ | ------- | ----------------------------- |
+| \_hash | bytes32 | The `bytes32` value to check. |
 
 ### \_emptyBytes
 
 ```solidity
-function _emptyBytes(bytes code) internal pure
+function _emptyBytes(bytes _code) internal pure
 ```
 
 Checks that a `bytes` array is not empty.
@@ -127,9 +127,9 @@ _Reverts with `EmptyBytes` error if the byte array's length is zero._
 
 #### Parameters
 
-| Name | Type  | Description                 |
-| ---- | ----- | --------------------------- |
-| code | bytes | The `bytes` array to check. |
+| Name   | Type  | Description                 |
+| ------ | ----- | --------------------------- |
+| \_code | bytes | The `bytes` array to check. |
 
 ---
 
@@ -163,6 +163,19 @@ but provides no specific error data (i.e., the return data size is zero)._
 | \_calldata                      | bytes   | The raw call data that was sent in the failed delegate call.             |
 | \_error                         | bytes   | The empty byte string returned from the failed call.                     |
 
+### NoBytecodeAtAddress
+
+```solidity
+error NoBytecodeAtAddress(address _contractAddress, string _message)
+```
+
+#### Parameters
+
+| Name              | Type    | Description                                        |
+| ----------------- | ------- | -------------------------------------------------- |
+| \_contractAddress | address | The address that was expected to contain bytecode. |
+| \_message         | string  | A descriptive error message.                       |
+
 ### \_initializeBusinessLogic
 
 ```solidity
@@ -184,3 +197,9 @@ message, it reverts with the custom `InitializationFunctionReverted` error inste
 | ---------- | ------- | ------------------------------------------------------------------------------- |
 | \_init     | address | The address of the implementation contract containing the logic to be executed. |
 | \_calldata | bytes   | The encoded function call and arguments to be executed by the `_init` contract. |
+
+### \_enforceHasContractCode
+
+```solidity
+function _enforceHasContractCode(address _contract, string _errorMessage) internal view
+```

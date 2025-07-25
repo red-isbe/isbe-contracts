@@ -10,7 +10,7 @@ Access to state-changing functions is restricted by role-based access control._
 ### deploy
 
 ```solidity
-function deploy(bytes32 businessId, bytes bytecode) external
+function deploy(bytes32 _businessId, bytes _bytecode) external
 ```
 
 Deploys a business logic contract using its unique identifier and bytecode.
@@ -22,15 +22,15 @@ Subsequent deployments for the same `businessId` will increment the version._
 
 #### Parameters
 
-| Name       | Type    | Description                                                  |
-| ---------- | ------- | ------------------------------------------------------------ |
-| businessId | bytes32 | The unique identifier for the business logic to be deployed. |
-| bytecode   | bytes   | The creation bytecode of the contract to deploy.             |
+| Name         | Type    | Description                                                  |
+| ------------ | ------- | ------------------------------------------------------------ |
+| \_businessId | bytes32 | The unique identifier for the business logic to be deployed. |
+| \_bytecode   | bytes   | The creation bytecode of the contract to deploy.             |
 
 ### getBusinessLogicAddress
 
 ```solidity
-function getBusinessLogicAddress(bytes32 businessId, uint256 versionNumber) external view returns (address businessLogicAddress_)
+function getBusinessLogicAddress(bytes32 _businessId, uint256 _versionNumber) external view returns (address businessLogicAddress_)
 ```
 
 ### getBusinessLogics
@@ -50,7 +50,7 @@ Retrieves a list of all unique business logic identifiers deployed by this facto
 ### getBusinessLogicVersions
 
 ```solidity
-function getBusinessLogicVersions(bytes32 businessId) external view returns (address[] versions_)
+function getBusinessLogicVersions(bytes32 _businessId) external view returns (address[] versions_)
 ```
 
 Retrieves all deployed contract addresses for a given business logic ID.
@@ -59,9 +59,9 @@ _Each address in the returned array corresponds to a deployed version of the con
 
 #### Parameters
 
-| Name       | Type    | Description                                  |
-| ---------- | ------- | -------------------------------------------- |
-| businessId | bytes32 | The unique identifier of the business logic. |
+| Name         | Type    | Description                                  |
+| ------------ | ------- | -------------------------------------------- |
+| \_businessId | bytes32 | The unique identifier of the business logic. |
 
 #### Return Values
 
@@ -190,37 +190,31 @@ reports the correct identifier via its EIP-2535 introspection function._
 ### \_deploy
 
 ```solidity
-function _deploy(bytes32 businessId, bytes code) internal returns (address businessLogicAddress_, uint256 currentVersion_)
+function _deploy(bytes32 _businessId, bytes _code) internal returns (address businessLogicAddress_, uint256 currentVersion_)
 ```
 
 ### \_getBusinessLogicAddress
 
 ```solidity
-function _getBusinessLogicAddress(bytes32 businessId, uint256 versionNumber) internal view returns (address businessLogicAddress_)
+function _getBusinessLogicAddress(bytes32 _businessId, uint256 _versionNumber) internal view returns (address businessLogicAddress_)
 ```
 
 ### \_isDeployedBusinessLogic
 
 ```solidity
-function _isDeployedBusinessLogic(bytes32 businessId) internal view returns (bool)
+function _isDeployedBusinessLogic(bytes32 _businessId, uint256 _version) internal view returns (bool)
 ```
 
 ### \_getBusinessLogics
 
 ```solidity
-function _getBusinessLogics() internal view returns (bytes32[] businessLogicIds)
+function _getBusinessLogics() internal view returns (bytes32[] businessLogicIds_)
 ```
 
 ### \_getBusinessLogicVersions
 
 ```solidity
-function _getBusinessLogicVersions(bytes32 businessId) internal view returns (address[] versions_)
-```
-
-### \_businessLogicStorage
-
-```solidity
-function _businessLogicStorage() internal pure returns (struct BusinessLogicFactoryInternal.BusinessLogicStorage storage_)
+function _getBusinessLogicVersions(bytes32 _businessId) internal view returns (address[] versions_)
 ```
 
 ---
@@ -255,7 +249,7 @@ Emitted when a new version of a business logic is successfully deployed.
 ### deploy
 
 ```solidity
-function deploy(bytes32 businessId, bytes bytecode) external
+function deploy(bytes32 _businessId, bytes _bytecode) external
 ```
 
 Deploys a business logic contract using its unique identifier and bytecode.
@@ -267,25 +261,25 @@ Subsequent deployments for the same `businessId` will increment the version._
 
 #### Parameters
 
-| Name       | Type    | Description                                                  |
-| ---------- | ------- | ------------------------------------------------------------ |
-| businessId | bytes32 | The unique identifier for the business logic to be deployed. |
-| bytecode   | bytes   | The creation bytecode of the contract to deploy.             |
+| Name         | Type    | Description                                                  |
+| ------------ | ------- | ------------------------------------------------------------ |
+| \_businessId | bytes32 | The unique identifier for the business logic to be deployed. |
+| \_bytecode   | bytes   | The creation bytecode of the contract to deploy.             |
 
 ### getBusinessLogicAddress
 
 ```solidity
-function getBusinessLogicAddress(bytes32 businessId, uint256 version) external view returns (address businessLogicAddress_)
+function getBusinessLogicAddress(bytes32 _businessId, uint256 _version) external view returns (address businessLogicAddress_)
 ```
 
 Gets the deployed address for a specific version of a business logic.
 
 #### Parameters
 
-| Name       | Type    | Description                                           |
-| ---------- | ------- | ----------------------------------------------------- |
-| businessId | bytes32 | The unique identifier of the business logic.          |
-| version    | uint256 | The version number of the business logic to retrieve. |
+| Name         | Type    | Description                                           |
+| ------------ | ------- | ----------------------------------------------------- |
+| \_businessId | bytes32 | The unique identifier of the business logic.          |
+| \_version    | uint256 | The version number of the business logic to retrieve. |
 
 #### Return Values
 
@@ -310,7 +304,7 @@ Retrieves a list of all unique business logic identifiers deployed by this facto
 ### getBusinessLogicVersions
 
 ```solidity
-function getBusinessLogicVersions(bytes32 businessId) external view returns (address[] versions_)
+function getBusinessLogicVersions(bytes32 _businessId) external view returns (address[] versions_)
 ```
 
 Retrieves all deployed contract addresses for a given business logic ID.
@@ -319,9 +313,9 @@ _Each address in the returned array corresponds to a deployed version of the con
 
 #### Parameters
 
-| Name       | Type    | Description                                  |
-| ---------- | ------- | -------------------------------------------- |
-| businessId | bytes32 | The unique identifier of the business logic. |
+| Name         | Type    | Description                                  |
+| ------------ | ------- | -------------------------------------------- |
+| \_businessId | bytes32 | The unique identifier of the business logic. |
 
 #### Return Values
 

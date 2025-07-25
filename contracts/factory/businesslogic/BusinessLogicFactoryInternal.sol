@@ -1,12 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {
-    IEIP2535Introspection
-} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
-import {
-    _BUSINESS_LOGIC_STORAGE_POSITION
-} from '../../constants/storagePositions.sol';
+import {IEIP2535Introspection} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {_BUSINESS_LOGIC_STORAGE_POSITION} from '../../constants/storagePositions.sol';
 import {Common} from '../../core/Common.sol';
 
 /**
@@ -45,63 +41,104 @@ abstract contract BusinessLogicFactoryInternal is Common {
     error BadBusinessId(bytes32 businessId);
 
     function _deploy(
-        bytes32 businessId,
-        bytes calldata code
+        bytes32 _businessId,
+        bytes calldata _code
     )
         internal
         returns (address businessLogicAddress_, uint256 currentVersion_)
     {
         BusinessLogicStorage storage $ = _businessLogicStorage();
-        businessLogicAddress_ = _deployBusinessLogic(code);
+        unchecked {
+            currentVersion_ = $.businessLogicVersions[_businessId].length + 1;
+        }
+        businessLogicAddress_ = _deployBusinessLogic(
+            _code,
+            _buildSalt(_businessId, currentVersion_)
+        );
         require(
             IEIP2535Introspection(businessLogicAddress_)
-                .businessIdIntrospection() == businessId,
-            BadBusinessId(businessId)
+                .businessIdIntrospection() == _businessId,
+            BadBusinessId(_businessId)
         );
-        $.latestVersions[businessId] = businessLogicAddress_;
-        $.businessLogicVersions[businessId].push(businessLogicAddress_);
-        currentVersion_ = $.businessLogicVersions[businessId].length;
-        if (currentVersion_ == 1) $.businessLogics.push(businessId);
+        $.latestVersions[_businessId] = businessLogicAddress_;
+        $.businessLogicVersions[_businessId].push(businessLogicAddress_);
+        if (currentVersion_ == 1) $.businessLogics.push(_businessId);
     }
 
     // TODO: To paginated when needed
     function _getBusinessLogicAddress(
-        bytes32 businessId,
-        uint256 versionNumber
+        bytes32 _businessId,
+        uint256 _versionNumber
     ) internal view returns (address businessLogicAddress_) {
         businessLogicAddress_ = _getAddress(
             _businessLogicStorage(),
-            businessId,
-            versionNumber
+            _businessId,
+            _versionNumber
         );
     }
 
     function _isDeployedBusinessLogic(
-        bytes32 businessId
+        bytes32 _businessId,
+        uint256 _version
     ) internal view returns (bool) {
+        uint256 versionCheck = _version == 0 ? _version : --_version;
         return
-            _businessLogicStorage().businessLogicVersions[businessId].length >
-            0;
+            _businessLogicStorage().businessLogicVersions[_businessId].length >
+            versionCheck;
     }
 
     function _getBusinessLogics()
         internal
         view
-        returns (bytes32[] memory businessLogicIds)
+        returns (bytes32[] memory businessLogicIds_)
     {
-        businessLogicIds = _businessLogicStorage().businessLogics;
+        businessLogicIds_ = _businessLogicStorage().businessLogics;
     }
 
     // 0 position is the latest version
     // TODO: To paginated when needed
     function _getBusinessLogicVersions(
-        bytes32 businessId
+        bytes32 _businessId
     ) internal view returns (address[] memory versions_) {
-        versions_ = _businessLogicStorage().businessLogicVersions[businessId];
+        versions_ = _businessLogicStorage().businessLogicVersions[_businessId];
+    }
+
+    // First implementation with CREATE, next versions could include CREATE2 pattern
+    function _deployBusinessLogic(
+        bytes memory _code,
+        uint256 _salt
+    ) private returns (address deployedAddress_) {
+        uint256 allGood;
+        // slither-disable-start assembly
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            deployedAddress_ := create2(
+                0,
+                add(_code, 0x20),
+                mload(_code),
+                _salt
+            )
+            allGood := gt(extcodesize(deployedAddress_), 0)
+        }
+        // slither-disable-end assembly
+        require(allGood > 0, DeployFailed());
+    }
+
+    function _getAddress(
+        BusinessLogicStorage storage _$,
+        bytes32 _businessId,
+        uint256 _versionNumber
+    ) private view returns (address address_) {
+        if (_versionNumber == 0) return _$.latestVersions[_businessId];
+        unchecked {
+            --_versionNumber;
+        }
+        if (_$.businessLogicVersions[_businessId].length > _versionNumber)
+            return _$.businessLogicVersions[_businessId][_versionNumber];
     }
 
     function _businessLogicStorage()
-        internal
+        private
         pure
         returns (BusinessLogicStorage storage storage_)
     {
@@ -114,31 +151,10 @@ abstract contract BusinessLogicFactoryInternal is Common {
         // slither-disable-end assembly
     }
 
-    // First implementation with CREATE, next versions could include CREATE2 pattern
-    function _deployBusinessLogic(
-        bytes memory code
-    ) private returns (address deployedAddress) {
-        uint256 allGood;
-        // slither-disable-start assembly
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            deployedAddress := create(0, add(code, 0x20), mload(code))
-            allGood := gt(extcodesize(deployedAddress), 0)
-        }
-        // slither-disable-end assembly
-        require(allGood > 0, DeployFailed());
-    }
-
-    function _getAddress(
-        BusinessLogicStorage storage $,
-        bytes32 businessId,
-        uint256 versionNumber
-    ) private view returns (address address_) {
-        if (versionNumber == 0) return $.latestVersions[businessId];
-        unchecked {
-            --versionNumber;
-        }
-        if ($.businessLogicVersions[businessId].length > versionNumber)
-            return $.businessLogicVersions[businessId][versionNumber];
+    function _buildSalt(
+        bytes32 _businessId,
+        uint256 _version
+    ) private pure returns (uint256 salt_) {
+        salt_ = uint256(keccak256(abi.encodePacked(_businessId, _version)));
     }
 }

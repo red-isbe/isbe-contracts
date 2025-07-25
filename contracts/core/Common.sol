@@ -2,9 +2,7 @@
 pragma solidity ^0.8.28;
 
 import {Initializable} from './Initializable.sol';
-import {
-    AccessControlInternal
-} from '../access/accessControl/AccessControlInternal.sol';
+import {AccessControlInternal} from '../access/accessControl/AccessControlInternal.sol';
 import {PauseInternalCommon} from '../pause/PauseInternalCommon.sol';
 import {OwnableInternal} from '../access/ownable/OwnableInternal.sol';
 import {ERC165Internal} from './ERC165Internal.sol';
@@ -28,20 +26,20 @@ abstract contract Common is
     /**
      * @dev Checks if an address equals to zero address
      *
-     * @param addr The address to check
+     * @param _addr The address to check
      */
-    modifier addressIsNotZero(address addr) {
-        _addressIsNotZero(addr);
+    modifier addressIsNotZero(address _addr) {
+        _addressIsNotZero(_addr);
         _;
     }
 
-    modifier bytes32IsNotZero(bytes32 hash) {
-        _bytes32IsNotZero(hash);
+    modifier bytes32IsNotZero(bytes32 _hash) {
+        _bytes32IsNotZero(_hash);
         _;
     }
 
-    modifier emptyCode(bytes memory code) {
-        _emptyBytes(code);
+    modifier emptyCode(bytes memory _code) {
+        _emptyBytes(_code);
         _;
     }
 }

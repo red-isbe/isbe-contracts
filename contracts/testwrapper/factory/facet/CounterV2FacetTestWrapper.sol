@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {
-    IEIP2535Introspection
-} from '../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {IEIP2535Introspection} from '../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 import {_RESOLVER_KEY, CounterFacetInternal} from './CounterFacetInternal.sol';
 import {_DEFAULT_ADMIN_ROLE} from '../../../constants/roles.sol';
 
@@ -16,16 +14,16 @@ contract CounterV2FacetTestWrapper is
     }
 
     function initializeCounter(
-        uint256 startingValue
+        uint256 _startingValue
     ) external initializer(_RESOLVER_KEY) {
         CounterStorage storage $ = _counterStorage();
-        $.counter = startingValue;
+        $.counter = _startingValue;
     }
 
     function increment(
-        uint256 amount
+        uint256 _amount
     ) external whenNotPaused onlyRole(_DEFAULT_ADMIN_ROLE) {
-        _counterStorage().counter += amount;
+        _counterStorage().counter += _amount;
     }
 
     function counter() external view returns (uint256) {

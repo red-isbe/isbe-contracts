@@ -13,7 +13,7 @@ function snapshot() external
 ### balanceOfAt
 
 ```solidity
-function balanceOfAt(address account, uint256 snapshotId) external view returns (uint256)
+function balanceOfAt(address _account, uint256 _snapshotId) external view returns (uint256)
 ```
 
 Retrieves the balance of an account at the specified snapshot ID.
@@ -23,10 +23,10 @@ Will revert if the snapshot ID is invalid or does not exist._
 
 #### Parameters
 
-| Name       | Type    | Description                                                |
-| ---------- | ------- | ---------------------------------------------------------- |
-| account    | address | The address of the account whose balance is being queried. |
-| snapshotId | uint256 | The ID of the snapshot to query.                           |
+| Name         | Type    | Description                                                |
+| ------------ | ------- | ---------------------------------------------------------- |
+| \_account    | address | The address of the account whose balance is being queried. |
+| \_snapshotId | uint256 | The ID of the snapshot to query.                           |
 
 #### Return Values
 
@@ -37,7 +37,7 @@ Will revert if the snapshot ID is invalid or does not exist._
 ### totalSupplyAt
 
 ```solidity
-function totalSupplyAt(uint256 snapshotId) external view returns (uint256)
+function totalSupplyAt(uint256 _snapshotId) external view returns (uint256)
 ```
 
 Retrieves the total token supply at the specified snapshot ID.
@@ -47,9 +47,9 @@ Will revert if the snapshot ID is invalid or does not exist._
 
 #### Parameters
 
-| Name       | Type    | Description                      |
-| ---------- | ------- | -------------------------------- |
-| snapshotId | uint256 | The ID of the snapshot to query. |
+| Name         | Type    | Description                      |
+| ------------ | ------- | -------------------------------- |
+| \_snapshotId | uint256 | The ID of the snapshot to query. |
 
 #### Return Values
 
@@ -163,7 +163,7 @@ function _snapshot() internal virtual returns (uint256)
 ### \_beforeTokenTransfer
 
 ```solidity
-function _beforeTokenTransfer(address from, address to, uint256) internal virtual
+function _beforeTokenTransfer(address _from, address _to, uint256) internal virtual
 ```
 
 ### \_getCurrentSnapshotId
@@ -175,7 +175,7 @@ function _getCurrentSnapshotId() internal view virtual returns (uint256)
 ### \_valueAt
 
 ```solidity
-function _valueAt(uint256 snapshotId, struct ERC20SnapshotInternal.Snapshots snapshots) internal view returns (bool, uint256)
+function _valueAt(uint256 _snapshotId, struct ERC20SnapshotInternal.Snapshots _snapshots) internal view returns (bool, uint256)
 ```
 
 ### \_erc20SnapshotStorage
@@ -239,7 +239,7 @@ function snapshot() external
 ### balanceOfAt
 
 ```solidity
-function balanceOfAt(address account, uint256 snapshotId) external view returns (uint256)
+function balanceOfAt(address _account, uint256 _snapshotId) external view returns (uint256)
 ```
 
 Retrieves the balance of an account at the specified snapshot ID.
@@ -249,10 +249,10 @@ Will revert if the snapshot ID is invalid or does not exist._
 
 #### Parameters
 
-| Name       | Type    | Description                                                |
-| ---------- | ------- | ---------------------------------------------------------- |
-| account    | address | The address of the account whose balance is being queried. |
-| snapshotId | uint256 | The ID of the snapshot to query.                           |
+| Name         | Type    | Description                                                |
+| ------------ | ------- | ---------------------------------------------------------- |
+| \_account    | address | The address of the account whose balance is being queried. |
+| \_snapshotId | uint256 | The ID of the snapshot to query.                           |
 
 #### Return Values
 
@@ -263,7 +263,7 @@ Will revert if the snapshot ID is invalid or does not exist._
 ### totalSupplyAt
 
 ```solidity
-function totalSupplyAt(uint256 snapshotId) external view returns (uint256)
+function totalSupplyAt(uint256 _snapshotId) external view returns (uint256)
 ```
 
 Retrieves the total token supply at the specified snapshot ID.
@@ -273,9 +273,9 @@ Will revert if the snapshot ID is invalid or does not exist._
 
 #### Parameters
 
-| Name       | Type    | Description                      |
-| ---------- | ------- | -------------------------------- |
-| snapshotId | uint256 | The ID of the snapshot to query. |
+| Name         | Type    | Description                      |
+| ------------ | ------- | -------------------------------- |
+| \_snapshotId | uint256 | The ID of the snapshot to query. |
 
 #### Return Values
 

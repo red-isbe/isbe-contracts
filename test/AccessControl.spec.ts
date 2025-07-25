@@ -18,9 +18,10 @@ describe('Access Control', function () {
     async function deploy(
         initialize: boolean = true,
         addRole?: string[],
-        user?: Signer[][]
+        user?: Signer[][],
+        isGovernance: boolean = false
     ) {
-        const result = await deployAll()
+        const result = await deployAll(false, isGovernance)
         accessControl = result.accessControl
         accessControlFacet = result.accessControlFacet
 
@@ -184,6 +185,26 @@ describe('Access Control', function () {
             await expect(accessControl.revokeRole(ISBE_ROLE, adminAccount))
                 .to.be.revertedWithCustomError(accessControl, 'RoleIsImmutable')
                 .withArgs(ISBE_ROLE)
+        })
+
+        it('GIVEN an Access Control Governance WHEN using account with admin role to grant ISBE role THEN succeeds', async function () {
+            await deploy(undefined, undefined, undefined, true)
+
+            accessControl = accessControl.connect(adminAccount)
+
+            await expect(accessControl.grantRole(ISBE_ROLE, account_2))
+                .to.emit(accessControl, 'RoleGranted')
+                .withArgs(ISBE_ROLE, account_2, adminAccount)
+        })
+
+        it('GIVEN an Access Control Governance WHEN using account with admin role to revoke ISBE role THEN succeeds', async function () {
+            await deploy(true, [ISBE_ROLE], [[adminAccount]], true)
+
+            accessControl = accessControl.connect(adminAccount)
+
+            await expect(accessControl.revokeRole(ISBE_ROLE, adminAccount))
+                .to.emit(accessControl, 'RoleRevoked')
+                .withArgs(ISBE_ROLE, adminAccount, adminAccount)
         })
 
         it('GIVEN an Access Control WHEN renouncing ISBE role THEN fails', async function () {

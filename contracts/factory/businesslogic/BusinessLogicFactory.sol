@@ -3,7 +3,7 @@ pragma solidity ^0.8.28;
 
 import {BusinessLogicFactoryInternal} from './BusinessLogicFactoryInternal.sol';
 import {IBusinessLogicFactory} from './IBusinessLogicFactory.sol';
-import {_ISBE_ROLE} from '../../constants/roles.sol';
+import {_BUSINESS_LOGIC_DEPLOYER_ROLE} from '../../constants/roles.sol';
 
 /**
  * @title BusinessLogicFactory
@@ -14,34 +14,34 @@ import {_ISBE_ROLE} from '../../constants/roles.sol';
  * the core deployment and storage logic from `BusinessLogicFactoryInternal`.
  * Access to state-changing functions is restricted by role-based access control.
  */
-contract BusinessLogicFactory is
+abstract contract BusinessLogicFactory is
     BusinessLogicFactoryInternal,
     IBusinessLogicFactory
 {
     function deploy(
-        bytes32 businessId,
-        bytes calldata bytecode
+        bytes32 _businessId,
+        bytes calldata _bytecode
     )
         external
         override
-        onlyRole(_ISBE_ROLE)
-        bytes32IsNotZero(businessId)
-        emptyCode(bytecode)
+        onlyRole(_BUSINESS_LOGIC_DEPLOYER_ROLE)
+        bytes32IsNotZero(_businessId)
+        emptyCode(_bytecode)
     {
         (address businessLogicAddress, uint256 version) = _deploy(
-            businessId,
-            bytecode
+            _businessId,
+            _bytecode
         );
-        emit Deployed(businessId, businessLogicAddress, version);
+        emit Deployed(_businessId, businessLogicAddress, version);
     }
 
     function getBusinessLogicAddress(
-        bytes32 businessId,
-        uint256 versionNumber
+        bytes32 _businessId,
+        uint256 _versionNumber
     ) external view override returns (address businessLogicAddress_) {
         businessLogicAddress_ = _getBusinessLogicAddress(
-            businessId,
-            versionNumber
+            _businessId,
+            _versionNumber
         );
     }
 
@@ -55,9 +55,9 @@ contract BusinessLogicFactory is
     }
 
     function getBusinessLogicVersions(
-        bytes32 businessId
+        bytes32 _businessId
     ) external view returns (address[] memory versions_) {
-        versions_ = _getBusinessLogicVersions(businessId);
+        versions_ = _getBusinessLogicVersions(_businessId);
     }
 
     function _implementedInterfaces()

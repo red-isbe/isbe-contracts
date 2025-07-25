@@ -3,7 +3,7 @@
 ### constructor
 
 ```solidity
-constructor(address beacon) public
+constructor(address _beacon) public
 ```
 
 ---
@@ -13,5 +13,5 @@ constructor(address beacon) public
 ### constructor
 
 ```solidity
-constructor(address implementation) public
+constructor(address _implementation) public
 ```

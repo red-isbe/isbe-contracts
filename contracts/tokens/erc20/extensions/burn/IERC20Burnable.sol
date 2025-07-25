@@ -17,17 +17,17 @@ interface IERC20Burnable {
      * @dev Reduces the caller's token balance and the total supply by the specified `amount`.
      *      The caller must have at least the specified `amount` of tokens in their account.
      *      Implementations should emit a `Transfer` event to indicate tokens were burned.
-     * @param amount The amount of tokens to burn.
+     * @param _amount The amount of tokens to burn.
      */
-    function burn(uint256 amount) external;
+    function burn(uint256 _amount) external;
 
     /**
      * @notice Burns a specific amount of tokens from another account, using an allowance.
      * @dev Reduces the balance of `account` and the total supply by the specified `amount`.
      *      The caller must be allowed to spend at least `amount` of tokens on behalf of `account`.
      *      Implementations should emit a `Transfer` event to indicate tokens were burned.
-     * @param account The address of the account whose tokens are to be burned.
-     * @param amount The amount of tokens to burn.
+     * @param _account The address of the account whose tokens are to be burned.
+     * @param _amount The amount of tokens to burn.
      */
-    function burnFrom(address account, uint256 amount) external;
+    function burnFrom(address _account, uint256 _amount) external;
 }

@@ -58,16 +58,16 @@ _Leaves the contract without an owner. Functions restricted to the owner will be
 ### transferOwnership
 
 ```solidity
-function transferOwnership(address newOwner) external
+function transferOwnership(address _newOwner) external
 ```
 
 Transfers ownership of the contract to a new account
 
 #### Parameters
 
-| Name     | Type    | Description                  |
-| -------- | ------- | ---------------------------- |
-| newOwner | address | The address of the new owner |
+| Name       | Type    | Description                  |
+| ---------- | ------- | ---------------------------- |
+| \_newOwner | address | The address of the new owner |
 
 ### owner
 
@@ -167,16 +167,16 @@ _Inherits from IOwnable and OwnableInternal_
 ### transferOwnership
 
 ```solidity
-function transferOwnership(address newOwner) external
+function transferOwnership(address _newOwner) external
 ```
 
 Transfers ownership of the contract to a new account
 
 #### Parameters
 
-| Name     | Type    | Description                  |
-| -------- | ------- | ---------------------------- |
-| newOwner | address | The address of the new owner |
+| Name       | Type    | Description                  |
+| ---------- | ------- | ---------------------------- |
+| \_newOwner | address | The address of the new owner |
 
 ---
 
@@ -189,16 +189,16 @@ _Inherits from IOwnable2Step, Ownable and Ownable2StepInternal_
 ### transferOwnership
 
 ```solidity
-function transferOwnership(address newOwner) external
+function transferOwnership(address _newOwner) external
 ```
 
 Transfers ownership of the contract to a new account
 
 #### Parameters
 
-| Name     | Type    | Description                  |
-| -------- | ------- | ---------------------------- |
-| newOwner | address | The address of the new owner |
+| Name       | Type    | Description                  |
+| ---------- | ------- | ---------------------------- |
+| \_newOwner | address | The address of the new owner |
 
 ### acceptOwnership
 
@@ -315,7 +315,7 @@ _Reverts with `AccountIsNotPendingOwner` error if the account is not the pending
 ### \_initiateTransferOwnership
 
 ```solidity
-function _initiateTransferOwnership(address newOwner) internal virtual
+function _initiateTransferOwnership(address _newOwner) internal virtual
 ```
 
 ### \_acceptOwnership
@@ -361,7 +361,7 @@ Constructor that disables the initializer
 ### initializeOwnable
 
 ```solidity
-function initializeOwnable(address admin) external
+function initializeOwnable(address _admin) external
 ```
 
 ### renounceOwnership
@@ -479,7 +479,7 @@ _Reverts with `AccountIsNotOwner` error if the account is not the owner_
 ### \_transferOwnership
 
 ```solidity
-function _transferOwnership(address newOwner) internal virtual
+function _transferOwnership(address _newOwner) internal virtual
 ```
 
 ### \_owner
