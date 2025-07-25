@@ -1,7 +1,12 @@
 import { expect } from 'chai'
 import { Signer } from 'ethers'
 import { ethers } from 'hardhat'
-import { AccessControl, AccessControlFacet } from '../typechain-types'
+import {
+    AccessControl,
+    AccessControlFacet,
+    IsbeTransparentProxy,
+    IsbeTransparentProxy__factory,
+} from '../typechain-types'
 import { DEFAULT_ADMIN_ROLE, ROLE_1, ROLE_2, ISBE_ROLE } from './constants'
 import { deployGovernance } from './initialization'
 
@@ -13,6 +18,7 @@ describe('Access Control', function () {
     let accessControlFacet: AccessControlFacet
     let accessControl: AccessControl
     let accessControlGovernance: AccessControl
+    let transparentProxyFactory: IsbeTransparentProxy__factory
 
     before(async () => {
         ;[adminAccount, account_2] = await ethers.getSigners()
@@ -47,6 +53,10 @@ describe('Access Control', function () {
         accessControl = result.accessControl
         accessControlGovernance = result.accessControlGovernance
         accessControlFacet = result.accessControlFacet
+
+        transparentProxyFactory = await ethers.getContractFactory(
+            'IsbeTransparentProxy'
+        )
     }
 
     describe('Testing initialization and constructor', function () {
@@ -91,19 +101,32 @@ describe('Access Control', function () {
                 .reverted
         })
 
-        it.skip('GIVEN a new Proxy pointing to an Access Control WHEN initializing it without adding DEFAULT_ADMIN_ROLE THEN fails', async function () {
-            await deploy(false)
+        it('GIVEN a new Proxy pointing to an Access Control WHEN initializing it without adding DEFAULT_ADMIN_ROLE THEN fails', async function () {
+            await deploy()
 
-            const account2Address = await account_2.getAddress()
+            const transparentProxy: IsbeTransparentProxy =
+                await transparentProxyFactory.deploy(
+                    await accessControlFacet.getAddress(),
+                    account_2Address
+                )
+
+            const accessControlProxy = await ethers.getContractAt(
+                'AccessControl',
+                await transparentProxy.getAddress(),
+                adminAccount
+            )
 
             await expect(
-                accessControl.initializeAccessControl([
+                accessControlProxy.initializeAccessControl([
                     {
                         role: ROLE_1,
-                        members: [account2Address],
+                        members: [adminAccountAddress],
                     },
                 ])
-            ).to.be.revertedWithCustomError(accessControl, 'MissingAdminRole')
+            ).to.be.revertedWithCustomError(
+                accessControlProxy,
+                'MissingAdminRole'
+            )
         })
     })
 
@@ -314,22 +337,39 @@ describe('Access Control', function () {
             ).to.not.emit(accessControl, 'RoleRevoked')
         })
 
-        it.skip('GIVEN an Access Control WHEN renouncing ISBE role when there are more than 1 ISBE role members THEN succeeds', async function () {
-            await deploy(
-                true,
-                [ISBE_ROLE],
-                [[account_2Address, adminAccountAddress]]
+        it('GIVEN an Access Control WHEN renouncing ISBE role when there are more than 1 ISBE role members THEN succeeds', async function () {
+            await deploy()
+
+            const transparentProxy: IsbeTransparentProxy =
+                await transparentProxyFactory.deploy(
+                    await accessControlFacet.getAddress(),
+                    adminAccountAddress
+                )
+
+            const accessControlProxy = await ethers.getContractAt(
+                'AccessControl',
+                await transparentProxy.getAddress(),
+                account_2
             )
 
-            accessControl = accessControl.connect(account_2)
+            await accessControlProxy.initializeAccessControl([
+                {
+                    role: DEFAULT_ADMIN_ROLE,
+                    members: [adminAccountAddress],
+                },
+                {
+                    role: ISBE_ROLE,
+                    members: [account_2Address, adminAccountAddress],
+                },
+            ])
 
-            await expect(accessControl.renounceRole(ISBE_ROLE))
-                .to.emit(accessControl, 'RoleRevoked')
+            await expect(accessControlProxy.renounceRole(ISBE_ROLE))
+                .to.emit(accessControlProxy, 'RoleRevoked')
                 .withArgs(ISBE_ROLE, account_2, account_2)
 
-            expect(await accessControl.hasRole(ISBE_ROLE, account_2)).to.equal(
-                false
-            )
+            expect(
+                await accessControlProxy.hasRole(ISBE_ROLE, account_2)
+            ).to.equal(false)
         })
     })
 
