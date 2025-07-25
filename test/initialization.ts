@@ -4,8 +4,11 @@ import {
     BusinessLogicFactoryFacet,
     BusinessLogicFactoryFacet__factory,
     GlobalIsbePauseFacet,
+    GlobalIsbePauseFacet__factory,
     ProxyFactoryFacet,
+    ProxyFactoryFacet__factory,
     ConfigurationManagementFacet,
+    ConfigurationManagementFacet__factory,
     DiamondCutAccessControlFacet,
     DiamondCutAccessControlFacet__factory,
     DiamondLoupeFacet,
@@ -49,6 +52,9 @@ import {
     PAUSE_RESOLVER_KEY,
     ISBE_CUT_RESOLVER_KEY,
     ISBE_LOUPE_RESOLVER_KEY,
+    CONFIGURATION_MANAGEMENT_RESOLVER_KEY,
+    PROXY_FACTORY_RESOLVER_KEY,
+    GLOBAL_ISBE_PAUSABLE_RESOLVER_KEY,
 } from './constants'
 import { getEvent } from '../scripts/utils/getEvent'
 import { getIsbeFactory } from '../scripts/utils/getIsbeFactory'
@@ -62,6 +68,9 @@ let EIP2535AccessControlFactory: any
 let ISBEPauseFacetFactory: ISBEPauseFacet__factory
 let DiamondCutAccessControlFacetFactory: DiamondCutAccessControlFacet__factory
 let DiamondLoupeFacetFactory: DiamondLoupeFacet__factory
+let GlobalIsbePauseFacetFactory: GlobalIsbePauseFacet__factory
+let ProxyFactoryFacetFactory: ProxyFactoryFacet__factory
+let ConfigMgmtFacetFactory: ConfigurationManagementFacet__factory
 let isbeFactory: IIsbeFactory
 
 /*async function deployFactory(
@@ -157,12 +166,13 @@ export async function deployGovernance(
     EIP2535AccessControlFactory = await ethers.getContractFactory(
         'EIP2535AccessControl'
     )
-    const GlobalIsbePauseFacetFactory = await ethers.getContractFactory(
+    GlobalIsbePauseFacetFactory = await ethers.getContractFactory(
         'GlobalIsbePauseFacet'
     )
-    const ProxyFactoryFacetFactory =
+    ProxyFactoryFacetFactory =
         await ethers.getContractFactory('ProxyFactoryFacet')
-    const ConfigMgmtFacetFactory = await ethers.getContractFactory(
+
+    ConfigMgmtFacetFactory = await ethers.getContractFactory(
         'ConfigurationManagementFacet'
     )
     DiamondCutAccessControlFacetFactory = await ethers.getContractFactory(
@@ -385,6 +395,19 @@ export async function deployAllUseCasesFacets(
         DiamondLoupeFacetFactory
     )
 
+    const configMgmtFacet = await deployBusinessLogicFromFactory(
+        CONFIGURATION_MANAGEMENT_RESOLVER_KEY,
+        ConfigMgmtFacetFactory
+    )
+    const proxyFactoryFacet = await deployBusinessLogicFromFactory(
+        PROXY_FACTORY_RESOLVER_KEY,
+        ProxyFactoryFacetFactory
+    )
+    const globalIsbePauseFacet = await deployBusinessLogicFromFactory(
+        GLOBAL_ISBE_PAUSABLE_RESOLVER_KEY,
+        GlobalIsbePauseFacetFactory
+    )
+
     // Deploy all business logic contracts before setting configuration
     await deployBusinessLogicFromFactory(OWNABLE_RESOLVER_KEY, ownableFactory)
     await deployBusinessLogicFromFactory(
@@ -541,6 +564,9 @@ export async function deployAllUseCasesFacets(
         isbeCutFacet,
         isbeLoupeFacet,
         proxy,
+        configMgmtFacet,
+        proxyFactoryFacet,
+        globalIsbePauseFacet,
     }
 }
 
