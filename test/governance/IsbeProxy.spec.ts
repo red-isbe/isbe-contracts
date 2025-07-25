@@ -158,6 +158,22 @@ describe('IsbeProxy', function () {
             ).to.be.revertedWithCustomError(accessControl, 'AddressZero')
         })
 
+        it('GIVEN deployed use Case proxy WHEN admin account sets new configuration passing wrong initialization THEN it fails', async () => {
+            await accessControl.grantRole(CONFIGURATION_MANAGER_ROLE, admin)
+
+            await expect(
+                isbeCutFacet.setIsbeProxyConfiguration(
+                    governanceAddress,
+                    CONFIG_ID_1,
+                    1,
+                    [ethers.ZeroAddress],
+                    []
+                )
+            )
+                .to.be.revertedWithCustomError(accessControl, 'NotSameLength')
+                .withArgs(1, 0)
+        })
+
         it('GIVEN deployed use Case proxy WHEN admin account sets new configuration to 0 THEN it fails', async () => {
             await accessControl.grantRole(CONFIGURATION_MANAGER_ROLE, admin)
 

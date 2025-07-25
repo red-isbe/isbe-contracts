@@ -5,8 +5,11 @@ import { Signer } from 'ethers'
 import { deployGovernance } from '../initialization'
 import {
     ASSET_EVENT_TRACKER_RESOLVER_KEY,
+    CONFIGURATION_MANAGER_ROLE,
+    DEFAULT_ADMIN_ROLE,
     ERC20_RESOLVER_KEY,
     HASH_TIMESTAMP_RESOLVER_KEY,
+    ISBE_ROLE,
     PROXY_DEPLOYER_ROLE,
     RANDOM_HASH_FOR_CONFIGURATION_ID,
 } from '../constants'
@@ -49,6 +52,65 @@ describe('ProxyFactory', function () {
 
     describe('ProxyFactory', () => {
         describe('deployUseCase', () => {
+            it('GIVEN deployed isbe factory WHEN try to deploy passing wrong init business Id THEN it fails', async () => {
+                await isbeFactory
+                    .connect(admin)
+                    .setConfiguration(RANDOM_HASH_FOR_CONFIGURATION_ID, [
+                        {
+                            businessId: HASH_TIMESTAMP_RESOLVER_KEY,
+                            version: 1,
+                        },
+                    ])
+
+                await expect(
+                    isbeFactory
+                        .connect(admin)
+                        .deployUseCase(
+                            RANDOM_HASH_FOR_CONFIGURATION_ID,
+                            1,
+                            [],
+                            false,
+                            [ASSET_EVENT_TRACKER_RESOLVER_KEY],
+                            ['0x']
+                        )
+                )
+                    .to.be.revertedWithCustomError(isbeFactory, 'FacetNotFound')
+                    .withArgs(ASSET_EVENT_TRACKER_RESOLVER_KEY)
+            })
+
+            it('GIVEN deployed isbe factory WHEN try to deploy initializing forbidden roles THEN it fails', async () => {
+                const FORBIDDEN_ROLES = [
+                    DEFAULT_ADMIN_ROLE,
+                    ISBE_ROLE,
+                    CONFIGURATION_MANAGER_ROLE,
+                ]
+
+                for (let i = 0; i < FORBIDDEN_ROLES.length; i++) {
+                    const ROLE = FORBIDDEN_ROLES[i]
+
+                    await expect(
+                        isbeFactory.connect(admin).deployUseCase(
+                            '0x0000000000000000000000000000000000000000000000000000000000000001',
+                            1,
+                            [
+                                {
+                                    role: ROLE,
+                                    members: [admin],
+                                },
+                            ],
+                            false,
+                            [],
+                            []
+                        )
+                    )
+                        .to.be.revertedWithCustomError(
+                            isbeFactory,
+                            'ForbiddenRole'
+                        )
+                        .withArgs(ROLE)
+                }
+            })
+
             it('GIVEN deployed isbe factory WHEN try to deploy without right THEN it fails', async () => {
                 await expect(
                     isbeFactory
