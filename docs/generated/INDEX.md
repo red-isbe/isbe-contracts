@@ -11,6 +11,7 @@
 - [factory/globalisbepause](factory/globalisbepause.md)
 - [factory/proxyfactory](factory/proxyfactory.md)
 - [hashtimestamp](hashtimestamp.md)
+- [identity/didregistry](identity/didregistry.md)
 - [pause](pause.md)
 - [proxies/ERC1967](proxies/ERC1967.md)
 - [proxies/beacon](proxies/beacon.md)

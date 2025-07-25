@@ -1,0 +1,122 @@
+@startuml DidRegistry Entities Structure
+
+title DidRegistry Smart Contract
+
+!define LIGHTYELLOW #FFFACD
+!define LIGHTBLUE #E6F3FF
+!define LIGHTGREEN #F0FFF0
+
+package "Interfaces" {
+    interface IDidRegistry {
+        * checkController(identifier, controller) : bool
+    }
+
+    interface IPolicyRegistry {
+        * checkPolicy(policyName, user) : bool
+        * checkPolicy(policyId, user) : bool
+    }
+}
+
+package "Storage Layer" {
+
+     package "DidDocuments" {
+        struct VMethod {
+            + publicKey: bytes
+            + isSecp256k1: bool
+            + revoked: bool
+        }
+
+         struct VRelationship {
+            + name: string
+            + vMethodId: string
+            + notBefore: uint256
+            + notAfter: uint256
+            + indexDid: uint256
+         }
+
+        struct DidDocument {
+            + baseDocument: string
+            + controllers: string[]
+            + controllerExist: mapping(string => bool)
+            + vMethods: mapping(string => VMethod)
+            + vRelationships;: VRelationship[]
+            + capabilityInvocations: VRelationship[]
+            + vRelationshipsNameAndMethodIdTuple: mapping(bytes32 => bool)
+            + vRelationshipsIndexes: mapping(string => uint[])
+            + capabilityInvocationMethodIdExist: mapping(string => bool)
+            + capabilityInvocationMethodIdIndex: mapping(string => uint)
+            + vMethodIdOfAddress: mapping(address => string)
+        }
+        DidDocument -down- VRelationship
+        DidDocument -down- VMethod
+
+        struct DidDocumentsData LIGHTYELLOW {
+            didList: mapping(string => DidDocument)
+            dids: string[]
+            invocationAddressToDidResolver: mapping(address => string)
+        }
+
+        DidDocumentsData -down- DidDocument
+     }
+    package "Controllers" {
+        struct ControllersData LIGHTYELLOW {
+            didsByController: mapping(string => string[])
+            didsByControllerIndex: mapping(string => mapping(string => uint))
+        }
+    }
+
+    DidDocuments -down[hidden]- Controllers
+}
+
+package "Smart Contracts" {
+    abstract class DidDocumentDetailed <<Business Logic>> LIGHTGREEN {
+        # DidDocumentInserted(did, baseDocument, string vMethodId, publicKey, isSecp256k1, notBefore, notAfter)
+        + insertDidDocument(did, baseDocument, vMethodId, publicKey, isSecp256k1, notBefore, notAfter)
+        # BaseDocumentUpdated(did, baseDocument)
+        + updateBaseDocument(did, baseDocument)
+        # ControllerAdded(did, controller)
+        + addController(did, controller)
+        # ControllerRevoked(did, controller)
+        + revokeController(did, controller)
+        # VerificationMethodAdded(did, vMethodId, publicKey, isSecp256k1)
+        + addVerificationMethod(did, vMethodId, publicKey,isSecp256k1)
+        # VerificationRelationshipAdded(did, name, vMethodId, notBefore, notAfter)
+        + addVerificationRelationship(did, name, vMethodId, notBefore, notAfter)
+        # VerificationMethodRevoked(did, vMethodId, notAfter)
+        + revokeVerificationMethod(did, vMethodId,notAfter)
+        # VerificationMethodExpired(did, vMethodId,notAfter)
+        + expireVerificationMethod(did, vMethodId, notAfter)
+        # VerificationMethodRolled(did, vMethodId, publicKey, isSecp256k1, notBefore, notAfter, oldVMethodId, duration)
+        + rollVerificationMethod(args:{did, vMethodId, publicKey, isSecp256k1, notBefore, notAfter, oldVMethodId, duration})
+        * getDids(page, pageSize) : (items, total, howMany, prev, next)
+        * getDidsByController(controller, page, pageSize) : (items, total, howMany, prev, next)
+        * getDidsByVerificationRelationship(vMethodId, name, page, pageSize) : (items, total, howMany, prev, next)
+        * getDidDocument(did) : (baseDocument, controllers, vMethodIds, vMethods, vRelationships)
+        * getDidDocumentByTimestamp(did, timestamp) : (baseDocument, controllers, vMethodIds, vMethods, vRelationships)
+        * checkController(identifier, controller) : bool
+        - getTrustedPolicyRegistry() : IPolicyRegistry
+    }
+
+    class DidRegistry <<Main Contract>> LIGHTBLUE {
+        # NewVersion(version)
+        + policyRegistryContract : IPolicyRegistry
+        + version() : uint256
+        + initialize(uint256 v)
+    }
+}
+
+"Storage Layer" -up[hidden]- "Smart Contracts"
+"Smart Contracts" -up[hidden]- "Interfaces"
+"Storage Layer" -up[hidden]- "Interfaces"
+
+' Relaciones de herencia
+DidRegistry <|-- DidDocumentDetailed : hereda
+
+' Relaciones de composición
+DidRegistry -up-> IPolicyRegistry : utiliza
+DidDocumentDetailed -up-> IDidRegistry : utiliza
+
+DidDocumentsData -up-> DidDocumentDetailed
+ControllersData -up-> DidDocumentDetailed
+
+@enduml

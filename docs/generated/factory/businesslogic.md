@@ -217,12 +217,6 @@ function _getBusinessLogics() internal view returns (bytes32[] businessLogicIds_
 function _getBusinessLogicVersions(bytes32 _businessId) internal view returns (address[] versions_)
 ```
 
-### \_businessLogicStorage
-
-```solidity
-function _businessLogicStorage() internal pure returns (struct BusinessLogicFactoryInternal.BusinessLogicStorage storage_)
-```
-
 ---
 
 ## IBusinessLogicFactory
