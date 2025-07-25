@@ -64,8 +64,6 @@ PROXY_DEPLOYER_ROLE -> [ProxyFactory] : 5. deploy an use case
 IsbeDiamond -l-> [ConfigurationManagement] : 6. \n(\nisbeConfigurationId,\nversion,\nselector\n)->businessLogicAddress
 [IsbeGlobalPause] .d.> IsbeDiamond : pause/unpause facets
 
-
-
 "ISBE Proxy (Diamond Adaptation)" -l[hidden]- "ISBE Governance Diamond Proxy"
 
 @enduml
