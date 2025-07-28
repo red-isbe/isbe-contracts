@@ -59,15 +59,19 @@ abstract contract IsbeProxyInternal is
         address[] memory _initAddresses,
         bytes[] memory _initData
     ) internal {
-        _checkSameLength(_initAddresses.length, _initData.length);
+        uint256 length = _initAddresses.length;
+        _checkSameLength(length, _initData.length);
 
         IsbeProxyStorage storage $ = _isbeProxyStorage();
         $.configurationManager = _configurationManager;
         $.configurationId = _configurationId;
         $.version = _version;
 
-        for (uint256 i = 0; i < _initAddresses.length; i++) {
-            _initializeDiamondCut(_initAddresses[i], _initData[i]);
+        for (; length > 0; ) {
+            unchecked {
+                --length;
+            }
+            _initializeDiamondCut(_initAddresses[length], _initData[length]);
         }
     }
 

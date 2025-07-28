@@ -41,16 +41,18 @@ abstract contract ProxyFactoryInternal is ConfigurationManagementInternal {
         bytes32[] memory _initBusinessIds,
         bytes[] memory _initData
     ) internal returns (address proxyAddress_) {
-        address[] memory _initBusinessAddresses = new address[](
-            _initBusinessIds.length
-        );
+        uint256 length = _initBusinessIds.length;
+        address[] memory _initBusinessAddresses = new address[](length);
 
-        for (uint256 i = 0; i < _initBusinessIds.length; i++) {
+        for (uint256 i; i < length; ) {
             _initBusinessAddresses[i] = _getFacetAddress(
                 _configurationId,
                 _version,
                 _initBusinessIds[i]
             );
+            unchecked {
+                ++i;
+            }
         }
 
         IsbeProxy.IsbeProxyArgs memory args = IsbeProxy.IsbeProxyArgs({
@@ -138,17 +140,17 @@ abstract contract ProxyFactoryInternal is ConfigurationManagementInternal {
     ) private pure {
         uint256 length = _rbacs.length;
         bytes32 role;
-        for (uint256 index; index < length; ) {
-            role = _rbacs[index].role;
+        for (; length > 0; ) {
+            unchecked {
+                --length;
+            }
+            role = _rbacs[length].role;
             require(
                 role != _DEFAULT_ADMIN_ROLE &&
                     role != _ISBE_ROLE &&
                     role != _CONFIGURATION_MANAGER_ROLE,
-                IProxyFactory.ForbiddenRole(_rbacs[index].role)
+                IProxyFactory.ForbiddenRole(role)
             );
-            unchecked {
-                ++index;
-            }
         }
     }
 
