@@ -33,10 +33,7 @@ abstract contract ERC721Internal is Common {
         uint256 tokenId
     ) internal addressIsNotZero(from) addressIsNotZero(to) {
         ERC721Storage storage $ = _erc721Storage();
-        require(
-            $.owners[tokenId] == from,
-            IERC721Isbe.TransferFromIncorrectOwner()
-        );
+        _checkIsApprovedOrOwner(_msgSender(), from, tokenId);
 
         _beforeTokenTransfer(from, to, tokenId);
 
@@ -132,32 +129,9 @@ abstract contract ERC721Internal is Common {
         uint256 tokenId,
         bytes memory data
     ) internal {
-        address owner = _ownerOf(tokenId);
-        _checkOwnedForTransferFrom(from, owner, tokenId);
         _transfer(from, to, tokenId);
-
         // If recipient is a contract, check that it implements IERC721Receiver
         _checkOnERC721Received(from, to, tokenId, data);
-    }
-
-    /**
-     * @notice Checks if the caller is the owner, approved address, or an operator for the given token.
-     * @dev Reverts with CallerNotOwnerNorApproved if the caller is not authorized to transfer the token.
-     * @param owner The address of the token owner.
-     * @param tokenId The ID of the token to check.
-     */
-    function _checkOwnedForTransferFrom(
-        address from,
-        address owner,
-        uint256 tokenId
-    ) internal view {
-        require(owner == from, IERC721Isbe.TransferFromIncorrectOwner());
-        require(
-            _msgSender() == owner ||
-                _getApproved(tokenId) == _msgSender() ||
-                _isApprovedForAll(owner, _msgSender()),
-            IERC721Isbe.CallerNotOwnerNorApproved()
-        );
     }
 
     function _name() internal view returns (string memory) {
@@ -189,6 +163,26 @@ abstract contract ERC721Internal is Common {
 
     function _totalSupply() internal view returns (uint256) {
         return _erc721Storage().totalSupply;
+    }
+
+    /**
+     * @notice Checks if `spender` is the owner, approved address, or an operator for the given token.
+     * @dev Reverts with CallerNotOwnerNorApproved if not authorized.
+     * @param spender The address performing the action (usually _msgSender()).
+     * @param owner The address of the token owner.
+     * @param tokenId The ID of the token to check.
+     */
+    function _checkIsApprovedOrOwner(
+        address spender,
+        address owner,
+        uint256 tokenId
+    ) internal view {
+        require(
+            spender == owner ||
+                _getApproved(tokenId) == spender ||
+                _isApprovedForAll(owner, spender),
+            IERC721Isbe.CallerNotOwnerNorApproved()
+        );
     }
 
     /**

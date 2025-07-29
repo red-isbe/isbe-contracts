@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {IERC721} from '@openzeppelin/contracts/token/ERC721/IERC721.sol';
-import {IERC721Metadata} from '@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol';
+import {IERC721} from './IERC721.sol';
+import {IERC721Metadata} from './IERC721Metadata.sol';
 
 /**
  * @title ERC721 Token Interface
@@ -19,10 +19,6 @@ interface IERC721Isbe is IERC721, IERC721Metadata {
      * @param symbol The symbol of the initialized ERC721 token.
      */
     event Erc721Initialized(string name, string symbol);
-
-    /// @notice Error thrown when attempting to transfer a token from an address that is not the current owner.
-    /// @dev `from` address in a transfer operation does not match the actual owner of the token.
-    error TransferFromIncorrectOwner();
 
     /// @notice Error thrown when attempting to mint a token that already exists.
     /// @dev Prevent minting of a token with an ID that has already been assigned.
