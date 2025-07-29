@@ -55,12 +55,24 @@ abstract contract IsbeProxyInternal is
     function _setIsbeProxyConfiguration(
         IConfigurationManagement _configurationManager,
         bytes32 _configurationId,
-        uint256 _version
+        uint256 _version,
+        address[] memory _initAddresses,
+        bytes[] memory _initData
     ) internal {
+        uint256 length = _initAddresses.length;
+        _checkSameLength(length, _initData.length);
+
         IsbeProxyStorage storage $ = _isbeProxyStorage();
         $.configurationManager = _configurationManager;
         $.configurationId = _configurationId;
         $.version = _version;
+
+        for (; length > 0; ) {
+            unchecked {
+                --length;
+            }
+            _initializeDiamondCut(_initAddresses[length], _initData[length]);
+        }
     }
 
     function _initializeDiamondCut(
@@ -141,6 +153,13 @@ abstract contract IsbeProxyInternal is
         _addressIsNotZero(address(_configurationManager));
         _bytes32IsNotZero(_configurationId);
         _configurationManager.checkConfiguration(_configurationId, _version);
+    }
+
+    function _checkSameLength(
+        uint256 _businessAddressesLength,
+        uint256 _dataLength
+    ) private pure {
+        _sameLength(_businessAddressesLength, _dataLength);
     }
 
     function _isbeProxyStorage()

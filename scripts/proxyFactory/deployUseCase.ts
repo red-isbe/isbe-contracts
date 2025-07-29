@@ -9,8 +9,8 @@ export async function deployUseCase(
     configVersion: number,
     roles: string[],
     members: string[][],
-    initBusinessId: string,
-    initData: string,
+    initBusinessIds: string[],
+    initData: string[],
     factory: string,
     signer: Signer
 ): Promise<{
@@ -22,11 +22,18 @@ export async function deployUseCase(
     if (!isValidBytesAndLength(configId, 32))
         throw new Error('Invalid config Id format : ' + configId)
 
-    if (!isValidBytesAndLength(initBusinessId, 32))
-        throw new Error('Invalid init business Id format : ' + initBusinessId)
+    if (initBusinessIds.length !== initData.length)
+        throw Error('initBusinessIds and initData length not the same')
 
-    if (initData.length > 2 && !isValidBytes(initData))
-        throw new Error('Invalid init data format : ' + initData)
+    for (let i = 0; i < initBusinessIds.length; i++) {
+        if (!isValidBytesAndLength(initBusinessIds[i], 32))
+            throw new Error(
+                'Invalid init business Id format : ' + initBusinessIds[i]
+            )
+
+        if (initData.length > 2 && !isValidBytes(initData[i]))
+            throw new Error('Invalid init data format : ' + initData[i])
+    }
 
     if (roles.length !== members.length)
         throw Error('roles and members length not the same')
@@ -59,7 +66,8 @@ export async function deployUseCase(
         configId,
         configVersion,
         initRbacs,
-        initBusinessId,
+        false,
+        initBusinessIds,
         initData
     )
 

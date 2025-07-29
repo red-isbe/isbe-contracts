@@ -3,7 +3,6 @@ import { ethers } from 'hardhat'
 import { Signer } from 'ethers'
 import {
     AccessControl,
-    ISBEPause,
     ERC20,
     ERC20Burnable,
     ERC20Snapshot,
@@ -16,9 +15,9 @@ import {
     SNAPSHOT_ROLE,
     CONTROLLER_ROLE,
     ERC20_RESOLVER_KEY,
-    DEFAULT_ADMIN_ROLE,
+    ERC20_CAPPED_RESOLVER_KEY,
 } from './constants'
-import { deployAll } from './initialization'
+import { deployGovernance } from './initialization'
 describe('ERC20', function () {
     const decimals = 2
     const name = 'ISBE stable token'
@@ -31,7 +30,6 @@ describe('ERC20', function () {
     let erc20Burnable: ERC20Burnable
     let erc20Capped: ERC20Capped
     let erc20Controller: ERC20Controller
-    let pause: ISBEPause
     let accessControl: AccessControl
 
     let owner: Signer
@@ -39,26 +37,60 @@ describe('ERC20', function () {
     let otherAccount: Signer
     let otherAccountAddress: string
 
-    async function deploy(initialize: boolean = false) {
+    async function deploy(
+        initialize: boolean = false,
+        init_pause: boolean = false,
+        initCap: number = 1000
+    ) {
         ;[owner, otherAccount] = await ethers.getSigners()
         ownerAddress = await owner.getAddress()
         otherAccountAddress = await otherAccount.getAddress()
 
-        const result = await deployAll()
+        const businessIds = []
+        const data = []
+
+        if (initialize) {
+            const ERC20Factory = await ethers.getContractFactory('ERC20Facet')
+            const CappedFactory =
+                await ethers.getContractFactory('ERC20CappedFacet')
+
+            // Use the interfaces to encode the init data
+            data.push(
+                ERC20Factory.interface.encodeFunctionData('initializeErc20', [
+                    name,
+                    symbol,
+                    decimals,
+                ])
+            )
+
+            data.push(
+                CappedFactory.interface.encodeFunctionData('initializeCap', [
+                    initCap,
+                ])
+            )
+
+            businessIds.push(ERC20_RESOLVER_KEY)
+            businessIds.push(ERC20_CAPPED_RESOLVER_KEY)
+        }
+
+        const result = await deployGovernance(
+            owner,
+            [],
+            init_pause,
+            '0x',
+            businessIds,
+            data
+        )
+
         erc20 = result.erc20
         erc20Snapshot = result.erc20Snapshot
         erc20Burnable = result.erc20Burnable
         erc20Capped = result.erc20Capped
         erc20Controller = result.erc20Controller
 
-        pause = result.pause
         accessControl = result.accessControl
         erc20Facet = result.erc20Facet
 
-        if (initialize) {
-            await erc20.initializeErc20(name, symbol, decimals)
-            await erc20Capped.initializeCap(1000)
-        }
         expect(await result.erc20Facet.businessIdIntrospection()).to.equal(
             ERC20_RESOLVER_KEY
         )
@@ -117,9 +149,9 @@ describe('ERC20', function () {
         })
 
         it('GIVEN an initialized ERC20 WHEN approve on a paused THEN fails', async () => {
-            await deploy(true)
+            await deploy(true, true)
 
-            await pause.initializePause(true)
+            //await pause.initializePause(true)
 
             await expect(
                 erc20.approve(ownerAddress, 100)
@@ -127,9 +159,9 @@ describe('ERC20', function () {
         })
 
         it('GIVEN an initialized ERC20 WHEN increase Allowance on a paused THEN fails', async () => {
-            await deploy(true)
+            await deploy(true, true)
 
-            await pause.initializePause(true)
+            //await pause.initializePause(true)
 
             await expect(
                 erc20.increaseAllowance(ownerAddress, 100)
@@ -137,9 +169,9 @@ describe('ERC20', function () {
         })
 
         it('GIVEN an initialized ERC20 WHEN decrease Allowance on a paused THEN fails', async () => {
-            await deploy(true)
+            await deploy(true, true)
 
-            await pause.initializePause(true)
+            //await pause.initializePause(true)
 
             await expect(
                 erc20.decreaseAllowance(ownerAddress, 1)
@@ -239,12 +271,6 @@ describe('ERC20', function () {
             await deploy(true)
             const totalSupply = 10
 
-            await accessControl.initializeAccessControl([
-                {
-                    role: DEFAULT_ADMIN_ROLE,
-                    members: [ownerAddress],
-                },
-            ])
             await accessControl.grantRole(MINTER_ROLE, ownerAddress)
             await accessControl.grantRole(CAP_ROLE, ownerAddress)
 
@@ -261,9 +287,7 @@ describe('ERC20', function () {
         })
 
         it('GIVEN an initialized ERC20 WHEN setting cap on a paused token THEN it fails', async () => {
-            await deploy(true)
-
-            await pause.initializePause(true)
+            await deploy(true, true)
 
             await expect(erc20Capped.setCap(1000000)).revertedWithCustomError(
                 erc20,
@@ -284,12 +308,6 @@ describe('ERC20', function () {
             await deploy(true)
             const totalSupply = 10
 
-            await accessControl.initializeAccessControl([
-                {
-                    role: DEFAULT_ADMIN_ROLE,
-                    members: [ownerAddress],
-                },
-            ])
             await accessControl.grantRole(MINTER_ROLE, ownerAddress)
             await accessControl.grantRole(CAP_ROLE, ownerAddress)
 
@@ -307,12 +325,6 @@ describe('ERC20', function () {
         it('GIVEN an initialized ERC20 WHEN mint to zero address THEN fails', async () => {
             await deploy(true)
 
-            await accessControl.initializeAccessControl([
-                {
-                    role: DEFAULT_ADMIN_ROLE,
-                    members: [ownerAddress],
-                },
-            ])
             await accessControl.grantRole(MINTER_ROLE, ownerAddress)
 
             await expect(
@@ -321,9 +333,7 @@ describe('ERC20', function () {
         })
 
         it('GIVEN an initialized ERC20 WHEN mint a paused token THEN fails', async () => {
-            await deploy(true)
-
-            await pause.initializePause(true)
+            await deploy(true, true)
 
             await expect(
                 erc20Capped.mint(ownerAddress, 100)
@@ -341,12 +351,6 @@ describe('ERC20', function () {
         it('GIVEN an ERC20 WHEN it is initialized THEN mint can be made', async () => {
             await deploy(true)
 
-            await accessControl.initializeAccessControl([
-                {
-                    role: DEFAULT_ADMIN_ROLE,
-                    members: [ownerAddress],
-                },
-            ])
             await accessControl.grantRole(MINTER_ROLE, ownerAddress)
 
             await expect(erc20Capped.mint(ownerAddress, 100))
@@ -359,12 +363,6 @@ describe('ERC20', function () {
         const prepare = async () => {
             await deploy(true)
 
-            await accessControl.initializeAccessControl([
-                {
-                    role: DEFAULT_ADMIN_ROLE,
-                    members: [ownerAddress],
-                },
-            ])
             await accessControl.grantRole(MINTER_ROLE, ownerAddress)
 
             await erc20Capped.mint(ownerAddress, 100)
@@ -379,8 +377,7 @@ describe('ERC20', function () {
         })
 
         it('GIVEN an ERC20 initialized WHEN try to burn a paused token THEN it fails', async () => {
-            await deploy(true)
-            await pause.initializePause(true)
+            await deploy(true, true)
 
             await expect(erc20Burnable.burn(0)).to.be.revertedWithCustomError(
                 erc20,
@@ -401,14 +398,11 @@ describe('ERC20', function () {
     })
 
     describe('BurnFrom', () => {
-        const prepare = async () => {
-            await deploy(true)
-            await accessControl.initializeAccessControl([
-                {
-                    role: DEFAULT_ADMIN_ROLE,
-                    members: [ownerAddress],
-                },
-            ])
+        const prepare = async (init_pause: boolean = false) => {
+            await deploy(true, init_pause)
+
+            if (init_pause) return
+
             await accessControl.grantRole(MINTER_ROLE, ownerAddress)
             await erc20Capped.mint(otherAccountAddress, 50)
             await erc20.connect(otherAccount).approve(ownerAddress, 100)
@@ -429,9 +423,7 @@ describe('ERC20', function () {
         })
 
         it('GIVEN an ERC20 initialized WHEN try to burn a paused token THEN it fails', async () => {
-            await prepare()
-
-            await pause.initializePause(true)
+            await prepare(true)
 
             await expect(
                 erc20Burnable.burnFrom(otherAccountAddress, 0)
@@ -456,14 +448,11 @@ describe('ERC20', function () {
     })
 
     describe('Transfer', () => {
-        const prepare = async () => {
-            await deploy(true)
-            await accessControl.initializeAccessControl([
-                {
-                    role: DEFAULT_ADMIN_ROLE,
-                    members: [ownerAddress],
-                },
-            ])
+        const prepare = async (init_pause: boolean = false) => {
+            await deploy(true, init_pause)
+
+            if (init_pause) return
+
             await accessControl.grantRole(MINTER_ROLE, ownerAddress)
             await erc20Capped.mint(ownerAddress, 100)
             return { erc20, owner, otherAccount }
@@ -487,8 +476,7 @@ describe('ERC20', function () {
         })
 
         it('GIVEN an ERC20 initialized WHEN try to transfer from a paused token THEN it fails', async () => {
-            await deploy(true)
-            await pause.initializePause(true)
+            await deploy(true, true)
 
             await expect(
                 erc20.transfer(ownerAddress, 0)
@@ -511,14 +499,11 @@ describe('ERC20', function () {
     })
 
     describe('TransferFrom', () => {
-        const prepare = async () => {
-            await deploy(true)
-            await accessControl.initializeAccessControl([
-                {
-                    role: DEFAULT_ADMIN_ROLE,
-                    members: [ownerAddress],
-                },
-            ])
+        const prepare = async (init_pause: boolean = false) => {
+            await deploy(true, init_pause)
+
+            if (init_pause) return
+
             await accessControl.grantRole(MINTER_ROLE, ownerAddress)
             await erc20Capped.mint(ownerAddress, 100)
             await erc20Capped.mint(otherAccountAddress, 100)
@@ -543,8 +528,7 @@ describe('ERC20', function () {
         })
 
         it('GIVEN an ERC20 initialized WHEN try to transfer from a paused token THEN it fails', async () => {
-            await prepare()
-            await pause.initializePause(true)
+            await prepare(true)
 
             await expect(
                 erc20.transferFrom(otherAccountAddress, ownerAddress, 0)
@@ -597,14 +581,11 @@ describe('ERC20', function () {
     })
 
     describe('Snapshot', () => {
-        const prepare = async () => {
-            await deploy(true)
-            await accessControl.initializeAccessControl([
-                {
-                    role: DEFAULT_ADMIN_ROLE,
-                    members: [ownerAddress],
-                },
-            ])
+        const prepare = async (init_pause: boolean = false) => {
+            await deploy(true, init_pause)
+
+            if (init_pause) return
+
             await accessControl.grantRole(MINTER_ROLE, ownerAddress)
             await erc20Capped.mint(ownerAddress, 100)
             return { erc20, owner, otherAccount }
@@ -627,9 +608,7 @@ describe('ERC20', function () {
         })
 
         it('GIVEN an ERC20 WHEN taking a snapshot of a paused token THEN fails', async () => {
-            await prepare()
-
-            await pause.initializePause(true)
+            await prepare(true)
 
             await expect(
                 erc20Snapshot.snapshot()
@@ -678,15 +657,11 @@ describe('ERC20', function () {
     describe('Controller', () => {
         const MINTED = 100
 
-        const prepare = async () => {
-            await deploy(true)
+        const prepare = async (init_pause: boolean = false) => {
+            await deploy(true, init_pause)
 
-            await accessControl.initializeAccessControl([
-                {
-                    role: DEFAULT_ADMIN_ROLE,
-                    members: [ownerAddress],
-                },
-            ])
+            if (init_pause) return
+
             await accessControl.grantRole(MINTER_ROLE, ownerAddress)
             await accessControl.grantRole(CONTROLLER_ROLE, ownerAddress)
 
@@ -694,8 +669,7 @@ describe('ERC20', function () {
         }
 
         it('GIVEN an ERC20 initialized WHEN try to force burn a paused token THEN it fails', async () => {
-            await prepare()
-            await pause.initializePause(true)
+            await prepare(true)
 
             await expect(
                 erc20Controller.forceBurn(otherAccountAddress, MINTED - 1)
@@ -730,8 +704,7 @@ describe('ERC20', function () {
         })
 
         it('GIVEN an ERC20 initialized WHEN try to force transfer a paused token THEN it fails', async () => {
-            await prepare()
-            await pause.initializePause(true)
+            await prepare(true)
 
             await expect(
                 erc20Controller.forceTransfer(

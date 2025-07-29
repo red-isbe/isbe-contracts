@@ -109,7 +109,7 @@ initialisation facet is not in the list of facets being deployed
 ### deployUseCase
 
 ```solidity
-function deployUseCase(bytes32 _configurationId, uint256 _version, struct IAccessControl.Rbac[] _rbacs, bytes32 _initBusinessId, bytes _initData) external
+function deployUseCase(bytes32 _configurationId, uint256 _version, struct IAccessControl.Rbac[] _rbacs, bool _initPause, bytes32[] _initBusinessIds, bytes[] _initData) external
 ```
 
 Deploys a new use-case proxy with the specified configuration
@@ -124,8 +124,9 @@ control, then initialises it with the provided data_
 | \_configurationId | bytes32                      | The unique identifier for the configuration            |
 | \_version         | uint256                      | The version number of the configuration (0 for latest) |
 | \_rbacs           | struct IAccessControl.Rbac[] | Array of role-based access control configurations      |
-| \_initBusinessId  | bytes32                      | The business ID of the facet to use for init           |
-| \_initData        | bytes                        | The calldata for the initialisation function           |
+| \_initPause       | bool                         | use case is initialized paused or not                  |
+| \_initBusinessIds | bytes32[]                    | The business IDs of the facets to use for init         |
+| \_initData        | bytes[]                      | The calldata for the initialisation function           |
 
 ### getDeployedProxiesByConfiguration
 
@@ -203,7 +204,7 @@ _Modifier to validate that a configuration exists and is valid_
 ### deployUseCase
 
 ```solidity
-function deployUseCase(bytes32 _configurationId, uint256 _version, struct IAccessControl.Rbac[] _rbacs, bytes32 _initBusinessId, bytes _initData) external
+function deployUseCase(bytes32 _configurationId, uint256 _version, struct IAccessControl.Rbac[] _rbacs, bool _initPause, bytes32[] _initBusinessIds, bytes[] _initData) external
 ```
 
 Deploys a new use-case proxy with the specified configuration
@@ -218,8 +219,9 @@ control, then initialises it with the provided data_
 | \_configurationId | bytes32                      | The unique identifier for the configuration            |
 | \_version         | uint256                      | The version number of the configuration (0 for latest) |
 | \_rbacs           | struct IAccessControl.Rbac[] | Array of role-based access control configurations      |
-| \_initBusinessId  | bytes32                      | The business ID of the facet to use for init           |
-| \_initData        | bytes                        | The calldata for the initialisation function           |
+| \_initPause       | bool                         | use case is initialized paused or not                  |
+| \_initBusinessIds | bytes32[]                    | The business IDs of the facets to use for init         |
+| \_initData        | bytes[]                      | The calldata for the initialisation function           |
 
 ### getDeployedProxiesByConfiguration
 
@@ -356,7 +358,7 @@ struct ProxyFactoryStorage {
 ### \_deployUseCase
 
 ```solidity
-function _deployUseCase(bytes32 _configurationId, uint256 _version, struct IAccessControl.Rbac[] _rbacs, bytes32 _initBusinessId, bytes _initData) internal returns (address proxyAddress_)
+function _deployUseCase(bytes32 _configurationId, uint256 _version, struct IAccessControl.Rbac[] _rbacs, bool _initPause, bytes32[] _initBusinessIds, bytes[] _initData) internal returns (address proxyAddress_)
 ```
 
 ### \_getDeployedProxiesByConfiguration

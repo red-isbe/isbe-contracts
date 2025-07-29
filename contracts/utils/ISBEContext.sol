@@ -36,6 +36,8 @@ abstract contract ISBEContext is Context {
      */
     error UnimplementedMethod();
 
+    error NotSameLength(uint256 a, uint256 b);
+
     /**
      * @notice Returns the timestamp of the current block.
      * @dev This is a virtual function that wraps `block.timestamp`, allowing it to be
@@ -82,5 +84,9 @@ abstract contract ISBEContext is Context {
      */
     function _emptyBytes(bytes memory _code) internal pure {
         require(_code.length != 0, EmptyBytes());
+    }
+
+    function _sameLength(uint256 _a, uint256 _b) internal pure {
+        require(_a == _b, NotSameLength(_a, _b));
     }
 }
