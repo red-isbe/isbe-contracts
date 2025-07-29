@@ -2,7 +2,7 @@ import { expect } from 'chai'
 import { ethers } from 'hardhat'
 import { IIsbeFactory, AccessControl } from '../../typechain-types'
 import { Signer } from 'ethers'
-import { deployGovernance } from '../initialization'
+import { CONFIGURATION_ID_ERC20, deployGovernance } from '../initialization'
 import {
     ASSET_EVENT_TRACKER_RESOLVER_KEY,
     CONFIGURATION_MANAGER_ROLE,
@@ -11,6 +11,7 @@ import {
     HASH_TIMESTAMP_RESOLVER_KEY,
     ISBE_ROLE,
     PROXY_DEPLOYER_ROLE,
+    PROXY_FACTORY_RESOLVER_KEY,
     RANDOM_HASH_FOR_CONFIGURATION_ID,
 } from '../constants'
 import { EventLog } from 'ethers'
@@ -44,6 +45,9 @@ describe('ProxyFactory', function () {
             'AccessControl',
             await result.governanceContract.getAddress()
         )
+        expect(
+            await result.proxyFactoryFacet.businessIdIntrospection()
+        ).to.be.equal(PROXY_FACTORY_RESOLVER_KEY)
     }
 
     beforeEach(async () => {
@@ -90,7 +94,7 @@ describe('ProxyFactory', function () {
 
                     await expect(
                         isbeFactory.connect(admin).deployUseCase(
-                            '0x0000000000000000000000000000000000000000000000000000000000000001',
+                            CONFIGURATION_ID_ERC20,
                             1,
                             [
                                 {

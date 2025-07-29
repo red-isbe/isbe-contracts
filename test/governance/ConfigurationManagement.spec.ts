@@ -17,6 +17,7 @@ import {
     RANDOM_HASH_FOR_CONFIGURATION_ID,
     ISBE_CUT_RESOLVER_KEY,
     ISBE_LOUPE_RESOLVER_KEY,
+    CONFIGURATION_MANAGEMENT_RESOLVER_KEY,
 } from '../constants'
 import { deployGovernance } from '../initialization'
 
@@ -49,6 +50,9 @@ describe('ConfigurationManagement', function () {
             'ConfigurationManagementFacet',
             await result.governanceContract.getAddress()
         )
+        expect(
+            await result.configMgmtFacet.businessIdIntrospection()
+        ).to.be.equal(CONFIGURATION_MANAGEMENT_RESOLVER_KEY)
     }
 
     beforeEach(async () => {

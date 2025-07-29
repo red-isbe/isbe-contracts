@@ -26,7 +26,15 @@ describe('ERC165', function () {
     async function deploy() {
         const [owner] = await ethers.getSigners()
 
-        const result = await deployGovernance(owner, [], false, '0x', [], [])
+        const result = await deployGovernance(
+            owner,
+            [],
+            undefined,
+            false,
+            '0x',
+            [],
+            []
+        )
         diamondLoupe = result.diamondLoupe
 
         AccessControlTestWrapperFactory = await ethers.getContractFactory(

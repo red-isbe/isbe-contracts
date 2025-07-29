@@ -9,7 +9,7 @@ import {
     IEIP2535Introspection,
 } from '../../typechain-types'
 import { Signer } from 'ethers'
-import { deployGovernance } from '../initialization'
+import { CONFIGURATION_ID_ERC20, deployGovernance } from '../initialization'
 import {
     ACCESS_CONTROL_RESOLVER_KEY,
     ASSET_EVENT_TRACKER_RESOLVER_KEY,
@@ -37,9 +37,6 @@ describe('IsbeProxy', function () {
     let governanceAddress: string
     let configurationManagementFacet: ConfigurationManagementFacet
     let pause: ISBEPause
-
-    const CONFIG_ID_1 =
-        '0x0000000000000000000000000000000000000000000000000000000000000001'
 
     async function deployInitial() {
         ;[admin] = await ethers.getSigners()
@@ -136,7 +133,7 @@ describe('IsbeProxy', function () {
             await expect(
                 isbeCutFacet.setIsbeProxyConfiguration(
                     governanceAddress,
-                    CONFIG_ID_1,
+                    CONFIGURATION_ID_ERC20,
                     1,
                     [],
                     []
@@ -150,7 +147,7 @@ describe('IsbeProxy', function () {
             await expect(
                 isbeCutFacet.setIsbeProxyConfiguration(
                     ethers.ZeroAddress,
-                    CONFIG_ID_1,
+                    CONFIGURATION_ID_ERC20,
                     1,
                     [],
                     []
@@ -164,7 +161,7 @@ describe('IsbeProxy', function () {
             await expect(
                 isbeCutFacet.setIsbeProxyConfiguration(
                     governanceAddress,
-                    CONFIG_ID_1,
+                    CONFIGURATION_ID_ERC20,
                     1,
                     [ethers.ZeroAddress],
                     []
@@ -196,7 +193,7 @@ describe('IsbeProxy', function () {
             await expect(
                 isbeCutFacet.setIsbeProxyConfiguration(
                     governanceAddress,
-                    CONFIG_ID_1,
+                    CONFIGURATION_ID_ERC20,
                     wrongVersion,
                     [],
                     []
@@ -206,7 +203,7 @@ describe('IsbeProxy', function () {
                     configurationManagementFacet,
                     'InvalidConfiguration'
                 )
-                .withArgs(CONFIG_ID_1, wrongVersion)
+                .withArgs(CONFIGURATION_ID_ERC20, wrongVersion)
         })
 
         it('GIVEN paused deployed use Case proxy WHEN admin account sets new configuration THEN it fails', async () => {
@@ -218,7 +215,7 @@ describe('IsbeProxy', function () {
             await expect(
                 isbeCutFacet.setIsbeProxyConfiguration(
                     governanceAddress,
-                    CONFIG_ID_1,
+                    CONFIGURATION_ID_ERC20,
                     1,
                     [],
                     []
@@ -232,14 +229,14 @@ describe('IsbeProxy', function () {
             await expect(
                 isbeCutFacet.setIsbeProxyConfiguration(
                     governanceAddress,
-                    CONFIG_ID_1,
+                    CONFIGURATION_ID_ERC20,
                     0,
                     [],
                     []
                 )
             )
                 .to.emit(isbeCutFacet, 'IsbeProxyConfigurationSet')
-                .withArgs(governanceAddress, CONFIG_ID_1, 0, [], [])
+                .withArgs(governanceAddress, CONFIGURATION_ID_ERC20, 0, [], [])
 
             await extracted()
         })

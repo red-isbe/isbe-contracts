@@ -28,6 +28,9 @@ import {
     Ownable2StepFacet,
     AccessControlFacet,
     IIsbeFactory,
+    IERC721Isbe__factory,
+    IERC721Isbe,
+    ERC721TestWrapperFacet,
 } from '../typechain-types'
 import {
     DEFAULT_ADMIN_ROLE,
@@ -43,24 +46,23 @@ import {
     ERC20_CAPPED_RESOLVER_KEY,
     ERC20_CONTROLLER_RESOLVER_KEY,
     ERC20_RESOLVER_KEY,
+    ERC721_RESOLVER_KEY,
+    ERC721_TEST_WRAPPER_RESOLVER_KEY,
     ASSET_EVENT_TRACKER_RESOLVER_KEY,
     HASH_TIMESTAMP_RESOLVER_KEY,
     MOCK_TIMESTAMP_RESOLVER_KEY,
-    DIAMOND_CUT_RESOLVER_KEY,
-    DIAMOND_LOUPE_RESOLVER_KEY,
     ACCESS_CONTROL_RESOLVER_KEY,
     PAUSE_RESOLVER_KEY,
     ISBE_CUT_RESOLVER_KEY,
     ISBE_LOUPE_RESOLVER_KEY,
-    CONFIGURATION_MANAGEMENT_RESOLVER_KEY,
-    PROXY_FACTORY_RESOLVER_KEY,
-    GLOBAL_ISBE_PAUSABLE_RESOLVER_KEY,
 } from './constants'
 import { getEvent } from '../scripts/utils/getEvent'
 import { getIsbeFactory } from '../scripts/utils/getIsbeFactory'
 
-const CONFIG_ID_1 =
-    '0x0000000000000000000000000000000000000000000000000000000000000001'
+export const CONFIGURATION_ID_ERC20 =
+    '0x0000000000000000000000000000000000000000000000000000000000000020'
+export const CONFIGURATION_ID_ERC721 =
+    '0x0000000000000000000000000000000000000000000000000000000000000721'
 
 let BusinessLogicFactoryFacetFactory: BusinessLogicFactoryFacet__factory
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -102,7 +104,6 @@ async function deployBusinessLogicFromFactory(
     resolverKey: string,
     contractFactory: ethers.ContractFactory
 ) {
-    await isbeFactory.deploy(resolverKey, contractFactory.bytecode)
     const deployTx = await (
         await isbeFactory.deploy(resolverKey, contractFactory.bytecode)
     ).wait()
@@ -123,6 +124,7 @@ export async function deployGovernance(
     owner: Signer,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     rbacsUseCase: any[] = [],
+    configurationId: string = CONFIGURATION_ID_ERC20,
     init_pause: boolean = false,
     initCalldata: string = '0x',
     init_BusinessId_UseCase: string[] = [],
@@ -245,13 +247,23 @@ export async function deployGovernance(
         owner
     )
 
-    const useCaseDeployment = await deployAllUseCasesFacets(
-        rbacsUseCase,
-        init_pause,
-        init_BusinessId_UseCase,
-        init_CallData_UseCase,
-        isUseCaseOwnable
-    )
+    const useCaseDeployment =
+        configurationId == CONFIGURATION_ID_ERC20
+            ? await deployERC20UseCasesFacets(
+                  rbacsUseCase,
+                  init_pause,
+                  init_BusinessId_UseCase,
+                  init_CallData_UseCase,
+                  isUseCaseOwnable
+              )
+            : await deployERC721UseCasesFacets(
+                  owner,
+                  rbacsUseCase,
+                  init_pause,
+                  init_BusinessId_UseCase,
+                  init_CallData_UseCase,
+                  isUseCaseOwnable
+              )
 
     const accessControlGovernance = AccessControlGovernanceFacetFactory.attach(
         await isbeFactory.getAddress()
@@ -280,6 +292,9 @@ export async function deployGovernance(
         globalIsbePause,
         accessControl: useCaseDeployment.accessControl,
         accessControlGovernance,
+        configMgmtFacet,
+        globalIsbePauseFacet,
+        proxyFactoryFacet,
         ownable: useCaseDeployment.ownable,
         assetEventTracker: useCaseDeployment.assetEventTracker,
         hashTimestamp: useCaseDeployment.hashTimestamp,
@@ -296,6 +311,10 @@ export async function deployGovernance(
         ownableFacet: useCaseDeployment.ownableFacet,
         assetEventTrackerFacet: useCaseDeployment.assetEventTrackerFacet,
         hashTimestampFacet: useCaseDeployment.hashTimestampFacet,
+        erc721Facet: useCaseDeployment.erc721Facet,
+        erc721TestWrapperFacet: useCaseDeployment.erc721TestWrapperFacet,
+        erc721: useCaseDeployment.erc721,
+        erc721TestWrapper: useCaseDeployment.erc721TestWrapper,
         diamondCutAccessControlFacet,
         diamondLoupeFacet,
         accessControlGovernanceFacet,
@@ -303,7 +322,7 @@ export async function deployGovernance(
     }
 }
 
-export async function deployAllUseCasesFacets(
+export async function deployERC20UseCasesFacets(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     rbacs: any[],
     init_pause: boolean,
@@ -314,7 +333,6 @@ export async function deployAllUseCasesFacets(
     const HashTimestampTestWrapperFactory = await ethers.getContractFactory(
         'HashTimestampTestWrapper'
     )
-
     const IsbeCutFacetFactory = await ethers.getContractFactory('IsbeCutFacet')
     const IsbeLoupeFacetFactory =
         await ethers.getContractFactory('IsbeLoupeFacet')
@@ -394,61 +412,12 @@ export async function deployAllUseCasesFacets(
         HASH_TIMESTAMP_RESOLVER_KEY,
         HashTimestampTestWrapperFactory
     )
-    const diamondCutAccessControlFacet = await deployBusinessLogicFromFactory(
-        DIAMOND_CUT_RESOLVER_KEY,
-        DiamondCutAccessControlFacetFactory
-    )
-    const diamondLoupeFacet = await deployBusinessLogicFromFactory(
-        DIAMOND_LOUPE_RESOLVER_KEY,
-        DiamondLoupeFacetFactory
-    )
-
-    const configMgmtFacet = await deployBusinessLogicFromFactory(
-        CONFIGURATION_MANAGEMENT_RESOLVER_KEY,
-        ConfigMgmtFacetFactory
-    )
-    const proxyFactoryFacet = await deployBusinessLogicFromFactory(
-        PROXY_FACTORY_RESOLVER_KEY,
-        ProxyFactoryFacetFactory
-    )
-    const globalIsbePauseFacet = await deployBusinessLogicFromFactory(
-        GLOBAL_ISBE_PAUSABLE_RESOLVER_KEY,
-        GlobalIsbePauseFacetFactory
-    )
-
-    // Deploy all business logic contracts before setting configuration
-    await deployBusinessLogicFromFactory(OWNABLE_RESOLVER_KEY, ownableFactory)
-    await deployBusinessLogicFromFactory(
-        ERC20_SNAPSHOT_RESOLVER_KEY,
-        ERC20SnapshotFacetFactory
-    )
-    await deployBusinessLogicFromFactory(
-        ERC20_BURNABLE_RESOLVER_KEY,
-        ERC20BurnableFacetFactory
-    )
-    await deployBusinessLogicFromFactory(
-        ERC20_CAPPED_RESOLVER_KEY,
-        ERC20CappedFacetFactory
-    )
-    await deployBusinessLogicFromFactory(
-        ERC20_CONTROLLER_RESOLVER_KEY,
-        ERC20ControllerFacetFactory
-    )
-    await deployBusinessLogicFromFactory(ERC20_RESOLVER_KEY, ERC20FacetFactory)
-    await deployBusinessLogicFromFactory(
-        ASSET_EVENT_TRACKER_RESOLVER_KEY,
-        AssetEventTrackerTestWrapperFactory
-    )
-    await deployBusinessLogicFromFactory(
-        HASH_TIMESTAMP_RESOLVER_KEY,
-        HashTimestampTestWrapperFactory
-    )
     await deployBusinessLogicFromFactory(
         MOCK_TIMESTAMP_RESOLVER_KEY,
         MockTimestampFacetFactory
     )
 
-    await isbeFactory.setConfiguration(CONFIG_ID_1, [
+    await isbeFactory.setConfiguration(CONFIGURATION_ID_ERC20, [
         {
             businessId: OWNABLE_RESOLVER_KEY,
             version: 1,
@@ -488,7 +457,7 @@ export async function deployAllUseCasesFacets(
     ])
 
     const tx = await isbeFactory.deployUseCase(
-        CONFIG_ID_1,
+        CONFIGURATION_ID_ERC20,
         1,
         rbacs,
         init_pause,
@@ -557,247 +526,102 @@ export async function deployAllUseCasesFacets(
         ownableFacet,
         assetEventTrackerFacet,
         hashTimestampFacet,
-        diamondCutAccessControlFacet,
-        diamondLoupeFacet,
         isbeCutFacet,
         isbeLoupeFacet,
         proxy,
-        configMgmtFacet,
-        proxyFactoryFacet,
-        globalIsbePauseFacet,
     }
 }
 
-/*export async function deployAll(
-    isOwnable: boolean = false,
-    isGovernance: boolean = false
+export async function deployERC721UseCasesFacets(
+    owner: Signer,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    rbacs: any[],
+    init_pause: boolean,
+    init_BusinessIds: string[],
+    init_CallData: string[]
 ) {
-    const [owner] = await ethers.getSigners()
-
-    BusinessLogicFactoryFacetFactory = await ethers.getContractFactory(
-        'BusinessLogicFactoryFacet'
-    )
-    EIP2535AccessControlFactory = await ethers.getContractFactory(
-        'EIP2535AccessControl'
-    )
-    const DiamondCutAccessControlFacetFactory = await ethers.getContractFactory(
-        'DiamondCutAccessControlFacet'
-    )
-    const DiamondLoupeFacetFactory =
-        await ethers.getContractFactory('DiamondLoupeFacet')
-
+    const IsbeCutFacetFactory = await ethers.getContractFactory('IsbeCutFacet')
+    const IsbeLoupeFacetFactory =
+        await ethers.getContractFactory('IsbeLoupeFacet')
     const AccessControlFacetFactory =
         await ethers.getContractFactory('AccessControlFacet')
-    const AccessControlGovernanceFacetFactory = await ethers.getContractFactory(
-        'AccessControlGovernanceFacet'
+    const ERC721FacetFactory = await ethers.getContractFactory('ERC721Facet')
+    const ERC721TestWrapperFacetFactory = await ethers.getContractFactory(
+        'ERC721TestWrapperFacet'
     )
-    const Ownable2StepFacetFactory =
-        await ethers.getContractFactory('Ownable2StepFacet')
-    const OwnableFacetFactory = await ethers.getContractFactory('OwnableFacet')
-    const ISBEPauseFacetFactory =
-        await ethers.getContractFactory('ISBEPauseFacet')
-    const ERC20SnapshotFacetFactory =
-        await ethers.getContractFactory('ERC20SnapshotFacet')
-    const ERC20BurnableFacetFactory =
-        await ethers.getContractFactory('ERC20BurnableFacet')
-    const ERC20CappedFacetFactory =
-        await ethers.getContractFactory('ERC20CappedFacet')
-    const ERC20ControllerFacetFactory = await ethers.getContractFactory(
-        'ERC20ControllerFacet'
-    )
-    const ERC20FacetFactory = await ethers.getContractFactory('ERC20Facet')
-    const AssetEventTrackerTestWrapperFactory = await ethers.getContractFactory(
-        'AssetEventTrackerTestWrapper'
-    )
-    const HashTimestampTestWrapperFactory = await ethers.getContractFactory(
-        'HashTimestampTestWrapper'
-    )
-    const MockTimestampFacetFactory =
-        await ethers.getContractFactory('MockTimestampFacet')
 
-    const businessLogicFactoryFacet: BusinessLogicFactoryFacet =
-        await BusinessLogicFactoryFacetFactory.deploy()
-    await businessLogicFactoryFacet.waitForDeployment()
-    isbeFactory = await deployFactory(
-        [await businessLogicFactoryFacet.getAddress()],
-        [await owner.getAddress()]
+    const isbeCutFacet = await deployBusinessLogicFromFactory(
+        ISBE_CUT_RESOLVER_KEY,
+        IsbeCutFacetFactory
     )
-    const diamondCutFacet = await deployBusinessLogicFromFactory(
-        DIAMOND_CUT_RESOLVER_KEY,
-        DiamondCutAccessControlFacetFactory
+    const isbeLoupeFacet = await deployBusinessLogicFromFactory(
+        ISBE_LOUPE_RESOLVER_KEY,
+        IsbeLoupeFacetFactory
     )
-    const diamondLoupeFacet = await deployBusinessLogicFromFactory(
-        DIAMOND_LOUPE_RESOLVER_KEY,
-        DiamondLoupeFacetFactory
-    )
-    const accessControlFacet = !isGovernance
-        ? await deployBusinessLogicFromFactory(
-              ACCESS_CONTROL_RESOLVER_KEY,
-              AccessControlFacetFactory
-          )
-        : await deployBusinessLogicFromFactory(
-              ACCESS_CONTROL_RESOLVER_KEY,
-              AccessControlGovernanceFacetFactory
-          )
-    const ownable2StepFacet = await deployBusinessLogicFromFactory(
-        OWNABLE_RESOLVER_KEY,
-        Ownable2StepFacetFactory
-    )
-    const ownableFacet = await deployBusinessLogicFromFactory(
-        OWNABLE_RESOLVER_KEY,
-        OwnableFacetFactory
+
+    const accessControlFacet = await deployBusinessLogicFromFactory(
+        ACCESS_CONTROL_RESOLVER_KEY,
+        AccessControlFacetFactory
     )
     const pauseFacet = await deployBusinessLogicFromFactory(
         PAUSE_RESOLVER_KEY,
         ISBEPauseFacetFactory
     )
-    //const erc20Facet = await ERC20TestWrapperFactory.deploy()
-    const erc20SnapshotFacet = await deployBusinessLogicFromFactory(
-        ERC20_SNAPSHOT_RESOLVER_KEY,
-        ERC20SnapshotFacetFactory
+
+    const erc721Facet = await deployBusinessLogicFromFactory(
+        ERC721_RESOLVER_KEY,
+        ERC721FacetFactory
     )
-    const erc20BurnableFacet = await deployBusinessLogicFromFactory(
-        ERC20_BURNABLE_RESOLVER_KEY,
-        ERC20BurnableFacetFactory
-    )
-    const erc20CappedFacet = await deployBusinessLogicFromFactory(
-        ERC20_CAPPED_RESOLVER_KEY,
-        ERC20CappedFacetFactory
-    )
-    const erc20ControllerFacet = await deployBusinessLogicFromFactory(
-        ERC20_CONTROLLER_RESOLVER_KEY,
-        ERC20ControllerFacetFactory
-    )
-    const erc20Facet = await deployBusinessLogicFromFactory(
-        ERC20_RESOLVER_KEY,
-        ERC20FacetFactory
-    )
-    const assetEventTrackerFacet = await deployBusinessLogicFromFactory(
-        ASSET_EVENT_TRACKER_RESOLVER_KEY,
-        AssetEventTrackerTestWrapperFactory
-    )
-    const hashTimestampFacet = await deployBusinessLogicFromFactory(
-        HASH_TIMESTAMP_RESOLVER_KEY,
-        HashTimestampTestWrapperFactory
-    )
-    const mockTimestampFacet = await deployBusinessLogicFromFactory(
-        MOCK_TIMESTAMP_RESOLVER_KEY,
-        MockTimestampFacetFactory
+    const erc721TestWrapperFacet = await deployBusinessLogicFromFactory(
+        ERC721_TEST_WRAPPER_RESOLVER_KEY,
+        ERC721TestWrapperFacetFactory
     )
 
-    const facetAddresses = [
-        await diamondCutFacet.getAddress(),
-        await diamondLoupeFacet.getAddress(),
-        await accessControlFacet.getAddress(),
-        isOwnable
-            ? await ownableFacet.getAddress()
-            : await ownable2StepFacet.getAddress(),
-        await pauseFacet.getAddress(),
-        await erc20SnapshotFacet.getAddress(),
-        await erc20BurnableFacet.getAddress(),
-        await erc20CappedFacet.getAddress(),
-        await erc20ControllerFacet.getAddress(),
-        await erc20Facet.getAddress(),
-        await assetEventTrackerFacet.getAddress(),
-        await hashTimestampFacet.getAddress(),
-        await mockTimestampFacet.getAddress(),
-    ]
-
-    const diamondProxy = await EIP2535AccessControlFactory.deploy(
-        facetAddresses,
+    await isbeFactory.setConfiguration(CONFIGURATION_ID_ERC721, [
         {
-            rbacs: [
-                {
-                    role: DEFAULT_ADMIN_ROLE,
-                    members: [owner],
-                },
-            ],
-            init: ethers.ZeroAddress,
-            initCalldata: '0x',
-        }
+            businessId: ERC721_RESOLVER_KEY,
+            version: 1,
+        },
+        {
+            businessId: ERC721_TEST_WRAPPER_RESOLVER_KEY,
+            version: 1,
+        },
+    ])
+
+    const tx = await isbeFactory.deployUseCase(
+        CONFIGURATION_ID_ERC721,
+        1,
+        rbacs,
+        init_pause,
+        init_BusinessIds,
+        init_CallData
     )
-    await diamondProxy.waitForDeployment()
 
-    const erc20Snapshot = ERC20SnapshotFacetFactory.attach(
-        await diamondProxy.getAddress()
-    ) as ERC20SnapshotFacet
-    const erc20Burnable = ERC20BurnableFacetFactory.attach(
-        await diamondProxy.getAddress()
-    ) as ERC20BurnableFacet
-    const erc20Capped = ERC20CappedFacetFactory.attach(
-        await diamondProxy.getAddress()
-    ) as ERC20CappedFacet
-    const erc20Controller = ERC20ControllerFacetFactory.attach(
-        await diamondProxy.getAddress()
-    ) as ERC20ControllerFacet
-    const erc20 = ERC20FacetFactory.attach(
-        await diamondProxy.getAddress()
-    ) as ERC20Facet
+    const deployedEvent = await getEvent('UseCaseDeployed', tx, isbeFactory)
+    const { proxy } = deployedEvent.args
 
-    const pause = ISBEPauseFacetFactory.attach(
-        await diamondProxy.getAddress()
-    ) as ISBEPauseFacet
+    const erc721 = IERC721Isbe__factory.connect(proxy, owner) as IERC721Isbe
+    const erc721TestWrapper = ERC721TestWrapperFacetFactory.attach(
+        proxy
+    ) as ERC721TestWrapperFacet
+
+    const pause = ISBEPauseFacetFactory.attach(proxy) as ISBEPauseFacet
 
     const accessControl = AccessControlFacetFactory.attach(
-        await diamondProxy.getAddress()
+        proxy
     ) as AccessControlFacet
 
-    const ownable2Step = Ownable2StepFacetFactory.attach(
-        await diamondProxy.getAddress()
-    ) as Ownable2StepFacet
-
-    const ownable = OwnableFacetFactory.attach(
-        await diamondProxy.getAddress()
-    ) as OwnableFacet
-
-    const assetEventTracker = AssetEventTrackerTestWrapperFactory.attach(
-        await diamondProxy.getAddress()
-    ) as AssetEventTrackerTestWrapper
-
-    const hashTimestamp = HashTimestampTestWrapperFactory.attach(
-        await diamondProxy.getAddress()
-    ) as HashTimestampTestWrapper
-
-    const diamondCutAccessControl = DiamondCutAccessControlFacetFactory.attach(
-        await diamondProxy.getAddress()
-    ) as DiamondCutAccessControlFacet
-
-    const diamondLoupe = DiamondLoupeFacetFactory.attach(
-        await diamondProxy.getAddress()
-    ) as DiamondLoupeFacet
-
-    const mockTimestamp = MockTimestampFacetFactory.attach(
-        await diamondProxy.getAddress()
-    ) as MockTimestampFacet
-
     return {
-        diamondProxy,
-        erc20,
-        erc20Snapshot,
-        erc20Burnable,
-        erc20Capped,
-        erc20Controller,
+        erc721,
+        erc721TestWrapper,
         pause,
         accessControl,
-        ownable2Step,
-        ownable,
-        assetEventTracker,
-        hashTimestamp,
-        diamondCutAccessControl,
-        diamondLoupe,
-        mockTimestamp,
-        erc20Facet,
-        erc20SnapshotFacet,
-        erc20BurnableFacet,
-        erc20CappedFacet,
-        erc20ControllerFacet,
+        erc721Facet,
+        erc721TestWrapperFacet,
         pauseFacet,
         accessControlFacet,
-        ownable2StepFacet,
-        ownableFacet,
-        assetEventTrackerFacet,
-        hashTimestampFacet,
-        diamondCutFacet,
-        diamondLoupeFacet,
+        isbeCutFacet,
+        isbeLoupeFacet,
+        proxy,
     }
-}*/
+}

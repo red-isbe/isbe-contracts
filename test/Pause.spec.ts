@@ -57,6 +57,7 @@ describe('Pause', function () {
         const result = await deployGovernance(
             adminAccount,
             rbacsUseCase,
+            undefined,
             init_pause
         )
         pause = result.pause

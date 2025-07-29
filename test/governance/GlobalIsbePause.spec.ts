@@ -6,7 +6,10 @@ import {
     IIsbeFactory,
 } from '../../typechain-types'
 import { Signer } from 'ethers'
-import { ISBE_PAUSER_ROLE } from '../constants'
+import {
+    GLOBAL_ISBE_PAUSABLE_RESOLVER_KEY,
+    ISBE_PAUSER_ROLE,
+} from '../constants'
 import { deployGovernance } from '../initialization'
 
 describe('GlobalIsbePause', function () {
@@ -29,7 +32,7 @@ describe('GlobalIsbePause', function () {
     }
 
     async function deployIsbeFactory(init_pause: boolean = false) {
-        const result = await deployGovernance(admin, [], init_pause)
+        const result = await deployGovernance(admin, [], undefined, init_pause)
 
         isbeFactory = await ethers.getContractAt(
             'IIsbeFactory',
@@ -40,6 +43,9 @@ describe('GlobalIsbePause', function () {
             'GlobalIsbePauseFacet',
             await result.governanceContract.getAddress()
         )
+        expect(
+            await result.globalIsbePauseFacet.businessIdIntrospection()
+        ).to.be.equal(GLOBAL_ISBE_PAUSABLE_RESOLVER_KEY)
 
         deployedProxyAddress = result.useCaseProxy
 

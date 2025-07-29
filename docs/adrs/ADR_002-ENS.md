@@ -1,4 +1,4 @@
-# ADR-003: Ethereum Name Service (ENS) Integration with Identity Management
+# ADR-002: Ethereum Name Service (ENS) Integration with Identity Management
 
 ## Table of Contents
 

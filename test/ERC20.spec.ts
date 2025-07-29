@@ -76,6 +76,7 @@ describe('ERC20', function () {
         const result = await deployGovernance(
             owner,
             [],
+            undefined,
             init_pause,
             '0x',
             businessIds,

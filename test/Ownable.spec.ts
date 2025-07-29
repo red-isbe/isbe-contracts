@@ -54,6 +54,7 @@ describe('Ownable & Ownable2Step', function () {
         const result = await deployGovernance(
             owner,
             [],
+            undefined,
             init_pause,
             '0x',
             businessIds,
