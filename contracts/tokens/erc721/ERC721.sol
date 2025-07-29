@@ -7,7 +7,7 @@ import {IERC721} from '@openzeppelin/contracts/token/ERC721/IERC721.sol';
 import {IERC721Metadata} from '@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol';
 import {ERC721InternalCommon} from './extensions/ERC721InternalCommon.sol';
 
-contract ERC721 is IERC721Isbe, ERC721InternalCommon {
+abstract contract ERC721 is IERC721Isbe, ERC721InternalCommon {
     /// @notice Constructor disables initializers by default for the diamond pattern
     constructor() {
         _disableInitializers(_ERC721_RESOLVER_KEY);

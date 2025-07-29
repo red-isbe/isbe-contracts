@@ -224,9 +224,8 @@ abstract contract ERC721Internal is Common {
      * @param tokenId The ID of the token to check.
      */
     function _checkTokenMinted(uint256 tokenId) private view {
-        ERC721Storage storage $ = _erc721Storage();
         require(
-            $.owners[tokenId] == address(0),
+            _erc721Storage().owners[tokenId] == address(0),
             IERC721Isbe.TokenAlreadyMinted()
         );
     }
