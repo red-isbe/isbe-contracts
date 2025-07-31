@@ -31,4 +31,5 @@
 - [tokens/erc20/extensions/snapshot](tokens/erc20/extensions/snapshot.md)
 - [tokens/erc721](tokens/erc721.md)
 - [tokens/erc721/extensions](tokens/erc721/extensions.md)
+- [tokens/erc721/extensions/cap](tokens/erc721/extensions/cap.md)
 - [utils](utils.md)

@@ -52,7 +52,10 @@ abstract contract ERC721Internal is Common {
         _afterTokenTransfer(from, to, tokenId);
     }
 
-    function _mint(address to, uint256 tokenId) internal addressIsNotZero(to) {
+    function _mint(
+        address to,
+        uint256 tokenId
+    ) internal virtual addressIsNotZero(to) {
         ERC721Storage storage $ = _erc721Storage();
         _checkTokenMinted(tokenId);
 

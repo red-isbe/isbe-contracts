@@ -10,6 +10,14 @@ function _beforeTokenTransfer(address from, address to, uint256 tokenId) interna
 
 _Override the \_beforeTokenTransfer hook to combine logic from all inherited modules._
 
+### \_mint
+
+```solidity
+function _mint(address to, uint256 tokenId) internal virtual
+```
+
+_Override the \_mint function to combine logic from all inherited modules._
+
 ### \_baseURI
 
 ```solidity

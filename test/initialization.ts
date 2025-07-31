@@ -15,6 +15,7 @@ import {
     ERC20Controller,
     ERC20,
     ERC721,
+    ERC721Capped,
     ERC721TestWrapper,
     MockTimestampFacet,
     EIP2535AccessControl__factory,
@@ -32,6 +33,7 @@ import {
     ERC20_CONTROLLER_RESOLVER_KEY,
     ERC20_RESOLVER_KEY,
     ERC721_RESOLVER_KEY,
+    ERC721_CAPPED_RESOLVER_KEY,
     ERC721_TEST_WRAPPER_RESOLVER_KEY,
     ERC20_SNAPSHOT_RESOLVER_KEY,
     HASH_TIMESTAMP_RESOLVER_KEY,
@@ -127,6 +129,8 @@ export async function deployAll(
     )
     const ERC20FacetFactory = await ethers.getContractFactory('ERC20Facet')
     const ERC721FacetFactory = await ethers.getContractFactory('ERC721Facet')
+    const ERC721CappedFacetFactory =
+        await ethers.getContractFactory('ERC721CappedFacet')
     const ERC721TestWrapperFacetFactory = await ethers.getContractFactory(
         'ERC721TestWrapperFacet'
     )
@@ -183,7 +187,7 @@ export async function deployAll(
         erc20CappedFacet,
         erc20ControllerFacet,
         erc20Facet
-    let erc721Facet, erc721TestWrapperFacet
+    let erc721Facet, erc721TestWrapperFacet, erc721CappedFacet
 
     const assetEventTrackerFacet = await deployBusinessLogicFromFactory(
         ASSET_EVENT_TRACKER_RESOLVER_KEY,
@@ -228,6 +232,10 @@ export async function deployAll(
             ERC721_TEST_WRAPPER_RESOLVER_KEY,
             ERC721TestWrapperFacetFactory
         )
+        erc721CappedFacet = await deployBusinessLogicFromFactory(
+            ERC721_CAPPED_RESOLVER_KEY,
+            ERC721CappedFacetFactory
+        )
     }
 
     let facetAddresses: string[]
@@ -259,6 +267,7 @@ export async function deployAll(
                 : await ownable2StepFacet.getAddress(),
             await pauseFacet.getAddress(),
             await erc721Facet.getAddress(),
+            await erc721CappedFacet.getAddress(),
             await erc721TestWrapperFacet.getAddress(),
             await assetEventTrackerFacet.getAddress(),
             await hashTimestampFacet.getAddress(),
@@ -302,6 +311,9 @@ export async function deployAll(
     const erc721 = ERC721FacetFactory.attach(
         await diamondProxy.getAddress()
     ) as ERC721
+    const erc721Capped = ERC721CappedFacetFactory.attach(
+        await diamondProxy.getAddress()
+    ) as ERC721Capped
     const erc721TestWrapper = ERC721TestWrapperFacetFactory.attach(
         await diamondProxy.getAddress()
     ) as ERC721TestWrapper
@@ -350,6 +362,7 @@ export async function deployAll(
         erc20Capped,
         erc20Controller,
         erc721,
+        erc721Capped,
         erc721TestWrapper,
         pause,
         accessControl,

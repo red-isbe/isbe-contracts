@@ -4,10 +4,6 @@ pragma solidity ^0.8.28;
 import {ERC721InternalCommon} from '../../../tokens/erc721/extensions/ERC721InternalCommon.sol';
 
 abstract contract ERC721TestWrapper is ERC721InternalCommon {
-    function mint(address to, uint256 tokenId) external {
-        _mint(to, tokenId);
-    }
-
     function burn(uint256 tokenId) external {
         _burn(tokenId);
     }
