@@ -34,6 +34,24 @@ abstract contract ERC20Internal is Common {
         $.decimals = newDecimals;
     }
 
+    //todo natspec
+    function _setName(string memory _newName) internal virtual {
+        //ToDo 
+        //require(keccak256(abi.encode(_name)) != keccak256(abi.encode("")), "invalid argument - empty string");
+        
+        ERC20Storage storage $ = _erc20Storage();
+        $.name = _newName;        
+    }
+
+    //todo natspec
+    function _setSymbol(string memory _newSymbol) internal virtual {
+        //ToDo 
+        //require(keccak256(abi.encode(_symbol)) != keccak256(abi.encode("")), "invalid argument - empty string");
+        
+        ERC20Storage storage $ = _erc20Storage();
+        $.symbol = _newSymbol;        
+    }
+
     /**
      * @dev Moves `amount` of tokens from `from` to `to`.
      *

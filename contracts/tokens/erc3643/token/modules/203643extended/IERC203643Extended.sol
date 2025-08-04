@@ -37,4 +37,25 @@ interface IERC203643Extended {
      */
     function setSymbol(string calldata _symbol) external;
 
+    /**
+     *  @dev sets the onchain ID of the token
+     *  @param _onchainID the address of the onchain ID to set
+     *  Only the owner of the token smart contract can call this function
+     *  emits a `UpdatedTokenInformation` event
+     */
+    function setOnchainID(address _onchainID) external;
+
+    /**
+     * @dev Returns the address of the onchainID of the token.
+     * the onchainID of the token gives all the information available
+     * about the token and is managed by the token issuer or his agent.
+     */
+    function onchainID() external view returns (address);
+
+    /**
+     * @dev Returns the TREX version of the token.
+     * current version is 3.0.0
+     */
+    function version() external view returns (string memory);
+
 }
