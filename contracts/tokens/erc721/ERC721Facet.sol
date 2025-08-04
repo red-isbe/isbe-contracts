@@ -33,7 +33,7 @@ contract ERC721Facet is ERC721, IEIP2535Introspection {
         override
         returns (bytes4[] memory selectors_)
     {
-        uint256 selectorsLength = 14;
+        uint256 selectorsLength = 13;
         selectors_ = new bytes4[](selectorsLength);
         selectors_[--selectorsLength] = this.initializeErc721.selector;
         selectors_[--selectorsLength] = this.approve.selector;
@@ -46,7 +46,6 @@ contract ERC721Facet is ERC721, IEIP2535Introspection {
         selectors_[--selectorsLength] = this.symbol.selector;
         selectors_[--selectorsLength] = this.ownerOf.selector;
         selectors_[--selectorsLength] = this.balanceOf.selector;
-        selectors_[--selectorsLength] = this.totalSupply.selector;
         selectors_[--selectorsLength] = this.getApproved.selector;
         selectors_[--selectorsLength] = this.isApprovedForAll.selector;
     }

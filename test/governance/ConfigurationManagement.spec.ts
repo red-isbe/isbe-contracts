@@ -1,194 +1,70 @@
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
 import {
-    EIP2535AccessControl__factory,
-    EIP2535AccessControl,
-    BusinessLogicFactoryFacet__factory,
-    BusinessLogicFactoryFacet,
-    ISBEPause__factory,
-    AccessControlFacet__factory,
     IIsbeFactory,
     IEIP2535Introspection,
-    HashTimestampFacet__factory,
-    AssetEventTrackerTestWrapper__factory,
-    Ownable2StepFacet__factory,
-    ConfigurationManagementFacet__factory,
     ConfigurationManagementFacet,
-    IsbeCutFacet__factory,
-    IsbeLoupeFacet__factory,
 } from '../../typechain-types'
 import { Signer } from 'ethers'
 import {
     ACCESS_CONTROL_RESOLVER_KEY,
     ASSET_EVENT_TRACKER_RESOLVER_KEY,
-    DEFAULT_ADMIN_ROLE,
     DIAMOND_CUT_RESOLVER_KEY,
     DIAMOND_LOUPE_RESOLVER_KEY,
     HASH_TIMESTAMP_RESOLVER_KEY,
-    ISBE_ROLE,
-    BUSINESS_LOGIC_DEPLOYER_ROLE,
-    OWNABLE_RESOLVER_KEY,
     PAUSE_RESOLVER_KEY,
     GOVERNANCE_CONFIGURATION_MANAGER_ROLE,
-    CONFIGURATION_MANAGEMENT_RESOLVER_KEY,
     RANDOM_HASH_FOR_CONFIGURATION_ID,
     ISBE_CUT_RESOLVER_KEY,
     ISBE_LOUPE_RESOLVER_KEY,
+    CONFIGURATION_MANAGEMENT_RESOLVER_KEY,
 } from '../constants'
+import { deployGovernance } from '../initialization'
 
 describe('ConfigurationManagement', function () {
     let admin: Signer
-    let adminAddress: string
     let isbe: Signer
     let isbeAddress: string
-    let businessLogicDeployer: Signer
-    let businessLogicDeployerAddress: string
-    let configurationManager: Signer
-    let configurationManagerAddress: string
     let nonAdmin: Signer
     let nonAdminAddress: string
-    let AccessControlFactory: AccessControlFacet__factory
-    let IsbePausableFactory: ISBEPause__factory
-    let EIP2535AccessControlFactory: EIP2535AccessControl__factory
-    let BusinessLogicFactoryFactory: BusinessLogicFactoryFacet__factory
-    let ConfigurationManagerFacetFactory: ConfigurationManagementFacet__factory
-    let IsbeCutFacetFactory: IsbeCutFacet__factory
-    let IsbeLoupeFacetFactory: IsbeLoupeFacet__factory
-    let HashTimestampFactory: HashTimestampFacet__factory
-    let AssetEventTrackerFactory: AssetEventTrackerTestWrapper__factory
-    let Ownable2StepFacetFactory: Ownable2StepFacet__factory
-    let diamondProxy: EIP2535AccessControl
-    let businessLogicFactoryFacet: BusinessLogicFactoryFacet
     let configurationManagementFacet: ConfigurationManagementFacet
     let isbeFactory: IIsbeFactory
 
     async function deployInitial() {
-        ;[admin, isbe, businessLogicDeployer, configurationManager, nonAdmin] =
-            await ethers.getSigners()
-        adminAddress = await admin.getAddress()
+        ;[admin, isbe, nonAdmin] = await ethers.getSigners()
         isbeAddress = await isbe.getAddress()
         nonAdminAddress = await nonAdmin.getAddress()
-        configurationManagerAddress = await configurationManager.getAddress()
-        businessLogicDeployerAddress = await businessLogicDeployer.getAddress()
-        // Despliegue AccessControl logic
-        BusinessLogicFactoryFactory = await ethers.getContractFactory(
-            'BusinessLogicFactoryFacet'
-        )
-        ConfigurationManagerFacetFactory = await ethers.getContractFactory(
-            'ConfigurationManagementFacet'
-        )
-        IsbeCutFacetFactory = await ethers.getContractFactory('IsbeCutFacet')
-        IsbeLoupeFacetFactory =
-            await ethers.getContractFactory('IsbeLoupeFacet')
-        EIP2535AccessControlFactory = await ethers.getContractFactory(
-            'EIP2535AccessControl'
-        )
-        AccessControlFactory =
-            await ethers.getContractFactory('AccessControlFacet')
-        IsbePausableFactory = await ethers.getContractFactory('ISBEPauseFacet')
-        HashTimestampFactory =
-            await ethers.getContractFactory('HashTimestampFacet')
-        AssetEventTrackerFactory = await ethers.getContractFactory(
-            'AssetEventTrackerTestWrapper'
-        )
-        Ownable2StepFacetFactory =
-            await ethers.getContractFactory('Ownable2StepFacet')
-        businessLogicFactoryFacet = await BusinessLogicFactoryFactory.deploy()
-        configurationManagementFacet =
-            await ConfigurationManagerFacetFactory.deploy()
-        await businessLogicFactoryFacet.waitForDeployment()
-        await configurationManagementFacet.waitForDeployment()
-        expect(
-            await configurationManagementFacet.businessIdIntrospection()
-        ).to.be.equal(CONFIGURATION_MANAGEMENT_RESOLVER_KEY)
-        expect(
-            await configurationManagementFacet.interfacesIntrospection()
-        ).to.be.deep.equal(['0x65f33a1f'])
+
+        await deployIsbeFactory()
     }
 
-    async function deployIsbeFactory(initCalldata: string = '0x') {
-        const proxyFactoryAddress =
-            await configurationManagementFacet.getAddress()
-        const facetAddresses = [
-            await businessLogicFactoryFacet.getAddress(),
-            proxyFactoryAddress,
-        ]
-        diamondProxy = await EIP2535AccessControlFactory.deploy(
-            facetAddresses,
-            {
-                rbacs: [
-                    {
-                        role: DEFAULT_ADMIN_ROLE,
-                        members: [adminAddress],
-                    },
-                    {
-                        role: ISBE_ROLE,
-                        members: [isbeAddress],
-                    },
-                    {
-                        role: BUSINESS_LOGIC_DEPLOYER_ROLE,
-                        members: [businessLogicDeployerAddress],
-                    },
-                    {
-                        role: GOVERNANCE_CONFIGURATION_MANAGER_ROLE,
-                        members: [configurationManagerAddress],
-                    },
-                ],
-                init: ethers.ZeroAddress,
-                initCalldata: initCalldata,
-            }
-        )
-        await diamondProxy.waitForDeployment()
+    async function deployIsbeFactory() {
+        const result = await deployGovernance(admin)
+
         isbeFactory = await ethers.getContractAt(
             'IIsbeFactory',
-            await diamondProxy.getAddress()
+            await result.governanceContract.getAddress()
         )
+
+        configurationManagementFacet = await ethers.getContractAt(
+            'ConfigurationManagementFacet',
+            await result.governanceContract.getAddress()
+        )
+        expect(
+            await result.configMgmtFacet.businessIdIntrospection()
+        ).to.be.equal(CONFIGURATION_MANAGEMENT_RESOLVER_KEY)
     }
 
-    before(async () => {
+    beforeEach(async () => {
         await deployInitial()
     })
 
     describe('ConfigurationManagement', () => {
-        before(async () => {
-            await deployIsbeFactory()
-            await isbeFactory
-                .connect(businessLogicDeployer)
-                .deploy(ISBE_CUT_RESOLVER_KEY, IsbeCutFacetFactory.bytecode)
-            await isbeFactory
-                .connect(businessLogicDeployer)
-                .deploy(ISBE_LOUPE_RESOLVER_KEY, IsbeLoupeFacetFactory.bytecode)
-            await isbeFactory
-                .connect(businessLogicDeployer)
-                .deploy(
-                    ACCESS_CONTROL_RESOLVER_KEY,
-                    AccessControlFactory.bytecode
-                )
-            await isbeFactory
-                .connect(businessLogicDeployer)
-                .deploy(PAUSE_RESOLVER_KEY, IsbePausableFactory.bytecode)
-            await isbeFactory
-                .connect(businessLogicDeployer)
-                .deploy(OWNABLE_RESOLVER_KEY, Ownable2StepFacetFactory.bytecode)
-            await isbeFactory
-                .connect(businessLogicDeployer)
-                .deploy(
-                    HASH_TIMESTAMP_RESOLVER_KEY,
-                    HashTimestampFactory.bytecode
-                )
-            await isbeFactory
-                .connect(businessLogicDeployer)
-                .deploy(
-                    ASSET_EVENT_TRACKER_RESOLVER_KEY,
-                    AssetEventTrackerFactory.bytecode
-                )
-        })
-
         describe('Configure Use Case', () => {
             it('GIVEN deployed isbe factory WHEN try to configure use case without right THEN it fails', async () => {
                 await expect(
                     isbeFactory
-                        .connect(admin)
+                        .connect(nonAdmin)
                         .setConfiguration(ethers.ZeroHash, [])
                 )
                     .to.be.revertedWithCustomError(
@@ -196,7 +72,7 @@ describe('ConfigurationManagement', function () {
                         'AccountHasNoRole'
                     )
                     .withArgs(
-                        adminAddress,
+                        nonAdminAddress,
                         GOVERNANCE_CONFIGURATION_MANAGER_ROLE
                     )
                 await expect(
@@ -229,7 +105,7 @@ describe('ConfigurationManagement', function () {
             it('GIVEN deployed isbe factory WHEN try to configure use case with empty configurationId THEN it fails', async () => {
                 await expect(
                     isbeFactory
-                        .connect(configurationManager)
+                        .connect(admin)
                         .setConfiguration(ethers.ZeroHash, [])
                 ).to.be.revertedWithCustomError(
                     configurationManagementFacet,
@@ -239,7 +115,7 @@ describe('ConfigurationManagement', function () {
             it('GIVEN deployed isbe factory WHEN try to configure use case with Zero facets THEN it fails', async () => {
                 await expect(
                     isbeFactory
-                        .connect(configurationManager)
+                        .connect(admin)
                         .setConfiguration(RANDOM_HASH_FOR_CONFIGURATION_ID, [])
                 ).to.be.revertedWithCustomError(
                     configurationManagementFacet,
@@ -249,7 +125,7 @@ describe('ConfigurationManagement', function () {
             it('GIVEN deployed isbe factory WHEN try to configure use case with Zero businessId THEN it fails', async () => {
                 await expect(
                     isbeFactory
-                        .connect(configurationManager)
+                        .connect(admin)
                         .setConfiguration(RANDOM_HASH_FOR_CONFIGURATION_ID, [
                             {
                                 businessId: ethers.ZeroHash,
@@ -264,7 +140,7 @@ describe('ConfigurationManagement', function () {
             it('GIVEN deployed isbe factory WHEN try to configure use case with a default facet THEN it fails', async () => {
                 await expect(
                     isbeFactory
-                        .connect(configurationManager)
+                        .connect(admin)
                         .setConfiguration(RANDOM_HASH_FOR_CONFIGURATION_ID, [
                             {
                                 businessId: ACCESS_CONTROL_RESOLVER_KEY,
@@ -279,7 +155,7 @@ describe('ConfigurationManagement', function () {
                     .withArgs(ACCESS_CONTROL_RESOLVER_KEY)
                 await expect(
                     isbeFactory
-                        .connect(configurationManager)
+                        .connect(admin)
                         .setConfiguration(RANDOM_HASH_FOR_CONFIGURATION_ID, [
                             {
                                 businessId: PAUSE_RESOLVER_KEY,
@@ -294,7 +170,7 @@ describe('ConfigurationManagement', function () {
                     .withArgs(PAUSE_RESOLVER_KEY)
                 await expect(
                     isbeFactory
-                        .connect(configurationManager)
+                        .connect(admin)
                         .setConfiguration(RANDOM_HASH_FOR_CONFIGURATION_ID, [
                             {
                                 businessId: DIAMOND_CUT_RESOLVER_KEY,
@@ -309,7 +185,7 @@ describe('ConfigurationManagement', function () {
                     .withArgs(DIAMOND_CUT_RESOLVER_KEY)
                 await expect(
                     isbeFactory
-                        .connect(configurationManager)
+                        .connect(admin)
                         .setConfiguration(RANDOM_HASH_FOR_CONFIGURATION_ID, [
                             {
                                 businessId: DIAMOND_LOUPE_RESOLVER_KEY,
@@ -326,7 +202,7 @@ describe('ConfigurationManagement', function () {
             it('GIVEN deployed isbe factory WHEN try to configure use case with non existent businessId THEN it fails', async () => {
                 await expect(
                     isbeFactory
-                        .connect(configurationManager)
+                        .connect(admin)
                         .setConfiguration(RANDOM_HASH_FOR_CONFIGURATION_ID, [
                             {
                                 businessId: RANDOM_HASH_FOR_CONFIGURATION_ID,
@@ -339,26 +215,11 @@ describe('ConfigurationManagement', function () {
                         'CurrentIdNotRegistered'
                     )
                     .withArgs(RANDOM_HASH_FOR_CONFIGURATION_ID)
-                await expect(
-                    isbeFactory
-                        .connect(configurationManager)
-                        .setConfiguration(RANDOM_HASH_FOR_CONFIGURATION_ID, [
-                            {
-                                businessId: HASH_TIMESTAMP_RESOLVER_KEY,
-                                version: 2,
-                            },
-                        ])
-                )
-                    .to.be.revertedWithCustomError(
-                        configurationManagementFacet,
-                        'CurrentIdNotRegistered'
-                    )
-                    .withArgs(HASH_TIMESTAMP_RESOLVER_KEY)
             })
             it('GIVEN deployed isbe factory WHEN try to configure use case with duplicated businessId THEN it fails', async () => {
                 await expect(
                     isbeFactory
-                        .connect(configurationManager)
+                        .connect(admin)
                         .setConfiguration(RANDOM_HASH_FOR_CONFIGURATION_ID, [
                             {
                                 businessId: HASH_TIMESTAMP_RESOLVER_KEY,
@@ -389,7 +250,7 @@ describe('ConfigurationManagement', function () {
                 ]
                 expect(
                     await isbeFactory
-                        .connect(configurationManager)
+                        .connect(admin)
                         .setConfiguration(
                             RANDOM_HASH_FOR_CONFIGURATION_ID,
                             businessDatas

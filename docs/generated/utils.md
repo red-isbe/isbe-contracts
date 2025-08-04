@@ -48,6 +48,12 @@ Raised when a function is called that has not been implemented.
 _This is useful in fallback functions or as a placeholder to prevent
 the execution of incomplete or abstract functionality._
 
+### NotSameLength
+
+```solidity
+error NotSameLength(uint256 a, uint256 b)
+```
+
 ### \_blockTimestamp
 
 ```solidity
@@ -130,6 +136,12 @@ _Reverts with `EmptyBytes` error if the byte array's length is zero._
 | Name   | Type  | Description                 |
 | ------ | ----- | --------------------------- |
 | \_code | bytes | The `bytes` array to check. |
+
+### \_sameLength
+
+```solidity
+function _sameLength(uint256 _a, uint256 _b) internal pure
+```
 
 ---
 

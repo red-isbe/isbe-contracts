@@ -9,7 +9,7 @@ import {_ISBE_ROLE} from '../../constants/roles.sol';
 /// @title AccessControl
 /// @notice Implements role-based access control mechanisms
 /// @dev Inherits from IAccessControl and Common, providing external role management functions
-contract AccessControl is IAccessControl, Common {
+abstract contract AccessControl is IAccessControl, Common {
     modifier protectISBERole(bytes32 _role) {
         _protectISBERole(_role);
         _;

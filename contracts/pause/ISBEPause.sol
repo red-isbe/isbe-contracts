@@ -8,7 +8,7 @@ import {_PAUSER_ROLE, _ISBE_ROLE} from '../constants/roles.sol';
 /// @title ISBEPause
 /// @notice Implements pausing mechanism for ISBE project
 /// @dev Inherits from Pause and implements the abstract methods according to ISBE functional requirements
-contract ISBEPause is Pause {
+abstract contract ISBEPause is Pause {
     uint256 private constant _DEFAULT_AUTHORIZATION_LEVEL = 0;
 
     uint256 private constant _PAUSER_AUTHORIZATION_LEVEL = 1000;

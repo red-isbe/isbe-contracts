@@ -307,8 +307,8 @@ task(
         Number.parseInt(resultSetConfiguration.version.toString()),
         [PAUSE_ROLE],
         [[accountAddress]],
-        '0x0000000000000000000000000000000000000000000000000000000000000000',
-        '0x',
+        [],
+        [],
         GovernanceAddress,
         signer
     )

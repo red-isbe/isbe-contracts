@@ -8,7 +8,7 @@ import {
     MockTimestamp,
 } from '../typechain-types'
 import { ASSET_EVENT_TRACKER_ROLE, PAUSER_ROLE } from './constants'
-import { deployAll } from './initialization'
+import { deployGovernance } from './initialization'
 
 describe('Asset Event Tracker', function () {
     const STATE_1 = 1
@@ -25,7 +25,8 @@ describe('Asset Event Tracker', function () {
         ;[adminAccount] = await ethers.getSigners()
         const adminAccountAddress = await adminAccount.getAddress()
 
-        const result = await deployAll()
+        const result = await deployGovernance(adminAccount)
+
         assetEventTracker = result.assetEventTracker
         pause = result.pause
         accessControl = result.accessControl

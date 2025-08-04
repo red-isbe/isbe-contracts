@@ -15,7 +15,7 @@ import {_PROXY_DEPLOYER_ROLE} from '../../constants/roles.sol';
  *      interface. Provides role-based access control for proxy deployment
  *      and configuration management functionality
  */
-contract ProxyFactory is ProxyFactoryInternal, IProxyFactory {
+abstract contract ProxyFactory is ProxyFactoryInternal, IProxyFactory {
     /**
      * @dev Modifier to validate that a configuration exists and is valid
      * @param _configurationId The unique identifier for the configuration
@@ -33,8 +33,9 @@ contract ProxyFactory is ProxyFactoryInternal, IProxyFactory {
         bytes32 _configurationId,
         uint256 _version,
         IAccessControl.Rbac[] calldata _rbacs,
-        bytes32 _initBusinessId,
-        bytes calldata _initData
+        bool _initPause,
+        bytes32[] calldata _initBusinessIds,
+        bytes[] calldata _initData
     )
         external
         override
@@ -46,7 +47,8 @@ contract ProxyFactory is ProxyFactoryInternal, IProxyFactory {
             _configurationId,
             _version,
             _rbacs,
-            _initBusinessId,
+            _initPause,
+            _initBusinessIds,
             _initData
         );
         emit UseCaseDeployed(_configurationId, _version, _rbacs, proxyAddress);

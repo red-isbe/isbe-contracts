@@ -63,6 +63,15 @@ These roles are specific to the management and operation of the central ISBE Gov
     - **Purpose**: Responsible for instantiating new use-cases on the platform.
     - **Permissions**: Authorised to deploy new use-case proxies through the `ProxyFactoryFacet`.
 
+- **`DID_REGISTRY_ROLE`**
+    - **Purpose**: Responsible to operate DID documents or to be controller.
+    - **Permissions**: Authorised to operate any action over `DiDRegistryFacet`.
+
+- **`DID_REGISTRY_MANAGER_ROLE`**
+    - **Purpose**: Responsible to change any permission over DID_REGISTRY for network-wide safety operations.
+    - **Permissions**: Authorised to operate any action over `DiDRegistryFacet`.
+    -
+
 ## Use-Case Roles
 
 These roles operate within the scope of an individual use-case proxy.
@@ -124,6 +133,10 @@ The Diamond contract is composed of the following facets, each with a unique res
 - **`ISBEPauseFacet`**:
     - **Function**: Pauses/Unpauses the governance diamond proxy.
     - **Access**: restricted to `PAUSER_ROLE`.
+
+- **`DidRegistryFacet`**:
+    - **Function**: Register and manage DID documents.
+    - **Access**: restricted to `DID_REGISTRY_ROLE` and `DID_REGISTRY_MANAGER_ROLE`.
 
 # Use Cases Facets
 

@@ -7,7 +7,7 @@ import {IERC20Burnable} from './IERC20Burnable.sol';
 /// @title ERC20Burnable
 /// @notice Implements burn mechanism
 /// @dev Inherits from IERC20Burnable and ERC20InternalCommon
-contract ERC20Burnable is IERC20Burnable, ERC20InternalCommon {
+abstract contract ERC20Burnable is IERC20Burnable, ERC20InternalCommon {
     function burn(uint256 _amount) external override whenNotPaused {
         _burn(_msgSender(), _amount);
     }

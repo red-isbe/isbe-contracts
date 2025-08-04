@@ -7,7 +7,7 @@ _Implements IIsbeCut interface within an EIP-2535 Diamond proxy system_
 ### setIsbeProxyConfiguration
 
 ```solidity
-function setIsbeProxyConfiguration(contract IConfigurationManagement _configurationManagement, bytes32 _configurationId, uint256 _version) external
+function setIsbeProxyConfiguration(contract IConfigurationManagement _configurationManagement, bytes32 _configurationId, uint256 _version, address[] _init, bytes[] _data) external
 ```
 
 Sets the ISBE proxy configuration from an external management contract
@@ -21,6 +21,8 @@ _Updates the proxy configuration using the specified management contract_
 | \_configurationManagement | contract IConfigurationManagement | The configuration management contract instance   |
 | \_configurationId         | bytes32                           | The identifier of the configuration to set       |
 | \_version                 | uint256                           | The version number of the configuration to apply |
+| \_init                    | address[]                         |                                                  |
+| \_data                    | bytes[]                           |                                                  |
 
 ### interfacesIntrospection
 

@@ -99,13 +99,6 @@ abstract contract ERC721 is IERC721Isbe, ERC721InternalCommon {
     }
 
     /**
-     * @notice Returns the total number of tokens in existence.
-     */
-    function totalSupply() external view returns (uint256) {
-        return _totalSupply();
-    }
-
-    /**
      * @notice Returns the account approved for `tokenId` token.
      */
     function getApproved(

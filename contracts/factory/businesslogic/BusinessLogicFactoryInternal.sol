@@ -48,7 +48,13 @@ abstract contract BusinessLogicFactoryInternal is Common {
         returns (address businessLogicAddress_, uint256 currentVersion_)
     {
         BusinessLogicStorage storage $ = _businessLogicStorage();
-        businessLogicAddress_ = _deployBusinessLogic(_code);
+        unchecked {
+            currentVersion_ = $.businessLogicVersions[_businessId].length + 1;
+        }
+        businessLogicAddress_ = _deployBusinessLogic(
+            _code,
+            _buildSalt(_businessId, currentVersion_)
+        );
         require(
             IEIP2535Introspection(businessLogicAddress_)
                 .businessIdIntrospection() == _businessId,
@@ -56,7 +62,6 @@ abstract contract BusinessLogicFactoryInternal is Common {
         );
         $.latestVersions[_businessId] = businessLogicAddress_;
         $.businessLogicVersions[_businessId].push(businessLogicAddress_);
-        currentVersion_ = $.businessLogicVersions[_businessId].length;
         if (currentVersion_ == 1) $.businessLogics.push(_businessId);
     }
 
@@ -98,29 +103,21 @@ abstract contract BusinessLogicFactoryInternal is Common {
         versions_ = _businessLogicStorage().businessLogicVersions[_businessId];
     }
 
-    function _businessLogicStorage()
-        internal
-        pure
-        returns (BusinessLogicStorage storage storage_)
-    {
-        bytes32 position = _BUSINESS_LOGIC_STORAGE_POSITION;
-        // slither-disable-start assembly
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            storage_.slot := position
-        }
-        // slither-disable-end assembly
-    }
-
     // First implementation with CREATE, next versions could include CREATE2 pattern
     function _deployBusinessLogic(
-        bytes memory _code
+        bytes memory _code,
+        uint256 _salt
     ) private returns (address deployedAddress_) {
         uint256 allGood;
         // slither-disable-start assembly
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            deployedAddress_ := create(0, add(_code, 0x20), mload(_code))
+            deployedAddress_ := create2(
+                0,
+                add(_code, 0x20),
+                mload(_code),
+                _salt
+            )
             allGood := gt(extcodesize(deployedAddress_), 0)
         }
         // slither-disable-end assembly
@@ -138,5 +135,26 @@ abstract contract BusinessLogicFactoryInternal is Common {
         }
         if (_$.businessLogicVersions[_businessId].length > _versionNumber)
             return _$.businessLogicVersions[_businessId][_versionNumber];
+    }
+
+    function _businessLogicStorage()
+        private
+        pure
+        returns (BusinessLogicStorage storage storage_)
+    {
+        bytes32 position = _BUSINESS_LOGIC_STORAGE_POSITION;
+        // slither-disable-start assembly
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            storage_.slot := position
+        }
+        // slither-disable-end assembly
+    }
+
+    function _buildSalt(
+        bytes32 _businessId,
+        uint256 _version
+    ) private pure returns (uint256 salt_) {
+        salt_ = uint256(keccak256(abi.encodePacked(_businessId, _version)));
     }
 }
