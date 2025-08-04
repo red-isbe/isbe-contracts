@@ -77,6 +77,12 @@ describe('ERC721', function () {
             await accessControl.grantRole(MINTER_ROLE, ownerAddress)
         })
 
+        it('GIVEN an ERC721 WHEN mint with tokenId 0 THEN reverts with TokenIdZeroNotAllowed', async () => {
+            await expect(
+                erc721Capped.mint(ownerAddress, 0)
+            ).to.be.revertedWithCustomError(erc721, 'TokenIdZeroNotAllowed')
+        })
+
         it('GIVEN an ERC721 WHEN mint to zero address THEN fails', async () => {
             await expect(
                 erc721Capped.mint(ethers.ZeroAddress, 1)

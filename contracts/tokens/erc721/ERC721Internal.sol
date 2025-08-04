@@ -231,6 +231,7 @@ abstract contract ERC721Internal is Common {
             _erc721Storage().owners[tokenId] == address(0),
             IERC721Isbe.TokenAlreadyMinted()
         );
+        require(tokenId > 0, IERC721Isbe.TokenIdZeroNotAllowed());
     }
 
     function _erc721Storage()

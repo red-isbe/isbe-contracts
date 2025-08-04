@@ -148,16 +148,16 @@ struct ERC721CappedStorage {
 }
 ```
 
-### checkNewCap
+### onlyValidNewCap
 
 ```solidity
-modifier checkNewCap(uint256 newCap)
+modifier onlyValidNewCap(uint256 newCap)
 ```
 
-### checkCap
+### onlyAllowedCap
 
 ```solidity
-modifier checkCap(uint256 amount)
+modifier onlyAllowedCap(uint256 amount)
 ```
 
 ### \_mint
@@ -178,16 +178,22 @@ function _setCap(uint256 newCap) internal
 function _cap() internal view returns (uint256)
 ```
 
-### \_checkNewCap
+### \_onlyValidNewCap
 
 ```solidity
-function _checkNewCap(uint256 newCap) internal view virtual
+function _onlyValidNewCap(uint256 newCap) internal view virtual
 ```
 
-### \_checkCap
+### \_onlyAllowedCap
 
 ```solidity
-function _checkCap(uint256 amount) internal view virtual
+function _onlyAllowedCap(uint256 amount) internal view virtual
+```
+
+### \_checkUint
+
+```solidity
+function _checkUint(uint256 newCap) internal view virtual
 ```
 
 ---

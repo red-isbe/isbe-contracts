@@ -20,6 +20,10 @@ interface IERC721Isbe is IERC721, IERC721Metadata {
      */
     event Erc721Initialized(string name, string symbol);
 
+    /// @notice Error thrown when a token ID is zero.
+    /// @dev Prevents the use of a zero token ID, which is not allowed in ERC721.
+    error TokenIdZeroNotAllowed();
+
     /// @notice Error thrown when attempting to mint a token that already exists.
     /// @dev Prevent minting of a token with an ID that has already been assigned.
     error TokenAlreadyMinted();
