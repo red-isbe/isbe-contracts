@@ -44,4 +44,9 @@ bytes32 constant _ERC165_STORAGE_POSITION = 0x5a9f265fc8293625a32b1b511d224627ed
 // keccak256('isbe.contracts.proxy.factory.storage');
 bytes32 constant _PROXY_FACTORY_STORAGE_POSITION = 0xaa8d33df53b16b2997ff500eedf8d4d1e966355596b60403562e732c9efb474a;
 
+// keccak256('isbe.contracts.erc20.erc3643.internal.common.storage');
+bytes32 constant _ERC20_3643_INTERNAL_COMMON_STORAGE_POSITION = 0x93e01c78c1c0b421f10e3b9735a44f1e8cbad52cb03c68a4f1a74f548303c5bb
+;
+
+
 // solhint-enable max-line-length
