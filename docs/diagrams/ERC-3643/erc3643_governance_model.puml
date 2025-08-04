@@ -1,0 +1,33 @@
+@startuml
+title ERC-3643 Governance Model
+
+actor Owner
+actor Agent
+
+package "ERC-3643 Components" {
+  [IERC3643 Token]
+  [ICompliance]
+  [IIdentityRegistry]
+  [ImplementationAuthority]
+}
+
+Owner --> [IERC3643 Token] : configure(), addAgent(), removeAgent(), upgrade()
+Owner --> [ICompliance] : setRules(), addAgent()
+Owner --> [IIdentityRegistry] : registerIdentity(), addAgent()
+Owner --> [ImplementationAuthority] : upgradeLogic()
+
+Agent --> [IERC3643 Token] : mint(), burn(), freeze(), forcedTransfer()
+Agent --> [ICompliance] : operational actions
+Agent --> [IIdentityRegistry] : register(), delete()
+
+note right of Owner
+  Owner (EIP-173)
+  Strategic control
+  Can revoke any Agent
+end note
+
+note right of Agent
+  Agent (via IAgentRole)
+  Operational executor
+end note
+@enduml

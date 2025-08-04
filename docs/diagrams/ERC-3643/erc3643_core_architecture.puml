@@ -1,0 +1,58 @@
+@startuml erc3643_core_architecture
+
+title ERC-3643 – Core Architecture Overview
+
+skinparam linetype ortho
+skinparam shadowing false
+skinparam defaultTextAlignment center
+skinparam rectangle {
+  BackgroundColor white
+  BorderColor black
+  RoundCorner 10
+}
+
+' Token Layer
+package "Token Layer" {
+  rectangle Token as "IERC3643\n(Token Contract)"
+}
+
+' Compliance Layer
+package "Compliance Layer" {
+  rectangle Compliance as "ICompliance\n(Transfer Rules Engine)"
+}
+
+' Identity Registry Layer
+package "Identity Registry Layer" {
+  rectangle IdentityRegistry as "IIdentityRegistry\n(Wallet–Identity Binding)"
+  rectangle IdentityStorage as "IIdentityRegistryStorage\n(Identity Storage)"
+  rectangle ClaimTopics as "IClaimTopicsRegistry\n(Required Topics)"
+  rectangle TrustedIssuers as "ITrustedIssuersRegistry\n(Authorized Issuers)"
+}
+
+' On-Chain Identity
+package "On-Chain Identity" {
+  rectangle Identity as "IIdentity\n(Identity Contract)"
+  rectangle ERC734 as "IERC734\n(Key/Delegate Management)"
+  rectangle ERC735 as "IERC735\n(Claims Management)"
+}
+
+' Connect token to compliance and identity
+Token --> Compliance : canTransfer()\ntransferred()\ncreated()\ndestroyed()
+Token --> IdentityRegistry : isVerified()\ninvestorCountry()
+
+' Compliance queries registry
+Compliance --> IdentityRegistry : identityRegistry()
+
+' IdentityRegistry internals
+IdentityRegistry --> IdentityStorage : storedIdentity()
+IdentityRegistry --> ClaimTopics : getClaimTopics()
+IdentityRegistry --> TrustedIssuers : isTrustedIssuer()
+
+' Identity resolution path
+IdentityStorage --> Identity : identity()
+
+' Identity contract composition
+Identity --> ERC734 : inherits
+Identity --> ERC735 : inherits
+
+@enduml

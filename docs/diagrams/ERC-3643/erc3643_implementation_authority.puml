@@ -1,0 +1,57 @@
+@startuml
+title ERC‑3643 – Centralized Upgrade via Implementation Authority
+
+skinparam linetype ortho
+skinparam rectangle {
+  BackgroundColor #fdfdfd
+  BorderColor #444
+  RoundCorner 15
+}
+skinparam defaultTextAlignment center
+
+actor Owner
+
+' ──────────────── Authorities ────────────────
+rectangle "ERC3643ImplementationAuthority" as Authority {
+  [getImplementation(key)]
+  [setImplementation(key, logic)]
+  [useVersion(versionId)]
+}
+
+' ──────────────── Proxies ────────────────
+package "Proxies" {
+  rectangle TokenProxy
+  rectangle ComplianceProxy
+  rectangle IdentityRegistryProxy
+  rectangle IdentityStorageProxy
+  rectangle ClaimTopicsRegistryProxy
+  rectangle TrustedIssuersRegistryProxy
+}
+
+' ──────────────── Logic Implementations ────────────────
+package "Logic Contracts" {
+  rectangle TokenImpl_v1
+  rectangle ComplianceImpl_v1
+  rectangle RegistryImpl_v1
+  rectangle StorageImpl_v1
+  rectangle TopicsImpl_v1
+  rectangle IssuersImpl_v1
+}
+
+' ──────────────── Relationships ────────────────
+TokenProxy --> Authority : getImplementation("token")
+ComplianceProxy --> Authority : getImplementation("compliance")
+IdentityRegistryProxy --> Authority : getImplementation("registry")
+IdentityStorageProxy --> Authority : getImplementation("storage")
+ClaimTopicsRegistryProxy --> Authority : getImplementation("topics")
+TrustedIssuersRegistryProxy --> Authority : getImplementation("issuers")
+
+TokenProxy ..[#888].-> TokenImpl_v1 : delegatecall
+ComplianceProxy ..[#888].-> ComplianceImpl_v1 : delegatecall
+IdentityRegistryProxy ..[#888].-> RegistryImpl_v1 : delegatecall
+IdentityStorageProxy ..[#888].-> StorageImpl_v1 : delegatecall
+ClaimTopicsRegistryProxy ..[#888].-> TopicsImpl_v1 : delegatecall
+TrustedIssuersRegistryProxy ..[#888].-> IssuersImpl_v1 : delegatecall
+
+Owner --> Authority : upgrade logic\n(add/set/useVersion)
+@enduml

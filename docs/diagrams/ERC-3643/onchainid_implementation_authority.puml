@@ -1,0 +1,44 @@
+@startuml
+title ONCHAINID – Centralized Upgrade via Implementation Authority
+
+skinparam linetype ortho
+skinparam rectangle {
+  BackgroundColor #fdfdfd
+  BorderColor #444
+  RoundCorner 15
+}
+skinparam defaultTextAlignment center
+
+actor Owner
+
+' ──────────────── Authority ────────────────
+rectangle "IdentityImplementationAuthority" as Authority {
+  [getImplementation(key)]
+  [setImplementation(key, logic)]
+  [useVersion(versionId)]
+}
+
+' ──────────────── Proxies ────────────────
+package "ONCHAINID Proxies" {
+  rectangle AliceProxy
+  rectangle BobProxy
+  rectangle IssuerProxy
+}
+
+' ──────────────── Logic Implementation ────────────────
+package "Identity Logic" {
+  rectangle IdentityImpl_v1
+}
+
+' ──────────────── Relationships ────────────────
+AliceProxy --> Authority : getImplementation("identity")
+BobProxy --> Authority : getImplementation("identity")
+IssuerProxy --> Authority : getImplementation("identity")
+
+AliceProxy ..[#888].-> IdentityImpl_v1 : delegatecall
+BobProxy ..[#888].-> IdentityImpl_v1 : delegatecall
+IssuerProxy ..[#888].-> IdentityImpl_v1 : delegatecall
+
+Owner --> Authority : upgrade logic\n(add/set/useVersion)
+
+@enduml

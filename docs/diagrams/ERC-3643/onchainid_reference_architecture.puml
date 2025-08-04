@@ -1,0 +1,37 @@
+@startuml onchainid_architecture
+
+title ONCHAINID Architecture
+
+skinparam linetype ortho
+skinparam rectangle {
+  BackgroundColor #f9f9f9
+  BorderColor #333
+  RoundCorner 15
+}
+skinparam defaultTextAlignment center
+
+' ──────── Identity Contract ────────
+package "ONCHAINID (Identity)" {
+  rectangle "IIdentity\n(ERC-734/735)" as Identity {
+    [Key Management\nIERC734]
+    [Claim Management\nIERC735]
+  }
+}
+
+' ──────── Claims ────────
+package "Claims" {
+  rectangle "Claim\n(topic, data, issuer,\nsignature, validity)" as Claim
+}
+
+' ──────── Issuers & Registries ────────
+package "Registries" {
+  rectangle "ITrustedIssuersRegistry" as TIR
+  rectangle "IClaimTopicsRegistry" as CTR
+}
+
+' ──────── Trust flow ────────
+Identity --> Claim : holds
+Claim --> TIR : issuedBy
+Claim --> CTR : hasTopic
+
+@enduml
