@@ -53,6 +53,7 @@ const config: HardhatUserConfig = {
     solidity: {
         version: '0.8.28',
         settings: {
+            evmVersion: 'istanbul',
             optimizer: {
                 enabled: true,
                 runs: 1000,
@@ -67,6 +68,14 @@ const config: HardhatUserConfig = {
         mvp: {
             url: 'https://besu-node-non-validator-1.mvp.envs.redisbe.com',
             chainId: 2023,
+            accounts: ACCOUNTS,
+            gasPrice: 0,
+            gas: 100000000,
+            blockGasLimit: 0x1e84800,
+        },
+        arsys: {
+            url: 'http://213.165.85.41:8545',
+            chainId: 2024,
             accounts: ACCOUNTS,
             gasPrice: 0,
             gas: 100000000,
