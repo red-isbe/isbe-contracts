@@ -148,16 +148,16 @@ struct ERC721CappedStorage {
 }
 ```
 
-### onlyValidNewCap
+### checkValidNewCap
 
 ```solidity
-modifier onlyValidNewCap(uint256 newCap)
+modifier checkValidNewCap(uint256 newCap)
 ```
 
-### onlyAllowedCap
+### checkAllowedCap
 
 ```solidity
-modifier onlyAllowedCap(uint256 amount)
+modifier checkAllowedCap(uint256 amount)
 ```
 
 ### \_mint
@@ -178,22 +178,16 @@ function _setCap(uint256 newCap) internal
 function _cap() internal view returns (uint256)
 ```
 
-### \_onlyValidNewCap
+### \_checkValidNewCap
 
 ```solidity
-function _onlyValidNewCap(uint256 newCap) internal view virtual
+function _checkValidNewCap(uint256 newCap) internal view virtual
 ```
 
-### \_onlyAllowedCap
+### \_checkAllowedCap
 
 ```solidity
-function _onlyAllowedCap(uint256 amount) internal view virtual
-```
-
-### \_checkUint
-
-```solidity
-function _checkUint(uint256 newCap) internal view virtual
+function _checkAllowedCap(uint256 amount) internal view virtual
 ```
 
 ---
@@ -203,7 +197,7 @@ function _checkUint(uint256 newCap) internal view virtual
 Interface for implementing a capped total supply for ERC721 tokens.
 It includes functionality to initialize a supply cap, emit related events, and handle cap validation errors.
 
-_Provides: - `initializeCap`: A function to set the maximum allowable token supply. - `CapSet`: An event emitted when the cap is successfully set. - `CapIsZero`, `NewCapIsLessThanTotalSupply`, and `CapExceeded`: Custom errors to enforce and validate
+_Provides: - `initializeCap`: A function to set the maximum allowable token supply. - `CapSet`: An event emitted when the cap is successfully set. - `NewCapIsLessThanTotalSupply`, and `CapExceeded`: Custom errors to enforce and validate
 cap-related rules.
 This interface must be implemented by any ERC721 token contract with a supply cap mechanism._
 
@@ -223,16 +217,6 @@ _Should be triggered when `initializeCap` or 'setCap' sets the supply cap._
 | -------- | ------- | ---------------------------------- |
 | operator | address | The account that set the cap.      |
 | newCap   | uint256 | The value of the token supply cap. |
-
-### CapIsZero
-
-```solidity
-error CapIsZero()
-```
-
-Thrown when an invalid token cap of zero is provided.
-
-_Ensures that the token supply cap must always be greater than zero._
 
 ### NewCapIsLessThanTotalSupply
 

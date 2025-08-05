@@ -54,6 +54,16 @@ the execution of incomplete or abstract functionality._
 error NotSameLength(uint256 a, uint256 b)
 ```
 
+### UintIsZero
+
+```solidity
+error UintIsZero()
+```
+
+Error thrown when a uint value is zero and it is not allowed.
+
+_Used for generic checks where a uint must be greater than zero._
+
 ### \_blockTimestamp
 
 ```solidity
@@ -120,6 +130,22 @@ _Reverts with `EmptyBytes32` error if the condition is not met._
 | Name   | Type    | Description                   |
 | ------ | ------- | ----------------------------- |
 | \_hash | bytes32 | The `bytes32` value to check. |
+
+### \_checkUint
+
+```solidity
+function _checkUint(uint256 amount) internal pure
+```
+
+Checks that a uint value is not zero.
+
+_Reverts with UintIsZero if the value is zero._
+
+#### Parameters
+
+| Name   | Type    | Description              |
+| ------ | ------- | ------------------------ |
+| amount | uint256 | The uint value to check. |
 
 ### \_emptyBytes
 
