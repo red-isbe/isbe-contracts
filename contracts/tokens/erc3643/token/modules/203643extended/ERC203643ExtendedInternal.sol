@@ -17,14 +17,6 @@ abstract contract ERC203643ExtendedInternal is
     }
 
 
-    function _setName(string memory _newName) internal virtual override {
-        super._setName(_newName);        
-    }
-
-    function _setSymbol(string memory _newSymbol) internal virtual override {
-        super._setSymbol(_newSymbol);        
-    }
-
     function _setOnchainID(address _newOnchainID) internal virtual {       
         ERC203643InternalCommonStorage storage $ = _erc203643InternalCommonStorage();
         $.onchainid = _newOnchainID;

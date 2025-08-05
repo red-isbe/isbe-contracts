@@ -28,8 +28,27 @@ abstract contract ERC203643Extended is IERC203643Extended, ERC20InternalCommon {
     }
 
     //todo: modifiers y todo
-    function setName(string memory _newName) external {
+    function setName(string memory _newName) external onlyRole(_TOKEN_OWNER_ROLE) {
         _setName(_newName);
+        emit UpdatedTokenInformation(_newName, _symbol(), _decimals(), _version(), _onchainID());
+    }
+
+    function setSymbol(string memory _newSymbol) external onlyRole(_TOKEN_OWNER_ROLE) {
+        _setSymbol(_newSymbol);
+        emit UpdatedTokenInformation(_name(), _newSymbol, _decimals(), _version(), _onchainID());
+    }
+
+    function setOnchainID(address _newOnchainID) external onlyRole(_TOKEN_OWNER_ROLE) {
+        _setOnchainID(_newOnchainID);
+        emit UpdatedTokenInformation(_name(), _symbol(), _decimals(), _version(), _newOnchainID);
+    }
+
+    function onchainID() external view override returns (address) {
+        return _onchainID();
+    }
+
+    function version() external view override returns (string memory) {
+        return _version();
     }
 
     function _implementedInterfaces()

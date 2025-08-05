@@ -28,16 +28,6 @@ abstract contract ERC20InternalCommon is
         ERC20CappedInternal._mint(account, amount);
     }
 
-    function _setName(
-        string memory _newName
-    ) internal virtual override(ERC203643ExtendedInternal,ERC20Internal) {
-        ERC203643ExtendedInternal._setName(_newName);
-    }
-
-    function _setSymbol(
-        string memory _newSymbol
-    ) internal virtual override(ERC203643ExtendedInternal,ERC20Internal) {
-        ERC203643ExtendedInternal._setSymbol(_newSymbol);
-    }
+    
 
 }

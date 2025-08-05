@@ -2,7 +2,7 @@
 pragma solidity ^0.8.28;
 
 import {IERC20Isbe} from '../../erc20/IERC20Isbe.sol';
-import {IERC203643Extended} from './modules/IERC203643Extended.sol';
+import {IERC203643Extended} from './modules/203643extended/IERC203643Extended.sol';
 
 import {IBatches} from './modules/IBatches.sol';
 import {IERC3643Infrastructure} from './modules/IERC3643Infrastructure.sol';
