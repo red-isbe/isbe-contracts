@@ -32,6 +32,7 @@ import {
     IERC721Isbe,
     ERC721TestWrapperFacet,
     ERC721CappedFacet,
+    ERC721SnapshotFacet,
 } from '../typechain-types'
 import {
     DEFAULT_ADMIN_ROLE,
@@ -57,6 +58,7 @@ import {
     ISBE_CUT_RESOLVER_KEY,
     ISBE_LOUPE_RESOLVER_KEY,
     ERC721_CAPPED_RESOLVER_KEY,
+    ERC721_SNAPSHOT_RESOLVER_KEY,
 } from './constants'
 import { getEvent } from '../scripts/utils/getEvent'
 import { getIsbeFactory } from '../scripts/utils/getIsbeFactory'
@@ -316,9 +318,11 @@ export async function deployGovernance(
         erc721Facet: useCaseDeployment.erc721Facet,
         erc721TestWrapperFacet: useCaseDeployment.erc721TestWrapperFacet,
         erc721CappedFacet: useCaseDeployment.erc721CappedFacet,
+        erc721SnapshotFacet: useCaseDeployment.erc721SnapshotFacet,
         erc721: useCaseDeployment.erc721,
         erc721TestWrapper: useCaseDeployment.erc721TestWrapper,
         erc721Capped: useCaseDeployment.erc721Capped,
+        erc721Snapshot: useCaseDeployment.erc721Snapshot,
         diamondCutAccessControlFacet,
         diamondLoupeFacet,
         accessControlGovernanceFacet,
@@ -555,6 +559,9 @@ export async function deployERC721UseCasesFacets(
     )
     const ERC721CappedFacetFactory =
         await ethers.getContractFactory('ERC721CappedFacet')
+    const ERC721SnapshotFacetFactory = await ethers.getContractFactory(
+        'ERC721SnapshotFacet'
+    )
 
     const isbeCutFacet = await deployBusinessLogicFromFactory(
         ISBE_CUT_RESOLVER_KEY,
@@ -586,6 +593,10 @@ export async function deployERC721UseCasesFacets(
         ERC721_CAPPED_RESOLVER_KEY,
         ERC721CappedFacetFactory
     )
+    const erc721SnapshotFacet = await deployBusinessLogicFromFactory(
+        ERC721_SNAPSHOT_RESOLVER_KEY,
+        ERC721SnapshotFacetFactory
+    )
 
     await isbeFactory.setConfiguration(CONFIGURATION_ID_ERC721, [
         {
@@ -598,6 +609,10 @@ export async function deployERC721UseCasesFacets(
         },
         {
             businessId: ERC721_CAPPED_RESOLVER_KEY,
+            version: 1,
+        },
+        {
+            businessId: ERC721_SNAPSHOT_RESOLVER_KEY,
             version: 1,
         },
     ])
@@ -621,6 +636,9 @@ export async function deployERC721UseCasesFacets(
     const erc721Capped = ERC721CappedFacetFactory.attach(
         proxy
     ) as ERC721CappedFacet
+    const erc721Snapshot = ERC721SnapshotFacetFactory.attach(
+        proxy
+    ) as ERC721SnapshotFacet
 
     const pause = ISBEPauseFacetFactory.attach(proxy) as ISBEPauseFacet
 
@@ -632,11 +650,13 @@ export async function deployERC721UseCasesFacets(
         erc721,
         erc721TestWrapper,
         erc721Capped,
+        erc721Snapshot,
         pause,
         accessControl,
         erc721Facet,
         erc721TestWrapperFacet,
         erc721CappedFacet,
+        erc721SnapshotFacet,
         pauseFacet,
         accessControlFacet,
         isbeCutFacet,
