@@ -1,6 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
+/**
+ * @title ERC721TestWrapperFacet
+ * @notice Facet exposing ERC721 test wrapper functions for diamond/facet architectures.
+ * @dev Implements diamond introspection and exposes burn, transfer, setApprovalForAll, and baseURI.
+ *      - Should be registered in the diamond with all required selectors for test scenarios.
+ */
+
 import {IEIP2535Introspection} from '../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 import {_ERC721_TEST_WRAPPER_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
 import {ERC721TestWrapper} from './ERC721TestWrapper.sol';

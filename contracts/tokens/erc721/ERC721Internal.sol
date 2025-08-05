@@ -1,6 +1,17 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
+/**
+ * @title ERC721Internal
+ * @notice Internal abstract contract for ERC721 logic, designed for use in diamond/facet architectures.
+ * @dev Implements core ERC721 storage, transfer, mint, burn, approval, and hooks. Not intended for direct deployment.
+ *      - Manages balances, ownership, approvals, and operator approvals.
+ *      - Provides internal functions for safe transfer, minting, burning, and approval logic.
+ *      - Designed to be inherited by facets or other contracts that expose external interfaces.
+ *      - Uses a custom storage slot for upgradeable compatibility.
+ *      - Relies on hooks (_beforeTokenTransfer, _afterTokenTransfer) for extensibility.
+ */
+
 import {Common} from '../../core/Common.sol';
 import {IERC721Isbe} from './IERC721Isbe.sol';
 import {_ERC721_STORAGE_POSITION} from '../../constants/storagePositions.sol';
