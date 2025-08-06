@@ -1,8 +1,8 @@
 module.exports = {
     skipFiles: ['testwrapper/'],
     mocha: {
-        timeout: 120000, // 2 minutos timeout para coverage
-        parallel: false, // Desactivar modo paralelo para solidity-coverage
+        timeout: 120000,
+        parallel: false,
     },
     configureYulOptimizer: true,
     measureStatementCoverage: true,
@@ -11,7 +11,6 @@ module.exports = {
     measureLineCoverage: true,
     istanbulReporter: ['html', 'lcov', 'text', 'json'],
     providerOptions: {
-        // Configuraciones específicas para el provider durante coverage
         mnemonic: 'test test test test test test test test test test test junk',
         gasLimit: 0xfffffffffff,
         gasPrice: 0x01,

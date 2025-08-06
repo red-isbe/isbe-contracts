@@ -1,17 +1,24 @@
 import { expect } from 'chai'
-import { ethers } from 'hardhat'
+import { ethers, config } from 'hardhat'
 import {
+    DidControllerFacet,
     DidDocumentDetailedFacet,
     IDidRegistry,
     MockTimestampFacet,
 } from '../../typechain-types'
-import { Signer, Wallet } from 'ethers'
+import { HDNodeWallet, Signer } from 'ethers'
 import { DID_DOCUMENT_DETAILED_RESOLVER_KEY } from '../constants'
 import {
     CONFIGURATION_ID_DID_REGISTRY,
     deployGovernance,
 } from '../initialization'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
+import {
+    DidDocumentVerifier,
+    DidDocumentBuilder,
+    DidsResultValidator,
+    ContractGetDidsResult,
+} from './utils'
 
 enum EllipticType {
     NONE = 0,
@@ -22,6 +29,7 @@ enum EllipticType {
 describe('DiDRegistry', function () {
     let admin: Signer
     let didDocumentDetailedFacet: DidDocumentDetailedFacet
+    let didControllerFacet: DidControllerFacet
     let didRegistry: IDidRegistry
     let mockTimestap: MockTimestampFacet
     const emptyString = ''
@@ -35,6 +43,17 @@ describe('DiDRegistry', function () {
     let publicKeyInvalindLength: string
     let publicKey65: string
     let publicKey64: string
+
+    const randomizeDidDocument = (wallet: HDNodeWallet) => {
+        baseDocument = randomStr()
+        vMethodId = randomStr()
+        publicKeyInvalindLength = randomHx()
+        publicKey65Incorrect = randomHx(65)
+        publicKey65 = wallet.signingKey.publicKey
+        publicKey64 = '0x'.concat(publicKey65.slice(4))
+        notBefore = randomInt()
+        notAfter = notBefore + 1000000000000000000n
+    }
 
     // Generar string hexadecimal aleatorio
     function randomHx(length: number = 32): string {
@@ -61,6 +80,7 @@ describe('DiDRegistry', function () {
             CONFIGURATION_ID_DID_REGISTRY
         )
         didDocumentDetailedFacet = gov.didDocumentDetailedFacet
+        didControllerFacet = gov.didControllerFacet
         didRegistry = gov.didRegistry
         mockTimestap = gov.mockTimestamp
         expect(
@@ -68,12 +88,22 @@ describe('DiDRegistry', function () {
         ).to.be.equal(DID_DOCUMENT_DETAILED_RESOLVER_KEY)
         expect(
             await didDocumentDetailedFacet.interfacesIntrospection()
-        ).to.be.deep.equal(['0x62e92ee6'])
+        ).to.be.deep.equal(['0x40350ddb'])
     }
 
     beforeEach(async () => {
         await loadFixture(deployInitial)
     })
+
+    function walletOfFirstSigner() {
+        const mnemonic = (
+            config.networks.hardhat.accounts as {
+                mnemonic: string
+                path: string
+            }
+        ).mnemonic
+        return ethers.Wallet.fromPhrase(mnemonic)
+    }
 
     describe('DiDRegistry', () => {
         describe('initializeDidRegistry', () => {
@@ -109,20 +139,15 @@ describe('DiDRegistry', function () {
 
         describe('insertDidDocument', () => {
             before(async () => {
-                baseDocument = randomStr()
-                vMethodId = randomStr()
-                publicKeyInvalindLength = randomHx()
-                publicKey65Incorrect = randomHx(65)
-                const wallet: Wallet = ethers.Wallet.createRandom()
-                publicKey65 = wallet.signingKey.publicKey
-                publicKey64 = '0x'.concat(publicKey65.slice(4))
-                notBefore = randomInt()
-                notAfter = notBefore + 1000000000000000000n
+                randomizeDidDocument(ethers.Wallet.createRandom())
             })
             beforeEach(async () => {
-                await didRegistry.initializeDiDRegistry(
-                    EllipticType.SECP_256_K1
-                )
+                const fixture = async () => {
+                    await didRegistry.initializeDiDRegistry(
+                        EllipticType.SECP_256_K1
+                    )
+                }
+                await loadFixture(fixture)
                 did = randomStr()
             })
             it('GIVEN initialized didRegistry WHEN try to insert did document with empty did THEN it fails', async () => {
@@ -363,46 +388,649 @@ describe('DiDRegistry', function () {
                         notBefore,
                         notAfter
                     )
-                await mockTimestap.setMockedTimestamp(notBefore - 1n)
-                let didDocument = await didRegistry.getDidDocument(did)
-                expect(didDocument[0]).to.equal(baseDocument)
-                expect(didDocument[1]).to.deep.equal([did])
-                expect(didDocument[2]).to.deep.equal([])
-                expect(didDocument[3]).to.have.lengthOf(0)
-                expect(didDocument[4]).to.have.lengthOf(0)
+            })
+        })
 
+        describe('updateDidDocument', () => {
+            let wallet: HDNodeWallet
+            before(async () => {
+                wallet = walletOfFirstSigner()
+                randomizeDidDocument(wallet)
+            })
+            beforeEach(async () => {
+                const fixture = async () => {
+                    await didRegistry.initializeDiDRegistry(
+                        EllipticType.SECP_256_K1
+                    )
+                    await didRegistry.insertDidDocument(
+                        did,
+                        baseDocument,
+                        vMethodId,
+                        publicKey65,
+                        EllipticType.SECP_256_K1,
+                        notBefore,
+                        notAfter
+                    )
+                }
+                await loadFixture(fixture)
+            })
+
+            it('GIVEN an inserted document WHEN try to update with empty did THEN it fails', async () => {
+                await expect(
+                    didRegistry.updateBaseDocument('', randomStr())
+                ).to.be.revertedWithCustomError(
+                    didDocumentDetailedFacet,
+                    'EmptyString'
+                )
+            })
+
+            it('GIVEN an inserted document WHEN try to update with empty baseDocument THEN it fails', async () => {
+                await expect(
+                    didRegistry.updateBaseDocument(randomStr(), '')
+                ).to.be.revertedWithCustomError(
+                    didDocumentDetailedFacet,
+                    'EmptyString'
+                )
+            })
+
+            it('GIVEN an inserted document WHEN try to update an not inserted did THEN it fails', async () => {
+                const neewDid = randomStr()
+                await expect(
+                    didRegistry.updateBaseDocument(neewDid, randomStr())
+                )
+                    .to.be.revertedWithCustomError(
+                        didDocumentDetailedFacet,
+                        'DidNotExists'
+                    )
+                    .withArgs(neewDid)
+            })
+
+            it('GIVEN an inserted document WHEN try to update without rights THEN it fails', async () => {
+                await expect(didRegistry.updateBaseDocument(did, randomStr()))
+                    .to.be.revertedWithCustomError(
+                        didDocumentDetailedFacet,
+                        'ControllerNotAuthorized'
+                    )
+                    .withArgs(did, await admin.getAddress())
+            })
+
+            it('GIVEN initialized didRegistry WHEN try to insert did document in current time THEN it success', async () => {
+                const newBaseDocument = randomStr()
                 await mockTimestap.setMockedTimestamp(notBefore + 1n)
-                didDocument = await didRegistry.getDidDocument(did)
-                expect(didDocument[0]).to.equal(baseDocument)
-                expect(didDocument[1]).to.deep.equal([did])
-                expect(didDocument[2]).to.deep.equal([vMethodId])
-                expect(didDocument[3]).to.have.lengthOf(1)
-                expect(didDocument[3][0][0]).to.deep.equal(publicKey64)
-                expect(didDocument[3][0][1]).to.deep.equal(
-                    EllipticType.SECP_256_K1
+                await expect(
+                    didRegistry.updateBaseDocument(did, newBaseDocument)
                 )
-                expect(didDocument[3][0][2]).to.deep.equal(false)
-                expect(didDocument[4]).to.have.lengthOf(2)
-                expect(didDocument[4][0][0]).to.deep.equal('authentication')
-                expect(didDocument[4][0][1]).to.deep.equal(vMethodId)
-                expect(didDocument[4][0][2]).to.deep.equal(notBefore)
-                expect(didDocument[4][0][3]).to.deep.equal(notAfter)
-                expect(didDocument[4][0][4]).to.deep.equal(0)
-                expect(didDocument[4][1][0]).to.deep.equal(
-                    'capabilityInvocation'
-                )
-                expect(didDocument[4][1][1]).to.deep.equal(vMethodId)
-                expect(didDocument[4][1][2]).to.deep.equal(notBefore)
-                expect(didDocument[4][1][3]).to.deep.equal(notAfter)
-                expect(didDocument[4][1][4]).to.deep.equal(0)
+                    .to.emit(didRegistry, 'BaseDocumentUpdated')
+                    .withArgs(did, newBaseDocument)
+            })
+        })
 
+        describe('addController', () => {
+            let wallet: HDNodeWallet
+            before(async () => {
+                const mnemonic = (
+                    config.networks.hardhat.accounts as {
+                        mnemonic: string
+                        path: string
+                    }
+                ).mnemonic
+                wallet = ethers.Wallet.fromPhrase(mnemonic)
+                randomizeDidDocument(wallet)
+            })
+            beforeEach(async () => {
+                const fixture = async () => {
+                    await didRegistry.initializeDiDRegistry(
+                        EllipticType.SECP_256_K1
+                    )
+                    await didRegistry.insertDidDocument(
+                        did,
+                        baseDocument,
+                        vMethodId,
+                        publicKey65,
+                        EllipticType.SECP_256_K1,
+                        notBefore,
+                        notAfter
+                    )
+                }
+                await loadFixture(fixture)
+            })
+
+            it('GIVEN deployed DiDRegistry WHEN try to add empty did THEN it fails', async () => {
+                await expect(
+                    didRegistry.addController(emptyString, randomStr())
+                ).to.be.revertedWithCustomError(
+                    didControllerFacet,
+                    'EmptyString'
+                )
+            })
+            it('GIVEN deployed DiDRegistry WHEN try to add empty controller THEN it fails', async () => {
+                await expect(
+                    didRegistry.addController(randomStr(), emptyString)
+                ).to.be.revertedWithCustomError(
+                    didControllerFacet,
+                    'EmptyString'
+                )
+            })
+            it('GIVEN deployed DiDRegistry WHEN try to add non existent did THEN it fails', async () => {
+                const randomDiD = randomStr()
+                await expect(didRegistry.addController(randomDiD, randomStr()))
+                    .to.be.revertedWithCustomError(
+                        didControllerFacet,
+                        'DidNotExists'
+                    )
+                    .withArgs(randomDiD)
+            })
+            it('GIVEN deployed DiDRegistry WHEN try to add non existent controller THEN it fails', async () => {
+                const randomDiD = randomStr()
+                await expect(didRegistry.addController(did, randomDiD))
+                    .to.be.revertedWithCustomError(
+                        didControllerFacet,
+                        'DidNotExists'
+                    )
+                    .withArgs(randomDiD)
+            })
+            it('GIVEN deployed DiDRegistry WHEN try to add same controller twice THEN it fails', async () => {
+                await expect(didRegistry.addController(did, did))
+                    .to.be.revertedWithCustomError(
+                        didControllerFacet,
+                        'DidIsControlledBy'
+                    )
+                    .withArgs(did, did)
+            })
+            it('GIVEN two inserted documents WHEN try to add controller THEN it success', async () => {
+                // GIVEN
+                const controller = randomStr()
+                await didRegistry.insertDidDocument(
+                    controller,
+                    randomStr(),
+                    randomStr(),
+                    publicKey64,
+                    EllipticType.SECP_256_K1,
+                    notBefore,
+                    notAfter
+                )
+                await mockTimestap.setMockedTimestamp(notBefore + 1n)
+
+                // WHEN
+                expect(await didRegistry.addController(did, controller))
+                    .to.emit(didRegistry, 'ControllerAdded')
+                    .withArgs(did, controller)
+            })
+        })
+
+        describe('revokeController', () => {
+            let wallet: HDNodeWallet
+            before(async () => {
+                const mnemonic = (
+                    config.networks.hardhat.accounts as {
+                        mnemonic: string
+                        path: string
+                    }
+                ).mnemonic
+                wallet = ethers.Wallet.fromPhrase(mnemonic)
+                randomizeDidDocument(wallet)
+            })
+            beforeEach(async () => {
+                const fixture = async () => {
+                    await didRegistry.initializeDiDRegistry(
+                        EllipticType.SECP_256_K1
+                    )
+                    await didRegistry.insertDidDocument(
+                        did,
+                        baseDocument,
+                        vMethodId,
+                        publicKey65,
+                        EllipticType.SECP_256_K1,
+                        notBefore,
+                        notAfter
+                    )
+                }
+                await loadFixture(fixture)
+            })
+
+            it('GIVEN deployed DiDRegistry WHEN try to revoke empty did THEN it fails', async () => {
+                await expect(
+                    didRegistry.revokeController(emptyString, randomStr())
+                ).to.be.revertedWithCustomError(
+                    didControllerFacet,
+                    'EmptyString'
+                )
+            })
+            it('GIVEN deployed DiDRegistry WHEN try to revoke empty controller THEN it fails', async () => {
+                await expect(
+                    didRegistry.revokeController(randomStr(), emptyString)
+                ).to.be.revertedWithCustomError(
+                    didControllerFacet,
+                    'EmptyString'
+                )
+            })
+            it('GIVEN deployed DiDRegistry WHEN try to revoke non existent did THEN it fails', async () => {
+                const randomDiD = randomStr()
+                await expect(
+                    didRegistry.revokeController(randomDiD, randomStr())
+                )
+                    .to.be.revertedWithCustomError(
+                        didControllerFacet,
+                        'DidNotExists'
+                    )
+                    .withArgs(randomDiD)
+            })
+            it('GIVEN deployed DiDRegistry WHEN try to revoke non existent controller THEN it fails', async () => {
+                const randomDiD = randomStr()
+                await expect(didRegistry.revokeController(did, randomDiD))
+                    .to.be.revertedWithCustomError(
+                        didControllerFacet,
+                        'DidNotExists'
+                    )
+                    .withArgs(randomDiD)
+            })
+            it('GIVEN deployed DiDRegistry WHEN try to revoke not linked controller THEN it fails', async () => {
+                // GIVEN
+                const controller = randomStr()
+                await didRegistry.insertDidDocument(
+                    controller,
+                    randomStr(),
+                    randomStr(),
+                    publicKey64,
+                    EllipticType.SECP_256_K1,
+                    notBefore,
+                    notAfter
+                )
+
+                // WHEN
+                await expect(didRegistry.revokeController(did, controller))
+                    .to.be.revertedWithCustomError(
+                        didControllerFacet,
+                        'DidIsNotControlledBy'
+                    )
+                    .withArgs(did, controller)
+            })
+            it('GIVEN two inserted documents WHEN try to revoke controller THEN it success', async () => {
+                // GIVEN
+                await mockTimestap.setMockedTimestamp(notBefore + 1n)
+                const controller = randomStr()
+                await didRegistry.insertDidDocument(
+                    controller,
+                    randomStr(),
+                    randomStr(),
+                    publicKey64,
+                    EllipticType.SECP_256_K1,
+                    notBefore,
+                    notAfter
+                )
+                await didRegistry.addController(did, controller)
+
+                // WHEN
+                expect(await didRegistry.revokeController(did, controller))
+                    .to.emit(didRegistry, 'ControllerRevoked')
+                    .withArgs(did, controller)
+            })
+        })
+
+        describe('getDids', () => {
+            const insertedDids = [
+                randomStr(),
+                randomStr(),
+                randomStr(),
+                randomStr(),
+                randomStr(),
+            ]
+
+            beforeEach(async () => {
+                randomizeDidDocument(ethers.Wallet.createRandom())
+                const fixture = async () => {
+                    await didRegistry.initializeDiDRegistry(
+                        EllipticType.SECP_256_K1
+                    )
+                    for (const did of insertedDids) {
+                        await didRegistry.insertDidDocument(
+                            did,
+                            baseDocument,
+                            vMethodId,
+                            publicKey64,
+                            EllipticType.SECP_256_K1,
+                            notBefore,
+                            notAfter
+                        )
+                    }
+                }
+                await loadFixture(fixture)
+            })
+            it('GIVEN inserted documents WHEN try to get more than exists THEN returns full list', async () => {
+                const dids: ContractGetDidsResult = (await didRegistry.getDids(
+                    1,
+                    insertedDids.length * 2
+                )) as unknown as ContractGetDidsResult
+                DidsResultValidator.validate(dids).expectFullResult({
+                    dids: insertedDids,
+                    totalCount: insertedDids.length,
+                    filteredCount: insertedDids.length,
+                    pageNumber: 1n,
+                    totalPages: 1n,
+                })
+            })
+            it('GIVEN inserted documents WHEN try to get bit by bit THEN returns little lists', async () => {
+                DidsResultValidator.validate(
+                    (await didRegistry.getDids(1, 2)) as ContractGetDidsResult
+                )
+                    .expectDidsArray(insertedDids.slice(0, 2))
+                    .expectCounts(insertedDids.length, 2)
+                    .expectPaginationInfo(1n, 2n)
+                DidsResultValidator.validate(
+                    (await didRegistry.getDids(2, 2)) as ContractGetDidsResult
+                )
+                    .expectDidsArray(insertedDids.slice(2, 4))
+                    .expectCounts(insertedDids.length, 2)
+                    .expectPaginationInfo(1n, 3n)
+                DidsResultValidator.validate(await didRegistry.getDids(3, 2))
+                    .expectDidsArray(insertedDids.slice(4))
+                    .expectCounts(insertedDids.length, 1)
+                    .expectPaginationInfo(2n, 3n)
+            })
+            it('GIVEN inserted documents WHEN try to get out of the list THEN returns emtpy list', async () => {
+                DidsResultValidator.validate(await didRegistry.getDids(2, 5))
+                    .expectDidsArray([])
+                    .expectCounts(insertedDids.length, 0)
+                    .expectPaginationInfo(1n, 1n)
+            })
+        })
+
+        describe('getDidsByController', () => {
+            let insertedDids: string[]
+            let controller: string
+
+            beforeEach(async () => {
+                randomizeDidDocument(walletOfFirstSigner())
+                controller = randomStr()
+                insertedDids = [
+                    randomStr(),
+                    randomStr(),
+                    randomStr(),
+                    randomStr(),
+                ]
+                const fixture = async () => {
+                    await didRegistry.initializeDiDRegistry(
+                        EllipticType.SECP_256_K1
+                    )
+                    await mockTimestap.setMockedTimestamp(notBefore + 1n)
+                    await didRegistry.insertDidDocument(
+                        controller,
+                        baseDocument,
+                        vMethodId,
+                        publicKey64,
+                        EllipticType.SECP_256_K1,
+                        notBefore,
+                        notAfter
+                    )
+                    for (const did of insertedDids) {
+                        await didRegistry.insertDidDocument(
+                            did,
+                            baseDocument,
+                            vMethodId,
+                            publicKey64,
+                            EllipticType.SECP_256_K1,
+                            notBefore,
+                            notAfter
+                        )
+                        await didRegistry.addController(did, controller)
+                    }
+                }
+                await loadFixture(fixture)
+                insertedDids = [controller].concat(insertedDids)
+            })
+            it('GIVEN controlled documents WHEN try to get more than exists THEN returns full list', async () => {
+                const dids: ContractGetDidsResult =
+                    (await didRegistry.getDidsByController(
+                        controller,
+                        1,
+                        insertedDids.length * 2
+                    )) as unknown as ContractGetDidsResult
+                DidsResultValidator.validate(dids).expectFullResult({
+                    dids: insertedDids,
+                    totalCount: insertedDids.length,
+                    filteredCount: insertedDids.length,
+                    pageNumber: 1n,
+                    totalPages: 1n,
+                })
+            })
+            it('GIVEN controlled documents WHEN try to get bit by bit THEN returns little lists', async () => {
+                DidsResultValidator.validate(
+                    (await didRegistry.getDidsByController(
+                        controller,
+                        1,
+                        2
+                    )) as ContractGetDidsResult
+                )
+                    .expectDidsArray(insertedDids.slice(0, 2))
+                    .expectCounts(insertedDids.length, 2)
+                    .expectPaginationInfo(1n, 2n)
+                DidsResultValidator.validate(
+                    (await didRegistry.getDidsByController(
+                        controller,
+                        2,
+                        2
+                    )) as ContractGetDidsResult
+                )
+                    .expectDidsArray(insertedDids.slice(2, 4))
+                    .expectCounts(insertedDids.length, 2)
+                    .expectPaginationInfo(1n, 3n)
+                DidsResultValidator.validate(
+                    await didRegistry.getDidsByController(controller, 3, 2)
+                )
+                    .expectDidsArray(insertedDids.slice(4))
+                    .expectCounts(insertedDids.length, 1)
+                    .expectPaginationInfo(2n, 3n)
+            })
+            it('GIVEN controlled documents WHEN try to get out of the list THEN returns emtpy list', async () => {
+                DidsResultValidator.validate(
+                    await didRegistry.getDidsByController(controller, 2, 5)
+                )
+                    .expectDidsArray([])
+                    .expectCounts(insertedDids.length, 0)
+                    .expectPaginationInfo(1n, 1n)
+            })
+        })
+
+        describe('getDidDocument', () => {
+            beforeEach(async () => {
+                randomizeDidDocument(ethers.Wallet.createRandom())
+                const fixture = async () => {
+                    await didRegistry.initializeDiDRegistry(
+                        EllipticType.SECP_256_K1
+                    )
+                    await didRegistry.insertDidDocument(
+                        did,
+                        baseDocument,
+                        vMethodId,
+                        publicKey64,
+                        EllipticType.SECP_256_K1,
+                        notBefore,
+                        notAfter
+                    )
+                }
+                await loadFixture(fixture)
+            })
+            it('GIVEN inserted document WHEN try to get it to the future THEN cant recover vMethods', async () => {
+                await mockTimestap.setMockedTimestamp(notBefore - 1n)
+                const didDocument = await didRegistry.getDidDocument(did)
+                const expectedEmpty = DidDocumentBuilder.empty(baseDocument, [
+                    did,
+                ])
+                DidDocumentVerifier.verifyDidDocument(
+                    didDocument,
+                    expectedEmpty
+                )
+            })
+            it('GIVEN inserted document WHEN try to get it in present THEN can recover vMethods', async () => {
+                await mockTimestap.setMockedTimestamp(notBefore + 1n)
+                const didDocument = await didRegistry.getDidDocument(did)
+                const expectedComplete = new DidDocumentBuilder(baseDocument, [
+                    did,
+                ])
+                    .addVMethod(
+                        vMethodId,
+                        publicKey64,
+                        EllipticType.SECP_256_K1,
+                        false
+                    )
+                    .addVRelationship(
+                        'authentication',
+                        vMethodId,
+                        notBefore,
+                        notAfter,
+                        0
+                    )
+                    .addVRelationship(
+                        'capabilityInvocation',
+                        vMethodId,
+                        notBefore,
+                        notAfter,
+                        0
+                    )
+                    .build()
+
+                DidDocumentVerifier.verifyDidDocument(
+                    didDocument,
+                    expectedComplete
+                )
+            })
+            it('GIVEN inserted document WHEN try to get it in past THEN cant recover vMethodsIds', async () => {
                 await mockTimestap.setMockedTimestamp(notAfter + 1n)
-                didDocument = await didRegistry.getDidDocument(did)
-                expect(didDocument[0]).to.equal(baseDocument)
-                expect(didDocument[1]).to.deep.equal([did])
-                expect(didDocument[2]).to.deep.equal([])
-                expect(didDocument[3]).to.have.lengthOf(0)
-                expect(didDocument[4]).to.have.lengthOf(0)
+                DidDocumentVerifier.verifyDidDocument(
+                    await didRegistry.getDidDocument(did),
+                    DidDocumentBuilder.empty(baseDocument, [did])
+                )
+            })
+        })
+
+        describe('getDidDocumentByTimestamp', () => {
+            beforeEach(async () => {
+                randomizeDidDocument(ethers.Wallet.createRandom())
+                const fixture = async () => {
+                    await didRegistry.initializeDiDRegistry(
+                        EllipticType.SECP_256_K1
+                    )
+                    await didRegistry.insertDidDocument(
+                        did,
+                        baseDocument,
+                        vMethodId,
+                        publicKey64,
+                        EllipticType.SECP_256_K1,
+                        notBefore,
+                        notAfter
+                    )
+                }
+                await loadFixture(fixture)
+            })
+            it('GIVEN inserted document WHEN try to get it to the future THEN cant recover vMethods', async () => {
+                const didDocument = await didRegistry.getDidDocumentByTimestamp(
+                    did,
+                    notBefore - 1n
+                )
+                const expectedEmpty = DidDocumentBuilder.empty(baseDocument, [
+                    did,
+                ])
+                DidDocumentVerifier.verifyDidDocument(
+                    didDocument,
+                    expectedEmpty
+                )
+            })
+            it('GIVEN inserted document WHEN try to get it in present THEN can recover vMethods', async () => {
+                const expectedComplete = new DidDocumentBuilder(baseDocument, [
+                    did,
+                ])
+                    .addVMethod(
+                        vMethodId,
+                        publicKey64,
+                        EllipticType.SECP_256_K1,
+                        false
+                    )
+                    .addVRelationship(
+                        'authentication',
+                        vMethodId,
+                        notBefore,
+                        notAfter,
+                        0
+                    )
+                    .addVRelationship(
+                        'capabilityInvocation',
+                        vMethodId,
+                        notBefore,
+                        notAfter,
+                        0
+                    )
+                    .build()
+
+                DidDocumentVerifier.verifyDidDocument(
+                    await didRegistry.getDidDocumentByTimestamp(
+                        did,
+                        notBefore + 1n
+                    ),
+                    expectedComplete
+                )
+            })
+            it('GIVEN inserted document WHEN try to get it in past THEN cant recover vMethodsIds', async () => {
+                DidDocumentVerifier.verifyDidDocument(
+                    await didRegistry.getDidDocumentByTimestamp(
+                        did,
+                        notAfter + 1n
+                    ),
+                    DidDocumentBuilder.empty(baseDocument, [did])
+                )
+            })
+        })
+
+        describe('checkController', () => {
+            let wallet: HDNodeWallet
+            let hexDid: string
+            beforeEach(async () => {
+                wallet = walletOfFirstSigner()
+                randomizeDidDocument(wallet)
+                const fixture = async () => {
+                    await didRegistry.initializeDiDRegistry(
+                        EllipticType.SECP_256_K1
+                    )
+                    await didRegistry.insertDidDocument(
+                        did,
+                        baseDocument,
+                        vMethodId,
+                        publicKey64,
+                        EllipticType.SECP_256_K1,
+                        notBefore,
+                        notAfter
+                    )
+                }
+                await loadFixture(fixture)
+                hexDid = ethers.hexlify(ethers.toUtf8Bytes(did))
+            })
+            it('GIVEN inserted document WHEN check controller with a non linked did THEN fails', async () => {
+                expect(
+                    await didRegistry['checkController(string,address)'](
+                        did,
+                        await wallet.getAddress()
+                    )
+                ).to.be.false
+                expect(
+                    await didRegistry['checkController(bytes,address)'](
+                        hexDid,
+                        await wallet.getAddress()
+                    )
+                ).to.be.false
+            })
+            it('GIVEN inserted document WHEN check controller with a linked did THEN success', async () => {
+                await mockTimestap.setMockedTimestamp(notBefore + 1n)
+                expect(
+                    await didRegistry['checkController(string,address)'](
+                        did,
+                        await wallet.getAddress()
+                    )
+                ).to.be.true
+                expect(
+                    await didRegistry['checkController(bytes,address)'](
+                        hexDid,
+                        await wallet.getAddress()
+                    )
+                ).to.be.true
             })
         })
     })

@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {IDidDocumentDetailed} from './interfaces/IDidDocumentDetailed.sol';
-import {_DID_DOCUMENT_DETAILED_STORAGE_POSITION} from '../../constants/storagePositions.sol';
 import {
     _AUTHENTICATION_RELATIONSHIP,
     _CAPABILITY_INVOCATION_RELATIONSHIP
 } from './constants.sol';
+import {IDidDocumentDetailed} from './interfaces/IDidDocumentDetailed.sol';
+import {IDidDocumentDetailed} from './interfaces/IDidDocumentDetailed.sol';
+import {LibCommon} from '../../core/LibCommon.sol';
 import {VRelationshipsInternal} from './VRelationshipsInternal.sol';
+import {_DID_DOCUMENT_DETAILED_STORAGE_POSITION} from '../../constants/storagePositions.sol';
+import {_DID_DOCUMENT_DETAILED_STORAGE_POSITION} from '../../constants/storagePositions.sol';
 
 /**
  * @title Decentralised Identity Document Internal Implementation
@@ -69,6 +72,11 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
         _;
     }
 
+    modifier onlyDidExists(string memory _did) {
+        _checkDidExists(_did);
+        _;
+    }
+
     modifier onlyValidEllipticType(
         IDidDocumentDetailed.EllipticType _ellipticType
     ) {
@@ -103,8 +111,6 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
 
         document.exists = true;
         document.baseDocument = _baseDocument;
-        document.controllers.push(_did);
-        document.controllerExist[_did] = true;
         document.vMethods[_vMethodId] = IDidDocumentDetailed.VMethod({
             publicKey: _publicKey,
             ellipticType: _ellipticType,
@@ -164,22 +170,80 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
         return true;
     }
 
-    function _addVerificationRelationship(
-        string memory _method,
-        string memory _vMethodId,
+    function _addControllerToDocument(
         string memory _did,
-        uint256 _notBefore,
-        uint256 _notAfter
-    ) internal returns (uint256) {
-        _checkValidRelationshipName(_method);
+        string memory _controller
+    ) internal returns (bool) {
+        DidDocument storage document = _didDocumentsStorage().didList[_did];
+        document.controllers.push(_controller);
+        document.controllerExist[_controller] = true;
+        return true;
+    }
 
-        return
-            _addVerificationRelationship(
-                _buildVerificationRelationshipId(_method, _vMethodId),
-                _did,
-                _notBefore,
-                _notAfter
-            );
+    function _removeControllerToDocument(
+        string memory _did,
+        string memory _controller
+    ) internal returns (bool) {
+        DidDocument storage document = _didDocumentsStorage().didList[_did];
+        string[] memory controllers = document.controllers;
+        uint256 length = controllers.length;
+        uint256 index;
+        unchecked {
+            --length;
+        }
+        for (; index < length; ) {
+            if (_equalStrings(_controller, controllers[length])) {
+                document.controllers[index] = document.controllers[length];
+                break;
+            }
+            unchecked {
+                ++index;
+            }
+        }
+        document.controllers.pop();
+        document.controllerExist[_controller] = false;
+        return true;
+    }
+
+    function _updateBaseDocument(
+        string memory did,
+        string memory baseDocument
+    ) internal returns (bool) {
+        _didDocumentsStorage().didList[did].baseDocument = baseDocument;
+        return true;
+    }
+
+    function _getDids(
+        uint256 _page,
+        uint256 _pageSize
+    )
+        internal
+        view
+        returns (
+            string[] memory items_,
+            uint256 total_,
+            uint256 howMany_,
+            uint256 prev_,
+            uint256 next_
+        )
+    {
+        string[] storage dids = _didDocumentsStorage().dids;
+        total_ = dids.length;
+        uint256 cursor;
+        (cursor, howMany_, prev_, next_) = LibCommon.getPaginationParameters(
+            dids.length,
+            _page,
+            _pageSize
+        );
+        if (howMany_ == 0) return (items_, total_, howMany_, prev_, next_);
+        items_ = new string[](howMany_);
+        for (uint256 i; i < howMany_; ) {
+            items_[i] = dids[cursor];
+            unchecked {
+                ++i;
+                ++cursor;
+            }
+        }
     }
 
     function _getDidDocument(
@@ -239,8 +303,84 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
         );
     }
 
+    function _checkDidExists(string memory _did) internal view {
+        require(_existsDid(_did), IDidDocumentDetailed.DidNotExists(_did));
+    }
+
     function _notExistDid(string memory _did) internal view returns (bool) {
-        return !_didDocumentsStorage().didList[_did].exists;
+        return !_existsDid(_did);
+    }
+
+    function _existsDid(string memory _did) internal view returns (bool) {
+        return _didDocumentsStorage().didList[_did].exists;
+    }
+
+    function _isController(
+        string memory did,
+        address controller
+    ) internal view returns (bool) {
+        DidDocumentsStorage storage $ = _didDocumentsStorage();
+        DidDocument storage document = $.didList[did];
+
+        uint256 controllersLength = document.controllers.length;
+        if (controllersLength == 0) return false;
+        uint256 blockTimestamp = _blockTimestamp();
+        unchecked {
+            string[] memory controllers = document.controllers;
+            for (uint256 i; i < controllersLength; ++i) {
+                DidDocument storage docController = $.didList[controllers[i]];
+                string memory vMethodId = docController.vMethodIdOfAddress[
+                    controller
+                ];
+
+                if (
+                    _isEmptyString(vMethodId) ||
+                    !docController.capabilityInvocationMethodIdExist[vMethodId]
+                ) continue;
+
+                uint256 methodIndex = docController
+                    .capabilityInvocationMethodIdIndex[vMethodId];
+                IDidDocumentDetailed.VRelationship memory vRel = docController
+                    .capabilityInvocations[methodIndex];
+                if (
+                    blockTimestamp > vRel.notBefore &&
+                    vRel.notAfter > blockTimestamp
+                ) return true;
+            }
+        }
+        return false;
+    }
+
+    function _isController(
+        string memory did,
+        string memory controller
+    ) internal view returns (bool) {
+        return _didDocumentsStorage().didList[did].controllerExist[controller];
+    }
+
+    function _isNotController(
+        string memory did,
+        string memory controller
+    ) internal view returns (bool) {
+        return !_isController(did, controller);
+    }
+
+    function _addVerificationRelationship(
+        string memory _method,
+        string memory _vMethodId,
+        string memory _did,
+        uint256 _notBefore,
+        uint256 _notAfter
+    ) private returns (uint256) {
+        _checkValidRelationshipName(_method);
+
+        return
+            _addVerificationRelationship(
+                _buildVerificationRelationshipId(_method, _vMethodId),
+                _did,
+                _notBefore,
+                _notAfter
+            );
     }
 
     function _getMethodsAndRelations(
@@ -435,27 +575,18 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
         string[] memory _vMethodIdsAux,
         IDidDocumentDetailed.VMethod[] memory _vMethodsAux,
         uint256 _currentSize
-    ) private view returns (uint256 newSize_) {
-        bool vMethodAdded = false;
-
+    ) private view returns (uint256) {
         for (uint256 j; j < _currentSize; ) {
-            if (_equalStrings(_vMethodId, _vMethodIdsAux[j])) {
-                vMethodAdded = true;
-                break;
-            }
+            if (_equalStrings(_vMethodId, _vMethodIdsAux[j]))
+                return _currentSize;
             unchecked {
                 ++j;
             }
         }
-
-        if (!vMethodAdded) {
-            _vMethodIdsAux[_currentSize] = _vMethodId;
-            _vMethodsAux[_currentSize] = _document.vMethods[_vMethodId];
-            unchecked {
-                newSize_ = _currentSize + 1;
-            }
-        } else {
-            newSize_ = _currentSize;
+        _vMethodIdsAux[_currentSize] = _vMethodId;
+        _vMethodsAux[_currentSize] = _document.vMethods[_vMethodId];
+        unchecked {
+            return _currentSize + 1;
         }
     }
 

@@ -10,7 +10,7 @@ import {
     _CAPABILITY_DELEGATION_RELATIONSHIP
 } from './constants.sol';
 import {IDidDocumentDetailed} from './interfaces/IDidDocumentDetailed.sol';
-import {DidControllerInternal} from './DidControllerInternal.sol';
+import {Common} from '../../core/Common.sol';
 
 /**
  * @title Verification Relationships Internal Management
@@ -21,7 +21,7 @@ import {DidControllerInternal} from './DidControllerInternal.sol';
  *      Supports W3C DID specification relationship types with enhanced period management
  * @author ISBE Development Team
  */
-abstract contract VRelationshipsInternal is DidControllerInternal {
+abstract contract VRelationshipsInternal is Common {
     /**
      * @notice DID identifier with temporal validity period structure
      * @param did The unique DID identifier string

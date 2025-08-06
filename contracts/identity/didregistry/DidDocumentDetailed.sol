@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {DidDocumentDetailedInternal} from './DidDocumentDetailedInternal.sol';
 import {IDidDocumentDetailed} from './interfaces/IDidDocumentDetailed.sol';
 import {_DID_DOCUMENT_DETAILED_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
+import {DidControllerInternal} from './DidControllerInternal.sol';
 
 /**
  * @title Decentralised Identity Document Management System
@@ -15,7 +15,7 @@ import {_DID_DOCUMENT_DETAILED_RESOLVER_KEY} from '../../constants/resolverKeys.
  * @author ISBE Development Team
  */
 abstract contract DidDocumentDetailed is
-    DidDocumentDetailedInternal,
+    DidControllerInternal,
     IDidDocumentDetailed
 {
     function initializeDiDRegistry(
@@ -75,11 +75,46 @@ abstract contract DidDocumentDetailed is
             ) && _linkDidToController(_did, _did);
     }
 
+    function updateBaseDocument(
+        string memory did,
+        string memory baseDocument
+    )
+        external
+        override
+        emptyString(did)
+        emptyString(baseDocument)
+        onlyDidExists(did)
+        onlyControllerOrAuth(did)
+        returns (bool)
+    {
+        emit BaseDocumentUpdated(did, baseDocument);
+        return _updateBaseDocument(did, baseDocument);
+    }
+
+    function getDids(
+        uint256 _page,
+        uint256 _pageSize
+    )
+        external
+        view
+        override
+        returns (
+            string[] memory items_,
+            uint256 total_,
+            uint256 howMany_,
+            uint256 prev_,
+            uint256 next_
+        )
+    {
+        return _getDids(_page, _pageSize);
+    }
+
     function getDidDocument(
         string memory _did
     )
         external
         view
+        override
         returns (
             string memory baseDocument_,
             string[] memory controllers_,
@@ -89,5 +124,23 @@ abstract contract DidDocumentDetailed is
         )
     {
         return _getDidDocument(_did);
+    }
+
+    function getDidDocumentByTimestamp(
+        string memory _did,
+        uint256 _timestamp
+    )
+        external
+        view
+        override
+        returns (
+            string memory baseDocument_,
+            string[] memory controllers_,
+            string[] memory vMethodIds_,
+            VMethod[] memory vMethods_,
+            VRelationship[] memory vRelationships_
+        )
+    {
+        return _getDidDocumentByTimestamp(_did, _timestamp);
     }
 }

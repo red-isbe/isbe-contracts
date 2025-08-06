@@ -42,4 +42,9 @@ abstract contract Common is
         _checkEmptyBytes(_code);
         _;
     }
+
+    modifier emptyString(string memory _string) {
+        _checkEmptyString(_string);
+        _;
+    }
 }

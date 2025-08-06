@@ -137,7 +137,7 @@ abstract contract ISBEContext is Context {
      * @param _string The string to validate for non-empty content
      */
     function _checkEmptyString(string memory _string) internal pure {
-        require(abi.encodePacked(_string).length > 0, EmptyString());
+        require(!_isEmptyString(_string), EmptyString());
     }
 
     /**
@@ -179,5 +179,11 @@ abstract contract ISBEContext is Context {
      */
     function _checkValidDates(uint256 _before, uint256 _after) internal pure {
         require(_after >= _before, InvalidDates(_before, _after));
+    }
+
+    function _isEmptyString(
+        string memory _string
+    ) internal pure returns (bool) {
+        return abi.encodePacked(_string).length == 0;
     }
 }

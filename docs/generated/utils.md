@@ -296,6 +296,12 @@ after timestamp is before the before timestamp. Ensures temporal consistency_
 | \_before | uint256 | The earlier timestamp that should precede the later one |
 | \_after  | uint256 | The later timestamp that should follow the earlier one  |
 
+### \_isEmptyString
+
+```solidity
+function _isEmptyString(string _string) internal pure returns (bool)
+```
+
 ---
 
 ## InitializeBusinessLogic

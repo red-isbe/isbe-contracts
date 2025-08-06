@@ -99,6 +99,12 @@ interface IDidDocumentDetailed {
     error DidAlreadyExists(string did);
 
     /**
+     * @notice Thrown when attempting to use a DID that not exists in the registry
+     * @param did The decentralised identifier string that not exists
+     */
+    error DidNotExists(string did);
+
+    /**
      * @notice Thrown when provided control bytes are malformed or invalid
      */
     error InvalidControlBytes();
@@ -154,10 +160,10 @@ interface IDidDocumentDetailed {
      * @param baseDocument The new base JSON-LD document content
      * @return success Whether the base document update completed successfully
      */
-    //    function updateBaseDocument(
-    //        string memory did,
-    //        string memory baseDocument
-    //    ) external returns (bool success);
+    function updateBaseDocument(
+        string memory did,
+        string memory baseDocument
+    ) external returns (bool success);
 
     /**
      * @notice Retrieves a paginated list of all registered DIDs in the system
@@ -170,19 +176,19 @@ interface IDidDocumentDetailed {
      * @return prev The previous page number, or current page if no previous page exists
      * @return next The next page number, or current page if no next page exists
      */
-    //    function getDids(
-    //        uint256 page,
-    //        uint256 pageSize
-    //    )
-    //    external
-    //    view
-    //    returns (
-    //        string[] memory items,
-    //        uint256 total,
-    //        uint256 howMany,
-    //        uint256 prev,
-    //        uint256 next
-    //    );
+    function getDids(
+        uint256 page,
+        uint256 pageSize
+    )
+        external
+        view
+        returns (
+            string[] memory items,
+            uint256 total,
+            uint256 howMany,
+            uint256 prev,
+            uint256 next
+        );
 
     /**
      * @notice Retrieves complete DID document details for a specified identifier
@@ -220,17 +226,17 @@ interface IDidDocumentDetailed {
      * @return vMethods Array of verification method structures valid at the timestamp
      * @return vRelationships Array of verification relationships active at the timestamp
      */
-    //    function getDidDocumentByTimestamp(
-    //        string memory did,
-    //        uint256 timestamp
-    //    )
-    //    external
-    //    view
-    //    returns (
-    //        string memory baseDocument,
-    //        string[] memory controllers,
-    //        string[] memory vMethodIds,
-    //        VMethod[] memory vMethods,
-    //        VRelationship[] memory vRelationships
-    //    );
+    function getDidDocumentByTimestamp(
+        string memory did,
+        uint256 timestamp
+    )
+        external
+        view
+        returns (
+            string memory baseDocument,
+            string[] memory controllers,
+            string[] memory vMethodIds,
+            VMethod[] memory vMethods,
+            VRelationship[] memory vRelationships
+        );
 }

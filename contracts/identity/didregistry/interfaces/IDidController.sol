@@ -24,6 +24,27 @@ interface IDidController {
     event ControllerRevoked(string did, string controller);
 
     /**
+     * @notice Raised when a controller is not authorized
+     * @param did The decentralised identifier losing the controller
+     * @param controller The controller identifier being revoked
+     */
+    error ControllerNotAuthorized(string did, address controller);
+
+    /**
+     * @notice Raised when a DID is not controlled by
+     * @param did The decentralised identifier
+     * @param controller The controller identifier
+     */
+    error DidIsNotControlledBy(string did, string controller);
+
+    /**
+     * @notice Raised when a DID is controlled by
+     * @param did The decentralised identifier
+     * @param controller The controller identifier
+     */
+    error DidIsControlledBy(string did, string controller);
+
+    /**
      * @notice Adds a new controller to the specified DID
      * @dev Requires appropriate authorisation to modify the DID
      * @param did The decentralised identifier to receive the new controller

@@ -59,6 +59,7 @@ import {
     ISBE_CUT_RESOLVER_KEY,
     ISBE_LOUPE_RESOLVER_KEY,
     DID_DOCUMENT_DETAILED_RESOLVER_KEY,
+    DID_CONTROLLER_RESOLVER_KEY,
 } from './constants'
 import { getEvent } from '../scripts/utils/getEvent'
 import { getIsbeFactory } from '../scripts/utils/getIsbeFactory'
@@ -310,6 +311,7 @@ export async function deployGovernance(
         erc721: useCaseDeployment.erc721,
         erc721TestWrapper: useCaseDeployment.erc721TestWrapper,
         didDocumentDetailedFacet: useCaseDeployment.didDocumentDetailedFacet,
+        didControllerFacet: useCaseDeployment.didControllerFacet,
         didRegistry: useCaseDeployment.didRegistry,
         diamondCutAccessControlFacet,
         diamondLoupeFacet,
@@ -642,6 +644,9 @@ export async function deployDidRegistryUseCaseFacets(
     const DidDocumentDetailedFacetFactory = await ethers.getContractFactory(
         'DidDocumentDetailedTestWrapperFacet'
     )
+    const DidControllerFacetFactory = await ethers.getContractFactory(
+        'DidControllerTestWrapperFacet'
+    )
 
     const isbeCutFacet = await deployBusinessLogicFromFactory(
         ISBE_CUT_RESOLVER_KEY,
@@ -666,6 +671,11 @@ export async function deployDidRegistryUseCaseFacets(
         DidDocumentDetailedFacetFactory
     )
 
+    const didControllerFacet = await deployBusinessLogicFromFactory(
+        DID_CONTROLLER_RESOLVER_KEY,
+        DidControllerFacetFactory
+    )
+
     // Deploy all business logic contracts before setting configuration
     await deployBusinessLogicFromFactory(
         MOCK_TIMESTAMP_RESOLVER_KEY,
@@ -679,6 +689,10 @@ export async function deployDidRegistryUseCaseFacets(
         },
         {
             businessId: DID_DOCUMENT_DETAILED_RESOLVER_KEY,
+            version: 1,
+        },
+        {
+            businessId: DID_CONTROLLER_RESOLVER_KEY,
             version: 1,
         },
     ])
@@ -719,6 +733,7 @@ export async function deployDidRegistryUseCaseFacets(
         isbeLoupeFacet,
         proxy,
         didDocumentDetailedFacet,
+        didControllerFacet,
         didRegistry,
     }
 }
