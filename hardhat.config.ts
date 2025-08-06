@@ -61,6 +61,17 @@ const config: HardhatUserConfig = {
         },
     },
     networks: {
+        hardhat: {
+            // Optimizaciones para tests
+            mining: {
+                auto: true,
+                interval: 0, // Minado instantáneo
+            },
+            // Aumentar límite de gas para despliegues complejos
+            blockGasLimit: 30000000,
+            // Habilitar optimizaciones
+            allowUnlimitedContractSize: true,
+        },
         localhost: {
             url: 'http://127.0.0.1:8545',
             // No need for accounts; Hardhat provides them
@@ -90,7 +101,10 @@ const config: HardhatUserConfig = {
             blockGasLimit: 18800000,
         },
     },
-
+    mocha: {
+        timeout: 60000, // 60 segundos timeout
+        parallel: true, // Considerar true si tests son independientes
+    },
     paths: {
         sources: './contracts',
         tests: './test',

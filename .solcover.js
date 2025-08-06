@@ -1,18 +1,28 @@
 module.exports = {
-    skipFiles: [
-        'testwrapper/assetevent/AssetEventTrackerTestWrapper.sol',
-        'testwrapper/factory/facet/CounterFacetInternal.sol',
-        'testwrapper/factory/facet/CounterFacetTestWrapper.sol',
-        'testwrapper/factory/facet/CounterV2FacetTestWrapper.sol',
-        'testwrapper/hashtimestamp/HashTimestampTestWrapper.sol',
-        'testwrapper/mockTimestamp/IMockTimestamp.sol',
-        'testwrapper/mockTimestamp/MockTimestamp.sol',
-        'testwrapper/mockTimestamp/MockTimestampFacet.sol',
-        'testwrapper/reentrancyguard/ReentrancyGuardTestWrapper.sol',
-        'testwrapper/tokens/erc20/ERC20TestWrapper.sol',
-        'testwrapper/tokens/erc20/ERC20TestWrapperTransparent.sol',
-        'testwrapper/tokens/erc20/ERC20TestWrapperUUPS.sol',
-        'testwrapper/tokens/erc721/ERC721TestWrapper.sol',
-        'testwrapper/tokens/erc721/ERC721WrongReceiverMock.sol',
-    ],
+    skipFiles: ['testwrapper/'],
+    mocha: {
+        timeout: 120000, // 2 minutos timeout para coverage
+        parallel: false, // Desactivar modo paralelo para solidity-coverage
+    },
+    configureYulOptimizer: true,
+    measureStatementCoverage: true,
+    measureFunctionCoverage: true,
+    measureBranchCoverage: true,
+    measureLineCoverage: true,
+    istanbulReporter: ['html', 'lcov', 'text', 'json'],
+    providerOptions: {
+        // Configuraciones específicas para el provider durante coverage
+        mnemonic: 'test test test test test test test test test test test junk',
+        gasLimit: 0xfffffffffff,
+        gasPrice: 0x01,
+    },
+    networks: {
+        coverage: {
+            host: 'localhost',
+            network_id: '*',
+            port: 8555,
+            gas: 0xfffffffffff,
+            gasPrice: 0x01,
+        },
+    },
 }

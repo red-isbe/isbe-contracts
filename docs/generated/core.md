@@ -27,10 +27,10 @@ _Checks if an address equals to zero address_
 modifier bytes32IsNotZero(bytes32 _hash)
 ```
 
-### emptyCode
+### emptyBytes
 
 ```solidity
-modifier emptyCode(bytes _code)
+modifier emptyBytes(bytes _code)
 ```
 
 ---
