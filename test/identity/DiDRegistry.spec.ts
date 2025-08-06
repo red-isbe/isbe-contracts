@@ -1,8 +1,9 @@
 import { expect } from 'chai'
-import { ethers, config } from 'hardhat'
+import { config, ethers } from 'hardhat'
 import {
     DidControllerFacet,
     DidDocumentDetailedFacet,
+    DidVerificationMethodFacet,
     IDidRegistry,
     MockTimestampFacet,
 } from '../../typechain-types'
@@ -14,8 +15,8 @@ import {
 } from '../initialization'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import {
-    DidDocumentVerifier,
     DidDocumentBuilder,
+    DidDocumentVerifier,
     DidsResultValidator,
     ContractGetDidsResult,
 } from './utils'
@@ -28,8 +29,11 @@ enum EllipticType {
 
 describe('DiDRegistry', function () {
     let admin: Signer
+    let other: Signer
+    let otherAddress: string
     let didDocumentDetailedFacet: DidDocumentDetailedFacet
     let didControllerFacet: DidControllerFacet
+    let didVerificationMethodFacet: DidVerificationMethodFacet
     let didRegistry: IDidRegistry
     let mockTimestap: MockTimestampFacet
     const emptyString = ''
@@ -44,12 +48,16 @@ describe('DiDRegistry', function () {
     let publicKey65: string
     let publicKey64: string
 
+    const walletToPublicKey = (wallet: HDNodeWallet): string => {
+        return wallet.signingKey.publicKey
+    }
+
     const randomizeDidDocument = (wallet: HDNodeWallet) => {
         baseDocument = randomStr()
         vMethodId = randomStr()
         publicKeyInvalindLength = randomHx()
         publicKey65Incorrect = randomHx(65)
-        publicKey65 = wallet.signingKey.publicKey
+        publicKey65 = walletToPublicKey(wallet)
         publicKey64 = '0x'.concat(publicKey65.slice(4))
         notBefore = randomInt()
         notAfter = notBefore + 1000000000000000000n
@@ -73,7 +81,8 @@ describe('DiDRegistry', function () {
     }
 
     async function deployInitial() {
-        ;[admin] = await ethers.getSigners()
+        ;[admin, other] = await ethers.getSigners()
+        otherAddress = await other.getAddress()
         const gov = await deployGovernance(
             admin,
             undefined,
@@ -81,6 +90,7 @@ describe('DiDRegistry', function () {
         )
         didDocumentDetailedFacet = gov.didDocumentDetailedFacet
         didControllerFacet = gov.didControllerFacet
+        didVerificationMethodFacet = gov.didVerificationMethodFacet
         didRegistry = gov.didRegistry
         mockTimestap = gov.mockTimestamp
         expect(
@@ -103,6 +113,10 @@ describe('DiDRegistry', function () {
             }
         ).mnemonic
         return ethers.Wallet.fromPhrase(mnemonic)
+    }
+
+    function deriveWallet(wallet: HDNodeWallet, path: string): HDNodeWallet {
+        return wallet.derivePath(path)
     }
 
     describe('DiDRegistry', () => {
@@ -462,6 +476,507 @@ describe('DiDRegistry', function () {
                 )
                     .to.emit(didRegistry, 'BaseDocumentUpdated')
                     .withArgs(did, newBaseDocument)
+            })
+        })
+
+        describe('addVerificationMethod', () => {
+            let wallet: HDNodeWallet
+            before(async () => {
+                wallet = walletOfFirstSigner()
+                randomizeDidDocument(wallet)
+            })
+            beforeEach(async () => {
+                const fixture = async () => {
+                    await didRegistry.initializeDiDRegistry(
+                        EllipticType.SECP_256_K1
+                    )
+                    await didRegistry.insertDidDocument(
+                        did,
+                        baseDocument,
+                        vMethodId,
+                        publicKey65,
+                        EllipticType.SECP_256_K1,
+                        notBefore,
+                        notAfter
+                    )
+                    await mockTimestap.setMockedTimestamp(notBefore + 1n)
+                }
+                await loadFixture(fixture)
+            })
+
+            it('GIVEN an inserted document WHEN try to add V.M. with empty did THEN it fails', async () => {
+                await expect(
+                    didRegistry.addVerificationMethod(
+                        emptyString,
+                        randomStr(),
+                        publicKey64,
+                        EllipticType.SECP_256_K1
+                    )
+                ).to.be.revertedWithCustomError(
+                    didVerificationMethodFacet,
+                    'EmptyString'
+                )
+            })
+            it('GIVEN an inserted document WHEN try to add V.M. with empty vMethod THEN it fails', async () => {
+                await expect(
+                    didRegistry.addVerificationMethod(
+                        randomStr(),
+                        emptyString,
+                        publicKey64,
+                        EllipticType.SECP_256_K1
+                    )
+                ).to.be.revertedWithCustomError(
+                    didVerificationMethodFacet,
+                    'EmptyString'
+                )
+            })
+            it('GIVEN an inserted document WHEN try to add V.M. with empty PK THEN it fails', async () => {
+                await expect(
+                    didRegistry.addVerificationMethod(
+                        randomStr(),
+                        randomStr(),
+                        emptyBytes,
+                        EllipticType.SECP_256_K1
+                    )
+                ).to.be.revertedWithCustomError(
+                    didVerificationMethodFacet,
+                    'EmptyBytes'
+                )
+            })
+            it('GIVEN an inserted document WHEN try to add V.M. with empty elliptic type THEN it fails', async () => {
+                await expect(
+                    didRegistry.addVerificationMethod(
+                        randomStr(),
+                        randomStr(),
+                        publicKey64,
+                        EllipticType.NONE
+                    )
+                ).to.be.revertedWithCustomError(
+                    didVerificationMethodFacet,
+                    'InvalidEllipticCurve'
+                )
+            })
+            it('GIVEN an inserted document WHEN try to add V.M. with not inserted did THEN it fails', async () => {
+                const newDid = randomStr()
+                await expect(
+                    didRegistry.addVerificationMethod(
+                        newDid,
+                        randomStr(),
+                        publicKey64,
+                        EllipticType.SECP_256_K1
+                    )
+                )
+                    .to.be.revertedWithCustomError(
+                        didVerificationMethodFacet,
+                        'DidNotExists'
+                    )
+                    .withArgs(newDid)
+            })
+            it('GIVEN an inserted document WHEN try to add V.M. with inserted vMethodId THEN it fails', async () => {
+                await expect(
+                    didRegistry.addVerificationMethod(
+                        did,
+                        vMethodId,
+                        publicKey64,
+                        EllipticType.SECP_256_K1
+                    )
+                )
+                    .to.be.revertedWithCustomError(
+                        didVerificationMethodFacet,
+                        'VerificationMethodExists'
+                    )
+                    .withArgs(did, vMethodId)
+            })
+            it('GIVEN an inserted document WHEN try to add V.M. with inserted PK THEN it fails', async () => {
+                const newVMethodId = randomStr()
+                await expect(
+                    didRegistry.addVerificationMethod(
+                        did,
+                        newVMethodId,
+                        publicKey64,
+                        EllipticType.SECP_256_K1
+                    )
+                )
+                    .to.be.revertedWithCustomError(
+                        didVerificationMethodFacet,
+                        'PublicKeyAlreadyInUse'
+                    )
+                    .withArgs(publicKey64)
+            })
+            it('GIVEN an inserted document WHEN try to add V.M. with a non controller THEN it fails', async () => {
+                const newMethodId = randomStr()
+                await expect(
+                    didRegistry
+                        .connect(other)
+                        .addVerificationMethod(
+                            did,
+                            newMethodId,
+                            walletToPublicKey(deriveWallet(wallet, '1')),
+                            EllipticType.SECP_256_K1
+                        )
+                )
+                    .to.be.revertedWithCustomError(
+                        didVerificationMethodFacet,
+                        'ControllerNotAuthorized'
+                    )
+                    .withArgs(did, otherAddress)
+            })
+            it('GIVEN an inserted document WHEN try to add V.M. of same elliptic type than NW THEN it success', async () => {
+                const newVMethodId = randomStr()
+                const newPublicKey = walletToPublicKey(
+                    deriveWallet(wallet, '1')
+                )
+
+                expect(
+                    await didRegistry.addVerificationMethod(
+                        did,
+                        newVMethodId,
+                        newPublicKey,
+                        EllipticType.SECP_256_R1
+                    )
+                )
+                    .to.emit(
+                        didVerificationMethodFacet,
+                        'VerificationMethodAdded'
+                    )
+                    .withArgs(
+                        did,
+                        newVMethodId,
+                        newPublicKey,
+                        EllipticType.SECP_256_R1
+                    )
+
+                const didDocument = await didRegistry.getDidDocument(did)
+                const expectedComplete = new DidDocumentBuilder(baseDocument, [
+                    did,
+                ])
+                    .addVMethod(
+                        vMethodId,
+                        publicKey65,
+                        EllipticType.SECP_256_K1,
+                        false
+                    )
+                    .addVRelationship(
+                        'authentication',
+                        vMethodId,
+                        notBefore,
+                        notAfter,
+                        0
+                    )
+                    .addVRelationship(
+                        'capabilityInvocation',
+                        vMethodId,
+                        notBefore,
+                        notAfter,
+                        0
+                    )
+                    .build()
+                DidDocumentVerifier.verifyDidDocument(
+                    didDocument,
+                    expectedComplete
+                )
+            })
+        })
+
+        describe('revokeVerificationMethod', () => {
+            let wallet: HDNodeWallet
+            before(async () => {
+                wallet = walletOfFirstSigner()
+                randomizeDidDocument(wallet)
+            })
+            beforeEach(async () => {
+                const fixture = async () => {
+                    await didRegistry.initializeDiDRegistry(
+                        EllipticType.SECP_256_K1
+                    )
+                    await didRegistry.insertDidDocument(
+                        did,
+                        baseDocument,
+                        vMethodId,
+                        publicKey65,
+                        EllipticType.SECP_256_K1,
+                        notBefore,
+                        notAfter
+                    )
+                    await mockTimestap.setMockedTimestamp(notBefore + 1n)
+                }
+                await loadFixture(fixture)
+            })
+
+            it('GIVEN an inserted document WHEN try to revoke V.M. with empty did THEN it fails', async () => {
+                await expect(
+                    didRegistry.revokeVerificationMethod(
+                        emptyString,
+                        randomStr(),
+                        randomInt()
+                    )
+                ).to.be.revertedWithCustomError(
+                    didVerificationMethodFacet,
+                    'EmptyString'
+                )
+            })
+            it('GIVEN an inserted document WHEN try to revoke V.M. with empty vMethod THEN it fails', async () => {
+                await expect(
+                    didRegistry.revokeVerificationMethod(
+                        randomStr(),
+                        emptyString,
+                        randomInt()
+                    )
+                ).to.be.revertedWithCustomError(
+                    didVerificationMethodFacet,
+                    'EmptyString'
+                )
+            })
+            it('GIVEN an inserted document WHEN try to revoke V.M. with not inserted did THEN it fails', async () => {
+                const newDid = randomStr()
+                await expect(
+                    didRegistry.revokeVerificationMethod(
+                        newDid,
+                        randomStr(),
+                        notBefore
+                    )
+                )
+                    .to.be.revertedWithCustomError(
+                        didVerificationMethodFacet,
+                        'DidNotExists'
+                    )
+                    .withArgs(newDid)
+            })
+            it('GIVEN an inserted document WHEN try to revoke V.M. with inserted vMethodId THEN it fails', async () => {
+                const newVMethodId = randomStr()
+                await expect(
+                    didRegistry.revokeVerificationMethod(
+                        did,
+                        newVMethodId,
+                        notBefore
+                    )
+                )
+                    .to.be.revertedWithCustomError(
+                        didVerificationMethodFacet,
+                        'VerificationMethodNotExists'
+                    )
+                    .withArgs(did, newVMethodId)
+            })
+            it('GIVEN an inserted document WHEN try to revoke V.M. with inserted 0 notAfter THEN it fails', async () => {
+                await expect(
+                    didRegistry.revokeVerificationMethod(did, vMethodId, 0)
+                ).to.be.revertedWithCustomError(
+                    didVerificationMethodFacet,
+                    'EmptyUint'
+                )
+            })
+            it('GIVEN an inserted document WHEN try to revoke V.M. with inserted future notAfter THEN it fails', async () => {
+                await expect(
+                    didRegistry.revokeVerificationMethod(
+                        did,
+                        vMethodId,
+                        notBefore + 2n
+                    )
+                ).to.be.revertedWithCustomError(
+                    didVerificationMethodFacet,
+                    'InvalidNotAfter'
+                )
+            })
+            it('GIVEN an inserted document WHEN try to revoke V.M. of same elliptic type than NW THEN it success', async () => {
+                expect(
+                    await didRegistry.revokeVerificationMethod(
+                        did,
+                        vMethodId,
+                        notBefore
+                    )
+                )
+                    .to.emit(
+                        didVerificationMethodFacet,
+                        'VerificationMethodRevoked'
+                    )
+                    .withArgs(did, vMethodId, notBefore)
+
+                const didDocument = await didRegistry.getDidDocument(did)
+                const expectedComplete = new DidDocumentBuilder(baseDocument, [
+                    did,
+                ])
+                    .addVMethod(
+                        vMethodId,
+                        publicKey65,
+                        EllipticType.SECP_256_K1,
+                        true
+                    )
+                    .addVRelationship(
+                        'authentication',
+                        vMethodId,
+                        notBefore,
+                        notAfter,
+                        0
+                    )
+                    .addVRelationship(
+                        'capabilityInvocation',
+                        vMethodId,
+                        notBefore,
+                        notAfter,
+                        0
+                    )
+                    .build()
+                DidDocumentVerifier.verifyDidDocument(
+                    didDocument,
+                    expectedComplete
+                )
+                expect(
+                    await didRegistry['checkController(string,address)'](
+                        did,
+                        await admin.getAddress()
+                    )
+                ).to.be.false
+            })
+        })
+
+        describe('expireVerificationMethod', () => {
+            let wallet: HDNodeWallet
+            before(async () => {
+                wallet = walletOfFirstSigner()
+                randomizeDidDocument(wallet)
+            })
+            beforeEach(async () => {
+                const fixture = async () => {
+                    await didRegistry.initializeDiDRegistry(
+                        EllipticType.SECP_256_K1
+                    )
+                    await didRegistry.insertDidDocument(
+                        did,
+                        baseDocument,
+                        vMethodId,
+                        publicKey65,
+                        EllipticType.SECP_256_K1,
+                        notBefore,
+                        notAfter
+                    )
+                    await mockTimestap.setMockedTimestamp(notBefore + 1n)
+                }
+                await loadFixture(fixture)
+            })
+
+            it('GIVEN an inserted document WHEN try to expire V.M. with empty did THEN it fails', async () => {
+                await expect(
+                    didRegistry.expireVerificationMethod(
+                        emptyString,
+                        randomStr(),
+                        randomInt()
+                    )
+                ).to.be.revertedWithCustomError(
+                    didVerificationMethodFacet,
+                    'EmptyString'
+                )
+            })
+            it('GIVEN an inserted document WHEN try to expire V.M. with empty vMethod THEN it fails', async () => {
+                await expect(
+                    didRegistry.expireVerificationMethod(
+                        randomStr(),
+                        emptyString,
+                        randomInt()
+                    )
+                ).to.be.revertedWithCustomError(
+                    didVerificationMethodFacet,
+                    'EmptyString'
+                )
+            })
+            it('GIVEN an inserted document WHEN try to expire V.M. with not inserted did THEN it fails', async () => {
+                const newDid = randomStr()
+                await expect(
+                    didRegistry.expireVerificationMethod(
+                        newDid,
+                        randomStr(),
+                        notBefore
+                    )
+                )
+                    .to.be.revertedWithCustomError(
+                        didVerificationMethodFacet,
+                        'DidNotExists'
+                    )
+                    .withArgs(newDid)
+            })
+            it('GIVEN an inserted document WHEN try to expire V.M. with inserted vMethodId THEN it fails', async () => {
+                const newVMethodId = randomStr()
+                await expect(
+                    didRegistry.expireVerificationMethod(
+                        did,
+                        newVMethodId,
+                        notBefore
+                    )
+                )
+                    .to.be.revertedWithCustomError(
+                        didVerificationMethodFacet,
+                        'VerificationMethodNotExists'
+                    )
+                    .withArgs(did, newVMethodId)
+            })
+            it('GIVEN an inserted document WHEN try to expire V.M. with inserted 0 notAfter THEN it fails', async () => {
+                await expect(
+                    didRegistry.expireVerificationMethod(did, vMethodId, 0)
+                ).to.be.revertedWithCustomError(
+                    didVerificationMethodFacet,
+                    'EmptyUint'
+                )
+            })
+            it('GIVEN an inserted document WHEN try to expire V.M. with inserted future notAfter THEN it fails', async () => {
+                await expect(
+                    didRegistry.expireVerificationMethod(
+                        did,
+                        vMethodId,
+                        notBefore - 2n
+                    )
+                ).to.be.revertedWithCustomError(
+                    didVerificationMethodFacet,
+                    'InvalidNotAfter'
+                )
+            })
+            it('GIVEN an inserted document WHEN try to expire V.M. of same elliptic type than NW THEN it success', async () => {
+                expect(
+                    await didRegistry.expireVerificationMethod(
+                        did,
+                        vMethodId,
+                        notBefore + 2n
+                    )
+                )
+                    .to.emit(
+                        didVerificationMethodFacet,
+                        'VerificationMethodExpired'
+                    )
+                    .withArgs(did, vMethodId, notBefore)
+
+                const didDocument = await didRegistry.getDidDocument(did)
+                const expectedComplete = new DidDocumentBuilder(baseDocument, [
+                    did,
+                ])
+                    .addVMethod(
+                        vMethodId,
+                        publicKey65,
+                        EllipticType.SECP_256_K1,
+                        false
+                    )
+                    .addVRelationship(
+                        'authentication',
+                        vMethodId,
+                        notBefore,
+                        notAfter,
+                        0
+                    )
+                    .addVRelationship(
+                        'capabilityInvocation',
+                        vMethodId,
+                        notBefore,
+                        notAfter,
+                        0
+                    )
+                    .build()
+                DidDocumentVerifier.verifyDidDocument(
+                    didDocument,
+                    expectedComplete
+                )
+                expect(
+                    await didRegistry['checkController(string,address)'](
+                        did,
+                        await admin.getAddress()
+                    )
+                ).to.be.false
             })
         })
 

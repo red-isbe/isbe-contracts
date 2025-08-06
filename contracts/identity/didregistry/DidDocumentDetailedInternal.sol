@@ -6,7 +6,7 @@ import {
     _CAPABILITY_INVOCATION_RELATIONSHIP
 } from './constants.sol';
 import {IDidDocumentDetailed} from './interfaces/IDidDocumentDetailed.sol';
-import {IDidDocumentDetailed} from './interfaces/IDidDocumentDetailed.sol';
+import {IDidVerificationMethod} from './interfaces/IDidVerificationMethod.sol';
 import {LibCommon} from '../../core/LibCommon.sol';
 import {VRelationshipsInternal} from './VRelationshipsInternal.sol';
 import {_DID_DOCUMENT_DETAILED_STORAGE_POSITION} from '../../constants/storagePositions.sol';
@@ -91,6 +91,22 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
         _;
     }
 
+    modifier onlyEmptyVMethodAndPublicKey(
+        string memory _did,
+        string memory _vMethodId,
+        bytes memory _publicKey,
+        IDidDocumentDetailed.EllipticType _ellipticType
+    ) {
+        _checkEmptyVMethod(_did, _vMethodId);
+        _checkPublicKeyNotAssigned(_did, _publicKey, _ellipticType);
+        _;
+    }
+
+    modifier onlyVMethodIdExists(string memory _did, string memory _vMethodId) {
+        _checkVMethodExists(_did, _vMethodId);
+        _;
+    }
+
     function _setEllipticType(
         IDidDocumentDetailed.EllipticType _ellipticType
     ) internal {
@@ -111,16 +127,12 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
 
         document.exists = true;
         document.baseDocument = _baseDocument;
-        document.vMethods[_vMethodId] = IDidDocumentDetailed.VMethod({
-            publicKey: _publicKey,
-            ellipticType: _ellipticType,
-            revoked: false
-        });
+        _addVerificationMethod(_did, _vMethodId, _publicKey, _ellipticType);
 
         //////
         uint256 indexDid;
 
-        indexDid = _addVerificationRelationship(
+        indexDid = _prepareAddVerificationRelationship(
             _CAPABILITY_INVOCATION_RELATIONSHIP,
             _vMethodId,
             _did,
@@ -143,7 +155,7 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
             )
         );
 
-        indexDid = _addVerificationRelationship(
+        indexDid = _prepareAddVerificationRelationship(
             _AUTHENTICATION_RELATIONSHIP,
             _vMethodId,
             _did,
@@ -167,6 +179,50 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
         );
 
         $.dids.push(_did);
+        return true;
+    }
+
+    function _addVerificationMethod(
+        string memory _did,
+        string memory _vMethodId,
+        bytes memory _publicKey,
+        IDidDocumentDetailed.EllipticType _ellipticType
+    ) internal returns (bool) {
+        DidDocumentsStorage storage $ = _didDocumentsStorage();
+        DidDocument storage document = $.didList[_did];
+        if (_ellipticType == $.networkEllipticType) {
+            document.vMethodIdOfAddress[_getAddress(_publicKey)] = _vMethodId;
+        }
+        document.vMethods[_vMethodId] = IDidDocumentDetailed.VMethod({
+            publicKey: _publicKey,
+            ellipticType: _ellipticType,
+            revoked: false
+        });
+        return true;
+    }
+
+    function _revokeVerificationMethod(
+        string memory _did,
+        string memory _vMethodId,
+        uint256 _notAfter
+    ) internal returns (bool) {
+        _expireVerificationMethod(_did, _vMethodId, _notAfter);
+        return
+            _didDocumentsStorage()
+                .didList[_did]
+                .vMethods[_vMethodId]
+                .revoked = true;
+    }
+
+    function _expireVerificationMethod(
+        string memory _did,
+        string memory _vMethodId,
+        uint256 _notAfter
+    ) internal returns (bool) {
+        DidDocumentsStorage storage $ = _didDocumentsStorage();
+        DidDocument storage document = $.didList[_did];
+        _revokeAllVerificationRelationships(document, _vMethodId, _notAfter);
+        _revokeCapabilityInvocation(document, _vMethodId, _notAfter, $);
         return true;
     }
 
@@ -307,12 +363,65 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
         require(_existsDid(_did), IDidDocumentDetailed.DidNotExists(_did));
     }
 
+    function _checkEmptyVMethod(
+        string memory _did,
+        string memory _vMethodId
+    ) internal view {
+        require(
+            _notExistsVMethod(_did, _vMethodId),
+            IDidVerificationMethod.VerificationMethodExists(_did, _vMethodId)
+        );
+    }
+
+    function _checkVMethodExists(
+        string memory _did,
+        string memory _vMethodId
+    ) internal view {
+        require(
+            _existsVMethod(_did, _vMethodId),
+            IDidVerificationMethod.VerificationMethodNotExists(_did, _vMethodId)
+        );
+    }
+
+    function _checkPublicKeyNotAssigned(
+        string memory _did,
+        bytes memory _publicKey,
+        IDidDocumentDetailed.EllipticType _ellipticType
+    ) internal view {
+        DidDocumentsStorage storage $ = _didDocumentsStorage();
+        if ($.networkEllipticType == _ellipticType)
+            require(
+                _isEmptyString(
+                    $.didList[_did].vMethodIdOfAddress[_getAddress(_publicKey)]
+                ),
+                IDidVerificationMethod.PublicKeyAlreadyInUse(_publicKey)
+            );
+    }
+
     function _notExistDid(string memory _did) internal view returns (bool) {
         return !_existsDid(_did);
     }
 
     function _existsDid(string memory _did) internal view returns (bool) {
         return _didDocumentsStorage().didList[_did].exists;
+    }
+
+    function _notExistsVMethod(
+        string memory _did,
+        string memory _vMethod
+    ) internal view returns (bool) {
+        return !_existsVMethod(_did, _vMethod);
+    }
+
+    function _existsVMethod(
+        string memory _did,
+        string memory _vMethod
+    ) internal view returns (bool) {
+        return
+            _didDocumentsStorage()
+                .didList[_did]
+                .vMethods[_vMethod]
+                .ellipticType != IDidDocumentDetailed.EllipticType.NONE;
     }
 
     function _isController(
@@ -365,7 +474,73 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
         return !_isController(did, controller);
     }
 
-    function _addVerificationRelationship(
+    function _revokeAllVerificationRelationships(
+        DidDocument storage document,
+        string memory _vMethodId,
+        uint256 _notAfter
+    ) private {
+        uint256[] storage relationshipIndexes = document.vRelationshipsIndexes[
+            _vMethodId
+        ];
+        uint256 length = relationshipIndexes.length;
+        while (length > 0) {
+            unchecked {
+                --length;
+            }
+            IDidDocumentDetailed.VRelationship storage vRelationship = document
+                .vRelationships[relationshipIndexes[length]];
+            _updateVerificationRelationship(
+                _buildVerificationRelationshipId(
+                    vRelationship.name,
+                    _vMethodId
+                ),
+                vRelationship.indexDid,
+                _notAfter
+            );
+        }
+    }
+
+    function _revokeCapabilityInvocation(
+        DidDocument storage document,
+        string memory _vMethodId,
+        uint256 _notAfter,
+        DidDocumentsStorage storage $
+    ) private {
+        if (!document.capabilityInvocationMethodIdExist[_vMethodId]) return;
+        IDidDocumentDetailed.VRelationship
+            storage capabilityInvocation = document.capabilityInvocations[
+                document.capabilityInvocationMethodIdIndex[_vMethodId]
+            ];
+        _cleanupAddressMappingIfNeeded(
+            document,
+            _vMethodId,
+            $.networkEllipticType
+        );
+        _updateVerificationRelationship(
+            _buildVerificationRelationshipId(
+                _CAPABILITY_INVOCATION_RELATIONSHIP,
+                _vMethodId
+            ),
+            capabilityInvocation.indexDid,
+            _notAfter
+        );
+    }
+
+    function _cleanupAddressMappingIfNeeded(
+        DidDocument storage document,
+        string memory _vMethodId,
+        IDidDocumentDetailed.EllipticType _networkEllipticType
+    ) private {
+        // Acceso directo al storage, evitar copia a memory
+        IDidDocumentDetailed.VMethod storage vMethod = document.vMethods[
+            _vMethodId
+        ];
+        if (vMethod.ellipticType == _networkEllipticType) {
+            delete document.vMethodIdOfAddress[_getAddress(vMethod.publicKey)];
+        }
+    }
+
+    function _prepareAddVerificationRelationship(
         string memory _method,
         string memory _vMethodId,
         string memory _did,
@@ -663,9 +838,7 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
             }
             return publicKeyWithoutPrefix;
         }
-        if (length == 64) {
-            return _publicKey;
-        }
+        if (length == 64) return _publicKey;
         revert IDidDocumentDetailed.InvalidPubKeyLength();
     }
 

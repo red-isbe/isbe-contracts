@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
+import {IDidDocumentDetailed} from './IDidDocumentDetailed.sol';
+
 /**
  * @title DID Verification Method Interface
  * @notice Interface for managing cryptographic verification methods within DID documents
@@ -14,7 +16,7 @@ interface IDidVerificationMethod {
      * @param did The decentralised identifier being updated
      * @param vMethodId The new verification method identifier
      * @param publicKey The new public key in bytes format
-     * @param isSecp256k1 Boolean indicating if the key uses secp256k1 curve
+     * @param ellipticType Cryptographic algorithm to verify signature
      * @param notBefore Unix timestamp when the new method becomes valid
      * @param notAfter Unix timestamp when the new method expires
      * @param oldVMethodId The verification method identifier being replaced
@@ -24,7 +26,7 @@ interface IDidVerificationMethod {
         string did;
         string vMethodId;
         bytes publicKey;
-        bool isSecp256k1;
+        IDidDocumentDetailed.EllipticType ellipticType;
         uint256 notBefore;
         uint256 notAfter;
         string oldVMethodId;
@@ -36,13 +38,13 @@ interface IDidVerificationMethod {
      * @param did The decentralised identifier receiving the new verification method
      * @param vMethodId The unique identifier for the verification method
      * @param publicKey The public key associated with the verification method
-     * @param isSecp256k1 Boolean indicating if the key uses secp256k1 elliptic curve
+     * @param ellipticType Cryptographic algorithm to verify signature
      */
     event VerificationMethodAdded(
         string did,
         string vMethodId,
         bytes publicKey,
-        bool isSecp256k1
+        IDidDocumentDetailed.EllipticType ellipticType
     );
 
     /**
@@ -74,7 +76,7 @@ interface IDidVerificationMethod {
      * @param did The decentralised identifier undergoing method rollover
      * @param vMethodId The new verification method identifier
      * @param publicKey The new public key for the verification method
-     * @param isSecp256k1 Boolean indicating if the new key uses secp256k1 curve
+     * @param ellipticType Cryptographic algorithm to verify signature
      * @param notBefore Unix timestamp when the new method becomes valid
      * @param notAfter Unix timestamp when the new method expires
      * @param oldVMethodId The identifier of the verification method being replaced
@@ -84,7 +86,7 @@ interface IDidVerificationMethod {
         string did,
         string vMethodId,
         bytes publicKey,
-        bool isSecp256k1,
+        IDidDocumentDetailed.EllipticType ellipticType,
         uint256 notBefore,
         uint256 notAfter,
         string oldVMethodId,
@@ -92,19 +94,50 @@ interface IDidVerificationMethod {
     );
 
     /**
+     * @notice Raised when attempting to add a verification method that already exists
+     * @dev This error prevents duplicate verification methods within the same DID document
+     * @param did The decentralised identifier containing the existing verification method
+     * @param vMethodId The verification method identifier that already exists
+     */
+    error VerificationMethodExists(string did, string vMethodId);
+
+    /**
+     * @notice Raised when attempting to operate on a non-existent verification method
+     * @dev This error ensures operations target valid verification methods within DID documents
+     * @param did The decentralised identifier that should contain the verification method
+     * @param vMethodId The verification method identifier that does not exist
+     */
+    error VerificationMethodNotExists(string did, string vMethodId);
+
+    /**
+     * @notice Raised when attempting to register a public key that is already in use
+     * @dev This error prevents cryptographic key reuse across verification methods to maintain
+     *      security and prevent key compromise scenarios
+     * @param publicKey The public key bytes that are already assigned to another method
+     */
+    error PublicKeyAlreadyInUse(bytes publicKey);
+
+    /**
+     * @notice Raised when the notAfter timestamp is invalid for the operation
+     * @dev This error ensures temporal validity constraints are met for verification method
+     *      lifecycle operations such as expiration or revocation
+     */
+    error InvalidNotAfter();
+
+    /**
      * @notice Adds a new verification method to the specified DID
      * @dev Creates a new cryptographic verification method with the provided key material
      * @param did The decentralised identifier to receive the verification method
      * @param vMethodId The unique identifier for the new verification method
      * @param publicKey The public key bytes for cryptographic verification
-     * @param isSecp256k1 Boolean flag indicating secp256k1 elliptic curve usage
+     * @param ellipticType Cryptographic algorithm to verify signature
      * @return success Boolean indicating whether the operation completed successfully
      */
     function addVerificationMethod(
         string memory did,
         string memory vMethodId,
         bytes memory publicKey,
-        bool isSecp256k1
+        IDidDocumentDetailed.EllipticType ellipticType
     ) external returns (bool success);
 
     /**
@@ -141,7 +174,7 @@ interface IDidVerificationMethod {
      * @param args The RollArgs structure containing all necessary rollover parameters
      * @return success Boolean indicating whether the operation completed successfully
      */
-    function rollVerificationMethod(
-        RollArgs memory args
-    ) external returns (bool success);
+    //    function rollVerificationMethod(
+    //        RollArgs memory args
+    //    ) external returns (bool success);
 }

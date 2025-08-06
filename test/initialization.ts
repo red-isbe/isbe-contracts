@@ -60,6 +60,7 @@ import {
     ISBE_LOUPE_RESOLVER_KEY,
     DID_DOCUMENT_DETAILED_RESOLVER_KEY,
     DID_CONTROLLER_RESOLVER_KEY,
+    DID_VERIFICATION_METHOD_RESOLVER_KEY,
 } from './constants'
 import { getEvent } from '../scripts/utils/getEvent'
 import { getIsbeFactory } from '../scripts/utils/getIsbeFactory'
@@ -312,6 +313,8 @@ export async function deployGovernance(
         erc721TestWrapper: useCaseDeployment.erc721TestWrapper,
         didDocumentDetailedFacet: useCaseDeployment.didDocumentDetailedFacet,
         didControllerFacet: useCaseDeployment.didControllerFacet,
+        didVerificationMethodFacet:
+            useCaseDeployment.didVerificationMethodFacet,
         didRegistry: useCaseDeployment.didRegistry,
         diamondCutAccessControlFacet,
         diamondLoupeFacet,
@@ -647,6 +650,9 @@ export async function deployDidRegistryUseCaseFacets(
     const DidControllerFacetFactory = await ethers.getContractFactory(
         'DidControllerTestWrapperFacet'
     )
+    const DidVerificationMethodFactory = await ethers.getContractFactory(
+        'DidVerificationMethodTestWrapperFacet'
+    )
 
     const isbeCutFacet = await deployBusinessLogicFromFactory(
         ISBE_CUT_RESOLVER_KEY,
@@ -676,6 +682,11 @@ export async function deployDidRegistryUseCaseFacets(
         DidControllerFacetFactory
     )
 
+    const didVerificationMethodFacet = await deployBusinessLogicFromFactory(
+        DID_VERIFICATION_METHOD_RESOLVER_KEY,
+        DidVerificationMethodFactory
+    )
+
     // Deploy all business logic contracts before setting configuration
     await deployBusinessLogicFromFactory(
         MOCK_TIMESTAMP_RESOLVER_KEY,
@@ -693,6 +704,10 @@ export async function deployDidRegistryUseCaseFacets(
         },
         {
             businessId: DID_CONTROLLER_RESOLVER_KEY,
+            version: 1,
+        },
+        {
+            businessId: DID_VERIFICATION_METHOD_RESOLVER_KEY,
             version: 1,
         },
     ])
@@ -734,6 +749,7 @@ export async function deployDidRegistryUseCaseFacets(
         proxy,
         didDocumentDetailedFacet,
         didControllerFacet,
+        didVerificationMethodFacet,
         didRegistry,
     }
 }

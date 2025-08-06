@@ -9,8 +9,10 @@ import {
     _CAPABILITY_INVOCATION_RELATIONSHIP,
     _CAPABILITY_DELEGATION_RELATIONSHIP
 } from './constants.sol';
-import {IDidDocumentDetailed} from './interfaces/IDidDocumentDetailed.sol';
 import {Common} from '../../core/Common.sol';
+import {IDidDocumentDetailed} from './interfaces/IDidDocumentDetailed.sol';
+import {IDidVerificationMethod} from './interfaces/IDidVerificationMethod.sol';
+import {_DID_VRELATIONSHIPS_STORAGE_POSITION} from '../../constants/storagePositions.sol';
 
 /**
  * @title Verification Relationships Internal Management
@@ -56,16 +58,29 @@ abstract contract VRelationshipsInternal is Common {
         return indexDid;
     }
 
-    //    function _updateVerificationRelationship(
-    //        uint256 _vrId,
-    //        uint256 _indexDid,
-    //        uint256 _notAfter
-    //    ) internal returns (bool) {
-    //        _vRelationshipsStorage()
-    //            .didsByVRelationship[_vrId][_indexDid]
-    //            .notAfter = _notAfter;
-    //        return true;
-    //    }
+    function _updateVerificationRelationship(
+        uint256 _vrId,
+        uint256 _indexDid,
+        uint256 _notAfter
+    ) internal {
+        _vRelationshipsStorage()
+            .didsByVRelationship[_vrId][_indexDid]
+            .notAfter = _notAfter;
+    }
+
+    function _checkNotAfterRevocation(uint256 _notAfter) internal view {
+        require(
+            _notAfter <= _blockTimestamp(),
+            IDidVerificationMethod.InvalidNotAfter()
+        );
+    }
+
+    function _checkNotAfterExpiration(uint256 _notAfter) internal view {
+        require(
+            _notAfter > _blockTimestamp(),
+            IDidVerificationMethod.InvalidNotAfter()
+        );
+    }
 
     function _checkValidRelationshipName(string memory _method) internal pure {
         require(

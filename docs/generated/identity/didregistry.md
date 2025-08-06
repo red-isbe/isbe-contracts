@@ -473,6 +473,18 @@ modifier onlyValidEllipticType(enum IDidDocumentDetailed.EllipticType _ellipticT
 modifier validateEllipticType(enum IDidDocumentDetailed.EllipticType _ellipticType)
 ```
 
+### onlyEmptyVMethodAndPublicKey
+
+```solidity
+modifier onlyEmptyVMethodAndPublicKey(string _did, string _vMethodId, bytes _publicKey, enum IDidDocumentDetailed.EllipticType _ellipticType)
+```
+
+### onlyVMethodIdExists
+
+```solidity
+modifier onlyVMethodIdExists(string _did, string _vMethodId)
+```
+
 ### \_setEllipticType
 
 ```solidity
@@ -483,6 +495,24 @@ function _setEllipticType(enum IDidDocumentDetailed.EllipticType _ellipticType) 
 
 ```solidity
 function _insertDidDocument(string _did, string _baseDocument, string _vMethodId, bytes _publicKey, enum IDidDocumentDetailed.EllipticType _ellipticType, uint256 _notBefore, uint256 _notAfter) internal returns (bool)
+```
+
+### \_addVerificationMethod
+
+```solidity
+function _addVerificationMethod(string _did, string _vMethodId, bytes _publicKey, enum IDidDocumentDetailed.EllipticType _ellipticType) internal returns (bool)
+```
+
+### \_revokeVerificationMethod
+
+```solidity
+function _revokeVerificationMethod(string _did, string _vMethodId, uint256 _notAfter) internal returns (bool)
+```
+
+### \_expireVerificationMethod
+
+```solidity
+function _expireVerificationMethod(string _did, string _vMethodId, uint256 _notAfter) internal returns (bool)
 ```
 
 ### \_addControllerToDocument
@@ -539,6 +569,24 @@ function _checkValidDid(string _did) internal view
 function _checkDidExists(string _did) internal view
 ```
 
+### \_checkEmptyVMethod
+
+```solidity
+function _checkEmptyVMethod(string _did, string _vMethodId) internal view
+```
+
+### \_checkVMethodExists
+
+```solidity
+function _checkVMethodExists(string _did, string _vMethodId) internal view
+```
+
+### \_checkPublicKeyNotAssigned
+
+```solidity
+function _checkPublicKeyNotAssigned(string _did, bytes _publicKey, enum IDidDocumentDetailed.EllipticType _ellipticType) internal view
+```
+
 ### \_notExistDid
 
 ```solidity
@@ -549,6 +597,18 @@ function _notExistDid(string _did) internal view returns (bool)
 
 ```solidity
 function _existsDid(string _did) internal view returns (bool)
+```
+
+### \_notExistsVMethod
+
+```solidity
+function _notExistsVMethod(string _did, string _vMethod) internal view returns (bool)
+```
+
+### \_existsVMethod
+
+```solidity
+function _existsVMethod(string _did, string _vMethod) internal view returns (bool)
 ```
 
 ### \_isController
@@ -567,6 +627,99 @@ function _isController(string did, string controller) internal view returns (boo
 
 ```solidity
 function _isNotController(string did, string controller) internal view returns (bool)
+```
+
+---
+
+## DidVerificationMethod
+
+Abstract contract for managing cryptographic verification methods within DID documents
+
+_Provides external interface implementations for adding, revoking, expiring, and rolling
+verification methods with comprehensive access control and temporal validation. Integrates
+with controller management to ensure authorised operations on DID documents_
+
+### addVerificationMethod
+
+```solidity
+function addVerificationMethod(string _did, string _vMethodId, bytes _publicKey, enum IDidDocumentDetailed.EllipticType _ellipticType) external returns (bool success)
+```
+
+### revokeVerificationMethod
+
+```solidity
+function revokeVerificationMethod(string _did, string _vMethodId, uint256 _notAfter) external returns (bool success)
+```
+
+### expireVerificationMethod
+
+```solidity
+function expireVerificationMethod(string _did, string _vMethodId, uint256 _notAfter) external returns (bool success)
+```
+
+---
+
+## DidVerificationMethodFacet
+
+Diamond facet providing external access to cryptographic verification method management
+for decentralised identifier documents with introspection capabilities
+
+_Concrete implementation of the diamond facet pattern for verification method operations.
+Combines verification method functionality with EIP-2535 interface introspection to
+support dynamic discovery of supported interfaces and function selectors_
+
+### interfacesIntrospection
+
+```solidity
+function interfacesIntrospection() external pure returns (bytes4[] interfaces_)
+```
+
+Gets the list of ERC-165 interface IDs the facet supports.
+
+_A pure function that returns an array of supported `bytes4` IDs._
+
+#### Return Values
+
+| Name         | Type     | Description                                  |
+| ------------ | -------- | -------------------------------------------- |
+| interfaces\_ | bytes4[] | An array of supported interface identifiers. |
+
+### businessIdIntrospection
+
+```solidity
+function businessIdIntrospection() external pure returns (bytes32 businessId_)
+```
+
+Retrieves the unique business identifier for this facet.
+
+_Returns a `bytes32` key identifying the facet's purpose._
+
+#### Return Values
+
+| Name         | Type    | Description                              |
+| ------------ | ------- | ---------------------------------------- |
+| businessId\_ | bytes32 | The `bytes32` ID for the business logic. |
+
+### selectorsIntrospection
+
+```solidity
+function selectorsIntrospection() external pure returns (bytes4[] selectors_)
+```
+
+Gets all function selectors implemented by this facet.
+
+_A pure function that returns a `bytes4[]` array of selectors._
+
+#### Return Values
+
+| Name        | Type     | Description                              |
+| ----------- | -------- | ---------------------------------------- |
+| selectors\_ | bytes4[] | An array of `bytes4` function selectors. |
+
+### \_implementedInterfaces
+
+```solidity
+function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
 ```
 
 ---
@@ -626,6 +779,24 @@ struct VRelationshipsStorage {
 
 ```solidity
 function _addVerificationRelationship(uint256 _vrId, string _did, uint256 _notBefore, uint256 _notAfter) internal returns (uint256)
+```
+
+### \_updateVerificationRelationship
+
+```solidity
+function _updateVerificationRelationship(uint256 _vrId, uint256 _indexDid, uint256 _notAfter) internal
+```
+
+### \_checkNotAfterRevocation
+
+```solidity
+function _checkNotAfterRevocation(uint256 _notAfter) internal view
+```
+
+### \_checkNotAfterExpiration
+
+```solidity
+function _checkNotAfterExpiration(uint256 _notAfter) internal view
 ```
 
 ### \_checkValidRelationshipName

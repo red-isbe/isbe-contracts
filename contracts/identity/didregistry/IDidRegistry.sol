@@ -3,8 +3,8 @@ pragma solidity ^0.8.28;
 
 import {IDidDocumentDetailed} from './interfaces/IDidDocumentDetailed.sol';
 import {IDidController} from './interfaces/IDidController.sol';
-import {IDidVerificationRelationship} from './interfaces/IDidVerficationRelationship.sol';
-import {IDidVerificationMethod} from './interfaces/IDidVerficationMethod.sol';
+import {IDidVerificationRelationship} from './interfaces/IDidVerificationRelationship.sol';
+import {IDidVerificationMethod} from './interfaces/IDidVerificationMethod.sol';
 
 /**
  * @title DID Registry Interface

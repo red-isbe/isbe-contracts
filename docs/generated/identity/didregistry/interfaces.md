@@ -540,3 +540,338 @@ trails and temporal verification of identity claims_
 | vMethodIds     | string[]                                    | Array of verification method identifiers active at the timestamp |
 | vMethods       | struct IDidDocumentDetailed.VMethod[]       | Array of verification method structures valid at the timestamp   |
 | vRelationships | struct IDidDocumentDetailed.VRelationship[] | Array of verification relationships active at the timestamp      |
+
+---
+
+## IDidVerificationMethod
+
+Interface for managing cryptographic verification methods within DID documents
+
+_Provides functionality to add, revoke, expire, and roll verification methods
+with support for different cryptographic key types_
+
+### RollArgs
+
+Arguments structure for rolling verification methods
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+
+```solidity
+struct RollArgs {
+  string did;
+  string vMethodId;
+  bytes publicKey;
+  enum IDidDocumentDetailed.EllipticType ellipticType;
+  uint256 notBefore;
+  uint256 notAfter;
+  string oldVMethodId;
+  uint256 duration;
+}
+```
+
+### VerificationMethodAdded
+
+```solidity
+event VerificationMethodAdded(string did, string vMethodId, bytes publicKey, enum IDidDocumentDetailed.EllipticType ellipticType)
+```
+
+Emitted when a new verification method is added to a DID
+
+#### Parameters
+
+| Name         | Type                                   | Description                                                        |
+| ------------ | -------------------------------------- | ------------------------------------------------------------------ |
+| did          | string                                 | The decentralised identifier receiving the new verification method |
+| vMethodId    | string                                 | The unique identifier for the verification method                  |
+| publicKey    | bytes                                  | The public key associated with the verification method             |
+| ellipticType | enum IDidDocumentDetailed.EllipticType | Cryptographic algorithm to verify signature                        |
+
+### VerificationMethodRevoked
+
+```solidity
+event VerificationMethodRevoked(string did, string vMethodId, uint256 notAfter)
+```
+
+Emitted when a verification method is revoked from a DID
+
+#### Parameters
+
+| Name      | Type    | Description                                                 |
+| --------- | ------- | ----------------------------------------------------------- |
+| did       | string  | The decentralised identifier losing the verification method |
+| vMethodId | string  | The identifier of the verification method being revoked     |
+| notAfter  | uint256 | Unix timestamp when the revocation becomes effective        |
+
+### VerificationMethodExpired
+
+```solidity
+event VerificationMethodExpired(string did, string vMethodId, uint256 notAfter)
+```
+
+Emitted when a verification method expires
+
+#### Parameters
+
+| Name      | Type    | Description                                                        |
+| --------- | ------- | ------------------------------------------------------------------ |
+| did       | string  | The decentralised identifier with the expiring verification method |
+| vMethodId | string  | The identifier of the verification method expiring                 |
+| notAfter  | uint256 | Unix timestamp when the method expires                             |
+
+### VerificationMethodRolled
+
+```solidity
+event VerificationMethodRolled(string did, string vMethodId, bytes publicKey, enum IDidDocumentDetailed.EllipticType ellipticType, uint256 notBefore, uint256 notAfter, string oldVMethodId, uint256 duration)
+```
+
+Emitted when a verification method is rolled over to a new one
+
+#### Parameters
+
+| Name         | Type                                   | Description                                              |
+| ------------ | -------------------------------------- | -------------------------------------------------------- |
+| did          | string                                 | The decentralised identifier undergoing method rollover  |
+| vMethodId    | string                                 | The new verification method identifier                   |
+| publicKey    | bytes                                  | The new public key for the verification method           |
+| ellipticType | enum IDidDocumentDetailed.EllipticType | Cryptographic algorithm to verify signature              |
+| notBefore    | uint256                                | Unix timestamp when the new method becomes valid         |
+| notAfter     | uint256                                | Unix timestamp when the new method expires               |
+| oldVMethodId | string                                 | The identifier of the verification method being replaced |
+| duration     | uint256                                | The validity period for the new verification method      |
+
+### VerificationMethodExists
+
+```solidity
+error VerificationMethodExists(string did, string vMethodId)
+```
+
+Raised when attempting to add a verification method that already exists
+
+_This error prevents duplicate verification methods within the same DID document_
+
+#### Parameters
+
+| Name      | Type   | Description                                                              |
+| --------- | ------ | ------------------------------------------------------------------------ |
+| did       | string | The decentralised identifier containing the existing verification method |
+| vMethodId | string | The verification method identifier that already exists                   |
+
+### VerificationMethodNotExists
+
+```solidity
+error VerificationMethodNotExists(string did, string vMethodId)
+```
+
+Raised when attempting to operate on a non-existent verification method
+
+_This error ensures operations target valid verification methods within DID documents_
+
+#### Parameters
+
+| Name      | Type   | Description                                                              |
+| --------- | ------ | ------------------------------------------------------------------------ |
+| did       | string | The decentralised identifier that should contain the verification method |
+| vMethodId | string | The verification method identifier that does not exist                   |
+
+### PublicKeyAlreadyInUse
+
+```solidity
+error PublicKeyAlreadyInUse(bytes publicKey)
+```
+
+Raised when attempting to register a public key that is already in use
+
+_This error prevents cryptographic key reuse across verification methods to maintain
+security and prevent key compromise scenarios_
+
+#### Parameters
+
+| Name      | Type  | Description                                                      |
+| --------- | ----- | ---------------------------------------------------------------- |
+| publicKey | bytes | The public key bytes that are already assigned to another method |
+
+### InvalidNotAfter
+
+```solidity
+error InvalidNotAfter()
+```
+
+Raised when the notAfter timestamp is invalid for the operation
+
+_This error ensures temporal validity constraints are met for verification method
+lifecycle operations such as expiration or revocation_
+
+### addVerificationMethod
+
+```solidity
+function addVerificationMethod(string did, string vMethodId, bytes publicKey, enum IDidDocumentDetailed.EllipticType ellipticType) external returns (bool success)
+```
+
+Adds a new verification method to the specified DID
+
+_Creates a new cryptographic verification method with the provided key material_
+
+#### Parameters
+
+| Name         | Type                                   | Description                                                     |
+| ------------ | -------------------------------------- | --------------------------------------------------------------- |
+| did          | string                                 | The decentralised identifier to receive the verification method |
+| vMethodId    | string                                 | The unique identifier for the new verification method           |
+| publicKey    | bytes                                  | The public key bytes for cryptographic verification             |
+| ellipticType | enum IDidDocumentDetailed.EllipticType | Cryptographic algorithm to verify signature                     |
+
+#### Return Values
+
+| Name    | Type | Description                                                     |
+| ------- | ---- | --------------------------------------------------------------- |
+| success | bool | Boolean indicating whether the operation completed successfully |
+
+### revokeVerificationMethod
+
+```solidity
+function revokeVerificationMethod(string did, string vMethodId, uint256 notAfter) external returns (bool success)
+```
+
+Revokes an existing verification method from the specified DID
+
+_Permanently disables the verification method from the specified timestamp_
+
+#### Parameters
+
+| Name      | Type    | Description                                                 |
+| --------- | ------- | ----------------------------------------------------------- |
+| did       | string  | The decentralised identifier losing the verification method |
+| vMethodId | string  | The identifier of the verification method to revoke         |
+| notAfter  | uint256 | Unix timestamp when the revocation becomes effective        |
+
+#### Return Values
+
+| Name    | Type | Description                                                     |
+| ------- | ---- | --------------------------------------------------------------- |
+| success | bool | Boolean indicating whether the operation completed successfully |
+
+### expireVerificationMethod
+
+```solidity
+function expireVerificationMethod(string did, string vMethodId, uint256 notAfter) external returns (bool success)
+```
+
+Expires a verification method at the specified timestamp
+
+_Sets the expiration time for the verification method_
+
+#### Parameters
+
+| Name      | Type    | Description                                                        |
+| --------- | ------- | ------------------------------------------------------------------ |
+| did       | string  | The decentralised identifier with the expiring verification method |
+| vMethodId | string  | The identifier of the verification method to expire                |
+| notAfter  | uint256 | Unix timestamp when the method should expire                       |
+
+#### Return Values
+
+| Name    | Type | Description                                                     |
+| ------- | ---- | --------------------------------------------------------------- |
+| success | bool | Boolean indicating whether the operation completed successfully |
+
+---
+
+## IDidVerificationRelationship
+
+Interface for managing verification relationships between DIDs and verification methods
+
+_Provides functionality to establish temporal relationships between DIDs and their
+verification methods with validity periods_
+
+### DidWithPeriod
+
+Structure representing a DID with its validity period
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+
+```solidity
+struct DidWithPeriod {
+    string did;
+    uint256 notBefore;
+    uint256 notAfter;
+}
+```
+
+### VerificationRelationshipAdded
+
+```solidity
+event VerificationRelationshipAdded(string did, string name, string vMethodId, uint256 notBefore, uint256 notAfter)
+```
+
+Emitted when a new verification relationship is established
+
+#### Parameters
+
+| Name      | Type    | Description                                               |
+| --------- | ------- | --------------------------------------------------------- |
+| did       | string  | The decentralised identifier involved in the relationship |
+| name      | string  | The name of the verification relationship type            |
+| vMethodId | string  | The verification method identifier being linked           |
+| notBefore | uint256 | Unix timestamp when the relationship becomes valid        |
+| notAfter  | uint256 | Unix timestamp when the relationship expires              |
+
+### addVerificationRelationship
+
+```solidity
+function addVerificationRelationship(string did, string name, string vMethodId, uint256 notBefore, uint256 notAfter) external returns (bool success)
+```
+
+Establishes a new verification relationship between a DID and verification method
+
+_Creates a temporal link with specified validity period_
+
+#### Parameters
+
+| Name      | Type    | Description                                                    |
+| --------- | ------- | -------------------------------------------------------------- |
+| did       | string  | The decentralised identifier to establish the relationship for |
+| name      | string  | The type of verification relationship (e.g., "authentication") |
+| vMethodId | string  | The verification method identifier to link with                |
+| notBefore | uint256 | Unix timestamp when the relationship becomes active            |
+| notAfter  | uint256 | Unix timestamp when the relationship expires                   |
+
+#### Return Values
+
+| Name    | Type | Description                                                     |
+| ------- | ---- | --------------------------------------------------------------- |
+| success | bool | Boolean indicating whether the operation completed successfully |
+
+### getDidsByVerificationRelationship
+
+```solidity
+function getDidsByVerificationRelationship(string vMethodId, string name, uint256 page, uint256 pageSize) external view returns (struct IDidVerificationRelationship.DidWithPeriod[] items, uint256 total, uint256 howMany, uint256 prev, uint256 next)
+```
+
+Retrieves paginated list of DIDs associated with a verification relationship
+
+_Returns DIDs that have the specified verification method and relationship type_
+
+#### Parameters
+
+| Name      | Type    | Description                                     |
+| --------- | ------- | ----------------------------------------------- |
+| vMethodId | string  | The verification method identifier to query for |
+| name      | string  | The verification relationship name to filter by |
+| page      | uint256 | The page number to retrieve (zero-based)        |
+| pageSize  | uint256 | The maximum number of items per page            |
+
+#### Return Values
+
+| Name    | Type                                                | Description                                              |
+| ------- | --------------------------------------------------- | -------------------------------------------------------- |
+| items   | struct IDidVerificationRelationship.DidWithPeriod[] | Array of DidWithPeriod structures matching the criteria  |
+| total   | uint256                                             | Total number of DIDs with this verification relationship |
+| howMany | uint256                                             | Number of items returned in current page                 |
+| prev    | uint256                                             | Previous page number (zero if no previous page)          |
+| next    | uint256                                             | Next page number (zero if no next page)                  |
