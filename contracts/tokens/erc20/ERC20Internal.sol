@@ -34,19 +34,29 @@ abstract contract ERC20Internal is Common {
         $.decimals = newDecimals;
     }
 
-    //todo natspec
-    function _setName(string memory _newName) internal virtual {
-        //ToDo 
-        //require(keccak256(abi.encode(_name)) != keccak256(abi.encode("")), "invalid argument - empty string");
-        
+    
+    /**
+     * @dev Internal function to update the token name in storage.
+     * Applies the {emptyString} modifier to ensure the input is not an empty string.
+     * This function does not perform access control or emit events.
+     * It is intended to be called by external logic that handles authorization and event emission.
+     * @param _newName The new name to assign to the token.
+     */
+    function _setName(string memory _newName) internal virtual emptyString(_newName){
+            
         ERC20Storage storage $ = _erc20Storage();
         $.name = _newName;        
     }
 
-    //todo natspec
-    function _setSymbol(string memory _newSymbol) internal virtual {
-        //ToDo 
-        //require(keccak256(abi.encode(_symbol)) != keccak256(abi.encode("")), "invalid argument - empty string");
+    
+    /**
+     * @dev Internal function to update the token symbol in storage.
+     * Applies the {emptyString} modifier to ensure the input is not an empty string.
+     * This function does not perform access control or emit events.
+     * It is intended to be called by external logic that handles authorization and event emission.
+     * @param _newSymbol The new symbol to assign to the token.
+     */
+    function _setSymbol(string memory _newSymbol) internal virtual emptyString(_newSymbol) {
         
         ERC20Storage storage $ = _erc20Storage();
         $.symbol = _newSymbol;        

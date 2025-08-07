@@ -2,22 +2,30 @@
 pragma solidity ^0.8.28;
 
 import {IERC20Isbe} from '../../erc20/IERC20Isbe.sol';
-import {IERC203643Extended} from './modules/203643extended/IERC203643Extended.sol';
+import {IERC3643Metadata} from './erc3643metadata/IERC3643Metadata.sol';
 
-import {IBatches} from './modules/IBatches.sol';
-import {IERC3643Infrastructure} from './modules/IERC3643Infrastructure.sol';
-import {IRecovery} from './modules/IRecovery.sol';
-import {ITokenFreeze} from './modules/ITokenFreeze.sol';
-import {IPause} from '../../../pause/IPause.sol';
 
+
+/**
+ * @title IERC3643
+ * @notice Interface for ERC-3643 compliant tokens supporting regulatory features.
+ * @dev This interface extends the ERC-20 standard with additional modules for identity,
+ *      compliance, recovery, freezing, pausing, batch operations, and extended metadata.
+ *
+ * The interface is composed of modular sub-interfaces, each responsible for a specific
+ * functional domain. 
+ *
+ * This interface serves as the unified entry point for ERC-3643 functionality.
+ * It is intended to be implemented by security tokens requiring regulatory compliance.
+ */
 
 // solhint-disable-next-line no-empty-blocks
 interface IERC3643 is
     IERC20Isbe,
-    IERC203643Extended,
-    IPause,
-    IBatches,
-    IERC3643Infrastructure,
-    IRecovery,
-    ITokenFreeze
+    IERC3643Metadata
+    //IPause,
+    //IBatches,
+    //IERC3643Infrastructure,
+    //IRecovery,
+    //ITokenFreeze
 {}

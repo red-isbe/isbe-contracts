@@ -2,8 +2,17 @@
 pragma solidity ^0.8.28;
 
 
-// solhint-disable-next-line no-empty-blocks
-interface IERC203643Extended {
+
+/**
+ * @title IERC3643Metadata
+ * @notice Interface for updating and retrieving extended metadata in ERC-3643 tokens.
+ * @dev Provides setter functions for name, symbol, and onchain identity.
+ *      Includes read-only access to version and onchainID.
+ *      This interface does not expose getters for name or symbol; those are expected
+ *      to be available via the base ERC-20 interface.
+ */
+
+interface IERC3643Metadata {
     /**
      *  this event is emitted when the token information is updated.
      *  the event is emitted by the token init function and by the setTokenInformation function
