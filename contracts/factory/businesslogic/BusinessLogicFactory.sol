@@ -3,7 +3,7 @@ pragma solidity ^0.8.28;
 
 import {BusinessLogicFactoryInternal} from './BusinessLogicFactoryInternal.sol';
 import {IBusinessLogicFactory} from './IBusinessLogicFactory.sol';
-import {_ISBE_ROLE} from '../../constants/roles.sol';
+import {_BUSINESS_LOGIC_DEPLOYER_ROLE} from '../../constants/roles.sol';
 
 /**
  * @title BusinessLogicFactory
@@ -24,7 +24,7 @@ contract BusinessLogicFactory is
     )
         external
         override
-        onlyRole(_ISBE_ROLE)
+        onlyRole(_BUSINESS_LOGIC_DEPLOYER_ROLE)
         bytes32IsNotZero(businessId)
         emptyCode(bytecode)
     {

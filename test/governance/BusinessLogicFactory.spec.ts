@@ -14,7 +14,7 @@ import {
     BUSINESS_LOGIC_FACTORY_RESOLVER_KEY,
     COUNTER_RESOLVER_KEY,
     DEFAULT_ADMIN_ROLE,
-    ISBE_ROLE,
+    BUSINESS_LOGIC_DEPLOYER_ROLE,
 } from '../constants'
 
 describe('BusinessLogicFactory', function () {
@@ -68,7 +68,7 @@ describe('BusinessLogicFactory', function () {
                             members: [await admin.getAddress()],
                         },
                         {
-                            role: ISBE_ROLE,
+                            role: BUSINESS_LOGIC_DEPLOYER_ROLE,
                             members: [await admin.getAddress()],
                         },
                     ],
@@ -92,7 +92,10 @@ describe('BusinessLogicFactory', function () {
                     businessLogicFactory,
                     'AccountHasNoRole'
                 )
-                .withArgs(await nonAdmin.getAddress(), ISBE_ROLE)
+                .withArgs(
+                    await nonAdmin.getAddress(),
+                    BUSINESS_LOGIC_DEPLOYER_ROLE
+                )
         })
 
         it('GIVEN an EIP2535 proxy with BusinessLogicFactory WHEN deploy with empty businessId THEN it fails', async () => {

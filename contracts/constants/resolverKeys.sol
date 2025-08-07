@@ -48,6 +48,9 @@ bytes32 constant _BUSINESS_LOGIC_FACTORY_RESOLVER_KEY = 0xc6315ad82a957243645764
 // keccak256('isbe.contracts.erc165.resolver.key');
 bytes32 constant _ERC165_RESOLVER_KEY = 0x0d211187337a25b55ba62c44fbaaff686007a4ff3d149631d418963345936a29;
 
+// keccak256('isbe.contracts.configuration.management.resolver.key');
+bytes32 constant _CONFIGURATION_MANAGEMENT_RESOLVER_KEY = 0x5c7eb9eee8ef1c4aad127182f7de73ed25d3582b9b642ad6c67b50ea0ce43eaf;
+
 // keccak256('isbe.contracts.proxy.factory.resolver.key');
 bytes32 constant _PROXY_FACTORY_RESOLVER_KEY = 0x949f2c59318fff1925835e4fd22837f508de87f71875ac3e71a5f5c7e4c74d10;
 

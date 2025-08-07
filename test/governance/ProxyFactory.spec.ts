@@ -27,6 +27,7 @@ import {
     HASH_TIMESTAMP_RESOLVER_KEY,
     HASH_TIMESTAMP_ROLE,
     ISBE_ROLE,
+    BUSINESS_LOGIC_DEPLOYER_ROLE,
     OWNABLE_RESOLVER_KEY,
     PAUSE_RESOLVER_KEY,
     PROXY_DEPLOYER_ROLE,
@@ -38,6 +39,8 @@ describe('ProxyFactory', function () {
     let adminAddress: string
     let isbe: Signer
     let isbeAddress: string
+    let businessLogicDeployer: Signer
+    let businessLogicDeployerAddress: string
     let proxyDeployer: Signer
     let proxyDeployerAddress: string
     let nonAdmin: Signer
@@ -58,11 +61,13 @@ describe('ProxyFactory', function () {
     let isbeFactory: IIsbeFactory
 
     async function deployInitial() {
-        ;[admin, isbe, proxyDeployer, nonAdmin] = await ethers.getSigners()
+        ;[admin, isbe, businessLogicDeployer, proxyDeployer, nonAdmin] =
+            await ethers.getSigners()
         adminAddress = await admin.getAddress()
         isbeAddress = await isbe.getAddress()
         nonAdminAddress = await nonAdmin.getAddress()
         proxyDeployerAddress = await proxyDeployer.getAddress()
+        businessLogicDeployerAddress = await businessLogicDeployer.getAddress()
         // Despliegue AccessControl logic
         BusinessLogicFactoryFactory = await ethers.getContractFactory(
             'BusinessLogicFactoryFacet'
@@ -118,6 +123,10 @@ describe('ProxyFactory', function () {
                         members: [isbeAddress],
                     },
                     {
+                        role: BUSINESS_LOGIC_DEPLOYER_ROLE,
+                        members: [businessLogicDeployerAddress],
+                    },
+                    {
                         role: PROXY_DEPLOYER_ROLE,
                         members: [proxyDeployerAddress],
                     },
@@ -141,37 +150,37 @@ describe('ProxyFactory', function () {
         before(async () => {
             await deployIsbeFactory()
             await isbeFactory
-                .connect(isbe)
+                .connect(businessLogicDeployer)
                 .deploy(
                     DIAMOND_CUT_RESOLVER_KEY,
                     DiamondCutFacetFactory.bytecode
                 )
             await isbeFactory
-                .connect(isbe)
+                .connect(businessLogicDeployer)
                 .deploy(
                     DIAMOND_LOUPE_RESOLVER_KEY,
                     DiamondLoupeFacetFactory.bytecode
                 )
             await isbeFactory
-                .connect(isbe)
+                .connect(businessLogicDeployer)
                 .deploy(
                     ACCESS_CONTROL_RESOLVER_KEY,
                     AccessControlFactory.bytecode
                 )
             await isbeFactory
-                .connect(isbe)
+                .connect(businessLogicDeployer)
                 .deploy(PAUSE_RESOLVER_KEY, IsbePausableFactory.bytecode)
             await isbeFactory
-                .connect(isbe)
+                .connect(businessLogicDeployer)
                 .deploy(OWNABLE_RESOLVER_KEY, Ownable2StepFacetFactory.bytecode)
             await isbeFactory
-                .connect(isbe)
+                .connect(businessLogicDeployer)
                 .deploy(
                     HASH_TIMESTAMP_RESOLVER_KEY,
                     HashTimestampFactory.bytecode
                 )
             await isbeFactory
-                .connect(isbe)
+                .connect(businessLogicDeployer)
                 .deploy(
                     ASSET_EVENT_TRACKER_RESOLVER_KEY,
                     AssetEventTrackerFactory.bytecode
