@@ -35,6 +35,11 @@ abstract contract ISBEContext is Context {
     error EmptyUint();
 
     /**
+     * @notice Raised when a uint256 value is not between 0 and 18, which is the valid range for token decimals.
+     */
+    error UintNotBetweenZeroAndEighteen();
+
+    /**
      * @notice Emitted when a string is empty but is expected to contain text
      */
     error EmptyString();
@@ -107,6 +112,10 @@ abstract contract ISBEContext is Context {
      */
     function _checkUintIsNotZero(uint256 _uint) internal pure {
         require(_uint != 0, EmptyUint());
+    }
+
+    function _checkUintBetweenZeroAndEighteen (uint256 _uint) internal pure {
+        require(_uint <= 18, UintNotBetweenZeroAndEighteen());
     }
 
     /**

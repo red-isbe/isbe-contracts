@@ -47,4 +47,9 @@ abstract contract Common is
         _checkEmptyString(_string);
         _;
     }
+
+    modifier uintBetweenZeroAndEighteen(uint256 _uint) {
+        _checkUintBetweenZeroAndEighteen(_uint);
+        _;
+    }
 }
