@@ -5,9 +5,7 @@ import {ERC20InternalCommon} from './extensions/ERC20InternalCommon.sol';
 import {IERC20Isbe} from './IERC20Isbe.sol';
 import {_ERC20_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
-import {
-    IERC20Metadata
-} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
+import {IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
 
 /**
  * @title ERC20 Token Contract
@@ -17,7 +15,7 @@ import {
  *      OpenZeppelin interfaces. It includes additional helper functions such as `increaseAllowance` and
  *      `decreaseAllowance` for more granular control over token allowances.
  */
-contract ERC20 is IERC20Isbe, ERC20InternalCommon {
+abstract contract ERC20 is IERC20Isbe, ERC20InternalCommon {
     /// @notice Constructor that assigns the deployer as the default admin
     constructor() {
         _disableInitializers(_ERC20_RESOLVER_KEY);
@@ -25,17 +23,17 @@ contract ERC20 is IERC20Isbe, ERC20InternalCommon {
 
     /**
      * @notice Initializes the ERC20 token with the given name, symbol, and decimals.
-     * @param newName The name of the ERC20 token to be initialized.
-     * @param newSymbol The symbol of the ERC20 token to be initialized.
-     * @param newDecimals The number of decimal places for the ERC20 token.
+     * @param _newName The name of the ERC20 token to be initialized.
+     * @param _newSymbol The symbol of the ERC20 token to be initialized.
+     * @param _newDecimals The number of decimal places for the ERC20 token.
      */
     function initializeErc20(
-        string memory newName,
-        string memory newSymbol,
-        uint8 newDecimals
+        string memory _newName,
+        string memory _newSymbol,
+        uint8 _newDecimals
     ) external override initializer(_ERC20_RESOLVER_KEY) {
-        _initialize(newName, newSymbol, newDecimals);
-        emit Erc20Initialized(newName, newSymbol, newDecimals);
+        _initialize(_newName, _newSymbol, _newDecimals);
+        emit Erc20Initialized(_newName, _newSymbol, _newDecimals);
     }
 
     /**
@@ -47,10 +45,10 @@ contract ERC20 is IERC20Isbe, ERC20InternalCommon {
      * - the caller must have a balance of at least `amount`.
      */
     function transfer(
-        address to,
-        uint256 amount
+        address _to,
+        uint256 _amount
     ) external override whenNotPaused returns (bool) {
-        _transfer(_msgSender(), to, amount);
+        _transfer(_msgSender(), _to, _amount);
         return true;
     }
 
@@ -65,10 +63,10 @@ contract ERC20 is IERC20Isbe, ERC20InternalCommon {
      * - `spender` cannot be the zero address.
      */
     function approve(
-        address spender,
-        uint256 amount
+        address _spender,
+        uint256 _amount
     ) external override whenNotPaused returns (bool) {
-        _approve(_msgSender(), spender, amount);
+        _approve(_msgSender(), _spender, _amount);
         return true;
     }
 
@@ -89,12 +87,12 @@ contract ERC20 is IERC20Isbe, ERC20InternalCommon {
      * `amount`.
      */
     function transferFrom(
-        address from,
-        address to,
-        uint256 amount
+        address _from,
+        address _to,
+        uint256 _amount
     ) external override whenNotPaused returns (bool) {
-        _spendAllowance(from, _msgSender(), amount);
-        _transfer(from, to, amount);
+        _spendAllowance(_from, _msgSender(), _amount);
+        _transfer(_from, _to, _amount);
         return true;
     }
 
@@ -111,11 +109,11 @@ contract ERC20 is IERC20Isbe, ERC20InternalCommon {
      * - `spender` cannot be the zero address.
      */
     function increaseAllowance(
-        address spender,
-        uint256 addedValue
+        address _spender,
+        uint256 _addedValue
     ) external whenNotPaused returns (bool) {
         address owner = _msgSender();
-        _approve(owner, spender, _allowance(owner, spender) + addedValue);
+        _approve(owner, _spender, _allowance(owner, _spender) + _addedValue);
         return true;
     }
 
@@ -134,27 +132,27 @@ contract ERC20 is IERC20Isbe, ERC20InternalCommon {
      * `subtractedValue`.
      */
     function decreaseAllowance(
-        address spender,
-        uint256 subtractedValue
+        address _spender,
+        uint256 _subtractedValue
     ) external whenNotPaused returns (bool) {
         address owner = _msgSender();
-        uint256 currentAllowance = _allowance(owner, spender);
+        uint256 currentAllowance = _allowance(owner, _spender);
         require(
-            currentAllowance >= subtractedValue,
+            currentAllowance >= _subtractedValue,
             IERC20Isbe.DecreasedAllowanceBellowZero()
         );
         unchecked {
-            _approve(owner, spender, currentAllowance - subtractedValue);
+            _approve(owner, _spender, currentAllowance - _subtractedValue);
         }
 
         return true;
     }
 
     function allowance(
-        address owner,
-        address spender
+        address _owner,
+        address _spender
     ) external view override returns (uint256) {
-        return _allowance(owner, spender);
+        return _allowance(_owner, _spender);
     }
 
     function decimals() external view override returns (uint8) {
@@ -174,9 +172,9 @@ contract ERC20 is IERC20Isbe, ERC20InternalCommon {
     }
 
     function balanceOf(
-        address account
+        address _account
     ) external view override returns (uint256) {
-        return _balanceOf(account);
+        return _balanceOf(_account);
     }
 
     function _implementedInterfaces()

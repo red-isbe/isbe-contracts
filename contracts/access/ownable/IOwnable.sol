@@ -25,8 +25,8 @@ interface IOwnable {
     function renounceOwnership() external;
 
     /// @notice Transfers ownership of the contract to a new account
-    /// @param newOwner The address of the new owner
-    function transferOwnership(address newOwner) external;
+    /// @param _newOwner The address of the new owner
+    function transferOwnership(address _newOwner) external;
 
     /// @notice Returns the current owner of the contract
     /// @return The address of the current owner

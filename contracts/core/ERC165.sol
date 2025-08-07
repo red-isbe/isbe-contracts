@@ -18,11 +18,10 @@ abstract contract ERC165 is IERC165, ERC165Internal {
     function supportsInterface(
         bytes4 _interfaceId
     ) external pure returns (bool) {
-        if (!_checkERC165ForbiddenInterfaces(_interfaceId)) {
-            return false;
-        }
         return
-            _supportsERC165Interface(_interfaceId) ||
-            _supportsInterface(_interfaceId, _implementedInterfaces());
+            _isERC165ForbiddenInterfaces(_interfaceId)
+                ? false
+                : (_supportsERC165Interface(_interfaceId) ||
+                    _supportsInterface(_interfaceId, _implementedInterfaces()));
     }
 }

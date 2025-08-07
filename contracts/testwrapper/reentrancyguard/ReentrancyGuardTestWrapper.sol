@@ -10,12 +10,12 @@ contract ReentrancyGuardTestWrapper is ReentrancyGuard {
     bytes32 public usedKey;
     event ProtectedCalled(bytes32 key);
 
-    function callProtected(bytes32 key) public nonReentrant(key) {
-        usedKey = key;
-        emit ProtectedCalled(key);
+    function callProtected(bytes32 _key) public nonReentrant(_key) {
+        usedKey = _key;
+        emit ProtectedCalled(_key);
     }
 
-    function forceReentrantFail(bytes32 key) public nonReentrant(key) {
-        this.callProtected(key);
+    function forceReentrantFail(bytes32 _key) public nonReentrant(_key) {
+        this.callProtected(_key);
     }
 }

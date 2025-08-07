@@ -2,5 +2,5 @@
 pragma solidity ^0.8.28;
 
 interface IMockTimestamp {
-    function setMockedTimestamp(uint256 ts) external;
+    function setMockedTimestamp(uint256 _ts) external;
 }

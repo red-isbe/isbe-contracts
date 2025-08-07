@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {
-    AssetEventTrackerFacet
-} from '../../assetevent/AssetEventTrackerFacet.sol';
+import {AssetEventTrackerFacet} from '../../assetevent/AssetEventTrackerFacet.sol';
 import {MockTimestamp} from '../mockTimestamp/MockTimestamp.sol';
 import {ISBEContext} from '../../utils/ISBEContext.sol';
 
@@ -21,9 +19,9 @@ contract AssetEventTrackerTestWrapper is AssetEventTrackerFacet, MockTimestamp {
     }
 
     function _isStateChangeAllowed(
-        uint256 currentState,
-        uint256 newState
+        uint256 _currentState,
+        uint256 _newState
     ) internal pure override returns (bool) {
-        return currentState < newState;
+        return _currentState < _newState;
     }
 }

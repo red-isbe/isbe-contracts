@@ -3,9 +3,7 @@ pragma solidity ^0.8.28;
 
 import {_ASSET_EVENT_TRACKER_RESOLVER_KEY} from '../constants/resolverKeys.sol';
 import {AssetEventTracker} from './AssetEventTracker.sol';
-import {
-    IEIP2535Introspection
-} from '../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {IEIP2535Introspection} from '../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 
 /// @title AssetEventTrackerFacet
 /// @notice Implements generic state tracking for an asset using events

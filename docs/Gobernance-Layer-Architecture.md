@@ -44,22 +44,18 @@ When deploying the governance contract, roles assignment will be managed by the 
 These roles are specific to the management and operation of the central ISBE Governance Diamond Proxy.
 
 - **`GOVERNANCE_MANAGER_ROLE`**
-
     - **Purpose**: Responsible for the structural integrity and functionality of the central governance diamond proxy.
     - **Permissions**: Authorised to manage the facet configuration of the governance diamond. This includes adding, removing, or replacing the smart contracts that define the governance system's behaviour.
 
 - **`BUSINESS_LOGIC_DEPLOYER_ROLE`**
-
     - **Purpose**: Manages the lifecycle of business logic contracts within the ecosystem.
     - **Permissions**: Authorised to deploy new business logic contracts. This role is central to introducing new features or updates.
 
 - **`GOVERNANCE_CONFIGURATION_MANAGER_ROLE`**
-
     - **Purpose**: Defines the official sets of functionalities available to use-case proxies.
     - **Permissions**: Authorised to create and manage 'configurations'. A configuration is a defined set of business logics that can be collectively assigned to a use-case proxy.
 
 - **`ISBE_PAUSER_ROLE`**
-
     - **Purpose**: A high-level administrative role for network-wide safety operations.
     - **Permissions**: Authorised to pause and un-pause any use-case proxy across the entire network, providing a global override for security.
 
@@ -67,12 +63,20 @@ These roles are specific to the management and operation of the central ISBE Gov
     - **Purpose**: Responsible for instantiating new use-cases on the platform.
     - **Permissions**: Authorised to deploy new use-case proxies through the `ProxyFactoryFacet`.
 
+- **`DID_REGISTRY_ROLE`**
+    - **Purpose**: Responsible to operate DID documents or to be controller.
+    - **Permissions**: Authorised to operate any action over `DiDRegistryFacet`.
+
+- **`DID_REGISTRY_MANAGER_ROLE`**
+    - **Purpose**: Responsible to change any permission over DID_REGISTRY for network-wide safety operations.
+    - **Permissions**: Authorised to operate any action over `DiDRegistryFacet`.
+    -
+
 ## Use-Case Roles
 
 These roles operate within the scope of an individual use-case proxy.
 
 - **`CONFIGURATION_MANAGER_ROLE`**
-
     - **Purpose**: Manages the functional configuration of a specific use-case proxy.
     - **Permissions**: Authorised to change the `isbeConfigurationId` or the version of the configuration assigned to their proxy, allowing for upgrades and functional changes.
 
@@ -85,30 +89,24 @@ These roles operate within the scope of an individual use-case proxy.
 The Diamond contract is composed of the following facets, each with a unique responsibility:
 
 - **`DiamondCutFacet`**:
-
     - **Function**: Exposes the functionality to modify the diamond's facets (`diamondCut`, `facetUpdates`).
     - **Access**: Restricted exclusively to the `GOVERNANCE_MANAGER_ROLE`, enabling secure governance updates.
 
 - **`DiamondLoupeFacet`**:
-
     - **Function**: Provides introspection capabilities, allowing any actor (internal or external) to query which facets and functions are registered with the diamond.
     - **Access**: Public.
 
 - **`BusinessLogicFactoryFacet`**:
-
     - **Function**: Manages the deployment and versioning of business logic contracts (implementations). Each business logic is registered with a unique `businessId` and a version number.
     - **Access**: Usage is restricted to the `BUSINESS_LOGIC_DEPLOYER_ROLE`.
 
 - **`ConfigurationManagement`**:
-
     - **Function**: A factory for manages configurations of diamonds to create different use cases.
     - **Default Behaviour**:
-
         - When a configuration is created, a list of facets must be assigned and it is set to version 1.
             - The map from selectors to address is created.
             - The map from interface identifier to boolean is created.
         - When a configuration is updated inserting, removing or updating facets:
-
             - The map from selector to address is updated with the differences.
             - The map from interface identifier to boole is updated.
             - A final transactions publish the new version
@@ -116,10 +114,8 @@ The Diamond contract is composed of the following facets, each with a unique res
         - **Access**: Proxy deployment is permitted for the `GOVERNANCE_CONFIGURATION_MANAGER_ROLE`.
 
 - **`ProxyFactoryFacet`**:
-
     - **Function**: A factory for deploying new proxies (diamonds) for use cases.
     - **Default Behaviour**:
-
         - A set of essential governance facets (`DiamondCutFacet`, `DiamondLoupeFacet`, `AccessControlFacet`, and `IsbePauseFacet`) are automatically added to each new proxy.
         - The `DEFAULT_ADMIN_ROLE` is assigned to de sender of the transaction.
         - The `ISBE_ROLE` is configured by default to the governance proxy.
@@ -127,12 +123,10 @@ The Diamond contract is composed of the following facets, each with a unique res
     - **Access**: Proxy deployment is permitted for the `PROXY_DEPLOYER_ROLE`.
 
 - **`GlobalIsbePause`**:
-
     - **Function**: Allows for the centralised pausing and unpausing of any proxy contract deployed via the `ProxyFactoryFacet`.
     - **Access**: Restricted exclusively to the `ISBE_PAUSER_ROLE` to facilitate rapid responses to security incidents.
 
 - **`AccessControlFacet`**:
-
     - **Function**: Assigns and revokes roles to/from the accounts.
     - **Access**: restricted to `DEFAULT_ADMIN_ROLE`.
 
@@ -140,12 +134,15 @@ The Diamond contract is composed of the following facets, each with a unique res
     - **Function**: Pauses/Unpauses the governance diamond proxy.
     - **Access**: restricted to `PAUSER_ROLE`.
 
+- **`DidRegistryFacet`**:
+    - **Function**: Register and manage DID documents.
+    - **Access**: restricted to `DID_REGISTRY_ROLE` and `DID_REGISTRY_MANAGER_ROLE`.
+
 # Use Cases Facets
 
 Each use case will have different facets based on its specific business logic. However, a set of core facets will always be added—regardless of the use case—by the governance smart contract that deploys the diamond proxies :
 
 - **`AccessControlFacet`**:
-
     - **Function**: Assigns and revokes roles to/from the accounts.
     - **Access**: restricted to `DEFAULT_ADMIN_ROLE`.
 

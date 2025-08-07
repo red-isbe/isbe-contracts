@@ -2,9 +2,7 @@
 pragma solidity ^0.8.28;
 
 import {ERC20InternalCommon} from '../ERC20InternalCommon.sol';
-import {
-    _ERC20_CAPPED_RESOLVER_KEY
-} from '../../../../constants/resolverKeys.sol';
+import {_ERC20_CAPPED_RESOLVER_KEY} from '../../../../constants/resolverKeys.sol';
 import {IERC20Capped} from './IERC20Capped.sol';
 import {_CAP_ROLE, _MINTER_ROLE} from '../../../../constants/roles.sol';
 
@@ -17,24 +15,24 @@ abstract contract ERC20Capped is IERC20Capped, ERC20InternalCommon {
     }
 
     function initializeCap(
-        uint256 newCap
-    ) external initializer(_ERC20_CAPPED_RESOLVER_KEY) checkNewCap(newCap) {
-        _setCap(newCap);
-        emit CapSet(_msgSender(), newCap);
+        uint256 _newCap
+    ) external initializer(_ERC20_CAPPED_RESOLVER_KEY) checkNewCap(_newCap) {
+        _setCap(_newCap);
+        emit CapSet(_msgSender(), _newCap);
     }
 
     function mint(
-        address account,
-        uint256 amount
-    ) external checkCap(amount) whenNotPaused onlyRole(_MINTER_ROLE) {
-        _mint(account, amount);
+        address _account,
+        uint256 _amount
+    ) external checkCap(_amount) whenNotPaused onlyRole(_MINTER_ROLE) {
+        _mint(_account, _amount);
     }
 
     function setCap(
-        uint256 newCap
-    ) external checkNewCap(newCap) whenNotPaused onlyRole(_CAP_ROLE) {
-        _setCap(newCap);
-        emit CapSet(_msgSender(), newCap);
+        uint256 _newCap
+    ) external checkNewCap(_newCap) whenNotPaused onlyRole(_CAP_ROLE) {
+        _setCap(_newCap);
+        emit CapSet(_msgSender(), _newCap);
     }
 
     function cap() external view returns (uint256) {

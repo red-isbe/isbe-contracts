@@ -10,27 +10,33 @@ and provides convenient modifiers for common validation checks to reduce boilerp
 ### addressIsNotZero
 
 ```solidity
-modifier addressIsNotZero(address addr)
+modifier addressIsNotZero(address _addr)
 ```
 
 _Checks if an address equals to zero address_
 
 #### Parameters
 
-| Name | Type    | Description          |
-| ---- | ------- | -------------------- |
-| addr | address | The address to check |
+| Name   | Type    | Description          |
+| ------ | ------- | -------------------- |
+| \_addr | address | The address to check |
 
 ### bytes32IsNotZero
 
 ```solidity
-modifier bytes32IsNotZero(bytes32 hash)
+modifier bytes32IsNotZero(bytes32 _hash)
 ```
 
-### emptyCode
+### emptyBytes
 
 ```solidity
-modifier emptyCode(bytes code)
+modifier emptyBytes(bytes _code)
+```
+
+### emptyString
+
+```solidity
+modifier emptyString(string _string)
 ```
 
 ---
@@ -63,10 +69,10 @@ within an array, and aggregate multiple interface lists. Contracts inheriting fr
 implement the `_implementedInterfaces` function to declare which interfaces they support,
 enabling standardised interface detection._
 
-### \_checkERC165ForbiddenInterfaces
+### \_isERC165ForbiddenInterfaces
 
 ```solidity
-function _checkERC165ForbiddenInterfaces(bytes4 _interfaceId) internal pure virtual returns (bool)
+function _isERC165ForbiddenInterfaces(bytes4 _interfaceId) internal pure virtual returns (bool)
 ```
 
 ### \_supportsERC165Interface
@@ -78,13 +84,13 @@ function _supportsERC165Interface(bytes4 _interfaceId) internal pure virtual ret
 ### \_supportsInterface
 
 ```solidity
-function _supportsInterface(bytes4 _interfaceId, bytes4[] _interfaces) internal pure virtual returns (bool supported)
+function _supportsInterface(bytes4 _interfaceId, bytes4[] _interfaces) internal pure virtual returns (bool supported_)
 ```
 
 ### \_aggregateInterfaces
 
 ```solidity
-function _aggregateInterfaces(bytes4[][] interfacesArrays, bytes4[] _interfaces) internal pure returns (bytes4[] interfaces_)
+function _aggregateInterfaces(bytes4[][] _interfacesArrays, bytes4[] _interfaces) internal pure returns (bytes4[] interfaces_)
 ```
 
 ### \_implementedInterfaces
@@ -176,4 +182,10 @@ function getSize(uint256 _start, uint256 _end, uint256 _listCount) internal pure
 
 ```solidity
 function getStartAndEnd(uint256 _pageIndex, uint256 _pageLength) internal pure returns (uint256 start_, uint256 end_)
+```
+
+### getPaginationParameters
+
+```solidity
+function getPaginationParameters(uint256 _total, uint256 _page, uint256 _pageSize) internal pure returns (uint256 cursor_, uint256 howMany_, uint256 prev_, uint256 next_)
 ```

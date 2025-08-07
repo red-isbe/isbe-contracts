@@ -77,12 +77,12 @@ contract DiamondLoupeFacet is
     }
 
     function supportsInterface(
-        bytes4 interfaceId
+        bytes4 _interfaceId
     ) external view virtual override returns (bool) {
-        if (!_checkERC165ForbiddenInterfaces(interfaceId)) {
-            return false;
-        }
-        return _supportsInterface(interfaceId);
+        return
+            _isERC165ForbiddenInterfaces(_interfaceId)
+                ? false
+                : _supportsInterface(_interfaceId);
     }
 
     function interfacesIntrospection()

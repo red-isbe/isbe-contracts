@@ -7,7 +7,7 @@ _Inherits from IERC20Burnable and ERC20InternalCommon_
 ### burn
 
 ```solidity
-function burn(uint256 amount) external
+function burn(uint256 _amount) external
 ```
 
 Burns a specific amount of tokens from the caller's account.
@@ -18,14 +18,14 @@ Implementations should emit a `Transfer` event to indicate tokens were burned._
 
 #### Parameters
 
-| Name   | Type    | Description                   |
-| ------ | ------- | ----------------------------- |
-| amount | uint256 | The amount of tokens to burn. |
+| Name     | Type    | Description                   |
+| -------- | ------- | ----------------------------- |
+| \_amount | uint256 | The amount of tokens to burn. |
 
 ### burnFrom
 
 ```solidity
-function burnFrom(address account, uint256 amount) external
+function burnFrom(address _account, uint256 _amount) external
 ```
 
 Burns a specific amount of tokens from another account, using an allowance.
@@ -36,10 +36,10 @@ Implementations should emit a `Transfer` event to indicate tokens were burned._
 
 #### Parameters
 
-| Name    | Type    | Description                                               |
-| ------- | ------- | --------------------------------------------------------- |
-| account | address | The address of the account whose tokens are to be burned. |
-| amount  | uint256 | The amount of tokens to burn.                             |
+| Name      | Type    | Description                                               |
+| --------- | ------- | --------------------------------------------------------- |
+| \_account | address | The address of the account whose tokens are to be burned. |
+| \_amount  | uint256 | The amount of tokens to burn.                             |
 
 ### \_implementedInterfaces
 
@@ -113,7 +113,7 @@ like `Transfer` to reflect changes in token balances and total supply._
 ### burn
 
 ```solidity
-function burn(uint256 amount) external
+function burn(uint256 _amount) external
 ```
 
 Burns a specific amount of tokens from the caller's account.
@@ -124,14 +124,14 @@ Implementations should emit a `Transfer` event to indicate tokens were burned._
 
 #### Parameters
 
-| Name   | Type    | Description                   |
-| ------ | ------- | ----------------------------- |
-| amount | uint256 | The amount of tokens to burn. |
+| Name     | Type    | Description                   |
+| -------- | ------- | ----------------------------- |
+| \_amount | uint256 | The amount of tokens to burn. |
 
 ### burnFrom
 
 ```solidity
-function burnFrom(address account, uint256 amount) external
+function burnFrom(address _account, uint256 _amount) external
 ```
 
 Burns a specific amount of tokens from another account, using an allowance.
@@ -142,7 +142,7 @@ Implementations should emit a `Transfer` event to indicate tokens were burned._
 
 #### Parameters
 
-| Name    | Type    | Description                                               |
-| ------- | ------- | --------------------------------------------------------- |
-| account | address | The address of the account whose tokens are to be burned. |
-| amount  | uint256 | The amount of tokens to burn.                             |
+| Name      | Type    | Description                                               |
+| --------- | ------- | --------------------------------------------------------- |
+| \_account | address | The address of the account whose tokens are to be burned. |
+| \_amount  | uint256 | The amount of tokens to burn.                             |

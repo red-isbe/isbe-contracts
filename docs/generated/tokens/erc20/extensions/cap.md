@@ -13,19 +13,19 @@ constructor() internal
 ### initializeCap
 
 ```solidity
-function initializeCap(uint256 newCap) external
+function initializeCap(uint256 _newCap) external
 ```
 
 ### mint
 
 ```solidity
-function mint(address account, uint256 amount) external
+function mint(address _account, uint256 _amount) external
 ```
 
 ### setCap
 
 ```solidity
-function setCap(uint256 newCap) external
+function setCap(uint256 _newCap) external
 ```
 
 ### cap
@@ -114,19 +114,19 @@ struct ERC20CappedStorage {
 ### checkNewCap
 
 ```solidity
-modifier checkNewCap(uint256 newCap)
+modifier checkNewCap(uint256 _newCap)
 ```
 
 ### checkCap
 
 ```solidity
-modifier checkCap(uint256 amount)
+modifier checkCap(uint256 _amount)
 ```
 
 ### \_mint
 
 ```solidity
-function _mint(address account, uint256 amount) internal virtual
+function _mint(address _account, uint256 _amount) internal virtual
 ```
 
 \_Creates `amount` tokens and assigns them to `account`, increasing
@@ -141,7 +141,7 @@ Requirements:
 ### \_setCap
 
 ```solidity
-function _setCap(uint256 newCap) internal
+function _setCap(uint256 _newCap) internal
 ```
 
 ### \_cap
@@ -153,13 +153,13 @@ function _cap() internal view returns (uint256)
 ### \_checkNewCap
 
 ```solidity
-function _checkNewCap(uint256 newCap) internal view virtual
+function _checkNewCap(uint256 _newCap) internal view virtual
 ```
 
 ### \_checkCap
 
 ```solidity
-function _checkCap(uint256 amount) internal view virtual
+function _checkCap(uint256 _amount) internal view virtual
 ```
 
 ---
@@ -222,7 +222,7 @@ _Triggered during operations like minting that would breach the defined cap._
 ### initializeCap
 
 ```solidity
-function initializeCap(uint256 cap) external
+function initializeCap(uint256 _cap) external
 ```
 
 Initializes the maximum supply cap for the token.
@@ -232,6 +232,6 @@ Emits a `CapInitialized` event if successful._
 
 #### Parameters
 
-| Name | Type    | Description                           |
-| ---- | ------- | ------------------------------------- |
-| cap  | uint256 | The desired maximum token supply cap. |
+| Name  | Type    | Description                           |
+| ----- | ------- | ------------------------------------- |
+| \_cap | uint256 | The desired maximum token supply cap. |

@@ -1,15 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {
-    _ACCESS_CONTROL_STORAGE_POSITION
-} from '../../constants/storagePositions.sol';
+import {_ACCESS_CONTROL_STORAGE_POSITION} from '../../constants/storagePositions.sol';
 import {IAccessControl} from './IAccessControl.sol';
 import {ISBEContext} from '../../utils/ISBEContext.sol';
 import {_DEFAULT_ADMIN_ROLE} from '../../constants/roles.sol';
-import {
-    EnumerableSet
-} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
+import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 import {LibCommon} from '../../core/LibCommon.sol';
 
 /// @title AccessControlInternal
@@ -33,105 +29,105 @@ abstract contract AccessControlInternal is ISBEContext {
     }
 
     /// @notice Modifier to restrict function to accounts with a specific role
-    /// @param role The required role
+    /// @param _role The required role
     /// @dev Reverts with `AccountHasNoRole` error if the account does not have the specific role
-    modifier onlyRole(bytes32 role) {
-        _checkRole(role);
+    modifier onlyRole(bytes32 _role) {
+        _checkRole(_role);
         _;
     }
 
     function _initializeRbacs(
-        IAccessControl.Rbac[] memory rbacs
+        IAccessControl.Rbac[] memory _rbacs
     ) internal virtual {
-        _checkRbacs(rbacs);
-        uint256 rbacsLength = rbacs.length;
+        _checkRbacs(_rbacs);
+        uint256 rbacsLength = _rbacs.length;
         for (uint256 index; index < rbacsLength; ++index) {
-            _grantRoles(rbacs[index].role, rbacs[index].members);
+            _grantRoles(_rbacs[index].role, _rbacs[index].members);
         }
     }
 
-    function _setRoleAdmin(bytes32 role, bytes32 adminRole) internal virtual {
-        bytes32 previousAdminRole = _getRoleAdmin(role);
-        if (previousAdminRole == adminRole) return;
-        _accessControlStorage().roles[role].adminRole = adminRole;
+    function _setRoleAdmin(bytes32 _role, bytes32 _adminRole) internal virtual {
+        bytes32 previousAdminRole = _getRoleAdmin(_role);
+        if (previousAdminRole == _adminRole) return;
+        _accessControlStorage().roles[_role].adminRole = _adminRole;
         emit IAccessControl.RoleAdminChanged(
-            role,
+            _role,
             previousAdminRole,
-            adminRole,
+            _adminRole,
             _msgSender()
         );
     }
 
-    function _grantRole(bytes32 role, address account) internal virtual {
-        if (_hasRole(role, account)) return;
+    function _grantRole(bytes32 _role, address _account) internal virtual {
+        if (_hasRole(_role, _account)) return;
 
-        _accessControlStorage().roles[role].members.add(account);
-        _accessControlStorage().rolesByAccount[account].add(role);
+        _accessControlStorage().roles[_role].members.add(_account);
+        _accessControlStorage().rolesByAccount[_account].add(_role);
 
-        emit IAccessControl.RoleGranted(role, account, _msgSender());
+        emit IAccessControl.RoleGranted(_role, _account, _msgSender());
     }
 
     function _grantRoles(
-        bytes32 role,
-        address[] memory accounts
+        bytes32 _role,
+        address[] memory _accounts
     ) internal virtual {
-        uint256 accountsLength = accounts.length;
+        uint256 accountsLength = _accounts.length;
         for (uint256 index; index < accountsLength; ++index) {
-            _grantRole(role, accounts[index]);
+            _grantRole(_role, _accounts[index]);
         }
     }
 
-    function _revokeRole(bytes32 role, address account) internal virtual {
-        if (!_hasRole(role, account)) return;
+    function _revokeRole(bytes32 _role, address _account) internal virtual {
+        if (!_hasRole(_role, _account)) return;
 
-        _accessControlStorage().roles[role].members.remove(account);
-        _accessControlStorage().rolesByAccount[account].remove(role);
+        _accessControlStorage().roles[_role].members.remove(_account);
+        _accessControlStorage().rolesByAccount[_account].remove(_role);
 
-        emit IAccessControl.RoleRevoked(role, account, _msgSender());
+        emit IAccessControl.RoleRevoked(_role, _account, _msgSender());
     }
 
     function _hasRole(
-        bytes32 role,
-        address account
+        bytes32 _role,
+        address _account
     ) internal view virtual returns (bool) {
-        return _accessControlStorage().roles[role].members.contains(account);
+        return _accessControlStorage().roles[_role].members.contains(_account);
     }
 
     function _getRoleAdmin(
-        bytes32 role
+        bytes32 _role
     ) internal view virtual returns (bytes32) {
-        return _accessControlStorage().roles[role].adminRole;
+        return _accessControlStorage().roles[_role].adminRole;
     }
 
-    function _checkRole(bytes32 role) internal view virtual {
-        _checkRole(role, _msgSender());
+    function _checkRole(bytes32 _role) internal view virtual {
+        _checkRole(_role, _msgSender());
     }
 
-    function _checkRole(bytes32 role, address account) internal view virtual {
+    function _checkRole(bytes32 _role, address _account) internal view virtual {
         require(
-            _hasRole(role, account),
-            IAccessControl.AccountHasNoRole(account, role)
+            _hasRole(_role, _account),
+            IAccessControl.AccountHasNoRole(_account, _role)
         );
     }
 
-    function _checkRoles(bytes32[] memory roles) internal view virtual {
-        _checkRoles(roles, _msgSender());
+    function _checkRoles(bytes32[] memory _roles) internal view virtual {
+        _checkRoles(_roles, _msgSender());
     }
 
     function _checkRoles(
-        bytes32[] memory roles,
-        address account
+        bytes32[] memory _roles,
+        address _account
     ) internal view virtual {
         bool rolesOK = false;
 
-        for (uint256 index = 0; index < roles.length; ++index) {
-            if (_hasRole(roles[index], account)) {
+        for (uint256 index = 0; index < _roles.length; ++index) {
+            if (_hasRole(_roles[index], _account)) {
                 rolesOK = true;
                 break;
             }
         }
 
-        require(rolesOK, IAccessControl.AccountHasNoRoles(account, roles));
+        require(rolesOK, IAccessControl.AccountHasNoRoles(_account, _roles));
     }
 
     function _getRoleMembersCount(
@@ -187,8 +183,8 @@ abstract contract AccessControlInternal is ISBEContext {
         // slither-disable-end assembly
     }
 
-    function _checkRbacs(IAccessControl.Rbac[] memory rbacs) private pure {
-        uint256 rbacLength = rbacs.length;
+    function _checkRbacs(IAccessControl.Rbac[] memory _rbacs) private pure {
+        uint256 rbacLength = _rbacs.length;
         bool adminRoleFound;
         for (uint256 index; index < rbacLength; ++index) {
             for (
@@ -197,34 +193,34 @@ abstract contract AccessControlInternal is ISBEContext {
                 ++innerIndex
             ) {
                 require(
-                    rbacs[index].role != rbacs[innerIndex].role,
-                    IAccessControl.RoleMustBeUnique(rbacs[index].role)
+                    _rbacs[index].role != _rbacs[innerIndex].role,
+                    IAccessControl.RoleMustBeUnique(_rbacs[index].role)
                 );
             }
-            if (!adminRoleFound && rbacs[index].role == _DEFAULT_ADMIN_ROLE) {
+            if (!adminRoleFound && _rbacs[index].role == _DEFAULT_ADMIN_ROLE) {
                 adminRoleFound = true;
             }
-            _checkMembers(rbacs[index].role, rbacs[index].members);
+            _checkMembers(_rbacs[index].role, _rbacs[index].members);
         }
         if (!adminRoleFound) revert IAccessControl.MissingAdminRole();
     }
 
     function _checkMembers(
-        bytes32 role,
-        address[] memory members
+        bytes32 _role,
+        address[] memory _members
     ) private pure {
-        uint256 membersLength = members.length;
+        uint256 membersLength = _members.length;
         for (uint256 index; index < membersLength; ++index) {
-            address currentMember = members[index];
-            _addressIsNotZero(currentMember);
+            address currentMember = _members[index];
+            _checkAddressIsNotZero(currentMember);
             for (
                 uint256 innerIndex = index + 1;
                 innerIndex < membersLength;
                 ++innerIndex
             ) {
                 require(
-                    currentMember != members[innerIndex],
-                    IAccessControl.RoleMemberMustBeUnique(role, currentMember)
+                    currentMember != _members[innerIndex],
+                    IAccessControl.RoleMemberMustBeUnique(_role, currentMember)
                 );
             }
         }

@@ -10,25 +10,25 @@ import {_HASH_TIMESTAMP_ROLE} from '../constants/roles.sol';
 /// @dev Inherits from IHashTimestamp and HashTimestampInternal, providing external timestamp hashes functions
 abstract contract HashTimestamp is IHashTimestamp, HashTimestampInternal {
     function timestampHash(
-        bytes32 hash
+        bytes32 _hash
     )
         external
         override
-        onlyNonExistentHash(hash)
+        onlyNonExistentHash(_hash)
         whenNotPaused
         onlyRole(_HASH_TIMESTAMP_ROLE)
     {
-        _timestampHash(hash);
+        _timestampHash(_hash);
     }
 
-    function exists(bytes32 hash) external view override returns (bool) {
-        return _exists(hash);
+    function exists(bytes32 _hash) external view override returns (bool) {
+        return _exists(_hash);
     }
 
     function getTimestamp(
-        bytes32 hash
+        bytes32 _hash
     ) external view override returns (uint256) {
-        return _getTimestamp(hash);
+        return _getTimestamp(_hash);
     }
 
     function _implementedInterfaces()

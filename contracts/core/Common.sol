@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {Initializable} from './Initializable.sol';
-import {
-    AccessControlInternal
-} from '../access/accessControl/AccessControlInternal.sol';
-import {PauseInternalCommon} from '../pause/PauseInternalCommon.sol';
-import {OwnableInternal} from '../access/ownable/OwnableInternal.sol';
+import {AccessControlInternal} from '../access/accessControl/AccessControlInternal.sol';
 import {ERC165Internal} from './ERC165Internal.sol';
+import {Initializable} from './Initializable.sol';
+import {OwnableInternal} from '../access/ownable/OwnableInternal.sol';
+import {PauseInternalCommon} from '../pause/PauseInternalCommon.sol';
 
 /**
  * @title Common
@@ -28,20 +26,25 @@ abstract contract Common is
     /**
      * @dev Checks if an address equals to zero address
      *
-     * @param addr The address to check
+     * @param _addr The address to check
      */
-    modifier addressIsNotZero(address addr) {
-        _addressIsNotZero(addr);
+    modifier addressIsNotZero(address _addr) {
+        _checkAddressIsNotZero(_addr);
         _;
     }
 
-    modifier bytes32IsNotZero(bytes32 hash) {
-        _bytes32IsNotZero(hash);
+    modifier bytes32IsNotZero(bytes32 _hash) {
+        _checkBytes32IsNotZero(_hash);
         _;
     }
 
-    modifier emptyCode(bytes memory code) {
-        _emptyBytes(code);
+    modifier emptyBytes(bytes memory _code) {
+        _checkEmptyBytes(_code);
+        _;
+    }
+
+    modifier emptyString(string memory _string) {
+        _checkEmptyString(_string);
         _;
     }
 }

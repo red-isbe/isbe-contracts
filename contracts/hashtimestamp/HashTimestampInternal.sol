@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {
-    _HASH_TIMESTAMP_STORAGE_POSITION
-} from '../constants/storagePositions.sol';
+import {_HASH_TIMESTAMP_STORAGE_POSITION} from '../constants/storagePositions.sol';
 import {IHashTimestamp} from './IHashTimestamp.sol';
 import {Common} from '../core/Common.sol';
 
@@ -17,30 +15,30 @@ abstract contract HashTimestampInternal is Common {
     }
 
     /// @notice Modifier to validate that provided hash
-    /// @param hash The hash to check
-    modifier onlyNonExistentHash(bytes32 hash) {
-        _checkHash(hash);
+    /// @param _hash The hash to check
+    modifier onlyNonExistentHash(bytes32 _hash) {
+        _checkHash(_hash);
         _;
     }
 
-    function _timestampHash(bytes32 hash) internal virtual {
+    function _timestampHash(bytes32 _hash) internal virtual {
         uint256 timestamp = _blockTimestamp();
-        _hashTimestampStorage().hashTimestamps[hash] = timestamp;
-        emit IHashTimestamp.HashTimestamped(hash, msg.sender, timestamp);
+        _hashTimestampStorage().hashTimestamps[_hash] = timestamp;
+        emit IHashTimestamp.HashTimestamped(_hash, msg.sender, timestamp);
     }
 
-    function _exists(bytes32 hash) internal view virtual returns (bool) {
-        return _getTimestamp(hash) != 0;
+    function _exists(bytes32 _hash) internal view virtual returns (bool) {
+        return _getTimestamp(_hash) != 0;
     }
 
     function _getTimestamp(
-        bytes32 hash
+        bytes32 _hash
     ) internal view virtual returns (uint256) {
-        return _hashTimestampStorage().hashTimestamps[hash];
+        return _hashTimestampStorage().hashTimestamps[_hash];
     }
 
-    function _checkHash(bytes32 hash) internal view virtual {
-        require(!_exists(hash), IHashTimestamp.HashAlreadyExists(hash));
+    function _checkHash(bytes32 _hash) internal view virtual {
+        require(!_exists(_hash), IHashTimestamp.HashAlreadyExists(_hash));
     }
 
     /// @notice Returns the storage slot for hash timestamp

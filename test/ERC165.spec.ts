@@ -13,9 +13,9 @@ import {
     IAccessControl__factory,
     AccessControlTestWrapper__factory,
 } from '../typechain-types'
-import { deployAll } from './initialization'
+import { deployGovernance } from './initialization'
+import { FORBIDDEN_ERC165_INTERFACE_ID } from './constants'
 
-const FORBIDDEN_ERC165_INTERFACE_ID = '0xffffffff'
 const ERC165_INTERFACE_ID = '0x01ffc9a7'
 const NON_EXISTING_INTERFACE_ID = '0x00000012'
 describe('ERC165', function () {
@@ -24,7 +24,17 @@ describe('ERC165', function () {
     let AccessControlTestWrapperFactory: AccessControlTestWrapper__factory
 
     async function deploy() {
-        const result = await deployAll()
+        const [owner] = await ethers.getSigners()
+
+        const result = await deployGovernance(
+            owner,
+            [],
+            undefined,
+            false,
+            '0x',
+            [],
+            []
+        )
         diamondLoupe = result.diamondLoupe
 
         AccessControlTestWrapperFactory = await ethers.getContractFactory(

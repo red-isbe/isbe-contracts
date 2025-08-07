@@ -14,18 +14,18 @@ abstract contract ERC20InternalCommon is
     ERC203643ExtendedInternal
 {
     function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 amount
+        address _from,
+        address _to,
+        uint256 _amount
     ) internal virtual override(ERC20Internal, ERC20SnapshotInternal) {
-        ERC20SnapshotInternal._beforeTokenTransfer(from, to, amount);
+        ERC20SnapshotInternal._beforeTokenTransfer(_from, _to, _amount);
     }
 
     function _mint(
-        address account,
-        uint256 amount
+        address _account,
+        uint256 _amount
     ) internal virtual override(ERC20CappedInternal, ERC20Internal) {
-        ERC20CappedInternal._mint(account, amount);
+        ERC20CappedInternal._mint(_account, _amount);
     }
 
     

@@ -24,14 +24,14 @@ abstract contract ERC20Internal is Common {
     }
 
     function _initialize(
-        string memory newName,
-        string memory newSymbol,
-        uint8 newDecimals
+        string memory _newName,
+        string memory _newSymbol,
+        uint8 _newDecimals
     ) internal {
         ERC20Storage storage $ = _erc20Storage();
-        $.name = newName;
-        $.symbol = newSymbol;
-        $.decimals = newDecimals;
+        $.name = _newName;
+        $.symbol = _newSymbol;
+        $.decimals = _newDecimals;
     }
 
     
@@ -77,27 +77,27 @@ abstract contract ERC20Internal is Common {
      * - `from` must have a balance of at least `amount`.
      */
     function _transfer(
-        address from,
-        address to,
-        uint256 amount
-    ) internal virtual addressIsNotZero(from) addressIsNotZero(to) {
-        _beforeTokenTransfer(from, to, amount);
+        address _from,
+        address _to,
+        uint256 _amount
+    ) internal virtual addressIsNotZero(_from) addressIsNotZero(_to) {
+        _beforeTokenTransfer(_from, _to, _amount);
         ERC20Storage storage $ = _erc20Storage();
-        uint256 fromBalance = $.balances[from];
+        uint256 fromBalance = $.balances[_from];
         require(
-            fromBalance >= amount,
+            fromBalance >= _amount,
             IERC20Isbe.TransferAmountExceedsBalance()
         );
         unchecked {
-            $.balances[from] = fromBalance - amount;
+            $.balances[_from] = fromBalance - _amount;
             // Overflow not possible: the sum of all balances is capped by totalSupply, and the sum is preserved by
             // decrementing then incrementing.
-            $.balances[to] += amount;
+            $.balances[_to] += _amount;
         }
 
-        emit IERC20.Transfer(from, to, amount);
+        emit IERC20.Transfer(_from, _to, _amount);
 
-        _afterTokenTransfer(from, to, amount);
+        _afterTokenTransfer(_from, _to, _amount);
     }
 
     /** @dev Creates `amount` tokens and assigns them to `account`, increasing
@@ -110,20 +110,20 @@ abstract contract ERC20Internal is Common {
      * - `account` cannot be the zero address.
      */
     function _mint(
-        address account,
-        uint256 amount
-    ) internal virtual addressIsNotZero(account) {
-        _beforeTokenTransfer(address(0), account, amount);
+        address _account,
+        uint256 _amount
+    ) internal virtual addressIsNotZero(_account) {
+        _beforeTokenTransfer(address(0), _account, _amount);
 
         ERC20Storage storage $ = _erc20Storage();
-        $.totalSupply += amount;
+        $.totalSupply += _amount;
         unchecked {
             // Overflow not possible: balance + amount is at most totalSupply + amount, which is checked above.
-            $.balances[account] += amount;
+            $.balances[_account] += _amount;
         }
-        emit IERC20.Transfer(address(0), account, amount);
+        emit IERC20.Transfer(address(0), _account, _amount);
 
-        _afterTokenTransfer(address(0), account, amount);
+        _afterTokenTransfer(address(0), _account, _amount);
     }
 
     /**
@@ -138,26 +138,26 @@ abstract contract ERC20Internal is Common {
      * - `account` must have at least `amount` tokens.
      */
     function _burn(
-        address account,
-        uint256 amount
-    ) internal virtual addressIsNotZero(account) {
-        _beforeTokenTransfer(account, address(0), amount);
+        address _account,
+        uint256 _amount
+    ) internal virtual addressIsNotZero(_account) {
+        _beforeTokenTransfer(_account, address(0), _amount);
 
         ERC20Storage storage $ = _erc20Storage();
-        uint256 accountBalance = $.balances[account];
+        uint256 accountBalance = $.balances[_account];
         require(
-            accountBalance >= amount,
+            accountBalance >= _amount,
             IERC20Isbe.BurnAmountExceedsBalance()
         );
         unchecked {
-            $.balances[account] = accountBalance - amount;
+            $.balances[_account] = accountBalance - _amount;
             // Overflow not possible: amount <= accountBalance <= totalSupply.
-            $.totalSupply -= amount;
+            $.totalSupply -= _amount;
         }
 
-        emit IERC20.Transfer(account, address(0), amount);
+        emit IERC20.Transfer(_account, address(0), _amount);
 
-        _afterTokenTransfer(account, address(0), amount);
+        _afterTokenTransfer(_account, address(0), _amount);
     }
 
     /**
@@ -174,12 +174,12 @@ abstract contract ERC20Internal is Common {
      * - `spender` cannot be the zero address.
      */
     function _approve(
-        address owner,
-        address spender,
-        uint256 amount
-    ) internal virtual addressIsNotZero(owner) addressIsNotZero(spender) {
-        _erc20Storage().allowances[owner][spender] = amount;
-        emit IERC20.Approval(owner, spender, amount);
+        address _owner,
+        address _spender,
+        uint256 _amount
+    ) internal virtual addressIsNotZero(_owner) addressIsNotZero(_spender) {
+        _erc20Storage().allowances[_owner][_spender] = _amount;
+        emit IERC20.Approval(_owner, _spender, _amount);
     }
 
     /**
@@ -191,15 +191,18 @@ abstract contract ERC20Internal is Common {
      * Might emit an {Approval} event.
      */
     function _spendAllowance(
-        address owner,
-        address spender,
-        uint256 amount
+        address _owner,
+        address _spender,
+        uint256 _amount
     ) internal virtual {
-        uint256 currentAllowance = _allowance(owner, spender);
+        uint256 currentAllowance = _allowance(_owner, _spender);
         if (currentAllowance == type(uint256).max) return;
-        require(currentAllowance >= amount, IERC20Isbe.InsufficientAllowance());
+        require(
+            currentAllowance >= _amount,
+            IERC20Isbe.InsufficientAllowance()
+        );
         unchecked {
-            _approve(owner, spender, currentAllowance - amount);
+            _approve(_owner, _spender, currentAllowance - _amount);
         }
     }
 
@@ -219,9 +222,9 @@ abstract contract ERC20Internal is Common {
      * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
      */
     function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 amount
+        address _from,
+        address _to,
+        uint256 _amount
     ) internal virtual;
 
     /**
@@ -239,9 +242,9 @@ abstract contract ERC20Internal is Common {
      * To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].
      */
     function _afterTokenTransfer(
-        address from,
-        address to,
-        uint256 amount
+        address _from,
+        address _to,
+        uint256 _amount
     ) internal virtual {}
     // solhint-enable no-empty-blocks
 

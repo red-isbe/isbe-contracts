@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {
-    EnumerableSet
-} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
+import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 
 library LibCommon {
     using EnumerableSet for EnumerableSet.Bytes32Set;
@@ -61,5 +59,35 @@ library LibCommon {
     ) internal pure returns (uint256 start_, uint256 end_) {
         start_ = _pageIndex * _pageLength;
         end_ = start_ + _pageLength;
+    }
+
+    function getPaginationParameters(
+        uint256 _total,
+        uint256 _page,
+        uint256 _pageSize
+    )
+        internal
+        pure
+        returns (
+            uint256 cursor_,
+            uint256 howMany_,
+            uint256 prev_,
+            uint256 next_
+        )
+    {
+        unchecked {
+            // Single division con ceil optimizado
+            uint256 lastPage = (_total + _pageSize - 1) / _pageSize;
+
+            cursor_ = (_page - 1) * _pageSize;
+
+            // Evitar branch para howMany_
+            uint256 remainingItems = _total > cursor_ ? _total - cursor_ : 0;
+            howMany_ = remainingItems > _pageSize ? _pageSize : remainingItems;
+
+            // Operaciones sin branches
+            next_ = _page + ((_page < lastPage) ? 1 : (lastPage - _page));
+            prev_ = _page - ((_page > 1) ? 1 : (_page - 1));
+        }
     }
 }
