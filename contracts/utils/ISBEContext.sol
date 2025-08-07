@@ -38,6 +38,10 @@ abstract contract ISBEContext is Context {
 
     error NotSameLength(uint256 a, uint256 b);
 
+    /// @notice Error thrown when a uint value is zero and it is not allowed.
+    /// @dev Used for generic checks where a uint must be greater than zero.
+    error UintIsZero();
+
     /**
      * @notice Returns the timestamp of the current block.
      * @dev This is a virtual function that wraps `block.timestamp`, allowing it to be
@@ -75,6 +79,15 @@ abstract contract ISBEContext is Context {
      */
     function _bytes32IsNotZero(bytes32 _hash) internal pure {
         require(_hash != bytes32(0), EmptyBytes32());
+    }
+
+    /**
+     * @notice Checks that a uint value is not zero.
+     * @dev Reverts with UintIsZero if the value is zero.
+     * @param amount The uint value to check.
+     */
+    function _checkUint(uint256 amount) internal pure {
+        require(amount > 0, UintIsZero());
     }
 
     /**

@@ -26,11 +26,8 @@ abstract contract ERC721Capped is IERC721Capped, ERC721InternalCommon {
      */
     function initializeCap(
         uint256 newCap
-    )
-        external
-        initializer(_ERC721_CAPPED_RESOLVER_KEY)
-        onlyValidNewCap(newCap)
-    {
+    ) external initializer(_ERC721_CAPPED_RESOLVER_KEY) {
+        _checkUint(newCap);
         _setCap(newCap);
         emit CapSet(_msgSender(), newCap);
     }
@@ -56,7 +53,8 @@ abstract contract ERC721Capped is IERC721Capped, ERC721InternalCommon {
      */
     function setCap(
         uint256 newCap
-    ) external onlyValidNewCap(newCap) whenNotPaused onlyRole(_CAP_ROLE) {
+    ) external checkValidNewCap(newCap) whenNotPaused onlyRole(_CAP_ROLE) {
+        _checkUint(newCap);
         _setCap(newCap);
         emit CapSet(_msgSender(), newCap);
     }

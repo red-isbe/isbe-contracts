@@ -22,20 +22,20 @@ abstract contract ERC721CappedInternal is ERC721Internal {
         uint256 cap;
     }
 
-    modifier onlyValidNewCap(uint256 newCap) {
-        _onlyValidNewCap(newCap);
+    modifier checkValidNewCap(uint256 newCap) {
+        _checkValidNewCap(newCap);
         _;
     }
 
-    modifier onlyAllowedCap(uint256 amount) {
-        _onlyAllowedCap(amount);
+    modifier checkAllowedCap(uint256 amount) {
+        _checkAllowedCap(amount);
         _;
     }
 
     function _mint(
         address to,
         uint256 tokenId
-    ) internal virtual override onlyAllowedCap(1) {
+    ) internal virtual override checkAllowedCap(1) {
         super._mint(to, tokenId);
     }
 
@@ -47,21 +47,15 @@ abstract contract ERC721CappedInternal is ERC721Internal {
         return _erc721CappedStorage().cap;
     }
 
-    function _onlyValidNewCap(uint256 newCap) internal view virtual {
-        _checkUint(newCap);
-
+    function _checkValidNewCap(uint256 newCap) internal view virtual {
         require(
             newCap >= _totalSupply(),
             IERC721Capped.NewCapIsLessThanTotalSupply(newCap, _totalSupply())
         );
     }
 
-    function _onlyAllowedCap(uint256 amount) internal view virtual {
+    function _checkAllowedCap(uint256 amount) internal view virtual {
         require(_totalSupply() + amount <= _cap(), IERC721Capped.CapExceeded());
-    }
-
-    function _checkUint(uint256 newCap) internal view virtual {
-        require(newCap > 0, IERC721Capped.CapIsZero());
     }
 
     function _erc721CappedStorage()
