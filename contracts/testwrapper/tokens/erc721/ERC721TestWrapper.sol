@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
+import {ERC721InternalCommon} from '../../../tokens/erc721/extensions/ERC721InternalCommon.sol';
+
 /**
  * @title ERC721TestWrapper
  * @notice Test wrapper contract for ERC721, exposing internal functions for testing purposes.
  * @dev Allows direct calls to burn, transfer, setApprovalForAll, and baseURI.
  *      - Not intended for production use; only for test environments and coverage.
  */
-
-import {ERC721InternalCommon} from '../../../tokens/erc721/extensions/ERC721InternalCommon.sol';
-
 abstract contract ERC721TestWrapper is ERC721InternalCommon {
     function burn(uint256 tokenId) external {
         _burn(tokenId);

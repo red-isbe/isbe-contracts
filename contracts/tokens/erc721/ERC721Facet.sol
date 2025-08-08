@@ -1,15 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-/**
- * @title ERC721Facet
- * @notice Facet for ERC721 functionality in a diamond architecture. Exposes ERC721 external interface and selectors.
- * @dev Implements ERC721 standard functions and diamond-specific introspection.
- *      - Exposes ERC721 methods.
- *      - Implements IEIP2535Introspection for selector and interface discovery.
- *      - Uses resolver key for diamond businessId identification.
- */
-
 import {_ERC721_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
 import {
     _SAFE_TRANSFER_FROM_SELECTOR_1,
@@ -18,6 +9,14 @@ import {
 import {ERC721} from './ERC721.sol';
 import {IEIP2535Introspection} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 
+/**
+ * @title ERC721Facet
+ * @notice Facet for ERC721 functionality in a diamond architecture. Exposes ERC721 external interface and selectors.
+ * @dev Implements ERC721 standard functions and diamond-specific introspection.
+ *      - Exposes ERC721 methods.
+ *      - Implements IEIP2535Introspection for selector and interface discovery.
+ *      - Uses resolver key for diamond businessId identification.
+ */
 contract ERC721Facet is ERC721, IEIP2535Introspection {
     function interfacesIntrospection()
         external
