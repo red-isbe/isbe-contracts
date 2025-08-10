@@ -37,6 +37,37 @@ error EmptyBytes()
 
 Raised when a `bytes` array is empty but is expected to have content.
 
+### EmptyUint
+
+```solidity
+error EmptyUint()
+```
+
+Emitted when a uint256 value is zero but is expected to be greater than zero
+
+### EmptyString
+
+```solidity
+error EmptyString()
+```
+
+Emitted when a string is empty but is expected to contain text
+
+### InvalidDates
+
+```solidity
+error InvalidDates(uint256 _before, uint256 _after)
+```
+
+Emitted when date validation fails due to invalid chronological ordering
+
+#### Parameters
+
+| Name     | Type    | Description                                             |
+| -------- | ------- | ------------------------------------------------------- |
+| \_before | uint256 | The earlier timestamp that should precede the later one |
+| \_after  | uint256 | The later timestamp that should follow the earlier one  |
+
 ### UnimplementedMethod
 
 ```solidity
@@ -54,15 +85,14 @@ the execution of incomplete or abstract functionality._
 error NotSameLength(uint256 a, uint256 b)
 ```
 
-### UintIsZero
+Emitted when two values are expected to have the same length but differ
 
-```solidity
-error UintIsZero()
-```
+#### Parameters
 
-Error thrown when a uint value is zero and it is not allowed.
-
-_Used for generic checks where a uint must be greater than zero._
+| Name | Type    | Description                    |
+| ---- | ------- | ------------------------------ |
+| a    | uint256 | The length of the first value  |
+| b    | uint256 | The length of the second value |
 
 ### \_blockTimestamp
 
@@ -98,10 +128,10 @@ overridden in child contracts for testing purposes._
 | ---- | ------ | ------------------------------------------------ |
 | [0]  | bytes4 | bytes4 The function selector from the call data. |
 
-### \_addressIsNotZero
+### \_checkAddressIsNotZero
 
 ```solidity
-function _addressIsNotZero(address _addr) internal pure
+function _checkAddressIsNotZero(address _addr) internal pure
 ```
 
 Checks that a given address is not the zero address.
@@ -115,10 +145,10 @@ This is an internal helper function intended to be used like a modifier._
 | ------ | ------- | --------------------- |
 | \_addr | address | The address to check. |
 
-### \_bytes32IsNotZero
+### \_checkBytes32IsNotZero
 
 ```solidity
-function _bytes32IsNotZero(bytes32 _hash) internal pure
+function _checkBytes32IsNotZero(bytes32 _hash) internal pure
 ```
 
 Checks that a `bytes32` value is not empty (all zeros).
@@ -131,42 +161,145 @@ _Reverts with `EmptyBytes32` error if the condition is not met._
 | ------ | ------- | ----------------------------- |
 | \_hash | bytes32 | The `bytes32` value to check. |
 
-### \_checkUint
+### \_checkUintIsNotZero
 
 ```solidity
-function _checkUint(uint256 amount) internal pure
+function _checkUintIsNotZero(uint256 _uint) internal pure
 ```
 
-Checks that a uint value is not zero.
+Validates that the provided uint256 value is not zero
 
-_Reverts with UintIsZero if the value is zero._
+_Internal validation function that reverts with EmptyUint error if the
+value is zero. Used for quantity and amount validation_
 
 #### Parameters
 
-| Name   | Type    | Description              |
-| ------ | ------- | ------------------------ |
-| amount | uint256 | The uint value to check. |
+| Name   | Type    | Description                                        |
+| ------ | ------- | -------------------------------------------------- |
+| \_uint | uint256 | The uint256 value to validate for non-zero content |
 
-### \_emptyBytes
+### \_checkEmptyBytes
 
 ```solidity
-function _emptyBytes(bytes _code) internal pure
+function _checkEmptyBytes(bytes _code) internal pure
 ```
 
-Checks that a `bytes` array is not empty.
+Validates that the provided bytes array is not empty
 
-_Reverts with `EmptyBytes` error if the byte array's length is zero._
+_Internal validation function that reverts with EmptyBytes error if the
+array length is zero. Used for data payload validation_
 
 #### Parameters
 
-| Name   | Type  | Description                 |
-| ------ | ----- | --------------------------- |
-| \_code | bytes | The `bytes` array to check. |
+| Name   | Type  | Description                                       |
+| ------ | ----- | ------------------------------------------------- |
+| \_code | bytes | The bytes array to validate for non-empty content |
 
-### \_sameLength
+### \_checkSameLength
 
 ```solidity
-function _sameLength(uint256 _a, uint256 _b) internal pure
+function _checkSameLength(uint256 _a, uint256 _b) internal pure
+```
+
+Validates that two values have identical length
+
+_Internal validation function that reverts with NotSameLength error if the
+values differ. Essential for parallel array operations_
+
+#### Parameters
+
+| Name | Type    | Description                          |
+| ---- | ------- | ------------------------------------ |
+| \_a  | uint256 | The first value's length to compare  |
+| \_b  | uint256 | The second value's length to compare |
+
+### \_checkEmptyString
+
+```solidity
+function _checkEmptyString(string _string) internal pure
+```
+
+Validates that the provided string is not empty
+
+_Internal validation function that reverts with EmptyString error if the
+string has zero length when encoded. Used for text content validation_
+
+#### Parameters
+
+| Name     | Type   | Description                                  |
+| -------- | ------ | -------------------------------------------- |
+| \_string | string | The string to validate for non-empty content |
+
+### \_equalStrings
+
+```solidity
+function _equalStrings(string a, string b) internal pure returns (bool)
+```
+
+Compares two strings for exact equality
+
+_Internal utility function using keccak256 hash comparison for efficient
+string matching. Handles strings of different lengths correctly_
+
+#### Parameters
+
+| Name | Type   | Description                  |
+| ---- | ------ | ---------------------------- |
+| a    | string | The first string to compare  |
+| b    | string | The second string to compare |
+
+#### Return Values
+
+| Name | Type | Description                                              |
+| ---- | ---- | -------------------------------------------------------- |
+| [0]  | bool | isEqual\_ True if strings are identical, false otherwise |
+
+### \_equalBytes
+
+```solidity
+function _equalBytes(bytes a, bytes b) internal pure returns (bool)
+```
+
+Compares two bytes arrays for exact equality
+
+_Internal utility function using length check followed by keccak256 hash
+comparison for efficient bytes matching. Optimised for different lengths_
+
+#### Parameters
+
+| Name | Type  | Description                       |
+| ---- | ----- | --------------------------------- |
+| a    | bytes | The first bytes array to compare  |
+| b    | bytes | The second bytes array to compare |
+
+#### Return Values
+
+| Name | Type | Description                                                   |
+| ---- | ---- | ------------------------------------------------------------- |
+| [0]  | bool | isEqual\_ True if bytes arrays are identical, false otherwise |
+
+### \_checkValidDates
+
+```solidity
+function _checkValidDates(uint256 _before, uint256 _after) internal pure
+```
+
+Validates chronological ordering of two timestamps
+
+_Internal validation function that reverts with InvalidDates error if the
+after timestamp is before the before timestamp. Ensures temporal consistency_
+
+#### Parameters
+
+| Name     | Type    | Description                                             |
+| -------- | ------- | ------------------------------------------------------- |
+| \_before | uint256 | The earlier timestamp that should precede the later one |
+| \_after  | uint256 | The later timestamp that should follow the earlier one  |
+
+### \_isEmptyString
+
+```solidity
+function _isEmptyString(string _string) internal pure returns (bool)
 ```
 
 ---

@@ -7,7 +7,6 @@ import {_ERC721_STORAGE_POSITION} from '../../constants/storagePositions.sol';
 import {IERC721} from '@openzeppelin/contracts/token/ERC721/IERC721.sol';
 import {IERC721Receiver} from './IERC721Receiver.sol';
 
-
 /**
  * @title ERC721Internal
  * @notice Internal abstract contract for ERC721 logic, designed for use in diamond/facet architectures.
@@ -242,7 +241,7 @@ abstract contract ERC721Internal is Common {
             _erc721Storage().owners[tokenId] == address(0),
             IERC721Isbe.TokenAlreadyMinted()
         );
-        _checkUint(tokenId);
+        _checkUintIsNotZero(tokenId);
     }
 
     function _erc721Storage()

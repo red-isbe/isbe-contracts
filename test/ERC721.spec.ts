@@ -80,7 +80,7 @@ describe('ERC721', function () {
         it('GIVEN an ERC721 WHEN mint with tokenId 0 THEN reverts', async () => {
             await expect(
                 erc721Capped.mint(ownerAddress, 0)
-            ).to.be.revertedWithCustomError(accessControl, 'UintIsZero')
+            ).to.be.revertedWithCustomError(accessControl, 'EmptyUint')
         })
 
         it('GIVEN an ERC721 WHEN mint to zero address THEN fails', async () => {
@@ -443,7 +443,7 @@ describe('ERC721', function () {
             await deploy()
             await expect(
                 erc721Capped.initializeCap(0)
-            ).to.be.revertedWithCustomError(erc721Capped, 'UintIsZero')
+            ).to.be.revertedWithCustomError(erc721Capped, 'EmptyUint')
         })
 
         it('GIVEN an ERC721 WHEN cap is initialized THEN it can be retrieved', async () => {

@@ -302,7 +302,7 @@ abstract contract ConfigurationManagementInternal is
         for (uint256 index; index < length; ) {
             bytes32 currentId = _businessData[index].businessId;
             uint256 version = _businessData[index].version;
-            _bytes32IsNotZero(currentId);
+            _checkBytes32IsNotZero(currentId);
             unchecked {
                 ++index;
             }

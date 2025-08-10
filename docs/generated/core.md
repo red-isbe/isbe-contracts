@@ -27,10 +27,16 @@ _Checks if an address equals to zero address_
 modifier bytes32IsNotZero(bytes32 _hash)
 ```
 
-### emptyCode
+### emptyBytes
 
 ```solidity
-modifier emptyCode(bytes _code)
+modifier emptyBytes(bytes _code)
+```
+
+### emptyString
+
+```solidity
+modifier emptyString(string _string)
 ```
 
 ---
@@ -176,4 +182,10 @@ function getSize(uint256 _start, uint256 _end, uint256 _listCount) internal pure
 
 ```solidity
 function getStartAndEnd(uint256 _pageIndex, uint256 _pageLength) internal pure returns (uint256 start_, uint256 end_)
+```
+
+### getPaginationParameters
+
+```solidity
+function getPaginationParameters(uint256 _total, uint256 _page, uint256 _pageSize) internal pure returns (uint256 cursor_, uint256 howMany_, uint256 prev_, uint256 next_)
 ```

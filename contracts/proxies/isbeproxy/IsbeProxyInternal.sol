@@ -150,16 +150,9 @@ abstract contract IsbeProxyInternal is
         bytes32 _configurationId,
         uint256 _version
     ) private view {
-        _addressIsNotZero(address(_configurationManager));
-        _bytes32IsNotZero(_configurationId);
+        _checkAddressIsNotZero(address(_configurationManager));
+        _checkBytes32IsNotZero(_configurationId);
         _configurationManager.checkConfiguration(_configurationId, _version);
-    }
-
-    function _checkSameLength(
-        uint256 _businessAddressesLength,
-        uint256 _dataLength
-    ) private pure {
-        _sameLength(_businessAddressesLength, _dataLength);
     }
 
     function _isbeProxyStorage()
