@@ -85,4 +85,13 @@ bytes32 constant _ERC721_RESOLVER_KEY = 0x90e014dbbf0f1e8a714d05a5a0c9464d9ab252
 // keccak256('isbe.contracts.erc721.test.wrapper.resolver.key');
 bytes32 constant _ERC721_TEST_WRAPPER_RESOLVER_KEY = 0x88ce2f3be96e8567d435c96c8a2a63c4d4e94facd693f5591439278fb837d868;
 
+// keccak256('isbe.contracts.did.document.detailed.resolver.key');
+bytes32 constant _DID_DOCUMENT_DETAILED_RESOLVER_KEY = 0x5a02d9131742d56d318dab3c9e499ea3b8e4388b578aac9d31b55350b1076873;
+
+// keccak256('isbe.contracts.did.controller.resolver.key');
+bytes32 constant _DID_CONTROLLER_RESOLVER_KEY = 0x26339b1ee881bb2790df0ed18d4f8f5f6b66c9855aac4f506052b0cf2f51188c;
+
+// keccak256('isbe.contracts.did.verification.method.resolver.key');
+bytes32 constant _DID_VERIFICATION_METHOD_RESOLVER_KEY = 0xac8773db319c7049be61ab52c59325712b4ba639daa556105c3b1e20671238dd;
+
 // solhint-enable max-line-length

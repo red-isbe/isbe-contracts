@@ -12,6 +12,7 @@
 - [factory/proxyfactory](factory/proxyfactory.md)
 - [hashtimestamp](hashtimestamp.md)
 - [identity/didregistry](identity/didregistry.md)
+- [identity/didregistry/interfaces](identity/didregistry/interfaces.md)
 - [identity/ens/ensregistry](identity/ens/ensregistry.md)
 - [identity/ens/publicresolver](identity/ens/publicresolver.md)
 - [identity/ens/publicresolver/profiles](identity/ens/publicresolver/profiles.md)

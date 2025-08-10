@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {IDidDocumentDetailed} from './IDidDocumentDetailed.sol';
-import {IDidController} from './IDidController.sol';
-import {IDidVerificationRelationship} from './IDidVerficationRelationship.sol';
-import {IDidVerificationMethod} from './IDidVerficationMethod.sol';
+import {IDidDocumentDetailed} from './interfaces/IDidDocumentDetailed.sol';
+import {IDidController} from './interfaces/IDidController.sol';
+import {IDidVerificationRelationship} from './interfaces/IDidVerificationRelationship.sol';
+import {IDidVerificationMethod} from './interfaces/IDidVerificationMethod.sol';
 
 /**
  * @title DID Registry Interface

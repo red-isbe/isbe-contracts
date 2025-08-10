@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-
 import {Common} from '../../core/Common.sol';
 import {IERC721Isbe} from './IERC721Isbe.sol';
 import {_ERC721_STORAGE_POSITION} from '../../constants/storagePositions.sol';
@@ -18,6 +17,13 @@ import {IERC721Receiver} from './IERC721Receiver.sol';
  *      - Uses a custom storage slot for upgradeable compatibility.
  *      - Relies on hooks (_beforeTokenTransfer, _afterTokenTransfer) for extensibility.
  */
+
+import {Common} from '../../core/Common.sol';
+import {IERC721Isbe} from './IERC721Isbe.sol';
+import {_ERC721_STORAGE_POSITION} from '../../constants/storagePositions.sol';
+import {IERC721} from '@openzeppelin/contracts/token/ERC721/IERC721.sol';
+import {IERC721Receiver} from './IERC721Receiver.sol';
+
 abstract contract ERC721Internal is Common {
     struct ERC721Storage {
         string name;
@@ -242,7 +248,7 @@ abstract contract ERC721Internal is Common {
             _erc721Storage().owners[tokenId] == address(0),
             IERC721Isbe.TokenAlreadyMinted()
         );
-        _checkUint(tokenId);
+        _checkUintIsNotZero(tokenId);
     }
 
     function _erc721Storage()

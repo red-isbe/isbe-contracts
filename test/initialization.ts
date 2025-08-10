@@ -1,6 +1,7 @@
 import { ethers } from 'hardhat'
 import { Signer } from 'ethers'
 import {
+    EIP2535AccessControl__factory,
     BusinessLogicFactoryFacet,
     BusinessLogicFactoryFacet__factory,
     GlobalIsbePauseFacet,
@@ -27,11 +28,13 @@ import {
     OwnableFacet,
     Ownable2StepFacet,
     AccessControlFacet,
+    IDidRegistry,
     IIsbeFactory,
     IERC721Isbe__factory,
     IERC721Isbe,
     ERC721TestWrapperFacet,
     ERC721CappedFacet,
+    IDidRegistry__factory,
     ERC721SnapshotFacet,
 } from '../typechain-types'
 import {
@@ -59,6 +62,9 @@ import {
     ISBE_LOUPE_RESOLVER_KEY,
     ERC721_CAPPED_RESOLVER_KEY,
     ERC721_SNAPSHOT_RESOLVER_KEY,
+    DID_DOCUMENT_DETAILED_RESOLVER_KEY,
+    DID_CONTROLLER_RESOLVER_KEY,
+    DID_VERIFICATION_METHOD_RESOLVER_KEY,
 } from './constants'
 import { getEvent } from '../scripts/utils/getEvent'
 import { getIsbeFactory } from '../scripts/utils/getIsbeFactory'
@@ -67,10 +73,11 @@ export const CONFIGURATION_ID_ERC20 =
     '0x0000000000000000000000000000000000000000000000000000000000000020'
 export const CONFIGURATION_ID_ERC721 =
     '0x0000000000000000000000000000000000000000000000000000000000000721'
+export const CONFIGURATION_ID_DID_REGISTRY =
+    '0x00000000000000000000000000000000000000004449445F5245474953545259'
 
 let BusinessLogicFactoryFacetFactory: BusinessLogicFactoryFacet__factory
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let EIP2535AccessControlFactory: any
+let EIP2535AccessControlFactory: EIP2535AccessControl__factory
 let ISBEPauseFacetFactory: ISBEPauseFacet__factory
 let DiamondCutAccessControlFacetFactory: DiamondCutAccessControlFacet__factory
 let DiamondLoupeFacetFactory: DiamondLoupeFacet__factory
@@ -78,31 +85,6 @@ let GlobalIsbePauseFacetFactory: GlobalIsbePauseFacet__factory
 let ProxyFactoryFacetFactory: ProxyFactoryFacet__factory
 let ConfigMgmtFacetFactory: ConfigurationManagementFacet__factory
 let isbeFactory: IIsbeFactory
-
-/*async function deployFactory(
-    facets: string[],
-    owners: string[]
-): Promise<IIsbeFactory> {
-    const diamondAddress = await EIP2535AccessControlFactory.deploy(facets, {
-        rbacs: [
-            {
-                role: DEFAULT_ADMIN_ROLE,
-                members: owners,
-            },
-            {
-                role: BUSINESS_LOGIC_DEPLOYER_ROLE,
-                members: owners,
-            },
-            {
-                role: PAUSER_ROLE,
-                members: owners,
-            },
-        ],
-        init: ethers.ZeroAddress,
-        initCalldata: '0x',
-    })
-    return BusinessLogicFactoryFacetFactory.attach(diamondAddress)
-}*/
 
 async function deployBusinessLogicFromFactory(
     resolverKey: string,
@@ -251,23 +233,37 @@ export async function deployGovernance(
         owner
     )
 
-    const useCaseDeployment =
-        configurationId == CONFIGURATION_ID_ERC20
-            ? await deployERC20UseCasesFacets(
-                  rbacsUseCase,
-                  init_pause,
-                  init_BusinessId_UseCase,
-                  init_CallData_UseCase,
-                  isUseCaseOwnable
-              )
-            : await deployERC721UseCasesFacets(
-                  owner,
-                  rbacsUseCase,
-                  init_pause,
-                  init_BusinessId_UseCase,
-                  init_CallData_UseCase,
-                  isUseCaseOwnable
-              )
+    async function deployUseCase() {
+        switch (configurationId) {
+            case CONFIGURATION_ID_ERC20:
+                return await deployERC20UseCasesFacets(
+                    rbacsUseCase,
+                    init_pause,
+                    init_BusinessId_UseCase,
+                    init_CallData_UseCase,
+                    isUseCaseOwnable
+                )
+            case CONFIGURATION_ID_ERC721:
+                return await deployERC721UseCasesFacets(
+                    owner,
+                    rbacsUseCase,
+                    init_pause,
+                    init_BusinessId_UseCase,
+                    init_CallData_UseCase
+                )
+            case CONFIGURATION_ID_DID_REGISTRY:
+                return await deployDidRegistryUseCaseFacets(
+                    owner,
+                    rbacsUseCase,
+                    init_pause,
+                    init_BusinessId_UseCase,
+                    init_CallData_UseCase
+                )
+        }
+        return {}
+    }
+
+    const useCaseDeployment = await deployUseCase()
 
     const accessControlGovernance = AccessControlGovernanceFacetFactory.attach(
         await isbeFactory.getAddress()
@@ -321,6 +317,11 @@ export async function deployGovernance(
         erc721SnapshotFacet: useCaseDeployment.erc721SnapshotFacet,
         erc721: useCaseDeployment.erc721,
         erc721TestWrapper: useCaseDeployment.erc721TestWrapper,
+        didDocumentDetailedFacet: useCaseDeployment.didDocumentDetailedFacet,
+        didControllerFacet: useCaseDeployment.didControllerFacet,
+        didVerificationMethodFacet:
+            useCaseDeployment.didVerificationMethodFacet,
+        didRegistry: useCaseDeployment.didRegistry,
         erc721Capped: useCaseDeployment.erc721Capped,
         erc721Snapshot: useCaseDeployment.erc721Snapshot,
         diamondCutAccessControlFacet,
@@ -511,6 +512,7 @@ export async function deployERC20UseCasesFacets(
     const mockTimestamp = MockTimestampFacetFactory.attach(
         proxy
     ) as MockTimestampFacet
+    const didRegistry: IDidRegistry = IDidRegistry__factory.connect(proxy)
 
     return {
         erc20,
@@ -537,6 +539,7 @@ export async function deployERC20UseCasesFacets(
         isbeCutFacet,
         isbeLoupeFacet,
         proxy,
+        didRegistry,
     }
 }
 
@@ -662,5 +665,130 @@ export async function deployERC721UseCasesFacets(
         isbeCutFacet,
         isbeLoupeFacet,
         proxy,
+    }
+}
+
+export async function deployDidRegistryUseCaseFacets(
+    owner: Signer,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    rbacs: any[],
+    init_pause: boolean,
+    init_BusinessIds: string[],
+    init_CallData: string[]
+) {
+    const IsbeCutFacetFactory = await ethers.getContractFactory('IsbeCutFacet')
+    const IsbeLoupeFacetFactory =
+        await ethers.getContractFactory('IsbeLoupeFacet')
+    const AccessControlFacetFactory =
+        await ethers.getContractFactory('AccessControlFacet')
+    const MockTimestampFacetFactory =
+        await ethers.getContractFactory('MockTimestampFacet')
+    const DidDocumentDetailedFacetFactory = await ethers.getContractFactory(
+        'DidDocumentDetailedTestWrapperFacet'
+    )
+    const DidControllerFacetFactory = await ethers.getContractFactory(
+        'DidControllerTestWrapperFacet'
+    )
+    const DidVerificationMethodFactory = await ethers.getContractFactory(
+        'DidVerificationMethodTestWrapperFacet'
+    )
+
+    const isbeCutFacet = await deployBusinessLogicFromFactory(
+        ISBE_CUT_RESOLVER_KEY,
+        IsbeCutFacetFactory
+    )
+    const isbeLoupeFacet = await deployBusinessLogicFromFactory(
+        ISBE_LOUPE_RESOLVER_KEY,
+        IsbeLoupeFacetFactory
+    )
+
+    const accessControlFacet = await deployBusinessLogicFromFactory(
+        ACCESS_CONTROL_RESOLVER_KEY,
+        AccessControlFacetFactory
+    )
+    const pauseFacet = await deployBusinessLogicFromFactory(
+        PAUSE_RESOLVER_KEY,
+        ISBEPauseFacetFactory
+    )
+
+    const didDocumentDetailedFacet = await deployBusinessLogicFromFactory(
+        DID_DOCUMENT_DETAILED_RESOLVER_KEY,
+        DidDocumentDetailedFacetFactory
+    )
+
+    const didControllerFacet = await deployBusinessLogicFromFactory(
+        DID_CONTROLLER_RESOLVER_KEY,
+        DidControllerFacetFactory
+    )
+
+    const didVerificationMethodFacet = await deployBusinessLogicFromFactory(
+        DID_VERIFICATION_METHOD_RESOLVER_KEY,
+        DidVerificationMethodFactory
+    )
+
+    // Deploy all business logic contracts before setting configuration
+    await deployBusinessLogicFromFactory(
+        MOCK_TIMESTAMP_RESOLVER_KEY,
+        MockTimestampFacetFactory
+    )
+
+    await isbeFactory.setConfiguration(CONFIGURATION_ID_DID_REGISTRY, [
+        {
+            businessId: MOCK_TIMESTAMP_RESOLVER_KEY,
+            version: 1,
+        },
+        {
+            businessId: DID_DOCUMENT_DETAILED_RESOLVER_KEY,
+            version: 1,
+        },
+        {
+            businessId: DID_CONTROLLER_RESOLVER_KEY,
+            version: 1,
+        },
+        {
+            businessId: DID_VERIFICATION_METHOD_RESOLVER_KEY,
+            version: 1,
+        },
+    ])
+
+    const tx = await isbeFactory.deployUseCase(
+        CONFIGURATION_ID_DID_REGISTRY,
+        1,
+        rbacs,
+        init_pause,
+        init_BusinessIds,
+        init_CallData
+    )
+
+    const deployedEvent = await getEvent('UseCaseDeployed', tx, isbeFactory)
+    const { proxy } = deployedEvent.args
+
+    const pause = ISBEPauseFacetFactory.attach(proxy) as ISBEPauseFacet
+
+    const accessControl = AccessControlFacetFactory.attach(
+        proxy
+    ) as AccessControlFacet
+
+    const mockTimestamp = MockTimestampFacetFactory.attach(
+        proxy
+    ) as MockTimestampFacet
+    const didRegistry: IDidRegistry = IDidRegistry__factory.connect(
+        proxy,
+        owner
+    ) as IDidRegistry
+
+    return {
+        pause,
+        accessControl,
+        mockTimestamp,
+        pauseFacet,
+        accessControlFacet,
+        isbeCutFacet,
+        isbeLoupeFacet,
+        proxy,
+        didDocumentDetailedFacet,
+        didControllerFacet,
+        didVerificationMethodFacet,
+        didRegistry,
     }
 }

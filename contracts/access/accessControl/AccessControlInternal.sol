@@ -212,7 +212,7 @@ abstract contract AccessControlInternal is ISBEContext {
         uint256 membersLength = _members.length;
         for (uint256 index; index < membersLength; ++index) {
             address currentMember = _members[index];
-            _addressIsNotZero(currentMember);
+            _checkAddressIsNotZero(currentMember);
             for (
                 uint256 innerIndex = index + 1;
                 innerIndex < membersLength;

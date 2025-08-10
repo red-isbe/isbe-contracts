@@ -61,6 +61,14 @@ const config: HardhatUserConfig = {
         },
     },
     networks: {
+        hardhat: {
+            mining: {
+                auto: true,
+                interval: 0,
+            },
+            blockGasLimit: 30000000,
+            allowUnlimitedContractSize: true,
+        },
         localhost: {
             url: 'http://127.0.0.1:8545',
             // No need for accounts; Hardhat provides them
@@ -90,7 +98,10 @@ const config: HardhatUserConfig = {
             blockGasLimit: 18800000,
         },
     },
-
+    mocha: {
+        timeout: 60000,
+        parallel: true,
+    },
     paths: {
         sources: './contracts',
         tests: './test',

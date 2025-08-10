@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-
 import {_ERC721_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
 import {
     _SAFE_TRANSFER_FROM_SELECTOR_1,
