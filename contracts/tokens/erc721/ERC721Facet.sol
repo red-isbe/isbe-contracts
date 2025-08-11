@@ -9,6 +9,14 @@ import {
 import {ERC721} from './ERC721.sol';
 import {IEIP2535Introspection} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 
+/**
+ * @title ERC721Facet
+ * @notice Facet for ERC721 functionality in a diamond architecture. Exposes ERC721 external interface and selectors.
+ * @dev Implements ERC721 standard functions and diamond-specific introspection.
+ *      - Exposes ERC721 methods.
+ *      - Implements IEIP2535Introspection for selector and interface discovery.
+ *      - Uses resolver key for diamond businessId identification.
+ */
 contract ERC721Facet is ERC721, IEIP2535Introspection {
     function interfacesIntrospection()
         external
@@ -33,7 +41,7 @@ contract ERC721Facet is ERC721, IEIP2535Introspection {
         override
         returns (bytes4[] memory selectors_)
     {
-        uint256 selectorsLength = 14;
+        uint256 selectorsLength = 13;
         selectors_ = new bytes4[](selectorsLength);
         selectors_[--selectorsLength] = this.initializeErc721.selector;
         selectors_[--selectorsLength] = this.approve.selector;
@@ -46,7 +54,6 @@ contract ERC721Facet is ERC721, IEIP2535Introspection {
         selectors_[--selectorsLength] = this.symbol.selector;
         selectors_[--selectorsLength] = this.ownerOf.selector;
         selectors_[--selectorsLength] = this.balanceOf.selector;
-        selectors_[--selectorsLength] = this.totalSupply.selector;
         selectors_[--selectorsLength] = this.getApproved.selector;
         selectors_[--selectorsLength] = this.isApprovedForAll.selector;
     }
