@@ -13,7 +13,6 @@ import {_TOKEN_OWNER_ROLE} from '../../../../constants/roles.sol';
  *      onchain identity, and version. Applies access control, validation, and emits events.
  */
 abstract contract ERC3643Metadata is IERC3643Metadata, ERC20InternalCommon {
-    
     /**
      * @dev Disables further initializations for this facet using its resolver key.
      */
@@ -30,8 +29,13 @@ abstract contract ERC3643Metadata is IERC3643Metadata, ERC20InternalCommon {
      */
     function initializeERC3643Metadata(
         address _newOnchainID,
-        string memory _newVersion        
-    ) external override initializer(_ERC3643_METADATA_RESOLVER_KEY) emptyString(_newVersion) {
+        string memory _newVersion
+    )
+        external
+        override
+        initializer(_ERC3643_METADATA_RESOLVER_KEY)
+        emptyString(_newVersion)
+    {
         _initialize(_newOnchainID, _newVersion);
         emit UpdatedTokenInformation(
             _name(),
@@ -48,9 +52,23 @@ abstract contract ERC3643Metadata is IERC3643Metadata, ERC20InternalCommon {
      *      Emits a {UpdatedTokenInformation} event.
      * @param _newName The new name to assign to the token.
      */
-    function setName(string memory _newName) external override onlyRole(_TOKEN_OWNER_ROLE) emptyString(_newName) whenNotPaused {
+    function setName(
+        string memory _newName
+    )
+        external
+        override
+        onlyRole(_TOKEN_OWNER_ROLE)
+        emptyString(_newName)
+        whenNotPaused
+    {
         _setName(_newName);
-        emit UpdatedTokenInformation(_newName, _symbol(), _decimals(), _version(), _onchainID());
+        emit UpdatedTokenInformation(
+            _newName,
+            _symbol(),
+            _decimals(),
+            _version(),
+            _onchainID()
+        );
     }
 
     /**
@@ -59,9 +77,23 @@ abstract contract ERC3643Metadata is IERC3643Metadata, ERC20InternalCommon {
      *      Emits a {UpdatedTokenInformation} event.
      * @param _newSymbol The new symbol to assign to the token.
      */
-    function setSymbol(string memory _newSymbol) external override onlyRole(_TOKEN_OWNER_ROLE) emptyString(_newSymbol) whenNotPaused {
+    function setSymbol(
+        string memory _newSymbol
+    )
+        external
+        override
+        onlyRole(_TOKEN_OWNER_ROLE)
+        emptyString(_newSymbol)
+        whenNotPaused
+    {
         _setSymbol(_newSymbol);
-        emit UpdatedTokenInformation(_name(), _newSymbol, _decimals(), _version(), _onchainID());
+        emit UpdatedTokenInformation(
+            _name(),
+            _newSymbol,
+            _decimals(),
+            _version(),
+            _onchainID()
+        );
     }
 
     /**
@@ -70,9 +102,17 @@ abstract contract ERC3643Metadata is IERC3643Metadata, ERC20InternalCommon {
      *      Emits a {UpdatedTokenInformation} event.
      * @param _newOnchainID The new onchain identity address to assign.
      */
-    function setOnchainID(address _newOnchainID) external override onlyRole(_TOKEN_OWNER_ROLE) whenNotPaused {
+    function setOnchainID(
+        address _newOnchainID
+    ) external override onlyRole(_TOKEN_OWNER_ROLE) whenNotPaused {
         _setOnchainID(_newOnchainID);
-        emit UpdatedTokenInformation(_name(), _symbol(), _decimals(), _version(), _newOnchainID);
+        emit UpdatedTokenInformation(
+            _name(),
+            _symbol(),
+            _decimals(),
+            _version(),
+            _newOnchainID
+        );
     }
 
     /**
@@ -103,7 +143,7 @@ abstract contract ERC3643Metadata is IERC3643Metadata, ERC20InternalCommon {
         returns (bytes4[] memory interfaces_)
     {
         uint256 interfacesLength = 1;
-        interfaces_ = new bytes4;
+        interfaces_ = new bytes4[](interfacesLength);
         interfaces_[--interfacesLength] = type(IERC3643Metadata).interfaceId;
     }
 }

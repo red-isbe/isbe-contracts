@@ -31,7 +31,14 @@ abstract contract ERC20 is IERC20Isbe, ERC20InternalCommon {
         string memory _newName,
         string memory _newSymbol,
         uint8 _newDecimals
-    ) external override initializer(_ERC20_RESOLVER_KEY) emptyString(_newName) emptyString(_newSymbol) uintBetweenZeroAndEighteen(_newDecimals) {
+    )
+        external
+        override
+        initializer(_ERC20_RESOLVER_KEY)
+        emptyString(_newName)
+        emptyString(_newSymbol)
+        uintBetweenZeroAndEighteen(_newDecimals)
+    {
         _initialize(_newName, _newSymbol, _newDecimals);
         emit Erc20Initialized(_newName, _newSymbol, _newDecimals);
     }

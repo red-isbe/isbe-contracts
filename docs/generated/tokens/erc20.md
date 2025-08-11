@@ -248,6 +248,36 @@ struct ERC20Storage {
 function _initialize(string _newName, string _newSymbol, uint8 _newDecimals) internal
 ```
 
+### \_setName
+
+```solidity
+function _setName(string _newName) internal virtual
+```
+
+_Internal function to update the token name in storage.
+Applies the {emptyString} modifier to ensure the input is not an empty string._
+
+#### Parameters
+
+| Name      | Type   | Description                          |
+| --------- | ------ | ------------------------------------ |
+| \_newName | string | The new name to assign to the token. |
+
+### \_setSymbol
+
+```solidity
+function _setSymbol(string _newSymbol) internal virtual
+```
+
+_Internal function to update the token symbol in storage.
+Applies the {emptyString} modifier to ensure the input is not an empty string._
+
+#### Parameters
+
+| Name        | Type   | Description                            |
+| ----------- | ------ | -------------------------------------- |
+| \_newSymbol | string | The new symbol to assign to the token. |
+
 ### \_transfer
 
 ```solidity

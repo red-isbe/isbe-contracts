@@ -114,7 +114,7 @@ abstract contract ISBEContext is Context {
         require(_uint != 0, EmptyUint());
     }
 
-    function _checkUintBetweenZeroAndEighteen (uint256 _uint) internal pure {
+    function _checkUintBetweenZeroAndEighteen(uint256 _uint) internal pure {
         require(_uint <= 18, UintNotBetweenZeroAndEighteen());
     }
 

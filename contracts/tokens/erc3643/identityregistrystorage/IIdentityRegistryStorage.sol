@@ -1,12 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {
-    IIdentityStorageRegistryManagement
-} from './modules/IIdentityStorageRegistryManagement.sol';
-import {
-    IIdentityStorageManagement
-} from './modules/IIdentityStorageManagement.sol';
+import {IIdentityStorageRegistryManagement} from './modules/IIdentityStorageRegistryManagement.sol';
+import {IIdentityStorageManagement} from './modules/IIdentityStorageManagement.sol';
 
 /**
  * @title IIdentityRegistryStorage

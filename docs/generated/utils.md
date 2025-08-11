@@ -45,6 +45,14 @@ error EmptyUint()
 
 Emitted when a uint256 value is zero but is expected to be greater than zero
 
+### UintNotBetweenZeroAndEighteen
+
+```solidity
+error UintNotBetweenZeroAndEighteen()
+```
+
+Raised when a uint256 value is not between 0 and 18, which is the valid range for token decimals.
+
 ### EmptyString
 
 ```solidity
@@ -177,6 +185,12 @@ value is zero. Used for quantity and amount validation_
 | Name   | Type    | Description                                        |
 | ------ | ------- | -------------------------------------------------- |
 | \_uint | uint256 | The uint256 value to validate for non-zero content |
+
+### \_checkUintBetweenZeroAndEighteen
+
+```solidity
+function _checkUintBetweenZeroAndEighteen(uint256 _uint) internal pure
+```
 
 ### \_checkEmptyBytes
 

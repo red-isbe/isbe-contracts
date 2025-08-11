@@ -27,7 +27,4 @@ abstract contract ERC20InternalCommon is
     ) internal virtual override(ERC20CappedInternal, ERC20Internal) {
         ERC20CappedInternal._mint(_account, _amount);
     }
-
-    
-
 }

@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-
-
 /**
  * @title IERC3643Metadata
  * @notice Interface for updating and retrieving extended metadata in ERC-3643 tokens.
@@ -78,6 +76,4 @@ interface IERC3643Metadata {
      * current version is 3.0.0
      */
     function version() external view returns (string memory);
-
-
 }

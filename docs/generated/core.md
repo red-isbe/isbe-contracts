@@ -39,6 +39,12 @@ modifier emptyBytes(bytes _code)
 modifier emptyString(string _string)
 ```
 
+### uintBetweenZeroAndEighteen
+
+```solidity
+modifier uintBetweenZeroAndEighteen(uint256 _uint)
+```
+
 ---
 
 ## ERC165
