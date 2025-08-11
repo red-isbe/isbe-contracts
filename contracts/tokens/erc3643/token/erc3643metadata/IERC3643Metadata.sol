@@ -55,6 +55,18 @@ interface IERC3643Metadata {
     function setOnchainID(address _onchainID) external;
 
     /**
+     * @notice Initializes the ERC-3643 metadata fields of the token.
+     * @dev Sets the initial onchain identity and version string.
+     *      Emits a {UpdatedTokenInformation} event.
+     * @param _newOnchainID The initial onchain identity address. Can be the zero address if not set.
+     * @param _newVersion The initial version string of the token. Must be non-empty.
+     */
+    function initializeERC3643Metadata(
+        address _newOnchainID,
+        string memory _newVersion
+    ) external;
+
+    /**
      * @dev Returns the address of the onchainID of the token.
      * the onchainID of the token gives all the information available
      * about the token and is managed by the token issuer or his agent.
@@ -66,5 +78,6 @@ interface IERC3643Metadata {
      * current version is 3.0.0
      */
     function version() external view returns (string memory);
+
 
 }

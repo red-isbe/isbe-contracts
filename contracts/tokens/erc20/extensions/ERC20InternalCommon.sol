@@ -3,7 +3,7 @@ pragma solidity ^0.8.28;
 
 import {ERC20CappedInternal} from './cap/ERC20CappedInternal.sol';
 import {ERC20SnapshotInternal} from './snapshot/ERC20SnapshotInternal.sol';
-import {ERC203643ExtendedInternal} from '../../erc3643/token/modules/203643extended/ERC203643ExtendedInternal.sol';
+import {ERC3643MetadataInternal} from '../../erc3643/token/erc3643metadata/ERC3643MetadataInternal.sol';
 import {ERC20Internal} from '../ERC20Internal.sol';
 
 /// @title ERC20InternalCommon
@@ -11,7 +11,7 @@ import {ERC20Internal} from '../ERC20Internal.sol';
 abstract contract ERC20InternalCommon is
     ERC20SnapshotInternal,
     ERC20CappedInternal,
-    ERC203643ExtendedInternal
+    ERC3643MetadataInternal
 {
     function _beforeTokenTransfer(
         address _from,
