@@ -7,6 +7,15 @@ import {IERC721} from '@openzeppelin/contracts/token/ERC721/IERC721.sol';
 import {IERC721Metadata} from '@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol';
 import {ERC721InternalCommon} from './extensions/ERC721InternalCommon.sol';
 
+/**
+ * @title ERC721
+ * @notice Abstract contract implementing the ERC721 standard for use in diamond/facet architectures.
+ * @dev Exposes ERC721 external interface, including metadata, approvals, and safe transfers.
+ *      - Designed to be inherited by facets that register selectors in a diamond.
+ *      - Handles initialization, approvals, transfers, and metadata queries.
+ *      - Uses a custom initializer for upgradeable compatibility.
+ *      - Implements ERC721, ERC721Metadata, and custom IERC721Isbe interfaces.
+ */
 abstract contract ERC721 is IERC721Isbe, ERC721InternalCommon {
     /// @notice Constructor disables initializers by default for the diamond pattern
     constructor() {
@@ -96,13 +105,6 @@ abstract contract ERC721 is IERC721Isbe, ERC721InternalCommon {
      */
     function balanceOf(address owner) external view override returns (uint256) {
         return _balanceOf(owner);
-    }
-
-    /**
-     * @notice Returns the total number of tokens in existence.
-     */
-    function totalSupply() external view returns (uint256) {
-        return _totalSupply();
     }
 
     /**

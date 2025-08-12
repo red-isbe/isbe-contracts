@@ -5,6 +5,12 @@ import {IEIP2535Introspection} from '../../../proxies/eip2535/interfaces/IEIP253
 import {_ERC721_TEST_WRAPPER_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
 import {ERC721TestWrapper} from './ERC721TestWrapper.sol';
 
+/**
+ * @title ERC721TestWrapperFacet
+ * @notice Facet exposing ERC721 test wrapper functions for diamond/facet architectures.
+ * @dev Implements diamond introspection and exposes burn, transfer, setApprovalForAll, and baseURI.
+ *      - Should be registered in the diamond with all required selectors for test scenarios.
+ */
 contract ERC721TestWrapperFacet is ERC721TestWrapper, IEIP2535Introspection {
     // Introspection for diamond pattern
     function interfacesIntrospection()
@@ -30,14 +36,12 @@ contract ERC721TestWrapperFacet is ERC721TestWrapper, IEIP2535Introspection {
         override
         returns (bytes4[] memory selectors_)
     {
-        uint256 selectorsLength = 5;
+        uint256 selectorsLength = 4;
         selectors_ = new bytes4[](selectorsLength);
 
-        selectors_[--selectorsLength] = this.mint.selector;
         selectors_[--selectorsLength] = this.burn.selector;
         selectors_[--selectorsLength] = this.transfer.selector;
         selectors_[--selectorsLength] = this.callSetApprovalForAll.selector;
         selectors_[--selectorsLength] = this.baseURI.selector;
-        //selectors_[--selectorsLength] = this.safeTransferFrom.selector;
     }
 }

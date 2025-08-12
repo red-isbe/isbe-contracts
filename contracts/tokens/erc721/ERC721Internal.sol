@@ -7,6 +7,16 @@ import {_ERC721_STORAGE_POSITION} from '../../constants/storagePositions.sol';
 import {IERC721} from '@openzeppelin/contracts/token/ERC721/IERC721.sol';
 import {IERC721Receiver} from './IERC721Receiver.sol';
 
+/**
+ * @title ERC721Internal
+ * @notice Internal abstract contract for ERC721 logic, designed for use in diamond/facet architectures.
+ * @dev Implements core ERC721 storage, transfer, mint, burn, approval, and hooks. Not intended for direct deployment.
+ *      - Manages balances, ownership, approvals, and operator approvals.
+ *      - Provides internal functions for safe transfer, minting, burning, and approval logic.
+ *      - Designed to be inherited by facets or other contracts that expose external interfaces.
+ *      - Uses a custom storage slot for upgradeable compatibility.
+ *      - Relies on hooks (_beforeTokenTransfer, _afterTokenTransfer) for extensibility.
+ */
 abstract contract ERC721Internal is Common {
     struct ERC721Storage {
         string name;
@@ -52,7 +62,10 @@ abstract contract ERC721Internal is Common {
         _afterTokenTransfer(from, to, tokenId);
     }
 
-    function _mint(address to, uint256 tokenId) internal addressIsNotZero(to) {
+    function _mint(
+        address to,
+        uint256 tokenId
+    ) internal virtual addressIsNotZero(to) {
         ERC721Storage storage $ = _erc721Storage();
         _checkTokenMinted(tokenId);
 
@@ -228,6 +241,7 @@ abstract contract ERC721Internal is Common {
             _erc721Storage().owners[tokenId] == address(0),
             IERC721Isbe.TokenAlreadyMinted()
         );
+        _checkUintIsNotZero(tokenId);
     }
 
     function _erc721Storage()

@@ -33,6 +33,7 @@ import {
     IERC721Isbe__factory,
     IERC721Isbe,
     ERC721TestWrapperFacet,
+    ERC721CappedFacet,
     IDidRegistry__factory,
 } from '../typechain-types'
 import {
@@ -58,6 +59,7 @@ import {
     PAUSE_RESOLVER_KEY,
     ISBE_CUT_RESOLVER_KEY,
     ISBE_LOUPE_RESOLVER_KEY,
+    ERC721_CAPPED_RESOLVER_KEY,
     DID_DOCUMENT_DETAILED_RESOLVER_KEY,
     DID_CONTROLLER_RESOLVER_KEY,
     DID_VERIFICATION_METHOD_RESOLVER_KEY,
@@ -309,6 +311,7 @@ export async function deployGovernance(
         hashTimestampFacet: useCaseDeployment.hashTimestampFacet,
         erc721Facet: useCaseDeployment.erc721Facet,
         erc721TestWrapperFacet: useCaseDeployment.erc721TestWrapperFacet,
+        erc721CappedFacet: useCaseDeployment.erc721CappedFacet,
         erc721: useCaseDeployment.erc721,
         erc721TestWrapper: useCaseDeployment.erc721TestWrapper,
         didDocumentDetailedFacet: useCaseDeployment.didDocumentDetailedFacet,
@@ -316,6 +319,7 @@ export async function deployGovernance(
         didVerificationMethodFacet:
             useCaseDeployment.didVerificationMethodFacet,
         didRegistry: useCaseDeployment.didRegistry,
+        erc721Capped: useCaseDeployment.erc721Capped,
         diamondCutAccessControlFacet,
         diamondLoupeFacet,
         accessControlGovernanceFacet,
@@ -552,6 +556,8 @@ export async function deployERC721UseCasesFacets(
     const ERC721TestWrapperFacetFactory = await ethers.getContractFactory(
         'ERC721TestWrapperFacet'
     )
+    const ERC721CappedFacetFactory =
+        await ethers.getContractFactory('ERC721CappedFacet')
 
     const isbeCutFacet = await deployBusinessLogicFromFactory(
         ISBE_CUT_RESOLVER_KEY,
@@ -579,6 +585,10 @@ export async function deployERC721UseCasesFacets(
         ERC721_TEST_WRAPPER_RESOLVER_KEY,
         ERC721TestWrapperFacetFactory
     )
+    const erc721CappedFacet = await deployBusinessLogicFromFactory(
+        ERC721_CAPPED_RESOLVER_KEY,
+        ERC721CappedFacetFactory
+    )
 
     await isbeFactory.setConfiguration(CONFIGURATION_ID_ERC721, [
         {
@@ -587,6 +597,10 @@ export async function deployERC721UseCasesFacets(
         },
         {
             businessId: ERC721_TEST_WRAPPER_RESOLVER_KEY,
+            version: 1,
+        },
+        {
+            businessId: ERC721_CAPPED_RESOLVER_KEY,
             version: 1,
         },
     ])
@@ -607,6 +621,9 @@ export async function deployERC721UseCasesFacets(
     const erc721TestWrapper = ERC721TestWrapperFacetFactory.attach(
         proxy
     ) as ERC721TestWrapperFacet
+    const erc721Capped = ERC721CappedFacetFactory.attach(
+        proxy
+    ) as ERC721CappedFacet
 
     const pause = ISBEPauseFacetFactory.attach(proxy) as ISBEPauseFacet
 
@@ -617,10 +634,12 @@ export async function deployERC721UseCasesFacets(
     return {
         erc721,
         erc721TestWrapper,
+        erc721Capped,
         pause,
         accessControl,
         erc721Facet,
         erc721TestWrapperFacet,
+        erc721CappedFacet,
         pauseFacet,
         accessControlFacet,
         isbeCutFacet,
