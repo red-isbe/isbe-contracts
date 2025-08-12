@@ -35,6 +35,7 @@ import {
     ERC721TestWrapperFacet,
     ERC721CappedFacet,
     IDidRegistry__factory,
+    ERC3643MetadataFacet,
 } from '../typechain-types'
 import {
     DEFAULT_ADMIN_ROLE,
@@ -63,6 +64,7 @@ import {
     DID_DOCUMENT_DETAILED_RESOLVER_KEY,
     DID_CONTROLLER_RESOLVER_KEY,
     DID_VERIFICATION_METHOD_RESOLVER_KEY,
+    ERC3643_METADATA_RESOLVER_KEY,
 } from './constants'
 import { getEvent } from '../scripts/utils/getEvent'
 import { getIsbeFactory } from '../scripts/utils/getIsbeFactory'
@@ -73,6 +75,8 @@ export const CONFIGURATION_ID_ERC721 =
     '0x0000000000000000000000000000000000000000000000000000000000000721'
 export const CONFIGURATION_ID_DID_REGISTRY =
     '0x00000000000000000000000000000000000000004449445F5245474953545259'
+export const CONFIGURATION_ID_ERC3643 =
+    '0x0000000000000000000000000000000000000000000000000000000000003643'
 
 let BusinessLogicFactoryFacetFactory: BusinessLogicFactoryFacet__factory
 let EIP2535AccessControlFactory: EIP2535AccessControl__factory
@@ -257,6 +261,14 @@ export async function deployGovernance(
                     init_BusinessId_UseCase,
                     init_CallData_UseCase
                 )
+            case CONFIGURATION_ID_ERC3643:
+                return await deployERC3643UseCasesFacets(
+                    rbacsUseCase,
+                    init_pause,
+                    init_BusinessId_UseCase,
+                    init_CallData_UseCase,
+                    isUseCaseOwnable
+                )
         }
         return {}
     }
@@ -324,6 +336,8 @@ export async function deployGovernance(
         diamondLoupeFacet,
         accessControlGovernanceFacet,
         useCaseProxy: useCaseDeployment.proxy,
+        erc3643Metadata: useCaseDeployment.erc3643Metadata,
+        erc3643MetadataFacet: useCaseDeployment.erc3643MetadataFacet,
     }
 }
 
@@ -770,5 +784,151 @@ export async function deployDidRegistryUseCaseFacets(
         didControllerFacet,
         didVerificationMethodFacet,
         didRegistry,
+    }
+}
+
+export async function deployERC3643UseCasesFacets(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    rbacs: any[],
+    init_pause: boolean,
+    init_BusinessIds: string[],
+    init_CallData: string[],
+    isOwnable: boolean = false
+) {
+    const IsbeCutFacetFactory = await ethers.getContractFactory('IsbeCutFacet')
+    const IsbeLoupeFacetFactory =
+        await ethers.getContractFactory('IsbeLoupeFacet')
+    const AccessControlFacetFactory =
+        await ethers.getContractFactory('AccessControlFacet')
+    const Ownable2StepFacetFactory =
+        await ethers.getContractFactory('Ownable2StepFacet')
+    const OwnableFacetFactory = await ethers.getContractFactory('OwnableFacet')
+    const ERC3643MetadataFacetFactory = await ethers.getContractFactory(
+        'ERC3643MetadataFacet'
+    )
+    const AssetEventTrackerTestWrapperFactory = await ethers.getContractFactory(
+        'AssetEventTrackerTestWrapper'
+    )
+    const HashTimestampTestWrapperFactory = await ethers.getContractFactory(
+        'HashTimestampTestWrapper'
+    )
+    const MockTimestampFacetFactory =
+        await ethers.getContractFactory('MockTimestampFacet')
+
+    const isbeCutFacet = await deployBusinessLogicFromFactory(
+        ISBE_CUT_RESOLVER_KEY,
+        IsbeCutFacetFactory
+    )
+    const isbeLoupeFacet = await deployBusinessLogicFromFactory(
+        ISBE_LOUPE_RESOLVER_KEY,
+        IsbeLoupeFacetFactory
+    )
+    const accessControlFacet = await deployBusinessLogicFromFactory(
+        ACCESS_CONTROL_RESOLVER_KEY,
+        AccessControlFacetFactory
+    )
+    const pauseFacet = await deployBusinessLogicFromFactory(
+        PAUSE_RESOLVER_KEY,
+        ISBEPauseFacetFactory
+    )
+
+    const ownableFactory = isOwnable
+        ? OwnableFacetFactory
+        : Ownable2StepFacetFactory
+    const ownableFacet = await deployBusinessLogicFromFactory(
+        OWNABLE_RESOLVER_KEY,
+        ownableFactory
+    )
+
+    const erc3643MetadataFacet = await deployBusinessLogicFromFactory(
+        ERC3643_METADATA_RESOLVER_KEY,
+        ERC3643MetadataFacetFactory
+    )
+
+    const assetEventTrackerFacet = await deployBusinessLogicFromFactory(
+        ASSET_EVENT_TRACKER_RESOLVER_KEY,
+        AssetEventTrackerTestWrapperFactory
+    )
+    const hashTimestampFacet = await deployBusinessLogicFromFactory(
+        HASH_TIMESTAMP_RESOLVER_KEY,
+        HashTimestampTestWrapperFactory
+    )
+    await deployBusinessLogicFromFactory(
+        MOCK_TIMESTAMP_RESOLVER_KEY,
+        MockTimestampFacetFactory
+    )
+
+    await isbeFactory.setConfiguration(CONFIGURATION_ID_ERC3643, [
+        {
+            businessId: OWNABLE_RESOLVER_KEY,
+            version: 1,
+        },
+        {
+            businessId: ERC3643_METADATA_RESOLVER_KEY,
+            version: 1,
+        },
+        {
+            businessId: ASSET_EVENT_TRACKER_RESOLVER_KEY,
+            version: 1,
+        },
+        {
+            businessId: HASH_TIMESTAMP_RESOLVER_KEY,
+            version: 1,
+        },
+        {
+            businessId: MOCK_TIMESTAMP_RESOLVER_KEY,
+            version: 1,
+        },
+    ])
+
+    const tx = await isbeFactory.deployUseCase(
+        CONFIGURATION_ID_ERC3643,
+        1,
+        rbacs,
+        init_pause,
+        init_BusinessIds,
+        init_CallData
+    )
+
+    const deployedEvent = await getEvent('UseCaseDeployed', tx, isbeFactory)
+    const { proxy } = deployedEvent.args
+
+    const erc3643Metadata = ERC3643MetadataFacetFactory.attach(
+        proxy
+    ) as ERC3643MetadataFacet
+    const pause = ISBEPauseFacetFactory.attach(proxy) as ISBEPauseFacet
+    const accessControl = AccessControlFacetFactory.attach(
+        proxy
+    ) as AccessControlFacet
+    const ownable = isOwnable
+        ? (OwnableFacetFactory.attach(proxy) as OwnableFacet)
+        : (Ownable2StepFacetFactory.attach(proxy) as Ownable2StepFacet)
+    const assetEventTracker = AssetEventTrackerTestWrapperFactory.attach(
+        proxy
+    ) as AssetEventTrackerTestWrapper
+    const hashTimestamp = HashTimestampTestWrapperFactory.attach(
+        proxy
+    ) as HashTimestampTestWrapper
+    const mockTimestamp = MockTimestampFacetFactory.attach(
+        proxy
+    ) as MockTimestampFacet
+
+    return {
+        erc3643Metadata,
+        pause,
+        accessControl,
+        ownable,
+        assetEventTracker,
+        hashTimestamp,
+        mockTimestamp,
+        erc3643MetadataFacet,
+        pauseFacet,
+        accessControlFacet,
+        ownableFacet,
+        assetEventTrackerFacet,
+        hashTimestampFacet,
+        isbeCutFacet,
+        isbeLoupeFacet,
+        proxy,
     }
 }
