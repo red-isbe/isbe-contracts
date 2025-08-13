@@ -8,6 +8,7 @@ skinparam rectangle {
   RoundCorner 15
 }
 skinparam defaultTextAlignment center
+skinparam ArrowFontSize 10
 
 actor Owner
 
@@ -18,6 +19,10 @@ rectangle "ERC3643ImplementationAuthority" as Authority {
   [useVersion(versionId)]
 }
 
+' ──────────────── Spacer ────────────────
+rectangle " " as Spacer1
+Spacer1 -[hidden]-> Authority
+
 ' ──────────────── Proxies ────────────────
 package "Proxies" {
   rectangle TokenProxy
@@ -27,6 +32,10 @@ package "Proxies" {
   rectangle ClaimTopicsRegistryProxy
   rectangle TrustedIssuersRegistryProxy
 }
+
+' ──────────────── Spacer ────────────────
+rectangle " " as Spacer2
+Spacer2 -[hidden]-> TokenProxy
 
 ' ──────────────── Logic Implementations ────────────────
 package "Logic Contracts" {

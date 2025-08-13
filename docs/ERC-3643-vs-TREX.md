@@ -1,6 +1,6 @@
 # 1. ERC‑3643 Standard Overview
 
-The [ERC‑3643: T‑REX – Token for Regulated EXchanges](https://eips.ethereum.org/EIPS/eip-3643) standard defines a modular framework for creating **permissioned, compliant tokens**. It embeds KYC/AML, jurisdictional controls, and transfer restrictions directly into the token's logic, making it suitable for security tokens, real-world assets (RWA), and regulated financial instruments.
+The [ERC‑3643: T‑REX – Token for Regulated EXchanges](https://eips.ethereum.org/EIPS/eip-3643) standard defines a modular framework for creating **permissioned, compliant tokens**. It embeds KYC/AML, jurisdictional controls, and transfer restrictions directly into the token's logic, making it suitable for regulated instruments.
 
 It extends ERC‑20 functionality and leverages additional interfaces for **identity**, **compliance**, and **governance**.
 
@@ -32,7 +32,7 @@ A transfer in an ERC‑3643 token goes through the following validation flow:
 
 This mechanism ensures **compliance-by-design**, preventing unauthorized transactions at the protocol level.
 
-Diagram: ![](./diagrams/ERC-3643/erc3643_transfer_flow.png)
+![](./diagrams/ERC-3643/erc3643_transfer_flow.png)
 
 ---
 
@@ -73,13 +73,15 @@ Canonical interface definitions:
 
 The standard defines a layered architecture:
 
+```
 IERC3643 (Token)
 ├── ICompliance (Compliance logic)
 └── IIdentityRegistry
-└── IIdentityRegistryStorage
-└── IClaimTopicsRegistry
-└── ITrustedIssuersRegistry
+   └── IIdentityRegistryStorage
+   └── IClaimTopicsRegistry
+   └── ITrustedIssuersRegistry
 └── IIdentity (per user)
+```
 
 Each layer plays a specific role:
 
@@ -191,7 +193,7 @@ Deployment is handled by a **factory contract** that orchestrates the creation o
 
 ### Deployed Components:
 
-- ERC‑3643 token (proxy)
+- ERC‑3643 token
 - Identity Registry + Storage
 - Claim Topics Registry
 - Trusted Issuers Registry
@@ -236,30 +238,21 @@ There are typically two main authorities:
 
 ### Benefits:
 
-- Seamless upgrades without redeploying proxies
-- Shared versions across multiple deployments
-- Issuer-level isolation for governance or upgrades
-- Option to transfer or lock the authority post-deployment
+- Seamless upgrades without redeploying proxies  
+- Shared versions across multiple deployments  
+- Issuer-level isolation for governance or upgrades  
+- Option to transfer or lock the authority post-deployment  
 
 ![](./diagrams/ERC-3643/erc3643_implementation_authority.png)
 
+*Figure: ERC‑3643 Implementation Authority structure*
+
+&nbsp;
+
 ![](./diagrams/ERC-3643/onchainid_implementation_authority.png)
 
----
+*Figure: ONCHAINID Implementation Authority structure*
 
-## 3.5 Functional Comparison: ERC‑3643 Spec vs Implementation
-
-| **Category**        | **ERC‑3643 (Standard)**                                  | **Reference Implementation** |
-|---------------------|----------------------------------------------------------|-------------------------------|
-| **Deployment**      | Not defined in spec                                      | Factory-based, atomic setup using CREATE2 |
-| **Upgradeability**  | Interfaces must remain stable                            | Centralized authority pattern with per-domain versioning |
-| **Compliance**      | Must support `canTransfer()`                             | Offers `BasicCompliance` and `ModularCompliance` modules |
-| **Identity**        | Requires ERC‑734/735-compatible system                   | Uses ONCHAINID with claim factories and issuers |
-| **Metadata (e.g. ISIN)** | Not included                                         | Stored in ONCHAINID via asset claims |
-| **Governance**      | Owner & Agent roles with `IAgentRole`                   | Fully implemented with role helpers and multisig support |
-| **Recovery**        | Required via `recoveryAddress`                          | Fully implemented |
-| **Batch Ops**       | Required (e.g., `batchTransfer`)                         | Fully implemented |
-| **Cross-chain Readiness** | Not specified                                      | Supported via deterministic deployment and role registries |
 
 ---
 

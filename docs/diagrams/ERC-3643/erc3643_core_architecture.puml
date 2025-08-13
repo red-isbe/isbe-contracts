@@ -1,10 +1,10 @@
-@startuml erc3643_core_architecture
-
+@startuml
 title ERC-3643 – Core Architecture Overview
 
 skinparam linetype ortho
 skinparam shadowing false
 skinparam defaultTextAlignment center
+skinparam ArrowFontSize 12
 skinparam rectangle {
   BackgroundColor white
   BorderColor black
@@ -36,23 +36,18 @@ package "On-Chain Identity" {
   rectangle ERC735 as "IERC735\n(Claims Management)"
 }
 
-' Connect token to compliance and identity
-Token --> Compliance : canTransfer()\ntransferred()\ncreated()\ndestroyed()
-Token --> IdentityRegistry : isVerified()\ninvestorCountry()
+' Conexiones — separamos texto de flechas
+Token --> Compliance : <<canTransfer(), transferred(),\ncreated(), destroyed()>>
+Token --> IdentityRegistry : <<isVerified(), investorCountry()>>
 
-' Compliance queries registry
-Compliance --> IdentityRegistry : identityRegistry()
+Compliance --> IdentityRegistry : <<identityRegistry()>>
 
-' IdentityRegistry internals
-IdentityRegistry --> IdentityStorage : storedIdentity()
-IdentityRegistry --> ClaimTopics : getClaimTopics()
-IdentityRegistry --> TrustedIssuers : isTrustedIssuer()
+IdentityRegistry --> IdentityStorage : <<storedIdentity()>>
+IdentityRegistry --> ClaimTopics : <<getClaimTopics()>>
+IdentityRegistry --> TrustedIssuers : <<isTrustedIssuer()>>
 
-' Identity resolution path
-IdentityStorage --> Identity : identity()
+IdentityStorage --> Identity : <<identity()>>
 
-' Identity contract composition
-Identity --> ERC734 : inherits
-Identity --> ERC735 : inherits
-
+Identity --> ERC734 : <<inherits>>
+Identity --> ERC735 : <<inherits>>
 @enduml

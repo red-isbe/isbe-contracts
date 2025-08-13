@@ -8,6 +8,7 @@ skinparam rectangle {
   RoundCorner 15
 }
 skinparam defaultTextAlignment center
+skinparam ArrowFontSize 10  ' <-- Texto de flechas más pequeño
 
 actor Owner
 
@@ -40,5 +41,4 @@ BobProxy ..[#888].-> IdentityImpl_v1 : delegatecall
 IssuerProxy ..[#888].-> IdentityImpl_v1 : delegatecall
 
 Owner --> Authority : upgrade logic\n(add/set/useVersion)
-
 @enduml
