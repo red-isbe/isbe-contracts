@@ -126,11 +126,13 @@ abstract contract ERC721Internal is Common {
         emit IERC721.ApprovalForAll(owner, operator, approved);
     }
 
+    // solhint-disable no-empty-blocks
     function _beforeTokenTransfer(
         address from,
         address to,
         uint256 tokenId
-    ) internal virtual returns (bool);
+    ) internal virtual;
+    // solhint-enable no-empty-blocks
 
     // solhint-disable no-empty-blocks
     function _afterTokenTransfer(

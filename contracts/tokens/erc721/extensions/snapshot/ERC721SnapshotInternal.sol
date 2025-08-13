@@ -53,7 +53,7 @@ abstract contract ERC721SnapshotInternal is ERC721Internal {
         address from,
         address to,
         uint256 tokenId
-    ) internal virtual override returns (bool) {
+    ) internal virtual override {
         // Update snapshots for balances and ownership before transfer
         if (from != address(0)) {
             _updateAccountSnapshot(from);
@@ -63,7 +63,6 @@ abstract contract ERC721SnapshotInternal is ERC721Internal {
         }
         _updateTokenOwnerSnapshot(tokenId);
         _updateTotalSupplySnapshot();
-        return true;
     }
 
     function _balanceOfAt(
