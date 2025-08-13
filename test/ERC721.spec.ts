@@ -7,9 +7,10 @@ import {
     AccessControl,
     ERC721Facet,
     ISBEPause,
+    ERC721Snapshot,
 } from '../typechain-types'
 import { CONFIGURATION_ID_ERC721, deployGovernance } from './initialization'
-import { CAP_ROLE, MINTER_ROLE, PAUSER_ROLE } from './constants'
+import { CAP_ROLE, MINTER_ROLE, PAUSER_ROLE, SNAPSHOT_ROLE } from './constants'
 
 describe('ERC721', function () {
     const name = 'ISBE NFT'
@@ -18,6 +19,7 @@ describe('ERC721', function () {
     let erc721: ERC721Facet
     let erc721TestWrapper: ERC721TestWrapper
     let erc721Capped: ERC721Capped
+    let erc721Snapshot: ERC721Snapshot
     let erc20Address: string
     let owner: Signer
     let ownerAddress: string
@@ -42,6 +44,7 @@ describe('ERC721', function () {
         erc721 = result.erc721
         erc721TestWrapper = result.erc721TestWrapper
         erc721Capped = result.erc721Capped
+        erc721Snapshot = result.erc721Snapshot
         erc20Address = await result.erc721Facet.getAddress()
         accessControl = result.accessControl
         pause = result.pause
@@ -540,6 +543,95 @@ describe('ERC721', function () {
             await expect(erc721Capped.setCap(newCap))
                 .to.emit(erc721Capped, 'CapSet')
                 .withArgs(ownerAddress, newCap)
+        })
+    })
+
+    describe('Snapshot', () => {
+        beforeEach(async () => {
+            await deploy(true)
+            await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+            await erc721Capped.mint(ownerAddress, 1)
+        })
+
+        it('GIVEN an ERC721 WHEN not exists snapshot THEN balanceOfAt and totalSupplyAt fails', async () => {
+            await expect(
+                erc721Snapshot.balanceOfAt(ownerAddress, 0)
+            ).to.be.revertedWithCustomError(erc721Snapshot, 'EmptyUint')
+            await expect(
+                erc721Snapshot.totalSupply(0)
+            ).to.be.revertedWithCustomError(erc721Snapshot, 'EmptyUint')
+            await expect(
+                erc721Snapshot.balanceOfAt(ownerAddress, 1)
+            ).to.be.revertedWithCustomError(
+                erc721Snapshot,
+                'NonExistentSnapshotId'
+            )
+            await expect(
+                erc721Snapshot.totalSupply(1)
+            ).to.be.revertedWithCustomError(
+                erc721Snapshot,
+                'NonExistentSnapshotId'
+            )
+            await expect(
+                erc721Snapshot.ownerOfAt(1, 0)
+            ).to.be.revertedWithCustomError(erc721Snapshot, 'EmptyUint')
+            await expect(
+                erc721Snapshot.ownerOfAt(1, 1)
+            ).to.be.revertedWithCustomError(
+                erc721Snapshot,
+                'NonExistentSnapshotId'
+            )
+        })
+
+        it('GIVEN an ERC721 WHEN paused THEN snapshot fails', async () => {
+            await accessControl.grantRole(SNAPSHOT_ROLE, ownerAddress)
+            await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+            await pause.pause()
+            await expect(
+                erc721Snapshot.snapshot()
+            ).to.be.revertedWithCustomError(erc721Snapshot, 'IsPaused')
+        })
+
+        it('GIVEN an ERC721 WHEN non snapshoter takes a snapshot THEN fails', async () => {
+            await expect(
+                erc721Snapshot.snapshot()
+            ).to.be.revertedWithCustomError(accessControl, 'AccountHasNoRole')
+        })
+
+        it('GIVEN an ERC721 WHEN it is prepared THEN a snapshot can be made', async () => {
+            await accessControl.grantRole(SNAPSHOT_ROLE, ownerAddress)
+
+            await expect(erc721Snapshot.snapshot())
+                .to.emit(erc721Snapshot, 'Snapshot')
+                .withArgs(1)
+            expect(
+                await erc721Snapshot.balanceOfAt(ownerAddress, 1)
+            ).to.be.equal(1)
+            expect(
+                await erc721Snapshot.balanceOfAt(otherAddress, 1)
+            ).to.be.equal(0)
+            expect(await erc721Snapshot.totalSupply(1)).to.be.equal(1)
+            if (erc721Snapshot.ownerOfAt) {
+                expect(await erc721Snapshot.ownerOfAt(1, 1)).to.equal(
+                    ownerAddress
+                )
+            }
+            await erc721.transferFrom(ownerAddress, otherAddress, 1)
+            await erc721Capped.mint(otherAddress, 2)
+            expect(
+                await erc721Snapshot.balanceOfAt(ownerAddress, 1)
+            ).to.be.equal(1)
+            expect(
+                await erc721Snapshot.balanceOfAt(otherAddress, 1)
+            ).to.be.equal(0)
+            expect(await erc721Snapshot.totalSupply(1)).to.be.equal(1)
+            expect(await erc721.balanceOf(ownerAddress)).to.be.equal(0)
+            expect(await erc721.balanceOf(otherAddress)).to.be.equal(2)
+            if (erc721Snapshot.ownerOfAt) {
+                expect(await erc721Snapshot.ownerOfAt(1, 1)).to.equal(
+                    ownerAddress
+                )
+            }
         })
     })
 })
