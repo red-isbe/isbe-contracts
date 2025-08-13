@@ -63,6 +63,7 @@ import {
     DID_DOCUMENT_DETAILED_RESOLVER_KEY,
     DID_CONTROLLER_RESOLVER_KEY,
     DID_VERIFICATION_METHOD_RESOLVER_KEY,
+    DID_VERIFICATION_RELATIONSHIP_RESOLVER_KEY,
 } from './constants'
 import { getEvent } from '../scripts/utils/getEvent'
 import { getIsbeFactory } from '../scripts/utils/getIsbeFactory'
@@ -318,6 +319,8 @@ export async function deployGovernance(
         didControllerFacet: useCaseDeployment.didControllerFacet,
         didVerificationMethodFacet:
             useCaseDeployment.didVerificationMethodFacet,
+        didVerificationRelationshipFacet:
+            useCaseDeployment.didVerificationRelationshipFacet,
         didRegistry: useCaseDeployment.didRegistry,
         erc721Capped: useCaseDeployment.erc721Capped,
         diamondCutAccessControlFacet,
@@ -672,6 +675,9 @@ export async function deployDidRegistryUseCaseFacets(
     const DidVerificationMethodFactory = await ethers.getContractFactory(
         'DidVerificationMethodTestWrapperFacet'
     )
+    const DidVerificationRelationshipFactory = await ethers.getContractFactory(
+        'DidVerificationRelationshipTestWrapperFacet'
+    )
 
     const isbeCutFacet = await deployBusinessLogicFromFactory(
         ISBE_CUT_RESOLVER_KEY,
@@ -706,6 +712,12 @@ export async function deployDidRegistryUseCaseFacets(
         DidVerificationMethodFactory
     )
 
+    const didVerificationRelationshipFacet =
+        await deployBusinessLogicFromFactory(
+            DID_VERIFICATION_RELATIONSHIP_RESOLVER_KEY,
+            DidVerificationRelationshipFactory
+        )
+
     // Deploy all business logic contracts before setting configuration
     await deployBusinessLogicFromFactory(
         MOCK_TIMESTAMP_RESOLVER_KEY,
@@ -727,6 +739,10 @@ export async function deployDidRegistryUseCaseFacets(
         },
         {
             businessId: DID_VERIFICATION_METHOD_RESOLVER_KEY,
+            version: 1,
+        },
+        {
+            businessId: DID_VERIFICATION_RELATIONSHIP_RESOLVER_KEY,
             version: 1,
         },
     ])
@@ -769,6 +785,7 @@ export async function deployDidRegistryUseCaseFacets(
         didDocumentDetailedFacet,
         didControllerFacet,
         didVerificationMethodFacet,
+        didVerificationRelationshipFacet,
         didRegistry,
     }
 }

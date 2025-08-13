@@ -269,18 +269,6 @@ elliptic curve types for enhanced cryptographic flexibility and interoperability
 function initializeDiDRegistry(enum IDidDocumentDetailed.EllipticType _ellipticType) external
 ```
 
-Initialises the DID registry with the specified elliptic curve configuration
-
-_Sets the cryptographic parameters for the entire registry. Must be called once
-before any DID operations can be performed. Only valid elliptic curve types
-are accepted, excluding NONE which represents an invalid state_
-
-#### Parameters
-
-| Name           | Type                                   | Description                                                 |
-| -------------- | -------------------------------------- | ----------------------------------------------------------- |
-| \_ellipticType | enum IDidDocumentDetailed.EllipticType | The elliptic curve algorithm to configure for this registry |
-
 ### insertDidDocument
 
 ```solidity
@@ -293,17 +281,17 @@ function insertDidDocument(string _did, string _baseDocument, string _vMethodId,
 function updateBaseDocument(string did, string baseDocument) external returns (bool)
 ```
 
-Updates the base document content for an existing DID
+Updates the base document content of an existing DID
 
-_Only authorised controllers can modify the base document. The DID must exist
-and be in an active state for updates to be permitted_
+_Modifies the JSON-LD document content whilst preserving verification methods
+and relationships. Requires appropriate authorisation to prevent unauthorised changes_
 
 #### Parameters
 
-| Name         | Type   | Description                                                      |
-| ------------ | ------ | ---------------------------------------------------------------- |
-| did          | string | The decentralised identifier whose base document will be updated |
-| baseDocument | string | The new base JSON-LD document content                            |
+| Name         | Type   | Description                                                        |
+| ------------ | ------ | ------------------------------------------------------------------ |
+| did          | string | The decentralised identifier whose base document should be updated |
+| baseDocument | string | The new base JSON-LD document content to set                       |
 
 #### Return Values
 
@@ -485,6 +473,18 @@ modifier onlyEmptyVMethodAndPublicKey(string _did, string _vMethodId, bytes _pub
 modifier onlyVMethodIdExists(string _did, string _vMethodId)
 ```
 
+### validateRollArgs
+
+```solidity
+modifier validateRollArgs(struct IDidVerificationMethod.RollArgs _args)
+```
+
+### onlyGoodRollArgs
+
+```solidity
+modifier onlyGoodRollArgs(struct IDidVerificationMethod.RollArgs _args)
+```
+
 ### \_setEllipticType
 
 ```solidity
@@ -495,6 +495,12 @@ function _setEllipticType(enum IDidDocumentDetailed.EllipticType _ellipticType) 
 
 ```solidity
 function _insertDidDocument(string _did, string _baseDocument, string _vMethodId, bytes _publicKey, enum IDidDocumentDetailed.EllipticType _ellipticType, uint256 _notBefore, uint256 _notAfter) internal returns (bool)
+```
+
+### \_addVerificationRelationshipToDocument
+
+```solidity
+function _addVerificationRelationshipToDocument(string _did, string _name, string _vMethodId, uint256 _notBefore, uint256 _notAfter) internal returns (bool)
 ```
 
 ### \_addVerificationMethod
@@ -525,6 +531,24 @@ function _addControllerToDocument(string _did, string _controller) internal retu
 
 ```solidity
 function _removeControllerToDocument(string _did, string _controller) internal returns (bool)
+```
+
+### \_rollVerificationMethod
+
+```solidity
+function _rollVerificationMethod(struct IDidVerificationMethod.RollArgs _args) internal returns (bool)
+```
+
+### \_rollExistingVerificationRelationships
+
+```solidity
+function _rollExistingVerificationRelationships(struct DidDocumentDetailedInternal.DidDocument document, struct IDidVerificationMethod.RollArgs _args, uint256 newNotAfter) internal
+```
+
+### \_rollCapabilityInvocation
+
+```solidity
+function _rollCapabilityInvocation(struct DidDocumentDetailedInternal.DidDocument document, struct IDidVerificationMethod.RollArgs _args, uint256 newNotAfter) internal
 ```
 
 ### \_updateBaseDocument
@@ -629,6 +653,12 @@ function _isController(string did, string controller) internal view returns (boo
 function _isNotController(string did, string controller) internal view returns (bool)
 ```
 
+### \_checkEmptyVerificationRelationship
+
+```solidity
+function _checkEmptyVerificationRelationship(string _did, string _name, string _vMethodId) internal view
+```
+
 ---
 
 ## DidVerificationMethod
@@ -657,6 +687,29 @@ function revokeVerificationMethod(string _did, string _vMethodId, uint256 _notAf
 function expireVerificationMethod(string _did, string _vMethodId, uint256 _notAfter) external returns (bool success)
 ```
 
+### rollVerificationMethod
+
+```solidity
+function rollVerificationMethod(struct IDidVerificationMethod.RollArgs args) external returns (bool success)
+```
+
+Rolls over a verification method to a new cryptographic key pair
+
+_Replaces an existing verification method with a new one in a single atomic
+operation, ensuring continuity of authentication capabilities during key rotation_
+
+#### Parameters
+
+| Name | Type                                   | Description                                                         |
+| ---- | -------------------------------------- | ------------------------------------------------------------------- |
+| args | struct IDidVerificationMethod.RollArgs | The RollArgs structure containing all necessary rollover parameters |
+
+#### Return Values
+
+| Name    | Type | Description                                                     |
+| ------- | ---- | --------------------------------------------------------------- |
+| success | bool | Boolean indicating whether the operation completed successfully |
+
 ---
 
 ## DidVerificationMethodFacet
@@ -667,6 +720,95 @@ for decentralised identifier documents with introspection capabilities
 _Concrete implementation of the diamond facet pattern for verification method operations.
 Combines verification method functionality with EIP-2535 interface introspection to
 support dynamic discovery of supported interfaces and function selectors_
+
+### interfacesIntrospection
+
+```solidity
+function interfacesIntrospection() external pure returns (bytes4[] interfaces_)
+```
+
+Gets the list of ERC-165 interface IDs the facet supports.
+
+_A pure function that returns an array of supported `bytes4` IDs._
+
+#### Return Values
+
+| Name         | Type     | Description                                  |
+| ------------ | -------- | -------------------------------------------- |
+| interfaces\_ | bytes4[] | An array of supported interface identifiers. |
+
+### businessIdIntrospection
+
+```solidity
+function businessIdIntrospection() external pure returns (bytes32 businessId_)
+```
+
+Retrieves the unique business identifier for this facet.
+
+_Returns a `bytes32` key identifying the facet's purpose._
+
+#### Return Values
+
+| Name         | Type    | Description                              |
+| ------------ | ------- | ---------------------------------------- |
+| businessId\_ | bytes32 | The `bytes32` ID for the business logic. |
+
+### selectorsIntrospection
+
+```solidity
+function selectorsIntrospection() external pure returns (bytes4[] selectors_)
+```
+
+Gets all function selectors implemented by this facet.
+
+_A pure function that returns a `bytes4[]` array of selectors._
+
+#### Return Values
+
+| Name        | Type     | Description                              |
+| ----------- | -------- | ---------------------------------------- |
+| selectors\_ | bytes4[] | An array of `bytes4` function selectors. |
+
+### \_implementedInterfaces
+
+```solidity
+function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
+```
+
+---
+
+## DidVerificationRelationship
+
+Abstract contract for managing verification relationships between decentralised
+identifiers and their cryptographic verification methods
+
+_Provides external interface implementations for creating and querying verification
+relationships with temporal validity constraints. Integrates with controller
+management to ensure authorised operations and implements W3C DID specification
+relationship types for authentication and authorisation purposes_
+
+### addVerificationRelationship
+
+```solidity
+function addVerificationRelationship(string _did, string _name, string _vMethodId, uint256 _notBefore, uint256 _notAfter) external returns (bool success)
+```
+
+### getDidsByVerificationRelationship
+
+```solidity
+function getDidsByVerificationRelationship(string _vMethodId, string _name, uint256 _page, uint256 _pageSize) external view returns (struct IDidVerificationRelationship.DidWithPeriod[] items_, uint256 total_, uint256 howMany_, uint256 prev_, uint256 next_)
+```
+
+---
+
+## DidVerificationRelationshipFacet
+
+Diamond facet implementation for managing verification relationships between
+decentralised identifiers and cryptographic verification methods
+
+_Extends DidVerificationRelationship functionality with EIP-2535 Diamond Standard
+introspection capabilities. Provides interface discovery and selector enumeration
+for verification relationship management operations within the diamond proxy_
 
 ### interfacesIntrospection
 
@@ -743,23 +885,6 @@ _Abstract contract providing internal verification relationship management funct
 including temporal validation, relationship type verification, and storage operations.
 Supports W3C DID specification relationship types with enhanced period management_
 
-### DidWithPeriod
-
-DID identifier with temporal validity period structure
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-
-```solidity
-struct DidWithPeriod {
-    string did;
-    uint256 notBefore;
-    uint256 notAfter;
-}
-```
-
 ### VRelationshipsStorage
 
 Storage structure for verification relationships organised by relationship ID
@@ -771,20 +896,26 @@ Storage structure for verification relationships organised by relationship ID
 
 ```solidity
 struct VRelationshipsStorage {
-  mapping(uint256 => struct VRelationshipsInternal.DidWithPeriod[]) didsByVRelationship;
+  mapping(uint256 => struct IDidVerificationRelationship.DidWithPeriod[]) didsByVRelationship;
 }
 ```
 
 ### \_addVerificationRelationship
 
 ```solidity
-function _addVerificationRelationship(uint256 _vrId, string _did, uint256 _notBefore, uint256 _notAfter) internal returns (uint256)
+function _addVerificationRelationship(string _vMethodId, string _name, string _did, uint256 _notBefore, uint256 _notAfter) internal returns (uint256)
 ```
 
 ### \_updateVerificationRelationship
 
 ```solidity
-function _updateVerificationRelationship(uint256 _vrId, uint256 _indexDid, uint256 _notAfter) internal
+function _updateVerificationRelationship(string _vMethodId, string _name, uint256 _indexDid, uint256 _notAfter) internal
+```
+
+### \_getDidsByVerificationRelationship
+
+```solidity
+function _getDidsByVerificationRelationship(string _vMethodId, string _name, uint256 _page, uint256 _pageSize) internal view returns (struct IDidVerificationRelationship.DidWithPeriod[] items_, uint256 total_, uint256 howMany_, uint256 prev_, uint256 next_)
 ```
 
 ### \_checkNotAfterRevocation
