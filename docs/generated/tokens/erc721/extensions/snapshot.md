@@ -87,6 +87,10 @@ function _implementedInterfaces() internal pure virtual returns (bytes4[] interf
 
 ## ERC721SnapshotFacet
 
+Facet for ERC721 snapshot functionality in diamond/facet architectures.
+
+_Exposes external interface for snapshot management and querying. - Allows taking snapshots, querying balances, total supply, and ownership at specific snapshots. - Should be registered in the diamond with all required selectors._
+
 ### interfacesIntrospection
 
 ```solidity
@@ -185,7 +189,25 @@ function _snapshot() internal virtual returns (uint256)
 ### \_beforeTokenTransfer
 
 ```solidity
-function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal virtual
+function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal virtual returns (bool)
+```
+
+### \_balanceOfAt
+
+```solidity
+function _balanceOfAt(address account, uint256 snapshotId) internal view returns (uint256)
+```
+
+### \_totalSupplyAt
+
+```solidity
+function _totalSupplyAt(uint256 snapshotId) internal view returns (uint256)
+```
+
+### \_ownerOfAt
+
+```solidity
+function _ownerOfAt(uint256 tokenId, uint256 snapshotId) internal view returns (address)
 ```
 
 ### \_getCurrentSnapshotId
@@ -206,10 +228,10 @@ function _valueAt(uint256 snapshotId, struct ERC721SnapshotInternal.Snapshots sn
 function _ownerAt(uint256 snapshotId, struct ERC721SnapshotInternal.TokenOwnerSnapshots snapshots) internal view returns (bool, address)
 ```
 
-### \_erc721SnapshotStorage
+### \_checkSnapshotIdExists
 
 ```solidity
-function _erc721SnapshotStorage() internal pure returns (struct ERC721SnapshotInternal.ERC721SnapshotStorage storage_)
+function _checkSnapshotIdExists(uint256 snapshotId) internal view
 ```
 
 ---
@@ -237,16 +259,6 @@ _The event is triggered in the `_snapshot` function and corresponds to the given
 | Name | Type    | Description                     |
 | ---- | ------- | ------------------------------- |
 | id   | uint256 | The ID of the created snapshot. |
-
-### SnapshotWithIdZero
-
-```solidity
-error SnapshotWithIdZero()
-```
-
-Error indicating that the snapshot ID is invalid because it is zero.
-
-_Snapshot IDs must always start from 1 or higher, and ID 0 is reserved as invalid._
 
 ### NonExistentSnapshotId
 

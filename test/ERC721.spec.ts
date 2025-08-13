@@ -556,16 +556,10 @@ describe('ERC721', function () {
         it('GIVEN an ERC721 WHEN not exists snapshot THEN balanceOfAt and totalSupplyAt fails', async () => {
             await expect(
                 erc721Snapshot.balanceOfAt(ownerAddress, 0)
-            ).to.be.revertedWithCustomError(
-                erc721Snapshot,
-                'SnapshotWithIdZero'
-            )
+            ).to.be.revertedWithCustomError(erc721Snapshot, 'EmptyUint')
             await expect(
                 erc721Snapshot.totalSupply(0)
-            ).to.be.revertedWithCustomError(
-                erc721Snapshot,
-                'SnapshotWithIdZero'
-            )
+            ).to.be.revertedWithCustomError(erc721Snapshot, 'EmptyUint')
             await expect(
                 erc721Snapshot.balanceOfAt(ownerAddress, 1)
             ).to.be.revertedWithCustomError(
@@ -580,10 +574,7 @@ describe('ERC721', function () {
             )
             await expect(
                 erc721Snapshot.ownerOfAt(1, 0)
-            ).to.be.revertedWithCustomError(
-                erc721Snapshot,
-                'SnapshotWithIdZero'
-            )
+            ).to.be.revertedWithCustomError(erc721Snapshot, 'EmptyUint')
             await expect(
                 erc721Snapshot.ownerOfAt(1, 1)
             ).to.be.revertedWithCustomError(

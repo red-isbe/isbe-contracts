@@ -33,11 +33,7 @@ abstract contract ERC721Snapshot is IERC721Snapshot, ERC721InternalCommon {
         address account,
         uint256 snapshotId
     ) external view override returns (uint256) {
-        (bool snapshotted, uint256 value) = _valueAt(
-            snapshotId,
-            _erc721SnapshotStorage().accountBalanceSnapshots[account]
-        );
-        return snapshotted ? value : _balanceOf(account);
+        return _balanceOfAt(account, snapshotId);
     }
 
     /**
@@ -48,11 +44,7 @@ abstract contract ERC721Snapshot is IERC721Snapshot, ERC721InternalCommon {
     function totalSupply(
         uint256 snapshotId
     ) external view override returns (uint256) {
-        (bool snapshotted, uint256 value) = _valueAt(
-            snapshotId,
-            _erc721SnapshotStorage().totalSupplySnapshots
-        );
-        return snapshotted ? value : _totalSupply();
+        return _totalSupplyAt(snapshotId);
     }
 
     /**
@@ -65,11 +57,7 @@ abstract contract ERC721Snapshot is IERC721Snapshot, ERC721InternalCommon {
         uint256 tokenId,
         uint256 snapshotId
     ) external view override returns (address) {
-        (bool snapshotted, address owner) = _ownerAt(
-            snapshotId,
-            _erc721SnapshotStorage().tokenOwnerSnapshots[tokenId]
-        );
-        return snapshotted ? owner : _ownerOf(tokenId);
+        return _ownerOfAt(tokenId, snapshotId);
     }
 
     function _implementedInterfaces()

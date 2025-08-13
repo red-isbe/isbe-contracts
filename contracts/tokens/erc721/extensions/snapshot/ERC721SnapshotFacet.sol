@@ -5,6 +5,13 @@ import {_ERC721_SNAPSHOT_RESOLVER_KEY} from '../../../../constants/resolverKeys.
 import {ERC721Snapshot} from './ERC721Snapshot.sol';
 import {IEIP2535Introspection} from '../../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 
+/**
+ * @title ERC721SnapshotFacet
+ * @notice Facet for ERC721 snapshot functionality in diamond/facet architectures.
+ * @dev Exposes external interface for snapshot management and querying.
+ *      - Allows taking snapshots, querying balances, total supply, and ownership at specific snapshots.
+ *      - Should be registered in the diamond with all required selectors.
+ */
 contract ERC721SnapshotFacet is ERC721Snapshot, IEIP2535Introspection {
     function interfacesIntrospection()
         external

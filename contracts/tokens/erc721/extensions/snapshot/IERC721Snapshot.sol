@@ -21,12 +21,6 @@ interface IERC721Snapshot {
     event Snapshot(uint256 id);
 
     /**
-     * @notice Error indicating that the snapshot ID is invalid because it is zero.
-     * @dev Snapshot IDs must always start from 1 or higher, and ID 0 is reserved as invalid.
-     */
-    error SnapshotWithIdZero();
-
-    /**
      * @notice Error indicating that the given snapshot ID does not exist.
      * @dev This is triggered when querying a nonexistent or invalid snapshot ID.
      */

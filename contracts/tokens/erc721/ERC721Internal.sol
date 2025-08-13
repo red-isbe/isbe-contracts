@@ -130,7 +130,7 @@ abstract contract ERC721Internal is Common {
         address from,
         address to,
         uint256 tokenId
-    ) internal virtual;
+    ) internal virtual returns (bool);
 
     // solhint-disable no-empty-blocks
     function _afterTokenTransfer(
