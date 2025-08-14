@@ -39,6 +39,12 @@ modifier emptyBytes(bytes _code)
 modifier emptyString(string _string)
 ```
 
+### emptyUint
+
+```solidity
+modifier emptyUint(uint256 _uint)
+```
+
 ### uintBetweenZeroAndEighteen
 
 ```solidity

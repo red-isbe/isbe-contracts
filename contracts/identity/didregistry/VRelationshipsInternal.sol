@@ -10,8 +10,10 @@ import {
     _CAPABILITY_DELEGATION_RELATIONSHIP
 } from './constants.sol';
 import {Common} from '../../core/Common.sol';
+import {LibCommon} from '../../core/LibCommon.sol';
 import {IDidDocumentDetailed} from './interfaces/IDidDocumentDetailed.sol';
 import {IDidVerificationMethod} from './interfaces/IDidVerificationMethod.sol';
+import {IDidVerificationRelationship} from './interfaces/IDidVerificationRelationship.sol';
 import {_DID_VRELATIONSHIPS_STORAGE_POSITION} from '../../constants/storagePositions.sol';
 
 /**
@@ -25,31 +27,21 @@ import {_DID_VRELATIONSHIPS_STORAGE_POSITION} from '../../constants/storagePosit
  */
 abstract contract VRelationshipsInternal is Common {
     /**
-     * @notice DID identifier with temporal validity period structure
-     * @param did The unique DID identifier string
-     * @param notBefore Timestamp when the DID relationship becomes valid
-     * @param notAfter Timestamp when the DID relationship expires
-     */
-    struct DidWithPeriod {
-        string did;
-        uint256 notBefore;
-        uint256 notAfter;
-    }
-
-    /**
      * @notice Storage structure for verification relationships organised by relationship ID
      * @param didsByVRelationship Mapping from relationship ID to array of temporal DIDs
      */
     struct VRelationshipsStorage {
-        mapping(uint256 => DidWithPeriod[]) didsByVRelationship;
+        mapping(uint256 => IDidVerificationRelationship.DidWithPeriod[]) didsByVRelationship;
     }
 
     function _addVerificationRelationship(
-        uint256 _vrId,
+        string memory _vMethodId,
+        string memory _name,
         string memory _did,
         uint256 _notBefore,
         uint256 _notAfter
     ) internal returns (uint256) {
+        uint256 _vrId = _buildVerificationRelationshipId(_name, _vMethodId);
         VRelationshipsStorage storage $ = _vRelationshipsStorage();
         uint256 indexDid = $.didsByVRelationship[_vrId].length;
         $.didsByVRelationship[_vrId].push(
@@ -59,13 +51,55 @@ abstract contract VRelationshipsInternal is Common {
     }
 
     function _updateVerificationRelationship(
-        uint256 _vrId,
+        string memory _vMethodId,
+        string memory _name,
         uint256 _indexDid,
         uint256 _notAfter
     ) internal {
         _vRelationshipsStorage()
-            .didsByVRelationship[_vrId][_indexDid]
+            .didsByVRelationship[
+                _buildVerificationRelationshipId(_name, _vMethodId)
+            ][_indexDid]
             .notAfter = _notAfter;
+    }
+
+    function _getDidsByVerificationRelationship(
+        string memory _vMethodId,
+        string memory _name,
+        uint256 _page,
+        uint256 _pageSize
+    )
+        internal
+        view
+        returns (
+            IDidVerificationRelationship.DidWithPeriod[] memory items_,
+            uint256 total_,
+            uint256 howMany_,
+            uint256 prev_,
+            uint256 next_
+        )
+    {
+        IDidVerificationRelationship.DidWithPeriod[]
+            storage didsWithPeriods = _vRelationshipsStorage()
+                .didsByVRelationship[
+                    _buildVerificationRelationshipId(_name, _vMethodId)
+                ];
+        total_ = didsWithPeriods.length;
+        uint256 cursor;
+        (cursor, howMany_, prev_, next_) = LibCommon.getPaginationParameters(
+            didsWithPeriods.length,
+            _page,
+            _pageSize
+        );
+        if (howMany_ == 0) return (items_, total_, howMany_, prev_, next_);
+        items_ = new IDidVerificationRelationship.DidWithPeriod[](howMany_);
+        for (uint256 i; i < howMany_; ) {
+            items_[i] = didsWithPeriods[cursor];
+            unchecked {
+                ++i;
+                ++cursor;
+            }
+        }
     }
 
     function _checkNotAfterRevocation(uint256 _notAfter) internal view {
@@ -101,8 +135,14 @@ abstract contract VRelationshipsInternal is Common {
         string memory _did,
         uint256 _notBefore,
         uint256 _notAfter
-    ) private pure returns (DidWithPeriod memory didWithPeriod_) {
-        didWithPeriod_ = DidWithPeriod({
+    )
+        private
+        pure
+        returns (
+            IDidVerificationRelationship.DidWithPeriod memory didWithPeriod_
+        )
+    {
+        didWithPeriod_ = IDidVerificationRelationship.DidWithPeriod({
             did: _did,
             notBefore: _notBefore,
             notAfter: _notAfter

@@ -48,6 +48,11 @@ abstract contract Common is
         _;
     }
 
+    modifier emptyUint(uint256 _uint) {
+        _checkUintIsNotZero(_uint);
+        _;
+    }
+
     modifier uintBetweenZeroAndEighteen(uint256 _uint) {
         _checkUintBetweenZeroAndEighteen(_uint);
         _;

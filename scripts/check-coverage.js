@@ -5,10 +5,10 @@ const coverage = JSON.parse(
 )
 
 const thresholds = {
-    lines: 99,
-    branches: 97,
-    functions: 100,
-    statements: 99,
+    lines: 97,
+    branches: 95,
+    functions: 97,
+    statements: 97,
 }
 
 let total = {

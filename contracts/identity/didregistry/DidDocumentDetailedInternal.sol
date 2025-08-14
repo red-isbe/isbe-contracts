@@ -107,6 +107,16 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
         _;
     }
 
+    modifier validateRollArgs(IDidVerificationMethod.RollArgs memory _args) {
+        _validateRollArgs(_args);
+        _;
+    }
+
+    modifier onlyGoodRollArgs(IDidVerificationMethod.RollArgs memory _args) {
+        _checkRollArgs(_args);
+        _;
+    }
+
     function _setEllipticType(
         IDidDocumentDetailed.EllipticType _ellipticType
     ) internal {
@@ -129,57 +139,58 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
         document.baseDocument = _baseDocument;
         _addVerificationMethod(_did, _vMethodId, _publicKey, _ellipticType);
 
-        //////
-        uint256 indexDid;
-
-        indexDid = _prepareAddVerificationRelationship(
+        _addVerificationRelationshipToDocument(
+            _did,
             _CAPABILITY_INVOCATION_RELATIONSHIP,
             _vMethodId,
-            _did,
             _notBefore,
             _notAfter
-        );
-        // insert getAddress in the did
-        document.vMethodIdOfAddress[_getAddress(_publicKey)] = _vMethodId;
-        document.capabilityInvocationMethodIdExist[_vMethodId] = true;
-        document.capabilityInvocationMethodIdIndex[_vMethodId] = document
-            .capabilityInvocations
-            .length;
-        document.capabilityInvocations.push(
-            _buildVRelationShip(
-                _CAPABILITY_INVOCATION_RELATIONSHIP,
-                _vMethodId,
-                _notBefore,
-                _notAfter,
-                indexDid
-            )
         );
 
-        indexDid = _prepareAddVerificationRelationship(
+        _addVerificationRelationshipToDocument(
+            _did,
             _AUTHENTICATION_RELATIONSHIP,
             _vMethodId,
-            _did,
             _notBefore,
             _notAfter
-        );
-        document.vRelationshipsIndexes[_vMethodId].push(
-            document.vRelationships.length
-        );
-        document.vRelationshipsNameAndMethodIdTuple[
-            _buildAuthenticationKey(_vMethodId)
-        ] = true;
-        document.vRelationships.push(
-            _buildVRelationShip(
-                _AUTHENTICATION_RELATIONSHIP,
-                _vMethodId,
-                _notBefore,
-                _notAfter,
-                indexDid
-            )
         );
 
         $.dids.push(_did);
         return true;
+    }
+
+    function _addVerificationRelationshipToDocument(
+        string memory _did,
+        string memory _name,
+        string memory _vMethodId,
+        uint256 _notBefore,
+        uint256 _notAfter
+    ) internal returns (bool) {
+        uint256 indexDid = _addVerificationRelationship(
+            _vMethodId,
+            _name,
+            _did,
+            _notBefore,
+            _notAfter
+        );
+        if (_equalStrings(_name, _CAPABILITY_INVOCATION_RELATIONSHIP))
+            return
+                _addCapabilityInvocationRelationship(
+                    _didDocumentsStorage().didList[_did],
+                    _vMethodId,
+                    _notBefore,
+                    _notAfter,
+                    indexDid
+                );
+        return
+            _addOtherRelationship(
+                _didDocumentsStorage().didList[_did],
+                _name,
+                _vMethodId,
+                _notBefore,
+                _notAfter,
+                indexDid
+            );
     }
 
     function _addVerificationMethod(
@@ -248,7 +259,7 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
             --length;
         }
         for (; index < length; ) {
-            if (_equalStrings(_controller, controllers[length])) {
+            if (_equalStrings(_controller, controllers[index])) {
                 document.controllers[index] = document.controllers[length];
                 break;
             }
@@ -259,6 +270,116 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
         document.controllers.pop();
         document.controllerExist[_controller] = false;
         return true;
+    }
+
+    function _rollVerificationMethod(
+        IDidVerificationMethod.RollArgs memory _args
+    ) internal returns (bool) {
+        DidDocumentsStorage storage $ = _didDocumentsStorage();
+        DidDocument storage document = $.didList[_args.did];
+        _addVerificationMethod(
+            _args.did,
+            _args.vMethodId,
+            _args.publicKey,
+            _args.ellipticType
+        );
+        uint256 newNotAfter;
+        unchecked {
+            newNotAfter = _args.notBefore + _args.duration;
+        }
+        _rollExistingVerificationRelationships(document, _args, newNotAfter);
+        _rollCapabilityInvocation(document, _args, newNotAfter);
+        _cleanupAddressMappingIfNeeded(
+            document,
+            _args.oldVMethodId,
+            $.networkEllipticType
+        );
+
+        return true;
+    }
+
+    function _rollExistingVerificationRelationships(
+        DidDocument storage document,
+        IDidVerificationMethod.RollArgs memory _args,
+        uint256 newNotAfter
+    ) internal {
+        uint256 length = document
+            .vRelationshipsIndexes[_args.oldVMethodId]
+            .length;
+        for (uint256 index; index < length; ) {
+            uint256 vRelationshipIndex = document.vRelationshipsIndexes[
+                _args.oldVMethodId
+            ][index];
+            string memory currentName = document
+                .vRelationships[vRelationshipIndex]
+                .name;
+            _updateVerificationRelationship(
+                _args.oldVMethodId,
+                currentName,
+                document.vRelationships[index].indexDid,
+                newNotAfter
+            );
+            document.vRelationships[vRelationshipIndex].notAfter = newNotAfter;
+            uint256 insertedVRelationShipIndex = _addVerificationRelationship(
+                _args.vMethodId,
+                currentName,
+                _args.did,
+                _args.notBefore,
+                _args.notAfter
+            );
+            document.vRelationshipsIndexes[_args.vMethodId].push(
+                document.vRelationships.length
+            );
+            document.vRelationshipsNameAndMethodIdTuple[
+                _buildAuthenticationKey(currentName, _args.oldVMethodId)
+            ] = true;
+            document.vRelationships.push(
+                _buildVRelationShip(
+                    currentName,
+                    _args.vMethodId,
+                    _args.notBefore,
+                    _args.notAfter,
+                    insertedVRelationShipIndex
+                )
+            );
+            unchecked {
+                ++index;
+            }
+        }
+    }
+
+    function _rollCapabilityInvocation(
+        DidDocument storage document,
+        IDidVerificationMethod.RollArgs memory _args,
+        uint256 newNotAfter
+    ) internal {
+        if (!document.capabilityInvocationMethodIdExist[_args.oldVMethodId])
+            return;
+        uint256 capabilityInvocationIndex = document
+            .capabilityInvocationMethodIdIndex[_args.oldVMethodId];
+        _updateVerificationRelationship(
+            _args.oldVMethodId,
+            _CAPABILITY_INVOCATION_RELATIONSHIP,
+            document.capabilityInvocations[capabilityInvocationIndex].indexDid,
+            newNotAfter
+        );
+        document
+            .capabilityInvocations[capabilityInvocationIndex]
+            .notAfter = newNotAfter;
+        uint256 indexVRelationshipInserted = _addVerificationRelationship(
+            _args.vMethodId,
+            _CAPABILITY_INVOCATION_RELATIONSHIP,
+            _args.did,
+            _args.notBefore,
+            _args.notAfter
+        );
+        _addCapabilityInvocationRelationship(
+            document,
+            _args.vMethodId,
+            _args.notBefore,
+            _args.notAfter,
+            indexVRelationshipInserted
+        );
     }
 
     function _updateBaseDocument(
@@ -474,6 +595,74 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
         return !_isController(did, controller);
     }
 
+    function _checkEmptyVerificationRelationship(
+        string memory _did,
+        string memory _name,
+        string memory _vMethodId
+    ) internal view {
+        require(
+            !_isEmptyVerificationRelationship(
+                _didDocumentsStorage().didList[_did],
+                _name,
+                _vMethodId
+            ),
+            IDidDocumentDetailed.VerificationRelationshipExists(
+                _did,
+                _name,
+                _vMethodId
+            )
+        );
+    }
+
+    function _addCapabilityInvocationRelationship(
+        DidDocument storage _document,
+        string memory _vMethodId,
+        uint256 _notBefore,
+        uint256 _notAfter,
+        uint256 _indexDid
+    ) private returns (bool) {
+        _document.capabilityInvocationMethodIdExist[_vMethodId] = true;
+        _document.capabilityInvocationMethodIdIndex[_vMethodId] = _document
+            .capabilityInvocations
+            .length;
+        _document.capabilityInvocations.push(
+            _buildVRelationShip(
+                _CAPABILITY_INVOCATION_RELATIONSHIP,
+                _vMethodId,
+                _notBefore,
+                _notAfter,
+                _indexDid
+            )
+        );
+        return true;
+    }
+
+    function _addOtherRelationship(
+        DidDocument storage _document,
+        string memory _name,
+        string memory _vMethodId,
+        uint256 _notBefore,
+        uint256 _notAfter,
+        uint256 _indexDid
+    ) private returns (bool) {
+        _document.vRelationshipsIndexes[_vMethodId].push(
+            _document.vRelationships.length
+        );
+        _document.vRelationshipsNameAndMethodIdTuple[
+            _buildAuthenticationKey(_name, _vMethodId)
+        ] = true;
+        _document.vRelationships.push(
+            _buildVRelationShip(
+                _name,
+                _vMethodId,
+                _notBefore,
+                _notAfter,
+                _indexDid
+            )
+        );
+        return true;
+    }
+
     function _revokeAllVerificationRelationships(
         DidDocument storage document,
         string memory _vMethodId,
@@ -490,10 +679,8 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
             IDidDocumentDetailed.VRelationship storage vRelationship = document
                 .vRelationships[relationshipIndexes[length]];
             _updateVerificationRelationship(
-                _buildVerificationRelationshipId(
-                    vRelationship.name,
-                    _vMethodId
-                ),
+                _vMethodId,
+                vRelationship.name,
                 vRelationship.indexDid,
                 _notAfter
             );
@@ -517,10 +704,8 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
             $.networkEllipticType
         );
         _updateVerificationRelationship(
-            _buildVerificationRelationshipId(
-                _CAPABILITY_INVOCATION_RELATIONSHIP,
-                _vMethodId
-            ),
+            _vMethodId,
+            _CAPABILITY_INVOCATION_RELATIONSHIP,
             capabilityInvocation.indexDid,
             _notAfter
         );
@@ -531,31 +716,31 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
         string memory _vMethodId,
         IDidDocumentDetailed.EllipticType _networkEllipticType
     ) private {
-        // Acceso directo al storage, evitar copia a memory
         IDidDocumentDetailed.VMethod storage vMethod = document.vMethods[
             _vMethodId
         ];
-        if (vMethod.ellipticType == _networkEllipticType) {
+        if (vMethod.ellipticType == _networkEllipticType)
             delete document.vMethodIdOfAddress[_getAddress(vMethod.publicKey)];
-        }
     }
 
-    function _prepareAddVerificationRelationship(
-        string memory _method,
-        string memory _vMethodId,
-        string memory _did,
-        uint256 _notBefore,
-        uint256 _notAfter
-    ) private returns (uint256) {
-        _checkValidRelationshipName(_method);
-
+    function _isEmptyVerificationRelationship(
+        DidDocument storage _document,
+        string memory _name,
+        string memory _vMethodId
+    ) private view returns (bool) {
         return
-            _addVerificationRelationship(
-                _buildVerificationRelationshipId(_method, _vMethodId),
-                _did,
-                _notBefore,
-                _notAfter
-            );
+            _equalStrings(_name, _CAPABILITY_INVOCATION_RELATIONSHIP)
+                ? _document.capabilityInvocationMethodIdExist[_vMethodId]
+                : _document.vRelationshipsNameAndMethodIdTuple[
+                    _buildAuthenticationKey(_name, _vMethodId)
+                ];
+    }
+
+    function _checkRollArgs(
+        IDidVerificationMethod.RollArgs memory _args
+    ) private view {
+        _checkEmptyVMethod(_args.did, _args.vMethodId);
+        _checkVMethodExists(_args.did, _args.oldVMethodId);
     }
 
     function _getMethodsAndRelations(
@@ -615,14 +800,12 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
             uint256 sizeVRelationships_
         )
     {
-        // Inicializar arrays auxiliares
         vMethodIdsAux_ = new string[](_maxLength);
         vMethodsAux_ = new IDidDocumentDetailed.VMethod[](_maxLength);
         vRelationshipsAux_ = new IDidDocumentDetailed.VRelationship[](
             _maxLength
         );
 
-        // Procesar relaciones regulares
         (sizeVMethods_, sizeVRelationships_) = _processRegularRelationships(
             _timestamp,
             _document,
@@ -631,7 +814,6 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
             vRelationshipsAux_
         );
 
-        // Procesar capability invocations
         (sizeVMethods_, sizeVRelationships_) = _processCapabilityInvocations(
             _timestamp,
             _document,
@@ -765,6 +947,19 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
         }
     }
 
+    function _validateRollArgs(
+        IDidVerificationMethod.RollArgs memory _args
+    ) private pure {
+        _checkEmptyString(_args.vMethodId);
+        _checkEmptyBytes(_args.publicKey);
+        _checkNonEmptyEllipticType(_args.ellipticType);
+        _checkUintIsNotZero(_args.notBefore);
+        _checkUintIsNotZero(_args.notAfter);
+        _checkValidDates(_args.notBefore, _args.notAfter);
+        _checkEmptyString(_args.oldVMethodId);
+        _checkUintIsNotZero(_args.duration);
+    }
+
     function _copyAuxiliaryArraysToResult(
         string[] memory _vMethodIdsAux,
         IDidDocumentDetailed.VMethod[] memory _vMethodsAux,
@@ -786,20 +981,14 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
             _sizeVRelationships
         );
 
-        uint256 i = _sizeVMethods > _sizeVRelationships
-            ? _sizeVMethods
-            : _sizeVRelationships;
-
-        for (; i > 0; ) {
+        for (uint256 index; index < _sizeVRelationships; ) {
+            if (index < _sizeVMethods) {
+                vMethodIds_[index] = _vMethodIdsAux[index];
+                vMethods_[index] = _vMethodsAux[index];
+            }
+            vRelationships_[index] = _vRelationshipsAux[index];
             unchecked {
-                --i;
-            }
-            if (i < _sizeVMethods) {
-                vMethodIds_[i] = _vMethodIdsAux[i];
-                vMethods_[i] = _vMethodsAux[i];
-            }
-            if (i < _sizeVRelationships) {
-                vRelationships_[i] = _vRelationshipsAux[i];
+                ++index;
             }
         }
     }
@@ -843,9 +1032,10 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
     }
 
     function _buildAuthenticationKey(
+        string memory _name,
         string memory _vMethodId
     ) private pure returns (bytes32) {
-        return keccak256(abi.encode(_AUTHENTICATION_RELATIONSHIP, _vMethodId));
+        return keccak256(abi.encode(_name, _vMethodId));
     }
 
     function _buildVRelationShip(

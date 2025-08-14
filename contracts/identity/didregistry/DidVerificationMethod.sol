@@ -90,4 +90,29 @@ abstract contract DidVerificationMethod is
         emit VerificationMethodExpired(_did, _vMethodId, _notAfter);
         return _expireVerificationMethod(_did, _vMethodId, _notAfter);
     }
+
+    function rollVerificationMethod(
+        RollArgs memory args
+    )
+        external
+        override
+        onlyControllerOrAuth(args.did)
+        validateRollArgs(args)
+        onlyGoodRollArgs(args)
+        returns (bool success)
+    {
+        {
+            emit VerificationMethodRolled(
+                args.did,
+                args.vMethodId,
+                args.publicKey,
+                args.ellipticType,
+                args.notBefore,
+                args.notAfter,
+                args.oldVMethodId,
+                args.duration
+            );
+        }
+        return _rollVerificationMethod(args);
+    }
 }

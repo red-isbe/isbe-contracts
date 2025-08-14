@@ -41,9 +41,4 @@ interface IERC721Isbe is IERC721, IERC721Metadata {
         string memory newName,
         string memory newSymbol
     ) external;
-
-    /**
-     * @dev Returns the total amount of tokens stored by the contract.
-     */
-    function totalSupply() external view returns (uint256);
 }
