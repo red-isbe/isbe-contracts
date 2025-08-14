@@ -5,7 +5,7 @@ This abstract contract puts together all ERC721 internal logic (snapshot, cap, a
 ### \_beforeTokenTransfer
 
 ```solidity
-function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal virtual returns (bool)
+function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal virtual
 ```
 
 _Override the \_beforeTokenTransfer hook to combine logic from all inherited modules._

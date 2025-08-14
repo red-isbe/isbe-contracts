@@ -189,7 +189,7 @@ function _snapshot() internal virtual returns (uint256)
 ### \_beforeTokenTransfer
 
 ```solidity
-function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal virtual returns (bool)
+function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal virtual
 ```
 
 ### \_balanceOfAt

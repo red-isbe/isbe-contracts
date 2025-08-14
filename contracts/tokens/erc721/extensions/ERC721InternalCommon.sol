@@ -18,14 +18,8 @@ abstract contract ERC721InternalCommon is
         address from,
         address to,
         uint256 tokenId
-    )
-        internal
-        virtual
-        override(ERC721Internal, ERC721SnapshotInternal)
-        returns (bool)
-    {
+    ) internal virtual override(ERC721Internal, ERC721SnapshotInternal) {
         ERC721SnapshotInternal._beforeTokenTransfer(from, to, tokenId);
-        return true;
     }
 
     /**
