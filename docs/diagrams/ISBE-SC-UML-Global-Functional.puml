@@ -1,0 +1,172 @@
+@startuml
+title Arquitectura de SC ISBE
+
+
+skinparam class {
+    BackgroundColor White
+    ArrowColor Black
+    BorderColor Black
+}
+skinparam linetype polyline
+hide empty members
+
+' === CORE ===
+package "Core" {
+    class Initializable <<(A,#228b22) abstract contract>>
+    class Common <<(A,#228b22) abstract contract>>
+    class LibCommon << (L,#FF7700) library >>
+    class ISBEContext <<(A,#228b22) abstract contract>>
+    class AccessControlInternal <<(A,#228b22) abstract contract>> #lightblue
+    class PauseInternalCommon <<(A,#228b22) abstract contract>> #FFDEAD
+    class OwnableInternal <<(A,#228b22) abstract contract>> #lightgreen
+    class ERC165Internal <<(A,#228b22) abstract contract>>
+    class Context <<(A,#228b22) abstract contract>>
+
+    Common --|> Initializable
+    Common --|> ERC165Internal
+    Common --|> AccessControlInternal
+  
+    Common --|> OwnableInternal
+    Common --|> PauseInternalCommon
+    PauseInternalCommon --|> ISBEContext
+    OwnableInternal --|> ISBEContext
+    ISBEContext --|> Context
+    AccessControlInternal --|> LibCommon
+}
+
+
+' === Modules===
+package "Modules" {
+' === ACCESS ===
+package "Access" {
+    class AccessControl <<(C,#1E90FF) contract>> #lightblue
+    class AccessControlFacet <<(C,#1E90FF) contract>> #lightblue
+    class IAccessControl <<(I,#FFD700) interface>> #lightblue
+
+    AccessControl --|> IAccessControl
+    AccessControl --|> Common
+    AccessControlFacet --|> AccessControl
+}
+
+' === OWNABLE ===
+package "Ownable" {
+    class Ownable <<(C,#1E90FF) contract>> #lightgreen
+    class OwnableBase <<(A,#228B22) abstract contract>> #lightgreen
+    class Ownable2Step <<(C,#1E90FF) contract>> #lightgreen
+    class Ownable2StepInternal <<(A,#228B22) abstract contract>> #lightgreen
+    class Ownable2StepFacet <<(C,#1E90FF) contract>> #lightgreen
+    class OwnableFacet <<(C,#1E90FF) contract>> #lightgreen
+    class IOwnable <<(I,#FFD700) interface>> #lightgreen
+    class IOwnable2Step <<(I,#FFD700) interface>> #lightgreen
+    class OwnableInternal <<(A,#228B22) abstract contract>> #lightgreen
+
+    Ownable --|> OwnableBase
+    OwnableBase --|> IOwnable
+    OwnableBase --|> Common
+    Ownable2Step --|> IOwnable2Step
+    Ownable2Step --|> OwnableBase
+    Ownable2Step --|> Ownable2StepInternal
+    Ownable2StepInternal --|> OwnableInternal
+    OwnableFacet --|> Ownable
+    Ownable2StepFacet --|> Ownable2Step
+}
+
+' === PAUSE ===
+package "Pause" {
+    class Pause <<(A,#228B22) abstract contract>> #FFDEAD
+    class PauseInternal <<(A,#228B22) abstract contract>> #FFDEAD
+    class ISBEPause <<(C,#1E90FF) contract>> #FFDEAD
+    class ISBEPauseFacet <<(C,#1E90FF) contract>> #FFDEAD
+    class IPause <<(I,#FFD700) interface>> #FFDEAD
+
+    Pause --|> IPause
+    Pause --|> PauseInternal
+    PauseInternal --|> Common
+    ISBEPause --|> Pause
+    ISBEPauseFacet --|> ISBEPause
+}
+
+' === ERC20 ===
+package "ERC20" {
+    class IERC20 <<(I,#FFD700) interface>> #E6E6FA
+    class IERC20Metadata <<(I,#FFD700) interface>> #E6E6FA
+    class IERC20Isbe <<(I,#FFD700) interface>> #E6E6FA
+    class IERC20Burnable <<(I,#FFD700) interface>> #E6E6FA
+    class IERC20Capped <<(I,#FFD700) interface>> #E6E6FA
+    class IERC20Controller <<(I,#FFD700) interface>> #E6E6FA
+    class IERC20Snapshot <<(I,#FFD700) interface>> #E6E6FA
+
+    class ERC20 <<(A,#228B22) contract>> #E6E6FA
+    class ERC20Facet <<(C,#1E90FF) contract>> #E6E6FA
+    class ERC20Internal <<(A,#228B22) abstract contract>> #E6E6FA
+    class ERC20InternalCommon <<(A,#228B22) abstract contract>> #E6E6FA
+
+    class ERC20Burnable <<(A,#228B22) contract>> #E6E6FA
+    class ERC20BurnableFacet <<(C,#1E90FF) contract>> #E6E6FA
+
+    class ERC20Capped <<(A,#228B22) abstract contract>> #E6E6FA
+    class ERC20CappedFacet <<(C,#1E90FF) contract>> #E6E6FA
+    class ERC20CappedInternal <<(A,#228B22) abstract contract>> #E6E6FA
+
+    class ERC20Controller <<(A,#228B22) contract>> #E6E6FA
+    class ERC20ControllerFacet <<(C,#1E90FF) contract>> #E6E6FA
+
+    class ERC20Snapshot <<(A,#228B22) abstract contract>> #E6E6FA
+    class ERC20SnapshotFacet <<(C,#1E90FF) contract>> #E6E6FA
+    class ERC20SnapshotInternal <<(A,#228B22) abstract contract>> #E6E6FA
+
+    ERC20 --|> IERC20Isbe
+    IERC20Isbe --|> IERC20
+    IERC20Isbe --|> IERC20Metadata
+    ERC20 --|> ERC20InternalCommon
+    ERC20InternalCommon --|> ERC20SnapshotInternal
+    ERC20InternalCommon --|> ERC20CappedInternal
+    ERC20Internal --|> Common
+    ERC20Facet --|> ERC20
+
+    ERC20Burnable --|> IERC20Burnable
+    ERC20Burnable --|> ERC20InternalCommon
+    ERC20BurnableFacet --|> ERC20Burnable
+
+    ERC20Capped --|> IERC20Capped
+    ERC20Capped --|> ERC20InternalCommon
+    ERC20CappedFacet --|> ERC20Capped
+    ERC20CappedInternal --|> ERC20Internal
+
+    ERC20Controller --|> IERC20Controller
+    ERC20Controller --|> ERC20InternalCommon
+    ERC20ControllerFacet --|> ERC20Controller
+
+    ERC20Snapshot --|> IERC20Snapshot
+    ERC20Snapshot --|> ERC20InternalCommon
+    ERC20SnapshotFacet --|> ERC20Snapshot
+    ERC20SnapshotInternal --|> ERC20Internal
+}
+
+' === ASSET TRACKING ===
+package "Asset Tracking" {
+    class AssetEventTracker <<(A,#228B22) abstract contract>> #B5651D
+    class AssetEventTrackerFacet <<(C,#1E90FF) contract>> #B5651D
+    class AssetEventTrackerInternal <<(A,#228B22) abstract contract>> #B5651D
+    class IAssetEventTracker <<(I,#FFD700) interface>> #B5651D
+
+    AssetEventTracker --|> IAssetEventTracker
+    AssetEventTracker --|> AssetEventTrackerInternal
+    AssetEventTrackerInternal --|> Common
+    AssetEventTrackerFacet --|> AssetEventTracker
+}
+
+' === HASH TIMESTAMP ===
+package "Hash Timestamp" {
+    class HashTimestamp <<(A,#228B22) abstract contract>> #D8BFD8
+    class HashTimestampFacet <<(C,#1E90FF) contract>> #D8BFD8
+    class HashTimestampInternal <<(A,#228B22) abstract contract>> #D8BFD8
+    class IHashTimestamp <<(I,#FFD700) interface>> #D8BFD8
+
+    HashTimestamp --|> IHashTimestamp
+    HashTimestamp --|> HashTimestampInternal
+    HashTimestampInternal --|> Common
+    HashTimestampFacet --|> HashTimestamp
+}
+}
+@enduml

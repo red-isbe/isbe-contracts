@@ -1,6 +1,6 @@
 {
     "name": "@alastria/isbe-contracts",
-    "version": "0.0.3",
+    "version": "0.0.5",
     "description": "Repository of certified and audited smart contracts for use in the ISBE network",
     "scripts": {
         "compile": "npx hardhat compile",

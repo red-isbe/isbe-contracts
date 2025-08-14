@@ -26,7 +26,7 @@ abstract contract BusinessLogicFactory is
         override
         onlyRole(_BUSINESS_LOGIC_DEPLOYER_ROLE)
         bytes32IsNotZero(_businessId)
-        emptyCode(_bytecode)
+        emptyBytes(_bytecode)
     {
         (address businessLogicAddress, uint256 version) = _deploy(
             _businessId,

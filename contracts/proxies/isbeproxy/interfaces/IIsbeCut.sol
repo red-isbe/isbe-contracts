@@ -20,7 +20,9 @@ interface IIsbeCut {
     event IsbeProxyConfigurationSet(
         address configumrationManagement,
         bytes32 configurationId,
-        uint256 version
+        uint256 version,
+        address[] initAddresses,
+        bytes[] initData
     );
 
     /**
@@ -33,6 +35,8 @@ interface IIsbeCut {
     function setIsbeProxyConfiguration(
         IConfigurationManagement _configurationManagement,
         bytes32 _configurationId,
-        uint256 _version
+        uint256 _version,
+        address[] calldata _init,
+        bytes[] calldata _data
     ) external;
 }

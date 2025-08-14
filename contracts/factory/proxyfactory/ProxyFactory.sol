@@ -33,8 +33,9 @@ abstract contract ProxyFactory is ProxyFactoryInternal, IProxyFactory {
         bytes32 _configurationId,
         uint256 _version,
         IAccessControl.Rbac[] calldata _rbacs,
-        bytes32 _initBusinessId,
-        bytes calldata _initData
+        bool _initPause,
+        bytes32[] calldata _initBusinessIds,
+        bytes[] calldata _initData
     )
         external
         override
@@ -46,7 +47,8 @@ abstract contract ProxyFactory is ProxyFactoryInternal, IProxyFactory {
             _configurationId,
             _version,
             _rbacs,
-            _initBusinessId,
+            _initPause,
+            _initBusinessIds,
             _initData
         );
         emit UseCaseDeployed(_configurationId, _version, _rbacs, proxyAddress);

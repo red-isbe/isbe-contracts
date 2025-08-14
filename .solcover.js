@@ -1,16 +1,27 @@
 module.exports = {
-    skipFiles: [
-        'testwrapper/assetevent/AssetEventTrackerTestWrapper.sol',
-        'testwrapper/factory/facet/CounterFacetInternal.sol',
-        'testwrapper/factory/facet/CounterFacetTestWrapper.sol',
-        'testwrapper/factory/facet/CounterV2FacetTestWrapper.sol',
-        'testwrapper/hashtimestamp/HashTimestampTestWrapper.sol',
-        'testwrapper/mockTimestamp/IMockTimestamp.sol',
-        'testwrapper/mockTimestamp/MockTimestamp.sol',
-        'testwrapper/mockTimestamp/MockTimestampFacet.sol',
-        'testwrapper/reentrancyguard/ReentrancyGuardTestWrapper.sol',
-        'testwrapper/tokens/erc20/ERC20TestWrapper.sol',
-        'testwrapper/tokens/erc20/ERC20TestWrapperTransparent.sol',
-        'testwrapper/tokens/erc20/ERC20TestWrapperUUPS.sol',
-    ],
+    skipFiles: ['testwrapper/'],
+    mocha: {
+        timeout: 120000,
+        parallel: false,
+    },
+    configureYulOptimizer: true,
+    measureStatementCoverage: true,
+    measureFunctionCoverage: true,
+    measureBranchCoverage: true,
+    measureLineCoverage: true,
+    istanbulReporter: ['html', 'lcov', 'text', 'json'],
+    providerOptions: {
+        mnemonic: 'test test test test test test test test test test test junk',
+        gasLimit: 0xfffffffffff,
+        gasPrice: 0x01,
+    },
+    networks: {
+        coverage: {
+            host: 'localhost',
+            network_id: '*',
+            port: 8555,
+            gas: 0xfffffffffff,
+            gasPrice: 0x01,
+        },
+    },
 }

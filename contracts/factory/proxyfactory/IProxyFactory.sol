@@ -74,15 +74,17 @@ interface IProxyFactory {
      * @param _configurationId The unique identifier for the configuration
      * @param _version The version number of the configuration (0 for latest)
      * @param _rbacs Array of role-based access control configurations
-     * @param _initBusinessId The business ID of the facet to use for init
+     * @param _initPause use case is initialized paused or not
+     * @param _initBusinessIds The business IDs of the facets to use for init
      * @param _initData The calldata for the initialisation function
      */
     function deployUseCase(
         bytes32 _configurationId,
         uint256 _version,
         IAccessControl.Rbac[] calldata _rbacs,
-        bytes32 _initBusinessId,
-        bytes calldata _initData
+        bool _initPause,
+        bytes32[] calldata _initBusinessIds,
+        bytes[] calldata _initData
     ) external;
 
     /**

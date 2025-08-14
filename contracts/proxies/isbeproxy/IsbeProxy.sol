@@ -3,7 +3,6 @@ pragma solidity ^0.8.28;
 
 import {IsbeProxyInternal} from './IsbeProxyInternal.sol';
 import {EIP2535} from '../eip2535/EIP2535.sol';
-import {IAccessControl} from '../../access/accessControl/IAccessControl.sol';
 import {IConfigurationManagement} from '../../factory/configurationmanagement/IConfigurationManagement.sol';
 
 /**
@@ -17,9 +16,8 @@ contract IsbeProxy is EIP2535, IsbeProxyInternal {
         IConfigurationManagement configurationManagement;
         bytes32 configurationId;
         uint256 version;
-        IAccessControl.Rbac[] rbacs;
-        address init;
-        bytes data;
+        address[] init;
+        bytes[] data;
     }
 
     constructor(
@@ -31,12 +29,12 @@ contract IsbeProxy is EIP2535, IsbeProxyInternal {
             _args.version
         )
     {
-        _initializeRbacs(_args.rbacs);
         _setIsbeProxyConfiguration(
             _args.configurationManagement,
             _args.configurationId,
-            _args.version
+            _args.version,
+            _args.init,
+            _args.data
         );
-        _initializeDiamondCut(_args.init, _args.data);
     }
 }
