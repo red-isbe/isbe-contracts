@@ -7,7 +7,7 @@ import {IERC721Burnable} from './IERC721Burnable.sol';
 /// @title ERC721Burnable
 /// @notice Implements burn mechanism for ERC721 tokens
 /// @dev Inherits from IERC721Burnable and ERC721InternalCommon
-contract ERC721Burnable is IERC721Burnable, ERC721InternalCommon {
+abstract contract ERC721Burnable is IERC721Burnable, ERC721InternalCommon {
     /**
      * @notice Burns a specific token owned by the caller.
      * @dev The caller must own the token or be an approved operator.
