@@ -12,7 +12,7 @@ pragma solidity ^0.8.28;
 interface IDidDocumentDetailed {
     /**
      * @notice Enumeration of supported elliptic curve cryptographic algorithms
-     * @param NONE No elliptic curve algorithm specified
+     * @param NONE No elliptic curve algorithm specified - invalid for operations
      * @param SECP_256_K1 The secp256k1 elliptic curve used in Bitcoin and Ethereum
      * @param SECP_256_R1 The secp256r1 elliptic curve used in NIST standards
      */
@@ -23,6 +23,7 @@ interface IDidDocumentDetailed {
     }
 
     /**
+     * @notice Structure representing a cryptographic verification method
      * @param publicKey The cryptographic public key material encoded as bytes
      * @param ellipticType The elliptic curve algorithm used for this verification method
      * @param revoked Whether this verification method has been permanently revoked
@@ -34,6 +35,7 @@ interface IDidDocumentDetailed {
     }
 
     /**
+     * @notice Structure representing a verification relationship with temporal validity
      * @param name The human-readable name identifying this verification relationship
      * @param vMethodId The unique identifier referencing the associated verification method
      * @param notBefore The timestamp before which this relationship is not valid
@@ -82,65 +84,90 @@ interface IDidDocumentDetailed {
     event BaseDocumentUpdated(string did, string baseDocument);
 
     /**
-     * @notice Thrown when an invalid or unsupported elliptic curve type is specified
+     * @notice Raised when an invalid or unsupported elliptic curve type is specified
+     * @dev This error ensures only supported cryptographic algorithms are used within
+     *      the DID registry to maintain security and compatibility standards
      */
     error InvalidEllipticCurve();
 
     /**
-     * @notice Thrown when the first public key does not match the configured network type
+     * @notice Raised when the first public key does not match the configured network type
+     * @dev This error ensures cryptographic consistency across the network by requiring
+     *      the initial verification method to use the network's configured algorithm
      * @param ellipticType The elliptic curve type that was provided but does not match
      */
     error FirstPublicKeyMustBeTheSameThanTheNetwork(EllipticType ellipticType);
 
     /**
-     * @notice Thrown when attempting to register a DID that already exists in the registry
+     * @notice Raised when attempting to register a DID that already exists in the registry
+     * @dev This error prevents duplicate DID registration and maintains registry integrity
      * @param did The decentralised identifier string that already exists
      */
     error DidAlreadyExists(string did);
 
     /**
-     * @notice Thrown when attempting to use a DID that not exists in the registry
-     * @param did The decentralised identifier string that not exists
+     * @notice Raised when attempting to use a DID that does not exist in the registry
+     * @dev This error ensures operations target valid DIDs and prevents unauthorised access
+     * @param did The decentralised identifier string that does not exist
      */
     error DidNotExists(string did);
 
     /**
-     * @notice Thrown when provided control bytes are malformed or invalid
+     * @notice Raised when provided control bytes are malformed or invalid
+     * @dev This error ensures proper formatting of cryptographic control parameters
+     *      used in verification and authentication operations
      */
     error InvalidControlBytes();
 
     /**
-     * @notice Thrown when public key length does not match expected format requirements
+     * @notice Raised when public key length does not match expected format requirements
+     * @dev This error ensures cryptographic keys conform to expected byte lengths for
+     *      the specified elliptic curve algorithm to prevent malformed key usage
      */
     error InvalidPubKeyLength();
 
     /**
-     * @notice Thrown when an unsupported verification method type is specified
-     * @param method The verification method string that is not recognised
+     * @notice Raised when attempting to operate with an invalid verification method
+     * @dev This error prevents operations on malformed or non-existent verification
+     *      methods to maintain document integrity and security
+     * @param method The verification method identifier that is invalid
      */
     error InvalidVerificationMethod(string method);
 
     /**
-     * @notice Initialises the DID registry with the specified elliptic curve configuration
-     * @dev Sets the cryptographic parameters for the entire registry. Must be called once
-     *      before any DID operations can be performed. Only valid elliptic curve types
-     *      are accepted, excluding NONE which represents an invalid state
-     * @param _ellipticType The elliptic curve algorithm to configure for this registry
+     * @notice Raised when attempting to create a verification relationship that already exists
+     * @dev This error prevents duplicate relationships between DIDs and verification methods
+     *      to maintain data consistency and prevent conflicting permissions
+     * @param did The decentralised identifier containing the existing relationship
+     * @param name The verification relationship name that already exists
+     * @param vMethodId The verification method identifier that already has this relationship
      */
-    function initializeDiDRegistry(EllipticType _ellipticType) external;
+    error VerificationRelationshipExists(
+        string did,
+        string name,
+        string vMethodId
+    );
 
     /**
-     * @notice Creates a new DID document with initial verification method
-     * @dev Requires that the DID does not already exist in the registry. The initial
-     *      verification method must use a supported elliptic curve algorithm
-     * @param did The unique decentralised identifier string to register
-     * @param baseDocument The base JSON-LD document content conforming to DID specification
+     * @notice Initialises the DID registry with the specified elliptic curve algorithm
+     * @dev Sets the network-wide cryptographic standard and prepares the registry for
+     *      DID document operations. This function can only be called once per deployment
+     * @param ellipticType The elliptic curve algorithm to use for the entire network
+     */
+    function initializeDiDRegistry(EllipticType ellipticType) external;
+
+    /**
+     * @notice Inserts a new DID document with initial verification method into the registry
+     * @dev Creates a complete DID document with cryptographic verification capabilities
+     *      and temporal validity constraints for secure identity management
+     * @param did The decentralised identifier string to register
+     * @param baseDocument The base JSON-LD document content containing DID metadata
      * @param vMethodId The unique identifier for the initial verification method
-     * @param publicKey The cryptographic public key material encoded as bytes
+     * @param publicKey The public key bytes for cryptographic verification
      * @param ellipticType The elliptic curve algorithm for the verification method
-     * @param notBefore The timestamp before which the verification method is not valid
-     * @param notAfter The timestamp after which the verification method expires
-     * @return success Whether the DID document insertion completed successfully
+     * @param notBefore Unix timestamp when the verification method becomes valid
+     * @param notAfter Unix timestamp when the verification method expires
+     * @return success Boolean indicating whether the insertion completed successfully
      */
     function insertDidDocument(
         string memory did,
@@ -153,12 +180,12 @@ interface IDidDocumentDetailed {
     ) external returns (bool success);
 
     /**
-     * @notice Updates the base document content for an existing DID
-     * @dev Only authorised controllers can modify the base document. The DID must exist
-     *      and be in an active state for updates to be permitted
-     * @param did The decentralised identifier whose base document will be updated
-     * @param baseDocument The new base JSON-LD document content
-     * @return success Whether the base document update completed successfully
+     * @notice Updates the base document content of an existing DID
+     * @dev Modifies the JSON-LD document content whilst preserving verification methods
+     *      and relationships. Requires appropriate authorisation to prevent unauthorised changes
+     * @param did The decentralised identifier whose base document should be updated
+     * @param baseDocument The new base JSON-LD document content to set
+     * @return success Boolean indicating whether the update completed successfully
      */
     function updateBaseDocument(
         string memory did,
@@ -166,15 +193,16 @@ interface IDidDocumentDetailed {
     ) external returns (bool success);
 
     /**
-     * @notice Retrieves a paginated list of all registered DIDs in the system
-     * @dev Returns DIDs in registration order with pagination support for large datasets
-     * @param page The zero-based page number for pagination
-     * @param pageSize The maximum number of DIDs to return per page
-     * @return items Array of decentralised identifier strings for the requested page
-     * @return total The total number of DIDs registered in the system
-     * @return howMany The actual number of DIDs returned in this response
-     * @return prev The previous page number, or current page if no previous page exists
-     * @return next The next page number, or current page if no next page exists
+     * @notice Retrieves a paginated list of registered decentralised identifiers
+     * @dev Provides efficient enumeration of all DIDs in the registry with pagination
+     *      support for large datasets and optimised gas usage
+     * @param page The page number to retrieve (starting from 0)
+     * @param pageSize The maximum number of items to return per page
+     * @return items Array of DID strings for the requested page
+     * @return total Total number of DIDs registered in the entire registry
+     * @return howMany Actual number of DIDs returned in this response
+     * @return prev Previous page number (0 if on first page)
+     * @return next Next page number (0 if on last page)
      */
     function getDids(
         uint256 page,
@@ -191,15 +219,15 @@ interface IDidDocumentDetailed {
         );
 
     /**
-     * @notice Retrieves complete DID document details for a specified identifier
-     * @dev Returns all components of the DID document including controllers, verification
-     *      methods, and verification relationships in their current state
-     * @param did The decentralised identifier to retrieve document details for
+     * @notice Retrieves the complete current DID document with all verification methods
+     * @dev Returns the full document structure including base content, controllers,
+     *      verification methods, and relationships as they exist at the current timestamp
+     * @param did The decentralised identifier to retrieve
      * @return baseDocument The base JSON-LD document content
-     * @return controllers Array of controller identifier strings
-     * @return vMethodIds Array of verification method identifier strings
-     * @return vMethods Array of verification method structures with cryptographic details
-     * @return vRelationships Array of verification relationship structures
+     * @return controllers Array of DID strings authorised to control this document
+     * @return vMethodIds Array of verification method identifiers
+     * @return vMethods Array of verification method structures with keys and algorithms
+     * @return vRelationships Array of verification relationships with temporal validity
      */
     function getDidDocument(
         string memory did
@@ -215,16 +243,16 @@ interface IDidDocumentDetailed {
         );
 
     /**
-     * @notice Retrieves DID document state as it existed at a specific timestamp
-     * @dev Provides historical view of DID document configuration, useful for audit
-     *      trails and temporal verification of identity claims
-     * @param did The decentralised identifier to retrieve historical state for
-     * @param timestamp The specific timestamp to query document state at
+     * @notice Retrieves the DID document as it existed at a specific historical timestamp
+     * @dev Returns the document structure with temporal filtering applied to show only
+     *      verification methods and relationships that were valid at the specified time
+     * @param did The decentralised identifier to retrieve
+     * @param timestamp Unix timestamp for historical document state retrieval
      * @return baseDocument The base JSON-LD document content at the specified time
-     * @return controllers Array of controller identifiers active at the timestamp
-     * @return vMethodIds Array of verification method identifiers active at the timestamp
-     * @return vMethods Array of verification method structures valid at the timestamp
-     * @return vRelationships Array of verification relationships active at the timestamp
+     * @return controllers Array of DID strings authorised to control this document
+     * @return vMethodIds Array of verification method identifiers valid at timestamp
+     * @return vMethods Array of verification methods that were active at timestamp
+     * @return vRelationships Array of relationships that were valid at timestamp
      */
     function getDidDocumentByTimestamp(
         string memory did,
