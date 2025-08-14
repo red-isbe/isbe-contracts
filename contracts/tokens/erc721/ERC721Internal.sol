@@ -48,9 +48,8 @@ abstract contract ERC721Internal is Common {
         address from,
         address to,
         uint256 tokenId
-    ) internal addressIsNotZero(from) addressIsNotZero(to) {
+    ) internal addressIsNotZero(to) {
         ERC721Storage storage $ = _erc721Storage();
-        _checkIsApprovedOrOwner(_msgSender(), from, tokenId);
 
         _beforeTokenTransfer(from, to, tokenId);
 
@@ -151,6 +150,7 @@ abstract contract ERC721Internal is Common {
         uint256 tokenId,
         bytes memory data
     ) internal {
+        _checkIsApprovedOrOwner(_msgSender(), from, tokenId);
         _transfer(from, to, tokenId);
         // If recipient is a contract, check that it implements IERC721Receiver
         _checkOnERC721Received(from, to, tokenId, data);
@@ -205,6 +205,15 @@ abstract contract ERC721Internal is Common {
                 _isApprovedForAll(owner, spender),
             IERC721Isbe.CallerNotOwnerNorApproved()
         );
+    }
+
+    /**
+     * @dev Internal function to verify that a given address is the owner of a specific ERC721 token.
+     * @param owner The address to check for ownership.
+     * @param tokenId The ID of the token to verify ownership of.
+     */
+    function _checkTokenOwner(address owner, uint256 tokenId) internal view {
+        require(_ownerOf(tokenId) == owner, IERC721Isbe.NotTokenOwner());
     }
 
     /**

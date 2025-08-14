@@ -65,6 +65,7 @@ abstract contract ERC721 is IERC721Isbe, ERC721InternalCommon {
         address to,
         uint256 tokenId
     ) external override {
+        _checkIsApprovedOrOwner(_msgSender(), from, tokenId);
         _transfer(from, to, tokenId);
     }
 
