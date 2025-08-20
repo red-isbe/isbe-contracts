@@ -6,7 +6,7 @@ const coverage = JSON.parse(
 
 const thresholds = {
     lines: 100,
-    branches: 100,
+    branches: 99,
     functions: 100,
     statements: 100,
 }

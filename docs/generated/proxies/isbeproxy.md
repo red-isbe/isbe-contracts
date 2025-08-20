@@ -11,9 +11,8 @@ struct IsbeProxyArgs {
   contract IConfigurationManagement configurationManagement;
   bytes32 configurationId;
   uint256 version;
-  struct IAccessControl.Rbac[] rbacs;
-  address init;
-  bytes data;
+  address[] init;
+  bytes[] data;
 }
 ```
 
@@ -66,7 +65,7 @@ _Modifier that checks configuration validity via management contract_
 ### \_setIsbeProxyConfiguration
 
 ```solidity
-function _setIsbeProxyConfiguration(contract IConfigurationManagement _configurationManager, bytes32 _configurationId, uint256 _version) internal
+function _setIsbeProxyConfiguration(contract IConfigurationManagement _configurationManager, bytes32 _configurationId, uint256 _version, address[] _initAddresses, bytes[] _initData) internal
 ```
 
 ### \_initializeDiamondCut

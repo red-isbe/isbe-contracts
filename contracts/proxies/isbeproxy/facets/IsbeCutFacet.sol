@@ -18,7 +18,9 @@ contract IsbeCutFacet is IIsbeCut, IsbeProxyInternal, IEIP2535Introspection {
     function setIsbeProxyConfiguration(
         IConfigurationManagement _configurationManagement,
         bytes32 _configurationId,
-        uint256 _version
+        uint256 _version,
+        address[] calldata _init,
+        bytes[] calldata _data
     )
         external
         override
@@ -33,12 +35,17 @@ contract IsbeCutFacet is IIsbeCut, IsbeProxyInternal, IEIP2535Introspection {
         _setIsbeProxyConfiguration(
             _configurationManagement,
             _configurationId,
-            _version
+            _version,
+            _init,
+            _data
         );
+
         emit IsbeProxyConfigurationSet(
             address(_configurationManagement),
             _configurationId,
-            _version
+            _version,
+            _init,
+            _data
         );
     }
 

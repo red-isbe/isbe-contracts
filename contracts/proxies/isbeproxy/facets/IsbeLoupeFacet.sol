@@ -70,8 +70,8 @@ contract IsbeLoupeFacet is
     ) external view virtual override returns (bool) {
         return
             _isERC165ForbiddenInterfaces(_interfaceId)
-                ? _supportsInterface(_interfaceId)
-                : false;
+                ? false
+                : _supportsInterface(_interfaceId);
     }
 
     function interfacesIntrospection()

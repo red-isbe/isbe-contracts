@@ -37,20 +37,37 @@ abstract contract ProxyFactoryInternal is ConfigurationManagementInternal {
         bytes32 _configurationId,
         uint256 _version,
         IAccessControl.Rbac[] memory _rbacs,
-        bytes32 _initBusinessId,
-        bytes memory _initData
+        bool _initPause,
+        bytes32[] memory _initBusinessIds,
+        bytes[] memory _initData
     ) internal returns (address proxyAddress_) {
+        uint256 length = _initBusinessIds.length;
+        address[] memory _initBusinessAddresses = new address[](length);
+
+        for (uint256 i; i < length; ) {
+            _initBusinessAddresses[i] = _getFacetAddress(
+                _configurationId,
+                _version,
+                _initBusinessIds[i]
+            );
+            unchecked {
+                ++i;
+            }
+        }
+
         IsbeProxy.IsbeProxyArgs memory args = IsbeProxy.IsbeProxyArgs({
             configurationManagement: IConfigurationManagement(address(this)),
             configurationId: _configurationId,
             version: _version,
-            rbacs: _adaptRbacWithIsbeRoles(_rbacs),
-            init: _getFacetAddress(_configurationId, _version, _initBusinessId),
+            init: _initBusinessAddresses,
             data: _initData
         });
         IsbeProxy proxy = new IsbeProxy(args);
         proxyAddress_ = address(proxy);
-        IPause(proxyAddress_).initializePause(false);
+        IAccessControl(proxyAddress_).initializeAccessControl(
+            _adaptRbacWithIsbeRoles(_rbacs)
+        );
+        IPause(proxyAddress_).initializePause(_initPause);
         _storeDeployedDiamond(_configurationId, _version, proxyAddress_);
     }
 
@@ -123,17 +140,17 @@ abstract contract ProxyFactoryInternal is ConfigurationManagementInternal {
     ) private pure {
         uint256 length = _rbacs.length;
         bytes32 role;
-        for (uint256 index; index < length; ) {
-            role = _rbacs[index].role;
+        for (; length > 0; ) {
+            unchecked {
+                --length;
+            }
+            role = _rbacs[length].role;
             require(
                 role != _DEFAULT_ADMIN_ROLE &&
                     role != _ISBE_ROLE &&
                     role != _CONFIGURATION_MANAGER_ROLE,
-                IProxyFactory.ForbiddenRole(_rbacs[index].role)
+                IProxyFactory.ForbiddenRole(role)
             );
-            unchecked {
-                ++index;
-            }
         }
     }
 

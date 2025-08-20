@@ -50,4 +50,26 @@ bytes32 constant _CONFIGURATION_MANAGEMENT_STORAGE_POSITION = 0x4beef12830ad37da
 // keccak256('isbe.contracts.proxy.factory.storage');
 bytes32 constant _PROXY_FACTORY_STORAGE_POSITION = 0xaa8d33df53b16b2997ff500eedf8d4d1e966355596b60403562e732c9efb474a;
 
+//ERC721 storage position
+// keccak256('isbe.contracts.erc721.storage');
+bytes32 constant _ERC721_STORAGE_POSITION = 0x831e41d39c52997482833cb014c17663793796e3e15559f599f945b05d1d8c17;
+
+// keccak256('isbe.contracts.erc721.capped.storage');
+bytes32 constant _ERC721_CAPPED_STORAGE_POSITION = 0x68abe8f291911e473a79ad8b9632ea2f4e12bec61ec5fc0b39019d84eac1786a;
+
+// keccak256('isbe.contracts.erc721.snapshot.storage');
+bytes32 constant _ERC721_SNAPSHOT_STORAGE_POSITION = 0xb8b8eb4b7ec15c12c11fa90a47c5ca87b2bf70f08ce0b50ddc4308120d336886;
+
+// keccaz('isbe.contracts.erc721.enumerable.storage');
+bytes32 constant _ERC721_ENUMERABLE_STORAGE_POSITION = 0x3969fad27725f1ed90ce289e31008b0b28af16d6ab387c1b3253de404b8dc79d;
+
+// keccak256('isbe.contracts.did.document.detailed.storage');
+bytes32 constant _DID_DOCUMENT_DETAILED_STORAGE_POSITION = 0x80e94812a2790226ccf997ec25d285a8dcc6c5b510b98e9845f9905541840650;
+
+// keccak256('isbe.contracts.did.controllers.storage');
+bytes32 constant _DID_CONTROLLERS_STORAGE_POSITION = 0xf63f4b221a52b770150d672310294c82430977254746fa6de226a1610090ce5c;
+
+// keccak256('isbe.contracts.did.vrelationships.storage');
+bytes32 constant _DID_VRELATIONSHIPS_STORAGE_POSITION = 0x069080572c15b1fdb02941c6065fda2799e12c178afaf7e09aba823ce980a70f;
+
 // solhint-enable max-line-length
