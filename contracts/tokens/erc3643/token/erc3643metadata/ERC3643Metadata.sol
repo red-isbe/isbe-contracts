@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {ERC20InternalCommon} from '../../../erc20/extensions/ERC20InternalCommon.sol';
 import {_ERC3643_METADATA_RESOLVER_KEY} from '../../../../constants/resolverKeys.sol';
+import {ERC3643MetadataInternal} from './ERC3643MetadataInternal.sol';
 import {IERC3643Metadata} from './IERC3643Metadata.sol';
 import {_TOKEN_OWNER_ROLE} from '../../../../constants/roles.sol';
 
@@ -12,7 +12,7 @@ import {_TOKEN_OWNER_ROLE} from '../../../../constants/roles.sol';
  * @dev Provides public methods to update and retrieve token metadata such as name, symbol,
  *      onchain identity, and version. Applies access control, validation, and emits events.
  */
-abstract contract ERC3643Metadata is IERC3643Metadata, ERC20InternalCommon {
+abstract contract ERC3643Metadata is IERC3643Metadata, ERC3643MetadataInternal {
     /**
      * @dev Disables further initializations for this facet using its resolver key.
      */

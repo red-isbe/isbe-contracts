@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {ERC20Internal} from '../../../erc20/ERC20Internal.sol';
+import {ERC20InternalCommon} from '../../../erc20/extensions/ERC20InternalCommon.sol';
 import {_ERC3643_METADATA_STORAGE_POSITION} from '../../../../constants/storagePositions.sol';
 
 /**
@@ -11,7 +11,7 @@ import {_ERC3643_METADATA_STORAGE_POSITION} from '../../../../constants/storageP
  *      This contract does not emit events or apply access control.
  *      It is intended to be used by external contracts that handle authorization and event emission.
  */
-abstract contract ERC3643MetadataInternal is ERC20Internal {
+abstract contract ERC3643MetadataInternal is ERC20InternalCommon {
     /// @dev Storage structure for ERC-3643 metadata.
     struct ERC3643MetadataStorage {
         address onchainid;
