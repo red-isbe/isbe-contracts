@@ -463,7 +463,58 @@ describe('ERC3643 Metadata Facet', function () {
             })
         })
 
+        describe('Paused State Validation', () => {
+            it('GIVEN ERC3643 Metadata WHEN setName called while paused THEN it should revert with IsPaused', async () => {
+                const result = await deploy(true)
 
+                // Grant PAUSER_ROLE to the owner to allow pausing
+                await result.accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+
+                // Pause the contract
+                await result.pause.pause()
+
+                await expect(
+                    erc3643MetadataFacet.setName('NewName')
+                ).to.be.revertedWithCustomError(
+                    erc3643MetadataFacet,
+                    'IsPaused'
+                )
+            })
+
+            it('GIVEN ERC3643 Metadata WHEN setSymbol called while paused THEN it should revert with IsPaused', async () => {
+                const result = await deploy(true)
+
+                // Grant PAUSER_ROLE to the owner to allow pausing
+                await result.accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+
+                // Pause the contract
+                await result.pause.pause()
+
+                await expect(
+                    erc3643MetadataFacet.setSymbol('NEW')
+                ).to.be.revertedWithCustomError(
+                    erc3643MetadataFacet,
+                    'IsPaused'
+                )
+            })
+
+            it('GIVEN ERC3643 Metadata WHEN setOnchainID called while paused THEN it should revert with IsPaused', async () => {
+                const result = await deploy(true)
+
+                // Grant PAUSER_ROLE to the owner to allow pausing
+                await result.accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+
+                // Pause the contract
+                await result.pause.pause()
+
+                await expect(
+                    erc3643MetadataFacet.setOnchainID(otherAccountAddress)
+                ).to.be.revertedWithCustomError(
+                    erc3643MetadataFacet,
+                    'IsPaused'
+                )
+            })
+        })
     })
 
     describe('Events', () => {
