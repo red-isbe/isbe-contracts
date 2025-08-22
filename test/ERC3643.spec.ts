@@ -1,16 +1,17 @@
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
 import { Signer } from 'ethers'
-import { ERC3643MetadataFacet, AccessControlFacet } from '../typechain-types'
-import { deployGovernance, CONFIGURATION_ID_ERC3643, CONFIGURATION_ID_ERC20 } from './initialization'
+import {
+    ERC3643MetadataFacet,
+    AccessControlFacet,
+    ERC20Facet,
+} from '../typechain-types'
+import { deployGovernance, CONFIGURATION_ID_ERC3643 } from './initialization'
 import {
     ERC3643_METADATA_RESOLVER_KEY,
     ERC20_RESOLVER_KEY,
     TOKEN_OWNER_ROLE,
     PAUSER_ROLE,
-    ISBE_ROLE,
-    ISBE_PAUSER_ROLE,
-    DEFAULT_ADMIN_ROLE,
 } from './constants'
 
 describe('ERC3643 Metadata Facet', function () {
@@ -18,9 +19,7 @@ describe('ERC3643 Metadata Facet', function () {
 
     let erc3643MetadataFacet: ERC3643MetadataFacet
     let accessControl: AccessControlFacet
-    let erc20Facet: any // For accessing name() and symbol() methods
-    let pauseFacet: any // For pause functionality
-
+    let erc20Facet: ERC20Facet
     let owner: Signer
     let ownerAddress: string
     let otherAccount: Signer
@@ -46,17 +45,20 @@ describe('ERC3643 Metadata Facet', function () {
                 'initializeErc20',
                 [
                     'Test ERC3643 Token', // name
-                    'T3643',              // symbol
-                    18                    // decimals
+                    'T3643', // symbol
+                    18, // decimals
                 ]
             )
 
             // 2. Prepare initialization data for ERC3643MetadataFacet
-            const ERC3643MetadataFactory = await ethers.getContractFactory('ERC3643MetadataFacet')
-            const erc3643InitData = ERC3643MetadataFactory.interface.encodeFunctionData(
-                'initializeERC3643Metadata',
-                [onchainIdAddress, version]
+            const ERC3643MetadataFactory = await ethers.getContractFactory(
+                'ERC3643MetadataFacet'
             )
+            const erc3643InitData =
+                ERC3643MetadataFactory.interface.encodeFunctionData(
+                    'initializeERC3643Metadata',
+                    [onchainIdAddress, version]
+                )
 
             // 3. Add both initializations - ORDER MATTERS (ERC20 first)
             businessIds.push(ERC20_RESOLVER_KEY)
@@ -82,19 +84,25 @@ describe('ERC3643 Metadata Facet', function () {
         )
 
         // Extract contracts from result
-        erc3643MetadataFacet = result.erc3643Metadata || result.erc3643MetadataFacet
+        erc3643MetadataFacet =
+            result.erc3643Metadata || result.erc3643MetadataFacet
         accessControl = result.accessControl || result.accessControlFacet
-        pauseFacet = result.pauseFacet
-
         // Attach ERC20 facet to the same proxy for verification tests
         if (initialize && result.useCaseProxy) {
-            const ERC20Factory = await ethers.getContractFactory('ERC20Facet')
-            erc20Facet = ERC20Factory.attach(result.useCaseProxy)
+            if (result.useCaseProxy) {
+                const ERC20Factory =
+                    await ethers.getContractFactory('ERC20Facet')
+                erc20Facet = ERC20Factory.attach(
+                    result.useCaseProxy
+                ) as ERC20Facet
+            }
         }
 
         // If ERC3643MetadataFacet is not available in result, attach it manually
         if (!erc3643MetadataFacet && result.useCaseProxy) {
-            const ERC3643MetadataFactory = await ethers.getContractFactory('ERC3643MetadataFacet')
+            const ERC3643MetadataFactory = await ethers.getContractFactory(
+                'ERC3643MetadataFacet'
+            )
             erc3643MetadataFacet = ERC3643MetadataFactory.attach(
                 result.useCaseProxy
             ) as ERC3643MetadataFacet
@@ -119,24 +127,31 @@ describe('ERC3643 Metadata Facet', function () {
         it('GIVEN ERC3643 Metadata Facet WHEN initialized THEN it should have correct initial values', async () => {
             // First deploy without initialization to get the contracts
             const result = await deploy(false)
-            
+
             // Initialize ERC20 first
-            await result.erc20.initializeErc20('Test ERC3643 Token', 'T3643', 18)
-            
+            await result.erc20.initializeErc20(
+                'Test ERC3643 Token',
+                'T3643',
+                18
+            )
+
             // Grant TOKEN_OWNER_ROLE for ERC3643 operations
             await result.accessControl.grantRole(TOKEN_OWNER_ROLE, ownerAddress)
-            
+
             // Initialize ERC3643 and capture the event
             await expect(
-                result.erc3643Metadata.initializeERC3643Metadata(onchainIdAddress, version)
+                result.erc3643Metadata.initializeERC3643Metadata(
+                    onchainIdAddress,
+                    version
+                )
             )
                 .to.emit(result.erc3643Metadata, 'UpdatedTokenInformation')
                 .withArgs(
                     'Test ERC3643 Token', // name
-                    'T3643',              // symbol
-                    18,                   // decimals
-                    version,              // version
-                    onchainIdAddress      // onchainID
+                    'T3643', // symbol
+                    18, // decimals
+                    version, // version
+                    onchainIdAddress // onchainID
                 )
 
             // Verify the onchainID is not zero address
@@ -173,7 +188,6 @@ describe('ERC3643 Metadata Facet', function () {
                 'ContractIsAlreadyInitialized'
             )
         })
-     
     })
 
     describe('ERC3643 Metadata Functionality', () => {
@@ -198,16 +212,14 @@ describe('ERC3643 Metadata Facet', function () {
             const currentDecimals = await erc20Facet.decimals()
             const currentVersion = await erc3643MetadataFacet.version()
 
-            await expect(
-                erc3643MetadataFacet.setOnchainID(otherAccountAddress)
-            )
+            await expect(erc3643MetadataFacet.setOnchainID(otherAccountAddress))
                 .to.emit(erc3643MetadataFacet, 'UpdatedTokenInformation')
                 .withArgs(
-                    currentName,           // name (unchanged)
-                    currentSymbol,         // symbol (unchanged)
-                    currentDecimals,       // decimals (unchanged)
-                    currentVersion,        // version (unchanged)
-                    otherAccountAddress    // onchainID (updated value)
+                    currentName, // name (unchanged)
+                    currentSymbol, // symbol (unchanged)
+                    currentDecimals, // decimals (unchanged)
+                    currentVersion, // version (unchanged)
+                    otherAccountAddress // onchainID (updated value)
                 )
 
             expect(await erc3643MetadataFacet.onchainID()).to.equal(
@@ -227,11 +239,11 @@ describe('ERC3643 Metadata Facet', function () {
             await expect(erc3643MetadataFacet.setName(newName))
                 .to.emit(erc3643MetadataFacet, 'UpdatedTokenInformation')
                 .withArgs(
-                    newName,             // name (updated value)
-                    currentSymbol,       // symbol (unchanged)
-                    currentDecimals,     // decimals (unchanged)
-                    currentVersion,      // version (unchanged)
-                    currentOnchainID     // onchainID (unchanged)
+                    newName, // name (updated value)
+                    currentSymbol, // symbol (unchanged)
+                    currentDecimals, // decimals (unchanged)
+                    currentVersion, // version (unchanged)
+                    currentOnchainID // onchainID (unchanged)
                 )
 
             // Verify the name was actually updated using ERC20 facet
@@ -251,11 +263,11 @@ describe('ERC3643 Metadata Facet', function () {
             await expect(erc3643MetadataFacet.setSymbol(newSymbol))
                 .to.emit(erc3643MetadataFacet, 'UpdatedTokenInformation')
                 .withArgs(
-                    currentName,         // name (unchanged)
-                    newSymbol,           // symbol (updated value)
-                    currentDecimals,     // decimals (unchanged)
-                    currentVersion,      // version (unchanged)
-                    currentOnchainID     // onchainID (unchanged)
+                    currentName, // name (unchanged)
+                    newSymbol, // symbol (updated value)
+                    currentDecimals, // decimals (unchanged)
+                    currentVersion, // version (unchanged)
+                    currentOnchainID // onchainID (unchanged)
                 )
 
             // Verify the symbol was actually updated using ERC20 facet
@@ -278,7 +290,7 @@ describe('ERC3643 Metadata Facet', function () {
         it('GIVEN an initialized ERC3643 Metadata Facet WHEN checking implemented interfaces THEN it should return the IERC3643Metadata interface', async () => {
             // IERC3643Metadata interface ID (calculated by Solidity compiler)
             const IERC3643_METADATA_INTERFACE_ID = '0x10a35cfa'
-            
+
             const interfaces =
                 await erc3643MetadataFacet.interfacesIntrospection()
 
@@ -310,15 +322,26 @@ describe('ERC3643 Metadata Facet', function () {
 
             // Get expected selectors from the contract interface
             const expectedSelectors = [
-                erc3643MetadataFacet.interface.getFunction('initializeERC3643Metadata').selector,
+                erc3643MetadataFacet.interface.getFunction(
+                    'initializeERC3643Metadata'
+                ).selector,
                 erc3643MetadataFacet.interface.getFunction('setName').selector,
-                erc3643MetadataFacet.interface.getFunction('setSymbol').selector,
-                erc3643MetadataFacet.interface.getFunction('setOnchainID').selector,
-                erc3643MetadataFacet.interface.getFunction('onchainID').selector,
+                erc3643MetadataFacet.interface.getFunction('setSymbol')
+                    .selector,
+                erc3643MetadataFacet.interface.getFunction('setOnchainID')
+                    .selector,
+                erc3643MetadataFacet.interface.getFunction('onchainID')
+                    .selector,
                 erc3643MetadataFacet.interface.getFunction('version').selector,
-                erc3643MetadataFacet.interface.getFunction('businessIdIntrospection').selector,
-                erc3643MetadataFacet.interface.getFunction('interfacesIntrospection').selector,
-                erc3643MetadataFacet.interface.getFunction('selectorsIntrospection').selector,
+                erc3643MetadataFacet.interface.getFunction(
+                    'businessIdIntrospection'
+                ).selector,
+                erc3643MetadataFacet.interface.getFunction(
+                    'interfacesIntrospection'
+                ).selector,
+                erc3643MetadataFacet.interface.getFunction(
+                    'selectorsIntrospection'
+                ).selector,
             ]
 
             // Verify all expected selectors are present
@@ -366,9 +389,7 @@ describe('ERC3643 Metadata Facet', function () {
 
         it('GIVEN ERC3643 Metadata WHEN non-owner tries to update symbol THEN it should revert', async () => {
             await expect(
-                erc3643MetadataFacet
-                    .connect(otherAccount)
-                    .setSymbol('UNAUTH')
+                erc3643MetadataFacet.connect(otherAccount).setSymbol('UNAUTH')
             )
                 .to.be.revertedWithCustomError(
                     erc3643MetadataFacet,
@@ -391,7 +412,9 @@ describe('ERC3643 Metadata Facet', function () {
             // Verify all values were actually updated
             expect(await erc20Facet.name()).to.equal(newName)
             expect(await erc20Facet.symbol()).to.equal(newSymbol)
-            expect(await erc3643MetadataFacet.onchainID()).to.equal(otherAccountAddress)
+            expect(await erc3643MetadataFacet.onchainID()).to.equal(
+                otherAccountAddress
+            )
         })
     })
 
@@ -404,27 +427,39 @@ describe('ERC3643 Metadata Facet', function () {
             })
 
             it('GIVEN ERC3643 Metadata WHEN setName called with empty string THEN it should revert with EmptyString', async () => {
-                const result = await deploy(true)
+                await deploy(true)
 
                 await expect(
                     erc3643MetadataFacet.setName('')
-                ).to.be.revertedWithCustomError(erc3643MetadataFacet, 'EmptyString')
+                ).to.be.revertedWithCustomError(
+                    erc3643MetadataFacet,
+                    'EmptyString'
+                )
             })
 
             it('GIVEN ERC3643 Metadata WHEN setSymbol called with empty string THEN it should revert with EmptyString', async () => {
-                const result = await deploy(true)
+                await deploy(true)
 
                 await expect(
                     erc3643MetadataFacet.setSymbol('')
-                ).to.be.revertedWithCustomError(erc3643MetadataFacet, 'EmptyString')
+                ).to.be.revertedWithCustomError(
+                    erc3643MetadataFacet,
+                    'EmptyString'
+                )
             })
 
             it('GIVEN ERC3643 Metadata WHEN initializeERC3643Metadata called with empty version THEN it should revert with EmptyString', async () => {
-                const result = await deploy(false)
+                await deploy(false)
 
                 await expect(
-                    erc3643MetadataFacet.initializeERC3643Metadata(onchainIdAddress, '')
-                ).to.be.revertedWithCustomError(erc3643MetadataFacet, 'EmptyString')
+                    erc3643MetadataFacet.initializeERC3643Metadata(
+                        onchainIdAddress,
+                        ''
+                    )
+                ).to.be.revertedWithCustomError(
+                    erc3643MetadataFacet,
+                    'EmptyString'
+                )
             })
         })
 
@@ -434,14 +469,19 @@ describe('ERC3643 Metadata Facet', function () {
             })
 
             it('GIVEN ERC3643 Metadata WHEN initialized with zero onchainID THEN it should succeed', async () => {
-                const result = await deploy(false)
+                await deploy(false)
 
                 // Zero address should be allowed for onchainID as per contract specification
                 await expect(
-                    erc3643MetadataFacet.initializeERC3643Metadata(ethers.ZeroAddress, version)
+                    erc3643MetadataFacet.initializeERC3643Metadata(
+                        ethers.ZeroAddress,
+                        version
+                    )
                 ).to.not.be.reverted
 
-                expect(await erc3643MetadataFacet.onchainID()).to.equal(ethers.ZeroAddress)
+                expect(await erc3643MetadataFacet.onchainID()).to.equal(
+                    ethers.ZeroAddress
+                )
             })
 
             it('GIVEN ERC3643 Metadata WHEN setOnchainID called with zero address THEN it should succeed', async () => {
@@ -450,16 +490,19 @@ describe('ERC3643 Metadata Facet', function () {
                 // Zero address should be allowed for onchainID reset
                 await expect(
                     erc3643MetadataFacet.setOnchainID(ethers.ZeroAddress)
-                ).to.emit(erc3643MetadataFacet, 'UpdatedTokenInformation')
-                .withArgs(
-                    'Test ERC3643 Token',
-                    'T3643',
-                    18,
-                    version,
+                )
+                    .to.emit(erc3643MetadataFacet, 'UpdatedTokenInformation')
+                    .withArgs(
+                        'Test ERC3643 Token',
+                        'T3643',
+                        18,
+                        version,
+                        ethers.ZeroAddress
+                    )
+
+                expect(await erc3643MetadataFacet.onchainID()).to.equal(
                     ethers.ZeroAddress
                 )
-
-                expect(await erc3643MetadataFacet.onchainID()).to.equal(ethers.ZeroAddress)
             })
         })
 
@@ -529,16 +572,14 @@ describe('ERC3643 Metadata Facet', function () {
             const currentDecimals = await erc20Facet.decimals()
             const currentVersion = await erc3643MetadataFacet.version()
 
-            await expect(
-                erc3643MetadataFacet.setOnchainID(otherAccountAddress)
-            )
+            await expect(erc3643MetadataFacet.setOnchainID(otherAccountAddress))
                 .to.emit(erc3643MetadataFacet, 'UpdatedTokenInformation')
                 .withArgs(
-                    currentName,           // name (unchanged)
-                    currentSymbol,         // symbol (unchanged)
-                    currentDecimals,       // decimals (unchanged)
-                    currentVersion,        // version (unchanged)
-                    otherAccountAddress    // onchainID (updated value)
+                    currentName, // name (unchanged)
+                    currentSymbol, // symbol (unchanged)
+                    currentDecimals, // decimals (unchanged)
+                    currentVersion, // version (unchanged)
+                    otherAccountAddress // onchainID (updated value)
                 )
         })
 
@@ -554,11 +595,11 @@ describe('ERC3643 Metadata Facet', function () {
             await expect(erc3643MetadataFacet.setName(newName))
                 .to.emit(erc3643MetadataFacet, 'UpdatedTokenInformation')
                 .withArgs(
-                    newName,             // name (updated value)
-                    currentSymbol,       // symbol (unchanged)
-                    currentDecimals,     // decimals (unchanged)
-                    currentVersion,      // version (unchanged)
-                    currentOnchainID     // onchainID (unchanged)
+                    newName, // name (updated value)
+                    currentSymbol, // symbol (unchanged)
+                    currentDecimals, // decimals (unchanged)
+                    currentVersion, // version (unchanged)
+                    currentOnchainID // onchainID (unchanged)
                 )
         })
 
@@ -574,11 +615,11 @@ describe('ERC3643 Metadata Facet', function () {
             await expect(erc3643MetadataFacet.setSymbol(newSymbol))
                 .to.emit(erc3643MetadataFacet, 'UpdatedTokenInformation')
                 .withArgs(
-                    currentName,         // name (unchanged)
-                    newSymbol,           // symbol (updated value)
-                    currentDecimals,     // decimals (unchanged)
-                    currentVersion,      // version (unchanged)
-                    currentOnchainID     // onchainID (unchanged)
+                    currentName, // name (unchanged)
+                    newSymbol, // symbol (updated value)
+                    currentDecimals, // decimals (unchanged)
+                    currentVersion, // version (unchanged)
+                    currentOnchainID // onchainID (unchanged)
                 )
         })
     })

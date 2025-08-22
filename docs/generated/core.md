@@ -39,10 +39,10 @@ modifier emptyBytes(bytes _code)
 modifier emptyString(string _string)
 ```
 
-### uintBetweenZeroAndEighteen
+### lessThanOrEqual
 
 ```solidity
-modifier uintBetweenZeroAndEighteen(uint256 _uint)
+modifier lessThanOrEqual(uint256 _currentValue, uint256 _maxValue)
 ```
 
 ---

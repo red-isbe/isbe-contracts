@@ -35,9 +35,11 @@ abstract contract ISBEContext is Context {
     error EmptyUint();
 
     /**
-     * @notice Raised when a uint256 value is not between 0 and 18, which is the valid range for token decimals.
+     * @notice Raised when _currentValue is not less or equal than of _maxValue.
+     * @param _currentValue The current uint256 value that was checked.
+     * @param _maxValue The maximum uint256 value that was expected.
      */
-    error UintNotBetweenZeroAndEighteen();
+    error UintNotLessThanOrEqual(uint256 _currentValue, uint256 _maxValue);
 
     /**
      * @notice Emitted when a string is empty but is expected to contain text
@@ -114,8 +116,21 @@ abstract contract ISBEContext is Context {
         require(_uint != 0, EmptyUint());
     }
 
-    function _checkUintBetweenZeroAndEighteen(uint256 _uint) internal pure {
-        require(_uint <= 18, UintNotBetweenZeroAndEighteen());
+    /**
+     * @notice Validates that the provided uint256 value is less than or equal to a maximum value
+     * @dev Internal validation function that reverts with UintNotLessThanOrEqual error if the
+     *      value exceeds the maximum. Used for range validation
+     * @param _currentValue The current uint256 value to validate
+     * @param _maxValue The maximum uint256 value that is allowed
+     */
+    function _checkLessThanOrEqual(
+        uint256 _currentValue,
+        uint256 _maxValue
+    ) internal pure {
+        require(
+            _currentValue <= _maxValue,
+            UintNotLessThanOrEqual(_currentValue, _maxValue)
+        );
     }
 
     /**

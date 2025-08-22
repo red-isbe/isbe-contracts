@@ -814,7 +814,7 @@ export async function deployERC3643UseCasesFacets(
     )
     const MockTimestampFacetFactory =
         await ethers.getContractFactory('MockTimestampFacet')
-    
+
     // ERC20 Facet Factories - needed for ERC3643 functionality
     const ERC20SnapshotFacetFactory =
         await ethers.getContractFactory('ERC20SnapshotFacet')
@@ -959,7 +959,7 @@ export async function deployERC3643UseCasesFacets(
     const ownable = isOwnable
         ? (OwnableFacetFactory.attach(proxy) as OwnableFacet)
         : (Ownable2StepFacetFactory.attach(proxy) as Ownable2StepFacet)
-    
+
     // Attach ERC20 facets
     const erc20Snapshot = ERC20SnapshotFacetFactory.attach(
         proxy
@@ -974,7 +974,7 @@ export async function deployERC3643UseCasesFacets(
         proxy
     ) as ERC20ControllerFacet
     const erc20 = ERC20FacetFactory.attach(proxy) as ERC20Facet
-    
+
     const assetEventTracker = AssetEventTrackerTestWrapperFactory.attach(
         proxy
     ) as AssetEventTrackerTestWrapper
