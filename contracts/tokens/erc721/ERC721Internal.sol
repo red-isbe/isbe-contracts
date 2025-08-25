@@ -35,6 +35,22 @@ abstract contract ERC721Internal is Common {
         mapping(address => mapping(address => bool)) operatorApprovals;
     }
 
+    /**
+     * @notice Modifier that checks if `spender` is the owner, approved address, or an operator for the given token.
+     * @dev Calls _checkIsApprovedOrOwner and reverts if not authorized.
+     * @param spender The address performing the action (usually _msgSender()).
+     * @param owner The address of the token owner.
+     * @param tokenId The ID of the token to check.
+     */
+    modifier onlyApprovedOrOwner(
+        address spender,
+        address owner,
+        uint256 tokenId
+    ) {
+        _checkIsApprovedOrOwner(spender, owner, tokenId);
+        _;
+    }
+
     function _initialize(
         string memory newName,
         string memory newSymbol
@@ -149,8 +165,7 @@ abstract contract ERC721Internal is Common {
         address to,
         uint256 tokenId,
         bytes memory data
-    ) internal {
-        _checkIsApprovedOrOwner(_msgSender(), from, tokenId);
+    ) internal onlyApprovedOrOwner(_msgSender(), from, tokenId) {
         _transfer(from, to, tokenId);
         // If recipient is a contract, check that it implements IERC721Receiver
         _checkOnERC721Received(from, to, tokenId, data);
@@ -205,15 +220,6 @@ abstract contract ERC721Internal is Common {
                 _isApprovedForAll(owner, spender),
             IERC721Isbe.CallerNotOwnerNorApproved()
         );
-    }
-
-    /**
-     * @dev Internal function to verify that a given address is the owner of a specific ERC721 token.
-     * @param owner The address to check for ownership.
-     * @param tokenId The ID of the token to verify ownership of.
-     */
-    function _checkTokenOwner(address owner, uint256 tokenId) internal view {
-        require(_ownerOf(tokenId) == owner, IERC721Isbe.NotTokenOwner());
     }
 
     /**

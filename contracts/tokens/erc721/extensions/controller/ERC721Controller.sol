@@ -32,7 +32,7 @@ abstract contract ERC721Controller is IERC721Controller, ERC721InternalCommon {
         address from,
         uint256 tokenId
     ) external override whenNotPaused onlyRole(_CONTROLLER_ROLE) {
-        _checkTokenOwner(from, tokenId);
+        require(_ownerOf(tokenId) == from, ForceBurnNotTokenOwner());
         _burn(tokenId);
         emit ForceBurn(_msgSender(), from, tokenId);
     }

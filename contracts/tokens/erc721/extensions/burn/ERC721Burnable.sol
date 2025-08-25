@@ -14,9 +14,14 @@ abstract contract ERC721Burnable is IERC721Burnable, ERC721InternalCommon {
      *      Emits a Transfer event to the zero address.
      * @param tokenId The identifier of the token to burn.
      */
-    function burn(uint256 tokenId) external override whenNotPaused {
-        address owner = _ownerOf(tokenId);
-        _checkIsApprovedOrOwner(msg.sender, owner, tokenId);
+    function burn(
+        uint256 tokenId
+    )
+        external
+        override
+        whenNotPaused
+        onlyApprovedOrOwner(msg.sender, _ownerOf(tokenId), tokenId)
+    {
         _burn(tokenId);
     }
 
@@ -30,8 +35,12 @@ abstract contract ERC721Burnable is IERC721Burnable, ERC721InternalCommon {
     function burnFrom(
         address owner,
         uint256 tokenId
-    ) external override whenNotPaused {
-        _checkIsApprovedOrOwner(msg.sender, owner, tokenId);
+    )
+        external
+        override
+        whenNotPaused
+        onlyApprovedOrOwner(msg.sender, owner, tokenId)
+    {
         _burn(tokenId);
     }
 

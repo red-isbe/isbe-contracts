@@ -155,6 +155,18 @@ describe('ERC721', function () {
                 'IsPaused'
             )
         })
+
+        it('GIVEN an ERC721 WHEN burn is called by not owner nor approved nor operator THEN reverts with CallerNotOwnerNorApproved', async () => {
+            // Mint token to owner
+            await erc721Capped.mint(ownerAddress, 2)
+            // Try to burn from another account (not owner, not approved, not operator)
+            await expect(
+                erc721Burn.connect(other).burn(2)
+            ).to.be.revertedWithCustomError(
+                erc721Burn,
+                'CallerNotOwnerNorApproved'
+            )
+        })
     })
 
     describe('BurnFrom', () => {
@@ -709,7 +721,10 @@ describe('ERC721', function () {
         it('GIVEN an ERC721 WHEN forceBurn with incorrect owner THEN it fails', async () => {
             await expect(
                 erc721Controller.forceBurn(thirdAddress, 1)
-            ).to.be.revertedWithCustomError(erc721Controller, 'NotTokenOwner')
+            ).to.be.revertedWithCustomError(
+                erc721Controller,
+                'ForceBurnNotTokenOwner'
+            )
         })
 
         it('GIVEN an ERC721 WHEN it is prepared THEN a force burn can be made', async () => {

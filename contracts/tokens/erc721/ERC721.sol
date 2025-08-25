@@ -40,9 +40,14 @@ abstract contract ERC721 is IERC721Isbe, ERC721InternalCommon {
      * @notice Approves `to` to transfer `tokenId` token.
      * @dev Only the owner or an approved operator can call this function.
      */
-    function approve(address to, uint256 tokenId) external override {
-        address owner = _ownerOf(tokenId);
-        _checkIsApprovedOrOwner(_msgSender(), owner, tokenId);
+    function approve(
+        address to,
+        uint256 tokenId
+    )
+        external
+        override
+        onlyApprovedOrOwner(_msgSender(), _ownerOf(tokenId), tokenId)
+    {
         _approve(to, tokenId);
     }
 
@@ -64,8 +69,7 @@ abstract contract ERC721 is IERC721Isbe, ERC721InternalCommon {
         address from,
         address to,
         uint256 tokenId
-    ) external override {
-        _checkIsApprovedOrOwner(_msgSender(), from, tokenId);
+    ) external override onlyApprovedOrOwner(_msgSender(), from, tokenId) {
         _transfer(from, to, tokenId);
     }
 

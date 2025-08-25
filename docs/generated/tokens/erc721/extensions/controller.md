@@ -129,6 +129,14 @@ Emitted when a token is forcefully burned from an account
 | from     | address | The address the token is burned from   |
 | tokenId  | uint256 | The identifier of the token burned     |
 
+### ForceBurnNotTokenOwner
+
+```solidity
+error ForceBurnNotTokenOwner()
+```
+
+Error thrown when attempting to force burn a token not owned by the specified address
+
 ### forceTransfer
 
 ```solidity

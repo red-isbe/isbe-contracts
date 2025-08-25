@@ -27,6 +27,9 @@ interface IERC721Controller {
         uint256 tokenId
     );
 
+    /// @notice Error thrown when attempting to force burn a token not owned by the specified address
+    error ForceBurnNotTokenOwner();
+
     /// @notice Transfers a token from one account to another without requiring approval
     /// @dev This function should only be callable by an authorized controller (e.g., regulator or admin contract)
     /// @param from The address to transfer the token from
