@@ -10,6 +10,7 @@ import {
     ERC721Snapshot,
     ERC721Burnable,
     ERC721Controller,
+    ERC721Enumerable,
 } from '../typechain-types'
 import { CONFIGURATION_ID_ERC721, deployGovernance } from './initialization'
 import {
@@ -30,6 +31,7 @@ describe('ERC721', function () {
     let erc721Snapshot: ERC721Snapshot
     let erc721Burn: ERC721Burnable
     let erc721Controller: ERC721Controller
+    let erc721Enumerable: ERC721Enumerable
     let erc20Address: string
     let owner: Signer
     let ownerAddress: string
@@ -57,6 +59,7 @@ describe('ERC721', function () {
         erc721Snapshot = result.erc721Snapshot
         erc721Burn = result.erc721Burn
         erc721Controller = result.erc721Controller
+        erc721Enumerable = result.erc721Enumerable
         erc20Address = await result.erc721Facet.getAddress()
         accessControl = result.accessControl
         pause = result.pause
@@ -108,8 +111,10 @@ describe('ERC721', function () {
             await expect(erc721Capped.mint(ownerAddress, 1))
                 .to.emit(erc721, 'Transfer')
                 .withArgs(ethers.ZeroAddress, ownerAddress, 1)
-            expect(await erc721.ownerOf(1)).to.equal(ownerAddress)
-            expect(await erc721.balanceOf(ownerAddress)).to.equal(1)
+            expect((await erc721.ownerOf(1)).toString()).to.equal(
+                ownerAddress.toString()
+            )
+            expect(Number(await erc721.balanceOf(ownerAddress))).to.equal(1)
         })
 
         it('GIVEN an ERC721 WHEN mint an already minted token THEN fails', async () => {
@@ -131,20 +136,26 @@ describe('ERC721', function () {
             await expect(erc721Burn.burn(1))
                 .to.emit(erc721, 'Transfer')
                 .withArgs(ownerAddress, ethers.ZeroAddress, 1)
-            expect(await erc721.ownerOf(1)).to.be.equal(ZeroAddress)
+            expect((await erc721.ownerOf(1)).toString()).to.be.equal(
+                ZeroAddress.toString()
+            )
         })
 
         it('GIVEN an ERC721 WHEN owner approves another, burns token, THEN approved address is reset to zero', async () => {
             await expect(erc721.approve(otherAddress, 1))
                 .to.emit(erc721, 'Approval')
                 .withArgs(ownerAddress, otherAddress, 1)
-            expect(await erc721.getApproved(1)).to.equal(otherAddress)
+            expect((await erc721.getApproved(1)).toString()).to.equal(
+                otherAddress.toString()
+            )
 
             await expect(erc721Burn.burn(1))
                 .to.emit(erc721, 'Transfer')
                 .withArgs(ownerAddress, ethers.ZeroAddress, 1)
 
-            expect(await erc721.getApproved(1)).to.equal(ethers.ZeroAddress)
+            expect((await erc721.getApproved(1)).toString()).to.equal(
+                ethers.ZeroAddress.toString()
+            )
         })
 
         it('GIVEN an ERC721 WHEN paused THEN burn reverts', async () => {
@@ -520,12 +531,12 @@ describe('ERC721', function () {
                 erc721Capped,
                 'ContractIsAlreadyInitialized'
             )
-            expect(await erc721Capped.cap()).to.equal(1000)
+            expect(Number(await erc721Capped.cap())).to.equal(1000)
         })
 
         it('GIVEN an initialized ERC721 WHEN mint over cap THEN it fails', async () => {
             await deploy(true)
-            expect(await erc721Capped.cap()).to.equal(3)
+            expect(Number(await erc721Capped.cap())).to.equal(3)
 
             await accessControl.grantRole(MINTER_ROLE, ownerAddress)
             // Mint up to cap
@@ -756,6 +767,139 @@ describe('ERC721', function () {
                 .to.emit(erc721Controller, 'ForceTransfer')
                 .withArgs(ownerAddress, otherAddress, ownerAddress, 1)
             expect(await erc721.ownerOf(1)).to.equal(ownerAddress)
+        })
+    })
+
+    describe('Enumerable', () => {
+        beforeEach(async () => {
+            await deploy(true)
+            await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+            await erc721Capped.mint(ownerAddress, 1)
+            await erc721Capped.mint(ownerAddress, 2)
+            await erc721Capped.mint(otherAddress, 3)
+        })
+
+        it('GIVEN an ERC721 WHEN minted THEN totalSupplyEnumerable returns correct value', async () => {
+            expect(await erc721Enumerable.totalSupplyEnumerable()).to.equal(3)
+        })
+
+        it('GIVEN an ERC721 WHEN minted THEN tokenOfOwnerByIndex returns correct token IDs', async () => {
+            expect(
+                await erc721Enumerable.tokenOfOwnerByIndex(ownerAddress, 0)
+            ).to.equal(1)
+            expect(
+                await erc721Enumerable.tokenOfOwnerByIndex(ownerAddress, 1)
+            ).to.equal(2)
+            expect(
+                await erc721Enumerable.tokenOfOwnerByIndex(otherAddress, 0)
+            ).to.equal(3)
+        })
+
+        it('GIVEN an ERC721 WHEN minted THEN tokenByIndex returns correct token IDs', async () => {
+            expect(await erc721Enumerable.tokenByIndex(0)).to.equal(1)
+            expect(await erc721Enumerable.tokenByIndex(1)).to.equal(2)
+            expect(await erc721Enumerable.tokenByIndex(2)).to.equal(3)
+        })
+
+        it('GIVEN an ERC721 WHEN tokenOfOwnerByIndex out of bounds THEN reverts with OwnerIndexOutOfBounds', async () => {
+            await expect(
+                erc721Enumerable.tokenOfOwnerByIndex(ownerAddress, 2)
+            ).to.be.revertedWithCustomError(
+                erc721Enumerable,
+                'OwnerIndexOutOfBounds'
+            )
+        })
+
+        it('GIVEN an ERC721 WHEN tokenByIndex out of bounds THEN reverts with GlobalIndexOutOfBounds', async () => {
+            await expect(
+                erc721Enumerable.tokenByIndex(3)
+            ).to.be.revertedWithCustomError(
+                erc721Enumerable,
+                'GlobalIndexOutOfBounds'
+            )
+        })
+
+        it('GIVEN an ERC721 WHEN token is transferred THEN it is removed from previous owner and added to new owner', async () => {
+            await erc721.transferFrom(ownerAddress, otherAddress, 2)
+            expect(
+                await erc721Enumerable.tokenOfOwnerByIndex(ownerAddress, 0)
+            ).to.equal(1)
+            await expect(
+                erc721Enumerable.tokenOfOwnerByIndex(ownerAddress, 1)
+            ).to.be.revertedWithCustomError(
+                erc721Enumerable,
+                'OwnerIndexOutOfBounds'
+            )
+
+            expect(
+                await erc721Enumerable.tokenOfOwnerByIndex(otherAddress, 0)
+            ).to.equal(3)
+            expect(
+                await erc721Enumerable.tokenOfOwnerByIndex(otherAddress, 1)
+            ).to.equal(2)
+        })
+
+        it('GIVEN an ERC721 WHEN transfer a token that is not the last in ownedTokens THEN triggers tokenIndex != lastTokenIndex logic', async () => {
+            await accessControl.grantRole(CAP_ROLE, ownerAddress)
+            erc721Capped.setCap(6)
+
+            await erc721Capped.mint(ownerAddress, 4)
+            await erc721.transferFrom(ownerAddress, otherAddress, 2)
+
+            expect(
+                await erc721Enumerable.tokenOfOwnerByIndex(ownerAddress, 0)
+            ).to.equal(1)
+            expect(
+                await erc721Enumerable.tokenOfOwnerByIndex(ownerAddress, 1)
+            ).to.equal(4)
+            await expect(
+                erc721Enumerable.tokenOfOwnerByIndex(ownerAddress, 2)
+            ).to.be.revertedWithCustomError(
+                erc721Enumerable,
+                'OwnerIndexOutOfBounds'
+            )
+
+            expect(
+                await erc721Enumerable.tokenOfOwnerByIndex(otherAddress, 0)
+            ).to.equal(3)
+            expect(
+                await erc721Enumerable.tokenOfOwnerByIndex(otherAddress, 1)
+            ).to.equal(2)
+        })
+
+        it('GIVEN an ERC721 WHEN burn a token that is not the last in allTokens THEN triggers tokenIndex != lastTokenIndex logic', async () => {
+            await accessControl.grantRole(CAP_ROLE, ownerAddress)
+            erc721Capped.setCap(6)
+            await erc721Capped.mint(ownerAddress, 4)
+
+            await erc721Burn.burn(2)
+
+            expect(await erc721Enumerable.tokenByIndex(0)).to.equal(1)
+            expect(await erc721Enumerable.tokenByIndex(1)).to.equal(4)
+        })
+
+        it('GIVEN an ERC721 WHEN transfer a token to a new owner THEN triggers else if (to != from) logic', async () => {
+            await erc721.transferFrom(ownerAddress, thirdAddress, 1)
+
+            expect(
+                await erc721Enumerable.tokenOfOwnerByIndex(thirdAddress, 0)
+            ).to.equal(1)
+            await expect(
+                erc721Enumerable.tokenOfOwnerByIndex(thirdAddress, 1)
+            ).to.be.revertedWithCustomError(
+                erc721Enumerable,
+                'OwnerIndexOutOfBounds'
+            )
+
+            expect(
+                await erc721Enumerable.tokenOfOwnerByIndex(ownerAddress, 0)
+            ).to.equal(2)
+            await expect(
+                erc721Enumerable.tokenOfOwnerByIndex(ownerAddress, 1)
+            ).to.be.revertedWithCustomError(
+                erc721Enumerable,
+                'OwnerIndexOutOfBounds'
+            )
         })
     })
 })
