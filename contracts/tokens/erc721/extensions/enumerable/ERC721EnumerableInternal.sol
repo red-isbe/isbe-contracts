@@ -32,7 +32,9 @@ abstract contract ERC721EnumerableInternal is ERC721Internal {
         if (from == address(0)) {
             s.allTokensIndex[tokenId] = s.allTokens.length;
             s.allTokens.push(tokenId);
-        } else if (from != to) {
+        }
+
+        if (from != address(0) && from != to) {
             uint256 lastTokenIndex = s.ownedTokens[from].length - 1;
             uint256 tokenIndex = s.ownedTokensIndex[tokenId];
 
@@ -56,7 +58,9 @@ abstract contract ERC721EnumerableInternal is ERC721Internal {
             }
             s.allTokens.pop();
             delete s.allTokensIndex[tokenId];
-        } else if (to != from) {
+        }
+
+        if (to != address(0) && to != from) {
             s.ownedTokensIndex[tokenId] = s.ownedTokens[to].length;
             s.ownedTokens[to].push(tokenId);
         }
