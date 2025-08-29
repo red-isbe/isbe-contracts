@@ -10,6 +10,7 @@ import {
     ERC721Snapshot,
     ERC721Burnable,
     ERC721Controller,
+    ERC721Consecutive,
 } from '../typechain-types'
 import { CONFIGURATION_ID_ERC721, deployGovernance } from './initialization'
 import {
@@ -30,6 +31,7 @@ describe('ERC721', function () {
     let erc721Snapshot: ERC721Snapshot
     let erc721Burn: ERC721Burnable
     let erc721Controller: ERC721Controller
+    let erc721Consecutive: ERC721Consecutive
     let erc20Address: string
     let owner: Signer
     let ownerAddress: string
@@ -57,6 +59,7 @@ describe('ERC721', function () {
         erc721Snapshot = result.erc721Snapshot
         erc721Burn = result.erc721Burn
         erc721Controller = result.erc721Controller
+        erc721Consecutive = result.erc721Consecutive
         erc20Address = await result.erc721Facet.getAddress()
         accessControl = result.accessControl
         pause = result.pause
@@ -365,7 +368,7 @@ describe('ERC721', function () {
             await erc721Capped.mint(ownerAddress, 1)
             const Receiver =
                 await ethers.getContractFactory('ERC721ReceiverMock')
-            receiverMock = await Receiver.deploy()
+            receiverMock = (await Receiver.deploy()) as unknown as Contract
         })
 
         it('GIVEN an ERC721 WHEN safeTransferFrom to EOA THEN succeeds', async () => {
@@ -756,6 +759,83 @@ describe('ERC721', function () {
                 .to.emit(erc721Controller, 'ForceTransfer')
                 .withArgs(ownerAddress, otherAddress, ownerAddress, 1)
             expect(await erc721.ownerOf(1)).to.equal(ownerAddress)
+        })
+    })
+
+    describe('Consecutive ', () => {
+        beforeEach(async () => {
+            await deploy(true)
+            await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+        })
+
+        it('GIVEN ERC721Consecutive WHEN mintConsecutive with quantity 0 THEN reverts', async () => {
+            await expect(
+                erc721Consecutive.mintConsecutive(ownerAddress, 0)
+            ).to.be.revertedWithCustomError(erc721TestWrapper, 'EmptyUint')
+        })
+
+        it('GIVEN ERC721Consecutive WHEN mintConsecutive to zero address THEN reverts', async () => {
+            await expect(
+                erc721Consecutive.mintConsecutive(ethers.ZeroAddress, 2)
+            ).to.be.revertedWithCustomError(erc721TestWrapper, 'AddressZero')
+        })
+
+        it('GIVEN ERC721Consecutive WHEN mintConsecutive as not minter THEN reverts', async () => {
+            await accessControl.revokeRole(MINTER_ROLE, ownerAddress)
+            await expect(
+                erc721Consecutive.mintConsecutive(ownerAddress, 2)
+            ).to.be.revertedWithCustomError(accessControl, 'AccountHasNoRole')
+        })
+
+        it('GIVEN ERC721Consecutive WHEN mintConsecutive THEN emits ConsecutiveTransfer and tokens are owned', async () => {
+            const quantity = 5
+            await accessControl.grantRole(CAP_ROLE, ownerAddress)
+            await erc721Capped.setCap(10)
+
+            await expect(
+                erc721Consecutive.mintConsecutive(ownerAddress, quantity)
+            )
+                .to.emit(erc721Consecutive, 'ConsecutiveTransfer')
+                .withArgs(1, quantity, ethers.ZeroAddress, ownerAddress)
+            for (let i = 1; i <= quantity; i++) {
+                expect(await erc721.ownerOf(i)).to.equal(ownerAddress)
+            }
+        })
+
+        it('GIVEN ERC721Consecutive WHEN mintConsecutive multiple times THEN tokenIds increment correctly', async () => {
+            await accessControl.grantRole(CAP_ROLE, ownerAddress)
+            await erc721Capped.setCap(10)
+
+            await erc721Consecutive.mintConsecutive(ownerAddress, 3)
+            await erc721Consecutive.mintConsecutive(ownerAddress, 2)
+            expect(await erc721.ownerOf(1)).to.equal(ownerAddress)
+            expect(await erc721.ownerOf(3)).to.equal(ownerAddress)
+            expect(await erc721.ownerOf(4)).to.equal(ownerAddress)
+            expect(await erc721.ownerOf(5)).to.equal(ownerAddress)
+        })
+
+        it('GIVEN ERC721Consecutive WHEN mintConsecutive THEN can transfer minted tokens', async () => {
+            await erc721Consecutive.mintConsecutive(ownerAddress, 2)
+            await erc721TestWrapper.transfer(ownerAddress, otherAddress, 1)
+            expect(await erc721.ownerOf(1)).to.equal(otherAddress)
+            await erc721TestWrapper.transfer(ownerAddress, otherAddress, 2)
+            expect(await erc721.ownerOf(2)).to.equal(otherAddress)
+        })
+
+        it('GIVEN ERC721Consecutive WHEN mintConsecutive THEN can burn minted tokens', async () => {
+            await erc721Consecutive.mintConsecutive(ownerAddress, 2)
+            await erc721Burn.burn(1)
+            expect(await erc721.ownerOf(1)).to.equal(ZeroAddress)
+            await erc721Burn.burn(2)
+            expect(await erc721.ownerOf(2)).to.equal(ZeroAddress)
+        })
+
+        it('GIVEN ERC721Consecutive WHEN paused THEN mintConsecutive reverts', async () => {
+            await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+            await pause.pause()
+            await expect(
+                erc721Consecutive.mintConsecutive(ownerAddress, 2)
+            ).to.be.revertedWithCustomError(erc721Consecutive, 'IsPaused')
         })
     })
 })
