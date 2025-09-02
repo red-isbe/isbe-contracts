@@ -562,11 +562,8 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
                 string memory vMethodId = docController.vMethodIdOfAddress[
                     controller
                 ];
-
-                if (
-                    _isEmptyString(vMethodId) ||
-                    !docController.capabilityInvocationMethodIdExist[vMethodId]
-                ) continue;
+                if (!docController.capabilityInvocationMethodIdExist[vMethodId])
+                    continue;
 
                 uint256 methodIndex = docController
                     .capabilityInvocationMethodIdIndex[vMethodId];

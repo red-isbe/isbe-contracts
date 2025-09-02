@@ -41,6 +41,7 @@ import './tasks/configMgmt/setConfig'
 import './tasks/proxyFactory/deployUseCase'
 import './tasks/proxyFactory/getConfigurationByProxy'
 import './tasks/deployTest'
+import './tasks/deployAll'
 import './tasks/extract/byteCode'
 import './tasks/extract/StorageSlots'
 
