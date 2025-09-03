@@ -68,6 +68,13 @@ interface IProxyFactory {
     error FacetNotFound(bytes32 businessId);
 
     /**
+     * @notice Reverted if attempting to deploy a proxy to an address that
+     *         has already been used for a previous deployment
+     * @param addr The address that has already been deployed to
+     */
+    error AddressAlreadyDeployed(address addr);
+
+    /**
      * @notice Deploys a new use-case proxy with the specified configuration
      * @dev Creates a diamond proxy with business logic facets and access
      *      control, then initialises it with the provided data

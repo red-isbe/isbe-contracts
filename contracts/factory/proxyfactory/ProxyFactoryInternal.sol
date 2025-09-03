@@ -52,6 +52,30 @@ abstract contract ProxyFactoryInternal is ConfigurationManagementInternal {
         IsbeProxy proxy;
 
         if (createTo) {
+            address predicted = address(
+                uint160(
+                    uint256(
+                        keccak256(
+                            abi.encodePacked(
+                                bytes1(0xFF),
+                                address(this),
+                                _salt,
+                                keccak256(
+                                    abi.encodePacked(
+                                        type(IsbeProxy).creationCode,
+                                        abi.encode(args)
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            );
+            require(
+                predicted.code.length == 0,
+                IProxyFactory.AddressAlreadyDeployed(predicted)
+            );
+
             proxy = new IsbeProxy{salt: _salt}(args);
         } else proxy = new IsbeProxy(args);
 
