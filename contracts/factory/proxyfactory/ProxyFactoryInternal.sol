@@ -43,41 +43,16 @@ abstract contract ProxyFactoryInternal is ConfigurationManagementInternal {
         bool createTo,
         bytes32 _salt
     ) internal returns (address proxyAddress_) {
-        IsbeProxy.IsbeProxyArgs memory args = _buildUseCaseDeployArgs(
-            _configurationId,
-            _version,
-            _initBusinessIds,
-            _initData
+        IsbeProxy proxy = _deployIsbeProxy(
+            createTo,
+            _salt,
+            _buildUseCaseDeployArgs(
+                _configurationId,
+                _version,
+                _initBusinessIds,
+                _initData
+            )
         );
-        IsbeProxy proxy;
-
-        if (createTo) {
-            address predicted = address(
-                uint160(
-                    uint256(
-                        keccak256(
-                            abi.encodePacked(
-                                bytes1(0xFF),
-                                address(this),
-                                _salt,
-                                keccak256(
-                                    abi.encodePacked(
-                                        type(IsbeProxy).creationCode,
-                                        abi.encode(args)
-                                    )
-                                )
-                            )
-                        )
-                    )
-                )
-            );
-            require(
-                predicted.code.length == 0,
-                IProxyFactory.AddressAlreadyDeployed(predicted)
-            );
-
-            proxy = new IsbeProxy{salt: _salt}(args);
-        } else proxy = new IsbeProxy(args);
 
         proxyAddress_ = address(proxy);
 
@@ -162,6 +137,42 @@ abstract contract ProxyFactoryInternal is ConfigurationManagementInternal {
         uint256 interfacesLength = 1;
         interfaces_ = new bytes4[](interfacesLength);
         interfaces_[--interfacesLength] = type(IProxyFactory).interfaceId;
+    }
+
+    function _deployIsbeProxy(
+        bool _createTo,
+        bytes32 _salt,
+        IsbeProxy.IsbeProxyArgs memory _args
+    ) private returns (IsbeProxy proxy_) {
+        if (_createTo) {
+            address predicted = address(
+                uint160(
+                    uint256(
+                        keccak256(
+                            abi.encodePacked(
+                                bytes1(0xFF),
+                                address(this),
+                                _salt,
+                                keccak256(
+                                    abi.encodePacked(
+                                        type(IsbeProxy).creationCode,
+                                        abi.encode(_args)
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            );
+            require(
+                predicted.code.length == 0,
+                IProxyFactory.AddressAlreadyDeployed(predicted)
+            );
+
+            return new IsbeProxy{salt: _salt}(_args);
+        }
+
+        return new IsbeProxy(_args);
     }
 
     function _storeDeployedDiamond(
