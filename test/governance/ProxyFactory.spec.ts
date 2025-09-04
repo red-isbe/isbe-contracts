@@ -559,6 +559,221 @@ describe('ProxyFactory', function () {
             })
         })
 
+        describe('deployUseCaseTo', () => {
+            const _SALT =
+                '0x1234567890123456789012345678901234567890123456789012345678901234'
+            const _VERSION = 1
+
+            it('GIVEN deployed isbe factory WHEN try to deploy without right THEN it fails', async () => {
+                await expect(
+                    isbeFactory
+                        .connect(nonAdmin)
+                        .deployUseCaseTo(
+                            ethers.ZeroHash,
+                            0,
+                            [],
+                            false,
+                            [],
+                            [],
+                            _SALT
+                        )
+                )
+                    .to.be.revertedWithCustomError(
+                        accessControl,
+                        'AccountHasNoRole'
+                    )
+                    .withArgs(nonAdminAddress, PROXY_DEPLOYER_ROLE)
+            })
+
+            it('GIVEN deployed isbe factory WHEN try to deploy empty configurationId THEN it fails', async () => {
+                await expect(
+                    isbeFactory
+                        .connect(admin)
+                        .deployUseCaseTo(
+                            ethers.ZeroHash,
+                            0,
+                            [],
+                            false,
+                            [],
+                            [],
+                            _SALT
+                        )
+                ).to.be.revertedWithCustomError(accessControl, 'EmptyBytes32')
+            })
+
+            it('GIVEN deployed isbe factory WHEN try to deploy configuration than not exists THEN it fails', async () => {
+                await expect(
+                    isbeFactory
+                        .connect(admin)
+                        .deployUseCaseTo(
+                            '0x1234567890123456789012345678901234567890123456789012345678901234',
+                            3,
+                            [],
+                            false,
+                            [],
+                            [],
+                            _SALT
+                        )
+                )
+                    .to.be.revertedWithCustomError(
+                        isbeFactory,
+                        'InvalidConfiguration'
+                    )
+                    .withArgs(
+                        '0x1234567890123456789012345678901234567890123456789012345678901234',
+                        3
+                    )
+            })
+
+            it('GIVEN deployed isbe factory WHEN deploying twice the same contract using deployUseCaseTo with same salt THEN it fails', async () => {
+                const _RBACS = [
+                    {
+                        role: '0x1234567890123456789012345678901234567890123456789012345678901234',
+                        members: [adminAddress],
+                    },
+                ]
+                await isbeFactory
+                    .connect(admin)
+                    .setConfiguration(RANDOM_HASH_FOR_CONFIGURATION_ID, [
+                        {
+                            businessId: HASH_TIMESTAMP_RESOLVER_KEY,
+                            version: _VERSION,
+                        },
+                    ])
+
+                const deployTx = await isbeFactory
+                    .connect(admin)
+                    .deployUseCaseTo(
+                        RANDOM_HASH_FOR_CONFIGURATION_ID,
+                        _VERSION,
+                        _RBACS,
+                        false,
+                        [],
+                        [],
+                        _SALT
+                    )
+                const waitedTx = await deployTx.wait()
+                if (!waitedTx) {
+                    throw new Error('Transaction receipt is null')
+                }
+                const diamondDeployedEvent = waitedTx.logs.find(
+                    (l) =>
+                        l.topics[0] ==
+                        isbeFactory.interface.getEvent('UseCaseDeployed')
+                            .topicHash
+                )
+                if (
+                    !diamondDeployedEvent ||
+                    !('args' in diamondDeployedEvent)
+                ) {
+                    throw new Error('Event not found or missing args')
+                }
+
+                const proxyAddress = diamondDeployedEvent.args.proxy
+
+                await expect(
+                    isbeFactory
+                        .connect(admin)
+                        .deployUseCaseTo(
+                            RANDOM_HASH_FOR_CONFIGURATION_ID,
+                            _VERSION,
+                            _RBACS,
+                            false,
+                            [],
+                            [],
+                            _SALT
+                        )
+                )
+                    .to.be.revertedWithCustomError(
+                        isbeFactory,
+                        'AddressAlreadyDeployed'
+                    )
+                    .withArgs(proxyAddress)
+            })
+
+            it('GIVEN deployed isbe factory WHEN deploying using deployUseCaseTo THEN address is predefined', async () => {
+                const _RBACS = [
+                    {
+                        role: '0x1234567890123456789012345678901234567890123456789012345678901234',
+                        members: [adminAddress],
+                    },
+                ]
+                await isbeFactory
+                    .connect(admin)
+                    .setConfiguration(RANDOM_HASH_FOR_CONFIGURATION_ID, [
+                        {
+                            businessId: HASH_TIMESTAMP_RESOLVER_KEY,
+                            version: _VERSION,
+                        },
+                    ])
+
+                const deployTx = await isbeFactory
+                    .connect(admin)
+                    .deployUseCaseTo(
+                        RANDOM_HASH_FOR_CONFIGURATION_ID,
+                        _VERSION,
+                        _RBACS,
+                        false,
+                        [],
+                        [],
+                        _SALT
+                    )
+                const waitedTx = await deployTx.wait()
+                if (!waitedTx) {
+                    throw new Error('Transaction receipt is null')
+                }
+                const diamondDeployedEvent = waitedTx.logs.find(
+                    (l) =>
+                        l.topics[0] ==
+                        isbeFactory.interface.getEvent('UseCaseDeployed')
+                            .topicHash
+                )
+                if (
+                    !diamondDeployedEvent ||
+                    !('args' in diamondDeployedEvent)
+                ) {
+                    throw new Error('Event not found or missing args')
+                }
+
+                const proxyAddress = diamondDeployedEvent.args.proxy
+
+                const deployer = await isbeFactory.getAddress()
+
+                const args = {
+                    configurationManagement: deployer,
+                    configurationId: RANDOM_HASH_FOR_CONFIGURATION_ID,
+                    version: _VERSION,
+                    init: [], // empty array since _initBusinessIds = []
+                    data: [], // empty array since _initData = []
+                }
+
+                // Get the IsbeProxy contract factory to access creation code
+                const IsbeProxyFactory =
+                    await ethers.getContractFactory('IsbeProxy')
+
+                // Encode the constructor arguments exactly as the contract does
+                const abiCoder = new ethers.AbiCoder()
+                const encodedArgs = abiCoder.encode(
+                    [
+                        'tuple(address configurationManagement, bytes32 configurationId, uint256 version, address[] init, bytes[] data)',
+                    ],
+                    [args]
+                )
+
+                const initCodeHash = ethers.keccak256(
+                    ethers.concat([IsbeProxyFactory.bytecode, encodedArgs])
+                )
+
+                const predictedAddress = ethers.getCreate2Address(
+                    deployer,
+                    _SALT,
+                    initCodeHash
+                )
+
+                expect(proxyAddress).to.equal(predictedAddress)
+            })
+        })
+
         describe('getDeployedProxiesByConfiguration', () => {
             it('GIVEN no deployed proxies WHEN getDeployedProxiesByConfiguration THEN returns empty array', async () => {
                 const uniqueConfigId =
