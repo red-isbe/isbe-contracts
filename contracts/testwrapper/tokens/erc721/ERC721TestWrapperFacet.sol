@@ -36,10 +36,9 @@ contract ERC721TestWrapperFacet is ERC721TestWrapper, IEIP2535Introspection {
         override
         returns (bytes4[] memory selectors_)
     {
-        uint256 selectorsLength = 4;
+        uint256 selectorsLength = 3;
         selectors_ = new bytes4[](selectorsLength);
 
-        selectors_[--selectorsLength] = this.burn.selector;
         selectors_[--selectorsLength] = this.transfer.selector;
         selectors_[--selectorsLength] = this.callSetApprovalForAll.selector;
         selectors_[--selectorsLength] = this.baseURI.selector;
