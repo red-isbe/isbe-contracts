@@ -104,7 +104,13 @@ abstract contract ERC3643Metadata is IERC3643Metadata, ERC3643MetadataInternal {
      */
     function setOnchainID(
         address _newOnchainID
-    ) external override onlyRole(_TOKEN_OWNER_ROLE) whenNotPaused {
+    )
+        external
+        override
+        onlyRole(_TOKEN_OWNER_ROLE)
+        whenNotPaused
+        addressIsNotZero(_newOnchainID)
+    {
         _setOnchainID(_newOnchainID);
         emit UpdatedTokenInformation(
             _name(),
