@@ -108,6 +108,7 @@ abstract contract DidControllerInternal is DidDocumentDetailedInternal {
     }
 
     function _checkControllerOrAuth(string memory did) private view {
+        _checkEmptyString(did);
         address sender = _msgSender();
         require(
             _isController(did, sender),

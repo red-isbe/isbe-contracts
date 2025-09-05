@@ -42,11 +42,12 @@ contract DidVerificationMethodFacet is
         override
         returns (bytes4[] memory selectors_)
     {
-        uint256 selectorsLength = 3;
+        uint256 selectorsLength = 4;
         selectors_ = new bytes4[](selectorsLength);
         selectors_[--selectorsLength] = this.addVerificationMethod.selector;
         selectors_[--selectorsLength] = this.revokeVerificationMethod.selector;
         selectors_[--selectorsLength] = this.expireVerificationMethod.selector;
+        selectors_[--selectorsLength] = this.rollVerificationMethod.selector;
     }
 
     function _implementedInterfaces()

@@ -34,6 +34,8 @@ import {
     IERC721Isbe,
     ERC721TestWrapperFacet,
     ERC721CappedFacet,
+    ERC721SnapshotFacet,
+    ERC721BurnableFacet,
     IDidRegistry__factory,
     ERC3643MetadataFacet,
 } from '../typechain-types'
@@ -61,9 +63,12 @@ import {
     ISBE_CUT_RESOLVER_KEY,
     ISBE_LOUPE_RESOLVER_KEY,
     ERC721_CAPPED_RESOLVER_KEY,
+    ERC721_SNAPSHOT_RESOLVER_KEY,
+    ERC721_BURNABLE_RESOLVER_KEY,
     DID_DOCUMENT_DETAILED_RESOLVER_KEY,
     DID_CONTROLLER_RESOLVER_KEY,
     DID_VERIFICATION_METHOD_RESOLVER_KEY,
+    DID_VERIFICATION_RELATIONSHIP_RESOLVER_KEY,
     ERC3643_METADATA_RESOLVER_KEY,
 } from './constants'
 import { getEvent } from '../scripts/utils/getEvent'
@@ -324,14 +329,20 @@ export async function deployGovernance(
         erc721Facet: useCaseDeployment.erc721Facet,
         erc721TestWrapperFacet: useCaseDeployment.erc721TestWrapperFacet,
         erc721CappedFacet: useCaseDeployment.erc721CappedFacet,
+        erc721SnapshotFacet: useCaseDeployment.erc721SnapshotFacet,
+        erc721BurnFacet: useCaseDeployment.erc721BurnFacet,
         erc721: useCaseDeployment.erc721,
         erc721TestWrapper: useCaseDeployment.erc721TestWrapper,
+        erc721Capped: useCaseDeployment.erc721Capped,
+        erc721Burn: useCaseDeployment.erc721Burn,
+        erc721Snapshot: useCaseDeployment.erc721Snapshot,
         didDocumentDetailedFacet: useCaseDeployment.didDocumentDetailedFacet,
         didControllerFacet: useCaseDeployment.didControllerFacet,
         didVerificationMethodFacet:
             useCaseDeployment.didVerificationMethodFacet,
+        didVerificationRelationshipFacet:
+            useCaseDeployment.didVerificationRelationshipFacet,
         didRegistry: useCaseDeployment.didRegistry,
-        erc721Capped: useCaseDeployment.erc721Capped,
         diamondCutAccessControlFacet,
         diamondLoupeFacet,
         accessControlGovernanceFacet,
@@ -572,7 +583,12 @@ export async function deployERC721UseCasesFacets(
     )
     const ERC721CappedFacetFactory =
         await ethers.getContractFactory('ERC721CappedFacet')
-
+    const ERC721SnapshotFacetFactory = await ethers.getContractFactory(
+        'ERC721SnapshotFacet'
+    )
+    const ERC721BurnFacetFactory = await ethers.getContractFactory(
+        'ERC721BurnableFacet'
+    )
     const isbeCutFacet = await deployBusinessLogicFromFactory(
         ISBE_CUT_RESOLVER_KEY,
         IsbeCutFacetFactory
@@ -603,6 +619,14 @@ export async function deployERC721UseCasesFacets(
         ERC721_CAPPED_RESOLVER_KEY,
         ERC721CappedFacetFactory
     )
+    const erc721SnapshotFacet = await deployBusinessLogicFromFactory(
+        ERC721_SNAPSHOT_RESOLVER_KEY,
+        ERC721SnapshotFacetFactory
+    )
+    const erc721BurnFacet = await deployBusinessLogicFromFactory(
+        ERC721_BURNABLE_RESOLVER_KEY,
+        ERC721BurnFacetFactory
+    )
 
     await isbeFactory.setConfiguration(CONFIGURATION_ID_ERC721, [
         {
@@ -615,6 +639,14 @@ export async function deployERC721UseCasesFacets(
         },
         {
             businessId: ERC721_CAPPED_RESOLVER_KEY,
+            version: 1,
+        },
+        {
+            businessId: ERC721_SNAPSHOT_RESOLVER_KEY,
+            version: 1,
+        },
+        {
+            businessId: ERC721_BURNABLE_RESOLVER_KEY,
             version: 1,
         },
     ])
@@ -638,6 +670,12 @@ export async function deployERC721UseCasesFacets(
     const erc721Capped = ERC721CappedFacetFactory.attach(
         proxy
     ) as ERC721CappedFacet
+    const erc721Snapshot = ERC721SnapshotFacetFactory.attach(
+        proxy
+    ) as ERC721SnapshotFacet
+    const erc721Burn = ERC721BurnFacetFactory.attach(
+        proxy
+    ) as ERC721BurnableFacet
 
     const pause = ISBEPauseFacetFactory.attach(proxy) as ISBEPauseFacet
 
@@ -649,11 +687,15 @@ export async function deployERC721UseCasesFacets(
         erc721,
         erc721TestWrapper,
         erc721Capped,
+        erc721Snapshot,
+        erc721Burn,
         pause,
         accessControl,
         erc721Facet,
         erc721TestWrapperFacet,
         erc721CappedFacet,
+        erc721SnapshotFacet,
+        erc721BurnFacet,
         pauseFacet,
         accessControlFacet,
         isbeCutFacet,
@@ -685,6 +727,9 @@ export async function deployDidRegistryUseCaseFacets(
     )
     const DidVerificationMethodFactory = await ethers.getContractFactory(
         'DidVerificationMethodTestWrapperFacet'
+    )
+    const DidVerificationRelationshipFactory = await ethers.getContractFactory(
+        'DidVerificationRelationshipTestWrapperFacet'
     )
 
     const isbeCutFacet = await deployBusinessLogicFromFactory(
@@ -720,6 +765,12 @@ export async function deployDidRegistryUseCaseFacets(
         DidVerificationMethodFactory
     )
 
+    const didVerificationRelationshipFacet =
+        await deployBusinessLogicFromFactory(
+            DID_VERIFICATION_RELATIONSHIP_RESOLVER_KEY,
+            DidVerificationRelationshipFactory
+        )
+
     // Deploy all business logic contracts before setting configuration
     await deployBusinessLogicFromFactory(
         MOCK_TIMESTAMP_RESOLVER_KEY,
@@ -741,6 +792,10 @@ export async function deployDidRegistryUseCaseFacets(
         },
         {
             businessId: DID_VERIFICATION_METHOD_RESOLVER_KEY,
+            version: 1,
+        },
+        {
+            businessId: DID_VERIFICATION_RELATIONSHIP_RESOLVER_KEY,
             version: 1,
         },
     ])
@@ -783,6 +838,7 @@ export async function deployDidRegistryUseCaseFacets(
         didDocumentDetailedFacet,
         didControllerFacet,
         didVerificationMethodFacet,
+        didVerificationRelationshipFacet,
         didRegistry,
     }
 }

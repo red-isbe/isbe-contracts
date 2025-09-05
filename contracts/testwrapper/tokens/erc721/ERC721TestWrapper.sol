@@ -10,10 +10,6 @@ import {ERC721InternalCommon} from '../../../tokens/erc721/extensions/ERC721Inte
  *      - Not intended for production use; only for test environments and coverage.
  */
 abstract contract ERC721TestWrapper is ERC721InternalCommon {
-    function burn(uint256 tokenId) external {
-        _burn(tokenId);
-    }
-
     function transfer(address from, address to, uint256 tokenId) external {
         _transfer(from, to, tokenId);
     }

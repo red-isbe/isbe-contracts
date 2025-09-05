@@ -26,8 +26,13 @@ task('deployUseCase', 'Sets config')
         undefined,
         types.json
     )
-    .addParam('initBusinessId', 'The initialization business ids')
-    .addParam('initData', 'The initialization data')
+    .addParam(
+        'initBusinessId',
+        'The initialization business ids',
+        undefined,
+        types.json
+    )
+    .addParam('initData', 'The initialization data', undefined, types.json)
     .addParam('factory', 'The factory contract address')
     .setAction(
         async (
@@ -36,8 +41,8 @@ task('deployUseCase', 'Sets config')
                 configVersion: number
                 rbacRoles: string[]
                 rbacMembers: string[][]
-                initBusinessId: string
-                initData: string
+                initBusinessId: string[]
+                initData: string[]
                 factory: string
             },
             hre
