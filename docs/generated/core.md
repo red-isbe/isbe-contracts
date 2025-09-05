@@ -45,10 +45,10 @@ modifier emptyString(string _string)
 modifier emptyUint(uint256 _uint)
 ```
 
-### uintBetweenZeroAndEighteen
+### lessThanOrEqual
 
 ```solidity
-modifier uintBetweenZeroAndEighteen(uint256 _uint)
+modifier lessThanOrEqual(uint256 _currentValue, uint256 _maxValue)
 ```
 
 ---

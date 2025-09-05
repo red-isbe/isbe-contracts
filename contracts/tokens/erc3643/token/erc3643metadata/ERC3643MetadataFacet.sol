@@ -37,5 +37,8 @@ contract ERC3643MetadataFacet is ERC3643Metadata, IEIP2535Introspection {
         selectors_[--selectorsLength] = this.setOnchainID.selector;
         selectors_[--selectorsLength] = this.onchainID.selector;
         selectors_[--selectorsLength] = this.version.selector;
+        // selectors_[--selectorsLength] = this.businessIdIntrospection.selector;
+        // selectors_[--selectorsLength] = this.interfacesIntrospection.selector;
+        // selectors_[--selectorsLength] = this.selectorsIntrospection.selector;
     }
 }

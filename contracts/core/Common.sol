@@ -53,8 +53,8 @@ abstract contract Common is
         _;
     }
 
-    modifier uintBetweenZeroAndEighteen(uint256 _uint) {
-        _checkUintBetweenZeroAndEighteen(_uint);
+    modifier lessThanOrEqual(uint256 _currentValue, uint256 _maxValue) {
+        _checkLessThanOrEqual(_currentValue, _maxValue);
         _;
     }
 }

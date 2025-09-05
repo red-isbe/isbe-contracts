@@ -45,13 +45,20 @@ error EmptyUint()
 
 Emitted when a uint256 value is zero but is expected to be greater than zero
 
-### UintNotBetweenZeroAndEighteen
+### UintNotLessThanOrEqual
 
 ```solidity
-error UintNotBetweenZeroAndEighteen()
+error UintNotLessThanOrEqual(uint256 _currentValue, uint256 _maxValue)
 ```
 
-Raised when a uint256 value is not between 0 and 18, which is the valid range for token decimals.
+Raised when \_currentValue is not less or equal than of \_maxValue.
+
+#### Parameters
+
+| Name           | Type    | Description                                  |
+| -------------- | ------- | -------------------------------------------- |
+| \_currentValue | uint256 | The current uint256 value that was checked.  |
+| \_maxValue     | uint256 | The maximum uint256 value that was expected. |
 
 ### EmptyString
 
@@ -186,11 +193,23 @@ value is zero. Used for quantity and amount validation_
 | ------ | ------- | -------------------------------------------------- |
 | \_uint | uint256 | The uint256 value to validate for non-zero content |
 
-### \_checkUintBetweenZeroAndEighteen
+### \_checkLessThanOrEqual
 
 ```solidity
-function _checkUintBetweenZeroAndEighteen(uint256 _uint) internal pure
+function _checkLessThanOrEqual(uint256 _currentValue, uint256 _maxValue) internal pure
 ```
+
+Validates that the provided uint256 value is less than or equal to a maximum value
+
+_Internal validation function that reverts with UintNotLessThanOrEqual error if the
+value exceeds the maximum. Used for range validation_
+
+#### Parameters
+
+| Name           | Type    | Description                               |
+| -------------- | ------- | ----------------------------------------- |
+| \_currentValue | uint256 | The current uint256 value to validate     |
+| \_maxValue     | uint256 | The maximum uint256 value that is allowed |
 
 ### \_checkEmptyBytes
 
