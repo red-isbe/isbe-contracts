@@ -34,9 +34,10 @@ contract ProxyFactoryFacet is ProxyFactory, IEIP2535Introspection {
         override
         returns (bytes4[] memory selectors_)
     {
-        uint256 selectorsLength = 3;
+        uint256 selectorsLength = 4;
         selectors_ = new bytes4[](selectorsLength);
         selectors_[--selectorsLength] = this.deployUseCase.selector;
+        selectors_[--selectorsLength] = this.deployUseCaseTo.selector;
         selectors_[--selectorsLength] = this
             .getDeployedProxiesByConfiguration
             .selector;
