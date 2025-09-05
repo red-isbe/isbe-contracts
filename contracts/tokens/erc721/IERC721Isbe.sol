@@ -32,6 +32,7 @@ interface IERC721Isbe is IERC721, IERC721Metadata {
     /// the ERC721 receiver interface.
     /// @dev Prevent tokens from being locked in contracts that cannot handle ERC721 tokens.
     error TransferToNonERC721ReceiverImplementer();
+
     /**
      * @notice Initializes the ERC721 token with the given name and symbol.
      * @param newName The name of the ERC721 token to be initialized.
