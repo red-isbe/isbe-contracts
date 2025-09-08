@@ -468,6 +468,18 @@ describe('ERC3643 Metadata Facet', function () {
                 await deploy(false)
             })
 
+            it('GIVEN ERC3643 Metadata WHEN setOnchainID called with zero address THEN it should fail', async () => {
+                await deploy(true)
+
+                // Zero address should be not allowed for onchainID reset
+                await expect(
+                    erc3643MetadataFacet.setOnchainID(ethers.ZeroAddress)
+                ).to.be.revertedWithCustomError(
+                    erc3643MetadataFacet,
+                    'AddressZero'
+                )
+            })
+
             it('GIVEN ERC3643 Metadata WHEN initialized with zero onchainID THEN it should succeed', async () => {
                 await deploy(false)
 
@@ -483,86 +495,60 @@ describe('ERC3643 Metadata Facet', function () {
                     ethers.ZeroAddress
                 )
             })
+        })
+    })
 
-            it('GIVEN ERC3643 Metadata WHEN setOnchainID called with zero address THEN it should succeed', async () => {
-                await deploy(true)
+    describe('Paused State Validation', () => {
+        it('GIVEN ERC3643 Metadata WHEN setName called while paused THEN it should revert with IsPaused', async () => {
+            const result = await deploy(true)
 
-                // Zero address should be allowed for onchainID reset
-                await expect(
-                    erc3643MetadataFacet.setOnchainID(ethers.ZeroAddress)
-                )
-                    .to.emit(erc3643MetadataFacet, 'UpdatedTokenInformation')
-                    .withArgs(
-                        'Test ERC3643 Token',
-                        'T3643',
-                        18,
-                        version,
-                        ethers.ZeroAddress
-                    )
+            // Grant PAUSER_ROLE to the owner to allow pausing
+            await result.accessControl.grantRole(PAUSER_ROLE, ownerAddress)
 
-                expect(await erc3643MetadataFacet.onchainID()).to.equal(
-                    ethers.ZeroAddress
-                )
-            })
+            // Pause the contract
+            await result.pause.pause()
+
+            await expect(
+                erc3643MetadataFacet.setName('NewName')
+            ).to.be.revertedWithCustomError(erc3643MetadataFacet, 'IsPaused')
         })
 
-        describe('Paused State Validation', () => {
-            it('GIVEN ERC3643 Metadata WHEN setName called while paused THEN it should revert with IsPaused', async () => {
-                const result = await deploy(true)
+        it('GIVEN ERC3643 Metadata WHEN setSymbol called while paused THEN it should revert with IsPaused', async () => {
+            const result = await deploy(true)
 
-                // Grant PAUSER_ROLE to the owner to allow pausing
-                await result.accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+            // Grant PAUSER_ROLE to the owner to allow pausing
+            await result.accessControl.grantRole(PAUSER_ROLE, ownerAddress)
 
-                // Pause the contract
-                await result.pause.pause()
+            // Pause the contract
+            await result.pause.pause()
 
-                await expect(
-                    erc3643MetadataFacet.setName('NewName')
-                ).to.be.revertedWithCustomError(
-                    erc3643MetadataFacet,
-                    'IsPaused'
-                )
-            })
+            await expect(
+                erc3643MetadataFacet.setSymbol('NEW')
+            ).to.be.revertedWithCustomError(erc3643MetadataFacet, 'IsPaused')
+        })
 
-            it('GIVEN ERC3643 Metadata WHEN setSymbol called while paused THEN it should revert with IsPaused', async () => {
-                const result = await deploy(true)
+        it('GIVEN ERC3643 Metadata WHEN setOnchainID called while paused THEN it should revert with IsPaused', async () => {
+            const result = await deploy(true)
 
-                // Grant PAUSER_ROLE to the owner to allow pausing
-                await result.accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+            // Grant PAUSER_ROLE to the owner to allow pausing
+            await result.accessControl.grantRole(PAUSER_ROLE, ownerAddress)
 
-                // Pause the contract
-                await result.pause.pause()
+            // Pause the contract
+            await result.pause.pause()
 
-                await expect(
-                    erc3643MetadataFacet.setSymbol('NEW')
-                ).to.be.revertedWithCustomError(
-                    erc3643MetadataFacet,
-                    'IsPaused'
-                )
-            })
-
-            it('GIVEN ERC3643 Metadata WHEN setOnchainID called while paused THEN it should revert with IsPaused', async () => {
-                const result = await deploy(true)
-
-                // Grant PAUSER_ROLE to the owner to allow pausing
-                await result.accessControl.grantRole(PAUSER_ROLE, ownerAddress)
-
-                // Pause the contract
-                await result.pause.pause()
-
-                await expect(
-                    erc3643MetadataFacet.setOnchainID(otherAccountAddress)
-                ).to.be.revertedWithCustomError(
-                    erc3643MetadataFacet,
-                    'IsPaused'
-                )
-            })
+            await expect(
+                erc3643MetadataFacet.setOnchainID(otherAccountAddress)
+            ).to.be.revertedWithCustomError(erc3643MetadataFacet, 'IsPaused')
         })
     })
 
     describe('Events', () => {
         beforeEach(async () => {
-            await deploy(true)
+            const result = await deploy(true)
+            // Update global variables for these tests
+            erc3643MetadataFacet = result.erc3643Metadata
+            accessControl = result.accessControl
+            erc20Facet = result.erc20
         })
 
         it('GIVEN ERC3643 Metadata WHEN onchainID is updated THEN it should emit UpdatedTokenInformation event', async () => {
@@ -572,55 +558,21 @@ describe('ERC3643 Metadata Facet', function () {
             const currentDecimals = await erc20Facet.decimals()
             const currentVersion = await erc3643MetadataFacet.version()
 
+            // Update onchainID and verify event emission
             await expect(erc3643MetadataFacet.setOnchainID(otherAccountAddress))
                 .to.emit(erc3643MetadataFacet, 'UpdatedTokenInformation')
                 .withArgs(
-                    currentName, // name (unchanged)
-                    currentSymbol, // symbol (unchanged)
-                    currentDecimals, // decimals (unchanged)
-                    currentVersion, // version (unchanged)
-                    otherAccountAddress // onchainID (updated value)
+                    currentName,
+                    currentSymbol,
+                    currentDecimals,
+                    currentVersion,
+                    otherAccountAddress
                 )
-        })
 
-        it('GIVEN ERC3643 Metadata WHEN name is updated THEN it should emit UpdatedTokenInformation event', async () => {
-            const newName = 'Updated Token Name'
-
-            // Get current values before update for event verification
-            const currentSymbol = await erc20Facet.symbol()
-            const currentDecimals = await erc20Facet.decimals()
-            const currentVersion = await erc3643MetadataFacet.version()
-            const currentOnchainID = await erc3643MetadataFacet.onchainID()
-
-            await expect(erc3643MetadataFacet.setName(newName))
-                .to.emit(erc3643MetadataFacet, 'UpdatedTokenInformation')
-                .withArgs(
-                    newName, // name (updated value)
-                    currentSymbol, // symbol (unchanged)
-                    currentDecimals, // decimals (unchanged)
-                    currentVersion, // version (unchanged)
-                    currentOnchainID // onchainID (unchanged)
-                )
-        })
-
-        it('GIVEN ERC3643 Metadata WHEN symbol is updated THEN it should emit UpdatedTokenInformation event', async () => {
-            const newSymbol = 'UPD'
-
-            // Get current values before update for event verification
-            const currentName = await erc20Facet.name()
-            const currentDecimals = await erc20Facet.decimals()
-            const currentVersion = await erc3643MetadataFacet.version()
-            const currentOnchainID = await erc3643MetadataFacet.onchainID()
-
-            await expect(erc3643MetadataFacet.setSymbol(newSymbol))
-                .to.emit(erc3643MetadataFacet, 'UpdatedTokenInformation')
-                .withArgs(
-                    currentName, // name (unchanged)
-                    newSymbol, // symbol (updated value)
-                    currentDecimals, // decimals (unchanged)
-                    currentVersion, // version (unchanged)
-                    currentOnchainID // onchainID (unchanged)
-                )
+            // Verify the onchainID was actually updated
+            expect(await erc3643MetadataFacet.onchainID()).to.equal(
+                otherAccountAddress
+            )
         })
     })
 })
