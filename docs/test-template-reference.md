@@ -13,7 +13,7 @@
 
 ```typescript
 // ========================================================================
-// 1. IMPORTS - ORDEN ESPECÍFICO
+// 1. IMPORTS  
 // ========================================================================
 import { expect } from 'chai'
 import { config, ethers } from 'hardhat'
@@ -103,24 +103,47 @@ describe('ContractName', function () {
     }
 
     // ====================================================================
-    // 3.3. INITIAL DEPLOYMENT FUNCTION
+    // 3.3. DEPLOYMENT FUNCTIONS (RECOMMENDED PATTERN)
     // ====================================================================
     async function deployInitial() {
-        ;[admin, other] = await ethers.getSigners()
-        otherAddress = await other.getAddress()
-        const gov = await deployGovernance(
+        const [admin, other] = await ethers.getSigners()
+        const adminAddress = await admin.getAddress()
+        const otherAddress = await other.getAddress()
+        
+        const result = await deployGovernance(
             admin,
-            undefined,
-            CONFIGURATION_ID_FOR_CONTRACT
+            [],
+            CONFIGURATION_ID_FOR_CONTRACT,
+            false,  // Don't initialize yet
+            '0x',
+            [],
+            [],
+            false
         )
 
-        // Assign contracts from deployment result
-        contractFacetOne = gov.contractFacetOne!
-        contractFacetTwo = gov.contractFacetTwo!
-        mainContract = gov.mainContract!
-        mockTimestamp = gov.mockTimestamp!
+        return {
+            ...result,
+            admin,
+            other,
+            adminAddress,
+            otherAddress,
+            contractFacetOne: result.contractFacetOne || result.contractFacetOneFacet,
+            contractFacetTwo: result.contractFacetTwo || result.contractFacetTwoFacet,
+            mainContract: result.mainContract || result.mainContractFacet,
+            mockTimestamp: result.mockTimestamp || result.mockTimestampFacet
+        }
+    }
 
-        return gov
+    async function deployInitialized() {
+        const result = await deployInitial()
+        
+        // Initialize the main contract
+        await result.mainContract.initializeFunction(validValue)
+        
+        // Grant necessary roles
+        await result.accessControl.grantRole(REQUIRED_ROLE, result.adminAddress)
+        
+        return result
     }
 
     // ====================================================================
@@ -132,11 +155,10 @@ describe('ContractName', function () {
     }
 
     // ====================================================================
-    // 4. GLOBAL SETUP
+    // 4. NO GLOBAL SETUP REQUIRED WITH loadFixture
     // ====================================================================
-    before(async () => {
-        await loadFixture(deployInitial)
-    })
+    // When using loadFixture pattern, no global before() setup is needed
+    // Each test gets fresh state from the fixture functions
 
     // ====================================================================
     // 5. MAIN NESTED DESCRIBE
@@ -148,6 +170,8 @@ describe('ContractName', function () {
         describe('initializeFunction', () => {
             // ⚠️ CRITICAL ORDER: FAILURES FIRST
             it('GIVEN deployed contract WHEN try to initialize with invalid parameter THEN it fails', async () => {
+                const { mainContract, contractFacetOne } = await loadFixture(deployInitial)
+                
                 await expect(
                     mainContract.initializeFunction(invalidValue)
                 ).to.be.revertedWithCustomError(
@@ -157,10 +181,14 @@ describe('ContractName', function () {
             })
 
             it('GIVEN deployed contract WHEN try to initialize twice THEN it fails', async () => {
+                const { mainContract, contractFacetOne } = await loadFixture(deployInitial)
+                
+                // First initialization should succeed
                 await expect(mainContract.initializeFunction(validValue))
                     .to.emit(mainContract, 'InitializationEvent')
                     .withArgs(validValue)
 
+                // Second initialization should fail
                 await expect(
                     mainContract.initializeFunction(validValue)
                 ).to.be.revertedWithCustomError(
@@ -170,8 +198,10 @@ describe('ContractName', function () {
             })
 
             // ✅ AFTER: SUCCESSES
-            it('GIVEN deployed contract WHEN try to initialize with correct parameters THEN success', async () => {
-                expect(await mainContract.initializeFunction(validValue))
+            it('GIVEN deployed contract WHEN try to initialize with correct parameters THEN it success', async () => {
+                const { mainContract } = await loadFixture(deployInitial)
+                
+                await expect(mainContract.initializeFunction(validValue))
                     .to.emit(mainContract, 'InitializationEvent')
                     .withArgs(validValue)
             })
@@ -181,20 +211,10 @@ describe('ContractName', function () {
         // 5.2. SECOND GROUP: MAIN FUNCTION 1
         // ================================================================
         describe('mainFunction', () => {
-            before(async () => {
-                randomizeTestData(ethers.Wallet.createRandom())
-            })
-
-            beforeEach(async () => {
-                const fixture = async () => {
-                    await mainContract.initializeFunction(validValue)
-                }
-                await loadFixture(fixture)
-                testVariable = randomStr()
-            })
-
             // ⚠️ CRITICAL ORDER: ALL FAILURES FIRST
             it('GIVEN initialized contract WHEN try to call function with empty parameter1 THEN it fails', async () => {
+                const { mainContract, contractFacetOne } = await loadFixture(deployInitialized)
+                
                 await expect(
                     mainContract.mainFunction(
                         emptyString,
@@ -205,6 +225,8 @@ describe('ContractName', function () {
             })
 
             it('GIVEN initialized contract WHEN try to call function with empty parameter2 THEN it fails', async () => {
+                const { mainContract, contractFacetOne } = await loadFixture(deployInitialized)
+                
                 await expect(
                     mainContract.mainFunction(
                         validParam1,
@@ -215,6 +237,8 @@ describe('ContractName', function () {
             })
 
             it('GIVEN initialized contract WHEN try to call function with invalid parameter3 THEN it fails', async () => {
+                const { mainContract, contractFacetOne } = await loadFixture(deployInitialized)
+                
                 await expect(
                     mainContract.mainFunction(
                         validParam1,
@@ -228,6 +252,8 @@ describe('ContractName', function () {
             })
 
             it('GIVEN initialized contract WHEN try to call function with unauthorized user THEN it fails', async () => {
+                const { mainContract, contractFacetOne, other } = await loadFixture(deployInitialized)
+                
                 await expect(
                     mainContract
                         .connect(other)
@@ -238,35 +264,10 @@ describe('ContractName', function () {
                 )
             })
 
-            it('GIVEN initialized contract WHEN try to call function with duplicate data THEN it fails', async () => {
-                // First successful call
-                await expect(
-                    mainContract.mainFunction(
-                        validParam1,
-                        validParam2,
-                        validParam3
-                    )
-                )
-                    .to.emit(mainContract, 'FunctionEvent')
-                    .withArgs(validParam1, validParam2, validParam3)
-
-                // Second call with duplicate data - should fail
-                await expect(
-                    mainContract.mainFunction(
-                        validParam1,
-                        validParam2,
-                        validParam3
-                    )
-                )
-                    .to.revertedWithCustomError(
-                        contractFacetOne,
-                        'DuplicateDataError'
-                    )
-                    .withArgs(validParam1)
-            })
-
             // ✅ AFTER: ALL SUCCESSES
             it('GIVEN initialized contract WHEN try to call function with valid parameters THEN it success', async () => {
+                const { mainContract } = await loadFixture(deployInitialized)
+                
                 await expect(
                     mainContract.mainFunction(
                         validParam1,
@@ -283,33 +284,25 @@ describe('ContractName', function () {
         // 5.3. THIRD GROUP: MAIN FUNCTION 2
         // ================================================================
         describe('updateFunction', () => {
-            let wallet: HDNodeWallet
-
-            before(async () => {
-                wallet = walletOfFirstSigner()
-                randomizeTestData(wallet)
-            })
-
-            beforeEach(async () => {
-                const fixture = async () => {
-                    await mainContract.initializeFunction(validValue)
-                    await mainContract.mainFunction(
-                        validParam1,
-                        validParam2,
-                        validParam3
-                    )
-                }
-                await loadFixture(fixture)
-            })
-
             // ⚠️ CRITICAL ORDER: FAILURES FIRST
             it('GIVEN an existing record WHEN try to update with empty parameter THEN it fails', async () => {
+                const { mainContract, contractFacetOne } = await loadFixture(deployInitialized)
+                
+                // First create the record to update
+                await mainContract.mainFunction(
+                    validParam1,
+                    validParam2,
+                    validParam3
+                )
+                
                 await expect(
                     mainContract.updateFunction(validId, emptyString)
                 ).to.be.revertedWithCustomError(contractFacetOne, 'EmptyString')
             })
 
             it('GIVEN an existing record WHEN try to update non-existent record THEN it fails', async () => {
+                const { mainContract, contractFacetOne } = await loadFixture(deployInitialized)
+                
                 await expect(
                     mainContract.updateFunction(nonExistentId, validParam)
                 )
@@ -321,6 +314,15 @@ describe('ContractName', function () {
             })
 
             it('GIVEN an existing record WHEN try to update without rights THEN it fails', async () => {
+                const { mainContract, contractFacetOne, other } = await loadFixture(deployInitialized)
+                
+                // First create the record to update
+                await mainContract.mainFunction(
+                    validParam1,
+                    validParam2,
+                    validParam3
+                )
+                
                 await expect(
                     mainContract
                         .connect(other)
@@ -333,6 +335,15 @@ describe('ContractName', function () {
 
             // ✅ AFTER: SUCCESSES
             it('GIVEN an existing record WHEN try to update with valid parameters THEN it success', async () => {
+                const { mainContract } = await loadFixture(deployInitialized)
+                
+                // First create the record to update
+                await mainContract.mainFunction(
+                    validParam1,
+                    validParam2,
+                    validParam3
+                )
+                
                 await expect(
                     mainContract.updateFunction(validId, newValidParam)
                 )
@@ -345,10 +356,25 @@ describe('ContractName', function () {
         // 5.4. CONTINUE PATTERN FOR OTHER FUNCTIONS...
         // ================================================================
         describe('additionalFunction', () => {
-            // Follow the same pattern:
-            // 1. before/beforeEach setup
-            // 2. ALL failure tests first
-            // 3. ALL success tests after
+            // ⚠️ CRITICAL ORDER: ALL FAILURES FIRST
+            it('GIVEN initialized contract WHEN try to call with invalid parameter THEN it fails', async () => {
+                const { mainContract, contractFacetOne } = await loadFixture(deployInitialized)
+                
+                await expect(
+                    mainContract.additionalFunction(invalidParam)
+                ).to.be.revertedWithCustomError(contractFacetOne, 'InvalidParameterError')
+            })
+
+            // ✅ AFTER: ALL SUCCESSES
+            it('GIVEN initialized contract WHEN try to call with valid parameter THEN it success', async () => {
+                const { mainContract } = await loadFixture(deployInitialized)
+                
+                await expect(
+                    mainContract.additionalFunction(validParam)
+                )
+                    .to.emit(mainContract, 'AdditionalEvent')
+                    .withArgs(validParam)
+            })
         })
 
         // ================================================================
@@ -356,7 +382,27 @@ describe('ContractName', function () {
         // ================================================================
         describe('viewFunctions', () => {
             // Tests for read-only functions
-            // Usually only success tests, but maintain order if there are failures
+            it('GIVEN initialized contract WHEN try to get data that does not exist THEN it fails', async () => {
+                const { mainContract, contractFacetOne } = await loadFixture(deployInitialized)
+                
+                await expect(
+                    mainContract.getData(nonExistentId)
+                ).to.be.revertedWithCustomError(contractFacetOne, 'DataNotFoundError')
+            })
+
+            it('GIVEN initialized contract WHEN try to get existing data THEN it success', async () => {
+                const { mainContract } = await loadFixture(deployInitialized)
+                
+                // First create some data
+                await mainContract.mainFunction(
+                    validParam1,
+                    validParam2,
+                    validParam3
+                )
+                
+                const result = await mainContract.getData(validId)
+                expect(result).to.equal(expectedValue)
+            })
         })
     })
 })
