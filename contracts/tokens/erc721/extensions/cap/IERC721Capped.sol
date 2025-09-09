@@ -8,7 +8,7 @@ pragma solidity ^0.8.28;
  * @dev Provides:
  *      - `initializeCap`: A function to set the maximum allowable token supply.
  *      - `CapSet`: An event emitted when the cap is successfully set.
- *      - `CapIsZero`, `NewCapIsLessThanTotalSupply`, and `CapExceeded`: Custom errors to enforce and validate
+ *      - `NewCapIsLessThanTotalSupply`, and `CapExceeded`: Custom errors to enforce and validate
  *      cap-related rules.
  *      This interface must be implemented by any ERC721 token contract with a supply cap mechanism.
  */
@@ -20,12 +20,6 @@ interface IERC721Capped {
      * @param newCap The value of the token supply cap.
      */
     event CapSet(address operator, uint256 newCap);
-
-    /**
-     * @notice Thrown when an invalid token cap of zero is provided.
-     * @dev Ensures that the token supply cap must always be greater than zero.
-     */
-    error CapIsZero();
 
     /**
      * @notice Thrown when an invalid token cap of less than the total supply is provided.

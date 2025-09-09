@@ -12,9 +12,6 @@ pragma solidity ^0.8.28;
  *      with the recipient set to the zero address to reflect the burn.
  */
 interface IERC721Burnable {
-    /// @notice Error thrown when caller is not owner nor approved for the token.
-    error NotOwnerNorApproved();
-
     /**
      * @notice Burns a specific token owned by the caller.
      * @dev Destroys the `tokenId` token, reducing the total supply.

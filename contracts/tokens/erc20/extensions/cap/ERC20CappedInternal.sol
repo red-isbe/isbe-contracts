@@ -2,9 +2,7 @@
 pragma solidity ^0.8.28;
 
 import {ERC20Internal} from '../../ERC20Internal.sol';
-import {
-    _ERC20_CAPPED_STORAGE_POSITION
-} from '../../../../constants/storagePositions.sol';
+import {_ERC20_CAPPED_STORAGE_POSITION} from '../../../../constants/storagePositions.sol';
 import {IERC20Capped} from './IERC20Capped.sol';
 
 /**
@@ -24,41 +22,44 @@ abstract contract ERC20CappedInternal is ERC20Internal {
         uint256 cap;
     }
 
-    modifier checkNewCap(uint256 newCap) {
-        _checkNewCap(newCap);
+    modifier checkNewCap(uint256 _newCap) {
+        _checkNewCap(_newCap);
         _;
     }
 
-    modifier checkCap(uint256 amount) {
-        _checkCap(amount);
+    modifier checkCap(uint256 _amount) {
+        _checkCap(_amount);
         _;
     }
 
-    function _mint(address account, uint256 amount) internal virtual override {
-        super._mint(account, amount);
+    function _mint(
+        address _account,
+        uint256 _amount
+    ) internal virtual override {
+        super._mint(_account, _amount);
     }
 
-    function _setCap(uint256 newCap) internal {
-        _erc20CappedStorage().cap = newCap;
+    function _setCap(uint256 _newCap) internal {
+        _erc20CappedStorage().cap = _newCap;
     }
 
     function _cap() internal view returns (uint256) {
         return _erc20CappedStorage().cap;
     }
 
-    function _checkNewCap(uint256 newCap) internal view virtual {
-        require(newCap > 0, IERC20Capped.CapIsZero());
+    function _checkNewCap(uint256 _newCap) internal view virtual {
+        require(_newCap > 0, IERC20Capped.CapIsZero());
 
         uint256 totalSupply = _totalSupply();
 
         require(
-            newCap >= totalSupply,
-            IERC20Capped.NewCapIsLessThanTotalSupply(newCap, totalSupply)
+            _newCap >= totalSupply,
+            IERC20Capped.NewCapIsLessThanTotalSupply(_newCap, totalSupply)
         );
     }
 
-    function _checkCap(uint256 amount) internal view virtual {
-        require(_totalSupply() + amount <= _cap(), IERC20Capped.CapExceeded());
+    function _checkCap(uint256 _amount) internal view virtual {
+        require(_totalSupply() + _amount <= _cap(), IERC20Capped.CapExceeded());
     }
 
     function _erc20CappedStorage()

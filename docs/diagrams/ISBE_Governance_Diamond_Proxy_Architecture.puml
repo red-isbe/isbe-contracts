@@ -1,0 +1,69 @@
+@startuml
+!theme vibrant
+
+title ISBE Governance Diamond Proxy Architecture
+
+package Roles #LightCyan {
+    actor BUSINESS_LOGIC_DEPLOYER_ROLE
+    actor GOVERNANCE_CONFIGURATION_MANAGER_ROLE
+    actor PROXY_DEPLOYER_ROLE
+    BUSINESS_LOGIC_DEPLOYER_ROLE -[hidden]- GOVERNANCE_CONFIGURATION_MANAGER_ROLE
+    GOVERNANCE_CONFIGURATION_MANAGER_ROLE -[hidden]- PROXY_DEPLOYER_ROLE
+}
+package "ISBE Governance Diamond Proxy" #AliceBlue {
+  node DiamondProxy as DP {
+    package "Common Facets" #MintCream {
+      [DiamondCut]
+      [DiamondLoupe]
+      [AccessControl]
+      [Pause]
+    }
+
+    package "Governance Facets" #LightGreen {
+      component "BusinessLogicFactory" #LightCyan {
+        database "(\n  businessIds,\n  version\n)->businessAddress"
+      }
+      component "ProxyFactory" #LightCyan {
+        database "(\n  isbeConfigurationId,\n  version\n)->isbeProxyAddress"
+      }
+      [IsbeGlobalPause]
+      component "ConfigurationManagement" #LightCyan {
+        database "(\n  isbeConfigurationId,\n  version,\n  selector\n)->(\n  businessIds,\n  version\n)[]"
+      }
+    }
+    "Common Facets" -[hidden]- "Governance Facets"
+  }
+}
+Roles -[hidden]- "ISBE Governance Diamond Proxy"
+package "ISBE Proxy (Diamond Adaptation)" #LightGoldenRodYellow {
+  node IsbeDiamond {
+    database "isbeConfigurationId\n          version"
+  }
+  note bottom of IsbeDiamond
+    An ISBE Proxy's configuration can only be
+    modified by its own PROXY_DEPLOYER_ROLE or
+    by the central ConfigurationManagement.
+  end note
+}
+
+' --- Storage & Data Flow between Facets ---
+[BusinessLogicFactory] ..> [ConfigurationManagement]
+[ConfigurationManagement] ..> [ProxyFactory]
+[ProxyFactory] ..> [IsbeGlobalPause]
+
+
+' --- Governance to ISBE Proxy Interactions ---
+[ProxyFactory] ..> IsbeDiamond : Creates
+
+' --- Automatic Update Flow ---
+BUSINESS_LOGIC_DEPLOYER_ROLE -> [BusinessLogicFactory] : 1. Deploy Business Logics
+[BusinessLogicFactory] ..> GOVERNANCE_CONFIGURATION_MANAGER_ROLE : 2. Notifies (businessId, version)
+GOVERNANCE_CONFIGURATION_MANAGER_ROLE -> [ConfigurationManagement] : 3. Create/update a configuration \nwith a list of business logics
+[ConfigurationManagement] ..> [PROXY_DEPLOYER_ROLE] : 4 Notifies (configurationId, version, businessIds)
+PROXY_DEPLOYER_ROLE -> [ProxyFactory] : 5. deploy an use case
+IsbeDiamond -l-> [ConfigurationManagement] : 6. \n(\nisbeConfigurationId,\nversion,\nselector\n)->businessLogicAddress
+[IsbeGlobalPause] .d.> IsbeDiamond : pause/unpause facets
+
+"ISBE Proxy (Diamond Adaptation)" -l[hidden]- "ISBE Governance Diamond Proxy"
+
+@enduml

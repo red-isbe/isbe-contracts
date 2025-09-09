@@ -2,9 +2,7 @@
 pragma solidity ^0.8.28;
 
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
-import {
-    IERC20Metadata
-} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
+import {IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
 
 /**
  * @title ERC20 Token Interface
@@ -37,13 +35,13 @@ interface IERC20Isbe is IERC20, IERC20Metadata {
 
     /**
      * @notice Initializes the ERC20 token with the given name, symbol, and decimals.
-     * @param newName The name of the ERC20 token to be initialized.
-     * @param newSymbol The symbol of the ERC20 token to be initialized.
-     * @param newDecimals The number of decimal places for the ERC20 token.
+     * @param _newName The name of the ERC20 token to be initialized.
+     * @param _newSymbol The symbol of the ERC20 token to be initialized.
+     * @param _newDecimals The number of decimal places for the ERC20 token.
      */
     function initializeErc20(
-        string memory newName,
-        string memory newSymbol,
-        uint8 newDecimals
+        string memory _newName,
+        string memory _newSymbol,
+        uint8 _newDecimals
     ) external;
 }

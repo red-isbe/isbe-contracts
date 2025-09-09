@@ -1,23 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {
-    ERC20Capped
-} from '../../../tokens/erc20/extensions/cap/ERC20Capped.sol';
-import {
-    ERC20Burnable
-} from '../../../tokens/erc20/extensions/burn/ERC20Burnable.sol';
-import {
-    ERC20Controller
-} from '../../../tokens/erc20/extensions/controller/ERC20Controller.sol';
-import {
-    ERC20Snapshot
-} from '../../../tokens/erc20/extensions/snapshot/ERC20Snapshot.sol';
+import {_ERC20_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
+import {ERC20Capped} from '../../../tokens/erc20/extensions/cap/ERC20Capped.sol';
+import {ERC20Burnable} from '../../../tokens/erc20/extensions/burn/ERC20Burnable.sol';
+import {ERC20Controller} from '../../../tokens/erc20/extensions/controller/ERC20Controller.sol';
+import {ERC20Snapshot} from '../../../tokens/erc20/extensions/snapshot/ERC20Snapshot.sol';
 import {ERC20} from '../../../tokens/erc20/ERC20.sol';
-import {ISBEPause} from '../../../pause/ISBEPause.sol';
-import {
-    IsbeUUPSUpgradeable
-} from '../../../proxies/utils/IsbeUUPSUpgradeable.sol';
+import {IEIP2535Introspection} from '../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 
 // solhint-disable-next-line
 contract ERC20TestWrapper is
@@ -26,16 +16,32 @@ contract ERC20TestWrapper is
     ERC20Capped,
     ERC20Snapshot,
     ERC20Controller,
-    ISBEPause,
-    IsbeUUPSUpgradeable
+    IEIP2535Introspection
 {
+    function interfacesIntrospection()
+        external
+        pure
+        returns (bytes4[] memory interfaces_)
+    {
+        return _implementedInterfaces();
+    }
+
+    function businessIdIntrospection()
+        external
+        pure
+        override
+        returns (bytes32 businessId_)
+    {
+        businessId_ = _ERC20_RESOLVER_KEY;
+    }
+
     function selectorsIntrospection()
         external
         pure
         override
         returns (bytes4[] memory selectors_)
     {
-        uint256 selectorsLength = 22;
+        uint256 selectorsLength = 23;
         selectors_ = new bytes4[](selectorsLength);
         selectors_[--selectorsLength] = this.initializeErc20.selector;
         selectors_[--selectorsLength] = this.initializeCap.selector;
@@ -55,16 +61,39 @@ contract ERC20TestWrapper is
         selectors_[--selectorsLength] = this.allowance.selector;
         selectors_[--selectorsLength] = this.setCap.selector;
         selectors_[--selectorsLength] = this.cap.selector;
+        selectors_[--selectorsLength] = this.snapshot.selector;
         selectors_[--selectorsLength] = this.balanceOfAt.selector;
         selectors_[--selectorsLength] = this.totalSupplyAt.selector;
         selectors_[--selectorsLength] = this.forceTransfer.selector;
         selectors_[--selectorsLength] = this.forceBurn.selector;
     }
 
-    function _mint(address account, uint256 amount) internal virtual override {
-        super._mint(account, amount);
-    }
+    function _implementedInterfaces()
+        internal
+        pure
+        virtual
+        override(
+            ERC20,
+            ERC20Burnable,
+            ERC20Capped,
+            ERC20Controller,
+            ERC20Snapshot
+        )
+        returns (bytes4[] memory interfaces_)
+    {
+        uint256 interfacesLength = 5;
 
-    // solhint-disable-next-line
-    function _authorizeUpgrade(address newImplementation) internal override {}
+        bytes4[][] memory interfaceGroups = new bytes4[][](interfacesLength);
+        interfaceGroups[--interfacesLength] = ERC20._implementedInterfaces();
+        interfaceGroups[--interfacesLength] = ERC20Burnable
+            ._implementedInterfaces();
+        interfaceGroups[--interfacesLength] = ERC20Capped
+            ._implementedInterfaces();
+        interfaceGroups[--interfacesLength] = ERC20Controller
+            ._implementedInterfaces();
+        interfaceGroups[--interfacesLength] = ERC20Snapshot
+            ._implementedInterfaces();
+
+        return _aggregateInterfaces(interfaceGroups, new bytes4[](0));
+    }
 }

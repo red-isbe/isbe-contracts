@@ -2,9 +2,7 @@
 pragma solidity ^0.8.28;
 
 import {ERC20Internal} from '../../ERC20Internal.sol';
-import {
-    _ERC20_CAPPED_STORAGE_POSITION
-} from '../../../../constants/storagePositions.sol';
+import {_ERC20_CAPPED_STORAGE_POSITION} from '../../../../constants/storagePositions.sol';
 import {IERC20Snapshot} from './IERC20Snapshot.sol';
 import {Arrays} from '@openzeppelin/contracts/utils/Arrays.sol';
 import {Counters} from '@openzeppelin/contracts/utils/Counters.sol';
@@ -62,24 +60,23 @@ abstract contract ERC20SnapshotInternal is ERC20Internal {
     }
 
     function _beforeTokenTransfer(
-        address from,
-        address to,
-        /* solhint-disable-next-line no-unused-vars */
-        uint256 amount
+        address _from,
+        address _to,
+        uint256 /*amount*/
     ) internal virtual override {
-        if (from == address(0)) {
+        if (_from == address(0)) {
             // mint
-            _updateAccountSnapshot(to);
+            _updateAccountSnapshot(_to);
             return _updateTotalSupplySnapshot();
         }
-        if (to == address(0)) {
+        if (_to == address(0)) {
             // burn
-            _updateAccountSnapshot(from);
+            _updateAccountSnapshot(_from);
             return _updateTotalSupplySnapshot();
         }
         // transfer
-        _updateAccountSnapshot(from);
-        _updateAccountSnapshot(to);
+        _updateAccountSnapshot(_from);
+        _updateAccountSnapshot(_to);
     }
 
     function _getCurrentSnapshotId() internal view virtual returns (uint256) {
@@ -87,20 +84,20 @@ abstract contract ERC20SnapshotInternal is ERC20Internal {
     }
 
     function _valueAt(
-        uint256 snapshotId,
-        Snapshots storage snapshots
+        uint256 _snapshotId,
+        Snapshots storage _snapshots
     ) internal view returns (bool, uint256) {
-        require(snapshotId > 0, IERC20Snapshot.SnapshotWithIdZero());
+        require(_snapshotId > 0, IERC20Snapshot.SnapshotWithIdZero());
         require(
-            snapshotId <= _getCurrentSnapshotId(),
+            _snapshotId <= _getCurrentSnapshotId(),
             IERC20Snapshot.NonExistentSnapshotId()
         );
 
-        uint256 index = snapshots.ids.findUpperBound(snapshotId);
+        uint256 index = _snapshots.ids.findUpperBound(_snapshotId);
         return
-            (index == snapshots.ids.length)
+            (index == _snapshots.ids.length)
                 ? (false, 0)
-                : (true, snapshots.values[index]);
+                : (true, _snapshots.values[index]);
     }
 
     function _erc20SnapshotStorage()
@@ -117,10 +114,10 @@ abstract contract ERC20SnapshotInternal is ERC20Internal {
         // slither-disable-end assembly
     }
 
-    function _updateAccountSnapshot(address account) private {
+    function _updateAccountSnapshot(address _account) private {
         _updateSnapshot(
-            _erc20SnapshotStorage().accountBalanceSnapshots[account],
-            _balanceOf(account)
+            _erc20SnapshotStorage().accountBalanceSnapshots[_account],
+            _balanceOf(_account)
         );
     }
 
@@ -132,19 +129,19 @@ abstract contract ERC20SnapshotInternal is ERC20Internal {
     }
 
     function _updateSnapshot(
-        Snapshots storage snapshots,
-        uint256 currentValue
+        Snapshots storage _snapshots,
+        uint256 _currentValue
     ) private {
         uint256 currentId = _getCurrentSnapshotId();
-        if (_lastSnapshotId(snapshots.ids) < currentId) {
-            snapshots.ids.push(currentId);
-            snapshots.values.push(currentValue);
+        if (_lastSnapshotId(_snapshots.ids) < currentId) {
+            _snapshots.ids.push(currentId);
+            _snapshots.values.push(_currentValue);
         }
     }
 
     function _lastSnapshotId(
-        uint256[] storage ids
+        uint256[] storage _ids
     ) private view returns (uint256) {
-        return ids.length == 0 ? 0 : ids[ids.length - 1];
+        return _ids.length == 0 ? 0 : _ids[_ids.length - 1];
     }
 }

@@ -2,10 +2,13 @@
 
 pragma solidity ^0.8.28;
 
-import {_PAUSE_STORAGE_POSITION} from '../constants/storagePositions.sol';
 import {IPause} from './IPause.sol';
+import {_PAUSE_STORAGE_POSITION} from '../constants/storagePositions.sol';
+import {ISBEContext} from '../utils/ISBEContext.sol';
 
-abstract contract PauseInternalCommon {
+/// @title PauseInternal
+/// @notice Internal logic for pausing mechanism
+abstract contract PauseInternalCommon is ISBEContext {
     /// @notice Structure for storing pause state and authority level
     struct PauseStorage {
         bool pause;
@@ -28,10 +31,6 @@ abstract contract PauseInternalCommon {
 
     function _paused() internal view virtual returns (bool) {
         return _pauseStorage().pause;
-    }
-
-    function _authorityLevel() internal view virtual returns (uint256) {
-        return _pauseStorage().authorityLevel;
     }
 
     function _requireNotPaused() internal view virtual {

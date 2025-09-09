@@ -1,6 +1,6 @@
 {
     "name": "@alastria/isbe-contracts",
-    "version": "0.0.3",
+    "version": "0.0.5",
     "description": "Repository of certified and audited smart contracts for use in the ISBE network",
     "scripts": {
         "compile": "npx hardhat compile",
@@ -14,25 +14,40 @@
         "size": "npx hardhat size-contracts",
         "test": "npx hardhat test",
         "test:parallel": "npx hardhat test --parallel",
-        "test:coverage": "npx hardhat coverage && node check-coverage.js",
+        "test:coverage": "npx hardhat coverage && node scripts/check-coverage.js",
         "test:accessControl": "npx hardhat test test/AccessControl.spec.ts",
         "test:pause": "npx hardhat test test/Pause.spec.ts",
         "test:ownable": "npx hardhat test test/Ownable.spec.ts",
         "test:erc20": "npx hardhat test test/ERC20.spec.ts",
+        "test:erc165": "npx hardhat test test/ERC165.spec.ts",
+        "test:assetEventTracker": "npx hardhat test test/AssetEventTracker.spec.ts",
+        "test:hashTimestamp": "npx hardhat test test/HashTimestamp.spec.ts",
+        "test:IsbeBeaconProxy": "npx hardhat test test/IsbeBeaconProxy.spec.ts",
+        "test:IsbeTransparentProxy": "npx hardhat test test/IsbeTransparentProxy.spec.ts",
+        "test:IsbeERC1967Proxy": "npx hardhat test test/IsbeERC1967Proxy.spec.ts",
+        "test:BusinessLogicFactory": "npx hardhat test test/governance/BusinessLogicFactory.spec.ts",
+        "test:ProxyFactory": "npx hardhat test test/governance/ProxyFactory.spec.ts",
+        "test:ConfigurationManagement": "npx hardhat test test/governance/ConfigurationManagement.spec.ts",
+        "test:GlobalIsbePause": "npx hardhat test test/governance/GlobalIsbePause.spec.ts",
+        "test:IsbeProxy": "npx hardhat test test/governance/IsbeProxy.spec.ts",
+        "test:scripts": "npx hardhat deployTest",
         "lint:sol": "solhint 'contracts/**/*.sol' --max-warnings 0",
+        "lint:sol:fix": "solhint 'contracts/**/*.sol' --fix --noPrompt",
         "lint:ts": "npx -y eslint .",
         "lint": "npm run lint:sol && npm run lint:ts",
         "prettier": "npm run prettier:write",
         "prettier:write": "npx -y prettier . --write",
         "prettier:check": "npx -y prettier . --check",
-        "pre-commit": "npm run prettier && npm run lint && npm run test:coverage",
+        "pre-commit": "npm run docgen && npm run prettier && npm run lint && npm run clean:cache && npm run test:coverage && npm run test:scripts",
         "prepare": "husky",
         "slither:analysis": "docker run -t --rm -v /var/run/docker.sock:/var/run/docker.sock -v \"$(pwd)\":\"/home/ethsec/contracts\" -w \"/home/ethsec/contracts\" -u 0:0 trailofbits/eth-security-toolbox /bin/sh -c \"solc-select install 0.8.28  && solc-select use 0.8.28  && slither . --solc-remaps @=node_modules/@\"",
         "slither:storageLayout": "docker run -t --rm -v /var/run/docker.sock:/var/run/docker.sock -v \"$(pwd)\":\"/home/ethsec/contracts\" -w \"/home/ethsec/contracts\" -u 0:0 trailofbits/eth-security-toolbox /bin/sh -c \"solc-select install 0.8.28  && solc-select use 0.8.28  && slither . --print variable-order --solc-remaps @=node_modules/@\"",
         "slither:inheritance": "docker run -t --rm -v /var/run/docker.sock:/var/run/docker.sock -v \"$(pwd)\":\"/home/ethsec/contracts\" -w \"/home/ethsec/contracts\" -u 0:0 trailofbits/eth-security-toolbox /bin/sh -c \"solc-select install 0.8.28  && solc-select use 0.8.28  && slither . --print inheritance --solc-remaps @=node_modules/@\"",
         "slither:summary": "docker run -t --rm -v /var/run/docker.sock:/var/run/docker.sock -v \"$(pwd)\":\"/home/ethsec/contracts\" -w \"/home/ethsec/contracts\" -u 0:0 trailofbits/eth-security-toolbox /bin/sh -c \"solc-select install 0.8.28  && solc-select use 0.8.28  && slither . --print human-summary --solc-remaps @=node_modules/@\"",
         "slither": "npm run slither:summary && npm run slither:storageLayout && npm run slither:inheritance && npm run slither:analysis",
-        "slither:analysis:local": "slither . --solc-remaps @=node_modules/@ | tee slither-output.txt && node check-slither.js"
+        "slither:analysis:local": "slither . --solc-remaps @=node_modules/@ | tee slither-output.txt && node scripts/check-slither.js",
+        "docgen": "npx hardhat docgen && node scripts/post-docgen.js",
+        "deployAll": "npx hardhat deployAll"
     },
     "repository": {
         "type": "git",
@@ -58,7 +73,8 @@
         "@nomicfoundation/hardhat-toolbox": "^5.0.0",
         "@openzeppelin/contracts": "^4.9.6",
         "eslint": "^9.25.1",
-        "hardhat": "^2.23.0",
+        "ethers": "^6.15.0",
+        "hardhat": "^2.25.0",
         "hardhat-contract-sizer": "^2.10.0",
         "husky": "^9.1.7",
         "lint-staged": "^15.5.1",
@@ -67,6 +83,7 @@
         "solhint": "^5.0.5",
         "solhint-plugin-prettier": "^0.1.0",
         "solidity-coverage": "^0.8.15",
+        "solidity-docgen": "^0.6.0-beta.36",
         "typescript-eslint": "^8.31.1"
     },
     "overrides": {
@@ -96,5 +113,8 @@
     "files": [
         "artifacts",
         "contracts"
-    ]
+    ],
+    "dependencies": {
+        "dotenv": "^17.0.1"
+    }
 }

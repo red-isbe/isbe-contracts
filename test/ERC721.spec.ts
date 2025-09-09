@@ -1,9 +1,21 @@
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
-import type { ERC721TestWrapper } from '../typechain-types'
+import { Signer, Contract, ZeroAddress } from 'ethers'
+import {
+    ERC721Capped,
+    ERC721TestWrapper,
+    AccessControl,
+    ERC721Facet,
+    ISBEPause,
+    ERC721Snapshot,
+    ERC721Burnable,
+    ERC721Controller,
+} from '../typechain-types'
+import { CONFIGURATION_ID_ERC721, deployGovernance } from './initialization'
 import {
     CAP_ROLE,
     MINTER_ROLE,
+    PAUSER_ROLE,
     SNAPSHOT_ROLE,
     CONTROLLER_ROLE,
 } from './constants'
@@ -11,562 +23,382 @@ import {
 describe('ERC721', function () {
     const name = 'ISBE NFT'
     const symbol = 'ISBENFT'
-    const cap = 10
+
+    let erc721: ERC721Facet
+    let erc721TestWrapper: ERC721TestWrapper
+    let erc721Capped: ERC721Capped
+    let erc721Snapshot: ERC721Snapshot
+    let erc721Burn: ERC721Burnable
+    let erc721Controller: ERC721Controller
+    let erc20Address: string
+    let owner: Signer
+    let ownerAddress: string
+    let other: Signer
+    let otherAddress: string
+    let third: Signer
+    let thirdAddress: string
+    let accessControl: AccessControl
+    let pause: ISBEPause
+
     async function deploy(initialize = false) {
-        const [owner, other, third] = await ethers.getSigners()
-        const ERC721 = await ethers.getContractFactory('ERC721TestWrapper')
-        const erc721Impl = await ERC721.deploy()
-        const Proxy = await ethers.getContractFactory('IsbeERC1967Proxy')
-        const proxy = await Proxy.deploy(erc721Impl)
-        await proxy.waitForDeployment()
-        const erc721 = ERC721.attach(
-            await proxy.getAddress()
-        ) as ERC721TestWrapper
+        ;[owner, other, third] = await ethers.getSigners()
+        ownerAddress = await owner.getAddress()
+        otherAddress = await other.getAddress()
+        thirdAddress = await third.getAddress()
+
+        const result = await deployGovernance(
+            owner,
+            undefined,
+            CONFIGURATION_ID_ERC721
+        )
+        erc721 = result.erc721
+        erc721TestWrapper = result.erc721TestWrapper
+        erc721Capped = result.erc721Capped
+        erc721Snapshot = result.erc721Snapshot
+        erc721Burn = result.erc721Burn
+        erc721Controller = result.erc721Controller
+        erc20Address = await result.erc721Facet.getAddress()
+        accessControl = result.accessControl
+        pause = result.pause
 
         if (initialize) {
             await erc721.initializeErc721(name, symbol)
-            await erc721.initializeCap(cap)
+            await erc721Capped.initializeCap(3)
         }
-
-        return { erc721, owner, other, third, erc721Impl }
     }
 
     describe('Deployment', () => {
-        it('GIVEN an ERC721 WHEN deployed THEN cannot initialize implementation', async () => {
-            const { erc721Impl } = await deploy()
-            await expect(
-                erc721Impl.initializeErc721(name, symbol)
-            ).to.be.revertedWithCustomError(
-                erc721Impl,
-                'ContractIsAlreadyInitialized'
-            )
-        })
-
-        it('GIVEN an ERC721 WHEN initialized THEN name and symbol can be retrieved', async () => {
-            const { erc721 } = await deploy()
-            await expect(erc721.initializeErc721(name, symbol))
-                .to.emit(erc721, 'Erc721Initialized')
-                .withArgs(name, symbol)
-            expect(await erc721.name()).to.equal(name)
-            expect(await erc721.symbol()).to.equal(symbol)
-            expect(await erc721.totalSupply()).to.equal(0)
-        })
-
-        it('GIVEN an initialized ERC721 WHEN try to initialize twice THEN it fails', async () => {
-            const { erc721 } = await deploy(true)
+        it('GIVEN an ERC721 WHEN deployed THEN cannot initialize twice', async () => {
+            await deploy(true)
             await expect(
                 erc721.initializeErc721(name, symbol)
             ).to.be.revertedWithCustomError(
-                erc721,
+                erc721TestWrapper,
                 'ContractIsAlreadyInitialized'
             )
         })
-    })
 
-    describe('Cap', () => {
-        it('GIVEN an ERC721 WHEN initializeCap with zero THEN fails', async () => {
-            const { erc721 } = await deploy()
-            await expect(erc721.initializeCap(0)).to.be.revertedWithCustomError(
-                erc721,
-                'CapIsZero'
-            )
-        })
-
-        it('GIVEN an ERC721 WHEN cap is initialized THEN it can be retrieved', async () => {
-            const { erc721, owner } = await deploy()
-            await expect(erc721.initializeCap(cap))
-                .to.emit(erc721, 'CapSet')
-                .withArgs(owner.address, cap)
-            expect(await erc721.cap()).to.equal(cap)
-        })
-
-        it('GIVEN an initialized ERC721 WHEN mint over cap THEN fails', async () => {
-            const { erc721, owner } = await deploy(true)
-            await erc721.initializeAccessControl(owner.address)
-            await erc721.grantRole(MINTER_ROLE, owner.address)
-            for (let i = 1; i <= cap; i++) {
-                await erc721.mint(owner.address, i)
-            }
-            await expect(
-                erc721.mint(owner.address, cap + 1)
-            ).to.be.revertedWithCustomError(erc721, 'CapExceeded')
-        })
-
-        it('GIVEN an initialized ERC721 WHEN setting cap below total supply THEN fails', async () => {
-            const { erc721, owner } = await deploy(true)
-            await erc721.initializeAccessControl(owner.address)
-            await erc721.grantRole(MINTER_ROLE, owner.address)
-            await erc721.grantRole(CAP_ROLE, owner.address)
-            await erc721.mint(owner.address, 1)
-            await erc721.mint(owner.address, 2)
-            await expect(erc721.setCap(1)).to.be.revertedWithCustomError(
-                erc721,
-                'NewCapIsLessThanTotalSupply'
-            )
-        })
-
-        it('GIVEN an initialized ERC721 WHEN non capper setting cap THEN fails', async () => {
-            const { erc721 } = await deploy(true)
-            await erc721.initializeAccessControl(
-                (await ethers.getSigners())[0].address
-            )
-            await expect(erc721.setCap(100)).to.be.revertedWithCustomError(
-                erc721,
-                'AccountHasNoRole'
-            )
-        })
-
-        it('GIVEN an initialized ERC721 WHEN setting cap over total supply THEN succeeds', async () => {
-            const { erc721, owner } = await deploy(true)
-            await erc721.initializeAccessControl(owner.address)
-            await erc721.grantRole(CAP_ROLE, owner.address)
-            await expect(erc721.setCap(cap + 1))
-                .to.emit(erc721, 'CapSet')
-                .withArgs(owner.address, cap + 1)
+        it('GIVEN an ERC721 WHEN deployed THEN name and symbol are correct', async () => {
+            await deploy()
+            await erc721.initializeErc721(name, symbol)
+            expect(await erc721.name()).to.equal(name)
+            expect(await erc721.symbol()).to.equal(symbol)
         })
     })
 
     describe('Mint', () => {
-        it('GIVEN an initialized ERC721 WHEN mint to zero address THEN fails', async () => {
-            const { erc721, owner } = await deploy(true)
-            await erc721.initializeAccessControl(owner.address)
-            await erc721.grantRole(MINTER_ROLE, owner.address)
-            await expect(
-                erc721.mint(ethers.ZeroAddress, 1)
-            ).to.be.revertedWithCustomError(erc721, 'AddressZero')
+        beforeEach(async () => {
+            await deploy(true)
+            await accessControl.grantRole(MINTER_ROLE, ownerAddress)
         })
 
-        it('GIVEN an initialized ERC721 WHEN non-MINTER mints THEN fails', async () => {
-            const { erc721, other } = await deploy(true)
-            await erc721.initializeAccessControl(
-                (await ethers.getSigners())[0].address
-            )
+        it('GIVEN an ERC721 WHEN mint with tokenId 0 THEN reverts', async () => {
             await expect(
-                erc721.connect(other).mint(other.address, 1)
-            ).to.be.revertedWithCustomError(erc721, 'AccountHasNoRole')
+                erc721Capped.mint(ownerAddress, 0)
+            ).to.be.revertedWithCustomError(accessControl, 'EmptyUint')
         })
 
-        it('GIVEN an initialized ERC721 WHEN mint a token THEN succeeds', async () => {
-            const { erc721, owner } = await deploy(true)
-            await erc721.initializeAccessControl(owner.address)
-            await erc721.grantRole(MINTER_ROLE, owner.address)
-            await expect(erc721.mint(owner.address, 1))
+        it('GIVEN an ERC721 WHEN mint to zero address THEN fails', async () => {
+            await expect(
+                erc721Capped.mint(ethers.ZeroAddress, 1)
+            ).to.be.revertedWithCustomError(erc721TestWrapper, 'AddressZero')
+        })
+
+        it('GIVEN an ERC721 WHEN mint a new token THEN succeeds', async () => {
+            await expect(erc721Capped.mint(ownerAddress, 1))
                 .to.emit(erc721, 'Transfer')
-                .withArgs(ethers.ZeroAddress, owner.address, 1)
-            expect(await erc721.ownerOf(1)).to.equal(owner.address)
-            expect(await erc721.balanceOf(owner.address)).to.equal(1)
-            expect(await erc721.totalSupply()).to.equal(1)
+                .withArgs(ethers.ZeroAddress, ownerAddress, 1)
+            expect(await erc721.ownerOf(1)).to.equal(ownerAddress)
+            expect(await erc721.balanceOf(ownerAddress)).to.equal(1)
         })
 
-        it('GIVEN an initialized ERC721 WHEN mint same tokenId twice THEN fails', async () => {
-            const { erc721, owner } = await deploy(true)
-            await erc721.initializeAccessControl(owner.address)
-            await erc721.grantRole(MINTER_ROLE, owner.address)
-            await erc721.mint(owner.address, 1)
+        it('GIVEN an ERC721 WHEN mint an already minted token THEN fails', async () => {
+            await erc721Capped.mint(ownerAddress, 1)
             await expect(
-                erc721.mint(owner.address, 1)
+                erc721Capped.mint(ownerAddress, 1)
             ).to.be.revertedWithCustomError(erc721, 'TokenAlreadyMinted')
-        })
-
-        it('GIVEN an ERC721 initialized WHEN minted THEN totalSupply returns correct value', async () => {
-            const { erc721, owner } = await deploy(true)
-            await erc721.initializeAccessControl(owner.address)
-            await erc721.grantRole(MINTER_ROLE, owner.address)
-            await erc721.mint(owner.address, 1)
-            expect(await erc721.totalSupply()).to.equal(1)
-        })
-
-        it('GIVEN an ERC721 initialized WHEN tokenURI is called THEN returns empty string', async () => {
-            const { erc721 } = await deploy(true)
-            expect(await erc721.tokenURI(123)).to.equal('')
         })
     })
 
     describe('Burn', () => {
-        it('GIVEN an ERC721 initialized WHEN owner burns THEN succeeds', async () => {
-            const { erc721, owner } = await deploy(true)
-            await erc721.initializeAccessControl(owner.address)
-            await erc721.grantRole(MINTER_ROLE, owner.address)
-            await erc721.mint(owner.address, 1)
-            await expect(erc721.connect(owner).burn(1))
+        beforeEach(async () => {
+            await deploy(true)
+            await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+            await erc721Capped.mint(ownerAddress, 1)
+        })
+
+        it('GIVEN an ERC721 WHEN burn a token THEN totalSupply decreases and ownerOf is ZeroAddress', async () => {
+            await expect(erc721Burn.burn(1))
                 .to.emit(erc721, 'Transfer')
-                .withArgs(owner.address, ethers.ZeroAddress, 1)
+                .withArgs(ownerAddress, ethers.ZeroAddress, 1)
+            expect(await erc721.ownerOf(1)).to.be.equal(ZeroAddress)
         })
 
-        it('GIVEN an ERC721 initialized WHEN not owner nor approved burns THEN fails', async () => {
-            const { erc721, owner, other } = await deploy(true)
-            await erc721.initializeAccessControl(owner.address)
-            await erc721.grantRole(MINTER_ROLE, owner.address)
-            await erc721.mint(owner.address, 1)
+        it('GIVEN an ERC721 WHEN owner approves another, burns token, THEN approved address is reset to zero', async () => {
+            await expect(erc721.approve(otherAddress, 1))
+                .to.emit(erc721, 'Approval')
+                .withArgs(ownerAddress, otherAddress, 1)
+            expect(await erc721.getApproved(1)).to.equal(otherAddress)
+
+            await expect(erc721Burn.burn(1))
+                .to.emit(erc721, 'Transfer')
+                .withArgs(ownerAddress, ethers.ZeroAddress, 1)
+
+            expect(await erc721.getApproved(1)).to.equal(ethers.ZeroAddress)
+        })
+
+        it('GIVEN an ERC721 WHEN paused THEN burn reverts', async () => {
+            await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+            await pause.pause()
+            await expect(erc721Burn.burn(1)).to.be.revertedWithCustomError(
+                erc721Burn,
+                'IsPaused'
+            )
+        })
+
+        it('GIVEN an ERC721 WHEN burn is called by not owner nor approved nor operator THEN reverts with CallerNotOwnerNorApproved', async () => {
+            // Mint token to owner
+            await erc721Capped.mint(ownerAddress, 2)
+            // Try to burn from another account (not owner, not approved, not operator)
             await expect(
-                erc721.connect(other).burn(1)
-            ).to.be.revertedWithCustomError(erc721, 'NotOwnerNorApproved')
-        })
-
-        it('GIVEN an ERC721 initialized WHEN burn non-existent token THEN fails', async () => {
-            const { erc721, owner } = await deploy(true)
-            await erc721.initializeAccessControl(owner.address)
-            await expect(erc721.burn(999)).to.be.revertedWithCustomError(
-                erc721,
-                'NotOwnerNorApproved'
+                erc721Burn.connect(other).burn(2)
+            ).to.be.revertedWithCustomError(
+                erc721Burn,
+                'CallerNotOwnerNorApproved'
             )
         })
     })
 
     describe('BurnFrom', () => {
-        it('GIVEN an ERC721 initialized WHEN approved burns from THEN succeeds', async () => {
-            const { erc721, owner, other } = await deploy(true)
-            await erc721.initializeAccessControl(owner.address)
-            await erc721.grantRole(MINTER_ROLE, owner.address)
-            await erc721.mint(owner.address, 1)
-            await erc721.approve(other.address, 1)
-            await expect(erc721.connect(other).burnFrom(owner.address, 1))
-                .to.emit(erc721, 'Transfer')
-                .withArgs(owner.address, ethers.ZeroAddress, 1)
+        beforeEach(async () => {
+            await deploy(true)
+            await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+            await erc721Capped.mint(ownerAddress, 1)
         })
 
-        it('GIVEN an ERC721 initialized WHEN not approved burns from THEN fails', async () => {
-            const { erc721, owner, other } = await deploy(true)
-            await erc721.initializeAccessControl(owner.address)
-            await erc721.grantRole(MINTER_ROLE, owner.address)
-            await erc721.mint(owner.address, 1)
+        it('GIVEN an ERC721 WHEN burnFrom as owner THEN succeeds', async () => {
+            await erc721.approve(erc721Burn, 1)
+            await expect(erc721Burn.burnFrom(ownerAddress, 1))
+                .to.emit(erc721, 'Transfer')
+                .withArgs(ownerAddress, ethers.ZeroAddress, 1)
+            expect(await erc721.ownerOf(1)).to.equal(ZeroAddress)
+        })
+
+        it('GIVEN an ERC721 WHEN burnFrom as not approved nor owner THEN reverts', async () => {
             await expect(
-                erc721.connect(other).burnFrom(owner.address, 1)
-            ).to.be.revertedWithCustomError(erc721, 'NotOwnerNorApproved')
+                erc721Burn.connect(other).burnFrom(ownerAddress, 1)
+            ).to.be.revertedWithCustomError(
+                erc721Burn,
+                'CallerNotOwnerNorApproved'
+            )
         })
 
-        it('GIVEN an ERC721 initialized WHEN operator burns from THEN succeeds', async () => {
-            const { erc721, owner, other } = await deploy(true)
-            await erc721.initializeAccessControl(owner.address)
-            await erc721.grantRole(MINTER_ROLE, owner.address)
-            await erc721.mint(owner.address, 1)
-            await erc721.setApprovalForAll(other.address, true)
-            await expect(erc721.connect(other).burnFrom(owner.address, 1))
-                .to.emit(erc721, 'Transfer')
-                .withArgs(owner.address, ethers.ZeroAddress, 1)
+        it('GIVEN an ERC721 WHEN paused THEN burnFrom reverts', async () => {
+            await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+            await pause.pause()
+            await expect(
+                erc721Burn.burnFrom(ownerAddress, 1)
+            ).to.be.revertedWithCustomError(erc721Burn, 'IsPaused')
         })
     })
 
     describe('Transfer', () => {
-        it('GIVEN an ERC721 initialized WHEN transfer token THEN succeeds', async () => {
-            const { erc721, owner, other } = await deploy(true)
-            await erc721.initializeAccessControl(owner.address)
-            await erc721.grantRole(MINTER_ROLE, owner.address)
-            await erc721.mint(owner.address, 1)
-            await expect(erc721.transferFrom(owner.address, other.address, 1))
-                .to.emit(erc721, 'Transfer')
-                .withArgs(owner.address, other.address, 1)
-            expect(await erc721.ownerOf(1)).to.equal(other.address)
+        beforeEach(async () => {
+            await deploy(true)
+            await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+            await erc721Capped.mint(ownerAddress, 1)
         })
 
-        it('GIVEN an ERC721 initialized WHEN transfer from not owner THEN fails', async () => {
-            const { erc721, owner, other } = await deploy(true)
-            await erc721.initializeAccessControl(owner.address)
-            await erc721.grantRole(MINTER_ROLE, owner.address)
-            await erc721.mint(owner.address, 1)
+        it('GIVEN an ERC721 WHEN transfer from correct owner THEN succeeds', async () => {
             await expect(
-                erc721
-                    .connect(other)
-                    .transferFrom(owner.address, other.address, 1)
+                erc721TestWrapper.transfer(ownerAddress, otherAddress, 1)
+            )
+                .to.emit(erc721, 'Transfer')
+                .withArgs(ownerAddress, otherAddress, 1)
+            expect(await erc721.ownerOf(1)).to.equal(otherAddress)
+        })
+
+        it('GIVEN an ERC721 WHEN transfer from incorrect owner THEN fails', async () => {
+            await expect(
+                erc721TestWrapper.transfer(otherAddress, thirdAddress, 1)
             ).to.be.revertedWithCustomError(erc721, 'CallerNotOwnerNorApproved')
         })
 
-        it('GIVEN an ERC721 initialized WHEN transferFrom to zero address THEN fails', async () => {
-            const { erc721, owner } = await deploy(true)
-            await erc721.initializeAccessControl(owner.address)
-            await erc721.grantRole(MINTER_ROLE, owner.address)
-            await erc721.mint(owner.address, 1)
+        it('GIVEN an ERC721 WHEN transfer to zero address THEN fails', async () => {
             await expect(
-                erc721.transferFrom(owner.address, ethers.ZeroAddress, 1)
-            ).to.be.revertedWithCustomError(erc721, 'AddressZero')
-        })
-
-        it('GIVEN an ERC721 initialized WHEN safeTransferFrom to zero address THEN fails', async () => {
-            const { erc721, owner } = await deploy(true)
-            await erc721.initializeAccessControl(owner.address)
-            await erc721.grantRole(MINTER_ROLE, owner.address)
-            await erc721.mint(owner.address, 1)
-            await expect(
-                erc721['safeTransferFrom(address,address,uint256)'](
-                    owner.address,
-                    ethers.ZeroAddress,
-                    1
-                )
-            ).to.be.revertedWithCustomError(erc721, 'AddressZero')
-        })
-
-        it('GIVEN an ERC721 initialized WHEN transferFrom non-existent token THEN fails', async () => {
-            const { erc721, owner, other } = await deploy(true)
-            await erc721.initializeAccessControl(owner.address)
-            await expect(
-                erc721.transferFrom(owner.address, other.address, 999)
-            ).to.be.revertedWithCustomError(
-                erc721,
-                'TransferFromIncorrectOwner'
-            )
-        })
-
-        it('GIVEN an ERC721 initialized WHEN safeTransferFrom with data THEN succeeds', async () => {
-            const { erc721, owner, other } = await deploy(true)
-            await erc721.initializeAccessControl(owner.address)
-            await erc721.grantRole(MINTER_ROLE, owner.address)
-            await erc721.mint(owner.address, 1)
-            await expect(
-                erc721['safeTransferFrom(address,address,uint256,bytes)'](
-                    owner.address,
-                    other.address,
-                    1,
-                    '0x1234'
-                )
-            ).to.emit(erc721, 'Transfer')
-            expect(await erc721.ownerOf(1)).to.equal(other.address)
+                erc721TestWrapper.transfer(ownerAddress, ethers.ZeroAddress, 1)
+            ).to.be.revertedWithCustomError(erc721TestWrapper, 'AddressZero')
         })
     })
 
-    describe('Approval', () => {
-        it('GIVEN an ERC721 initialized WHEN approve and transfer by approved THEN succeeds', async () => {
-            const { erc721, owner, other } = await deploy(true)
-            await erc721.initializeAccessControl(owner.address)
-            await erc721.grantRole(MINTER_ROLE, owner.address)
-            await erc721.mint(owner.address, 1)
-            await expect(erc721.approve(other.address, 1))
+    describe('Approvals', () => {
+        beforeEach(async () => {
+            await deploy(true)
+            await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+            await erc721Capped.mint(ownerAddress, 1)
+        })
+
+        it('GIVEN callSetApprovalForAll WHEN owner is zero address THEN reverts with AddressZero', async () => {
+            await expect(
+                erc721TestWrapper.callSetApprovalForAll(
+                    ethers.ZeroAddress,
+                    otherAddress,
+                    true
+                )
+            ).to.be.revertedWithCustomError(erc721TestWrapper, 'AddressZero')
+        })
+
+        it('GIVEN an ERC721 WHEN approve as owner THEN succeeds', async () => {
+            await expect(erc721.approve(otherAddress, 1))
                 .to.emit(erc721, 'Approval')
-                .withArgs(owner.address, other.address, 1)
-            await expect(
-                erc721
-                    .connect(other)
-                    .transferFrom(owner.address, other.address, 1)
-            ).to.emit(erc721, 'Transfer')
+                .withArgs(ownerAddress, otherAddress, 1)
+            expect(await erc721.getApproved(1)).to.equal(otherAddress)
         })
 
-        it('GIVEN an ERC721 initialized WHEN setApprovalForAll and transfer by operator THEN succeeds', async () => {
-            const { erc721, owner, other } = await deploy(true)
-            await erc721.initializeAccessControl(owner.address)
-            await erc721.grantRole(MINTER_ROLE, owner.address)
-            await erc721.mint(owner.address, 1)
-            await expect(erc721.setApprovalForAll(other.address, true))
+        it('GIVEN an ERC721 WHEN approve as approved THEN succeeds', async () => {
+            await erc721.approve(otherAddress, 1)
+            await expect(erc721.connect(other).approve(thirdAddress, 1))
+                .to.emit(erc721, 'Approval')
+                .withArgs(ownerAddress, thirdAddress, 1)
+            expect(await erc721.getApproved(1)).to.equal(thirdAddress)
+        })
+
+        it('GIVEN an ERC721 WHEN approve as operator THEN succeeds', async () => {
+            await erc721.setApprovalForAll(otherAddress, true)
+            await expect(erc721.connect(other).approve(thirdAddress, 1))
+                .to.emit(erc721, 'Approval')
+                .withArgs(ownerAddress, thirdAddress, 1)
+            expect(await erc721.getApproved(1)).to.equal(thirdAddress)
+        })
+
+        it('GIVEN an ERC721 WHEN setApprovalForAll THEN isApprovedForAll is true', async () => {
+            await expect(erc721.setApprovalForAll(otherAddress, true))
                 .to.emit(erc721, 'ApprovalForAll')
-                .withArgs(owner.address, other.address, true)
+                .withArgs(ownerAddress, otherAddress, true)
+            expect(await erc721.isApprovedForAll(ownerAddress, otherAddress)).to
+                .be.true
+        })
+
+        it('GIVEN an ERC721 WHEN setApprovalForAll with zero operator THEN fails', async () => {
+            await expect(
+                erc721.setApprovalForAll(ethers.ZeroAddress, true)
+            ).to.be.revertedWithCustomError(erc721TestWrapper, 'AddressZero')
+        })
+
+        it('GIVEN an ERC721 WHEN approve as not owner nor operator THEN fails', async () => {
+            await expect(
+                erc721.connect(other).approve(thirdAddress, 1)
+            ).to.be.revertedWithCustomError(erc721, 'CallerNotOwnerNorApproved')
+        })
+    })
+
+    describe('transferFrom', () => {
+        beforeEach(async () => {
+            await deploy(true)
+            await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+            await erc721Capped.mint(ownerAddress, 1)
+        })
+
+        it('GIVEN an ERC721 WHEN transferFrom as owner THEN succeeds', async () => {
+            await expect(erc721.transferFrom(ownerAddress, otherAddress, 1))
+                .to.emit(erc721, 'Transfer')
+                .withArgs(ownerAddress, otherAddress, 1)
+        })
+
+        it('GIVEN an ERC721 WHEN transferFrom as approved THEN succeeds', async () => {
+            await erc721.approve(otherAddress, 1)
             await expect(
                 erc721
                     .connect(other)
-                    .transferFrom(owner.address, other.address, 1)
+                    .transferFrom(ownerAddress, thirdAddress, 1)
             ).to.emit(erc721, 'Transfer')
         })
 
-        it('GIVEN an ERC721 initialized WHEN approve for non-owned token THEN fails', async () => {
-            const { erc721, owner, other } = await deploy(true)
-            await erc721.initializeAccessControl(owner.address)
-            await erc721.grantRole(MINTER_ROLE, owner.address)
-            await erc721.mint(owner.address, 1)
+        it('GIVEN an ERC721 WHEN transferFrom as operator THEN succeeds', async () => {
+            await erc721.setApprovalForAll(otherAddress, true)
             await expect(
-                erc721.connect(other).approve(owner.address, 1)
+                erc721
+                    .connect(other)
+                    .transferFrom(ownerAddress, thirdAddress, 1)
+            ).to.emit(erc721, 'Transfer')
+        })
+
+        it('GIVEN an ERC721 WHEN transferFrom as not approved THEN fails', async () => {
+            await expect(
+                erc721
+                    .connect(other)
+                    .transferFrom(ownerAddress, thirdAddress, 1)
             ).to.be.revertedWithCustomError(erc721, 'CallerNotOwnerNorApproved')
         })
 
-        it('GIVEN an ERC721 initialized WHEN approve to zero address THEN succeeds (revoca approval)', async () => {
-            const { erc721, owner, other } = await deploy(true)
-            await erc721.initializeAccessControl(owner.address)
-            await erc721.grantRole(MINTER_ROLE, owner.address)
-            await erc721.mint(owner.address, 1)
-            await erc721.approve(other.address, 1)
-            await expect(erc721.approve(ethers.ZeroAddress, 1))
+        it('GIVEN an ERC721 WHEN transferFrom from not owner THEN fails', async () => {
+            await expect(
+                erc721.transferFrom(otherAddress, thirdAddress, 1)
+            ).to.be.revertedWithCustomError(erc721, 'CallerNotOwnerNorApproved')
+        })
+
+        it('GIVEN an ERC721 WHEN owner approves another, transfers token, THEN approved address is reset to zero', async () => {
+            // Owner approves 'other' for token 1
+            await expect(erc721.approve(otherAddress, 1))
                 .to.emit(erc721, 'Approval')
-                .withArgs(owner.address, ethers.ZeroAddress, 1)
+                .withArgs(ownerAddress, otherAddress, 1)
+            expect(await erc721.getApproved(1)).to.equal(otherAddress)
+
+            // Owner transfers token 1 to 'third'
+            await expect(
+                erc721TestWrapper.transfer(ownerAddress, thirdAddress, 1)
+            )
+                .to.emit(erc721, 'Transfer')
+                .withArgs(ownerAddress, thirdAddress, 1)
+
+            // After transfer, approved address should be reset to zero
             expect(await erc721.getApproved(1)).to.equal(ethers.ZeroAddress)
         })
-
-        it('GIVEN an ERC721 initialized WHEN setApprovalForAll THEN isApprovedForAll returns true', async () => {
-            const { erc721, owner, other } = await deploy(true)
-            await erc721.initializeAccessControl(owner.address)
-            await erc721.setApprovalForAll(other.address, true)
-            expect(
-                await erc721.isApprovedForAll(owner.address, other.address)
-            ).to.equal(true)
-        })
     })
 
-    describe('Snapshot', () => {
-        it('GIVEN an ERC721 initialized WHEN non snapshoter takes a snapshot THEN fails', async () => {
-            const { erc721, other } = await deploy(true)
-            await expect(
-                erc721.connect(other).snapshot()
-            ).to.be.revertedWithCustomError(erc721, 'AccountHasNoRole')
+    describe('safeTransferFrom', () => {
+        let receiverMock: Contract
+
+        beforeEach(async () => {
+            await deploy(true)
+            await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+            await erc721Capped.mint(ownerAddress, 1)
+            const Receiver =
+                await ethers.getContractFactory('ERC721ReceiverMock')
+            receiverMock = await Receiver.deploy()
         })
 
-        it('GIVEN an ERC721 initialized WHEN snapshoter takes a snapshot THEN succeeds', async () => {
-            const { erc721, owner } = await deploy(true)
-            await erc721.initializeAccessControl(owner.address)
-            await erc721.grantRole(SNAPSHOT_ROLE, owner.address)
-            await expect(erc721.snapshot()).to.emit(erc721, 'Snapshot')
-        })
-
-        it('GIVEN an ERC721 initialized WHEN querying non-existent snapshot THEN fails', async () => {
-            const { erc721, owner } = await deploy(true)
-            await erc721.initializeAccessControl(owner.address)
-            await erc721.grantRole(SNAPSHOT_ROLE, owner.address)
-            await erc721.snapshot()
-            await expect(
-                erc721.balanceOfAt(owner.address, 999)
-            ).to.be.revertedWithCustomError(erc721, 'NonExistentSnapshotId')
-        })
-
-        it('GIVEN an ERC721 initialized WHEN snapshot taken THEN balanceOfAt/totalSupplyAt/ownerOfAt return correct values', async () => {
-            const { erc721, owner } = await deploy(true)
-            await erc721.initializeAccessControl(owner.address)
-            await erc721.grantRole(MINTER_ROLE, owner.address)
-            await erc721.grantRole(SNAPSHOT_ROLE, owner.address)
-            await erc721.mint(owner.address, 1)
-            await erc721.snapshot() // snapshotId será 1
-            expect(await erc721.balanceOfAt(owner.address, 1)).to.equal(1)
-            expect(await erc721.totalSupplyAt(1)).to.equal(1)
-            expect(await erc721.ownerOfAt(1, 1)).to.equal(owner.address)
-        })
-    })
-
-    describe('Controller', () => {
-        it('GIVEN an ERC721 initialized WHEN non controller tries to force burn THEN fails', async () => {
-            const { erc721, owner, other } = await deploy(true)
-            await erc721.initializeAccessControl(owner.address)
-            await erc721.grantRole(MINTER_ROLE, owner.address)
-            await erc721.mint(owner.address, 1)
-            await expect(
-                erc721.connect(other).forceBurn(owner.address, 1)
-            ).to.be.revertedWithCustomError(erc721, 'AccountHasNoRole')
-        })
-
-        it('GIVEN an ERC721 initialized WHEN controller force burns THEN succeeds', async () => {
-            const { erc721, owner } = await deploy(true)
-            await erc721.initializeAccessControl(owner.address)
-            await erc721.grantRole(MINTER_ROLE, owner.address)
-            await erc721.grantRole(CONTROLLER_ROLE, owner.address)
-            await erc721.mint(owner.address, 1)
-            await expect(erc721.forceBurn(owner.address, 1))
-                .to.emit(erc721, 'ForceBurn')
-                .withArgs(owner.address, owner.address, 1)
-        })
-
-        it('GIVEN an ERC721 initialized WHEN controller force transfers THEN succeeds', async () => {
-            const { erc721, owner, other } = await deploy(true)
-            await erc721.initializeAccessControl(owner.address)
-            await erc721.grantRole(MINTER_ROLE, owner.address)
-            await erc721.grantRole(CONTROLLER_ROLE, owner.address)
-            await erc721.mint(owner.address, 1)
-            await expect(erc721.forceTransfer(owner.address, other.address, 1))
-                .to.emit(erc721, 'ForceTransfer')
-                .withArgs(owner.address, owner.address, other.address, 1)
-            expect(await erc721.ownerOf(1)).to.equal(other.address)
-        })
-
-        it('GIVEN an ERC721 initialized WHEN controller force burns not owner THEN fails', async () => {
-            const { erc721, owner, other } = await deploy(true)
-            await erc721.initializeAccessControl(owner.address)
-            await erc721.grantRole(MINTER_ROLE, owner.address)
-            await erc721.grantRole(CONTROLLER_ROLE, owner.address)
-            await erc721.mint(other.address, 1)
-            await expect(
-                erc721.forceBurn(owner.address, 1)
-            ).to.be.revertedWithCustomError(erc721, 'ForceBurnNotTokenOwner')
-        })
-    })
-
-    describe('Pause', () => {
-        it('GIVEN an ERC721 initialized WHEN paused THEN mint/transfer/burn/snapshot/setCap/forceTransfer/forceBurn revert', async () => {
-            const { erc721, owner, other } = await deploy(true)
-            await erc721.initializeAccessControl(owner.address)
-            await erc721.grantRole(MINTER_ROLE, owner.address)
-            await erc721.grantRole(CAP_ROLE, owner.address)
-            await erc721.grantRole(SNAPSHOT_ROLE, owner.address)
-            await erc721.grantRole(CONTROLLER_ROLE, owner.address)
-            await erc721.initializePause(true)
-            await expect(
-                erc721.mint(owner.address, 1)
-            ).to.be.revertedWithCustomError(erc721, 'IsPaused')
-            await expect(erc721.snapshot()).to.be.revertedWithCustomError(
-                erc721,
-                'IsPaused'
-            )
-            await expect(erc721.setCap(cap + 1)).to.be.revertedWithCustomError(
-                erc721,
-                'IsPaused'
-            )
-            await expect(
-                erc721.forceTransfer(owner.address, other.address, 1)
-            ).to.be.revertedWithCustomError(erc721, 'IsPaused')
-            await expect(
-                erc721.forceBurn(owner.address, 1)
-            ).to.be.revertedWithCustomError(erc721, 'IsPaused')
-        })
-    })
-
-    describe('AccessControl', () => {
-        it('GIVEN an ERC721 initialized WHEN grantRole THEN only admin can', async () => {
-            const { erc721, owner, other } = await deploy(true)
-            await erc721.initializeAccessControl(owner.address)
-            await expect(
-                erc721.connect(other).grantRole(MINTER_ROLE, other.address)
-            ).to.be.revertedWithCustomError(erc721, 'AccountHasNoRole')
-            await expect(erc721.grantRole(MINTER_ROLE, other.address)).to.emit(
-                erc721,
-                'RoleGranted'
-            )
-        })
-    })
-
-    describe('Introspection', () => {
-        it('GIVEN an ERC721 initialized WHEN selectorsIntrospection THEN returns expected', async () => {
-            const { erc721 } = await deploy(true)
-            const selectors = await erc721.selectorsIntrospection()
-            expect(selectors).to.be.an('array').that.is.not.empty
-            // Puedes comprobar algunos selectores concretos si lo deseas
-        })
-
-        it('GIVEN an ERC721 initialized WHEN supportsInterface THEN returns true for ERC721', async () => {
-            const { erc721 } = await deploy(true)
-            expect(await erc721.supportsInterface('0x80ac58cd')).to.equal(true)
-        })
-
-        it('GIVEN an ERC721 initialized WHEN selectorsIntrospection THEN returns all expected selectors', async () => {
-            const { erc721 } = await deploy(true)
-            const selectors = await erc721.selectorsIntrospection()
-            const expectedSelectors = [
-                erc721.interface.getFunction('initializeErc721').selector,
-                erc721.interface.getFunction('initializeCap').selector,
-                erc721.interface.getFunction('name').selector,
-                erc721.interface.getFunction('symbol').selector,
-                erc721.interface.getFunction('totalSupply').selector,
-                erc721.interface.getFunction('balanceOf').selector,
-                erc721.interface.getFunction('ownerOf').selector,
-                erc721.interface.getFunction('mint').selector,
-                erc721.interface.getFunction('burn').selector,
-                erc721.interface.getFunction('burnFrom').selector,
-                erc721.interface.getFunction('approve').selector,
-                erc721.interface.getFunction('getApproved').selector,
-                erc721.interface.getFunction('setApprovalForAll').selector,
-                erc721.interface.getFunction('isApprovedForAll').selector,
-                erc721.interface.getFunction('transferFrom').selector,
-                erc721.interface.getFunction('snapshot').selector,
-                erc721.interface.getFunction('balanceOfAt').selector,
-                erc721.interface.getFunction('totalSupplyAt').selector,
-            ]
-            expect([...selectors].sort()).to.deep.equal(
-                [...expectedSelectors].sort()
-            )
-        })
-    })
-
-    describe('ERC721 implementer', () => {
-        it('GIVEN an ERC721 initialized WHEN safeTransferFrom to non-ERC721Receiver contract THEN fails', async () => {
-            const { erc721, owner } = await deploy(true)
-            await erc721.initializeAccessControl(owner.address)
-            await erc721.grantRole(MINTER_ROLE, owner.address)
-            await erc721.mint(owner.address, 1)
-            const Dummy = await ethers.getContractFactory('DummyNonReceiver')
-            const dummy = await Dummy.deploy()
+        it('GIVEN an ERC721 WHEN safeTransferFrom to EOA THEN succeeds', async () => {
             await expect(
                 erc721['safeTransferFrom(address,address,uint256)'](
-                    owner.address,
-                    dummy.target,
+                    ownerAddress,
+                    otherAddress,
+                    1
+                )
+            ).to.emit(erc721, 'Transfer')
+            expect(await erc721.ownerOf(1)).to.equal(otherAddress)
+        })
+
+        it('GIVEN an ERC721 WHEN safeTransferFrom to contract implementing onERC721Received THEN succeeds', async () => {
+            await receiverMock.setSelector('0x150b7a02')
+            const receiverAddress = await receiverMock.getAddress()
+            await expect(
+                erc721['safeTransferFrom(address,address,uint256)'](
+                    ownerAddress,
+                    receiverAddress,
+                    1
+                )
+            ).to.emit(erc721, 'Transfer')
+            expect(await erc721.ownerOf(1)).to.equal(receiverAddress)
+        })
+
+        it('GIVEN an ERC721 WHEN safeTransferFrom to contract returning wrong selector THEN reverts with TransferToNonERC721ReceiverImplementer', async () => {
+            await receiverMock.setSelector('0xdeadbeef')
+            const receiverAddress = await receiverMock.getAddress()
+            await expect(
+                erc721['safeTransferFrom(address,address,uint256)'](
+                    ownerAddress,
+                    receiverAddress,
                     1
                 )
             ).to.be.revertedWithCustomError(
@@ -575,90 +407,355 @@ describe('ERC721', function () {
             )
         })
 
-        it('GIVEN an ERC721 initialized WHEN safeTransferFrom to ERC721Receiver contract THEN succeeds', async () => {
-            const { erc721, owner } = await deploy(true)
-            await erc721.initializeAccessControl(owner.address)
-            await erc721.grantRole(MINTER_ROLE, owner.address)
-            await erc721.mint(owner.address, 1)
-            const Receiver = await ethers.getContractFactory(
-                'DummyERC721Receiver'
-            )
-            const receiver = await Receiver.deploy()
+        it('GIVEN an ERC721 WHEN safeTransferFrom a contrato que NO implementa onERC721Received (ej: ERC20) THEN reverts with TransferToNonERC721ReceiverImplementer', async () => {
             await expect(
                 erc721['safeTransferFrom(address,address,uint256)'](
-                    owner.address,
-                    receiver.target,
+                    ownerAddress,
+                    erc20Address,
                     1
                 )
-            ).to.emit(erc721, 'Transfer')
-            expect(await erc721.ownerOf(1)).to.equal(receiver.target)
-        })
-    })
-
-    describe('Edge Cases', () => {
-        it('GIVEN an ERC721 initialized WHEN getApproved for non-existent token THEN returns zero address', async () => {
-            const { erc721 } = await deploy(true)
-            expect(await erc721.getApproved(999)).to.equal(ethers.ZeroAddress)
+            ).to.be.revertedWithCustomError(
+                erc721,
+                'TransferToNonERC721ReceiverImplementer'
+            )
         })
 
-        it('GIVEN an ERC721 initialized WHEN ownerOf for non-existent token THEN returns zero address', async () => {
-            const { erc721 } = await deploy(true)
-            expect(await erc721.ownerOf(999)).to.equal(ethers.ZeroAddress)
-        })
-
-        it('GIVEN an ERC721 initialized WHEN balanceOf zero address THEN returns 0', async () => {
-            const { erc721 } = await deploy(true)
-            expect(await erc721.balanceOf(ethers.ZeroAddress)).to.equal(0)
-        })
-
-        it('GIVEN an ERC721 initialized WHEN setApprovalForAll to self THEN isApprovedForAll returns true', async () => {
-            const { erc721, owner } = await deploy(true)
-            await erc721.initializeAccessControl(owner.address)
-            await erc721.setApprovalForAll(owner.address, true)
-            expect(
-                await erc721.isApprovedForAll(owner.address, owner.address)
-            ).to.equal(true)
-        })
-
-        it('GIVEN an ERC721 initialized WHEN setApprovalForAll true then false THEN emits events', async () => {
-            const { erc721, owner, other } = await deploy(true)
-            await erc721.initializeAccessControl(owner.address)
-            await expect(erc721.setApprovalForAll(other.address, true))
-                .to.emit(erc721, 'ApprovalForAll')
-                .withArgs(owner.address, other.address, true)
-            await expect(erc721.setApprovalForAll(other.address, false))
-                .to.emit(erc721, 'ApprovalForAll')
-                .withArgs(owner.address, other.address, false)
-        })
-
-        it('GIVEN an ERC721 initialized WHEN transfer to self THEN succeeds', async () => {
-            const { erc721, owner } = await deploy(true)
-            await erc721.initializeAccessControl(owner.address)
-            await erc721.grantRole(MINTER_ROLE, owner.address)
-            await erc721.mint(owner.address, 1)
+        it('GIVEN an ERC721 WHEN safeTransferFrom(address,address,uint256,bytes) is called THEN token is transferred and Transfer event is emitted', async () => {
+            const data = ethers.encodeBytes32String('extra-data')
             await expect(
-                erc721.transferFrom(owner.address, owner.address, 1)
-            ).to.emit(erc721, 'Transfer')
-            expect(await erc721.ownerOf(1)).to.equal(owner.address)
-        })
-    })
-    describe('Snapshot Edge Cases', () => {
-        it('GIVEN an ERC721 initialized WHEN snapshot with zero supply THEN totalSupplyAt is zero', async () => {
-            const { erc721, owner } = await deploy(true)
-            await erc721.initializeAccessControl(owner.address)
-            await erc721.grantRole(SNAPSHOT_ROLE, owner.address)
-            await erc721.snapshot()
-            expect(await erc721.totalSupplyAt(1)).to.equal(0)
+                erc721['safeTransferFrom(address,address,uint256,bytes)'](
+                    ownerAddress,
+                    otherAddress,
+                    1,
+                    data
+                )
+            )
+                .to.emit(erc721, 'Transfer')
+                .withArgs(ownerAddress, otherAddress, 1)
+            expect(await erc721.ownerOf(1)).to.equal(otherAddress)
         })
 
-        it('GIVEN an ERC721 initialized WHEN snapshot and then mint THEN balanceOfAt is correct', async () => {
-            const { erc721, owner } = await deploy(true)
-            await erc721.initializeAccessControl(owner.address)
-            await erc721.grantRole(MINTER_ROLE, owner.address)
-            await erc721.grantRole(SNAPSHOT_ROLE, owner.address)
-            await erc721.snapshot()
-            await erc721.mint(owner.address, 1)
-            expect(await erc721.balanceOfAt(owner.address, 1)).to.equal(0)
+        it('GIVEN an ERC721 WHEN safeTransferFrom from incorrect owner THEN reverts with CallerNotOwnerNorApproved', async () => {
+            await expect(
+                erc721['safeTransferFrom(address,address,uint256)'](
+                    otherAddress,
+                    thirdAddress,
+                    1
+                )
+            ).to.be.revertedWithCustomError(erc721, 'CallerNotOwnerNorApproved')
+        })
+
+        it('GIVEN an ERC721 WHEN safeTransferFrom as not owner nor approved nor operator THEN reverts with CallerNotOwnerNorApproved', async () => {
+            const safeTransferFrom =
+                erc721.connect(other)[
+                    'safeTransferFrom(address,address,uint256)'
+                ]
+            await expect(
+                safeTransferFrom(ownerAddress, thirdAddress, 1)
+            ).to.be.revertedWithCustomError(erc721, 'CallerNotOwnerNorApproved')
+        })
+
+        it('GIVEN an ERC721 WHEN safeTransferFrom as operator (isApprovedForAll) THEN succeeds', async () => {
+            await erc721.setApprovalForAll(otherAddress, true)
+            const safeTransferFrom =
+                erc721.connect(other)[
+                    'safeTransferFrom(address,address,uint256)'
+                ]
+            await expect(safeTransferFrom(ownerAddress, thirdAddress, 1))
+                .to.emit(erc721, 'Transfer')
+                .withArgs(ownerAddress, thirdAddress, 1)
+        })
+
+        it('GIVEN an ERC721 WHEN safeTransferFrom as approved THEN succeeds', async () => {
+            await erc721.approve(otherAddress, 1)
+            const safeTransferFrom =
+                erc721.connect(other)[
+                    'safeTransferFrom(address,address,uint256)'
+                ]
+            await expect(safeTransferFrom(ownerAddress, thirdAddress, 1))
+                .to.emit(erc721, 'Transfer')
+                .withArgs(ownerAddress, thirdAddress, 1)
+        })
+    })
+
+    describe('Metadata', () => {
+        beforeEach(async () => {
+            await deploy(true)
+            await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+        })
+
+        it('GIVEN an ERC721 WHEN tokenURI is called THEN returns empty string', async () => {
+            await erc721Capped.mint(ownerAddress, 1)
+            expect(await erc721.tokenURI(1)).to.equal('')
+        })
+
+        it('GIVEN an ERC721 WHEN baseURI is called THEN returns empty string', async () => {
+            expect(await erc721TestWrapper.baseURI()).to.equal('')
+        })
+    })
+
+    describe('Cap', () => {
+        it('GIVEN an initialized ERC721 WHEN mint is called by someone without MINTER_ROLE THEN it reverts', async () => {
+            await deploy(true)
+
+            await expect(
+                erc721Capped.connect(other).mint(otherAddress, 1)
+            ).to.be.revertedWithCustomError(accessControl, 'AccountHasNoRole')
+        })
+        it('GIVEN an ERC721 WHEN initializeCap with Zero THEN it fails', async () => {
+            await deploy()
+            await expect(
+                erc721Capped.initializeCap(0)
+            ).to.be.revertedWithCustomError(erc721Capped, 'EmptyUint')
+        })
+
+        it('GIVEN an ERC721 WHEN cap is initialized THEN it can be retrieved', async () => {
+            await deploy()
+            await expect(erc721Capped.initializeCap(1000))
+                .to.emit(erc721Capped, 'CapSet')
+                .withArgs(ownerAddress, 1000)
+            await expect(
+                erc721Capped.initializeCap(1)
+            ).to.be.revertedWithCustomError(
+                erc721Capped,
+                'ContractIsAlreadyInitialized'
+            )
+            expect(await erc721Capped.cap()).to.equal(1000)
+        })
+
+        it('GIVEN an initialized ERC721 WHEN mint over cap THEN it fails', async () => {
+            await deploy(true)
+            expect(await erc721Capped.cap()).to.equal(3)
+
+            await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+            // Mint up to cap
+            for (let i = 1; i <= 3; i++) {
+                await erc721Capped.mint(ownerAddress, i)
+            }
+            // Minting above cap should fail
+            await expect(
+                erc721Capped.mint(ownerAddress, 4)
+            ).to.be.revertedWithCustomError(erc721Capped, 'CapExceeded')
+        })
+
+        it('GIVEN an initialized ERC721 WHEN setting cap below total supply THEN it fails', async () => {
+            await deploy(true)
+            await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+            await accessControl.grantRole(CAP_ROLE, ownerAddress)
+
+            // Mint 2 tokens
+            await erc721Capped.mint(ownerAddress, 1)
+            await erc721Capped.mint(ownerAddress, 2)
+            const totalSupply = 2
+            const newCap = totalSupply - 1
+
+            await expect(erc721Capped.setCap(newCap))
+                .to.be.revertedWithCustomError(
+                    erc721Capped,
+                    'NewCapIsLessThanTotalSupply'
+                )
+                .withArgs(newCap, totalSupply)
+        })
+
+        it('GIVEN an initialized ERC721 WHEN setting cap on a paused token THEN it fails', async () => {
+            await deploy(true)
+            await accessControl.grantRole(CAP_ROLE, ownerAddress)
+            await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+
+            await pause.pause()
+
+            await expect(
+                erc721Capped.setCap(1000000)
+            ).to.be.revertedWithCustomError(pause, 'IsPaused')
+        })
+
+        it('GIVEN an initialized ERC721 WHEN mint on a paused token THEN it fails', async () => {
+            await deploy(true)
+            await accessControl.grantRole(CAP_ROLE, ownerAddress)
+            await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+
+            await pause.pause()
+
+            await expect(
+                erc721Capped.mint(ownerAddress, 1)
+            ).to.be.revertedWithCustomError(pause, 'IsPaused')
+        })
+
+        it('GIVEN an initialized ERC721 WHEN non capper setting cap THEN it fails', async () => {
+            await deploy(true)
+            // No CAP_ROLE granted
+            await expect(erc721Capped.setCap(1)).to.be.revertedWithCustomError(
+                accessControl,
+                'AccountHasNoRole'
+            )
+        })
+
+        it('GIVEN an initialized ERC721 WHEN setting cap over total supply THEN it succeeds', async () => {
+            await deploy(true)
+            await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+            await accessControl.grantRole(CAP_ROLE, ownerAddress)
+
+            await erc721Capped.mint(ownerAddress, 1)
+            await erc721Capped.mint(ownerAddress, 2)
+            const totalSupply = 2
+            const newCap = totalSupply + 1
+
+            await expect(erc721Capped.setCap(newCap))
+                .to.emit(erc721Capped, 'CapSet')
+                .withArgs(ownerAddress, newCap)
+        })
+    })
+
+    describe('Snapshot', () => {
+        beforeEach(async () => {
+            await deploy(true)
+            await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+            await erc721Capped.mint(ownerAddress, 1)
+        })
+
+        it('GIVEN an ERC721 WHEN not exists snapshot THEN balanceOfAt and totalSupplyAt fails', async () => {
+            await expect(
+                erc721Snapshot.balanceOfAt(ownerAddress, 0)
+            ).to.be.revertedWithCustomError(erc721Snapshot, 'EmptyUint')
+            await expect(
+                erc721Snapshot.totalSupply(0)
+            ).to.be.revertedWithCustomError(erc721Snapshot, 'EmptyUint')
+            await expect(
+                erc721Snapshot.balanceOfAt(ownerAddress, 1)
+            ).to.be.revertedWithCustomError(
+                erc721Snapshot,
+                'NonExistentSnapshotId'
+            )
+            await expect(
+                erc721Snapshot.totalSupply(1)
+            ).to.be.revertedWithCustomError(
+                erc721Snapshot,
+                'NonExistentSnapshotId'
+            )
+            await expect(
+                erc721Snapshot.ownerOfAt(1, 0)
+            ).to.be.revertedWithCustomError(erc721Snapshot, 'EmptyUint')
+            await expect(
+                erc721Snapshot.ownerOfAt(1, 1)
+            ).to.be.revertedWithCustomError(
+                erc721Snapshot,
+                'NonExistentSnapshotId'
+            )
+        })
+
+        it('GIVEN an ERC721 WHEN paused THEN snapshot fails', async () => {
+            await accessControl.grantRole(SNAPSHOT_ROLE, ownerAddress)
+            await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+            await pause.pause()
+            await expect(
+                erc721Snapshot.snapshot()
+            ).to.be.revertedWithCustomError(erc721Snapshot, 'IsPaused')
+        })
+
+        it('GIVEN an ERC721 WHEN non snapshoter takes a snapshot THEN fails', async () => {
+            await expect(
+                erc721Snapshot.snapshot()
+            ).to.be.revertedWithCustomError(accessControl, 'AccountHasNoRole')
+        })
+
+        it('GIVEN an ERC721 WHEN it is prepared THEN a snapshot can be made', async () => {
+            await accessControl.grantRole(SNAPSHOT_ROLE, ownerAddress)
+
+            await expect(erc721Snapshot.snapshot())
+                .to.emit(erc721Snapshot, 'Snapshot')
+                .withArgs(1)
+            expect(
+                await erc721Snapshot.balanceOfAt(ownerAddress, 1)
+            ).to.be.equal(1)
+            expect(
+                await erc721Snapshot.balanceOfAt(otherAddress, 1)
+            ).to.be.equal(0)
+            expect(await erc721Snapshot.totalSupply(1)).to.be.equal(1)
+            if (erc721Snapshot.ownerOfAt) {
+                expect(await erc721Snapshot.ownerOfAt(1, 1)).to.equal(
+                    ownerAddress
+                )
+            }
+            await erc721.transferFrom(ownerAddress, otherAddress, 1)
+            await erc721Capped.mint(otherAddress, 2)
+            expect(
+                await erc721Snapshot.balanceOfAt(ownerAddress, 1)
+            ).to.be.equal(1)
+            expect(
+                await erc721Snapshot.balanceOfAt(otherAddress, 1)
+            ).to.be.equal(0)
+            expect(await erc721Snapshot.totalSupply(1)).to.be.equal(1)
+            expect(await erc721.balanceOf(ownerAddress)).to.be.equal(0)
+            expect(await erc721.balanceOf(otherAddress)).to.be.equal(2)
+            if (erc721Snapshot.ownerOfAt) {
+                expect(await erc721Snapshot.ownerOfAt(1, 1)).to.equal(
+                    ownerAddress
+                )
+            }
+        })
+    })
+
+    describe('Controller', () => {
+        beforeEach(async () => {
+            await deploy(true)
+            await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+            await accessControl.grantRole(CONTROLLER_ROLE, ownerAddress)
+            await erc721Capped.mint(otherAddress, 1)
+        })
+
+        it('GIVEN an ERC721 initialized WHEN try to force burn a paused token THEN it fails', async () => {
+            await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+            await pause.pause()
+            await expect(
+                erc721Controller.forceBurn(otherAddress, 1)
+            ).to.be.revertedWithCustomError(erc721Controller, 'IsPaused')
+        })
+
+        it('GIVEN an ERC721 initialized WHEN non controller tries to force burn THEN it fails', async () => {
+            erc721Controller = erc721Controller.connect(other)
+            await expect(
+                erc721Controller.forceBurn(otherAddress, 1)
+            ).to.be.revertedWithCustomError(accessControl, 'AccountHasNoRole')
+        })
+
+        it('GIVEN an ERC721 WHEN forceBurn with incorrect owner THEN it fails', async () => {
+            await expect(
+                erc721Controller.forceBurn(thirdAddress, 1)
+            ).to.be.revertedWithCustomError(
+                erc721Controller,
+                'ForceBurnNotTokenOwner'
+            )
+        })
+
+        it('GIVEN an ERC721 WHEN it is prepared THEN a force burn can be made', async () => {
+            await expect(erc721Controller.forceBurn(otherAddress, 1))
+                .to.emit(erc721Controller, 'ForceBurn')
+                .withArgs(ownerAddress, otherAddress, 1)
+            expect(await erc721.ownerOf(1)).to.equal(ZeroAddress)
+        })
+
+        it('GIVEN an ERC721 initialized WHEN try to force transfer a paused token THEN it fails', async () => {
+            await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+            await pause.pause()
+            await expect(
+                erc721Controller.forceTransfer(otherAddress, ownerAddress, 1)
+            ).to.be.revertedWithCustomError(erc721Controller, 'IsPaused')
+        })
+
+        it('GIVEN an ERC721 initialized WHEN non controller tries to force transfer THEN it fails', async () => {
+            erc721Controller = erc721Controller.connect(other)
+            await expect(
+                erc721Controller.forceTransfer(otherAddress, ownerAddress, 1)
+            ).to.be.revertedWithCustomError(accessControl, 'AccountHasNoRole')
+        })
+
+        it('GIVEN an ERC721 WHEN it is prepared THEN a force transfer can be made', async () => {
+            await expect(
+                erc721Controller.forceTransfer(otherAddress, ownerAddress, 1)
+            )
+                .to.emit(erc721Controller, 'ForceTransfer')
+                .withArgs(ownerAddress, otherAddress, ownerAddress, 1)
+            expect(await erc721.ownerOf(1)).to.equal(ownerAddress)
         })
     })
 })

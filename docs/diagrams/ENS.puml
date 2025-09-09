@@ -1,0 +1,155 @@
+@startuml ENS Registry and PublicResolver Entity Diagram
+
+!define PRIMARY_KEY(x) <b>x</b>
+!define FOREIGN_KEY(x) <i>x</i>
+
+package "Registry" {
+
+' ENS Interface
+interface ENS {
+  + owner(bytes32 node) : address
+  + resolver(bytes32 node) : address
+  + ttl(bytes32 node) : uint64
+  + recordExists(bytes32 node) : bool
+  + setRecord(bytes32 node, address owner, address resolver, uint64 ttl)
+  + setSubnodeRecord(bytes32 node, bytes32 label, address owner, address resolver, uint64 ttl)
+  + setOwner(bytes32 node, address owner)
+  + setSubnodeOwner(bytes32 node, bytes32 label, address owner) : bytes32
+  + setResolver(bytes32 node, address resolver)
+  + setTTL(bytes32 node, uint64 ttl)
+  + setApprovalForAll(address operator, bool approved)
+  + isApprovedForAll(address owner, address operator) : bool
+}
+
+' ENSRegistry Storage
+entity "ENSRegistry" {
+  PRIMARY_KEY(address) : contract_address
+  --
+  **Storage:**
+  records: mapping(bytes32 => Record)
+  operators: mapping(address => mapping(address => bool))
+}
+
+struct "Record" {
+  PRIMARY_KEY(bytes32) : node
+  --
+  owner: address
+  resolver: address
+  ttl: uint64
+}
+}
+' PublicResolver and its interfaces
+entity "PublicResolver" {
+  PRIMARY_KEY(address) : contract_address
+  --
+  **Storage:**
+  ens: ENS (immutable)
+  nameWrapper: INameWrapper (immutable)
+  trustedETHController: address (immutable)
+  trustedReverseRegistrar: address (immutable)
+  _operatorApprovals: mapping(address => mapping(address => bool))
+  _tokenApprovals: mapping(address => mapping(bytes32 => mapping(address => bool)))
+}
+
+package "Must" {
+
+    interface "NameResolver" {
+      + name(bytes32 node) : string
+      + setName(bytes32 node, string name)
+    }
+
+    interface "PubkeyResolver" {
+      + pubkey(bytes32 node) : (bytes32, bytes32)
+      + setPubkey(bytes32 node, bytes32 x, bytes32 y)
+    }
+
+    interface "TextResolver" {
+      + text(bytes32 node, string key) : string
+      + setText(bytes32 node, string key, string value)
+    }
+
+    NameResolver -d[hidden]- PubkeyResolver
+    PubkeyResolver -d[hidden]- TextResolver
+}
+
+package "Identity" {
+    interface "DidResolver" {
+        * did(bytes32 node) : (string did)
+        * setDid(bytes32 node, string did)
+    }
+    note right of "DidResolver"
+        Identity must determine
+        whether this is required
+    end note
+
+    interface "ListResolver" {
+        * length(bytes32 node, bytes32 key): (uint256 length)
+        * get(bytes32 node, bytes32 key, uint256 pageNumber, uint256 pageLength) : (bytes[] didDocuments)
+        * add(bytes32 node, bytes32 key, bytes didDocument)
+        * remove(bytes32 node, bytes32 key, bytes didDocument)
+        * isInList(bytes32 node, bytes32 key, bytes didDocument)
+    }
+    DidResolver -d[hidden]- "ListResolver"
+}
+
+package "Should" {
+    interface "AddrResolver" {
+      + addr(bytes32 node) : address
+      + addr(bytes32 node, uint256 coinType) : bytes
+      + setAddr(bytes32 node, address addr)
+      + setAddr(bytes32 node, uint256 coinType, bytes addr)
+      + hasAddr(bytes32 node, uint256 coinType) : bool
+    }
+
+    interface "ABIResolver" {
+      + ABI(bytes32 node, uint256 contentTypes) : (uint256, bytes)
+      + setABI(bytes32 node, uint256 contentType, bytes data)
+    }
+
+    interface "ContentHashResolver" {
+      + contenthash(bytes32 node) : bytes
+      + setContenthash(bytes32 node, bytes hash)
+    }
+
+    interface "DNSResolver" {
+      + dnsRecord(bytes32 node, bytes32 name, uint16 resource) : bytes
+      + hasDNSRecords(bytes32 node, bytes32 name) : bool
+      + setDNSRecords(bytes32 node, bytes data)
+    }
+
+    interface "InterfaceResolver" {
+      + interfaceImplementer(bytes32 node, bytes4 interfaceID) : address
+      + setInterface(bytes32 node, bytes4 interfaceID, address implementer)
+    }
+
+    ' Additional interfaces
+    interface "Multicallable" {
+      + multicall(bytes[] calldata data) : bytes[]
+    }
+
+    interface "ReverseClaimer" {
+      + claim(address owner) : bytes32
+      + claimForAddr(address addr, address owner, address resolver) : bytes32
+      + claimWithResolver(address owner, address resolver) : bytes32
+    }
+    "AddrResolver" .d[hidden]- "ABIResolver"
+    ABIResolver -d[hidden]- ContentHashResolver
+    ContentHashResolver -d[hidden]- DNSResolver
+    DNSResolver -d[hidden]- "InterfaceResolver"
+    "InterfaceResolver" -d[hidden]- "Multicallable"
+    "Multicallable" -d[hidden]- "ReverseClaimer"
+}
+
+' Relationships
+ENSRegistry --|> ENS : implements
+ENSRegistry ||--o{ Record : contains
+
+PublicResolver --|> Must : implements
+PublicResolver ..|> Identity : implements
+PublicResolver --|> Should : implements
+PublicResolver --> ENS : uses
+
+ENS -d[hidden]- ENSRegistry
+Must -d[hidden]- Identity
+Identity -d[hidden]- Should
+@enduml

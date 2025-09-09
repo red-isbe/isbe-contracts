@@ -5,9 +5,7 @@ import {ERC721Internal} from '../../ERC721Internal.sol';
 import {IERC721Snapshot} from './IERC721Snapshot.sol';
 import {Arrays} from '@openzeppelin/contracts/utils/Arrays.sol';
 import {Counters} from '@openzeppelin/contracts/utils/Counters.sol';
-import {
-    _ERC721_SNAPSHOT_STORAGE_POSITION
-} from '../../../../constants/storagePositions.sol';
+import {_ERC721_SNAPSHOT_STORAGE_POSITION} from '../../../../constants/storagePositions.sol';
 
 /**
  * @title ERC721SnapshotInternal
@@ -67,6 +65,38 @@ abstract contract ERC721SnapshotInternal is ERC721Internal {
         _updateTotalSupplySnapshot();
     }
 
+    function _balanceOfAt(
+        address account,
+        uint256 snapshotId
+    ) internal view returns (uint256) {
+        (bool snapshotted, uint256 value) = _valueAt(
+            snapshotId,
+            _erc721SnapshotStorage().accountBalanceSnapshots[account]
+        );
+        return snapshotted ? value : _balanceOf(account);
+    }
+
+    function _totalSupplyAt(
+        uint256 snapshotId
+    ) internal view returns (uint256) {
+        (bool snapshotted, uint256 value) = _valueAt(
+            snapshotId,
+            _erc721SnapshotStorage().totalSupplySnapshots
+        );
+        return snapshotted ? value : _totalSupply();
+    }
+
+    function _ownerOfAt(
+        uint256 tokenId,
+        uint256 snapshotId
+    ) internal view returns (address) {
+        (bool snapshotted, address owner) = _ownerAt(
+            snapshotId,
+            _erc721SnapshotStorage().tokenOwnerSnapshots[tokenId]
+        );
+        return snapshotted ? owner : _ownerOf(tokenId);
+    }
+
     function _getCurrentSnapshotId() internal view virtual returns (uint256) {
         return _erc721SnapshotStorage().currentSnapshotId.current();
     }
@@ -75,11 +105,8 @@ abstract contract ERC721SnapshotInternal is ERC721Internal {
         uint256 snapshotId,
         Snapshots storage snapshots
     ) internal view returns (bool, uint256) {
-        require(snapshotId > 0, IERC721Snapshot.SnapshotWithIdZero());
-        require(
-            snapshotId <= _getCurrentSnapshotId(),
-            IERC721Snapshot.NonExistentSnapshotId()
-        );
+        _checkUintIsNotZero(snapshotId);
+        _checkSnapshotIdExists(snapshotId);
 
         uint256 index = snapshots.ids.findUpperBound(snapshotId);
         return
@@ -92,11 +119,8 @@ abstract contract ERC721SnapshotInternal is ERC721Internal {
         uint256 snapshotId,
         TokenOwnerSnapshots storage snapshots
     ) internal view returns (bool, address) {
-        require(snapshotId > 0, IERC721Snapshot.SnapshotWithIdZero());
-        require(
-            snapshotId <= _getCurrentSnapshotId(),
-            IERC721Snapshot.NonExistentSnapshotId()
-        );
+        _checkUintIsNotZero(snapshotId);
+        _checkSnapshotIdExists(snapshotId);
 
         uint256 index = snapshots.ids.findUpperBound(snapshotId);
         return
@@ -105,18 +129,11 @@ abstract contract ERC721SnapshotInternal is ERC721Internal {
                 : (true, snapshots.owners[index]);
     }
 
-    function _erc721SnapshotStorage()
-        internal
-        pure
-        returns (ERC721SnapshotStorage storage storage_)
-    {
-        bytes32 position = _ERC721_SNAPSHOT_STORAGE_POSITION;
-        // slither-disable-start assembly
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            storage_.slot := position
-        }
-        // slither-disable-end assembly
+    function _checkSnapshotIdExists(uint256 snapshotId) internal view {
+        require(
+            snapshotId <= _getCurrentSnapshotId(),
+            IERC721Snapshot.NonExistentSnapshotId()
+        );
     }
 
     function _updateAccountSnapshot(address account) private {
@@ -166,5 +183,19 @@ abstract contract ERC721SnapshotInternal is ERC721Internal {
         uint256[] storage ids
     ) private view returns (uint256) {
         return ids.length == 0 ? 0 : ids[ids.length - 1];
+    }
+
+    function _erc721SnapshotStorage()
+        private
+        pure
+        returns (ERC721SnapshotStorage storage storage_)
+    {
+        bytes32 position = _ERC721_SNAPSHOT_STORAGE_POSITION;
+        // slither-disable-start assembly
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            storage_.slot := position
+        }
+        // slither-disable-end assembly
     }
 }

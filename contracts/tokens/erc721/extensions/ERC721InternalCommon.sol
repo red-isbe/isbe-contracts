@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {
-    ERC721SnapshotInternal
-} from '../extensions/snapshot/ERC721SnapshotInternal.sol';
-import {ERC721CappedInternal} from './cap/ERC721CappedInternal.sol';
 import {ERC721Internal} from '../ERC721Internal.sol';
+import {ERC721CappedInternal} from './cap/ERC721CappedInternal.sol';
+import {ERC721SnapshotInternal} from './snapshot/ERC721SnapshotInternal.sol';
 
 /// @title ERC721InternalCommon
 /// @notice This abstract contract puts together all ERC721 internal logic (snapshot, cap, and base logic).
@@ -32,5 +30,13 @@ abstract contract ERC721InternalCommon is
         uint256 tokenId
     ) internal virtual override(ERC721CappedInternal, ERC721Internal) {
         ERC721CappedInternal._mint(to, tokenId);
+    }
+
+    /**
+     * @notice Returns the base URI for token metadata.
+     * @dev Optional internal function to build tokenURI.
+     */
+    function _baseURI() internal view virtual returns (string memory) {
+        return '';
     }
 }

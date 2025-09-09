@@ -1,16 +1,18 @@
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
 import {
-    ERC20TestWrapper,
-    ERC20TestWrapper__factory,
-    ERC20TestWrapperUpdated,
-    ERC20TestWrapperUpdated__factory,
     IsbeTransparentProxy__factory,
     IsbeProxyAdmin,
     IsbeProxyAdmin__factory,
+    ERC20TestWrapperTransparent__factory,
+    ERC20TestWrapperTransparent,
 } from '../typechain-types'
-import { MINTER_ROLE } from './constants'
+import { DEFAULT_ADMIN_ROLE, MINTER_ROLE } from './constants'
 import { Signer } from 'ethers'
+
+const NAME = 'My Token'
+const SYMBOL = 'MTK'
+const DECIMALS = 18
 
 describe('TransparentProxy', function () {
     let admin: Signer
@@ -18,24 +20,19 @@ describe('TransparentProxy', function () {
     let ProxyAdminFactory: IsbeProxyAdmin__factory
     let proxyAdmin: IsbeProxyAdmin
 
-    let ERC20TestWrapperFactory: ERC20TestWrapper__factory
-    let ERC20TestWrapperUpdatedFactory: ERC20TestWrapperUpdated__factory
-    let erc20Implementation: ERC20TestWrapper
-    let erc20ImplementationUpdated: ERC20TestWrapperUpdated
-    let erc20: ERC20TestWrapper
-    let erc20Updated: ERC20TestWrapperUpdated
+    let ERC20TestWrapperTransparentFactory: ERC20TestWrapperTransparent__factory
+    let erc20ImplementationTransparent: ERC20TestWrapperTransparent
+    let erc20Transparent: ERC20TestWrapperTransparent
 
     async function deployInitial() {
         ;[admin] = await ethers.getSigners()
-        ERC20TestWrapperFactory =
-            await ethers.getContractFactory('ERC20TestWrapper')
-        erc20Implementation = await ERC20TestWrapperFactory.deploy()
-
-        ERC20TestWrapperUpdatedFactory = await ethers.getContractFactory(
-            'ERC20TestWrapperUpdated'
+        ERC20TestWrapperTransparentFactory = await ethers.getContractFactory(
+            'ERC20TestWrapperTransparent'
         )
-        erc20ImplementationUpdated =
-            await ERC20TestWrapperUpdatedFactory.deploy()
+        erc20ImplementationTransparent =
+            await ERC20TestWrapperTransparentFactory.deploy()
+
+        await erc20ImplementationTransparent.waitForDeployment()
 
         TransparentProxyFactory = await ethers.getContractFactory(
             'IsbeTransparentProxy'
@@ -43,8 +40,6 @@ describe('TransparentProxy', function () {
         ProxyAdminFactory = await ethers.getContractFactory('IsbeProxyAdmin')
         proxyAdmin = await ProxyAdminFactory.deploy()
 
-        await erc20Implementation.waitForDeployment()
-        await erc20ImplementationUpdated.waitForDeployment()
         await proxyAdmin.waitForDeployment()
     }
 
@@ -54,51 +49,47 @@ describe('TransparentProxy', function () {
 
     beforeEach(async () => {
         const transparentProxy = await TransparentProxyFactory.deploy(
-            await erc20Implementation.getAddress(),
+            await erc20ImplementationTransparent.getAddress(),
             await proxyAdmin.getAddress()
         )
+
         await transparentProxy.waitForDeployment()
 
-        erc20 = ERC20TestWrapperFactory.attach(
+        erc20Transparent = ERC20TestWrapperTransparentFactory.attach(
             await transparentProxy.getAddress()
-        ) as ERC20TestWrapper
-        await erc20.initializeErc20('My Token', 'MTK', 18)
-        await erc20.initializeCap(10000)
+        ) as ERC20TestWrapperTransparent
+
+        await erc20Transparent.initializeErc20(NAME, SYMBOL, DECIMALS)
+        await erc20Transparent.initializeCap(10000)
         const adminAddress = await admin.getAddress()
-        await erc20.initializeAccessControl(adminAddress)
-        await erc20.grantRole(MINTER_ROLE, adminAddress)
-        erc20Updated = ERC20TestWrapperUpdatedFactory.attach(
-            await transparentProxy.getAddress()
-        ) as ERC20TestWrapperUpdated
+        await erc20Transparent.initializeAccessControl([
+            {
+                role: DEFAULT_ADMIN_ROLE,
+                members: [adminAddress],
+            },
+        ])
+        await erc20Transparent.grantRole(MINTER_ROLE, adminAddress)
     })
 
     it('GIVEN an ERC20 deployed WHEN using Transparent Proxy THEN it can be initialized', async () => {
-        expect(await erc20.name()).to.equal('My Token')
-        expect(await erc20.symbol()).to.equal('MTK')
-        expect(await erc20.decimals()).to.equal(18)
-        await expect(erc20Updated.metadata()).to.be.revertedWithoutReason()
+        expect(await erc20Transparent.name()).to.equal(NAME)
+        expect(await erc20Transparent.symbol()).to.equal(SYMBOL)
+        expect(await erc20Transparent.decimals()).to.equal(DECIMALS)
     })
 
     it('GIVEN an ERC20 deployed linked to an Transparent proxy WHEN update THEN it can be updated', async () => {
-        await proxyAdmin.upgrade(
-            await erc20.getAddress(),
-            await erc20ImplementationUpdated.getAddress()
-        )
+        const erc20ImplementationTransparent_2 =
+            await ERC20TestWrapperTransparentFactory.deploy()
 
-        expect(await erc20Updated.name()).to.equal('My Token')
-        expect(await erc20Updated.symbol()).to.equal('MTK')
-        expect(await erc20Updated.decimals()).to.equal(18)
-
-        expect(await erc20Updated.metadata()).to.deep.equal([
-            'My Token',
-            'MTK',
-            18,
-        ])
+        await erc20ImplementationTransparent_2.waitForDeployment()
 
         await proxyAdmin.upgrade(
-            await erc20.getAddress(),
-            await erc20ImplementationUpdated.getAddress()
+            await erc20Transparent.getAddress(),
+            await erc20ImplementationTransparent_2.getAddress()
         )
-        await erc20Updated.mint(await erc20Updated.getAddress(), 100)
+
+        expect(await erc20Transparent.name()).to.equal(NAME)
+        expect(await erc20Transparent.symbol()).to.equal(SYMBOL)
+        expect(await erc20Transparent.decimals()).to.equal(DECIMALS)
     })
 })

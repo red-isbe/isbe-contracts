@@ -6,14 +6,21 @@ pragma solidity ^0.8.28;
 * EIP-2535 Diamonds
 /******************************************************************************/
 
+import {_DIAMOND_CUT_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
 import {IDiamondCut} from '../interfaces/IDiamondCut.sol';
-import {OwnableInternal} from '../../../access/OwnableInternal.sol';
 import {EIP2535Internal} from '../EIP2535Internal.sol';
 import {IEIP2535Introspection} from '../interfaces/IEIP2535Introspection.sol';
+import {OwnableInternal} from '../../../access/ownable/OwnableInternal.sol';
 
-// Remember to add the loupe functions from DiamondLoupeFacet to the diamond.
-// The loupe functions are required by the EIP2535 Diamonds standard
-
+/**
+ * @title Diamond Cut Ownable Facet
+ * @author ISBE
+ * @notice Manages diamond cuts, restricting modifications to the owner.
+ * @dev A dedicated facet for EIP-2535 diamond cuts, secured by ownership.
+ *      It implements `IDiamondCut` and uses the `onlyOwner` modifier.
+ *      Only the owner can add, replace, or remove facets.
+ *      It also complies with `IEIP2535Introspection` for discovery.
+ */
 contract DiamondCutOwnableFacet is
     IDiamondCut,
     EIP2535Internal,
@@ -27,19 +34,44 @@ contract DiamondCutOwnableFacet is
     /// @param _calldata A function call, including function selector and arguments
     ///                  _calldata is executed with delegatecall on _init
     function diamondCut(
-        FacetCut[] calldata _facetCuts,
+        ItemCut[] calldata _facetCuts,
         address _init,
         bytes calldata _calldata
     ) external override onlyOwner whenNotPaused {
         _diamondCut(_facetCuts, _init, _calldata);
     }
 
+    function interfaceCut(
+        ItemCut[] calldata _interfaceCuts
+    ) external override onlyOwner whenNotPaused {
+        _interfaceCut(_interfaceCuts);
+    }
+
     function facetUpdates(
-        address[] memory _facetAddresses,
+        address[] memory _newFacetAddresses,
         address _init,
         bytes calldata _calldata
     ) external override onlyOwner whenNotPaused {
-        _facetUpdates(_facetAddresses, _init, _calldata);
+        _facetUpdates(_newFacetAddresses, _init, _calldata);
+    }
+
+    function interfacesIntrospection()
+        external
+        pure
+        returns (bytes4[] memory interfaces_)
+    {
+        uint256 interfacesLength = 1;
+        interfaces_ = new bytes4[](interfacesLength);
+        interfaces_[--interfacesLength] = type(IDiamondCut).interfaceId;
+    }
+
+    function businessIdIntrospection()
+        external
+        pure
+        override
+        returns (bytes32 businessId_)
+    {
+        businessId_ = _DIAMOND_CUT_RESOLVER_KEY;
     }
 
     function selectorsIntrospection()
@@ -48,9 +80,10 @@ contract DiamondCutOwnableFacet is
         override
         returns (bytes4[] memory selectors_)
     {
-        uint256 selectorsLength = 2;
+        uint256 selectorsLength = 3;
         selectors_ = new bytes4[](selectorsLength);
         selectors_[--selectorsLength] = this.diamondCut.selector;
+        selectors_[--selectorsLength] = this.interfaceCut.selector;
         selectors_[--selectorsLength] = this.facetUpdates.selector;
     }
 }

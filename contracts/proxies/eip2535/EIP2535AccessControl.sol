@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
+import {EIP2535Internal} from './EIP2535Internal.sol';
+import {AccessControlInternal} from '../../access/accessControl/AccessControlInternal.sol';
 import {EIP2535} from './EIP2535.sol';
-import {IAccessControl} from '../../access/IAccessControl.sol';
+import {IAccessControl} from '../../access/accessControl/IAccessControl.sol';
 
 /**
  * @title EIP2535AccessControl Contract
@@ -10,7 +12,11 @@ import {IAccessControl} from '../../access/IAccessControl.sol';
  *      RBAC (Role-Based Access Control) during initialization and supports the configuration of facets in a
  *      diamond contract.
  */
-contract EIP2535AccessControl is EIP2535 {
+contract EIP2535AccessControl is
+    EIP2535,
+    EIP2535Internal,
+    AccessControlInternal
+{
     /**
      * @dev Struct to hold arguments required during the diamond contract's constructor. This helps to avoid
      *      "stack too deep" errors by bundling multiple parameters together.
@@ -35,7 +41,9 @@ contract EIP2535AccessControl is EIP2535 {
      * @param _args Struct containing diamond initialization arguments (`DiamondArgs`).
      */
     constructor(address[] memory _facets, DiamondArgs memory _args) payable {
-        _initializeRbac(_args.rbacs); // Set up role-based access control
-        _configureFacets(_facets, _args.init, _args.initCalldata); // Configure facets and execute initialization logic
+        // Set up role-based access control
+        _initializeRbacs(_args.rbacs);
+        // Configure facets and execute initialization logic
+        _configureFacets(_facets, _args.init, _args.initCalldata);
     }
 }

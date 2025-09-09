@@ -1,8 +1,14 @@
 import { expect } from 'chai'
 import { Signer } from 'ethers'
 import { ethers } from 'hardhat'
-import { AssetEventTrackerTestWrapper } from '../typechain-types'
+import {
+    AssetEventTrackerTestWrapper,
+    AccessControl,
+    ISBEPause,
+    MockTimestamp,
+} from '../typechain-types'
 import { ASSET_EVENT_TRACKER_ROLE, PAUSER_ROLE } from './constants'
+import { deployGovernance } from './initialization'
 
 describe('Asset Event Tracker', function () {
     const STATE_1 = 1
@@ -11,37 +17,26 @@ describe('Asset Event Tracker', function () {
 
     let adminAccount: Signer
     let assetEventTracker: AssetEventTrackerTestWrapper
-    let assetEventTrackerImplementation: AssetEventTrackerTestWrapper
+    let pause: ISBEPause
+    let accessControl: AccessControl
+    let mockTimestamp: MockTimestamp
 
     async function deploy() {
         ;[adminAccount] = await ethers.getSigners()
         const adminAccountAddress = await adminAccount.getAddress()
 
-        const AssetEventTracker = await ethers.getContractFactory(
-            'AssetEventTrackerTestWrapper'
-        )
-        assetEventTrackerImplementation = await AssetEventTracker.deploy()
-        expect(await assetEventTrackerImplementation.selectorsIntrospection())
-            .to.not.be.undefined
+        const result = await deployGovernance(adminAccount)
 
-        const Proxy = await ethers.getContractFactory('IsbeERC1967Proxy')
-        const proxy = await Proxy.deploy(assetEventTrackerImplementation)
-        await proxy.waitForDeployment()
+        assetEventTracker = result.assetEventTracker
+        pause = result.pause
+        accessControl = result.accessControl
+        mockTimestamp = result.mockTimestamp
 
-        assetEventTracker = (await AssetEventTracker.attach(
-            await proxy.getAddress()
-        )) as AssetEventTrackerTestWrapper
-
-        await assetEventTracker.initializeAccessControl(adminAccountAddress)
-
-        assetEventTracker = assetEventTracker.connect(adminAccount)
-        await assetEventTracker.grantRole(
+        await accessControl.grantRole(PAUSER_ROLE, adminAccountAddress)
+        await accessControl.grantRole(
             ASSET_EVENT_TRACKER_ROLE,
             adminAccountAddress
         )
-        await assetEventTracker.grantRole(PAUSER_ROLE, adminAccountAddress)
-
-        await assetEventTracker.initializePause(false)
     }
 
     describe('Recording states', function () {
@@ -49,7 +44,9 @@ describe('Asset Event Tracker', function () {
             await deploy()
 
             assetEventTracker = assetEventTracker.connect(adminAccount)
-            await assetEventTracker.setMockedTimestamp(BLOCK_TIMESTAMP)
+            mockTimestamp = mockTimestamp.connect(adminAccount)
+
+            await mockTimestamp.setMockedTimestamp(BLOCK_TIMESTAMP)
 
             await expect(assetEventTracker.recordState(STATE_1))
                 .to.emit(assetEventTracker, 'StateRecorded')
@@ -72,7 +69,7 @@ describe('Asset Event Tracker', function () {
             await deploy()
 
             assetEventTracker = assetEventTracker.connect(adminAccount)
-            await assetEventTracker.setMockedTimestamp(BLOCK_TIMESTAMP)
+            await mockTimestamp.setMockedTimestamp(BLOCK_TIMESTAMP)
 
             await expect(assetEventTracker.recordState(STATE_2))
                 .to.emit(assetEventTracker, 'StateRecorded')
@@ -102,7 +99,8 @@ describe('Asset Event Tracker', function () {
             await deploy()
 
             assetEventTracker = assetEventTracker.connect(adminAccount)
-            await assetEventTracker.pause()
+
+            await pause.pause()
 
             await expect(
                 assetEventTracker.recordState(STATE_1)
@@ -113,7 +111,7 @@ describe('Asset Event Tracker', function () {
             await deploy()
 
             assetEventTracker = assetEventTracker.connect(adminAccount)
-            await assetEventTracker.revokeRole(
+            await accessControl.revokeRole(
                 ASSET_EVENT_TRACKER_ROLE,
                 adminAccount.getAddress()
             )
@@ -170,7 +168,7 @@ describe('Asset Event Tracker', function () {
             await deploy()
 
             assetEventTracker = assetEventTracker.connect(adminAccount)
-            await assetEventTracker.setMockedTimestamp(BLOCK_TIMESTAMP)
+            await mockTimestamp.setMockedTimestamp(BLOCK_TIMESTAMP)
 
             await assetEventTracker.recordState(STATE_1)
 

@@ -1,39 +1,36 @@
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
 import {
-    ERC20TestWrapper,
-    ERC20TestWrapper__factory,
-    ERC20TestWrapperUpdated__factory,
-    ERC20TestWrapperUpdated,
     IsbeERC1967Proxy__factory,
+    ERC20TestWrapperUUPS__factory,
+    ERC20TestWrapperUUPS,
 } from '../typechain-types'
-import { MINTER_ROLE } from './constants'
-import { Signer } from 'ethers/lib.esm'
+import { DEFAULT_ADMIN_ROLE, MINTER_ROLE } from './constants'
+import { Signer } from 'ethers'
+
+const NAME = 'My Token'
+const SYMBOL = 'MTK'
+const DECIMALS = 18
 
 describe('IsbeERC1967Proxy', function () {
     let admin: Signer
     let IsbeERC1967ProxyFactory: IsbeERC1967Proxy__factory
-    let ERC20TestWrapperFactory: ERC20TestWrapper__factory
-    let ERC20TestWrapperUpdatedFactory: ERC20TestWrapperUpdated__factory
-    let erc20Impl: ERC20TestWrapper
-    let erc20ImplUpdated: ERC20TestWrapperUpdated
-    let erc20: ERC20TestWrapper
-    let erc20Updated: ERC20TestWrapperUpdated
+    let ERC20TestWrapperUUPSFactory: ERC20TestWrapperUUPS__factory
+    let erc20ImplementationUUPS: ERC20TestWrapperUUPS
+    let erc20UUPS: ERC20TestWrapperUUPS
 
     async function deployInitial() {
         ;[admin] = await ethers.getSigners()
-        // Despliegue AccessControl logic
-        ERC20TestWrapperFactory =
-            await ethers.getContractFactory('ERC20TestWrapper')
-        erc20Impl = await ERC20TestWrapperFactory.deploy()
-        ERC20TestWrapperUpdatedFactory = await ethers.getContractFactory(
-            'ERC20TestWrapperUpdated'
+
+        ERC20TestWrapperUUPSFactory = await ethers.getContractFactory(
+            'ERC20TestWrapperUUPS'
         )
-        erc20ImplUpdated = await ERC20TestWrapperUpdatedFactory.deploy()
+        erc20ImplementationUUPS = await ERC20TestWrapperUUPSFactory.deploy()
+
+        await erc20ImplementationUUPS.waitForDeployment()
+
         IsbeERC1967ProxyFactory =
             await ethers.getContractFactory('IsbeERC1967Proxy')
-        await erc20Impl.waitForDeployment()
-        await erc20ImplUpdated.waitForDeployment()
     }
 
     before(async () => {
@@ -42,41 +39,42 @@ describe('IsbeERC1967Proxy', function () {
 
     beforeEach(async () => {
         const IsbeERC1967Proxy = await IsbeERC1967ProxyFactory.deploy(
-            await erc20Impl.getAddress()
+            await erc20ImplementationUUPS.getAddress()
         )
         await IsbeERC1967Proxy.waitForDeployment()
-        erc20 = ERC20TestWrapperFactory.attach(
+
+        erc20UUPS = ERC20TestWrapperUUPSFactory.attach(
             await IsbeERC1967Proxy.getAddress()
-        ) as ERC20TestWrapper
-        await erc20.initializeErc20('My Token', 'MTK', 18)
-        await erc20.initializeCap(10000)
+        ) as ERC20TestWrapperUUPS
+
+        await erc20UUPS.initializeErc20(NAME, SYMBOL, DECIMALS)
+        await erc20UUPS.initializeCap(10000)
         const adminAddress = await admin.getAddress()
-        await erc20.initializeAccessControl(adminAddress)
-        await erc20.grantRole(MINTER_ROLE, adminAddress)
-        erc20Updated = ERC20TestWrapperUpdatedFactory.attach(
-            await IsbeERC1967Proxy.getAddress()
-        ) as ERC20TestWrapperUpdated
+        await erc20UUPS.initializeAccessControl([
+            {
+                role: DEFAULT_ADMIN_ROLE,
+                members: [adminAddress],
+            },
+        ])
+        await erc20UUPS.grantRole(MINTER_ROLE, adminAddress)
     })
 
     it('GIVEN an ERC20 deployed WHEN deploy a Uups proxy THEN it can be initialized', async () => {
-        expect(await erc20.name()).to.equal('My Token')
-        expect(await erc20.symbol()).to.equal('MTK')
-        expect(await erc20.decimals()).to.equal(18)
-        await expect(erc20Updated.metadata()).to.be.revertedWithoutReason()
+        expect(await erc20UUPS.name()).to.equal(NAME)
+        expect(await erc20UUPS.symbol()).to.equal(SYMBOL)
+        expect(await erc20UUPS.decimals()).to.equal(DECIMALS)
     })
 
     it('GIVEN an ERC20 deployed linked to an UUPS proxy WHEN update THEN it can be updated', async () => {
-        await erc20.upgradeTo(await erc20ImplUpdated.getAddress())
-        expect(await erc20.name()).to.equal('My Token')
-        expect(await erc20.symbol()).to.equal('MTK')
-        expect(await erc20.decimals()).to.equal(18)
-        expect(await erc20Updated.metadata()).to.be.deep.equal([
-            'My Token',
-            'MTK',
-            18,
-        ])
-        // To complete coverage
-        await erc20.upgradeTo(await erc20ImplUpdated.getAddress())
-        await erc20.mint(await erc20.getAddress(), 100)
+        const erc20ImplementationUUPS_2 =
+            await ERC20TestWrapperUUPSFactory.deploy()
+
+        await erc20ImplementationUUPS_2.waitForDeployment()
+
+        await erc20UUPS.upgradeTo(await erc20ImplementationUUPS_2.getAddress())
+
+        expect(await erc20UUPS.name()).to.equal(NAME)
+        expect(await erc20UUPS.symbol()).to.equal(SYMBOL)
+        expect(await erc20UUPS.decimals()).to.equal(DECIMALS)
     })
 })

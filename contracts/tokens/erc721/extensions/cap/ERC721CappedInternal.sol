@@ -2,9 +2,7 @@
 pragma solidity ^0.8.28;
 
 import {ERC721Internal} from '../../ERC721Internal.sol';
-import {
-    _ERC721_CAPPED_STORAGE_POSITION
-} from '../../../../constants/storagePositions.sol';
+import {_ERC721_CAPPED_STORAGE_POSITION} from '../../../../constants/storagePositions.sol';
 import {IERC721Capped} from './IERC721Capped.sol';
 
 /**
@@ -24,20 +22,20 @@ abstract contract ERC721CappedInternal is ERC721Internal {
         uint256 cap;
     }
 
-    modifier checkNewCap(uint256 newCap) {
-        _checkNewCap(newCap);
+    modifier checkValidNewCap(uint256 newCap) {
+        _checkValidNewCap(newCap);
         _;
     }
 
-    modifier checkCap(uint256 amount) {
-        _checkCap(amount);
+    modifier checkAllowedCap(uint256 amount) {
+        _checkAllowedCap(amount);
         _;
     }
 
     function _mint(
         address to,
         uint256 tokenId
-    ) internal virtual override checkCap(1) {
+    ) internal virtual override checkAllowedCap(1) {
         super._mint(to, tokenId);
     }
 
@@ -49,18 +47,14 @@ abstract contract ERC721CappedInternal is ERC721Internal {
         return _erc721CappedStorage().cap;
     }
 
-    function _checkNewCap(uint256 newCap) internal view virtual {
-        require(newCap > 0, IERC721Capped.CapIsZero());
-
-        uint256 totalSupply = _totalSupply();
-
+    function _checkValidNewCap(uint256 newCap) internal view virtual {
         require(
-            newCap >= totalSupply,
-            IERC721Capped.NewCapIsLessThanTotalSupply(newCap, totalSupply)
+            newCap >= _totalSupply(),
+            IERC721Capped.NewCapIsLessThanTotalSupply(newCap, _totalSupply())
         );
     }
 
-    function _checkCap(uint256 amount) internal view virtual {
+    function _checkAllowedCap(uint256 amount) internal view virtual {
         require(_totalSupply() + amount <= _cap(), IERC721Capped.CapExceeded());
     }
 

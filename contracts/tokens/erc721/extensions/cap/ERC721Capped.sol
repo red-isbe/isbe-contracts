@@ -2,9 +2,7 @@
 pragma solidity ^0.8.28;
 
 import {ERC721InternalCommon} from '../ERC721InternalCommon.sol';
-import {
-    _ERC721_CAPPED_RESOLVER_KEY
-} from '../../../../constants/resolverKeys.sol';
+import {_ERC721_CAPPED_RESOLVER_KEY} from '../../../../constants/resolverKeys.sol';
 import {IERC721Capped} from './IERC721Capped.sol';
 import {_CAP_ROLE, _MINTER_ROLE} from '../../../../constants/roles.sol';
 
@@ -28,7 +26,8 @@ abstract contract ERC721Capped is IERC721Capped, ERC721InternalCommon {
      */
     function initializeCap(
         uint256 newCap
-    ) external initializer(_ERC721_CAPPED_RESOLVER_KEY) checkNewCap(newCap) {
+    ) external initializer(_ERC721_CAPPED_RESOLVER_KEY) {
+        _checkUintIsNotZero(newCap);
         _setCap(newCap);
         emit CapSet(_msgSender(), newCap);
     }
@@ -42,7 +41,7 @@ abstract contract ERC721Capped is IERC721Capped, ERC721InternalCommon {
     function mint(
         address to,
         uint256 tokenId
-    ) external checkCap(1) whenNotPaused onlyRole(_MINTER_ROLE) {
+    ) external whenNotPaused onlyRole(_MINTER_ROLE) {
         _mint(to, tokenId);
     }
 
@@ -54,7 +53,8 @@ abstract contract ERC721Capped is IERC721Capped, ERC721InternalCommon {
      */
     function setCap(
         uint256 newCap
-    ) external checkNewCap(newCap) whenNotPaused onlyRole(_CAP_ROLE) {
+    ) external checkValidNewCap(newCap) whenNotPaused onlyRole(_CAP_ROLE) {
+        _checkUintIsNotZero(newCap);
         _setCap(newCap);
         emit CapSet(_msgSender(), newCap);
     }
@@ -64,5 +64,17 @@ abstract contract ERC721Capped is IERC721Capped, ERC721InternalCommon {
      */
     function cap() external view returns (uint256) {
         return _cap();
+    }
+
+    function _implementedInterfaces()
+        internal
+        pure
+        virtual
+        override
+        returns (bytes4[] memory interfaces_)
+    {
+        uint256 interfacesLength = 1;
+        interfaces_ = new bytes4[](interfacesLength);
+        interfaces_[--interfacesLength] = type(IERC721Capped).interfaceId;
     }
 }

@@ -1,0 +1,25 @@
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.28;
+
+import {IGlobalIsbePause} from './globalisbepause/IGlobalIsbePause.sol';
+import {IBusinessLogicFactory} from './businesslogic/IBusinessLogicFactory.sol';
+import {IProxyFactory} from './proxyfactory/IProxyFactory.sol';
+import {IConfigurationManagement} from './configurationmanagement/IConfigurationManagement.sol';
+import {IDidRegistry} from '../identity/didregistry/IDidRegistry.sol';
+
+/**
+ * @title ISBE Factory Interface
+ * @notice Comprehensive interface for the ISBE governance diamond factory system
+ * @dev Aggregates all core governance interfaces into a unified factory interface for
+ *      complete ecosystem management including business logic deployment, proxy creation,
+ *      configuration management, global pause controls, and DID registry operations
+ * @author ISBE Development Team
+ */
+// solhint-disable-next-line no-empty-blocks
+interface IIsbeFactory is
+    IBusinessLogicFactory,
+    IConfigurationManagement,
+    IProxyFactory,
+    IGlobalIsbePause,
+    IDidRegistry
+{}

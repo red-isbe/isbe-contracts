@@ -1,0 +1,85 @@
+@startuml
+!theme vibrant
+
+title ISBE Roles
+
+' ACCIONES SOBRE GOBERNANZA
+' 1. DESPLIEGUE Y VERSIONADO DE LÓGICAS DE NEGOCIO -> BUSINESS_LOGIC_DEPLOYER_ROLE
+' 2. DESPLIEGUE DE PROXIES DE CASOS DE USO -> PROXY_DEPLOYER_ROLE *** NOT ISBE ***
+' 3, GESTIONAR LAS CONFIGURACIONES DE LOS DIAMANTES -> GOVERNANCE_CONFIGURATION_MANAGER_ROLE
+' 4. PAUSAR/UNPAUSAR OTRO TOKENS --> ISBE_PAUSER_ROLE
+' 5. ASIGNAR/REVOCAR ROLES EN GOBERNANZA) --> DEFAULT_ADMIN_ROLE
+' 6. GESTIONAR LAS FACETAS DEL DIAMANTE DE GOBERNANZA -> GOVERNANCE_MANAGER_ROLE
+' 7. Pausar/UNPAUSAR DIAMANTE DE GOBERNANZA --> PAUSER_ROLE
+
+' ACCIONES SOBRE CASOS DE USO
+' 1. PAUSAR/DESPAUSAR POR EL PROPIETARIO DEL CASO DE USO -> PAUSER_ROLE
+' 2. PAUSAR/DESPAUSAR POR ISBE -> ISBE_ROLE (Contrato gobernanza)
+' 3. MANEJAR ROLES ADMINISTRATIVAMENTE -> DEFAULT_ADMIN_ROLE * Restricciones
+' 4. GESTION DE CONFIGURACIÓN DEL ISBE PROXY -> CONFIGURATION_MANAGER_ROLE
+' RULES:
+'   * ISBE_ROLE no se permite que se informe y se asigna el address del proxy de gobernanza
+'   * DEFAULT_ADMIN_ROLE no se permite que se informe y se asigna el address del msg.sender
+package "Roles" #LightCyan {
+    package "Governance" {
+        package "ISBE owned" {
+            actor GOVERNANCE_MANAGER_ROLE
+            note bottom of GOVERNANCE_MANAGER_ROLE
+                Manage configuration of facets
+                for governance diamond proxy.
+            end note
+            actor BUSINESS_LOGIC_DEPLOYER_ROLE
+            note top of BUSINESS_LOGIC_DEPLOYER_ROLE
+                Deploy of business logics
+            end note
+            actor GOVERNANCE_CONFIGURATION_MANAGER_ROLE
+            note bottom of GOVERNANCE_CONFIGURATION_MANAGER_ROLE
+                Permits to create with a set of
+                business logics a configuration
+                to be assigned to the use case proxies
+            end note
+            actor ISBE_PAUSER_ROLE
+            note top of ISBE_PAUSER_ROLE
+                PAUSE / UNPASE
+                any use case proxy
+            end note
+        }
+        actor PROXY_DEPLOYER_ROLE
+        note left of PROXY_DEPLOYER_ROLE
+            Deploy new use case proxies
+        end note
+        PROXY_DEPLOYER_ROLE -[hidden]- "ISBE owned"
+    }
+    package "Use case" {
+        actor CONFIGURATION_MANAGER_ROLE
+        note top of CONFIGURATION_MANAGER_ROLE
+            permits to change isbeConfigurationId
+            or version
+        end note
+        actor ISBE_ROLE
+        note bottom of ISBE_ROLE
+            Administrative actions from governance.
+            Not able to be changes by other roles.
+            Not able to be revoked.
+            Set by default to the governance proxy.
+        end note
+    }
+
+    package "Common" {
+        actor DEFAULT_ADMIN_ROLE
+        note left of DEFAULT_ADMIN_ROLE
+            grant and revoke any role
+            for use case and governance is set
+            to the address of the deployer
+        end note
+        actor PAUSER_ROLE
+        note right of PAUSER_ROLE
+            PAUSE / UNPAUSE
+            for governance or use case.
+        end note
+    }
+}
+"Use case" -u[hidden]- "GOVERNANCE_CONFIGURATION_MANAGER_ROLE"
+"Governance" -u[hidden]- "Common"
+"Use case" -u[hidden]- "BUSINESS_LOGIC_DEPLOYER_ROLE"
+@enduml

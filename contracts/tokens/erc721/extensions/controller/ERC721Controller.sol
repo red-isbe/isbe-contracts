@@ -8,7 +8,7 @@ import {_CONTROLLER_ROLE} from '../../../../constants/roles.sol';
 /// @title ERC721Controller
 /// @notice Implements force mechanism for ERC721 tokens (force transfer and burn)
 /// @dev Inherits from IERC721Controller and ERC721Internal
-contract ERC721Controller is IERC721Controller, ERC721InternalCommon {
+abstract contract ERC721Controller is IERC721Controller, ERC721InternalCommon {
     /**
      * @notice Transfers a token from one account to another without requiring approval.
      * @dev Only callable by accounts with the controller role.
@@ -35,5 +35,17 @@ contract ERC721Controller is IERC721Controller, ERC721InternalCommon {
         require(_ownerOf(tokenId) == from, ForceBurnNotTokenOwner());
         _burn(tokenId);
         emit ForceBurn(_msgSender(), from, tokenId);
+    }
+
+    function _implementedInterfaces()
+        internal
+        pure
+        virtual
+        override
+        returns (bytes4[] memory interfaces_)
+    {
+        uint256 interfacesLength = 1;
+        interfaces_ = new bytes4[](interfacesLength);
+        interfaces_[--interfacesLength] = type(IERC721Controller).interfaceId;
     }
 }
