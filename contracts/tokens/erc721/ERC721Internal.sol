@@ -35,6 +35,22 @@ abstract contract ERC721Internal is Common {
         mapping(address => mapping(address => bool)) operatorApprovals;
     }
 
+    /**
+     * @notice Modifier that checks if `spender` is the owner, approved address, or an operator for the given token.
+     * @dev Calls _checkIsApprovedOrOwner and reverts if not authorized.
+     * @param spender The address performing the action (usually _msgSender()).
+     * @param owner The address of the token owner.
+     * @param tokenId The ID of the token to check.
+     */
+    modifier onlyApprovedOrOwner(
+        address spender,
+        address owner,
+        uint256 tokenId
+    ) {
+        _checkIsApprovedOrOwner(spender, owner, tokenId);
+        _;
+    }
+
     function _initialize(
         string memory newName,
         string memory newSymbol
@@ -48,9 +64,8 @@ abstract contract ERC721Internal is Common {
         address from,
         address to,
         uint256 tokenId
-    ) internal addressIsNotZero(from) addressIsNotZero(to) {
+    ) internal addressIsNotZero(to) {
         ERC721Storage storage $ = _erc721Storage();
-        _checkIsApprovedOrOwner(_msgSender(), from, tokenId);
 
         _beforeTokenTransfer(from, to, tokenId);
 
@@ -150,7 +165,7 @@ abstract contract ERC721Internal is Common {
         address to,
         uint256 tokenId,
         bytes memory data
-    ) internal {
+    ) internal onlyApprovedOrOwner(_msgSender(), from, tokenId) {
         _transfer(from, to, tokenId);
         // If recipient is a contract, check that it implements IERC721Receiver
         _checkOnERC721Received(from, to, tokenId, data);

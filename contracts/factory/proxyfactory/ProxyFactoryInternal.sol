@@ -39,8 +39,45 @@ abstract contract ProxyFactoryInternal is ConfigurationManagementInternal {
         IAccessControl.Rbac[] memory _rbacs,
         bool _initPause,
         bytes32[] memory _initBusinessIds,
-        bytes[] memory _initData
+        bytes[] memory _initData,
+        bool createTo,
+        bytes32 _salt
     ) internal returns (address proxyAddress_) {
+        IsbeProxy proxy = _deployIsbeProxy(
+            createTo,
+            _salt,
+            _buildUseCaseDeployArgs(
+                _configurationId,
+                _version,
+                _initBusinessIds,
+                _initData
+            )
+        );
+
+        proxyAddress_ = address(proxy);
+
+        _initializeUseCase(proxyAddress_, _rbacs, _initPause);
+
+        _storeDeployedDiamond(_configurationId, _version, proxyAddress_);
+    }
+
+    function _initializeUseCase(
+        address _proxyAddress,
+        IAccessControl.Rbac[] memory _rbacs,
+        bool _initPause
+    ) internal {
+        IAccessControl(_proxyAddress).initializeAccessControl(
+            _adaptRbacWithIsbeRoles(_rbacs)
+        );
+        IPause(_proxyAddress).initializePause(_initPause);
+    }
+
+    function _buildUseCaseDeployArgs(
+        bytes32 _configurationId,
+        uint256 _version,
+        bytes32[] memory _initBusinessIds,
+        bytes[] memory _initData
+    ) internal view returns (IsbeProxy.IsbeProxyArgs memory args_) {
         uint256 length = _initBusinessIds.length;
         address[] memory _initBusinessAddresses = new address[](length);
 
@@ -55,20 +92,13 @@ abstract contract ProxyFactoryInternal is ConfigurationManagementInternal {
             }
         }
 
-        IsbeProxy.IsbeProxyArgs memory args = IsbeProxy.IsbeProxyArgs({
+        args_ = IsbeProxy.IsbeProxyArgs({
             configurationManagement: IConfigurationManagement(address(this)),
             configurationId: _configurationId,
             version: _version,
             init: _initBusinessAddresses,
             data: _initData
         });
-        IsbeProxy proxy = new IsbeProxy(args);
-        proxyAddress_ = address(proxy);
-        IAccessControl(proxyAddress_).initializeAccessControl(
-            _adaptRbacWithIsbeRoles(_rbacs)
-        );
-        IPause(proxyAddress_).initializePause(_initPause);
-        _storeDeployedDiamond(_configurationId, _version, proxyAddress_);
     }
 
     function _getDeployedProxiesByConfiguration(
@@ -107,6 +137,42 @@ abstract contract ProxyFactoryInternal is ConfigurationManagementInternal {
         uint256 interfacesLength = 1;
         interfaces_ = new bytes4[](interfacesLength);
         interfaces_[--interfacesLength] = type(IProxyFactory).interfaceId;
+    }
+
+    function _deployIsbeProxy(
+        bool _createTo,
+        bytes32 _salt,
+        IsbeProxy.IsbeProxyArgs memory _args
+    ) private returns (IsbeProxy proxy_) {
+        if (_createTo) {
+            address predicted = address(
+                uint160(
+                    uint256(
+                        keccak256(
+                            abi.encodePacked(
+                                bytes1(0xFF),
+                                address(this),
+                                _salt,
+                                keccak256(
+                                    abi.encodePacked(
+                                        type(IsbeProxy).creationCode,
+                                        abi.encode(_args)
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            );
+            require(
+                predicted.code.length == 0,
+                IProxyFactory.AddressAlreadyDeployed(predicted)
+            );
+
+            return new IsbeProxy{salt: _salt}(_args);
+        }
+
+        return new IsbeProxy(_args);
     }
 
     function _storeDeployedDiamond(

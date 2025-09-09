@@ -6,6 +6,16 @@ Repository of certified and audited utilities for use in the ISBE network
 
 - Node version 20.X.X
 
+## Deploy environment
+
+```bash
+$ npm install
+$ npm run compile:force
+$ npx hardhat deployAll --network localhost
+```
+
+Available networks: hardhat, localhost, mvp, arsys.
+
 ## User Roles
 
 In this repository we can find two different users:

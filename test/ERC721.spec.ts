@@ -9,9 +9,16 @@ import {
     ISBEPause,
     ERC721Snapshot,
     ERC721Burnable,
+    ERC721Controller,
 } from '../typechain-types'
 import { CONFIGURATION_ID_ERC721, deployGovernance } from './initialization'
-import { CAP_ROLE, MINTER_ROLE, PAUSER_ROLE, SNAPSHOT_ROLE } from './constants'
+import {
+    CAP_ROLE,
+    MINTER_ROLE,
+    PAUSER_ROLE,
+    SNAPSHOT_ROLE,
+    CONTROLLER_ROLE,
+} from './constants'
 
 describe('ERC721', function () {
     const name = 'ISBE NFT'
@@ -22,6 +29,7 @@ describe('ERC721', function () {
     let erc721Capped: ERC721Capped
     let erc721Snapshot: ERC721Snapshot
     let erc721Burn: ERC721Burnable
+    let erc721Controller: ERC721Controller
     let erc20Address: string
     let owner: Signer
     let ownerAddress: string
@@ -48,6 +56,7 @@ describe('ERC721', function () {
         erc721Capped = result.erc721Capped
         erc721Snapshot = result.erc721Snapshot
         erc721Burn = result.erc721Burn
+        erc721Controller = result.erc721Controller
         erc20Address = await result.erc721Facet.getAddress()
         accessControl = result.accessControl
         pause = result.pause
@@ -146,6 +155,18 @@ describe('ERC721', function () {
                 'IsPaused'
             )
         })
+
+        it('GIVEN an ERC721 WHEN burn is called by not owner nor approved nor operator THEN reverts with CallerNotOwnerNorApproved', async () => {
+            // Mint token to owner
+            await erc721Capped.mint(ownerAddress, 2)
+            // Try to burn from another account (not owner, not approved, not operator)
+            await expect(
+                erc721Burn.connect(other).burn(2)
+            ).to.be.revertedWithCustomError(
+                erc721Burn,
+                'CallerNotOwnerNorApproved'
+            )
+        })
     })
 
     describe('BurnFrom', () => {
@@ -206,12 +227,6 @@ describe('ERC721', function () {
         it('GIVEN an ERC721 WHEN transfer to zero address THEN fails', async () => {
             await expect(
                 erc721TestWrapper.transfer(ownerAddress, ethers.ZeroAddress, 1)
-            ).to.be.revertedWithCustomError(erc721TestWrapper, 'AddressZero')
-        })
-
-        it('GIVEN an ERC721 WHEN transfer from zero address THEN fails', async () => {
-            await expect(
-                erc721TestWrapper.transfer(ethers.ZeroAddress, otherAddress, 1)
             ).to.be.revertedWithCustomError(erc721TestWrapper, 'AddressZero')
         })
     })
@@ -677,6 +692,70 @@ describe('ERC721', function () {
                     ownerAddress
                 )
             }
+        })
+    })
+
+    describe('Controller', () => {
+        beforeEach(async () => {
+            await deploy(true)
+            await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+            await accessControl.grantRole(CONTROLLER_ROLE, ownerAddress)
+            await erc721Capped.mint(otherAddress, 1)
+        })
+
+        it('GIVEN an ERC721 initialized WHEN try to force burn a paused token THEN it fails', async () => {
+            await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+            await pause.pause()
+            await expect(
+                erc721Controller.forceBurn(otherAddress, 1)
+            ).to.be.revertedWithCustomError(erc721Controller, 'IsPaused')
+        })
+
+        it('GIVEN an ERC721 initialized WHEN non controller tries to force burn THEN it fails', async () => {
+            erc721Controller = erc721Controller.connect(other)
+            await expect(
+                erc721Controller.forceBurn(otherAddress, 1)
+            ).to.be.revertedWithCustomError(accessControl, 'AccountHasNoRole')
+        })
+
+        it('GIVEN an ERC721 WHEN forceBurn with incorrect owner THEN it fails', async () => {
+            await expect(
+                erc721Controller.forceBurn(thirdAddress, 1)
+            ).to.be.revertedWithCustomError(
+                erc721Controller,
+                'ForceBurnNotTokenOwner'
+            )
+        })
+
+        it('GIVEN an ERC721 WHEN it is prepared THEN a force burn can be made', async () => {
+            await expect(erc721Controller.forceBurn(otherAddress, 1))
+                .to.emit(erc721Controller, 'ForceBurn')
+                .withArgs(ownerAddress, otherAddress, 1)
+            expect(await erc721.ownerOf(1)).to.equal(ZeroAddress)
+        })
+
+        it('GIVEN an ERC721 initialized WHEN try to force transfer a paused token THEN it fails', async () => {
+            await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+            await pause.pause()
+            await expect(
+                erc721Controller.forceTransfer(otherAddress, ownerAddress, 1)
+            ).to.be.revertedWithCustomError(erc721Controller, 'IsPaused')
+        })
+
+        it('GIVEN an ERC721 initialized WHEN non controller tries to force transfer THEN it fails', async () => {
+            erc721Controller = erc721Controller.connect(other)
+            await expect(
+                erc721Controller.forceTransfer(otherAddress, ownerAddress, 1)
+            ).to.be.revertedWithCustomError(accessControl, 'AccountHasNoRole')
+        })
+
+        it('GIVEN an ERC721 WHEN it is prepared THEN a force transfer can be made', async () => {
+            await expect(
+                erc721Controller.forceTransfer(otherAddress, ownerAddress, 1)
+            )
+                .to.emit(erc721Controller, 'ForceTransfer')
+                .withArgs(ownerAddress, otherAddress, ownerAddress, 1)
+            expect(await erc721.ownerOf(1)).to.equal(ownerAddress)
         })
     })
 })
