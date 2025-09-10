@@ -46,6 +46,7 @@ abstract contract ERC721 is IERC721Isbe, ERC721InternalCommon {
     )
         external
         override
+        whenNotPaused
         onlyApprovedOrOwner(_msgSender(), _ownerOf(tokenId), tokenId)
     {
         _approve(to, tokenId);
@@ -57,7 +58,7 @@ abstract contract ERC721 is IERC721Isbe, ERC721InternalCommon {
     function setApprovalForAll(
         address operator,
         bool approved
-    ) external override {
+    ) external override whenNotPaused{
         _setApprovalForAll(_msgSender(), operator, approved);
     }
 
@@ -69,7 +70,12 @@ abstract contract ERC721 is IERC721Isbe, ERC721InternalCommon {
         address from,
         address to,
         uint256 tokenId
-    ) external override onlyApprovedOrOwner(_msgSender(), from, tokenId) {
+    )
+        external
+        override
+        whenNotPaused
+        onlyApprovedOrOwner(_msgSender(), from, tokenId)
+    {
         _transfer(from, to, tokenId);
     }
 
@@ -140,7 +146,7 @@ abstract contract ERC721 is IERC721Isbe, ERC721InternalCommon {
         address to,
         uint256 tokenId,
         bytes memory data
-    ) public virtual override {
+    ) public virtual override whenNotPaused {
         _safeTransferFrom(from, to, tokenId, data);
     }
 
@@ -151,7 +157,7 @@ abstract contract ERC721 is IERC721Isbe, ERC721InternalCommon {
         address from,
         address to,
         uint256 tokenId
-    ) public virtual override {
+    ) public virtual override whenNotPaused {
         _safeTransferFrom(from, to, tokenId, '');
     }
 

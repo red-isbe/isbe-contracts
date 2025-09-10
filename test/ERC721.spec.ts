@@ -305,6 +305,22 @@ describe('ERC721', function () {
                 erc721.connect(other).approve(thirdAddress, 1)
             ).to.be.revertedWithCustomError(erc721, 'CallerNotOwnerNorApproved')
         })
+
+        it('GIVEN an ERC721 WHEN paused THEN approve reverts', async () => {
+            await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+            await pause.pause()
+            await expect(
+                erc721.approve(otherAddress, 1)
+            ).to.be.revertedWithCustomError(erc721, 'IsPaused')
+        })
+
+        it('GIVEN an ERC721 WHEN paused THEN setApprovalForAll reverts', async () => {
+            await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+            await pause.pause()
+            await expect(
+                erc721.setApprovalForAll(otherAddress, true)
+            ).to.be.revertedWithCustomError(erc721, 'IsPaused')
+        })
     })
 
     describe('transferFrom', () => {
@@ -368,6 +384,14 @@ describe('ERC721', function () {
 
             // After transfer, approved address should be reset to zero
             expect(await erc721.getApproved(1)).to.equal(ethers.ZeroAddress)
+        })
+
+        it('GIVEN an ERC721 WHEN paused THEN transferFrom reverts', async () => {
+            await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+            await pause.pause()
+            await expect(
+                erc721.transferFrom(ownerAddress, otherAddress, 1)
+            ).to.be.revertedWithCustomError(erc721, 'IsPaused')
         })
     })
 
@@ -490,6 +514,32 @@ describe('ERC721', function () {
             await expect(safeTransferFrom(ownerAddress, thirdAddress, 1))
                 .to.emit(erc721, 'Transfer')
                 .withArgs(ownerAddress, thirdAddress, 1)
+        })
+
+        it('GIVEN an ERC721 WHEN paused THEN safeTransferFrom(address,address,uint256) reverts', async () => {
+            await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+            await pause.pause()
+            await expect(
+                erc721['safeTransferFrom(address,address,uint256)'](
+                    ownerAddress,
+                    thirdAddress,
+                    1
+                )
+            ).to.be.revertedWithCustomError(erc721, 'IsPaused')
+        })
+
+        it('GIVEN an ERC721 WHEN paused THEN safeTransferFrom(address,address,uint256,bytes) reverts', async () => {
+            await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+            await pause.pause()
+            const data = ethers.encodeBytes32String('extra-data')
+            await expect(
+                erc721['safeTransferFrom(address,address,uint256,bytes)'](
+                    ownerAddress,
+                    thirdAddress,
+                    1,
+                    data
+                )
+            ).to.be.revertedWithCustomError(erc721, 'IsPaused')
         })
     })
 
@@ -1019,6 +1069,46 @@ describe('ERC721', function () {
 
         it('GIVEN feeDenominator is set to zero WHEN feeDenominator() is called THEN returns default value 10000', async () => {
             expect(await erc721Royalty.feeDenominator()).to.equal(10000)
+        })
+
+        it('GIVEN an ERC721 WHEN paused THEN setDefaultRoyalty reverts', async () => {
+            await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+            await pause.pause()
+            await expect(
+                erc721Royalty.setDefaultRoyalty(ownerAddress, 500)
+            ).to.be.revertedWithCustomError(erc721Royalty, 'IsPaused')
+        })
+
+        it('GIVEN an ERC721 WHEN paused THEN deleteDefaultRoyalty reverts', async () => {
+            await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+            await pause.pause()
+            await expect(
+                erc721Royalty.deleteDefaultRoyalty()
+            ).to.be.revertedWithCustomError(erc721Royalty, 'IsPaused')
+        })
+
+        it('GIVEN an ERC721 WHEN paused THEN setTokenRoyalty reverts', async () => {
+            await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+            await pause.pause()
+            await expect(
+                erc721Royalty.setTokenRoyalty(1, otherAddress, 1000)
+            ).to.be.revertedWithCustomError(erc721Royalty, 'IsPaused')
+        })
+
+        it('GIVEN an ERC721 WHEN paused THEN resetTokenRoyalty reverts', async () => {
+            await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+            await pause.pause()
+            await expect(
+                erc721Royalty.resetTokenRoyalty(1)
+            ).to.be.revertedWithCustomError(erc721Royalty, 'IsPaused')
+        })
+
+        it('GIVEN an ERC721 WHEN paused THEN setFeeDenominator reverts', async () => {
+            await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+            await pause.pause()
+            await expect(
+                erc721Royalty.setFeeDenominator(20000)
+            ).to.be.revertedWithCustomError(erc721Royalty, 'IsPaused')
         })
     })
 })

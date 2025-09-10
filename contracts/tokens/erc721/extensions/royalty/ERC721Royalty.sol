@@ -20,7 +20,7 @@ abstract contract ERC721Royalty is IERC721Royalty, ERC721InternalCommon {
     function setDefaultRoyalty(
         address receiver,
         uint96 feeNumerator
-    ) external onlyRole(_ROYALTY_ROLE) {
+    ) external whenNotPaused onlyRole(_ROYALTY_ROLE) {
         _setDefaultRoyalty(receiver, feeNumerator);
     }
 
@@ -28,7 +28,11 @@ abstract contract ERC721Royalty is IERC721Royalty, ERC721InternalCommon {
      * @notice Removes the default royalty information.
      * @dev Only callable by authorized roles (add access control in production).
      */
-    function deleteDefaultRoyalty() external onlyRole(_ROYALTY_ROLE) {
+    function deleteDefaultRoyalty()
+        external
+        whenNotPaused
+        onlyRole(_ROYALTY_ROLE)
+    {
         _deleteDefaultRoyalty();
     }
 
@@ -43,7 +47,7 @@ abstract contract ERC721Royalty is IERC721Royalty, ERC721InternalCommon {
         uint256 tokenId,
         address receiver,
         uint96 feeNumerator
-    ) external onlyRole(_ROYALTY_ROLE) {
+    ) external whenNotPaused onlyRole(_ROYALTY_ROLE) {
         _setTokenRoyalty(tokenId, receiver, feeNumerator);
     }
 
@@ -54,7 +58,7 @@ abstract contract ERC721Royalty is IERC721Royalty, ERC721InternalCommon {
      */
     function resetTokenRoyalty(
         uint256 tokenId
-    ) external onlyRole(_ROYALTY_ROLE) {
+    ) external whenNotPaused onlyRole(_ROYALTY_ROLE) {
         _resetTokenRoyalty(tokenId);
     }
 
@@ -65,7 +69,7 @@ abstract contract ERC721Royalty is IERC721Royalty, ERC721InternalCommon {
      */
     function setFeeDenominator(
         uint96 newDenominator
-    ) external onlyRole(_ROYALTY_ROLE) {
+    ) external whenNotPaused onlyRole(_ROYALTY_ROLE) {
         _setFeeDenominator(newDenominator);
     }
 
