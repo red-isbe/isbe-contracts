@@ -5,11 +5,13 @@ import {
     ERC721Capped,
     ERC721TestWrapper,
     AccessControl,
-    ERC721Facet,
+    ERC721,
     ISBEPause,
     ERC721Snapshot,
     ERC721Burnable,
     ERC721Controller,
+    ERC721Enumerable,
+    ERC721Royalty,
     ERC721Consecutive,
 } from '../typechain-types'
 import { CONFIGURATION_ID_ERC721, deployGovernance } from './initialization'
@@ -19,18 +21,21 @@ import {
     PAUSER_ROLE,
     SNAPSHOT_ROLE,
     CONTROLLER_ROLE,
+    ROYALTY_ROLE,
 } from './constants'
 
 describe('ERC721', function () {
     const name = 'ISBE NFT'
     const symbol = 'ISBENFT'
 
-    let erc721: ERC721Facet
+    let erc721: ERC721
     let erc721TestWrapper: ERC721TestWrapper
     let erc721Capped: ERC721Capped
     let erc721Snapshot: ERC721Snapshot
     let erc721Burn: ERC721Burnable
     let erc721Controller: ERC721Controller
+    let erc721Enumerable: ERC721Enumerable
+    let erc721Royalty: ERC721Royalty
     let erc721Consecutive: ERC721Consecutive
     let erc20Address: string
     let owner: Signer
@@ -59,6 +64,8 @@ describe('ERC721', function () {
         erc721Snapshot = result.erc721Snapshot
         erc721Burn = result.erc721Burn
         erc721Controller = result.erc721Controller
+        erc721Enumerable = result.erc721Enumerable
+        erc721Royalty = result.erc721Royalty
         erc721Consecutive = result.erc721Consecutive
         erc20Address = await result.erc721Facet.getAddress()
         accessControl = result.accessControl
@@ -111,8 +118,10 @@ describe('ERC721', function () {
             await expect(erc721Capped.mint(ownerAddress, 1))
                 .to.emit(erc721, 'Transfer')
                 .withArgs(ethers.ZeroAddress, ownerAddress, 1)
-            expect(await erc721.ownerOf(1)).to.equal(ownerAddress)
-            expect(await erc721.balanceOf(ownerAddress)).to.equal(1)
+            expect((await erc721.ownerOf(1)).toString()).to.equal(
+                ownerAddress.toString()
+            )
+            expect(Number(await erc721.balanceOf(ownerAddress))).to.equal(1)
         })
 
         it('GIVEN an ERC721 WHEN mint an already minted token THEN fails', async () => {
@@ -134,20 +143,26 @@ describe('ERC721', function () {
             await expect(erc721Burn.burn(1))
                 .to.emit(erc721, 'Transfer')
                 .withArgs(ownerAddress, ethers.ZeroAddress, 1)
-            expect(await erc721.ownerOf(1)).to.be.equal(ZeroAddress)
+            expect((await erc721.ownerOf(1)).toString()).to.be.equal(
+                ZeroAddress.toString()
+            )
         })
 
         it('GIVEN an ERC721 WHEN owner approves another, burns token, THEN approved address is reset to zero', async () => {
             await expect(erc721.approve(otherAddress, 1))
                 .to.emit(erc721, 'Approval')
                 .withArgs(ownerAddress, otherAddress, 1)
-            expect(await erc721.getApproved(1)).to.equal(otherAddress)
+            expect((await erc721.getApproved(1)).toString()).to.equal(
+                otherAddress.toString()
+            )
 
             await expect(erc721Burn.burn(1))
                 .to.emit(erc721, 'Transfer')
                 .withArgs(ownerAddress, ethers.ZeroAddress, 1)
 
-            expect(await erc721.getApproved(1)).to.equal(ethers.ZeroAddress)
+            expect((await erc721.getApproved(1)).toString()).to.equal(
+                ethers.ZeroAddress.toString()
+            )
         })
 
         it('GIVEN an ERC721 WHEN paused THEN burn reverts', async () => {
@@ -293,6 +308,22 @@ describe('ERC721', function () {
                 erc721.connect(other).approve(thirdAddress, 1)
             ).to.be.revertedWithCustomError(erc721, 'CallerNotOwnerNorApproved')
         })
+
+        it('GIVEN an ERC721 WHEN paused THEN approve reverts', async () => {
+            await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+            await pause.pause()
+            await expect(
+                erc721.approve(otherAddress, 1)
+            ).to.be.revertedWithCustomError(erc721, 'IsPaused')
+        })
+
+        it('GIVEN an ERC721 WHEN paused THEN setApprovalForAll reverts', async () => {
+            await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+            await pause.pause()
+            await expect(
+                erc721.setApprovalForAll(otherAddress, true)
+            ).to.be.revertedWithCustomError(erc721, 'IsPaused')
+        })
     })
 
     describe('transferFrom', () => {
@@ -356,6 +387,14 @@ describe('ERC721', function () {
 
             // After transfer, approved address should be reset to zero
             expect(await erc721.getApproved(1)).to.equal(ethers.ZeroAddress)
+        })
+
+        it('GIVEN an ERC721 WHEN paused THEN transferFrom reverts', async () => {
+            await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+            await pause.pause()
+            await expect(
+                erc721.transferFrom(ownerAddress, otherAddress, 1)
+            ).to.be.revertedWithCustomError(erc721, 'IsPaused')
         })
     })
 
@@ -479,6 +518,32 @@ describe('ERC721', function () {
                 .to.emit(erc721, 'Transfer')
                 .withArgs(ownerAddress, thirdAddress, 1)
         })
+
+        it('GIVEN an ERC721 WHEN paused THEN safeTransferFrom(address,address,uint256) reverts', async () => {
+            await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+            await pause.pause()
+            await expect(
+                erc721['safeTransferFrom(address,address,uint256)'](
+                    ownerAddress,
+                    thirdAddress,
+                    1
+                )
+            ).to.be.revertedWithCustomError(erc721, 'IsPaused')
+        })
+
+        it('GIVEN an ERC721 WHEN paused THEN safeTransferFrom(address,address,uint256,bytes) reverts', async () => {
+            await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+            await pause.pause()
+            const data = ethers.encodeBytes32String('extra-data')
+            await expect(
+                erc721['safeTransferFrom(address,address,uint256,bytes)'](
+                    ownerAddress,
+                    thirdAddress,
+                    1,
+                    data
+                )
+            ).to.be.revertedWithCustomError(erc721, 'IsPaused')
+        })
     })
 
     describe('Metadata', () => {
@@ -523,12 +588,12 @@ describe('ERC721', function () {
                 erc721Capped,
                 'ContractIsAlreadyInitialized'
             )
-            expect(await erc721Capped.cap()).to.equal(1000)
+            expect(Number(await erc721Capped.cap())).to.equal(1000)
         })
 
         it('GIVEN an initialized ERC721 WHEN mint over cap THEN it fails', async () => {
             await deploy(true)
-            expect(await erc721Capped.cap()).to.equal(3)
+            expect(Number(await erc721Capped.cap())).to.equal(3)
 
             await accessControl.grantRole(MINTER_ROLE, ownerAddress)
             // Mint up to cap
@@ -759,6 +824,294 @@ describe('ERC721', function () {
                 .to.emit(erc721Controller, 'ForceTransfer')
                 .withArgs(ownerAddress, otherAddress, ownerAddress, 1)
             expect(await erc721.ownerOf(1)).to.equal(ownerAddress)
+        })
+    })
+
+    describe('Enumerable', () => {
+        beforeEach(async () => {
+            await deploy(true)
+            await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+            await erc721Capped.mint(ownerAddress, 1)
+            await erc721Capped.mint(ownerAddress, 2)
+            await erc721Capped.mint(otherAddress, 3)
+        })
+
+        it('GIVEN an ERC721 WHEN minted THEN totalSupplyEnumerable returns correct value', async () => {
+            expect(await erc721Enumerable.totalSupplyEnumerable()).to.equal(3)
+        })
+
+        it('GIVEN an ERC721 WHEN minted THEN tokenOfOwnerByIndex returns correct token IDs', async () => {
+            expect(
+                await erc721Enumerable.tokenOfOwnerByIndex(ownerAddress, 0)
+            ).to.equal(1)
+            expect(
+                await erc721Enumerable.tokenOfOwnerByIndex(ownerAddress, 1)
+            ).to.equal(2)
+            expect(
+                await erc721Enumerable.tokenOfOwnerByIndex(otherAddress, 0)
+            ).to.equal(3)
+        })
+
+        it('GIVEN an ERC721 WHEN minted THEN tokenByIndex returns correct token IDs', async () => {
+            expect(await erc721Enumerable.tokenByIndex(0)).to.equal(1)
+            expect(await erc721Enumerable.tokenByIndex(1)).to.equal(2)
+            expect(await erc721Enumerable.tokenByIndex(2)).to.equal(3)
+        })
+
+        it('GIVEN an ERC721 WHEN tokenOfOwnerByIndex out of bounds THEN reverts with OwnerIndexOutOfBounds', async () => {
+            await expect(
+                erc721Enumerable.tokenOfOwnerByIndex(ownerAddress, 2)
+            ).to.be.revertedWithCustomError(
+                erc721Enumerable,
+                'OwnerIndexOutOfBounds'
+            )
+        })
+
+        it('GIVEN an ERC721 WHEN tokenByIndex out of bounds THEN reverts with GlobalIndexOutOfBounds', async () => {
+            await expect(
+                erc721Enumerable.tokenByIndex(3)
+            ).to.be.revertedWithCustomError(
+                erc721Enumerable,
+                'GlobalIndexOutOfBounds'
+            )
+        })
+
+        it('GIVEN an ERC721 WHEN token is transferred THEN it is removed from previous owner and added to new owner', async () => {
+            await erc721.transferFrom(ownerAddress, otherAddress, 2)
+            expect(
+                await erc721Enumerable.tokenOfOwnerByIndex(ownerAddress, 0)
+            ).to.equal(1)
+            await expect(
+                erc721Enumerable.tokenOfOwnerByIndex(ownerAddress, 1)
+            ).to.be.revertedWithCustomError(
+                erc721Enumerable,
+                'OwnerIndexOutOfBounds'
+            )
+
+            expect(
+                await erc721Enumerable.tokenOfOwnerByIndex(otherAddress, 0)
+            ).to.equal(3)
+            expect(
+                await erc721Enumerable.tokenOfOwnerByIndex(otherAddress, 1)
+            ).to.equal(2)
+        })
+
+        it('GIVEN an ERC721 WHEN transfer a token that is not the last in ownedTokens THEN triggers tokenIndex != lastTokenIndex logic', async () => {
+            await accessControl.grantRole(CAP_ROLE, ownerAddress)
+            erc721Capped.setCap(6)
+
+            await erc721Capped.mint(ownerAddress, 4)
+            await erc721.transferFrom(ownerAddress, otherAddress, 2)
+
+            expect(
+                await erc721Enumerable.tokenOfOwnerByIndex(ownerAddress, 0)
+            ).to.equal(1)
+            expect(
+                await erc721Enumerable.tokenOfOwnerByIndex(ownerAddress, 1)
+            ).to.equal(4)
+            await expect(
+                erc721Enumerable.tokenOfOwnerByIndex(ownerAddress, 2)
+            ).to.be.revertedWithCustomError(
+                erc721Enumerable,
+                'OwnerIndexOutOfBounds'
+            )
+
+            expect(
+                await erc721Enumerable.tokenOfOwnerByIndex(otherAddress, 0)
+            ).to.equal(3)
+            expect(
+                await erc721Enumerable.tokenOfOwnerByIndex(otherAddress, 1)
+            ).to.equal(2)
+        })
+
+        it('GIVEN an ERC721 WHEN burn a token that is not the last in allTokens THEN triggers tokenIndex != lastTokenIndex logic', async () => {
+            await accessControl.grantRole(CAP_ROLE, ownerAddress)
+            erc721Capped.setCap(6)
+            await erc721Capped.mint(ownerAddress, 4)
+
+            await erc721Burn.burn(2)
+
+            expect(await erc721Enumerable.tokenByIndex(0)).to.equal(1)
+            expect(await erc721Enumerable.tokenByIndex(1)).to.equal(4)
+        })
+
+        it('GIVEN an ERC721 WHEN transfer a token to a new owner THEN triggers else if (to != from) logic', async () => {
+            await erc721.transferFrom(ownerAddress, thirdAddress, 1)
+
+            expect(
+                await erc721Enumerable.tokenOfOwnerByIndex(thirdAddress, 0)
+            ).to.equal(1)
+            await expect(
+                erc721Enumerable.tokenOfOwnerByIndex(thirdAddress, 1)
+            ).to.be.revertedWithCustomError(
+                erc721Enumerable,
+                'OwnerIndexOutOfBounds'
+            )
+
+            expect(
+                await erc721Enumerable.tokenOfOwnerByIndex(ownerAddress, 0)
+            ).to.equal(2)
+            await expect(
+                erc721Enumerable.tokenOfOwnerByIndex(ownerAddress, 1)
+            ).to.be.revertedWithCustomError(
+                erc721Enumerable,
+                'OwnerIndexOutOfBounds'
+            )
+        })
+    })
+
+    describe('Royalty', () => {
+        beforeEach(async () => {
+            await deploy(true)
+            await accessControl.grantRole(ROYALTY_ROLE, ownerAddress)
+        })
+
+        it('GIVEN a valid fee denominator WHEN setDefaultRoyalty is called THEN sets and queries default royalty correctly', async () => {
+            await erc721Royalty.setFeeDenominator(10000)
+            await erc721Royalty.setDefaultRoyalty(ownerAddress, 500)
+            const [receiver, amount] = await erc721Royalty.royaltyInfo(1, 10000)
+            expect(receiver).to.equal(ownerAddress)
+            expect(amount).to.equal(500)
+        })
+
+        it('GIVEN a default royalty set WHEN deleteDefaultRoyalty is called THEN royalty info returns zero values', async () => {
+            await erc721Royalty.setFeeDenominator(10000)
+            await erc721Royalty.setDefaultRoyalty(ownerAddress, 500)
+            await erc721Royalty.deleteDefaultRoyalty()
+            const [receiver, amount] = await erc721Royalty.royaltyInfo(1, 10000)
+            expect(receiver).to.equal(ZeroAddress)
+            expect(amount).to.equal(0)
+        })
+
+        it('GIVEN a token royalty set WHEN royaltyInfo is queried THEN returns correct token royalty', async () => {
+            await erc721Royalty.setFeeDenominator(10000)
+            await erc721Royalty.setTokenRoyalty(1, otherAddress, 1000)
+            const [receiver, amount] = await erc721Royalty.royaltyInfo(1, 10000)
+            expect(receiver).to.equal(otherAddress)
+            expect(amount).to.equal(1000)
+        })
+
+        it('GIVEN a token royalty set and reset WHEN royaltyInfo is queried THEN returns default royalty', async () => {
+            await erc721Royalty.setFeeDenominator(10000)
+            await erc721Royalty.setDefaultRoyalty(ownerAddress, 500)
+            await erc721Royalty.setTokenRoyalty(1, otherAddress, 1000)
+            await erc721Royalty.resetTokenRoyalty(1)
+            const [receiver, amount] = await erc721Royalty.royaltyInfo(1, 10000)
+            expect(receiver).to.equal(ownerAddress)
+            expect(amount).to.equal(500)
+        })
+
+        it('GIVEN setFeeDenominator is called WHEN queried THEN returns correct denominator', async () => {
+            await erc721Royalty.setFeeDenominator(20000)
+            expect(await erc721Royalty.feeDenominator()).to.equal(20000)
+        })
+
+        it('GIVEN feeNumerator exceeds denominator WHEN setDefaultRoyalty is called THEN reverts with FeeExceedsDenominator', async () => {
+            await erc721Royalty.setFeeDenominator(10000)
+            await expect(
+                erc721Royalty.setDefaultRoyalty(ownerAddress, 20000)
+            ).to.be.revertedWithCustomError(
+                erc721Royalty,
+                'FeeExceedsDenominator'
+            )
+        })
+
+        it('GIVEN feeNumerator exceeds denominator WHEN setTokenRoyalty is called THEN reverts with FeeExceedsDenominator', async () => {
+            await erc721Royalty.setFeeDenominator(1000)
+            await expect(
+                erc721Royalty.setTokenRoyalty(1, ownerAddress, 1001)
+            ).to.be.revertedWithCustomError(
+                erc721Royalty,
+                'FeeExceedsDenominator'
+            )
+        })
+
+        it('GIVEN no ROYALTY_ROLE WHEN managing royalties THEN all management functions revert with access control error', async () => {
+            await erc721Royalty.setFeeDenominator(10000)
+            await accessControl.revokeRole(ROYALTY_ROLE, ownerAddress)
+
+            await expect(
+                erc721Royalty.setDefaultRoyalty(ownerAddress, 500)
+            ).to.be.revertedWithCustomError(accessControl, 'AccountHasNoRole')
+            await expect(
+                erc721Royalty.setTokenRoyalty(1, ownerAddress, 500)
+            ).to.be.revertedWithCustomError(accessControl, 'AccountHasNoRole')
+            await expect(
+                erc721Royalty.deleteDefaultRoyalty()
+            ).to.be.revertedWithCustomError(accessControl, 'AccountHasNoRole')
+            await expect(
+                erc721Royalty.resetTokenRoyalty(1)
+            ).to.be.revertedWithCustomError(accessControl, 'AccountHasNoRole')
+            await expect(
+                erc721Royalty.setFeeDenominator(10000)
+            ).to.be.revertedWithCustomError(accessControl, 'AccountHasNoRole')
+        })
+
+        it('GIVEN no royalty set WHEN royaltyInfo is queried THEN returns zero values', async () => {
+            await erc721Royalty.setFeeDenominator(10000)
+            const [receiver, amount] = await erc721Royalty.royaltyInfo(1, 10000)
+            expect(receiver).to.equal(ZeroAddress)
+            expect(amount).to.equal(0)
+        })
+
+        it('GIVEN zero address or zero denominator WHEN setDefaultRoyalty or setFeeDenominator is called THEN reverts with validation error', async () => {
+            await erc721Royalty.setFeeDenominator(10000)
+            await expect(
+                erc721Royalty.setDefaultRoyalty(ZeroAddress, 500)
+            ).to.be.revertedWithCustomError(erc721Royalty, 'AddressZero')
+            await expect(
+                erc721Royalty.setFeeDenominator(0)
+            ).to.be.revertedWithCustomError(erc721Royalty, 'EmptyUint')
+        })
+
+        it('GIVEN receiver is zero address WHEN setTokenRoyalty is called THEN reverts with AddressIsZero', async () => {
+            await expect(
+                erc721Royalty.setTokenRoyalty(1, ZeroAddress, 500)
+            ).to.be.revertedWithCustomError(erc721Royalty, 'AddressZero')
+        })
+
+        it('GIVEN feeDenominator is set to zero WHEN feeDenominator() is called THEN returns default value 10000', async () => {
+            expect(await erc721Royalty.feeDenominator()).to.equal(10000)
+        })
+
+        it('GIVEN an ERC721 WHEN paused THEN setDefaultRoyalty reverts', async () => {
+            await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+            await pause.pause()
+            await expect(
+                erc721Royalty.setDefaultRoyalty(ownerAddress, 500)
+            ).to.be.revertedWithCustomError(erc721Royalty, 'IsPaused')
+        })
+
+        it('GIVEN an ERC721 WHEN paused THEN deleteDefaultRoyalty reverts', async () => {
+            await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+            await pause.pause()
+            await expect(
+                erc721Royalty.deleteDefaultRoyalty()
+            ).to.be.revertedWithCustomError(erc721Royalty, 'IsPaused')
+        })
+
+        it('GIVEN an ERC721 WHEN paused THEN setTokenRoyalty reverts', async () => {
+            await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+            await pause.pause()
+            await expect(
+                erc721Royalty.setTokenRoyalty(1, otherAddress, 1000)
+            ).to.be.revertedWithCustomError(erc721Royalty, 'IsPaused')
+        })
+
+        it('GIVEN an ERC721 WHEN paused THEN resetTokenRoyalty reverts', async () => {
+            await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+            await pause.pause()
+            await expect(
+                erc721Royalty.resetTokenRoyalty(1)
+            ).to.be.revertedWithCustomError(erc721Royalty, 'IsPaused')
+        })
+
+        it('GIVEN an ERC721 WHEN paused THEN setFeeDenominator reverts', async () => {
+            await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+            await pause.pause()
+            await expect(
+                erc721Royalty.setFeeDenominator(20000)
+            ).to.be.revertedWithCustomError(erc721Royalty, 'IsPaused')
         })
     })
 

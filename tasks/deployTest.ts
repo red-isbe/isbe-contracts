@@ -25,6 +25,7 @@ import { getBusinessLogicAddress } from '../scripts/businessLogic/getBusinessLog
 import { getBusinessLogicVersions } from '../scripts/businessLogic/getBusinessLogicVersions'
 import { getBusinessLogics } from '../scripts/businessLogic/getBusinessLogics'
 import { deployUseCase } from '../scripts/proxyFactory/deployUseCase'
+import { deployUseCaseTo } from '../scripts/proxyFactory/deployUseCaseTo'
 import { getConfigurationByProxy } from '../scripts/proxyFactory/getConfigurationByProxy'
 
 /**
@@ -301,6 +302,29 @@ task(
 
     // deploy use case
     console.log('PROXY FACTORY')
+
+    const SALT =
+        '0x0000000000000000000000000000000000000000000000000000000000000001'
+
+    const resultDeployUseCaseTo = await deployUseCaseTo(
+        CONFIG_ID,
+        Number.parseInt(resultSetConfiguration.version.toString()),
+        [PAUSE_ROLE],
+        [[accountAddress]],
+        [],
+        [],
+        SALT,
+        GovernanceAddress,
+        signer
+    )
+
+    const UseCaseAddressTo = hre.ethers.getAddress(resultDeployUseCaseTo.proxy)
+
+    console.log('Deployed Use Case To result:')
+    console.log('  Configuration ID:', resultDeployUseCaseTo.configurationId)
+    console.log('  Version:', resultDeployUseCaseTo.version)
+    console.log('  RBACs:', JSON.stringify(resultDeployUseCaseTo.rbacs))
+    console.log('  Proxy Address:', UseCaseAddressTo)
 
     const resultDeployUseCase = await deployUseCase(
         CONFIG_ID,
