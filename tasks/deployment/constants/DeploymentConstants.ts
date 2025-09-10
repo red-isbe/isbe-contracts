@@ -44,6 +44,8 @@ export const ERC721_CONTROLLER_RESOLVER_KEY =
     '0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367'
 export const ERC721_SNAPSHOT_RESOLVER_KEY = 
     '0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d'
+export const ERC721_ROYALTY_RESOLVER_KEY =
+    '0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76'
 
 // Utility facets
 export const HASH_TIMESTAMP_RESOLVER_KEY =
@@ -100,6 +102,7 @@ export const ARTIFACT_PATHS = {
     ERC721_CAPPED: 'contracts/tokens/erc721/extension/cap/ERC721CappedFacet.sol',
     ERC721_CONTROLLER: 'contracts/tokens/erc721/extension/controller/ERC721ControllerFacet.sol',
     ERC721_SNAPSHOT: 'contracts/tokens/erc721/extension/snapshot/ERC721SnapshotFacet.sol',
+    ERC721_ROYALTY: 'contracts/tokens/erc721/extension/royalty/ERC721RoyaltyFacet.sol',
 
     // Utility facets
     HASH_TIMESTAMP: 'contracts/hashtimestamp/HashTimestampFacet.sol',
@@ -139,6 +142,7 @@ export const CONTRACT_NAMES = {
     ERC721_CAPPED: 'ERC721CappedFacet',
     ERC721_CONTROLLER: 'ERC721ControllerFacet',
     ERC721_SNAPSHOT: 'ERC721SnapshotFacet',
+    ERC721_ROYALTY: 'ERC721RoyaltyFacet',
 
     // Utility facets
     HASH_TIMESTAMP: 'HashTimestampFacet',
@@ -250,6 +254,12 @@ export const BUSINESS_LOGIC_DEFINITIONS = [
         contractName: CONTRACT_NAMES.ERC721_SNAPSHOT,
         artifactPath: ARTIFACT_PATHS.ERC721_SNAPSHOT,
     },
+    {
+        description: 'ERC721RoyaltyFacet',
+        key: ERC721_ROYALTY_RESOLVER_KEY,
+        contractName: CONTRACT_NAMES.ERC721_ROYALTY,
+        artifactPath: ARTIFACT_PATHS.ERC721_ROYALTY,
+    },
 
     // Utility facets
     {
@@ -346,8 +356,9 @@ export const ERC721_USE_CASE_CONFIG = {
         ERC721_CAPPED_RESOLVER_KEY,
         ERC721_CONTROLLER_RESOLVER_KEY,
         ERC721_SNAPSHOT_RESOLVER_KEY,
+        ERC721_ROYALTY_RESOLVER_KEY,
     ],
-    versions: Array(6).fill(DEFAULT_VERSION),
+    versions: Array(7).fill(DEFAULT_VERSION),
     rbacs: [],
     initPause: false,
     initBusinessIds: [],
