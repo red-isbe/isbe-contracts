@@ -46,6 +46,8 @@ export const ERC721_SNAPSHOT_RESOLVER_KEY =
     '0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d'
 export const ERC721_ROYALTY_RESOLVER_KEY =
     '0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76'
+export const ERC721_CONSECUTIVE_RESOLVER_KEY =
+    '0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4'
 
 // Utility facets
 export const HASH_TIMESTAMP_RESOLVER_KEY =
@@ -109,6 +111,8 @@ export const ARTIFACT_PATHS = {
         'contracts/tokens/erc721/extension/snapshot/ERC721SnapshotFacet.sol',
     ERC721_ROYALTY:
         'contracts/tokens/erc721/extension/royalty/ERC721RoyaltyFacet.sol',
+    ERC721_CONSECUTIVE:
+        'contracts/tokens/erc721/extension/consecutive/ERC721ConsecutiveFacet.sol',
 
     // Utility facets
     HASH_TIMESTAMP: 'contracts/hashtimestamp/HashTimestampFacet.sol',
@@ -149,6 +153,7 @@ export const CONTRACT_NAMES = {
     ERC721_CONTROLLER: 'ERC721ControllerFacet',
     ERC721_SNAPSHOT: 'ERC721SnapshotFacet',
     ERC721_ROYALTY: 'ERC721RoyaltyFacet',
+    ERC721_CONSECUTIVE: 'ERC721ConsecutiveFacet',
 
     // Utility facets
     HASH_TIMESTAMP: 'HashTimestampFacet',
@@ -266,6 +271,12 @@ export const BUSINESS_LOGIC_DEFINITIONS = [
         contractName: CONTRACT_NAMES.ERC721_ROYALTY,
         artifactPath: ARTIFACT_PATHS.ERC721_ROYALTY,
     },
+    {
+        description: 'ERC721ConsecutiveFacet',
+        key: ERC721_CONSECUTIVE_RESOLVER_KEY,
+        contractName: CONTRACT_NAMES.ERC721_CONSECUTIVE,
+        artifactPath: ARTIFACT_PATHS.ERC721_CONSECUTIVE,
+    },
 
     // Utility facets
     {
@@ -363,8 +374,9 @@ export const ERC721_USE_CASE_CONFIG = {
         ERC721_CONTROLLER_RESOLVER_KEY,
         ERC721_SNAPSHOT_RESOLVER_KEY,
         ERC721_ROYALTY_RESOLVER_KEY,
+        ERC721_CONSECUTIVE_RESOLVER_KEY,
     ],
-    versions: Array(7).fill(DEFAULT_VERSION),
+    versions: Array(8).fill(DEFAULT_VERSION),
     rbacs: [],
     initPause: false,
     initBusinessIds: [],
