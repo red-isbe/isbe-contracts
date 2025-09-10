@@ -49,7 +49,37 @@ abstract contract ProxyFactory is ProxyFactoryInternal, IProxyFactory {
             _rbacs,
             _initPause,
             _initBusinessIds,
-            _initData
+            _initData,
+            false,
+            '0x0'
+        );
+        emit UseCaseDeployed(_configurationId, _version, _rbacs, proxyAddress);
+    }
+
+    function deployUseCaseTo(
+        bytes32 _configurationId,
+        uint256 _version,
+        IAccessControl.Rbac[] calldata _rbacs,
+        bool _initPause,
+        bytes32[] calldata _initBusinessIds,
+        bytes[] calldata _initData,
+        bytes32 _salt
+    )
+        external
+        override
+        onlyRole(_PROXY_DEPLOYER_ROLE)
+        bytes32IsNotZero(_configurationId)
+        onlyValidConfiguration(_configurationId, _version)
+    {
+        (address proxyAddress) = _deployUseCase(
+            _configurationId,
+            _version,
+            _rbacs,
+            _initPause,
+            _initBusinessIds,
+            _initData,
+            true,
+            _salt
         );
         emit UseCaseDeployed(_configurationId, _version, _rbacs, proxyAddress);
     }

@@ -37,6 +37,7 @@ import {
     ERC721SnapshotFacet,
     ERC721BurnableFacet,
     ERC721ControllerFacet,
+    ERC721EnumerableFacet,
     ERC721RoyaltyFacet,
     IDidRegistry__factory,
 } from '../typechain-types'
@@ -67,6 +68,7 @@ import {
     ERC721_SNAPSHOT_RESOLVER_KEY,
     ERC721_BURNABLE_RESOLVER_KEY,
     ERC721_CONTROLLER_RESOLVER_KEY,
+    ERC721_ENUMERABLE_RESOLVER_KEY,
     ERC721_ROYALTY_RESOLVER_KEY,
     DID_DOCUMENT_DETAILED_RESOLVER_KEY,
     DID_CONTROLLER_RESOLVER_KEY,
@@ -324,6 +326,7 @@ export async function deployGovernance(
         erc721SnapshotFacet: useCaseDeployment.erc721SnapshotFacet,
         erc721BurnFacet: useCaseDeployment.erc721BurnFacet,
         erc721ControllerFacet: useCaseDeployment.erc721ControllerFacet,
+        erc721EnumerableFacet: useCaseDeployment.erc721EnumerableFacet,
         erc721RoyaltyFacet: useCaseDeployment.erc721RoyaltyFacet,
         erc721: useCaseDeployment.erc721,
         erc721TestWrapper: useCaseDeployment.erc721TestWrapper,
@@ -331,6 +334,7 @@ export async function deployGovernance(
         erc721Burn: useCaseDeployment.erc721Burn,
         erc721Snapshot: useCaseDeployment.erc721Snapshot,
         erc721Controller: useCaseDeployment.erc721Controller,
+        erc721Enumerable: useCaseDeployment.erc721Enumerable,
         erc721Royalty: useCaseDeployment.erc721Royalty,
         didDocumentDetailedFacet: useCaseDeployment.didDocumentDetailedFacet,
         didControllerFacet: useCaseDeployment.didControllerFacet,
@@ -586,6 +590,9 @@ export async function deployERC721UseCasesFacets(
     const ERC721ControllerFacetFactory = await ethers.getContractFactory(
         'ERC721ControllerFacet'
     )
+    const ERC721EnumerableFacetFactory = await ethers.getContractFactory(
+        'ERC721EnumerableFacet'
+    )
     const ERC721RoyaltyFacetFactory =
         await ethers.getContractFactory('ERC721RoyaltyFacet')
     const isbeCutFacet = await deployBusinessLogicFromFactory(
@@ -630,6 +637,10 @@ export async function deployERC721UseCasesFacets(
         ERC721_CONTROLLER_RESOLVER_KEY,
         ERC721ControllerFacetFactory
     )
+    const erc721EnumerableFacet = await deployBusinessLogicFromFactory(
+        ERC721_ENUMERABLE_RESOLVER_KEY,
+        ERC721EnumerableFacetFactory
+    )
     const erc721RoyaltyFacet = await deployBusinessLogicFromFactory(
         ERC721_ROYALTY_RESOLVER_KEY,
         ERC721RoyaltyFacetFactory
@@ -658,6 +669,10 @@ export async function deployERC721UseCasesFacets(
         },
         {
             businessId: ERC721_CONTROLLER_RESOLVER_KEY,
+            version: 1,
+        },
+        {
+            businessId: ERC721_ENUMERABLE_RESOLVER_KEY,
             version: 1,
         },
         {
@@ -694,6 +709,9 @@ export async function deployERC721UseCasesFacets(
     const erc721Controller = ERC721ControllerFacetFactory.attach(
         proxy
     ) as ERC721ControllerFacet
+    const erc721Enumerable = ERC721EnumerableFacetFactory.attach(
+        proxy
+    ) as ERC721EnumerableFacet
     const erc721Royalty = ERC721RoyaltyFacetFactory.attach(
         proxy
     ) as ERC721RoyaltyFacet
@@ -711,6 +729,7 @@ export async function deployERC721UseCasesFacets(
         erc721Snapshot,
         erc721Burn,
         erc721Controller,
+        erc721Enumerable,
         erc721Royalty,
         pause,
         accessControl,
@@ -720,6 +739,7 @@ export async function deployERC721UseCasesFacets(
         erc721SnapshotFacet,
         erc721BurnFacet,
         erc721ControllerFacet,
+        erc721EnumerableFacet,
         erc721RoyaltyFacet,
         pauseFacet,
         accessControlFacet,

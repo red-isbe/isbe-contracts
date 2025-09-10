@@ -68,6 +68,13 @@ interface IProxyFactory {
     error FacetNotFound(bytes32 businessId);
 
     /**
+     * @notice Reverted if attempting to deploy a proxy to an address that
+     *         has already been used for a previous deployment
+     * @param addr The address that has already been deployed to
+     */
+    error AddressAlreadyDeployed(address addr);
+
+    /**
      * @notice Deploys a new use-case proxy with the specified configuration
      * @dev Creates a diamond proxy with business logic facets and access
      *      control, then initialises it with the provided data
@@ -85,6 +92,28 @@ interface IProxyFactory {
         bool _initPause,
         bytes32[] calldata _initBusinessIds,
         bytes[] calldata _initData
+    ) external;
+
+    /**
+     * @notice Identical to deployUseCase but deploys to a specific address (CREATE2)
+     * @dev Creates a diamond proxy with business logic facets and access
+     *      control, then initialises it with the provided data
+     * @param _configurationId The unique identifier for the configuration
+     * @param _version The version number of the configuration (0 for latest)
+     * @param _rbacs Array of role-based access control configurations
+     * @param _initPause use case is initialized paused or not
+     * @param _initBusinessIds The business IDs of the facets to use for init
+     * @param _initData The calldata for the initialisation function
+     * @param _salt The salt used to determine the deployed address with CREATE2
+     */
+    function deployUseCaseTo(
+        bytes32 _configurationId,
+        uint256 _version,
+        IAccessControl.Rbac[] calldata _rbacs,
+        bool _initPause,
+        bytes32[] calldata _initBusinessIds,
+        bytes[] calldata _initData,
+        bytes32 _salt
     ) external;
 
     /**

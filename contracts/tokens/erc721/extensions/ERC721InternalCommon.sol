@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 import {ERC721Internal} from '../ERC721Internal.sol';
 import {ERC721CappedInternal} from './cap/ERC721CappedInternal.sol';
 import {ERC721SnapshotInternal} from './snapshot/ERC721SnapshotInternal.sol';
+import {ERC721EnumerableInternal} from './enumerable/ERC721EnumerableInternal.sol';
 import {ERC721RoyaltyInternal} from './royalty/ERC721RoyaltyInternal.sol';
 
 /// @title ERC721InternalCommon
@@ -11,6 +12,7 @@ import {ERC721RoyaltyInternal} from './royalty/ERC721RoyaltyInternal.sol';
 abstract contract ERC721InternalCommon is
     ERC721SnapshotInternal,
     ERC721CappedInternal,
+    ERC721EnumerableInternal,
     ERC721RoyaltyInternal
 {
     /**
@@ -20,8 +22,17 @@ abstract contract ERC721InternalCommon is
         address from,
         address to,
         uint256 tokenId
-    ) internal virtual override(ERC721Internal, ERC721SnapshotInternal) {
+    )
+        internal
+        virtual
+        override(
+            ERC721Internal,
+            ERC721SnapshotInternal,
+            ERC721EnumerableInternal
+        )
+    {
         ERC721SnapshotInternal._beforeTokenTransfer(from, to, tokenId);
+        ERC721EnumerableInternal._beforeTokenTransfer(from, to, tokenId);
     }
 
     /**

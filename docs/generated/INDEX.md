@@ -39,6 +39,7 @@
 - [tokens/erc721/extensions/burn](tokens/erc721/extensions/burn.md)
 - [tokens/erc721/extensions/cap](tokens/erc721/extensions/cap.md)
 - [tokens/erc721/extensions/controller](tokens/erc721/extensions/controller.md)
+- [tokens/erc721/extensions/enumerable](tokens/erc721/extensions/enumerable.md)
 - [tokens/erc721/extensions/royalty](tokens/erc721/extensions/royalty.md)
 - [tokens/erc721/extensions/snapshot](tokens/erc721/extensions/snapshot.md)
 - [utils](utils.md)

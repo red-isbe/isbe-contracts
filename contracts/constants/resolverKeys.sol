@@ -70,6 +70,9 @@ bytes32 constant _GLOBAL_ISBE_PAUSABLE_RESOLVER_KEY = 0x95abb588e90c3cf7e85016cd
 // keccak256('isbe.contracts.erc721.burnable.resolver.key');
 bytes32 constant _ERC721_BURNABLE_RESOLVER_KEY = 0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731;
 
+// keccak256('isbe.contracts.erc721.enumerable.resolver.key');
+bytes32 constant _ERC721_ENUMERABLE_RESOLVER_KEY = 0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5;
+
 // keccak256('isbe.contracts.erc721.capped.resolver.key');
 bytes32 constant _ERC721_CAPPED_RESOLVER_KEY = 0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c;
 
