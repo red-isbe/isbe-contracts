@@ -58,7 +58,7 @@ abstract contract ERC721 is IERC721Isbe, ERC721InternalCommon {
     function setApprovalForAll(
         address operator,
         bool approved
-    ) external override whenNotPaused{
+    ) external override whenNotPaused {
         _setApprovalForAll(_msgSender(), operator, approved);
     }
 

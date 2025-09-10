@@ -5,7 +5,7 @@ import {
     ERC721Capped,
     ERC721TestWrapper,
     AccessControl,
-    ERC721Facet,
+    ERC721,
     ISBEPause,
     ERC721Snapshot,
     ERC721Burnable,
@@ -27,7 +27,7 @@ describe('ERC721', function () {
     const name = 'ISBE NFT'
     const symbol = 'ISBENFT'
 
-    let erc721: ERC721Facet
+    let erc721: ERC721
     let erc721TestWrapper: ERC721TestWrapper
     let erc721Capped: ERC721Capped
     let erc721Snapshot: ERC721Snapshot

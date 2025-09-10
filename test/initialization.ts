@@ -30,9 +30,8 @@ import {
     AccessControlFacet,
     IDidRegistry,
     IIsbeFactory,
-    IERC721Isbe__factory,
-    IERC721Isbe,
     ERC721TestWrapperFacet,
+    ERC721Facet,
     ERC721CappedFacet,
     ERC721SnapshotFacet,
     ERC721BurnableFacet,
@@ -693,7 +692,7 @@ export async function deployERC721UseCasesFacets(
     const deployedEvent = await getEvent('UseCaseDeployed', tx, isbeFactory)
     const { proxy } = deployedEvent.args
 
-    const erc721 = IERC721Isbe__factory.connect(proxy, owner) as IERC721Isbe
+    const erc721 = ERC721FacetFactory.attach(proxy) as ERC721Facet
     const erc721TestWrapper = ERC721TestWrapperFacetFactory.attach(
         proxy
     ) as ERC721TestWrapperFacet
