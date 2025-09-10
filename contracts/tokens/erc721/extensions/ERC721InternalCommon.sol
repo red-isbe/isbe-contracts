@@ -5,13 +5,15 @@ import {ERC721Internal} from '../ERC721Internal.sol';
 import {ERC721CappedInternal} from './cap/ERC721CappedInternal.sol';
 import {ERC721SnapshotInternal} from './snapshot/ERC721SnapshotInternal.sol';
 import {ERC721EnumerableInternal} from './enumerable/ERC721EnumerableInternal.sol';
+import {ERC721RoyaltyInternal} from './royalty/ERC721RoyaltyInternal.sol';
 
 /// @title ERC721InternalCommon
 /// @notice This abstract contract puts together all ERC721 internal logic (snapshot, cap, and base logic).
 abstract contract ERC721InternalCommon is
     ERC721SnapshotInternal,
     ERC721CappedInternal,
-    ERC721EnumerableInternal
+    ERC721EnumerableInternal,
+    ERC721RoyaltyInternal
 {
     /**
      * @dev Override the _beforeTokenTransfer hook to combine logic from all inherited modules.
