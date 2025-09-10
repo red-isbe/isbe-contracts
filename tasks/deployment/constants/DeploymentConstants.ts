@@ -31,6 +31,10 @@ export const ERC20_CAPPED_RESOLVER_KEY =
 export const ERC20_CONTROLLER_RESOLVER_KEY =
     '0xed76d446b6029b8a177fda4fc38162d9dc0dc29ab636541fd6e75ae60fe17151'
 
+// ERC3643 facets
+export const ERC3643_METADATA_RESOLVER_KEY =
+    '0x8bffaf1ebc4070155b40757cd1d588dd59fcab63cd7007ebf7755f7f60a0c1e1'
+
 // ERC721 facets
 export const ERC721_RESOLVER_KEY =
     '0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413'
@@ -62,6 +66,8 @@ export const CONFIGURATION_ID_DID_REGISTRY =
     '0x00000000000000000000000000000000000000004449445F5245474953545259'
 export const CONFIGURATION_ID_HASH_TIMESTAMP =
     '0x56209af0faa47cd136c87cbd8b739b3beb4ac51cbba6ec828e2ae8421365929e'
+export const CONFIGURATION_ID_ERC3643 =
+    '0x0000000000000000000000000000000000000000000000000000000000003643'
 
 // ================================
 // ARTIFACT PATHS - Contract Paths
@@ -82,6 +88,9 @@ export const ARTIFACT_PATHS = {
     ERC20_CAPPED: 'contracts/tokens/erc20/extensions/cap/ERC20CappedFacet.sol',
     ERC20_CONTROLLER:
         'contracts/tokens/erc20/extensions/controller/ERC20ControllerFacet.sol',
+    // ERC3643 facets
+    ERC3643_METADATA:
+        'contracts/tokens/erc3643/token/erc3643metadata/ERC3643MetadataFacet.sol',
 
     // ERC721 facets
     ERC721: 'contracts/tokens/erc721/ERC721Facet.sol',
@@ -116,6 +125,9 @@ export const CONTRACT_NAMES = {
     ERC20_BURNABLE: 'ERC20BurnableFacet',
     ERC20_CAPPED: 'ERC20CappedFacet',
     ERC20_CONTROLLER: 'ERC20ControllerFacet',
+
+    // ERC3643 facets
+    ERC3643_METADATA: 'ERC3643MetadataFacet',
 
     // ERC721 facets
     ERC721: 'ERC721Facet',
@@ -193,6 +205,14 @@ export const BUSINESS_LOGIC_DEFINITIONS = [
         artifactPath: ARTIFACT_PATHS.ERC20_CONTROLLER,
     },
 
+    // ERC3643 facets
+    {
+        description: 'ERC3643MetadataFacet',
+        key: ERC3643_METADATA_RESOLVER_KEY,
+        contractName: CONTRACT_NAMES.ERC3643_METADATA,
+        artifactPath: ARTIFACT_PATHS.ERC3643_METADATA,
+    },
+
     // ERC721 facets
     {
         description: 'ERC721Facet',
@@ -266,6 +286,27 @@ export const ERC20_USE_CASE_CONFIG = {
     isOwnable: false,
 } as UseCaseConfig
 
+// ERC3643 configuration
+export const ERC3643_USE_CASE_CONFIG = {
+    description: 'ERC3643 Security Token UseCase',
+    configurationId: CONFIGURATION_ID_ERC3643,
+    type: 'erc3643',
+    businessLogicKeys: [
+        ERC20_SNAPSHOT_RESOLVER_KEY,
+        ERC20_BURNABLE_RESOLVER_KEY,
+        ERC20_CAPPED_RESOLVER_KEY,
+        ERC20_CONTROLLER_RESOLVER_KEY,
+        ERC20_RESOLVER_KEY,
+        ERC3643_METADATA_RESOLVER_KEY,
+    ],
+    versions: Array(6).fill(DEFAULT_VERSION),
+    rbacs: [],
+    initPause: false,
+    initBusinessIds: [],
+    initCallData: [],
+    isOwnable: true,
+} as UseCaseConfig
+
 // DID Registry configuration
 export const DID_REGISTRY_USE_CASE_CONFIG = {
     description: 'DID Registry UseCase',
@@ -318,6 +359,7 @@ export const DEFAULT_USE_CASE_CONFIGURATIONS = [
     DID_REGISTRY_USE_CASE_CONFIG,
     ERC721_USE_CASE_CONFIG,
     HASH_TIMESTAMP_USE_CASE_CONFIG,
+    ERC3643_USE_CASE_CONFIG,
 ] as const
 
 // ================================
