@@ -193,24 +193,6 @@ value is zero. Used for quantity and amount validation_
 | ------ | ------- | -------------------------------------------------- |
 | \_uint | uint256 | The uint256 value to validate for non-zero content |
 
-### \_checkLessThanOrEqual
-
-```solidity
-function _checkLessThanOrEqual(uint256 _currentValue, uint256 _maxValue) internal pure
-```
-
-Validates that the provided uint256 value is less than or equal to a maximum value
-
-_Internal validation function that reverts with UintNotLessThanOrEqual error if the
-value exceeds the maximum. Used for range validation_
-
-#### Parameters
-
-| Name           | Type    | Description                               |
-| -------------- | ------- | ----------------------------------------- |
-| \_currentValue | uint256 | The current uint256 value to validate     |
-| \_maxValue     | uint256 | The maximum uint256 value that is allowed |
-
 ### \_checkEmptyBytes
 
 ```solidity

@@ -52,9 +52,4 @@ abstract contract Common is
         _checkUintIsNotZero(_uint);
         _;
     }
-
-    modifier lessThanOrEqual(uint256 _currentValue, uint256 _maxValue) {
-        _checkLessThanOrEqual(_currentValue, _maxValue);
-        _;
-    }
 }

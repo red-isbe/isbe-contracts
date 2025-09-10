@@ -117,23 +117,6 @@ abstract contract ISBEContext is Context {
     }
 
     /**
-     * @notice Validates that the provided uint256 value is less than or equal to a maximum value
-     * @dev Internal validation function that reverts with UintNotLessThanOrEqual error if the
-     *      value exceeds the maximum. Used for range validation
-     * @param _currentValue The current uint256 value to validate
-     * @param _maxValue The maximum uint256 value that is allowed
-     */
-    function _checkLessThanOrEqual(
-        uint256 _currentValue,
-        uint256 _maxValue
-    ) internal pure {
-        require(
-            _currentValue <= _maxValue,
-            UintNotLessThanOrEqual(_currentValue, _maxValue)
-        );
-    }
-
-    /**
      * @notice Validates that the provided bytes array is not empty
      * @dev Internal validation function that reverts with EmptyBytes error if the
      *      array length is zero. Used for data payload validation

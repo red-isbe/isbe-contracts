@@ -45,12 +45,6 @@ modifier emptyString(string _string)
 modifier emptyUint(uint256 _uint)
 ```
 
-### lessThanOrEqual
-
-```solidity
-modifier lessThanOrEqual(uint256 _currentValue, uint256 _maxValue)
-```
-
 ---
 
 ## ERC165
