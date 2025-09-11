@@ -216,7 +216,7 @@ Sets the initial values for the token's onchain ID and version._
 ### \_setOnchainID
 
 ```solidity
-function _setOnchainID(address _newOnchainID) internal virtual
+function _setOnchainID(address _newOnchainID) internal
 ```
 
 _Internal function to update the onchain identity address in storage.

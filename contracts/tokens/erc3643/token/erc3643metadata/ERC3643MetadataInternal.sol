@@ -38,7 +38,7 @@ abstract contract ERC3643MetadataInternal is ERC20InternalCommon {
      * Setting the address to zero indicates that no onchain identity is currently bound to the token.
      * @param _newOnchainID The new onchain identity address to assign.
      */
-    function _setOnchainID(address _newOnchainID) internal virtual {
+    function _setOnchainID(address _newOnchainID) internal {
         ERC3643MetadataStorage storage $ = _erc3643MetadataStorage();
         $.onchainid = _newOnchainID;
     }

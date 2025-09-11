@@ -203,6 +203,16 @@ emits a `RecoveryFails` event if the recovery process fails
 
 ---
 
+## IToken
+
+This interface combines all core ERC3643 security token functionality
+including compliance, trusted issuers registry, recovery mechanisms,
+and infrastructure components.
+
+_Required interface of an ERC3643 compliant security token contract._
+
+---
+
 ## ITokenFreeze
 
 ### AddressFrozen
