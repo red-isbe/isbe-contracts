@@ -2,19 +2,13 @@
 pragma solidity ^0.8.28;
 
 import {IERC3643} from './IERC3643.sol';
-import {ITrustedIssuersRegistry} from '../trustedissuersregistry/ITrustedIssuersRegistry.sol';
 import {IRecovery} from './IRecovery.sol';
-import {IERC3643Infrastructure} from './IERC3643Infrastructure.sol';
 
 /**
  * @dev Required interface of an ERC3643 compliant security token contract.
- * @notice This interface combines all core ERC3643 security token functionality
- * including compliance, trusted issuers registry, recovery mechanisms,
- * and infrastructure components.
+ * @dev Aggregates all ERC3643 management interfaces into a single, unified interface for
+ *      complete ERC3643 lifecycle management including controllers, verification
+ *      methods, and verification relationships
  */
-interface IToken is
-    IERC3643,
-    ITrustedIssuersRegistry,
-    IRecovery,
-    IERC3643Infrastructure
-{}
+// solhint-disable-next-line no-empty-blocks
+interface IToken is IERC3643, IRecovery {}
