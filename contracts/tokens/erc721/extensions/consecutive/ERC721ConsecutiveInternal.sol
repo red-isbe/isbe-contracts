@@ -16,19 +16,24 @@ abstract contract ERC721ConsecutiveInternal is
     }
 
     /// @dev Internal mint function for consecutive tokens
-    function _mintConsecutive(
-        address to,
-        uint256 quantity
-    ) internal emptyUint(quantity) addressIsNotZero(to) {
-        ERC721ConsecutiveStorage storage s = _consecutiveStorage();
-        uint256 fromTokenId = s._currentConsecutiveTokenId + 1;
-        uint256 toTokenId = fromTokenId + quantity - 1;
+    function _mintConsecutive(address to, uint256 quantity) internal {
+        ERC721ConsecutiveStorage storage $ = _consecutiveStorage();
 
-        for (uint256 tokenId = fromTokenId; tokenId <= toTokenId; ++tokenId) {
-            _mint(to, tokenId);
+        uint256 fromTokenId;
+        uint256 toTokenId;
+        unchecked {
+            fromTokenId = $._currentConsecutiveTokenId + 1;
+            toTokenId = fromTokenId + quantity - 1;
         }
 
-        s._currentConsecutiveTokenId = toTokenId;
+        $._currentConsecutiveTokenId = toTokenId;
+
+        for (uint256 tokenId = fromTokenId; tokenId <= toTokenId; ) {
+            _mint(to, tokenId);
+            unchecked {
+                ++tokenId;
+            }
+        }
 
         emit ConsecutiveTransfer(fromTokenId, toTokenId, address(0), to);
     }

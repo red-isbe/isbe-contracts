@@ -86,6 +86,98 @@ package "Pause" {
     ISBEPauseFacet --|> ISBEPause
 }
 
+' === ERC721 ===
+package "ERC721" {
+    class IERC721 <<(I,#FFD700) interface>> #E6E6FA
+    class IERC721Metadata <<(I,#FFD700) interface>> #E6E6FA
+    class IERC721Isbe <<(I,#FFD700) interface>> #E6E6FA  
+    class ERC721Internal <<(A,#228B22) abstract contract>> #E6E6FA
+    class ERC721InternalCommon <<(A,#228B22) abstract contract>> #E6E6FA
+    class ERC721 <<(A,#228B22) contract>> #E6E6FA
+    class ERC721Facet <<(C,#1E90FF) contract>> #E6E6FA
+
+    ERC721 --|> IERC721Isbe
+    IERC721Isbe--|> IERC721
+    IERC721Isbe--|> IERC721Metadata
+    ERC721 --|> ERC721InternalCommon
+    ERC721Internal --|> Common
+    ERC721Facet --|> ERC721
+
+
+    class IERC721Burnable <<(I,#FFD700) interface>> #E6E6FA
+    class ERC721Burnable <<(A,#228B22) contract>> #E6E6FA
+    class ERC721BurnableFacet <<(C,#1E90FF) contract>> #E6E6FA
+
+    ERC721BurnableFacet --|> ERC721Burnable
+    ERC721Burnable --|> IERC721Burnable
+    ERC721Burnable --|> ERC721InternalCommon
+
+    class IERC721Controller <<(I,#FFD700) interface>> #E6E6FA
+    class ERC721Controller <<(A,#228B22) contract>> #E6E6FA
+    class ERC721ControllerFacet <<(C,#1E90FF) contract>> #E6E6FA
+
+    ERC721ControllerFacet --|> ERC721Controller
+    ERC721Controller --|> IERC721Controller
+    ERC721Controller --|> ERC721InternalCommon
+
+    class IERC721Capped <<(I,#FFD700) interface>> #E6E6FA
+    class ERC721CappedInternal <<(A,#228B22) abstract contract>> #E6E6FA
+    class ERC721Capped <<(A,#228B22) abstract contract>> #E6E6FA
+    class ERC721CappedFacet <<(C,#1E90FF) contract>> #E6E6FA
+ 
+    ERC721CappedFacet --|> ERC721Capped
+    ERC721Capped --|> IERC721Capped
+    ERC721Capped --|> ERC721InternalCommon
+    ERC721InternalCommon --|> ERC721CappedInternal
+    ERC721CappedInternal --|> ERC721Internal
+
+
+    class IERC721Snapshot <<(I,#FFD700) interface>> #E6E6FA
+    class ERC721SnapshotInternal <<(A,#228B22) abstract contract>> #E6E6FA
+    class ERC721Snapshot <<(A,#228B22) abstract contract>> #E6E6FA
+    class ERC721SnapshotFacet <<(C,#1E90FF) contract>> #E6E6FA
+    
+    ERC721SnapshotFacet --|> ERC721Snapshot
+    ERC721Snapshot --|> IERC721Snapshot
+    ERC721Snapshot --|> ERC721InternalCommon
+    ERC721InternalCommon --|> ERC721SnapshotInternal
+    ERC721SnapshotInternal --|> ERC721Internal
+
+
+    class IERC721Enumerable <<(I,#FFD700) interface>> #E6E6FA
+    class ERC721EnumerableInternal <<(A,#228B22) abstract contract>> #E6E6FA
+    class ERC721Enumerable <<(A,#228B22) abstract contract>> #E6E6FA
+    class ERC721EnumerableFacet <<(C,#1E90FF) contract>> #E6E6FA
+
+    ERC721EnumerableFacet --|> ERC721Enumerable
+    ERC721Enumerable --|> IERC721Enumerable
+    ERC721Enumerable --|> ERC721InternalCommon
+    ERC721InternalCommon --|> ERC721EnumerableInternal
+    ERC721EnumerableInternal --|> ERC721Internal
+
+    class IERC721Royalty <<(I,#FFD700) interface>> #E6E6FA
+    class ERC721RoyaltyInternal <<(A,#228B22) abstract contract>> #E6E6FA
+    class ERC721Royalty <<(A,#228B22) abstract contract>> #E6E6FA
+    class ERC721RoyaltyFacet <<(C,#1E90FF) contract>> #E6E6FA
+    
+    ERC721RoyaltyFacet --|> ERC721Royalty
+    ERC721Royalty --|> IERC721Royalty
+    ERC721Royalty --|> ERC721InternalCommon
+    ERC721InternalCommon --|> ERC721RoyaltyInternal
+    ERC721RoyaltyInternal --|> ERC721Internal
+
+    class IERC721Consecutive <<(I,#FFD700) interface>> #E6E6FA
+    class ERC721ConsecutiveInternal <<(A,#228B22) abstract contract>> #E6E6FA
+    class ERC721Consecutive <<(A,#228B22) abstract contract>> #E6E6FA
+    class ERC721ConsecutiveFacet <<(C,#1E90FF) contract>> #E6E6FA
+
+    ERC721ConsecutiveFacet --|> ERC721Consecutive
+    ERC721Consecutive --|> IERC721Consecutive
+    ERC721Consecutive --|> ERC721ConsecutiveInternal 
+    ERC721ConsecutiveInternal --|> ERC721InternalCommon
+
+}
+
 ' === ERC20 ===
 package "ERC20" {
     class IERC20 <<(I,#FFD700) interface>> #E6E6FA

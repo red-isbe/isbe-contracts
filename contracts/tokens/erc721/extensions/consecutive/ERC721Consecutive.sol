@@ -24,7 +24,14 @@ abstract contract ERC721Consecutive is
     function mintConsecutive(
         address to,
         uint256 quantity
-    ) external override whenNotPaused onlyRole(_MINTER_ROLE) {
+    )
+        external
+        override
+        whenNotPaused
+        onlyRole(_MINTER_ROLE)
+        emptyUint(quantity)
+        addressIsNotZero(to)
+    {
         _mintConsecutive(to, quantity);
     }
 
