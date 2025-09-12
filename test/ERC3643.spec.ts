@@ -1,29 +1,42 @@
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
-
+import { Signer } from 'ethers'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
-
 import { deployGovernance, CONFIGURATION_ID_ERC3643 } from './initialization'
 import { TOKEN_OWNER_ROLE, PAUSER_ROLE } from './constants'
-import { IToken } from '../typechain-types'
+import { IToken, AccessControl, ERC20, ISBEPause } from '../typechain-types'
 
 describe('ERC3643 Token', function () {
     // ====================================================================
     // GLOBAL VARIABLES
     // ====================================================================
+    let owner: Signer
+    let otherAccount: Signer
+    let onchainId: Signer
+    let ownerAddress: string
+    let otherAccountAddress: string
+    let onchainIdAddress: string
+    let token: IToken
+    let accessControl: AccessControl
+    let erc20Facet: ERC20
+    let pause: ISBEPause
+
     const version = '4.0.0'
     const emptyString = ''
 
     // ====================================================================
-    // HELPER FUNCTIONS
+    // FIXTURE FUNCTIONS (solo las básicas como DiDRegistry)
     // ====================================================================
     async function deployInitial() {
-        const [owner, otherAccount, onchainId] = await ethers.getSigners()
-        const ownerAddress = await owner.getAddress()
-        const otherAccountAddress = await otherAccount.getAddress()
-        const onchainIdAddress = await onchainId.getAddress()
+        const signers = await ethers.getSigners()
+        owner = signers[0] as unknown as Signer
+        otherAccount = signers[1] as unknown as Signer
+        onchainId = signers[2] as unknown as Signer
 
-        // Deploy without initialization
+        ownerAddress = await owner.getAddress()
+        otherAccountAddress = await otherAccount.getAddress()
+        onchainIdAddress = await onchainId.getAddress()
+
         const result = await deployGovernance(
             owner,
             [],
@@ -35,58 +48,40 @@ describe('ERC3643 Token', function () {
             false
         )
 
-        return {
-            ...result,
-            owner,
-            otherAccount,
-            onchainId,
-            ownerAddress,
-            otherAccountAddress,
-            onchainIdAddress,
-            // Use IToken as utility interface for scalable testing
-            token:
-                result.erc3643Metadata ||
-                (result.erc3643MetadataFacet as IToken),
-            accessControl: result.accessControl || result.accessControlFacet,
-            erc20Facet: result.erc20 || result.erc20Facet,
-        }
-    }
-
-    async function deployInitialized() {
-        const result = await deployInitial()
-
-        // Initialize ERC20 first
-        await result.erc20Facet.initializeErc20(
-            'Test ERC3643 Token',
-            'T3643',
-            18
-        )
-
-        // Grant TOKEN_OWNER_ROLE for ERC3643 operations
-        await result.accessControl.grantRole(
-            TOKEN_OWNER_ROLE,
-            result.ownerAddress
-        )
-
-        // Initialize ERC3643
-        await result.token.initializeERC3643Metadata(
-            result.onchainIdAddress,
-            version
-        )
+        token =
+            result.erc3643Metadata || (result.erc3643MetadataFacet as IToken)
+        accessControl = result.accessControl || result.accessControlFacet
+        erc20Facet = result.erc20 || result.erc20Facet
+        pause = result.pause || result.pauseFacet
 
         return result
     }
 
     // ====================================================================
-    // FUNCTION-BASED TEST ORGANIZATION
+    // HOOKS (siguiendo exactamente DiDRegistry)
     // ====================================================================
+    beforeEach(async () => {
+        await loadFixture(deployInitial)
+    })
 
+    // ====================================================================
+    // TESTS (patrón DiDRegistry - sin helper functions)
+    // ====================================================================
     describe('initializeERC3643Metadata', () => {
+        beforeEach(async () => {
+            const fixture = async () => {
+                await erc20Facet.initializeErc20(
+                    'Test ERC3643 Token',
+                    'T3643',
+                    18
+                )
+                await accessControl.grantRole(TOKEN_OWNER_ROLE, ownerAddress)
+            }
+            await loadFixture(fixture)
+        })
+
         describe('Failures', () => {
             it('GIVEN deployed contract WHEN try to initialize with empty version THEN it fails', async () => {
-                const { token, onchainIdAddress } =
-                    await loadFixture(deployInitial)
-
                 await expect(
                     token.initializeERC3643Metadata(
                         onchainIdAddress,
@@ -96,30 +91,10 @@ describe('ERC3643 Token', function () {
             })
 
             it('GIVEN deployed contract WHEN try to initialize twice THEN it fails', async () => {
-                const {
-                    token,
-                    erc20Facet,
-                    accessControl,
-                    ownerAddress,
-                    onchainIdAddress,
-                } = await loadFixture(deployInitial)
-
-                // Initialize ERC20 first
-                await erc20Facet.initializeErc20(
-                    'Test ERC3643 Token',
-                    'T3643',
-                    18
-                )
-
-                // Grant TOKEN_OWNER_ROLE
-                await accessControl.grantRole(TOKEN_OWNER_ROLE, ownerAddress)
-
-                // First initialization should succeed
                 await expect(
                     token.initializeERC3643Metadata(onchainIdAddress, version)
                 ).to.emit(token, 'UpdatedTokenInformation')
 
-                // Second initialization should fail
                 await expect(
                     token.initializeERC3643Metadata(onchainIdAddress, version)
                 ).to.be.revertedWithCustomError(
@@ -131,24 +106,6 @@ describe('ERC3643 Token', function () {
 
         describe('Success', () => {
             it('GIVEN deployed contract WHEN initialize with valid parameters THEN it success', async () => {
-                const {
-                    token,
-                    erc20Facet,
-                    accessControl,
-                    ownerAddress,
-                    onchainIdAddress,
-                } = await loadFixture(deployInitial)
-
-                // Initialize ERC20 first
-                await erc20Facet.initializeErc20(
-                    'Test ERC3643 Token',
-                    'T3643',
-                    18
-                )
-
-                // Grant TOKEN_OWNER_ROLE
-                await accessControl.grantRole(TOKEN_OWNER_ROLE, ownerAddress)
-
                 await expect(
                     token.initializeERC3643Metadata(onchainIdAddress, version)
                 )
@@ -166,19 +123,6 @@ describe('ERC3643 Token', function () {
             })
 
             it('GIVEN deployed contract WHEN initialize with zero onchainID THEN it success', async () => {
-                const { token, erc20Facet, accessControl, ownerAddress } =
-                    await loadFixture(deployInitial)
-
-                // Initialize ERC20 first
-                await erc20Facet.initializeErc20(
-                    'Test ERC3643 Token',
-                    'T3643',
-                    18
-                )
-
-                // Grant TOKEN_OWNER_ROLE
-                await accessControl.grantRole(TOKEN_OWNER_ROLE, ownerAddress)
-
                 await expect(
                     token.initializeERC3643Metadata(ethers.ZeroAddress, version)
                 ).to.not.be.reverted
@@ -189,19 +133,27 @@ describe('ERC3643 Token', function () {
     })
 
     describe('setOnchainID', () => {
+        beforeEach(async () => {
+            const fixture = async () => {
+                await erc20Facet.initializeErc20(
+                    'Test ERC3643 Token',
+                    'T3643',
+                    18
+                )
+                await accessControl.grantRole(TOKEN_OWNER_ROLE, ownerAddress)
+                await token.initializeERC3643Metadata(onchainIdAddress, version)
+            }
+            await loadFixture(fixture)
+        })
+
         describe('Failures', () => {
             it('GIVEN initialized contract WHEN try to set zero address THEN it fails', async () => {
-                const { token } = await loadFixture(deployInitialized)
-
                 await expect(
                     token.setOnchainID(ethers.ZeroAddress)
                 ).to.be.revertedWithCustomError(token, 'AddressZero')
             })
 
             it('GIVEN initialized contract WHEN non-owner tries to set onchainID THEN it fails', async () => {
-                const { token, otherAccount, otherAccountAddress } =
-                    await loadFixture(deployInitialized)
-
                 await expect(
                     token
                         .connect(otherAccount)
@@ -212,16 +164,11 @@ describe('ERC3643 Token', function () {
             })
 
             it('GIVEN initialized contract WHEN try to set onchainID while paused THEN it fails', async () => {
-                const {
-                    token,
-                    accessControl,
-                    pause,
-                    ownerAddress,
-                    otherAccountAddress,
-                } = await loadFixture(deployInitialized)
-
-                await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
-                await pause.pause()
+                const fixture = async () => {
+                    await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+                    await pause.pause()
+                }
+                await loadFixture(fixture)
 
                 await expect(
                     token.setOnchainID(otherAccountAddress)
@@ -231,9 +178,6 @@ describe('ERC3643 Token', function () {
 
         describe('Success', () => {
             it('GIVEN initialized contract WHEN set valid onchainID THEN it success', async () => {
-                const { token, erc20Facet, otherAccountAddress } =
-                    await loadFixture(deployInitialized)
-
                 const currentName = await erc20Facet.name()
                 const currentSymbol = await erc20Facet.symbol()
                 const currentDecimals = await erc20Facet.decimals()
@@ -255,19 +199,27 @@ describe('ERC3643 Token', function () {
     })
 
     describe('setName', () => {
+        beforeEach(async () => {
+            const fixture = async () => {
+                await erc20Facet.initializeErc20(
+                    'Test ERC3643 Token',
+                    'T3643',
+                    18
+                )
+                await accessControl.grantRole(TOKEN_OWNER_ROLE, ownerAddress)
+                await token.initializeERC3643Metadata(onchainIdAddress, version)
+            }
+            await loadFixture(fixture)
+        })
+
         describe('Failures', () => {
             it('GIVEN initialized contract WHEN try to set empty name THEN it fails', async () => {
-                const { token } = await loadFixture(deployInitialized)
-
                 await expect(
                     token.setName(emptyString)
                 ).to.be.revertedWithCustomError(token, 'EmptyString')
             })
 
             it('GIVEN initialized contract WHEN non-owner tries to set name THEN it fails', async () => {
-                const { token, otherAccount, otherAccountAddress } =
-                    await loadFixture(deployInitialized)
-
                 await expect(
                     token.connect(otherAccount).setName('Unauthorized Name')
                 )
@@ -276,11 +228,11 @@ describe('ERC3643 Token', function () {
             })
 
             it('GIVEN initialized contract WHEN try to set name while paused THEN it fails', async () => {
-                const { token, accessControl, pause, ownerAddress } =
-                    await loadFixture(deployInitialized)
-
-                await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
-                await pause.pause()
+                const fixture = async () => {
+                    await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+                    await pause.pause()
+                }
+                await loadFixture(fixture)
 
                 await expect(
                     token.setName('NewName')
@@ -290,10 +242,7 @@ describe('ERC3643 Token', function () {
 
         describe('Success', () => {
             it('GIVEN initialized contract WHEN set valid name THEN it success', async () => {
-                const { token, erc20Facet } =
-                    await loadFixture(deployInitialized)
                 const newName = 'Updated ERC3643 Token'
-
                 const currentSymbol = await erc20Facet.symbol()
                 const currentDecimals = await erc20Facet.decimals()
                 const currentVersion = await token.version()
@@ -315,30 +264,38 @@ describe('ERC3643 Token', function () {
     })
 
     describe('setSymbol', () => {
+        beforeEach(async () => {
+            const fixture = async () => {
+                await erc20Facet.initializeErc20(
+                    'Test ERC3643 Token',
+                    'T3643',
+                    18
+                )
+                await accessControl.grantRole(TOKEN_OWNER_ROLE, ownerAddress)
+                await token.initializeERC3643Metadata(onchainIdAddress, version)
+            }
+            await loadFixture(fixture)
+        })
+
         describe('Failures', () => {
             it('GIVEN initialized contract WHEN try to set empty symbol THEN it fails', async () => {
-                const { token } = await loadFixture(deployInitialized)
-
                 await expect(
                     token.setSymbol(emptyString)
                 ).to.be.revertedWithCustomError(token, 'EmptyString')
             })
 
             it('GIVEN initialized contract WHEN non-owner tries to set symbol THEN it fails', async () => {
-                const { token, otherAccount, otherAccountAddress } =
-                    await loadFixture(deployInitialized)
-
                 await expect(token.connect(otherAccount).setSymbol('UNAUTH'))
                     .to.be.revertedWithCustomError(token, 'AccountHasNoRole')
                     .withArgs(otherAccountAddress, TOKEN_OWNER_ROLE)
             })
 
             it('GIVEN initialized contract WHEN try to set symbol while paused THEN it fails', async () => {
-                const { token, accessControl, pause, ownerAddress } =
-                    await loadFixture(deployInitialized)
-
-                await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
-                await pause.pause()
+                const fixture = async () => {
+                    await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+                    await pause.pause()
+                }
+                await loadFixture(fixture)
 
                 await expect(
                     token.setSymbol('NEW')
@@ -348,10 +305,7 @@ describe('ERC3643 Token', function () {
 
         describe('Success', () => {
             it('GIVEN initialized contract WHEN set valid symbol THEN it success', async () => {
-                const { token, erc20Facet } =
-                    await loadFixture(deployInitialized)
                 const newSymbol = 'UPD3643'
-
                 const currentName = await erc20Facet.name()
                 const currentDecimals = await erc20Facet.decimals()
                 const currentVersion = await token.version()
@@ -373,23 +327,29 @@ describe('ERC3643 Token', function () {
     })
 
     describe('View Functions', () => {
+        beforeEach(async () => {
+            const fixture = async () => {
+                await erc20Facet.initializeErc20(
+                    'Test ERC3643 Token',
+                    'T3643',
+                    18
+                )
+                await accessControl.grantRole(TOKEN_OWNER_ROLE, ownerAddress)
+                await token.initializeERC3643Metadata(onchainIdAddress, version)
+            }
+            await loadFixture(fixture)
+        })
+
         describe('Success', () => {
             it('GIVEN initialized contract WHEN checking version THEN it success', async () => {
-                const { token } = await loadFixture(deployInitialized)
-
                 expect(await token.version()).to.equal(version)
             })
 
             it('GIVEN initialized contract WHEN checking onchainID THEN it success', async () => {
-                const { token, onchainIdAddress } =
-                    await loadFixture(deployInitialized)
-
                 expect(await token.onchainID()).to.equal(onchainIdAddress)
             })
 
             it('GIVEN deployed contract WHEN checking deployment THEN it success', async () => {
-                const { token } = await loadFixture(deployInitial)
-
                 expect(await token.getAddress()).to.not.equal(
                     ethers.ZeroAddress
                 )
