@@ -44,12 +44,7 @@ error EmptyUint()
 ```
 
 Emitted when a uint256 value is zero but is expected to be greater than zero
-
-### UintNotLessThanOrEqual
-
-```solidity
-error UintNotLessThanOrEqual(uint256 _currentValue, uint256 _maxValue)
-```
+ 
 
 Raised when \_currentValue is not less or equal than of \_maxValue.
 

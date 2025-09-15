@@ -24,9 +24,7 @@ describe('ERC3643 Token', function () {
     const version = '4.0.0'
     const emptyString = ''
 
-    // ====================================================================
-    // FIXTURE FUNCTIONS (solo las básicas como DiDRegistry)
-    // ====================================================================
+  
     async function deployInitial() {
         const signers = await ethers.getSigners()
         owner = signers[0] as unknown as Signer
@@ -57,16 +55,12 @@ describe('ERC3643 Token', function () {
         return result
     }
 
-    // ====================================================================
-    // HOOKS (siguiendo exactamente DiDRegistry)
-    // ====================================================================
+ 
     beforeEach(async () => {
         await loadFixture(deployInitial)
     })
 
-    // ====================================================================
-    // TESTS (patrón DiDRegistry - sin helper functions)
-    // ====================================================================
+   
     describe('initializeERC3643Metadata', () => {
         beforeEach(async () => {
             const fixture = async () => {

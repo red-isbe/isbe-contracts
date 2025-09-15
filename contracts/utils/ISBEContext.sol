@@ -34,12 +34,7 @@ abstract contract ISBEContext is Context {
      */
     error EmptyUint();
 
-    /**
-     * @notice Raised when _currentValue is not less or equal than of _maxValue.
-     * @param _currentValue The current uint256 value that was checked.
-     * @param _maxValue The maximum uint256 value that was expected.
-     */
-    error UintNotLessThanOrEqual(uint256 _currentValue, uint256 _maxValue);
+    
 
     /**
      * @notice Emitted when a string is empty but is expected to contain text
