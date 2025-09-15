@@ -39,7 +39,7 @@ abstract contract ERC20Internal is Common {
      * Applies the {emptyString} modifier to ensure the input is not an empty string.
      * @param _newName The new name to assign to the token.
      */
-    function _setName(string memory _newName) internal   {
+    function _setName(string memory _newName) internal {
         ERC20Storage storage $ = _erc20Storage();
         $.name = _newName;
     }
@@ -49,7 +49,7 @@ abstract contract ERC20Internal is Common {
      * Applies the {emptyString} modifier to ensure the input is not an empty string.
      * @param _newSymbol The new symbol to assign to the token.
      */
-    function _setSymbol(string memory _newSymbol) internal virtual {
+    function _setSymbol(string memory _newSymbol) internal {
         ERC20Storage storage $ = _erc20Storage();
         $.symbol = _newSymbol;
     }

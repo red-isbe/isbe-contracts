@@ -44,16 +44,6 @@ error EmptyUint()
 ```
 
 Emitted when a uint256 value is zero but is expected to be greater than zero
- 
-
-Raised when \_currentValue is not less or equal than of \_maxValue.
-
-#### Parameters
-
-| Name           | Type    | Description                                  |
-| -------------- | ------- | -------------------------------------------- |
-| \_currentValue | uint256 | The current uint256 value that was checked.  |
-| \_maxValue     | uint256 | The maximum uint256 value that was expected. |
 
 ### EmptyString
 

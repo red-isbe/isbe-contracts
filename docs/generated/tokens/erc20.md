@@ -251,7 +251,7 @@ function _initialize(string _newName, string _newSymbol, uint8 _newDecimals) int
 ### \_setName
 
 ```solidity
-function _setName(string _newName) internal virtual
+function _setName(string _newName) internal
 ```
 
 _Internal function to update the token name in storage.
@@ -266,7 +266,7 @@ Applies the {emptyString} modifier to ensure the input is not an empty string._
 ### \_setSymbol
 
 ```solidity
-function _setSymbol(string _newSymbol) internal virtual
+function _setSymbol(string _newSymbol) internal
 ```
 
 _Internal function to update the token symbol in storage.

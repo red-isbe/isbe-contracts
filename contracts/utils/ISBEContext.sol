@@ -34,8 +34,6 @@ abstract contract ISBEContext is Context {
      */
     error EmptyUint();
 
-    
-
     /**
      * @notice Emitted when a string is empty but is expected to contain text
      */
