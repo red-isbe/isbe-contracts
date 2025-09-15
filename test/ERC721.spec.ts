@@ -100,9 +100,12 @@ describe('ERC721', function () {
 
     describe('Mint', () => {
         beforeEach(async () => {
-            await erc721.initializeErc721(name, symbol)
-            await erc721Capped.initializeCap(3)
-            await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+            const fixture = async () => {
+                await erc721.initializeErc721(name, symbol)
+                await erc721Capped.initializeCap(3)
+                await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+            }
+            await loadFixture(fixture)
         })
         it('GIVEN an ERC721 WHEN mint with tokenId 0 THEN reverts', async () => {
             await expect(
@@ -136,9 +139,12 @@ describe('ERC721', function () {
 
     describe('Burn', () => {
         beforeEach(async () => {
-            await erc721.initializeErc721(name, symbol)
-            await erc721Capped.initializeCap(3)
-            await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+            const fixture = async () => {
+                await erc721.initializeErc721(name, symbol)
+                await erc721Capped.initializeCap(3)
+                await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+            }
+            await loadFixture(fixture)
         })
         it('GIVEN an ERC721 WHEN burn a token THEN totalSupply decreases and ownerOf is ZeroAddress', async () => {
             await erc721Capped.mint(ownerAddress, 1)
@@ -192,9 +198,12 @@ describe('ERC721', function () {
 
     describe('BurnFrom', () => {
         beforeEach(async () => {
-            await erc721.initializeErc721(name, symbol)
-            await erc721Capped.initializeCap(3)
-            await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+            const fixture = async () => {
+                await erc721.initializeErc721(name, symbol)
+                await erc721Capped.initializeCap(3)
+                await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+            }
+            await loadFixture(fixture)
         })
 
         it('GIVEN an ERC721 WHEN burnFrom as owner THEN succeeds', async () => {
@@ -228,9 +237,12 @@ describe('ERC721', function () {
 
     describe('Transfer', () => {
         beforeEach(async () => {
-            await erc721.initializeErc721(name, symbol)
-            await erc721Capped.initializeCap(3)
-            await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+            const fixture = async () => {
+                await erc721.initializeErc721(name, symbol)
+                await erc721Capped.initializeCap(3)
+                await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+            }
+            await loadFixture(fixture)
         })
         it('GIVEN an ERC721 WHEN transfer from correct owner THEN succeeds', async () => {
             await erc721Capped.mint(ownerAddress, 1)
@@ -262,8 +274,11 @@ describe('ERC721', function () {
 
     describe('Approvals', () => {
         beforeEach(async () => {
-            await erc721.initializeErc721(name, symbol)
-            await erc721Capped.initializeCap(3)
+            const fixture = async () => {
+                await erc721.initializeErc721(name, symbol)
+                await erc721Capped.initializeCap(3)
+            }
+            await loadFixture(fixture)
         })
         it('GIVEN callSetApprovalForAll WHEN owner is zero address THEN reverts with AddressZero', async () => {
             await expect(
@@ -353,10 +368,13 @@ describe('ERC721', function () {
 
     describe('transferFrom', () => {
         beforeEach(async () => {
-            await erc721.initializeErc721(name, symbol)
-            await erc721Capped.initializeCap(3)
-            await accessControl.grantRole(MINTER_ROLE, ownerAddress)
-            await erc721Capped.mint(ownerAddress, 1)
+            const fixture = async () => {
+                await erc721.initializeErc721(name, symbol)
+                await erc721Capped.initializeCap(3)
+                await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+                await erc721Capped.mint(ownerAddress, 1)
+            }
+            await loadFixture(fixture)
         })
 
         it('GIVEN an ERC721 WHEN transferFrom as owner THEN succeeds', async () => {
@@ -426,10 +444,13 @@ describe('ERC721', function () {
 
     describe('safeTransferFrom', () => {
         beforeEach(async () => {
-            await erc721.initializeErc721(name, symbol)
-            await erc721Capped.initializeCap(3)
-            await accessControl.grantRole(MINTER_ROLE, ownerAddress)
-            await erc721Capped.mint(ownerAddress, 1)
+            const fixture = async () => {
+                await erc721.initializeErc721(name, symbol)
+                await erc721Capped.initializeCap(3)
+                await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+                await erc721Capped.mint(ownerAddress, 1)
+            }
+            await loadFixture(fixture)
         })
         it('GIVEN an ERC721 WHEN safeTransferFrom to EOA THEN succeeds', async () => {
             await expect(
@@ -575,8 +596,11 @@ describe('ERC721', function () {
 
     describe('Metadata', () => {
         beforeEach(async () => {
-            await erc721.initializeErc721(name, symbol)
-            await erc721Capped.initializeCap(3)
+            const fixture = async () => {
+                await erc721.initializeErc721(name, symbol)
+                await erc721Capped.initializeCap(3)
+            }
+            await loadFixture(fixture)
         })
         it('GIVEN an ERC721 WHEN tokenURI is called THEN returns empty string', async () => {
             await accessControl.grantRole(MINTER_ROLE, ownerAddress)
@@ -613,8 +637,11 @@ describe('ERC721', function () {
 
         describe('Behavior with initialized cap', () => {
             beforeEach(async () => {
-                await erc721.initializeErc721(name, symbol)
-                await erc721Capped.initializeCap(3)
+                const fixture = async () => {
+                    await erc721.initializeErc721(name, symbol)
+                    await erc721Capped.initializeCap(3)
+                }
+                await loadFixture(fixture)
             })
 
             it('GIVEN an initialized ERC721 WHEN mint is called by someone without MINTER_ROLE THEN it reverts', async () => {
@@ -708,8 +735,11 @@ describe('ERC721', function () {
 
     describe('Snapshot', () => {
         beforeEach(async () => {
-            await erc721.initializeErc721(name, symbol)
-            await erc721Capped.initializeCap(3)
+            const fixture = async () => {
+                await erc721.initializeErc721(name, symbol)
+                await erc721Capped.initializeCap(3)
+            }
+            await loadFixture(fixture)
         })
         it('GIVEN an ERC721 WHEN not exists snapshot THEN balanceOfAt and totalSupplyAt fails', async () => {
             await accessControl.grantRole(MINTER_ROLE, ownerAddress)
@@ -802,9 +832,12 @@ describe('ERC721', function () {
 
     describe('Controller', () => {
         beforeEach(async () => {
-            await erc721.initializeErc721(name, symbol)
-            await erc721Capped.initializeCap(3)
-            await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+            const fixture = async () => {
+                await erc721.initializeErc721(name, symbol)
+                await erc721Capped.initializeCap(3)
+                await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+            }
+            await loadFixture(fixture)
         })
 
         it('GIVEN an ERC721 initialized WHEN try to force burn a paused token THEN it fails', async () => {
@@ -891,9 +924,12 @@ describe('ERC721', function () {
 
     describe('Enumerable', () => {
         beforeEach(async () => {
-            await erc721.initializeErc721(name, symbol)
-            await erc721Capped.initializeCap(3)
-            await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+            const fixture = async () => {
+                await erc721.initializeErc721(name, symbol)
+                await erc721Capped.initializeCap(3)
+                await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+            }
+            await loadFixture(fixture)
         })
         it('GIVEN an ERC721 WHEN minted THEN totalSupplyEnumerable returns correct value', async () => {
             await erc721Capped.mint(ownerAddress, 1)
@@ -1052,9 +1088,12 @@ describe('ERC721', function () {
 
     describe('Royalty', () => {
         beforeEach(async () => {
-            await erc721.initializeErc721(name, symbol)
-            await erc721Capped.initializeCap(3)
-            await accessControl.grantRole(ROYALTY_ROLE, ownerAddress)
+            const fixture = async () => {
+                await erc721.initializeErc721(name, symbol)
+                await erc721Capped.initializeCap(3)
+                await accessControl.grantRole(ROYALTY_ROLE, ownerAddress)
+            }
+            await loadFixture(fixture)
         })
 
         it('GIVEN a valid fee denominator WHEN setDefaultRoyalty is called THEN sets and queries default royalty correctly', async () => {
@@ -1214,9 +1253,12 @@ describe('ERC721', function () {
 
     describe('Consecutive', () => {
         beforeEach(async () => {
-            await erc721.initializeErc721(name, symbol)
-            await erc721Capped.initializeCap(3)
-            await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+            const fixture = async () => {
+                await erc721.initializeErc721(name, symbol)
+                await erc721Capped.initializeCap(3)
+                await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+            }
+            await loadFixture(fixture)
         })
         it('GIVEN ERC721Consecutive WHEN mintConsecutive with quantity 0 THEN reverts', async () => {
             await expect(
