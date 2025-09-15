@@ -8,7 +8,6 @@ import {ERC721EnumerableInternal} from './enumerable/ERC721EnumerableInternal.so
 import {ERC721RoyaltyInternal} from './royalty/ERC721RoyaltyInternal.sol';
 import {ERC721ConsecutiveInternal} from './consecutive/ERC721ConsecutiveInternal.sol';
 
-
 /// @title ERC721InternalCommon
 /// @notice This abstract contract puts together all ERC721 internal logic (snapshot, cap, and base logic).
 abstract contract ERC721InternalCommon is

@@ -7,8 +7,7 @@ import {_ERC721_CONSECUTIVE_STORAGE_POSITION} from '../../../../constants/storag
 
 /// @title ERC721ConsecutiveInternal
 /// @dev Internal logic for ERC721 Consecutive extension (EIP-2309)
-abstract contract ERC721ConsecutiveInternal is ERC721Internal
-{
+abstract contract ERC721ConsecutiveInternal is ERC721Internal {
     struct ERC721ConsecutiveStorage {
         uint256 _currentConsecutiveTokenId;
     }
@@ -33,7 +32,12 @@ abstract contract ERC721ConsecutiveInternal is ERC721Internal
             }
         }
 
-        emit IERC721Consecutive.ConsecutiveTransfer(fromTokenId, toTokenId, address(0), to);
+        emit IERC721Consecutive.ConsecutiveTransfer(
+            fromTokenId,
+            toTokenId,
+            address(0),
+            to
+        );
     }
 
     function _consecutiveStorage()
