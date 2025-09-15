@@ -780,3 +780,345 @@ Returns a paginated list of roles assigned to a specific account
 | Name    | Type      | Description                                       |
 | ------- | --------- | ------------------------------------------------- |
 | roles\_ | bytes32[] | A list of role identifiers that the account holds |
+
+---
+
+## IAccessControlDid
+
+External interface for role-based access control functionality
+
+### Rbac
+
+_This struct is used to implement a simple role-based access control mechanism.
+It defines a role and the list of DIDs that are members of that role._
+
+```solidity
+struct Rbac {
+    bytes32 role;
+    string[] dids;
+}
+```
+
+### RoleAdminChanged
+
+```solidity
+event RoleAdminChanged(bytes32 role, bytes32 previousAdminRole, bytes32 newAdminRole, string sender)
+```
+
+Emitted when a role's admin role is changed
+
+#### Parameters
+
+| Name              | Type    | Description                      |
+| ----------------- | ------- | -------------------------------- |
+| role              | bytes32 | The role identifier              |
+| previousAdminRole | bytes32 | The previous admin role          |
+| newAdminRole      | bytes32 | The new admin role               |
+| sender            | string  | The did that performed the grant |
+
+### RoleGranted
+
+```solidity
+event RoleGranted(bytes32 role, string did, string sender)
+```
+
+Emitted when a role is granted to an did
+
+#### Parameters
+
+| Name   | Type    | Description                          |
+| ------ | ------- | ------------------------------------ |
+| role   | bytes32 | The role identifier                  |
+| did    | string  | The did receiving the role           |
+| sender | string  | The address that performed the grant |
+
+### RoleRevoked
+
+```solidity
+event RoleRevoked(bytes32 role, string did, string sender)
+```
+
+Emitted when a role is revoked from an did
+
+#### Parameters
+
+| Name   | Type    | Description                           |
+| ------ | ------- | ------------------------------------- |
+| role   | bytes32 | The role identifier                   |
+| did    | string  | The did losing the role               |
+| sender | string  | The did that performed the revocation |
+
+### MissingAdminRole
+
+```solidity
+error MissingAdminRole()
+```
+
+### RoleMustBeUnique
+
+```solidity
+error RoleMustBeUnique(bytes32 role)
+```
+
+### RoleMemberMustBeUnique
+
+```solidity
+error RoleMemberMustBeUnique(bytes32 role, bytes32 did)
+```
+
+### AccountHasNoRole
+
+```solidity
+error AccountHasNoRole(string did, bytes32 role)
+```
+
+Error indicating an did does not hold a required role
+
+#### Parameters
+
+| Name | Type    | Description           |
+| ---- | ------- | --------------------- |
+| did  | string  | The did being checked |
+| role | bytes32 | The role required     |
+
+### AccountHasNoRoles
+
+```solidity
+error AccountHasNoRoles(string did, bytes32[] roles)
+```
+
+Error indicating an did does not hold any of the required roles
+
+#### Parameters
+
+| Name  | Type      | Description           |
+| ----- | --------- | --------------------- |
+| did   | string    | The did being checked |
+| roles | bytes32[] | The roles required    |
+
+### RoleIsImmutable
+
+```solidity
+error RoleIsImmutable(bytes32 role)
+```
+
+Error indicating that a role is immutable and it's members cannot be changed
+
+#### Parameters
+
+| Name | Type    | Description                   |
+| ---- | ------- | ----------------------------- |
+| role | bytes32 | The immutable role identifier |
+
+### AtLeastOneMemberForRole
+
+```solidity
+error AtLeastOneMemberForRole(bytes32 role)
+```
+
+Error indicating that there has to be at least one member for a role
+
+#### Parameters
+
+| Name | Type    | Description         |
+| ---- | ------- | ------------------- |
+| role | bytes32 | The role identifier |
+
+### initializeAccessControl
+
+```solidity
+function initializeAccessControl(struct IAccessControlDid.Rbac[] _rbacs) external
+```
+
+Initializes the Access Control contrl grating roles
+
+#### Parameters
+
+| Name    | Type                            | Description                       |
+| ------- | ------------------------------- | --------------------------------- |
+| \_rbacs | struct IAccessControlDid.Rbac[] | Addresses and roles to be granted |
+
+### grantRole
+
+```solidity
+function grantRole(bytes32 _role, string _did) external
+```
+
+Grants a role to an did
+
+#### Parameters
+
+| Name   | Type    | Description                  |
+| ------ | ------- | ---------------------------- |
+| \_role | bytes32 | The role identifier          |
+| \_did  | string  | The did to grant the role to |
+
+### revokeRole
+
+```solidity
+function revokeRole(bytes32 _role, string _did) external
+```
+
+Revokes a role from an did
+
+#### Parameters
+
+| Name   | Type    | Description                         |
+| ------ | ------- | ----------------------------------- |
+| \_role | bytes32 | The role identifier                 |
+| \_did  | string  | The address to revoke the role from |
+
+### renounceRole
+
+```solidity
+function renounceRole(bytes32 _role) external
+```
+
+Allows caller to renounce a role they hold
+
+#### Parameters
+
+| Name   | Type    | Description          |
+| ------ | ------- | -------------------- |
+| \_role | bytes32 | The role to renounce |
+
+### setRoleAdmin
+
+```solidity
+function setRoleAdmin(bytes32 _role, bytes32 _adminRole) external
+```
+
+Sets the admin role of a given role
+
+#### Parameters
+
+| Name        | Type    | Description                           |
+| ----------- | ------- | ------------------------------------- |
+| \_role      | bytes32 | The role whose admin is being changed |
+| \_adminRole | bytes32 | The new admin role                    |
+
+### hasRole
+
+```solidity
+function hasRole(bytes32 _role, string _did, address _addr) external view returns (bool)
+```
+
+Checks if a DID holds a given role
+
+#### Parameters
+
+| Name   | Type    | Description           |
+| ------ | ------- | --------------------- |
+| \_role | bytes32 | The role identifier   |
+| \_did  | string  | The DID of the sender |
+| \_addr | address | The address to check  |
+
+#### Return Values
+
+| Name | Type | Description                                   |
+| ---- | ---- | --------------------------------------------- |
+| [0]  | bool | True if the DID has the role, false otherwise |
+
+### getRoleAdmin
+
+```solidity
+function getRoleAdmin(bytes32 _role) external view returns (bytes32)
+```
+
+Returns the admin role controlling a given role
+
+#### Parameters
+
+| Name   | Type    | Description       |
+| ------ | ------- | ----------------- |
+| \_role | bytes32 | The role to query |
+
+#### Return Values
+
+| Name | Type    | Description                             |
+| ---- | ------- | --------------------------------------- |
+| [0]  | bytes32 | The admin role associated with the role |
+
+### getRoleMembersCount
+
+```solidity
+function getRoleMembersCount(bytes32 _role) external view returns (uint256)
+```
+
+Returns the total number of DIDs that have been granted the role
+
+#### Parameters
+
+| Name   | Type    | Description         |
+| ------ | ------- | ------------------- |
+| \_role | bytes32 | The role identifier |
+
+#### Return Values
+
+| Name | Type    | Description                                              |
+| ---- | ------- | -------------------------------------------------------- |
+| [0]  | uint256 | The total number of DIDs that have been granted the role |
+
+### getRoleMembers
+
+```solidity
+function getRoleMembers(bytes32 _role, uint256 _pageIndex, uint256 _pageLength) external view returns (string[] did_)
+```
+
+Returns a paginated list of DIDs that have been granted the role
+
+#### Parameters
+
+| Name         | Type    | Description                                      |
+| ------------ | ------- | ------------------------------------------------ |
+| \_role       | bytes32 | The role identifier                              |
+| \_pageIndex  | uint256 | The index of the page to fetch (starting from 0) |
+| \_pageLength | uint256 | The number of DIDs to return per page            |
+
+#### Return Values
+
+| Name  | Type     | Description                                    |
+| ----- | -------- | ---------------------------------------------- |
+| did\_ | string[] | A list of DIDs that have been granted the role |
+
+### getRolesByDidLength
+
+```solidity
+function getRolesByDidLength(string _did) external view returns (uint256)
+```
+
+Returns the number of roles assigned to a specific did
+
+#### Parameters
+
+| Name  | Type   | Description                           |
+| ----- | ------ | ------------------------------------- |
+| \_did | string | The did whose roles are being queried |
+
+#### Return Values
+
+| Name | Type    | Description                           |
+| ---- | ------- | ------------------------------------- |
+| [0]  | uint256 | The total number of roles the did has |
+
+### getRolesByDid
+
+```solidity
+function getRolesByDid(string _did, uint256 _pageIndex, uint256 _pageLength) external view returns (bytes32[] roles_)
+```
+
+Returns a paginated list of roles assigned to a specific did
+
+#### Parameters
+
+| Name         | Type    | Description                                      |
+| ------------ | ------- | ------------------------------------------------ |
+| \_did        | string  | The did whose roles are being queried            |
+| \_pageIndex  | uint256 | The index of the page to fetch (starting from 0) |
+| \_pageLength | uint256 | The number of roles to return per page           |
+
+#### Return Values
+
+| Name    | Type      | Description                                   |
+| ------- | --------- | --------------------------------------------- |
+| roles\_ | bytes32[] | A list of role identifiers that the did holds |

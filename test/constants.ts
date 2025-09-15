@@ -127,3 +127,12 @@ export const ASSERTION_RELATIONSHIP = 'assertionMethod'
 export const KEY_AGREEMENT_RELATIONSHIP = 'keyAgreement'
 export const CAPABILITY_INVOCATION_RELATIONSHIP = 'capabilityInvocation'
 export const CAPABILITY_DELEGATION_RELATIONSHIP = 'capabilityDelegation'
+
+export const ENS_ROLE =
+    '0x91d1777781884d03a6757a803996e38de2a42967fb37eeaca72729271025a9e2'
+export const ENS_MANAGER_ROLE =
+    '0x6e23e5e4b53b45e5b32b8b2e8e9a8c48b8a7c3b9c2b8a9a7b9a8c4b8b9a8c9b9'
+
+// Resolver keys
+export const ENS_REGISTRY_RESOLVER_KEY =
+    '0xc0629a5fdc41a377e7fd772f766ce559d0fecbb52e72bd1b4915525935b59053'

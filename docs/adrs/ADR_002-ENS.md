@@ -85,7 +85,7 @@ We require the capability to store a Decentralised Identifier (DID) as an integr
 
 ### List Resolver Requirement
 
-We require sophisticated functionality to store and manage organised collections of identity documents like DID documents, credential schemas,...ç categorised by different keys within each node entry. This comprehensive document management system is essential for supporting complex identity scenarios where:
+We require sophisticated functionality to store and manage organised collections of identity documents like DID documents, credential schemas,... categorised by different keys within each node entry. This comprehensive document management system is essential for supporting complex identity scenarios where:
 
 - Multiple identity documents of varying types may be associated with a single ENS name
 - Different document categories require separate classification, storage, and retrieval mechanisms
@@ -107,9 +107,9 @@ e. The rest of PublicResolverModules should be re-visited in next iterations
 The implementation of PublicResolver methods shall follow a carefully planned, phased approach to ensure system stability and manageable complexity:
 
 1. **First Phase**: Implement and thoroughly test critical core functionality including NameResolver, PubkeyResolver, and TextResolver components
-2. **Role base application**: Study how to apply Rbac in ENS or if it is part of governance's diamond.
-   3**Second Phase**: Check if needed identity-specific functionality through DidResolver and StringListResolver implementations
-   4**Third Phase**: Decide what to implement extended functionality components as required by specific use cases and community demand
+    1. **Role base application**: Study how to apply Rbac in ENS or if it is part of governance's diamond.
+2. **Second Phase**: Check if needed identity-specific functionality through DidResolver and StringListResolver implementations
+3. **Third Phase**: Decide what to implement extended functionality components as required by specific use cases and community demand
 
 ## Implementation Subtasks
 

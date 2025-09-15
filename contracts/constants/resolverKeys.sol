@@ -97,4 +97,7 @@ bytes32 constant _DID_VERIFICATION_METHOD_RESOLVER_KEY = 0xac8773db319c7049be61a
 // keccak256('isbe.contracts.did.verification.relationship.resolver.key');
 bytes32 constant _DID_VERIFICATION_RELATIONSHIP_RESOLVER_KEY = 0x32bd32541f3651dc69848ddc9cad21896eabb6a11034c19b03683da6e19b76d7;
 
+// keccak256('isbe.contracts.ens.registry.resolver.key');
+bytes32 constant _ENS_REGISTRY_RESOLVER_KEY = 0xc0629a5fdc41a377e7fd772f766ce559d0fecbb52e72bd1b4915525935b59053;
+
 // solhint-enable max-line-length
