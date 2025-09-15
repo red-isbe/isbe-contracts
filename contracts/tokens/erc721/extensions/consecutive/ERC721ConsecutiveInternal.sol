@@ -2,14 +2,12 @@
 pragma solidity ^0.8.28;
 
 import {IERC721Consecutive} from './IERC721Consecutive.sol';
-import {ERC721InternalCommon} from '../ERC721InternalCommon.sol';
+import {ERC721Internal} from '../../ERC721Internal.sol';
 import {_ERC721_CONSECUTIVE_STORAGE_POSITION} from '../../../../constants/storagePositions.sol';
 
 /// @title ERC721ConsecutiveInternal
 /// @dev Internal logic for ERC721 Consecutive extension (EIP-2309)
-abstract contract ERC721ConsecutiveInternal is
-    IERC721Consecutive,
-    ERC721InternalCommon
+abstract contract ERC721ConsecutiveInternal is ERC721Internal
 {
     struct ERC721ConsecutiveStorage {
         uint256 _currentConsecutiveTokenId;
@@ -35,7 +33,7 @@ abstract contract ERC721ConsecutiveInternal is
             }
         }
 
-        emit ConsecutiveTransfer(fromTokenId, toTokenId, address(0), to);
+        emit IERC721Consecutive.ConsecutiveTransfer(fromTokenId, toTokenId, address(0), to);
     }
 
     function _consecutiveStorage()
