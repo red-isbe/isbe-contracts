@@ -1,0 +1,115 @@
+@startuml
+title Arquitectura de SC ISBE
+
+
+skinparam class {
+    BackgroundColor White
+    ArrowColor Black
+    BorderColor Black
+}
+skinparam linetype polyline
+hide empty members
+
+' === CORE ===
+package "Core" {
+    class Initializable <<(A,#228b22) abstract contract>>
+    class Common <<(A,#228b22) abstract contract>>
+    class LibCommon << (L,#FF7700) library >>
+    class ISBEContext <<(A,#228b22) abstract contract>>
+    class AccessControlInternal <<(A,#228b22) abstract contract>> #lightblue
+    class PauseInternalCommon <<(A,#228b22) abstract contract>> #FFDEAD
+    class OwnableInternal <<(A,#228b22) abstract contract>> #lightgreen
+    class ERC165Internal <<(A,#228b22) abstract contract>>
+    class Context <<(A,#228b22) abstract contract>>
+
+    Common --|> Initializable
+    Common --|> ERC165Internal
+    Common --|> AccessControlInternal
+  
+    Common --|> OwnableInternal
+    Common --|> PauseInternalCommon
+    PauseInternalCommon --|> ISBEContext
+    OwnableInternal --|> ISBEContext
+    ISBEContext --|> Context
+    AccessControlInternal --|> LibCommon
+}
+
+
+' === Modules===
+package "Modules" {
+' === ACCESS ===
+package "Access" {
+    class AccessControl <<(C,#1E90FF) contract>> #lightblue
+    class AccessControlFacet <<(C,#1E90FF) contract>> #lightblue
+    class IAccessControl <<(I,#FFD700) interface>> #lightblue
+
+    AccessControl --|> IAccessControl
+    AccessControl --|> Common
+    AccessControlFacet --|> AccessControl
+}
+
+' === OWNABLE ===
+package "Ownable" {
+    class Ownable <<(C,#1E90FF) contract>> #lightgreen
+    class OwnableBase <<(A,#228B22) abstract contract>> #lightgreen
+    class Ownable2Step <<(C,#1E90FF) contract>> #lightgreen
+    class Ownable2StepInternal <<(A,#228B22) abstract contract>> #lightgreen
+    class Ownable2StepFacet <<(C,#1E90FF) contract>> #lightgreen
+    class OwnableFacet <<(C,#1E90FF) contract>> #lightgreen
+    class IOwnable <<(I,#FFD700) interface>> #lightgreen
+    class IOwnable2Step <<(I,#FFD700) interface>> #lightgreen
+    class OwnableInternal <<(A,#228B22) abstract contract>> #lightgreen
+
+    Ownable --|> OwnableBase
+    OwnableBase --|> IOwnable
+    OwnableBase --|> Common
+    Ownable2Step --|> IOwnable2Step
+    Ownable2Step --|> OwnableBase
+    Ownable2Step --|> Ownable2StepInternal
+    Ownable2StepInternal --|> OwnableInternal
+    OwnableFacet --|> Ownable
+    Ownable2StepFacet --|> Ownable2Step
+}
+
+' === PAUSE ===
+package "Pause" {
+    class Pause <<(A,#228B22) abstract contract>> #FFDEAD
+    class PauseInternal <<(A,#228B22) abstract contract>> #FFDEAD
+    class ISBEPause <<(C,#1E90FF) contract>> #FFDEAD
+    class ISBEPauseFacet <<(C,#1E90FF) contract>> #FFDEAD
+    class IPause <<(I,#FFD700) interface>> #FFDEAD
+
+    Pause --|> IPause
+    Pause --|> PauseInternal
+    PauseInternal --|> Common
+    ISBEPause --|> Pause
+    ISBEPauseFacet --|> ISBEPause
+}
+
+' === ASSET TRACKING ===
+package "Asset Tracking" {
+    class AssetEventTracker <<(A,#228B22) abstract contract>> #B5651D
+    class AssetEventTrackerFacet <<(C,#1E90FF) contract>> #B5651D
+    class AssetEventTrackerInternal <<(A,#228B22) abstract contract>> #B5651D
+    class IAssetEventTracker <<(I,#FFD700) interface>> #B5651D
+
+    AssetEventTracker --|> IAssetEventTracker
+    AssetEventTracker --|> AssetEventTrackerInternal
+    AssetEventTrackerInternal --|> Common
+    AssetEventTrackerFacet --|> AssetEventTracker
+}
+
+' === HASH TIMESTAMP ===
+package "Hash Timestamp" {
+    class HashTimestamp <<(A,#228B22) abstract contract>> #D8BFD8
+    class HashTimestampFacet <<(C,#1E90FF) contract>> #D8BFD8
+    class HashTimestampInternal <<(A,#228B22) abstract contract>> #D8BFD8
+    class IHashTimestamp <<(I,#FFD700) interface>> #D8BFD8
+
+    HashTimestamp --|> IHashTimestamp
+    HashTimestamp --|> HashTimestampInternal
+    HashTimestampInternal --|> Common
+    HashTimestampFacet --|> HashTimestamp
+}
+}
+@enduml
