@@ -164,7 +164,7 @@ To check contract data a regular call (contract + ABI) to **get()** is executed 
 This process can be included easily to current deployment process. High level steps:
 1. Execute the current deployment process "**deployAll**" in Hardhat network (some not needed contracts could be excluded). Now Hardhat network contains all deployment transactions
 2. Group these transactions by affected contract (created contract or destination contract)
-3. By using **debug_traceTransaction** the execution stack is retrieved for each contract transaction and touched slots are included in a list. As a result a data structure containing for each contract a list of modified slots
+3. By using **debug_traceTransaction** the execution stack is retrieved for each contract transaction and touched slots are included in a list. As a result a data structure containing for each contract a list of modified slots is generated
 4. For each contract we get last value for each modified slot
 5. Generate genesis.json from a selected template (we may require several templates depending on environment (test, pre, pro) and network type (bare, usecase))
 
@@ -172,7 +172,7 @@ It is relevant to point out that 1st step uses current deployment process "deplo
 
 Additionally, 5th step is very convenient as it may automate generation and testing procedures. As we know, mistakes in blockchain are very severe and potentially devastating. Not to mention if the problem occurs in the genesis block.
 
-For the sake of this project, we need to make absolutely sure this process works as expected and genesis file is correct. Therefore, we plan, as part of CI procedure, to start a Besu network using generated genesis and check values by using regular contract calls. This may require effort, however, it is fundamental to ensure genesis correctness.
+For the sake of this project, we need to make absolutely sure this process works as expected and genesis file is correct. Therefore, we plan, as part of CI procedure, to start a Besu network using generated genesis and check stored values by using regular contract calls. This may require effort, however, it is fundamental to ensure genesis correctness.
 
 ### Implementation phases
 1. Create hardhat task invoking current development process (deployAll)
@@ -180,8 +180,11 @@ For the sake of this project, we need to make absolutely sure this process works
 3. Extract from transactions modified slots
 4. Retrieve from chain each value for each slot
 5. Generate from template genesis file
------ End of generation process
+
+End of generation process
+
 6. Deploy besu network with generated genesis
 7. Check by using regular contract calls data stored in contract's state
------ End of test process
+
+End of test process
 
