@@ -79,6 +79,9 @@ bytes32 constant _ERC721_CAPPED_RESOLVER_KEY = 0x562609faca97c2599c7b5267f4c9852
 // keccak256('isbe.contracts.erc721.controller.resolver.key');
 bytes32 constant _ERC721_CONTROLLER_RESOLVER_KEY = 0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367;
 
+// keccak256('isbe.contracts.erc721.consecutive.resolver.key');
+bytes32 constant _ERC721_CONSECUTIVE_RESOLVER_KEY = 0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4;
+
 // keccak256('isbe.contracts.erc721.snapshot.resolver.key');
 bytes32 constant _ERC721_SNAPSHOT_RESOLVER_KEY = 0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d;
 

@@ -38,6 +38,7 @@ import {
     ERC721ControllerFacet,
     ERC721EnumerableFacet,
     ERC721RoyaltyFacet,
+    ERC721ConsecutiveFacet,
     IDidRegistry__factory,
 } from '../typechain-types'
 import {
@@ -69,6 +70,7 @@ import {
     ERC721_CONTROLLER_RESOLVER_KEY,
     ERC721_ENUMERABLE_RESOLVER_KEY,
     ERC721_ROYALTY_RESOLVER_KEY,
+    ERC721_CONSECUTIVE_RESOLVER_KEY,
     DID_DOCUMENT_DETAILED_RESOLVER_KEY,
     DID_CONTROLLER_RESOLVER_KEY,
     DID_VERIFICATION_METHOD_RESOLVER_KEY,
@@ -327,6 +329,7 @@ export async function deployGovernance(
         erc721ControllerFacet: useCaseDeployment.erc721ControllerFacet,
         erc721EnumerableFacet: useCaseDeployment.erc721EnumerableFacet,
         erc721RoyaltyFacet: useCaseDeployment.erc721RoyaltyFacet,
+        erc721ConsecutiveFacet: useCaseDeployment.erc721ConsecutiveFacet,
         erc721: useCaseDeployment.erc721,
         erc721TestWrapper: useCaseDeployment.erc721TestWrapper,
         erc721Capped: useCaseDeployment.erc721Capped,
@@ -335,6 +338,7 @@ export async function deployGovernance(
         erc721Controller: useCaseDeployment.erc721Controller,
         erc721Enumerable: useCaseDeployment.erc721Enumerable,
         erc721Royalty: useCaseDeployment.erc721Royalty,
+        erc721Consecutive: useCaseDeployment.erc721Consecutive,
         didDocumentDetailedFacet: useCaseDeployment.didDocumentDetailedFacet,
         didControllerFacet: useCaseDeployment.didControllerFacet,
         didVerificationMethodFacet:
@@ -594,6 +598,9 @@ export async function deployERC721UseCasesFacets(
     )
     const ERC721RoyaltyFacetFactory =
         await ethers.getContractFactory('ERC721RoyaltyFacet')
+    const ERC721ConsecutiveFacetFactory = await ethers.getContractFactory(
+        'ERC721ConsecutiveFacet'
+    )
     const isbeCutFacet = await deployBusinessLogicFromFactory(
         ISBE_CUT_RESOLVER_KEY,
         IsbeCutFacetFactory
@@ -644,6 +651,10 @@ export async function deployERC721UseCasesFacets(
         ERC721_ROYALTY_RESOLVER_KEY,
         ERC721RoyaltyFacetFactory
     )
+    const erc721ConsecutiveFacet = await deployBusinessLogicFromFactory(
+        ERC721_CONSECUTIVE_RESOLVER_KEY,
+        ERC721ConsecutiveFacetFactory
+    )
 
     await isbeFactory.setConfiguration(CONFIGURATION_ID_ERC721, [
         {
@@ -676,6 +687,10 @@ export async function deployERC721UseCasesFacets(
         },
         {
             businessId: ERC721_ROYALTY_RESOLVER_KEY,
+            version: 1,
+        },
+        {
+            businessId: ERC721_CONSECUTIVE_RESOLVER_KEY,
             version: 1,
         },
     ])
@@ -714,6 +729,9 @@ export async function deployERC721UseCasesFacets(
     const erc721Royalty = ERC721RoyaltyFacetFactory.attach(
         proxy
     ) as ERC721RoyaltyFacet
+    const erc721Consecutive = ERC721ConsecutiveFacetFactory.attach(
+        proxy
+    ) as ERC721ConsecutiveFacet
 
     const pause = ISBEPauseFacetFactory.attach(proxy) as ISBEPauseFacet
 
@@ -730,6 +748,7 @@ export async function deployERC721UseCasesFacets(
         erc721Controller,
         erc721Enumerable,
         erc721Royalty,
+        erc721Consecutive,
         pause,
         accessControl,
         erc721Facet,
@@ -740,6 +759,7 @@ export async function deployERC721UseCasesFacets(
         erc721ControllerFacet,
         erc721EnumerableFacet,
         erc721RoyaltyFacet,
+        erc721ConsecutiveFacet,
         pauseFacet,
         accessControlFacet,
         isbeCutFacet,
