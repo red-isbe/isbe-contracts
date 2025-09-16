@@ -1,0 +1,187 @@
+# ADR_004:  Diamond of Governance deployment in Genesis 
+
+## Table of contents
+- [Status](#status)
+- [Context](#context)
+- [Decision](#decision)
+- [Description](#description)
+    - [Process detail](#process-detail)
+    - [Current known limitations](#current-known-limitations)
+    - [Tests](#tests)
+- [Benefits](#benefits)
+- [Implementation phases](#implementation-phases)
+## Status
+
+Proposal
+
+## Context
+To streamline the contract deployment process, all contracts necessary for the ISBE infrastructure will be pre-deployed. They need to be available from the outset (first block) so that use cases can make use of them.
+
+## Decision
+Due to the large number of contracts to be deployed in the infrastructure and the amount of bootstrapping they require, the deployment process is complex. Therefore, priority will be given to those pre-deployment processes in Genesis that have the least impact on the current deployment process and are flexible enough so that the addition of new contracts does not cause problems for pre-deployment.
+
+## Description
+In order to pre-deploy a contract in Genesis, the following information is required:
+- **Deployed bytecode (mandatory for contracts)**: This is the code once a contract has been deployed onchain (do not be confused with deployment code which is used to deploy the contract). We need the resulting deployed code also known as "code". 
+- **Slot structure (optional)**: This is the initial state of the contract also known as "storage". In case needed, this genesis entry contains a key/value structure corresponding to SLOT_NUMBER / SLOT_VALUE.
+- **Initial crypto balance (optional)**: In case needed, it is possible to provide an initial crypto balance for this contract. 
+
+
+### Process detail
+Extracting the deployed code from contracts (not the deployment code) is straightforward; simply access the contract artifact or consult the code onchain using the contract address.
+
+The slot structure, on the other hand, is not so simple. The rules for generating the slot structure are very complex, especially with dynamic types (strings, bytes, mappings, and arrays). Extracting the slot structure using EVM rules is a difficult task. There are several ways to extract the slot structure, but we have opted for the one that is most compatible with the current deployment procedure.
+
+**Briefly**:
+1. Deploy the contract on Hardhat’s in-memory chain.
+2. Trace the deployment transaction and any other transaction, and collect every SSTORE executed in the constructor. Result is a list of modified slots for this contrac
+3. Read final values from the chain state for those slots.
+4. Fetch runtime code and emit a normalized JSON.
+
+**Detailed steps**:
+1. Compile
+2. Deploy the contract (for this test a constructor without params): we need a real EVM run of the constructor to record its SSTOREs, and the address to read code/storage afterward.
+3. Trace the deployment transaction:  we need structLogs with SSTORE steps. Enabling stack/storage gives us enough context to identify slot keys robustly.
+```js
+  const trace = await network.provider.send("debug_traceTransaction", [
+      tx.hash,
+      {
+        disableStack: false,
+        disableStorage: false,
+        disableMemory: true,
+      },
+    ]);
+```
+4. Collect the written slots: We check the entire trace to detect "SSTORE" op-code. If a SSTORE is detected process will store SLOT modified. 
+```js
+ const structLogs: Array<{ op: string; stack?: string[] }> = trace?.structLogs ?? [];
+ for (const step of structLogs) {
+        if (step.op !== "SSTORE") continue;
+        const st = step.stack ?? [];
+        if (st.length < 2) {
+            throw new Error(`SSTORE without 2 stack items (pc=${step.pc}, depth=${step.depth}). Are you using Hardhat and debug_traceTransaction is correctly invoked?`);
+        }
+     
+        const keyHex   = st[st.length - 1]; // Key (Slot number)
+
+        // Normalize key to 32 bytes
+        const key = normalize32(keyHex);
+        console.log("Touched slot in update:", key);
+        touchedSlots.add(key);
+    }
+```
+
+5. Read final values from chain state: guarantees we record the post-constructor state
+```js
+const storage: StorageMap = {};
+    for (const slotKey of touchedSlots) {
+        const raw = await network.provider.send("eth_getStorageAt", [address, slotKey, "latest"]);
+        storage[slotKey] = normalize32(raw);
+    }
+```
+
+6. Fetch runtime code: Generate an alloc-compatible structure for genesis
+```js
+{
+  "contract": "ContractName",
+  "address": "0x…",
+  "code": "0x…",                   
+  "storage": {
+    "0x…0000": "0x…0A",             
+    "0x…0001": "0x…0B"   
+  }
+}
+```
+
+### Current known limitations
+
+This process extracts slot structure from a specific contract; it does not allow extraction from multiple contracts, which is necessary for the expected process.  
+
+### Tests
+Two tests have been carried out
+- Contract deployment test: The contract is implemented with a constructor without parameters (for simplicity) and the code and slot structure are generated by standard output. This checks if contract deployment generates expected slot structure **(and it does)**
+- Same as the previous test, but changing the values via a regular contract call (transaction) after the contract has been deployed. Checks if a regular call is compatible with slot extracting process **(and it is)**
+
+To check extraction behaviour several ways of data storing have been put in place in contract:
+```js
+contract Lock {
+
+  struct pp{
+    uint a;
+  }
+  uint public unlockTime; // (slot 0)
+  address payable public owner; // (slot 1)
+  string str="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"; // Force several slot creation (slot 2)
+
+  constructor() payable {
+
+    pp storage p;
+   
+    unlockTime = 0xFF;
+    owner = payable(msg.sender);
+
+    assembly {
+      p.slot := 10 // Force slot at 10
+      sstore(11, 0xBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB) //store data at slot 11
+    }
+    p.a=0xCC;
+  }
+
+  // Function used to extract all slot data
+  function get() public view returns(uint, address,string memory, uint,uint){
+    pp storage p;
+    pp storage p2;
+    assembly {
+      p2.slot := 11
+      p.slot := 10
+    }
+    uint tmp = p2.a;
+    uint tmp2 = p.a;
+    return(unlockTime, owner,str, tmp2, tmp);
+  }
+
+   //Function used to change slots once contract has been deployed
+  function set(uint _unlocktime, address _owner, string calldata _str,uint u1, uint u2) public {
+    pp storage p;
+    pp storage p2;
+    assembly {
+      p2.slot := 11
+      p.slot := 10
+    }
+    p2.a=u2;
+    p.a=u1;
+    unlockTime = _unlocktime;
+    owner = payable(_owner);
+    str = _str;
+  }
+}
+``` 
+To check its behaviour a genesis.json has been created with code and slot structure extracted from this process. This genesis has been installed in a besu one-node network and started.
+
+To check contract data a regular call (contract + ABI) to **get()** is executed and result is compared to contract constructor data (**data contained is the same**)
+
+### Benefits
+This process can be included easily to current deployment process. High level steps:
+1. Execute the current deployment process "**deployAll**" in Hardhat network (some not needed contracts could be excluded). Now Hardhat network contains all deployment transactions
+2. Group these transactions by affected contract (created contract or destination contract)
+3. By using **debug_traceTransaction** the execution stack is retrieved for each contract transaction and touched slots are included in a list. As a result a data structure containing for each contract a list of modified slots
+4. For each contract we get last value for each modified slot
+5. Generate genesis.json from a selected template (we may require several templates depending on environment (test, pre, pro) and network type (bare, usecase))
+
+It is relevant to point out that 1st step uses current deployment process "deployAll".  "deployAll" may require minor adaptations, but that's all. If new contracts are added to deployAll process, genesis generation process will work as expected  without any adaptation.
+
+Additionally, 5th step is very convenient as it may automate generation and testing procedures. As we know, mistakes in blockchain are very severe and potentially devastating. Not to mention if the problem occurs in the genesis block.
+
+For the sake of this project, we need to make absolutely sure this process works as expected and genesis file is correct. Therefore, we plan, as part of CI procedure, to start a Besu network using generated genesis and check values by using regular contract calls. This may require effort, however, it is fundamental to ensure genesis correctness.
+
+### Implementation phases
+1. Create hardhat task invoking current development process (deployAll)
+2. Extract from Hardhat network all transactions grouped by contract (transactions generated in step 1)
+3. Extract from transactions modified slots
+4. Retrieve from chain each value for each slot
+5. Generate from template genesis file
+----- End of generation process
+6. Deploy besu network with generated genesis
+7. Check by using regular contract calls data stored in contract's state
+----- End of test process
+
