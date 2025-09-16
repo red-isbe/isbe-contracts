@@ -86,63 +86,6 @@ package "Pause" {
     ISBEPauseFacet --|> ISBEPause
 }
 
-' === ERC20 ===
-package "ERC20" {
-    class IERC20 <<(I,#FFD700) interface>> #E6E6FA
-    class IERC20Metadata <<(I,#FFD700) interface>> #E6E6FA
-    class IERC20Isbe <<(I,#FFD700) interface>> #E6E6FA
-    class IERC20Burnable <<(I,#FFD700) interface>> #E6E6FA
-    class IERC20Capped <<(I,#FFD700) interface>> #E6E6FA
-    class IERC20Controller <<(I,#FFD700) interface>> #E6E6FA
-    class IERC20Snapshot <<(I,#FFD700) interface>> #E6E6FA
-
-    class ERC20 <<(A,#228B22) contract>> #E6E6FA
-    class ERC20Facet <<(C,#1E90FF) contract>> #E6E6FA
-    class ERC20Internal <<(A,#228B22) abstract contract>> #E6E6FA
-    class ERC20InternalCommon <<(A,#228B22) abstract contract>> #E6E6FA
-
-    class ERC20Burnable <<(A,#228B22) contract>> #E6E6FA
-    class ERC20BurnableFacet <<(C,#1E90FF) contract>> #E6E6FA
-
-    class ERC20Capped <<(A,#228B22) abstract contract>> #E6E6FA
-    class ERC20CappedFacet <<(C,#1E90FF) contract>> #E6E6FA
-    class ERC20CappedInternal <<(A,#228B22) abstract contract>> #E6E6FA
-
-    class ERC20Controller <<(A,#228B22) contract>> #E6E6FA
-    class ERC20ControllerFacet <<(C,#1E90FF) contract>> #E6E6FA
-
-    class ERC20Snapshot <<(A,#228B22) abstract contract>> #E6E6FA
-    class ERC20SnapshotFacet <<(C,#1E90FF) contract>> #E6E6FA
-    class ERC20SnapshotInternal <<(A,#228B22) abstract contract>> #E6E6FA
-
-    ERC20 --|> IERC20Isbe
-    IERC20Isbe --|> IERC20
-    IERC20Isbe --|> IERC20Metadata
-    ERC20 --|> ERC20InternalCommon
-    ERC20InternalCommon --|> ERC20SnapshotInternal
-    ERC20InternalCommon --|> ERC20CappedInternal
-    ERC20Internal --|> Common
-    ERC20Facet --|> ERC20
-
-    ERC20Burnable --|> IERC20Burnable
-    ERC20Burnable --|> ERC20InternalCommon
-    ERC20BurnableFacet --|> ERC20Burnable
-
-    ERC20Capped --|> IERC20Capped
-    ERC20Capped --|> ERC20InternalCommon
-    ERC20CappedFacet --|> ERC20Capped
-    ERC20CappedInternal --|> ERC20Internal
-
-    ERC20Controller --|> IERC20Controller
-    ERC20Controller --|> ERC20InternalCommon
-    ERC20ControllerFacet --|> ERC20Controller
-
-    ERC20Snapshot --|> IERC20Snapshot
-    ERC20Snapshot --|> ERC20InternalCommon
-    ERC20SnapshotFacet --|> ERC20Snapshot
-    ERC20SnapshotInternal --|> ERC20Internal
-}
-
 ' === ASSET TRACKING ===
 package "Asset Tracking" {
     class AssetEventTracker <<(A,#228B22) abstract contract>> #B5651D
