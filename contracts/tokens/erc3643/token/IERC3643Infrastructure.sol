@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {IIdentityRegistry} from '../../identityregistry/IIdentityRegistry.sol';
-import {ICompliance} from '../../compliance/ICompliance.sol';
+//import {IIdentityRegistry} from '../../identityregistry/IIdentityRegistry.sol';
+//import {ICompliance} from '../../compliance/ICompliance.sol';
 
 // solhint-disable-next-line no-empty-blocks
 interface IERC3643Infrastructure {
@@ -41,10 +41,10 @@ interface IERC3643Infrastructure {
     /**
      *  @dev Returns the Identity Registry linked to the token
      */
-    function identityRegistry() external view returns (IIdentityRegistry);
+    //function identityRegistry() external view returns (IIdentityRegistry);
 
     /**
      *  @dev Returns the Compliance contract linked to the token
      */
-    function compliance() external view returns (ICompliance);
+    //function compliance() external view returns (ICompliance);
 }

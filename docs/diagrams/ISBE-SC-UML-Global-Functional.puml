@@ -86,6 +86,20 @@ package "Pause" {
     ISBEPauseFacet --|> ISBEPause
 }
 
+' === ERC3643 ===
+package "ERC3643" {
+    class IERC3643Metadata <<(I,#FFD700) interface>> #E6E6FA
+    class ERC3643MetadataInternal <<(A,#228B22) abstract contract>> #E6E6FA
+    class ERC3643Metadata <<(A,#228B22) contract>> #E6E6FA
+    class ERC3643MetadataFacet <<(C,#1E90FF) contract>> #E6E6FA
+
+    ERC3643Metadata --|> IERC3643Metadata 
+    ERC3643Metadata --|> ERC3643MetadataInternal 
+    ERC3643MetadataFacet --|> ERC3643Metadata 
+    ERC3643MetadataInternal --|> ERC20InternalCommon 
+
+}
+
 ' === ERC20 ===
 package "ERC20" {
     class IERC20 <<(I,#FFD700) interface>> #E6E6FA

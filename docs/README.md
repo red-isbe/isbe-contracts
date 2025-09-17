@@ -9,6 +9,7 @@
 - [Development Guidelines](Development-guidelines.md)
 - [Diamond Pattern Guidelines](Diamond-pattern-guidelines.md)
 - [Project Bootstrapping](Project-bootstrapping.md)
+- [Test Template Reference](test-template-reference.md)
 
 ## Generated Documentation
 

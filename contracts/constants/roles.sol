@@ -48,4 +48,7 @@ bytes32 constant _SNAPSHOT_ROLE = 0x0ca5e23bde0d5e6112f10b9752afc92df6901f9218a4
 // keccak256('isbe.contracts.role.minter');
 bytes32 constant _MINTER_ROLE = 0xd8e8f9f9638a19d632dbb79025022db564483265e96ba99b2dd89df138e9cace;
 
+// keccak256('isbe.contracts.role.token.owner');
+bytes32 constant _TOKEN_OWNER_ROLE = 0x94cfc4e707c237182ee63ac42e9f9e1bcdff703cb2a92c4b5e50c4ae86f7f28d;
+
 // solhint-enable max-line-length
