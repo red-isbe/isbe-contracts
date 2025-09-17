@@ -1,0 +1,20 @@
+@startuml
+title ERC-3643 Transfer Flow
+
+actor User
+participant "IERC3643 Token" as Token
+participant "IIdentityRegistry" as IdentityRegistry
+participant "ICompliance" as Compliance
+
+User -> Token : transfer(to, amount)
+
+Token -> IdentityRegistry : isVerified(to)
+
+Token -> Compliance : canTransfer(from, to, amount)
+alt Transfer is allowed
+    Token -> Token : execute transfer
+    Token -> Compliance : transferred(from, to, amount)
+else Transfer is rejected
+    Token -> User : revert transaction
+end
+@enduml

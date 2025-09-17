@@ -1,0 +1,53 @@
+@startuml erc3643_reference_architecture
+
+skinparam defaultTextAlignment center
+skinparam linetype ortho
+left to right direction
+
+'────────────────────────── Identity Stack ──────────────────────────
+package "IdentityRegistries" {
+    [IdentityRegistry (Proxy)] as IRP
+    [IdentityRegistry (Impl)] as IR
+    [IdentityRegistryStorage] as IRS
+    [ClaimTopicsRegistry] as CTR
+    [TrustedIssuersRegistry] as TIR
+}
+
+package "IdentityContract" {
+    [IIdentity (user)] as ID
+    [IERC734]
+    [IERC735]
+}
+
+'────────────────────────── Token & Compliance ──────────────────────
+package "TokenLayer" {
+    [Token (Proxy)] as TP
+    [Token (Impl)] as TI
+}
+
+package "ComplianceLayer" {
+    [Compliance (Proxy)] as CP
+    [Compliance (Impl)] as CI
+}
+
+'────────────────────────── Implementation Links ────────────────────
+TP ..> TI : delegatecall
+CP ..> CI : delegatecall
+IRP ..> IR : delegatecall
+
+'────────────────────────── Wiring & Calls ──────────────────────────
+TP --> IRP : isVerified()\n& investorCountry()
+TP --> CP : canTransfer()\n& transferred()
+CP ..> IRP : via tokenBound\n.identityRegistry()
+
+'────────────────────────── IdentityRegistry Internals ─────────────
+IR --> IRS : uses
+IR --> CTR : requires claims from
+IR --> TIR : uses issuers from
+IR --> ID : storedIdentity()
+
+'────────────────────────── ONCHAINID Inheritance ───────────────────
+ID --> IERC734 : inherits
+ID --> IERC735 : inherits
+
+@enduml

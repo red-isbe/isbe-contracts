@@ -66,6 +66,12 @@ bytes32 constant _ERC721_SNAPSHOT_STORAGE_POSITION = 0xb8b8eb4b7ec15c12c11fa90a4
 // keccaz('isbe.contracts.erc721.enumerable.storage');
 bytes32 constant _ERC721_ENUMERABLE_STORAGE_POSITION = 0x3969fad27725f1ed90ce289e31008b0b28af16d6ab387c1b3253de404b8dc79d;
 
+// keccak256('isbe.contracts.erc721.royalty.storage');
+bytes32 constant _ERC721_ROYALTY_STORAGE_POSITION = 0xe78a59431484f3fef1053619e34c03dcd3180e5a68e7f74e0726c4b594d6f743;
+
+// keccak256('isbe.contracts.erc721.consecutive.storage');
+bytes32 constant _ERC721_CONSECUTIVE_STORAGE_POSITION = 0x862b4288cbdf8a7b1161ce9ee0c4bcad401e2b91e048ff96ad0a492a5b5eb7ef;
+
 // keccak256('isbe.contracts.did.document.detailed.storage');
 bytes32 constant _DID_DOCUMENT_DETAILED_STORAGE_POSITION = 0x80e94812a2790226ccf997ec25d285a8dcc6c5b510b98e9845f9905541840650;
 
