@@ -1,7 +1,6 @@
 @startuml
 title Arquitectura de SC ISBE
 
-
 skinparam class {
     BackgroundColor White
     ArrowColor Black
@@ -25,7 +24,6 @@ package "Core" {
     Common --|> Initializable
     Common --|> ERC165Internal
     Common --|> AccessControlInternal
-  
     Common --|> OwnableInternal
     Common --|> PauseInternalCommon
     PauseInternalCommon --|> ISBEContext
@@ -50,7 +48,6 @@ package "ERC721" {
     ERC721 --|> ERC721InternalCommon
     ERC721Internal --|> Common
     ERC721Facet --|> ERC721
-
 
     class IERC721Burnable <<(I,#FFD700) interface>> #FFFFE0
     class ERC721Burnable <<(A,#228B22) contract>> #FFFFE0
@@ -79,7 +76,6 @@ package "ERC721" {
     ERC721InternalCommon --|> ERC721CappedInternal
     ERC721CappedInternal --|> ERC721Internal
 
-
     class IERC721Snapshot <<(I,#FFD700) interface>> #FFFFE0
     class ERC721SnapshotInternal <<(A,#228B22) abstract contract>> #FFFFE0
     class ERC721Snapshot <<(A,#228B22) abstract contract>> #FFFFE0
@@ -90,7 +86,6 @@ package "ERC721" {
     ERC721Snapshot --|> ERC721InternalCommon
     ERC721InternalCommon --|> ERC721SnapshotInternal
     ERC721SnapshotInternal --|> ERC721Internal
-
 
     class IERC721Enumerable <<(I,#FFD700) interface>> #FFFFE0
     class ERC721EnumerableInternal <<(A,#228B22) abstract contract>> #FFFFE0
@@ -124,22 +119,34 @@ package "ERC721" {
     ERC721Consecutive --|> ERC721InternalCommon
     ERC721InternalCommon --|> ERC721ConsecutiveInternal
     ERC721ConsecutiveInternal --|> ERC721Internal
-
 }
 
 ' === ERC3643 ===
 package "ERC3643" {
+    
+    ' --- Regulatory Infrastructure ---
+    class IERC3643Regulatory <<(I,#FFD700) interface>> #FFE4B5
+    class ERC3643RegulatoryInternal <<(A,#228B22) abstract contract>> #FFE4B5
+    class ERC3643Regulatory <<(A,#228B22) abstract contract>> #FFE4B5
+    class ERC3643RegulatoryFacet <<(C,#1E90FF) contract>> #FFE4B5
+
+    ERC3643Regulatory --|> IERC3643Regulatory
+    ERC3643Regulatory --|> ERC3643RegulatoryInternal
+    ERC3643RegulatoryFacet --|> ERC3643Regulatory
+    ERC3643RegulatoryInternal --|> Common
+
+    ' --- Metadata ---
     class IERC3643Metadata <<(I,#FFD700) interface>> #E6E6FA
     class ERC3643MetadataInternal <<(A,#228B22) abstract contract>> #E6E6FA
-    class ERC3643Metadata <<(A,#228B22) contract>> #E6E6FA
+    class ERC3643Metadata <<(A,#228B22) abstract contract>> #E6E6FA
     class ERC3643MetadataFacet <<(C,#1E90FF) contract>> #E6E6FA
 
     ERC3643Metadata --|> IERC3643Metadata 
     ERC3643Metadata --|> ERC3643MetadataInternal 
     ERC3643MetadataFacet --|> ERC3643Metadata 
     ERC3643MetadataInternal --|> ERC20InternalCommon 
-
 }
+
 
 ' === ERC20 ===
 package "ERC20" {
@@ -151,19 +158,19 @@ package "ERC20" {
     class IERC20Controller <<(I,#FFD700) interface>> #FFB6C1
     class IERC20Snapshot <<(I,#FFD700) interface>> #FFB6C1
 
-    class ERC20 <<(A,#228B22) contract>> #FFB6C1
+    class ERC20 <<(A,#228B22) abstract contract>> #FFB6C1
     class ERC20Facet <<(C,#1E90FF) contract>> #FFB6C1
     class ERC20Internal <<(A,#228B22) abstract contract>> #FFB6C1
     class ERC20InternalCommon <<(A,#228B22) abstract contract>> #FFB6C1
 
-    class ERC20Burnable <<(A,#228B22) contract>> #FFB6C1
+    class ERC20Burnable <<(A,#228B22) abstract contract>> #FFB6C1
     class ERC20BurnableFacet <<(C,#1E90FF) contract>> #FFB6C1
 
     class ERC20Capped <<(A,#228B22) abstract contract>> #FFB6C1
     class ERC20CappedFacet <<(C,#1E90FF) contract>> #FFB6C1
     class ERC20CappedInternal <<(A,#228B22) abstract contract>> #FFB6C1
 
-    class ERC20Controller <<(A,#228B22) contract>> #FFB6C1
+    class ERC20Controller <<(A,#228B22) abstract contract>> #FFB6C1
     class ERC20ControllerFacet <<(C,#1E90FF) contract>> #FFB6C1
 
     class ERC20Snapshot <<(A,#228B22) abstract contract>> #FFB6C1
@@ -196,6 +203,5 @@ package "ERC20" {
     ERC20Snapshot --|> ERC20InternalCommon
     ERC20SnapshotFacet --|> ERC20Snapshot
     ERC20SnapshotInternal --|> ERC20Internal
-}
 }
 @enduml
