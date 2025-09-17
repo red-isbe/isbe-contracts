@@ -35,6 +35,26 @@ abstract contract ERC20Internal is Common {
     }
 
     /**
+     * @dev Internal function to update the token name in storage.
+     * Applies the {emptyString} modifier to ensure the input is not an empty string.
+     * @param _newName The new name to assign to the token.
+     */
+    function _setName(string memory _newName) internal {
+        ERC20Storage storage $ = _erc20Storage();
+        $.name = _newName;
+    }
+
+    /**
+     * @dev Internal function to update the token symbol in storage.
+     * Applies the {emptyString} modifier to ensure the input is not an empty string.
+     * @param _newSymbol The new symbol to assign to the token.
+     */
+    function _setSymbol(string memory _newSymbol) internal {
+        ERC20Storage storage $ = _erc20Storage();
+        $.symbol = _newSymbol;
+    }
+
+    /**
      * @dev Moves `amount` of tokens from `from` to `to`.
      *
      * This internal function is equivalent to {transfer}, and can be used to

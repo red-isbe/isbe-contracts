@@ -31,9 +31,27 @@ export const ERC20_CAPPED_RESOLVER_KEY =
 export const ERC20_CONTROLLER_RESOLVER_KEY =
     '0xed76d446b6029b8a177fda4fc38162d9dc0dc29ab636541fd6e75ae60fe17151'
 
+// ERC3643 facets
+export const ERC3643_METADATA_RESOLVER_KEY =
+    '0x8bffaf1ebc4070155b40757cd1d588dd59fcab63cd7007ebf7755f7f60a0c1e1'
+
 // ERC721 facets
 export const ERC721_RESOLVER_KEY =
     '0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413'
+export const ERC721_BURNABLE_RESOLVER_KEY =
+    '0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731'
+export const ERC721_ENUMERABLE_RESOLVER_KEY =
+    '0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5'
+export const ERC721_CAPPED_RESOLVER_KEY =
+    '0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c'
+export const ERC721_CONTROLLER_RESOLVER_KEY =
+    '0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367'
+export const ERC721_SNAPSHOT_RESOLVER_KEY =
+    '0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d'
+export const ERC721_ROYALTY_RESOLVER_KEY =
+    '0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76'
+export const ERC721_CONSECUTIVE_RESOLVER_KEY =
+    '0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4'
 
 // Utility facets
 export const HASH_TIMESTAMP_RESOLVER_KEY =
@@ -62,6 +80,8 @@ export const CONFIGURATION_ID_DID_REGISTRY =
     '0x00000000000000000000000000000000000000004449445F5245474953545259'
 export const CONFIGURATION_ID_HASH_TIMESTAMP =
     '0x56209af0faa47cd136c87cbd8b739b3beb4ac51cbba6ec828e2ae8421365929e'
+export const CONFIGURATION_ID_ERC3643 =
+    '0x0000000000000000000000000000000000000000000000000000000000003643'
 
 // ================================
 // ARTIFACT PATHS - Contract Paths
@@ -82,9 +102,26 @@ export const ARTIFACT_PATHS = {
     ERC20_CAPPED: 'contracts/tokens/erc20/extensions/cap/ERC20CappedFacet.sol',
     ERC20_CONTROLLER:
         'contracts/tokens/erc20/extensions/controller/ERC20ControllerFacet.sol',
+    // ERC3643 facets
+    ERC3643_METADATA:
+        'contracts/tokens/erc3643/token/erc3643metadata/ERC3643MetadataFacet.sol',
 
     // ERC721 facets
     ERC721: 'contracts/tokens/erc721/ERC721Facet.sol',
+    ERC721_BURNABLE:
+        'contracts/tokens/erc721/extension/burn/ERC721BurnableFacet.sol',
+    ERC721_ENUMERABLE:
+        'contracts/tokens/erc721/extension/enumerable/ERC721EnumerableFacet.sol',
+    ERC721_CAPPED:
+        'contracts/tokens/erc721/extension/cap/ERC721CappedFacet.sol',
+    ERC721_CONTROLLER:
+        'contracts/tokens/erc721/extension/controller/ERC721ControllerFacet.sol',
+    ERC721_SNAPSHOT:
+        'contracts/tokens/erc721/extension/snapshot/ERC721SnapshotFacet.sol',
+    ERC721_ROYALTY:
+        'contracts/tokens/erc721/extension/royalty/ERC721RoyaltyFacet.sol',
+    ERC721_CONSECUTIVE:
+        'contracts/tokens/erc721/extension/consecutive/ERC721ConsecutiveFacet.sol',
 
     // Utility facets
     HASH_TIMESTAMP: 'contracts/hashtimestamp/HashTimestampFacet.sol',
@@ -117,8 +154,18 @@ export const CONTRACT_NAMES = {
     ERC20_CAPPED: 'ERC20CappedFacet',
     ERC20_CONTROLLER: 'ERC20ControllerFacet',
 
+    // ERC3643 facets
+    ERC3643_METADATA: 'ERC3643MetadataFacet',
+
     // ERC721 facets
     ERC721: 'ERC721Facet',
+    ERC721_BURNABLE: 'ERC721BurnableFacet',
+    ERC721_ENUMERABLE: 'ERC721EnumerableFacet',
+    ERC721_CAPPED: 'ERC721CappedFacet',
+    ERC721_CONTROLLER: 'ERC721ControllerFacet',
+    ERC721_SNAPSHOT: 'ERC721SnapshotFacet',
+    ERC721_ROYALTY: 'ERC721RoyaltyFacet',
+    ERC721_CONSECUTIVE: 'ERC721ConsecutiveFacet',
 
     // Utility facets
     HASH_TIMESTAMP: 'HashTimestampFacet',
@@ -193,12 +240,62 @@ export const BUSINESS_LOGIC_DEFINITIONS = [
         artifactPath: ARTIFACT_PATHS.ERC20_CONTROLLER,
     },
 
+    // ERC3643 facets
+    {
+        description: 'ERC3643MetadataFacet',
+        key: ERC3643_METADATA_RESOLVER_KEY,
+        contractName: CONTRACT_NAMES.ERC3643_METADATA,
+        artifactPath: ARTIFACT_PATHS.ERC3643_METADATA,
+    },
+
     // ERC721 facets
     {
         description: 'ERC721Facet',
         key: ERC721_RESOLVER_KEY,
         contractName: CONTRACT_NAMES.ERC721,
         artifactPath: ARTIFACT_PATHS.ERC721,
+    },
+    {
+        description: 'ERC721BurnableFacet',
+        key: ERC721_BURNABLE_RESOLVER_KEY,
+        contractName: CONTRACT_NAMES.ERC721_BURNABLE,
+        artifactPath: ARTIFACT_PATHS.ERC721_BURNABLE,
+    },
+    {
+        description: 'ERC721EnumerableFacet',
+        key: ERC721_ENUMERABLE_RESOLVER_KEY,
+        contractName: CONTRACT_NAMES.ERC721_ENUMERABLE,
+        artifactPath: ARTIFACT_PATHS.ERC721_ENUMERABLE,
+    },
+    {
+        description: 'ERC721CappedFacet',
+        key: ERC721_CAPPED_RESOLVER_KEY,
+        contractName: CONTRACT_NAMES.ERC721_CAPPED,
+        artifactPath: ARTIFACT_PATHS.ERC721_CAPPED,
+    },
+    {
+        description: 'ERC721ControllerFacet',
+        key: ERC721_CONTROLLER_RESOLVER_KEY,
+        contractName: CONTRACT_NAMES.ERC721_CONTROLLER,
+        artifactPath: ARTIFACT_PATHS.ERC721_CONTROLLER,
+    },
+    {
+        description: 'ERC721SnapshotFacet',
+        key: ERC721_SNAPSHOT_RESOLVER_KEY,
+        contractName: CONTRACT_NAMES.ERC721_SNAPSHOT,
+        artifactPath: ARTIFACT_PATHS.ERC721_SNAPSHOT,
+    },
+    {
+        description: 'ERC721RoyaltyFacet',
+        key: ERC721_ROYALTY_RESOLVER_KEY,
+        contractName: CONTRACT_NAMES.ERC721_ROYALTY,
+        artifactPath: ARTIFACT_PATHS.ERC721_ROYALTY,
+    },
+    {
+        description: 'ERC721ConsecutiveFacet',
+        key: ERC721_CONSECUTIVE_RESOLVER_KEY,
+        contractName: CONTRACT_NAMES.ERC721_CONSECUTIVE,
+        artifactPath: ARTIFACT_PATHS.ERC721_CONSECUTIVE,
     },
 
     // Utility facets
@@ -266,6 +363,27 @@ export const ERC20_USE_CASE_CONFIG = {
     isOwnable: false,
 } as UseCaseConfig
 
+// ERC3643 configuration
+export const ERC3643_USE_CASE_CONFIG = {
+    description: 'ERC3643 Security Token UseCase',
+    configurationId: CONFIGURATION_ID_ERC3643,
+    type: 'erc3643',
+    businessLogicKeys: [
+        ERC20_SNAPSHOT_RESOLVER_KEY,
+        ERC20_BURNABLE_RESOLVER_KEY,
+        ERC20_CAPPED_RESOLVER_KEY,
+        ERC20_CONTROLLER_RESOLVER_KEY,
+        ERC20_RESOLVER_KEY,
+        ERC3643_METADATA_RESOLVER_KEY,
+    ],
+    versions: Array(6).fill(DEFAULT_VERSION),
+    rbacs: [],
+    initPause: false,
+    initBusinessIds: [],
+    initCallData: [],
+    isOwnable: true,
+} as UseCaseConfig
+
 // DID Registry configuration
 export const DID_REGISTRY_USE_CASE_CONFIG = {
     description: 'DID Registry UseCase',
@@ -289,8 +407,17 @@ export const ERC721_USE_CASE_CONFIG = {
     description: 'ERC721 UseCase',
     configurationId: CONFIGURATION_ID_ERC721,
     type: 'erc721',
-    businessLogicKeys: [ERC721_RESOLVER_KEY],
-    versions: Array(1).fill(DEFAULT_VERSION), // [0, 0]
+    businessLogicKeys: [
+        ERC721_RESOLVER_KEY,
+        ERC721_BURNABLE_RESOLVER_KEY,
+        ERC721_ENUMERABLE_RESOLVER_KEY,
+        ERC721_CAPPED_RESOLVER_KEY,
+        ERC721_CONTROLLER_RESOLVER_KEY,
+        ERC721_SNAPSHOT_RESOLVER_KEY,
+        ERC721_ROYALTY_RESOLVER_KEY,
+        ERC721_CONSECUTIVE_RESOLVER_KEY,
+    ],
+    versions: Array(8).fill(DEFAULT_VERSION),
     rbacs: [],
     initPause: false,
     initBusinessIds: [],
@@ -318,6 +445,7 @@ export const DEFAULT_USE_CASE_CONFIGURATIONS = [
     DID_REGISTRY_USE_CASE_CONFIG,
     ERC721_USE_CASE_CONFIG,
     HASH_TIMESTAMP_USE_CASE_CONFIG,
+    ERC3643_USE_CASE_CONFIG,
 ] as const
 
 // ================================

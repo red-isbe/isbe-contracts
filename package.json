@@ -115,6 +115,6 @@
         "contracts"
     ],
     "dependencies": {
-        "dotenv": "^17.0.1"
+        "dotenv": "^17.2.1"
     }
 }
