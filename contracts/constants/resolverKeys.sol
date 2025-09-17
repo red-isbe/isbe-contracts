@@ -66,8 +66,12 @@ bytes32 constant _PROXY_FACTORY_RESOLVER_KEY = 0x949f2c59318fff1925835e4fd22837f
 // keccak256('isbe.contracts.global.isbe.pausable.resolver.key');
 bytes32 constant _GLOBAL_ISBE_PAUSABLE_RESOLVER_KEY = 0x95abb588e90c3cf7e85016cd7eef6fcbf9073b2a59c113a2f59ef664c86cf3f3;
 
+//ERC3643 ResolverKeys
 // keccak256('isbe.contracts.global.isbe.erc3643.metadata.resolver.key');
 bytes32 constant _ERC3643_METADATA_RESOLVER_KEY = 0x8bffaf1ebc4070155b40757cd1d588dd59fcab63cd7007ebf7755f7f60a0c1e1;
+
+// keccak256('isbe.contracts.global.isbe.erc3643.regulatory.resolver.key');
+bytes32 constant _ERC3643_REGULATORY_RESOLVER_KEY = 0xd611e027d42ed421b59243a309bc0a2854443d4eb7af090fc234b04d3f7f6b65;
 
 //ERC721 ResolverKeys
 // keccak256('isbe.contracts.erc721.burnable.resolver.key');

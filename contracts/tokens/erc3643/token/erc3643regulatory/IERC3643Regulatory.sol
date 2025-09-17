@@ -42,6 +42,18 @@ interface IERC3643Regulatory {
     function setCompliance(address _newCompliance) external;
 
     /**
+     * @notice Initializes the ERC-3643 regulatory references of the token.
+     * @dev Sets the initial IdentityRegistry and Compliance contracts.
+     *      Emits {IdentityRegistryAdded} and {ComplianceAdded} events.
+     * @param _newIdentityRegistry The initial IdentityRegistry contract address. Can be the zero address if not set.
+     * @param _newCompliance The initial Compliance contract address. Can be the zero address if not set.
+     */
+    function initializeERC3643Regulatory(
+        address _newIdentityRegistry,
+        address _newCompliance
+    ) external;
+
+    /**
      *  @dev Returns the Identity Registry linked to the token
      */
     function identityRegistry() external view returns (IIdentityRegistry);
