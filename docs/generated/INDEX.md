@@ -45,6 +45,7 @@
 - [tokens/erc3643/identityregistrystorage/modules](tokens/erc3643/identityregistrystorage/modules.md)
 - [tokens/erc3643/token](tokens/erc3643/token.md)
 - [tokens/erc3643/token/erc3643metadata](tokens/erc3643/token/erc3643metadata.md)
+- [tokens/erc3643/token/erc3643regulatory](tokens/erc3643/token/erc3643regulatory.md)
 - [tokens/erc3643/trustedissuersregistry](tokens/erc3643/trustedissuersregistry.md)
 - [tokens/erc721](tokens/erc721.md)
 - [tokens/erc721/extensions](tokens/erc721/extensions.md)

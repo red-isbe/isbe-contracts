@@ -31,7 +31,9 @@ contract ERC3643RegulatoryFacet is ERC3643Regulatory, IEIP2535Introspection {
     {
         uint256 selectorsLength = 5;
         selectors_ = new bytes4[](selectorsLength);
-        selectors_[--selectorsLength] = this.initializeERC3643Regulatory.selector;
+        selectors_[--selectorsLength] = this
+            .initializeERC3643Regulatory
+            .selector;
         selectors_[--selectorsLength] = this.setIdentityRegistry.selector;
         selectors_[--selectorsLength] = this.setCompliance.selector;
         selectors_[--selectorsLength] = this.identityRegistry.selector;
