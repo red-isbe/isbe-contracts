@@ -2,9 +2,8 @@
 pragma solidity ^0.8.28;
 
 import {Common} from '../../../../core/Common.sol';
-import {IIdentityRegistry} from '../../identityregistry/IIdentityRegistry.sol';
-import {ICompliance} from '../../compliance/ICompliance.sol';
 import {_ERC3643_REGULATORY_STORAGE_POSITION} from '../../../../constants/storagePositions.sol';
+import {ICompliance} from '../../compliance/ICompliance.sol';
 
 /**
  * @title ERC3643RegulatoryInternal
@@ -16,8 +15,8 @@ import {_ERC3643_REGULATORY_STORAGE_POSITION} from '../../../../constants/storag
 abstract contract ERC3643RegulatoryInternal is Common {
     /// @dev Storage structure for ERC-3643 regulatory.
     struct ERC3643RegulatoryStorage {
-        IIdentityRegistry identityRegistry;
-        ICompliance compliance;
+        address identityRegistry;
+        address compliance;
     }
 
     /**
@@ -31,8 +30,8 @@ abstract contract ERC3643RegulatoryInternal is Common {
         address _newCompliance
     ) internal {
         ERC3643RegulatoryStorage storage $ = _erc3643RegulatoryStorage();
-        $.identityRegistry = IIdentityRegistry(_newIdentityRegistry);
-        $.compliance = ICompliance(_newCompliance);
+        $.identityRegistry = _newIdentityRegistry;
+        $.compliance = _newCompliance;
     }
 
     /**
@@ -41,7 +40,7 @@ abstract contract ERC3643RegulatoryInternal is Common {
      */
     function _setIdentityRegistry(address _newIdentityRegistry) internal {
         ERC3643RegulatoryStorage storage $ = _erc3643RegulatoryStorage();
-        $.identityRegistry = IIdentityRegistry(_newIdentityRegistry);
+        $.identityRegistry = _newIdentityRegistry;
     }
 
     /**
@@ -50,14 +49,18 @@ abstract contract ERC3643RegulatoryInternal is Common {
      */
     function _setCompliance(address _newCompliance) internal {
         ERC3643RegulatoryStorage storage $ = _erc3643RegulatoryStorage();
-        $.compliance = ICompliance(_newCompliance);
+        $.compliance = _newCompliance;
+
+        if (_newCompliance != address(0)) {
+            ICompliance(_newCompliance).bindToken(address(this));
+        }
     }
 
     /**
      * @dev Internal view function to retrieve the current Identity Registry contract from storage.
      * @return The Identity Registry contract linked to the token.
      */
-    function _identityRegistry() internal view returns (IIdentityRegistry) {
+    function _identityRegistry() internal view returns (address) {
         return _erc3643RegulatoryStorage().identityRegistry;
     }
 
@@ -65,7 +68,7 @@ abstract contract ERC3643RegulatoryInternal is Common {
      * @dev Internal view function to retrieve the current Compliance contract from storage.
      * @return The Compliance contract linked to the token.
      */
-    function _compliance() internal view returns (ICompliance) {
+    function _compliance() internal view returns (address) {
         return _erc3643RegulatoryStorage().compliance;
     }
 

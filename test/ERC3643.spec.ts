@@ -4,7 +4,7 @@ import { Signer } from 'ethers'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { deployGovernance, CONFIGURATION_ID_ERC3643 } from './initialization'
 import { TOKEN_OWNER_ROLE, PAUSER_ROLE } from './constants'
-import { IToken, AccessControl, ERC20, ISBEPause } from '../typechain-types'
+import { IERC3643, AccessControl, ERC20, ISBEPause } from '../typechain-types'
 
 describe('ERC3643 Token', function () {
     // ====================================================================
@@ -16,7 +16,7 @@ describe('ERC3643 Token', function () {
     let ownerAddress: string
     let otherAccountAddress: string
     let onchainIdAddress: string
-    let token: IToken
+    let token: IERC3643
     let accessControl: AccessControl
     let erc20Facet: ERC20
     let pause: ISBEPause

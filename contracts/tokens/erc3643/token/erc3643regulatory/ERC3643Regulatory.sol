@@ -76,9 +76,7 @@ abstract contract ERC3643Regulatory is IERC3643Regulatory, ERC3643RegulatoryInte
         whenNotPaused
     {
         _setCompliance(_newCompliance);
-        if (_newCompliance != address(0)) {
-            ICompliance(_newCompliance).bindToken(address(this));
-        }
+        
         emit ComplianceAdded(_newCompliance);
     }
 
@@ -87,7 +85,7 @@ abstract contract ERC3643Regulatory is IERC3643Regulatory, ERC3643RegulatoryInte
      * @return The IdentityRegistry contract linked to the token.
      */
     function identityRegistry() external view override returns (IIdentityRegistry) {
-        return _identityRegistry();
+        return IIdentityRegistry(_identityRegistry());
     }
 
     /**
@@ -95,7 +93,7 @@ abstract contract ERC3643Regulatory is IERC3643Regulatory, ERC3643RegulatoryInte
      * @return The Compliance contract linked to the token.
      */
     function compliance() external view override returns (ICompliance) {
-        return _compliance();
+        return ICompliance(_compliance());
     }
 
     /**
