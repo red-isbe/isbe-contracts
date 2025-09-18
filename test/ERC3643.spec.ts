@@ -326,6 +326,19 @@ describe('ERC3643 Token', function () {
                             )
                     ).to.be.reverted
                 })
+
+                it('GIVEN deployed contract WHEN initialize with invalid compliance THEN it fails', async () => {
+                    // Test for coverage: This test ensures coverage of the bindToken call in _setCompliance
+                    // Using a non-contract address (alice) as compliance should fail when attempting to call bindToken
+                    await expect(
+                        token
+                            .connect(owner)
+                            .initializeERC3643Regulatory(
+                                ethers.ZeroAddress,  // identity registry
+                                aliceAddress         // invalid compliance address (EOA)
+                            )
+                    ).to.be.reverted
+                })
             })
 
             describe('Success', () => {
@@ -422,6 +435,14 @@ describe('ERC3643 Token', function () {
 
                     await expect(
                         token.connect(owner).setCompliance(ownerAddress)
+                    ).to.be.reverted
+                })
+
+                it('GIVEN initialized contract WHEN set invalid compliance address THEN it fails', async () => {
+                    // Test for coverage: This test ensures coverage of the bindToken call in _setCompliance
+                    // Using a non-contract address (alice) as compliance should fail when attempting to call bindToken
+                    await expect(
+                        token.connect(owner).setCompliance(aliceAddress)
                     ).to.be.reverted
                 })
             })
