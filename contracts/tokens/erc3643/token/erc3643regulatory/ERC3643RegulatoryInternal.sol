@@ -29,9 +29,8 @@ abstract contract ERC3643RegulatoryInternal is Common {
         address _newIdentityRegistry,
         address _newCompliance
     ) internal {
-        ERC3643RegulatoryStorage storage $ = _erc3643RegulatoryStorage();
-        $.identityRegistry = _newIdentityRegistry;
-        $.compliance = _newCompliance;
+        _setIdentityRegistry(_newIdentityRegistry);
+        _setCompliance(_newCompliance);
     }
 
     /**
