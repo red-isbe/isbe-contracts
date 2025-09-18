@@ -41,6 +41,7 @@ import {
     ERC721ConsecutiveFacet,
     IDidRegistry__factory,
     ERC3643MetadataFacet,
+    ERC3643RegulatoryFacet,
 } from '../typechain-types'
 import {
     DEFAULT_ADMIN_ROLE,
@@ -77,6 +78,7 @@ import {
     DID_VERIFICATION_METHOD_RESOLVER_KEY,
     DID_VERIFICATION_RELATIONSHIP_RESOLVER_KEY,
     ERC3643_METADATA_RESOLVER_KEY,
+    ERC3643_REGULATORY_RESOLVER_KEY,
 } from './constants'
 import { getEvent } from '../scripts/utils/getEvent'
 import { getIsbeFactory } from '../scripts/utils/getIsbeFactory'
@@ -364,6 +366,8 @@ export async function deployGovernance(
         useCaseProxy: useCaseDeployment.proxy,
         erc3643Metadata: useCaseDeployment.erc3643Metadata,
         erc3643MetadataFacet: useCaseDeployment.erc3643MetadataFacet,
+        erc3643Regulatory: useCaseDeployment.erc3643Regulatory,
+        erc3643RegulatoryFacet: useCaseDeployment.erc3643RegulatoryFacet,
     }
 }
 
@@ -940,6 +944,9 @@ export async function deployERC3643UseCasesFacets(
     const ERC3643MetadataFacetFactory = await ethers.getContractFactory(
         'ERC3643MetadataFacet'
     )
+    const ERC3643RegulatoryFacetFactory = await ethers.getContractFactory(
+        'ERC3643RegulatoryFacet'
+    )
     const AssetEventTrackerTestWrapperFactory = await ethers.getContractFactory(
         'AssetEventTrackerTestWrapper'
     )
@@ -1013,6 +1020,11 @@ export async function deployERC3643UseCasesFacets(
         ERC3643MetadataFacetFactory
     )
 
+    const erc3643RegulatoryFacet = await deployBusinessLogicFromFactory(
+        ERC3643_REGULATORY_RESOLVER_KEY,
+        ERC3643RegulatoryFacetFactory
+    )
+
     const assetEventTrackerFacet = await deployBusinessLogicFromFactory(
         ASSET_EVENT_TRACKER_RESOLVER_KEY,
         AssetEventTrackerTestWrapperFactory
@@ -1058,6 +1070,10 @@ export async function deployERC3643UseCasesFacets(
             version: 1,
         },
         {
+            businessId: ERC3643_REGULATORY_RESOLVER_KEY,
+            version: 1,
+        },
+        {
             businessId: ASSET_EVENT_TRACKER_RESOLVER_KEY,
             version: 1,
         },
@@ -1086,6 +1102,9 @@ export async function deployERC3643UseCasesFacets(
     const erc3643Metadata = ERC3643MetadataFacetFactory.attach(
         proxy
     ) as ERC3643MetadataFacet
+    const erc3643Regulatory = ERC3643RegulatoryFacetFactory.attach(
+        proxy
+    ) as ERC3643RegulatoryFacet
     const pause = ISBEPauseFacetFactory.attach(proxy) as ISBEPauseFacet
     const accessControl = AccessControlFacetFactory.attach(
         proxy
@@ -1121,6 +1140,7 @@ export async function deployERC3643UseCasesFacets(
 
     return {
         erc3643Metadata,
+        erc3643Regulatory,
         pause,
         accessControl,
         ownable,
@@ -1136,6 +1156,7 @@ export async function deployERC3643UseCasesFacets(
         mockTimestamp,
         // Raw facet deployments
         erc3643MetadataFacet,
+        erc3643RegulatoryFacet,
         pauseFacet,
         accessControlFacet,
         ownableFacet,

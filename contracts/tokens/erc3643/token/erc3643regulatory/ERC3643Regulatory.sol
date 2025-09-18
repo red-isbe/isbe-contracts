@@ -14,7 +14,10 @@ import {ICompliance} from '../../compliance/ICompliance.sol';
  * @dev Provides public methods to update and retrieve references to IdentityRegistry and Compliance contracts.
  *      Applies access control, validation, and emits events.
  */
-abstract contract ERC3643Regulatory is IERC3643Regulatory, ERC3643RegulatoryInternal {
+abstract contract ERC3643Regulatory is
+    IERC3643Regulatory,
+    ERC3643RegulatoryInternal
+{
     /**
      * @dev Disables further initializations for this facet using its resolver key.
      */
@@ -32,11 +35,7 @@ abstract contract ERC3643Regulatory is IERC3643Regulatory, ERC3643RegulatoryInte
     function initializeERC3643Regulatory(
         address _newIdentityRegistry,
         address _newCompliance
-    )
-        external
-        override
-        initializer(_ERC3643_REGULATORY_RESOLVER_KEY)
-    {
+    ) external override initializer(_ERC3643_REGULATORY_RESOLVER_KEY) {
         _initialize(_newIdentityRegistry, _newCompliance);
         emit IdentityRegistryAdded(_newIdentityRegistry);
         emit ComplianceAdded(_newCompliance);
@@ -50,12 +49,7 @@ abstract contract ERC3643Regulatory is IERC3643Regulatory, ERC3643RegulatoryInte
      */
     function setIdentityRegistry(
         address _newIdentityRegistry
-    )
-        external
-        override
-        onlyRole(_TOKEN_OWNER_ROLE)
-        whenNotPaused
-    {
+    ) external override onlyRole(_TOKEN_OWNER_ROLE) whenNotPaused {
         _setIdentityRegistry(_newIdentityRegistry);
         emit IdentityRegistryAdded(_newIdentityRegistry);
     }
@@ -69,14 +63,9 @@ abstract contract ERC3643Regulatory is IERC3643Regulatory, ERC3643RegulatoryInte
      */
     function setCompliance(
         address _newCompliance
-    )
-        external
-        override
-        onlyRole(_TOKEN_OWNER_ROLE)
-        whenNotPaused
-    {
+    ) external override onlyRole(_TOKEN_OWNER_ROLE) whenNotPaused {
         _setCompliance(_newCompliance);
-        
+
         emit ComplianceAdded(_newCompliance);
     }
 
@@ -84,7 +73,12 @@ abstract contract ERC3643Regulatory is IERC3643Regulatory, ERC3643RegulatoryInte
      * @notice Returns the current IdentityRegistry reference.
      * @return The IdentityRegistry contract linked to the token.
      */
-    function identityRegistry() external view override returns (IIdentityRegistry) {
+    function identityRegistry()
+        external
+        view
+        override
+        returns (IIdentityRegistry)
+    {
         return IIdentityRegistry(_identityRegistry());
     }
 
