@@ -54,4 +54,8 @@ bytes32 constant _ROYALTY_ROLE = 0xe87ed15151829ed3753553fc34d39b49f60370ac439fd
 // keccak256('isbe.contracts.role.token.owner');
 bytes32 constant _TOKEN_OWNER_ROLE = 0x94cfc4e707c237182ee63ac42e9f9e1bcdff703cb2a92c4b5e50c4ae86f7f28d;
 
+// keccak256('isbe.contracts.role.token.agent');
+bytes32 constant _TOKEN_AGENT_ROLE = 0xb6f35cf5493efddae235e307acfda2a4d8b05301dd9562b613d27dd1a7d44af4;
+
+
 // solhint-enable max-line-length

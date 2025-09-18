@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-// solhint-disable-next-line no-empty-blocks
-interface ITokenFreeze {
-    /// events
-
+/**
+ * @title IERC3643Freeze
+ * @notice Interface for freezing and unfreezing addresses and token balances in ERC-3643 tokens.
+ * @dev Defines full address freeze and partial token freeze operations,
+ *      together with read-only inspection functions.
+ */
+interface IERC3643Freeze {
     /**
      *  this event is emitted when the wallet of an investor is frozen or unfrozen
      *  the event is emitted by setAddressFrozen and batchSetAddressFrozen functions
@@ -14,11 +17,7 @@ interface ITokenFreeze {
      *  if `_isFrozen` equals `false` the wallet is unfrozen after emission of the event
      *  `_owner` is the address of the agent who called the function to freeze the wallet
      */
-    event AddressFrozen(
-        address indexed _userAddress,
-        bool indexed _isFrozen,
-        address indexed _owner
-    );
+    event AddressFrozen(address indexed _userAddress, bool indexed _isFrozen, address indexed _owner);
 
     /**
      *  this event is emitted when a certain amount of tokens is frozen on a wallet
@@ -36,8 +35,6 @@ interface ITokenFreeze {
      */
     event TokensUnfrozen(address indexed _userAddress, uint256 _amount);
 
-    /// functions
-
     /**
      *  @dev sets an address frozen status for this token.
      *  @param _userAddress The address for which to update frozen status
@@ -54,10 +51,7 @@ interface ITokenFreeze {
      *  This function can only be called by a wallet set as agent of the token
      *  emits a `TokensFrozen` event
      */
-    function freezePartialTokens(
-        address _userAddress,
-        uint256 _amount
-    ) external;
+    function freezePartialTokens(address _userAddress, uint256 _amount) external;
 
     /**
      *  @dev unfreezes token amount specified for given address
@@ -66,10 +60,7 @@ interface ITokenFreeze {
      *  This function can only be called by a wallet set as agent of the token
      *  emits a `TokensUnfrozen` event
      */
-    function unfreezePartialTokens(
-        address _userAddress,
-        uint256 _amount
-    ) external;
+    function unfreezePartialTokens(address _userAddress, uint256 _amount) external;
 
     /**
      *  @dev Returns the freezing status of a wallet
@@ -86,7 +77,5 @@ interface ITokenFreeze {
      *  the amount of frozen tokens is always <= to the total balance of the wallet
      *  @param _userAddress the address of the wallet on which getFrozenTokens is called
      */
-    function getFrozenTokens(
-        address _userAddress
-    ) external view returns (uint256);
+    function getFrozenTokens(address _userAddress) external view returns (uint256);
 }
