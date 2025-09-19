@@ -45,6 +45,7 @@ import './tasks/deployTest'
 import './tasks/deployAll'
 import './tasks/extract/byteCode'
 import './tasks/extract/StorageSlots'
+import './tasks/genesisGeneration'
 
 import { randomBytes } from 'crypto'
 
