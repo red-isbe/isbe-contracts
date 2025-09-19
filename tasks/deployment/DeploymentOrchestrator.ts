@@ -68,14 +68,50 @@ export class DeploymentOrchestrator {
     }
 
     private async initializeSigner(): Promise<void> {
-        const signers = await this.hre.ethers.getSigners()
-        if (signers.length === 0) {
-            throw new Error('No signers available')
-        }
+        // Check if this is a secp256r1 network and use appropriate signer
+        const networkConfig = this.hre.config.networks[
+            this.hre.network.name
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ] as any
 
-        this.signer = signers[0]
-        const address = await this.signer.getAddress()
-        console.log(`🔐 Using signer: ${address}`)
+        if (
+            networkConfig.curve === 'secp256r1' &&
+            networkConfig.secp256r1Accounts
+        ) {
+            // Use secp256r1 account from network configuration
+            const secp256r1Account = networkConfig.secp256r1Accounts[0]
+            const privateKey = secp256r1Account.privateKey.startsWith('0x')
+                ? secp256r1Account.privateKey
+                : '0x' + secp256r1Account.privateKey
+
+            // Create wallet from private key and connect to provider
+            this.signer = new this.hre.ethers.Wallet(
+                privateKey,
+                this.hre.ethers.provider
+            )
+
+            const address = await this.signer.getAddress()
+            console.log(`🔐 Using secp256r1 signer: ${address}`)
+
+            // For secp256r1 networks, the governance address (secp256r1-derived) differs from signer address (secp256k1-derived)
+            // This is expected and normal - we use secp256k1 signing with secp256r1-derived addresses
+            console.log(
+                `📍 Governance account configured as: ${this.config.governance.accountAddress}`
+            )
+            console.log(
+                `🔑 Signing with Ethereum-compatible address: ${address}`
+            )
+        } else {
+            // Use standard Hardhat signers for secp256k1 networks
+            const signers = await this.hre.ethers.getSigners()
+            if (signers.length === 0) {
+                throw new Error('No signers available')
+            }
+
+            this.signer = signers[0]
+            const address = await this.signer.getAddress()
+            console.log(`🔐 Using signer: ${address}`)
+        }
     }
 
     private async deployGovernance(result: DeploymentResult): Promise<void> {

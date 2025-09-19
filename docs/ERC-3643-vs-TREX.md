@@ -10,15 +10,15 @@ It extends ERC‑20 functionality and leverages additional interfaces for **iden
 
 ERC‑3643 organizes the system into specialized modules:
 
-| **Component** | **Purpose** |
-|---------------|-------------|
-| **Token (`IERC3643`)** | ERC‑20-compatible fungible token extended with compliance hooks, freezing, recovery, forced transfers, pausing, and batch operations. |
-| **Compliance (`ICompliance`)** | A modular rule engine that evaluates transfers in real time (`canTransfer`). Custom logic can be plugged per token. |
-| **Identity Registry (`IIdentityRegistry`)** | Links wallets to verified on-chain identities and checks if they satisfy required claims. |
-| **Identity (`IIdentity`)** | On-chain identity contract (ERC‑734/735) holding signed claims (e.g. KYC passed, jurisdiction, investor status). |
-| **Claim Topics Registry** | Lists required identity attributes (KYC, accredited, AML, etc.). |
-| **Trusted Issuers Registry** | Maintains a list of entities authorized to issue valid claims. |
-| **Governance (Owner & Agents)** | Role separation: Owner has strategic control; Agents execute operational functions (mint, freeze, etc.). |
+| **Component**                               | **Purpose**                                                                                                                           |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| **Token (`IERC3643`)**                      | ERC‑20-compatible fungible token extended with compliance hooks, freezing, recovery, forced transfers, pausing, and batch operations. |
+| **Compliance (`ICompliance`)**              | A modular rule engine that evaluates transfers in real time (`canTransfer`). Custom logic can be plugged per token.                   |
+| **Identity Registry (`IIdentityRegistry`)** | Links wallets to verified on-chain identities and checks if they satisfy required claims.                                             |
+| **Identity (`IIdentity`)**                  | On-chain identity contract (ERC‑734/735) holding signed claims (e.g. KYC passed, jurisdiction, investor status).                      |
+| **Claim Topics Registry**                   | Lists required identity attributes (KYC, accredited, AML, etc.).                                                                      |
+| **Trusted Issuers Registry**                | Maintains a list of entities authorized to issue valid claims.                                                                        |
+| **Governance (Owner & Agents)**             | Role separation: Owner has strategic control; Agents execute operational functions (mint, freeze, etc.).                              |
 
 ---
 
@@ -51,9 +51,9 @@ Entities in ERC‑3643 go through a regulated onboarding process:
 
 Governance is handled via two roles:
 
-| **Role** | **Responsibilities** |
-|----------|----------------------|
-| **Owner** | Defined via EIP‑173. Can assign agents, upgrade contract logic, configure registries. |
+| **Role**  | **Responsibilities**                                                                                        |
+| --------- | ----------------------------------------------------------------------------------------------------------- |
+| **Owner** | Defined via EIP‑173. Can assign agents, upgrade contract logic, configure registries.                       |
 | **Agent** | Operational role (EOA or contract). Executes tasks like minting, burning, freezing, registering identities. |
 
 Permissions are granted per contract via the `IAgentRole` interface. Owners retain full authority and can revoke agents instantly (`removeAgent`).
@@ -96,16 +96,16 @@ Each layer plays a specific role:
 
 ## 2.2 Interface Summary
 
-| **Interface** | **Source** | **Description** |
-|---------------|------------|-----------------|
-| `IERC3643` | [`IERC3643.sol`](https://github.com/ERC-3643/ERCs/blob/master/assets/erc-3643/interfaces/IERC3643.sol) | ERC‑20-compatible token with compliance, batch, pause, recovery, forced transfer, etc. |
-| `ICompliance` | [`ICompliance.sol`](https://github.com/ERC-3643/ERCs/blob/master/assets/erc-3643/interfaces/ICompliance.sol) | Implements `canTransfer`; hooks into transfer lifecycle. |
-| `IIdentityRegistry` | [`IIdentityRegistry.sol`](https://github.com/ERC-3643/ERCs/blob/master/assets/erc-3643/interfaces/IIdentityRegistry.sol) | Verifies wallet–identity mapping and required claims. |
-| `IIdentity` | [`IIdentity.sol`](https://github.com/ERC-3643/ERCs/blob/master/assets/erc-3643/interfaces/IIdentity.sol) | On-chain identity contract (ERC‑734/735); holds signed claims. |
-| `IIdentityRegistryStorage` | [`IIdentityRegistryStorage.sol`](https://github.com/ERC-3643/ERCs/blob/master/assets/erc-3643/interfaces/IIdentityRegistryStorage.sol) | Stores wallet–identity relations. |
-| `IClaimTopicsRegistry` | [`IClaimTopicsRegistry.sol`](https://github.com/ERC-3643/ERCs/blob/master/assets/erc-3643/interfaces/IClaimTopicsRegistry.sol) | Lists required identity claims. |
-| `ITrustedIssuersRegistry` | [`ITrustedIssuersRegistry.sol`](https://github.com/ERC-3643/ERCs/blob/master/assets/erc-3643/interfaces/ITrustedIssuersRegistry.sol) | Maintains list of trusted KYC/claim issuers. |
-| `IAgentRole` | [`IAgentRole.sol`](https://github.com/ERC-3643/ERCs/blob/master/assets/erc-3643/interfaces/IAgentRole.sol) | Grants/revokes agent permissions. |
+| **Interface**              | **Source**                                                                                                                             | **Description**                                                                        |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `IERC3643`                 | [`IERC3643.sol`](https://github.com/ERC-3643/ERCs/blob/master/assets/erc-3643/interfaces/IERC3643.sol)                                 | ERC‑20-compatible token with compliance, batch, pause, recovery, forced transfer, etc. |
+| `ICompliance`              | [`ICompliance.sol`](https://github.com/ERC-3643/ERCs/blob/master/assets/erc-3643/interfaces/ICompliance.sol)                           | Implements `canTransfer`; hooks into transfer lifecycle.                               |
+| `IIdentityRegistry`        | [`IIdentityRegistry.sol`](https://github.com/ERC-3643/ERCs/blob/master/assets/erc-3643/interfaces/IIdentityRegistry.sol)               | Verifies wallet–identity mapping and required claims.                                  |
+| `IIdentity`                | [`IIdentity.sol`](https://github.com/ERC-3643/ERCs/blob/master/assets/erc-3643/interfaces/IIdentity.sol)                               | On-chain identity contract (ERC‑734/735); holds signed claims.                         |
+| `IIdentityRegistryStorage` | [`IIdentityRegistryStorage.sol`](https://github.com/ERC-3643/ERCs/blob/master/assets/erc-3643/interfaces/IIdentityRegistryStorage.sol) | Stores wallet–identity relations.                                                      |
+| `IClaimTopicsRegistry`     | [`IClaimTopicsRegistry.sol`](https://github.com/ERC-3643/ERCs/blob/master/assets/erc-3643/interfaces/IClaimTopicsRegistry.sol)         | Lists required identity claims.                                                        |
+| `ITrustedIssuersRegistry`  | [`ITrustedIssuersRegistry.sol`](https://github.com/ERC-3643/ERCs/blob/master/assets/erc-3643/interfaces/ITrustedIssuersRegistry.sol)   | Maintains list of trusted KYC/claim issuers.                                           |
+| `IAgentRole`               | [`IAgentRole.sol`](https://github.com/ERC-3643/ERCs/blob/master/assets/erc-3643/interfaces/IAgentRole.sol)                             | Grants/revokes agent permissions.                                                      |
 
 ---
 
@@ -113,17 +113,17 @@ Each layer plays a specific role:
 
 The ERC‑3643 specification mandates that any conforming token must implement the following features:
 
-| **Requirement** | **Interfaces** | **Key Methods** |
-|------------------|----------------|------------------|
-| ERC‑20 compatibility | `IERC3643` | `transfer`, `balanceOf`, etc. |
-| Compliance enforcement | `ICompliance` | `canTransfer`, `transferred`, `created`, `destroyed` |
-| On-chain identity system | `IIdentityRegistry`, `IIdentity` | `isVerified`, `identity()` |
-| Freezing and pause | `IERC3643` | `setAddressFrozen`, `pause`, `unpause` |
-| Mint & burn | `IERC3643` | `mint`, `burn` |
-| Recovery | `IERC3643` | `recoveryAddress` |
-| Forced transfers | `IERC3643` | `forcedTransfer` |
-| Batch operations | `IERC3643` | `batchMint`, `batchTransfer` |
-| Owner/Agent role system | `IAgentRole` | `addAgent`, `removeAgent`, `isAgent` |
+| **Requirement**          | **Interfaces**                   | **Key Methods**                                      |
+| ------------------------ | -------------------------------- | ---------------------------------------------------- |
+| ERC‑20 compatibility     | `IERC3643`                       | `transfer`, `balanceOf`, etc.                        |
+| Compliance enforcement   | `ICompliance`                    | `canTransfer`, `transferred`, `created`, `destroyed` |
+| On-chain identity system | `IIdentityRegistry`, `IIdentity` | `isVerified`, `identity()`                           |
+| Freezing and pause       | `IERC3643`                       | `setAddressFrozen`, `pause`, `unpause`               |
+| Mint & burn              | `IERC3643`                       | `mint`, `burn`                                       |
+| Recovery                 | `IERC3643`                       | `recoveryAddress`                                    |
+| Forced transfers         | `IERC3643`                       | `forcedTransfer`                                     |
+| Batch operations         | `IERC3643`                       | `batchMint`, `batchTransfer`                         |
+| Owner/Agent role system  | `IAgentRole`                     | `addAgent`, `removeAgent`, `isAgent`                 |
 
 All requirements are detailed in the [ERC‑3643 specification](https://github.com/ERC-3643/ERCs/blob/master/ERCS/erc-3643.md).
 
@@ -139,7 +139,6 @@ Governance is enforced through a combination of:
 Each contract (token, compliance, registry) enforces role validation independently. Agents can be revoked without contract redeployment, enabling secure delegation.
 
 ![](./diagrams/ERC-3643/erc3643_governance_model.png)
-
 
 # 3. ERC‑3643 Reference Implementation
 
@@ -204,10 +203,10 @@ Deployment is handled by a **factory contract** that orchestrates the creation o
 
 1. Issuer invokes the factory with config parameters.
 2. Proxy contracts are deployed using CREATE2.
-3. All components are interconnected:  
-   - Token ↔ IdentityRegistry ↔ Compliance  
-   - Compliance ↔ Rules  
-   - Registries ↔ ONCHAINID
+3. All components are interconnected:
+    - Token ↔ IdentityRegistry ↔ Compliance
+    - Compliance ↔ Rules
+    - Registries ↔ ONCHAINID
 4. Ownership and agent roles are configured.
 5. The entire system is handed over to the issuer.
 
@@ -231,28 +230,27 @@ The implementation adopts a **centralized upgrade model** using an `Implementati
 
 There are typically two main authorities:
 
-| **Authority** | **Controls** |
-|---------------|--------------|
-| `ERC3643ImplementationAuthority` | Token, Compliance, Registries |
-| `IdentityImplementationAuthority` | ONCHAINID contracts |
+| **Authority**                     | **Controls**                  |
+| --------------------------------- | ----------------------------- |
+| `ERC3643ImplementationAuthority`  | Token, Compliance, Registries |
+| `IdentityImplementationAuthority` | ONCHAINID contracts           |
 
 ### Benefits:
 
-- Seamless upgrades without redeploying proxies  
-- Shared versions across multiple deployments  
-- Issuer-level isolation for governance or upgrades  
-- Option to transfer or lock the authority post-deployment  
+- Seamless upgrades without redeploying proxies
+- Shared versions across multiple deployments
+- Issuer-level isolation for governance or upgrades
+- Option to transfer or lock the authority post-deployment
 
 ![](./diagrams/ERC-3643/erc3643_implementation_authority.png)
 
-*Figure: ERC‑3643 Implementation Authority structure*
+_Figure: ERC‑3643 Implementation Authority structure_
 
 &nbsp;
 
 ![](./diagrams/ERC-3643/onchainid_implementation_authority.png)
 
-*Figure: ONCHAINID Implementation Authority structure*
-
+_Figure: ONCHAINID Implementation Authority structure_
 
 ---
 
