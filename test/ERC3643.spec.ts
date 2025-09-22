@@ -24,6 +24,15 @@ describe('ERC3643 Token', function () {
     const version = '3.0.0'
     const emptyString = ''
 
+    // Mocks pending to refactor to use mock contracts
+    let mockOnChainID: Signer
+    let mockCompliance: Signer
+    let mockIdentityRegistry: Signer
+    let mockOnChainIDAddress: string
+    let mockComplianceAddress: string
+    let mockIdentityRegistryAddress: string
+    
+
     // ====================================================================
     // HELPER FUNCTIONS
     // ====================================================================
@@ -43,13 +52,19 @@ describe('ERC3643 Token', function () {
     // ====================================================================
     // COMMON FIXTURES
     // ====================================================================
-    async function deployInitial() {
+    async function deployInitialConfiguration() {
         const signers = await ethers.getSigners()
         owner = signers[0] as unknown as Signer
         alice = signers[1] as unknown as Signer
+        mockOnChainID = signers[2] as unknown as Signer
+        mockCompliance = signers[3] as unknown as Signer
+        mockIdentityRegistry = signers[4] as unknown as Signer
 
         ownerAddress = await owner.getAddress()
         aliceAddress = await alice.getAddress()
+        mockOnChainIDAddress = await mockOnChainID.getAddress()
+        mockComplianceAddress = await mockCompliance.getAddress()
+        mockIdentityRegistryAddress = await mockIdentityRegistry.getAddress()
 
         const result = await deployGovernance(
             owner,
@@ -77,45 +92,38 @@ describe('ERC3643 Token', function () {
         erc3643RegulatoryFacet = result.erc3643Regulatory
     }
 
-    // Basic ERC20 + Role setup
-    async function deployWithBasicSetup() {
-        await loadFixture(deployInitial)
-        
-        await erc20Facet.initializeErc20('Test ERC3643 Token', 'T3643', 18)
+    beforeEach(async () => {
+        await loadFixture(deployInitialConfiguration)
         await accessControlFacet.grantRole(TOKEN_OWNER_ROLE, ownerAddress)
+    })
+
+    // Initialization of modules
+    async function initERC20() {
+        await erc20Facet.initializeErc20('Test ERC3643 Token', 'T3643', 18)
     }
 
     // Basic setup + Metadata module initialized
-    async function deployWithMetadataModule() {
-        await deployWithBasicSetup()
-        
-        await erc3643.connect(owner).initializeERC3643Metadata(ownerAddress, version)
+    async function initERC3643MetadataEmptyOnchainId() {       
+        await erc3643.connect(owner).initializeERC3643Metadata(ZeroAddress, version)
     }
 
-    // Basic setup + Both modules initialized (configurable regulatory params)
-    async function deployWithBothModules(identityRegistry = aliceAddress, compliance = ethers.ZeroAddress) {
-        await deployWithBasicSetup()
-        
-        // Initialize both modules sequentially
-        await erc3643.connect(owner).initializeERC3643Metadata(ownerAddress, version)
-        await erc3643.connect(owner).initializeERC3643Regulatory(identityRegistry, compliance)
+    async function initERC3643MetadataFullOnchainId() {       
+        await erc3643.connect(owner).initializeERC3643Metadata(mockOnChainID, version)
     }
 
-    // Basic setup + Metadata + Empty Regulatory (for testing regulatory functions)
-    async function deployWithEmptyRegulatoryModule() {
-        return deployWithBothModules(ZeroAddress, ZeroAddress)
+    async function initERC3643RegulatoryEmptyReferences() {       
+        await erc3643.connect(owner).initializeERC3643Regulatory(ZeroAddress, ZeroAddress)
     }
+
+    async function initERC3643RegulatoryFullReferences() {       
+        await erc3643.connect(owner).initializeERC3643Regulatory(mockIdentityRegistry, mockCompliance)
+    }
+
+
+
 
     describe('ERC3643Metadata Module', () => {
-        beforeEach(async () => {
-            await loadFixture(deployInitial)
-        })
-
         describe('initializeERC3643Metadata', () => {
-            beforeEach(async () => {
-                await loadFixture(deployWithBasicSetup)
-            })
-
             describe('Failures', () => {
                 it('GIVEN deployed contract WHEN try to initialize with empty version THEN it fails', async () => {
                     await expect(
@@ -161,11 +169,14 @@ describe('ERC3643 Token', function () {
         })
 
         describe('setOnchainID', () => {
+
             beforeEach(async () => {
-                await loadFixture(deployWithMetadataModule)
+                await loadFixture(initERC3643MetadataEmptyOnchainId)
             })
 
             describe('Failures', () => {
+
+
                 it('GIVEN initialized contract WHEN try to set zero address THEN it fails', async () => {
                     await expect(erc3643.connect(owner).setOnchainID(ZeroAddress))
                         .to.be.reverted
@@ -199,7 +210,7 @@ describe('ERC3643 Token', function () {
 
         describe('setName', () => {
             beforeEach(async () => {
-                await loadFixture(deployWithMetadataModule)
+                await loadFixture(initERC20)
             })
 
             describe('Failures', () => {
@@ -235,7 +246,7 @@ describe('ERC3643 Token', function () {
 
         describe('setSymbol', () => {
             beforeEach(async () => {
-                await loadFixture(deployWithMetadataModule)
+                await loadFixture(initERC20)
             })
 
             describe('Failures', () => {
@@ -271,7 +282,7 @@ describe('ERC3643 Token', function () {
 
         describe('View Functions', () => {
             beforeEach(async () => {
-                await loadFixture(deployWithMetadataModule)
+                await loadFixture(initERC3643MetadataFullOnchainId)
             })
 
             describe('Success', () => {
@@ -280,7 +291,7 @@ describe('ERC3643 Token', function () {
                 })
 
                 it('GIVEN initialized contract WHEN checking onchainID THEN it success', async () => {
-                    expect(await erc3643.onchainID()).to.equal(ownerAddress)
+                    expect(await erc3643.onchainID()).to.equal(mockOnChainIDAddress)
                 })
 
                 it('GIVEN deployed contract WHEN checking deployment THEN it success', async () => {
@@ -291,14 +302,7 @@ describe('ERC3643 Token', function () {
     })
 
     describe('ERC3643Regulatory Module', () => {
-        beforeEach(async () => {
-            await loadFixture(deployInitial)
-        })
-
         describe('initializeERC3643Regulatory', () => {
-            beforeEach(async () => {
-                await loadFixture(deployWithMetadataModule)
-            })
 
             describe('Failures', () => {
                 it('GIVEN deployed contract WHEN try to initialize twice THEN it fails', async () => {
@@ -312,21 +316,20 @@ describe('ERC3643 Token', function () {
                         erc3643
                             .connect(owner)
                             .initializeERC3643Regulatory(
-                                ownerAddress,
-                                ownerAddress
+                                mockIdentityRegistry,
+                                mockCompliance
                             )
                     ).to.be.reverted
                 })
 
                 it('GIVEN deployed contract WHEN initialize with invalid compliance THEN it fails', async () => {
                     // Test for coverage: This test ensures coverage of the bindToken call in _setCompliance
-                    // Using a non-contract address (alice) as compliance should fail when attempting to call bindToken
                     await expect(
                         erc3643
                             .connect(owner)
                             .initializeERC3643Regulatory(
                                 ethers.ZeroAddress,  // identity registry
-                                aliceAddress         // invalid compliance address (EOA)
+                                mockCompliance         // invalid compliance address
                             )
                     ).to.be.reverted
                 })
@@ -369,7 +372,7 @@ describe('ERC3643 Token', function () {
 
         describe('setIdentityRegistry', () => {
             beforeEach(async () => {
-                await loadFixture(deployWithEmptyRegulatoryModule)
+                await loadFixture(initERC3643RegulatoryEmptyReferences)
             })
 
             describe('Failures', () => {
@@ -411,7 +414,7 @@ describe('ERC3643 Token', function () {
 
         describe('setCompliance', () => {
             beforeEach(async () => {
-                await loadFixture(deployWithEmptyRegulatoryModule)
+                await loadFixture(initERC3643RegulatoryEmptyReferences)
             })
 
             describe('Failures', () => {
@@ -433,7 +436,7 @@ describe('ERC3643 Token', function () {
                     // Test for coverage: This test ensures coverage of the bindToken call in _setCompliance
                     // Using a non-contract address (alice) as compliance should fail when attempting to call bindToken
                     await expect(
-                        erc3643.connect(owner).setCompliance(aliceAddress)
+                        erc3643.connect(owner).setCompliance(mockCompliance)
                     ).to.be.reverted
                 })
             })
@@ -461,13 +464,13 @@ describe('ERC3643 Token', function () {
 
         describe('View Functions', () => {
             beforeEach(async () => {
-                await loadFixture(deployWithBothModules)
+                await loadFixture(initERC3643RegulatoryEmptyReferences)
             })
 
             describe('Success', () => {
                 it('GIVEN initialized contract WHEN checking identityRegistry THEN it success', async () => {
                     expect(await erc3643.identityRegistry()).to.equal(
-                        aliceAddress
+                        ethers.ZeroAddress
                     )
                 })
 
@@ -490,20 +493,24 @@ describe('ERC3643 Token', function () {
 
         describe('Integration Tests', () => {
             beforeEach(async () => {
-                await loadFixture(deployWithBothModules)
+                await loadFixture(initERC3643RegulatoryEmptyReferences)
             })
 
             describe('Success', () => {
                 it('GIVEN fully initialized contract WHEN checking all modules THEN it success', async () => {
+                    // Initialize ERC20 module
+                    await initERC20()
+                    // Initialize Metadata module
+                    await initERC3643MetadataFullOnchainId()
                     // Metadata module functions work
                     expect(await erc3643.version()).to.equal(version)
                     expect(await erc3643.name()).to.equal('Test ERC3643 Token')
                     expect(await erc3643.symbol()).to.equal('T3643')
-                    expect(await erc3643.onchainID()).to.equal(ownerAddress)
+                    expect(await erc3643.onchainID()).to.equal(mockOnChainIDAddress)
 
                     // Regulatory module functions work
                     expect(await erc3643.identityRegistry()).to.equal(
-                        aliceAddress
+                        ethers.ZeroAddress
                     )
                     expect(await erc3643.compliance()).to.equal(
                         ethers.ZeroAddress
