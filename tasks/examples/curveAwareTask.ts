@@ -1,7 +1,12 @@
 // tasks/examples/curveAwareTask.ts
 import { task } from 'hardhat/config'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
-import { isSecp256r1Network, logNetworkInfo } from '../../utils/networkUtils'
+import { logNetworkInfo, isSecp256r1Network } from '../../utils/networkUtils'
+import { NetworkConfigWithCurve } from '../../types/hardhat'
+
+interface TaskArgs {
+    contract: string
+}
 
 /**
  * Example task that can work with both secp256k1 and secp256r1 networks
@@ -32,8 +37,7 @@ task('curve-aware-deploy', 'Deploy contract with curve-aware configuration')
  * Deploy using standard secp256k1 (Ethereum-compatible) approach
  */
 async function deployWithSecp256k1(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    taskArgs: any,
+    taskArgs: TaskArgs,
     hre: HardhatRuntimeEnvironment
 ) {
     console.log('Using secp256k1 deployment...')
@@ -59,8 +63,7 @@ async function deployWithSecp256k1(
  * Deploy using secp256r1 approach (custom implementation required)
  */
 async function deployWithSecp256r1(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    taskArgs: any,
+    taskArgs: TaskArgs,
     hre: HardhatRuntimeEnvironment
 ) {
     console.log('Using secp256r1 deployment...')
@@ -94,14 +97,14 @@ async function deployWithSecp256r1(
  * Simulate secp256r1 deployment with actual account information
  */
 async function simulateSecp256r1Deployment(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    taskArgs: any,
+    taskArgs: TaskArgs,
     hre: HardhatRuntimeEnvironment
 ) {
     console.log('Simulating secp256r1 deployment...')
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const networkConfig = hre.config.networks[hre.network.name] as any
+    const networkConfig = hre.config.networks[
+        hre.network.name
+    ] as NetworkConfigWithCurve
     console.log('Target network URL:', networkConfig.url)
     console.log('Target chain ID:', networkConfig.chainId)
     console.log('')

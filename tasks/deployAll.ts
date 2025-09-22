@@ -2,8 +2,9 @@ import { task } from 'hardhat/config'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeploymentOrchestrator } from './deployment/DeploymentOrchestrator'
 import { DeploymentConfig } from './deployment/config/DeploymentConfig'
+import { logNetworkInfo, isSecp256r1Network } from '../utils/networkUtils'
 import { PreCommitValidator } from './validation/PreCommitValidator'
-import { isSecp256r1Network, logNetworkInfo } from '../utils/networkUtils'
+import { NetworkConfigWithCurve } from '../types/hardhat'
 
 interface TaskArgs {
     precommit?: boolean
@@ -159,8 +160,9 @@ async function deployAllWithSecp256r1(
 ) {
     console.log('Using secp256r1 real deployment strategy...')
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const networkConfig = hre.config.networks[hre.network.name] as any
+    const networkConfig = hre.config.networks[
+        hre.network.name
+    ] as NetworkConfigWithCurve
 
     // Check if we have secp256r1 accounts available
     if (

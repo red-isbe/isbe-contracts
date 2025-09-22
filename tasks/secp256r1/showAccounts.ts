@@ -11,6 +11,7 @@ import {
 } from '../../utils/secp256r1Utils'
 import { writeFileSync } from 'fs'
 import { join } from 'path'
+import { NetworkConfigWithCurve } from '../../types/hardhat'
 
 /**
  * Task to display secp256r1 account information for customR1Network
@@ -35,8 +36,9 @@ task('show-secp256r1-accounts', 'Display secp256r1 account addresses and keys')
         }
 
         // Get network configuration
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const networkConfig = hre.config.networks[hre.network.name] as any
+        const networkConfig = hre.config.networks[
+            hre.network.name
+        ] as NetworkConfigWithCurve
 
         if (!networkConfig.secp256r1Accounts) {
             console.error(

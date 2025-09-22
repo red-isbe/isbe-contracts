@@ -1,21 +1,10 @@
 // utils/networkUtils.ts
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
-
-export type EllipticCurve = 'secp256k1' | 'secp256r1'
-
-export interface NetworkCurveInfo {
-    networkName: string
-    curve: EllipticCurve
-    chainId?: number
-    url?: string
-}
-
-interface NetworkConfigWithCurve {
-    curve?: EllipticCurve
-    chainId?: number
-    url?: string
-    [key: string]: unknown
-}
+import {
+    EllipticCurve,
+    NetworkConfigWithCurve,
+    NetworkCurveInfo,
+} from '../types/hardhat'
 
 /**
  * Get the elliptic curve used by the current network

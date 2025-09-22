@@ -2,6 +2,7 @@
 import { task } from 'hardhat/config'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { getNetworkCurveInfo } from '../../utils/networkUtils'
+import { NetworkConfigWithCurve } from '../../types/hardhat'
 
 /**
  * Task to analyze governance roles and permissions
@@ -42,8 +43,9 @@ task('governance-roles', 'Analyze governance roles and permissions')
             console.log('')
 
             // Get network configuration
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const networkConfig = hre.config.networks[hre.network.name] as any
+            const networkConfig = hre.config.networks[
+                hre.network.name
+            ] as NetworkConfigWithCurve
             const accounts =
                 curveInfo.curve === 'secp256r1'
                     ? networkConfig.secp256r1Accounts || []

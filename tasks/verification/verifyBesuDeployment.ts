@@ -2,6 +2,7 @@
 import { task } from 'hardhat/config'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { getNetworkCurveInfo } from '../../utils/networkUtils'
+import { NetworkConfigWithCurve } from '../../types/hardhat'
 
 /**
  * Task to verify successful deployment on Hyperledger Besu secp256r1 network
@@ -44,8 +45,9 @@ task(
             console.log(`   ✅ Current block number: ${blockNumber}`)
 
             // Get network configuration
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const networkConfig = hre.config.networks[hre.network.name] as any
+            const networkConfig = hre.config.networks[
+                hre.network.name
+            ] as NetworkConfigWithCurve
             const secp256r1Accounts = networkConfig.secp256r1Accounts || []
 
             console.log('')

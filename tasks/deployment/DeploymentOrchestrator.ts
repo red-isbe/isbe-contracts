@@ -7,6 +7,7 @@ import { UseCaseDeployer } from './deployers/UseCaseDeployer'
 import { DeploymentValidator } from './validators/DeploymentValidator'
 import { DeploymentResult, DeploymentOptions } from './types/DeploymentTypes'
 import { DeploymentTableRenderer } from './utils/DeploymentTableRenderer'
+import { NetworkConfigWithCurve } from '../../types/hardhat'
 
 /**
  * Main orchestrator that coordinates the entire deployment process
@@ -71,8 +72,7 @@ export class DeploymentOrchestrator {
         // Check if this is a secp256r1 network and use appropriate signer
         const networkConfig = this.hre.config.networks[
             this.hre.network.name
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ] as any
+        ] as NetworkConfigWithCurve
 
         if (
             networkConfig.curve === 'secp256r1' &&

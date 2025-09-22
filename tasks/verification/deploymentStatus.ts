@@ -2,6 +2,7 @@
 import { task } from 'hardhat/config'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { getNetworkCurveInfo } from '../../utils/networkUtils'
+import { NetworkConfigWithCurve } from '../../types/hardhat'
 
 /**
  * Task to check deployment status and list deployed contracts on the network
@@ -42,13 +43,13 @@ task('deployment-status', 'Check deployment status and list deployed contracts')
             }> = []
 
             // Get network configuration for accounts
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const networkConfig = hre.config.networks[hre.network.name] as any
+            const networkConfig = hre.config.networks[
+                hre.network.name
+            ] as NetworkConfigWithCurve
             const accounts =
                 curveInfo.curve === 'secp256r1'
                     ? (networkConfig.secp256r1Accounts || []).map(
-                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                          (acc: any) => acc.address
+                          (acc) => acc.address
                       )
                     : networkConfig.accounts || []
 

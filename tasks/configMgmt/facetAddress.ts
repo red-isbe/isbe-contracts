@@ -1,5 +1,5 @@
 import { task } from 'hardhat/config'
-import * as dotenv from 'dotenv'
+
 import { getFacetAddress } from '../../scripts/configMgmt/getFacetAddress'
 import { getSigner } from '../../scripts/utils/getSigner'
 
@@ -10,8 +10,6 @@ import { getSigner } from '../../scripts/utils/getSigner'
   --factory "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6" \
     --selector "0x34a23402"
  */
-
-dotenv.config()
 
 task('facetAddress', 'Returns facet address from config management')
     .addParam('configId', 'The configuration ID')

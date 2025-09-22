@@ -1,5 +1,5 @@
 import { task, types } from 'hardhat/config'
-import * as dotenv from 'dotenv'
+
 import { setConfig } from '../../scripts/configMgmt/setConfig'
 import { getSigner } from '../../scripts/utils/getSigner'
 
@@ -10,8 +10,6 @@ import { getSigner } from '../../scripts/utils/getSigner'
   --versions '[1,1]' \
   --factory "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6"
  */
-
-dotenv.config()
 
 task('setConfig', 'Sets config')
     .addParam('configId', 'The configuration ID')

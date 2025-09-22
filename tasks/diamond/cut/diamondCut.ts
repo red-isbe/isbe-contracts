@@ -1,5 +1,5 @@
 import { task, types } from 'hardhat/config'
-import * as dotenv from 'dotenv'
+
 import { diamondCut } from '../../../scripts/diamond/cut/diamondCut'
 import { getSigner } from '../../../scripts/utils/getSigner'
 
@@ -12,8 +12,6 @@ import { getSigner } from '../../../scripts/utils/getSigner'
   --calldata '0x1234567812345678' \
   --diamond "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6"
  */
-
-dotenv.config()
 
 task('diamondCut', 'updates a diamond')
     .addParam(

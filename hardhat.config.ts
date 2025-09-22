@@ -5,6 +5,9 @@ import '@typechain/hardhat'
 import 'hardhat-contract-sizer'
 import 'solidity-docgen'
 import 'hardhat-gas-reporter'
+
+// Configure dotenv globally without verbose logging
+import 'dotenv/config'
 import './tasks/businessLogic/deployIsbeFactory'
 import './tasks/businessLogic/deployBusinessLogic'
 import './tasks/businessLogic/getBusinessLogicAddress'
