@@ -14,7 +14,7 @@ $ npm run compile:force
 $ npx hardhat deployAll --network localhost
 ```
 
-Available networks: hardhat, localhost, mvp, arsys.
+Available networks: hardhat, localhost, mvp, arsys, besuLocalDeployer.
 
 ## User Roles
 
@@ -56,3 +56,13 @@ In order to include any change in this repository, we need to follow these steps
 ## Install package
 
 In order to use the smart contracts implemented in this repository as an npm dependency in your poject, please follow these [instructions](https://github.com/alastria/isbe-contracts/pkgs/npm/isbe-contracts)
+
+## Deploy to isbe besu local deployer
+
+To deploy to Isbe besu local deployer, the test network provided on the repo, you need to add the correct .env variables, which are:
+
+- ACCOUNTS: A private key, for an account that exist on the network. It can´t start with 0x
+- ACCOUNT_ADDRESS: The wallet direction of that account. It has to start with 0x
+- PRIVATE_KEY: It should be the same value of ACCOUNTS
+
+Then you can do deployAll command and it should work as expected.

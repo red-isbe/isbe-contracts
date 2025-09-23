@@ -99,6 +99,14 @@ const config: HardhatUserConfig = {
             gas: 100000000,
             blockGasLimit: 18800000,
         },
+        isbelocaldeployer: {
+            url: 'http://127.0.0.1:8545',
+            chainId: 2222,
+            accounts: ACCOUNTS,
+            gasPrice: 0,
+            gas: 100000000,
+            blockGasLimit: 0x1e84800,
+        },
     },
     mocha: {
         timeout: 60000,
