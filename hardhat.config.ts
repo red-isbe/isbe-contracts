@@ -45,6 +45,10 @@ import './tasks/deployTest'
 import './tasks/deployAll'
 import './tasks/extract/byteCode'
 import './tasks/extract/StorageSlots'
+import './tasks/client/registerFilter'
+import './tasks/client/getFiltersLength'
+import './tasks/client/getFiltersByPage'
+import './tasks/client/isFilterRegistered'
 
 import { randomBytes } from 'crypto'
 

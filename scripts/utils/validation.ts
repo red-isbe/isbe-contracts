@@ -18,3 +18,14 @@ export function isValidBytesAndLength(
     // Check if length matches exactly the required byte length
     return input.length === 2 + byteLength * 2
 }
+
+export function checkValidHexadecimal(
+    input: string = '',
+    regExp: RegExp,
+    length: number = 1,
+    errorMessage: string = ''
+) {
+    const differentLength = input.length - length !== 0
+    const notAdjustedToRegEx = !regExp.test(input)
+    if (notAdjustedToRegEx || differentLength) throw new Error(errorMessage)
+}
