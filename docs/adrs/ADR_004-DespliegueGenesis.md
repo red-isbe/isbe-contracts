@@ -94,31 +94,95 @@ Two tests have been carried out
 To check extraction behaviour several ways of data storing have been put in place in contract:
 
 ```js
+ontract SubSubContract{
+  uint public dummy;
+  uint public aa;
+
+  constructor(){
+    aa=0xEE;
+  }
+
+
+
+  function setAA(uint _aa) public {
+    aa=_aa;
+  }
+}
+
+
+contract SubConrtact{
+  uint public dummy1;
+  uint public dumm2;
+  uint public a;
+  address public subSubContractAddress = address(new SubSubContract{salt: bytes32(uint256(0xC0FFEE))}()); //address(new SubSubContract());
+
+  constructor(){
+    string storage str;
+    assembly {
+      str.slot := 100
+      sstore(str.slot, "1111111111")
+    }
+  }
+
+  function getStr() public view returns (string memory) {
+     string storage str;
+    assembly {
+      str.slot := 100
+    }
+    return str;
+  }
+  
+  function setStr(uint _a) public {
+    string storage str;
+    assembly {
+      str.slot := 100
+      sstore(str.slot, _a)
+    }
+  }
+
+  function setA(uint _a) public {
+    a=_a;
+    SubSubContract(subSubContractAddress).setAA(_a);
+    // (bool ok, bytes memory ret) = subSubContractAddress.delegatecall(
+    //   abi.encodeWithSelector(SubSubContract.setAA.selector, uint256(0xDD))
+    // );
+    // if (!ok) assembly { revert(add(ret, 32), mload(ret)) }
+  }
+}
+
+
 contract Lock {
 
   struct pp{
     uint a;
   }
-  uint public unlockTime; // (slot 0)
-  address payable public owner; // (slot 1)
-  string str="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"; // Force several slot creation (slot 2)
+  uint public unlockTime;
+  address payable public owner;
+  string str="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC";
+  address public subContractAddress =  address(new SubConrtact{salt: bytes32(uint256(0xC0FFEE))}()); // address(new SubConrtact());
+  event Withdrawal(uint amount, uint when);
 
   constructor() payable {
 
     pp storage p;
-
+   
     unlockTime = 0xFF;
     owner = payable(msg.sender);
 
     assembly {
-      p.slot := 10 // Force slot at 10
-      sstore(11, 0xBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB) //store data at slot 11
+      p.slot := 10
+      sstore(11, 0xBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB)
     }
     p.a=0xCC;
+
+    SubConrtact(subContractAddress).setA(0xDD);
+    // (bool ok, bytes memory ret) = subContractAddress.delegatecall(
+    //   abi.encodeWithSelector(SubConrtact.setA.selector, uint256(0xDD))
+    // );
+    // if (!ok) assembly { revert(add(ret, 32), mload(ret)) }
   }
 
-  // Function used to extract all slot data
-  function get() public view returns(uint, address,string memory, uint,uint){
+  function get() public view returns(uint, address,address,string memory, uint,uint){
     pp storage p;
     pp storage p2;
     assembly {
@@ -127,11 +191,10 @@ contract Lock {
     }
     uint tmp = p2.a;
     uint tmp2 = p.a;
-    return(unlockTime, owner,str, tmp2, tmp);
+    return(unlockTime, owner, subContractAddress,str, tmp2, tmp);
   }
 
-   //Function used to change slots once contract has been deployed
-  function set(uint _unlocktime, address _owner, string calldata _str,uint u1, uint u2) public {
+    function set(uint _unlocktime, address _owner, string calldata _str,uint u1, uint u2) public {
     pp storage p;
     pp storage p2;
     assembly {
@@ -145,6 +208,7 @@ contract Lock {
     str = _str;
   }
 }
+
 ```
 
 To check its behaviour a genesis.json has been created with code and slot structure extracted from this process. This genesis has been installed in a besu one-node network and started.
