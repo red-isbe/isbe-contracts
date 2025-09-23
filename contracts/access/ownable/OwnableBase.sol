@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 import {IOwnable} from './IOwnable.sol';
 import {Common} from '../../core/Common.sol';
 import {_OWNABLE_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
+import {_OWNABLE_VERSION} from '../../constants/facetVersions.sol';
 
 /// @title Ownable
 /// @notice Implements ownership mechanisms
@@ -12,12 +13,16 @@ abstract contract OwnableBase is IOwnable, Common {
     /// @notice Constructor that disables the initializer
 
     constructor() {
-        _disableInitializers(_OWNABLE_RESOLVER_KEY);
+        _disableInitializers(_OWNABLE_RESOLVER_KEY, _OWNABLE_VERSION);
     }
 
     function initializeOwnable(
         address _admin
-    ) external initializer(_OWNABLE_RESOLVER_KEY) addressIsNotZero(_admin) {
+    )
+        external
+        initializer(_OWNABLE_RESOLVER_KEY, _OWNABLE_VERSION)
+        addressIsNotZero(_admin)
+    {
         _transferOwnership(_admin);
         emit OwnershipTransferred(_msgSender(), _admin);
     }

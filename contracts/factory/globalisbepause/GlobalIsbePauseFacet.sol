@@ -3,6 +3,7 @@ pragma solidity ^0.8.28;
 
 import {GlobalIsbePause} from './GlobalIsbePause.sol';
 import {_GLOBAL_ISBE_PAUSABLE_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
+import {_GLOBAL_ISBE_PAUSABLE_VERSION} from '../../constants/facetVersions.sol';
 
 /**
  * @title Global ISBE Pausable Facet
@@ -15,7 +16,10 @@ import {_GLOBAL_ISBE_PAUSABLE_RESOLVER_KEY} from '../../constants/resolverKeys.s
  */
 contract GlobalIsbePauseFacet is GlobalIsbePause {
     constructor() {
-        _disableInitializers(_GLOBAL_ISBE_PAUSABLE_RESOLVER_KEY);
+        _disableInitializers(
+            _GLOBAL_ISBE_PAUSABLE_RESOLVER_KEY,
+            _GLOBAL_ISBE_PAUSABLE_VERSION
+        );
     }
 
     function businessIdIntrospection()

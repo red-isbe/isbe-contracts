@@ -263,6 +263,14 @@ _Implements the complete DID specification including document creation, verifica
 method management, and cryptographic controller relationships. Supports multiple
 elliptic curve types for enhanced cryptographic flexibility and interoperability_
 
+### constructor
+
+```solidity
+constructor() internal
+```
+
+Constructor that disables the initializer
+
 ### initializeDiDRegistry
 
 ```solidity

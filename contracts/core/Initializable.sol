@@ -25,18 +25,18 @@ abstract contract Initializable {
     /**
      * @dev Triggered when the facet has been initialized or reinitialized.
      */
-    event Initialized(bytes32 facet);
+    event Initialized(bytes32 facet, uint256 version);
 
-    error ContractIsAlreadyInitialized(bytes32 facet);
+    error ContractIsAlreadyInitialized(bytes32 facet, uint256 version);
 
     /**
      * @dev Modifier to protect an initialization function so that it can only be invoked by functions with the
      * {initializer} and {reinitializer} modifiers, directly or indirectly.
      */
-    modifier initializer(bytes32 _facetKey) {
-        _preInitializer(_facetKey);
+    modifier initializer(bytes32 _facetKey, uint256 _version) {
+        _preInitializer(_facetKey, _version);
         _;
-        _postInitializer(_facetKey);
+        _postInitializer(_facetKey, _version);
     }
     /**
      * @dev Locks the contract, preventing any future reinitialization. This cannot be part of an initializer call.
@@ -46,28 +46,46 @@ abstract contract Initializable {
      *
      * Emits an {Initialized} event the first time it is successfully executed.
      */
-    function _disableInitializers(bytes32 _facetKey) internal virtual {
-        _preInitializer(_facetKey);
-        _postInitializer(_facetKey);
+    function _disableInitializers(
+        bytes32 _facetKey,
+        uint256 _version
+    ) internal virtual {
+        _preInitializer(_facetKey, _version);
+        _postInitializer(_facetKey, _version);
     }
 
-    function _postInitializer(bytes32 _facetKey) private {
-        _initializableStorage().initialized[_facetKey] = true;
-        emit Initialized(_facetKey);
+    function _postInitializer(bytes32 _facetKey, uint256 _version) private {
+        _initializableStorage().initialized[
+            _uniqueInitializerKey(_facetKey, _version)
+        ] = true;
+        emit Initialized(_facetKey, _version);
     }
 
     /**
      * @dev Returns `true` if the contract is currently initializing. See {onlyInitializing}.
      */
-    function _isInitialized(bytes32 _facetKey) private view returns (bool) {
-        return _initializableStorage().initialized[_facetKey];
+    function _isInitialized(
+        bytes32 _facetKey,
+        uint256 _version
+    ) private view returns (bool) {
+        return
+            _initializableStorage().initialized[
+                _uniqueInitializerKey(_facetKey, _version)
+            ];
     }
 
-    function _preInitializer(bytes32 _facetKey) private view {
+    function _preInitializer(bytes32 _facetKey, uint256 _version) private view {
         require(
-            !_isInitialized(_facetKey),
-            ContractIsAlreadyInitialized(_facetKey)
+            !_isInitialized(_facetKey, _version),
+            ContractIsAlreadyInitialized(_facetKey, _version)
         );
+    }
+
+    function _uniqueInitializerKey(
+        bytes32 _facetKey,
+        uint256 _version
+    ) private pure returns (bytes32) {
+        return keccak256(abi.encodePacked(_facetKey, _version));
     }
 
     function _initializableStorage()

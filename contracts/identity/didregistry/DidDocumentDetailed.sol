@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 import {IDidDocumentDetailed} from './interfaces/IDidDocumentDetailed.sol';
 import {_DID_DOCUMENT_DETAILED_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
 import {DidControllerInternal} from './DidControllerInternal.sol';
+import {_DID_DOCUMENT_DETAILED_VERSION} from '../../constants/facetVersions.sol';
 
 /**
  * @title Decentralised Identity Document Management System
@@ -18,11 +19,22 @@ abstract contract DidDocumentDetailed is
     DidControllerInternal,
     IDidDocumentDetailed
 {
+    /// @notice Constructor that disables the initializer
+    constructor() {
+        _disableInitializers(
+            _DID_DOCUMENT_DETAILED_RESOLVER_KEY,
+            _DID_DOCUMENT_DETAILED_VERSION
+        );
+    }
+
     function initializeDiDRegistry(
         EllipticType _ellipticType
     )
         external
-        initializer(_DID_DOCUMENT_DETAILED_RESOLVER_KEY)
+        initializer(
+            _DID_DOCUMENT_DETAILED_RESOLVER_KEY,
+            _DID_DOCUMENT_DETAILED_VERSION
+        )
         validateEllipticType(_ellipticType)
     {
         _setEllipticType(_ellipticType);

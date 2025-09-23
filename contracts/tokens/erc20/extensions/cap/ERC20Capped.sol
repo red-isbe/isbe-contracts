@@ -5,18 +5,23 @@ import {ERC20InternalCommon} from '../ERC20InternalCommon.sol';
 import {_ERC20_CAPPED_RESOLVER_KEY} from '../../../../constants/resolverKeys.sol';
 import {IERC20Capped} from './IERC20Capped.sol';
 import {_CAP_ROLE, _MINTER_ROLE} from '../../../../constants/roles.sol';
+import {_ERC20_CAPPED_VERSION} from '../../../../constants/facetVersions.sol';
 
 /// @title ERC20Capped
 /// @notice Implements capped mechanism
 /// @dev Inherits from IERC20Capped and ERC20InternalCommon
 abstract contract ERC20Capped is IERC20Capped, ERC20InternalCommon {
     constructor() {
-        _disableInitializers(_ERC20_CAPPED_RESOLVER_KEY);
+        _disableInitializers(_ERC20_CAPPED_RESOLVER_KEY, _ERC20_CAPPED_VERSION);
     }
 
     function initializeCap(
         uint256 _newCap
-    ) external initializer(_ERC20_CAPPED_RESOLVER_KEY) checkNewCap(_newCap) {
+    )
+        external
+        initializer(_ERC20_CAPPED_RESOLVER_KEY, _ERC20_CAPPED_VERSION)
+        checkNewCap(_newCap)
+    {
         _setCap(_newCap);
         emit CapSet(_msgSender(), _newCap);
     }

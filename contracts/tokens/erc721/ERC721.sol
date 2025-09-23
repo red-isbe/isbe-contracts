@@ -16,11 +16,12 @@ import {_ERC721_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
 import {IERC721} from '@openzeppelin/contracts/token/ERC721/IERC721.sol';
 import {IERC721Metadata} from '@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol';
 import {ERC721InternalCommon} from './extensions/ERC721InternalCommon.sol';
+import {_ERC721_VERSION} from '../../constants/facetVersions.sol';
 
 abstract contract ERC721 is IERC721Isbe, ERC721InternalCommon {
     /// @notice Constructor disables initializers by default for the diamond pattern
     constructor() {
-        _disableInitializers(_ERC721_RESOLVER_KEY);
+        _disableInitializers(_ERC721_RESOLVER_KEY, _ERC721_VERSION);
     }
 
     /**
@@ -31,7 +32,7 @@ abstract contract ERC721 is IERC721Isbe, ERC721InternalCommon {
     function initializeErc721(
         string memory newName,
         string memory newSymbol
-    ) external override initializer(_ERC721_RESOLVER_KEY) {
+    ) external override initializer(_ERC721_RESOLVER_KEY, _ERC721_VERSION) {
         _initialize(newName, newSymbol);
         emit Erc721Initialized(newName, newSymbol);
     }

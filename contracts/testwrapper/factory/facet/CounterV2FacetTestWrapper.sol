@@ -2,7 +2,11 @@
 pragma solidity ^0.8.28;
 
 import {IEIP2535Introspection} from '../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
-import {_RESOLVER_KEY, CounterFacetInternal} from './CounterFacetInternal.sol';
+import {
+    _RESOLVER_KEY,
+    _RESOLVER_VERSION,
+    CounterFacetInternal
+} from './CounterFacetInternal.sol';
 import {_DEFAULT_ADMIN_ROLE} from '../../../constants/roles.sol';
 
 contract CounterV2FacetTestWrapper is
@@ -10,12 +14,12 @@ contract CounterV2FacetTestWrapper is
     IEIP2535Introspection
 {
     constructor() {
-        _disableInitializers(_RESOLVER_KEY);
+        _disableInitializers(_RESOLVER_KEY, _RESOLVER_VERSION);
     }
 
     function initializeCounter(
         uint256 _startingValue
-    ) external initializer(_RESOLVER_KEY) {
+    ) external initializer(_RESOLVER_KEY, _RESOLVER_VERSION) {
         CounterStorage storage $ = _counterStorage();
         $.counter = _startingValue;
     }

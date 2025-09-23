@@ -6,6 +6,8 @@ import {Common} from '../../../core/Common.sol';
 // keccak256('isbe.contracts.mock.counter.resolver.key');
 bytes32 constant _RESOLVER_KEY = 0x1d2001a5725b4c2a6cf5885d8aaad52e63d5efcab82525e12cda1a1a27550182;
 
+uint256 constant _RESOLVER_VERSION = 1;
+
 // keccak256('isbe.contracts.counter.test.wrapper.storage');
 bytes32 constant _STORAGE_POSITION = 0x3a79faacf1a0c9de5b1b6757af212b3d2990c5bf4a921a578c1bdab4cecda749;
 

@@ -5,6 +5,7 @@ pragma solidity ^0.8.28;
 import {PauseInternal} from './PauseInternal.sol';
 import {IPause} from './IPause.sol';
 import {_PAUSE_RESOLVER_KEY} from '../constants/resolverKeys.sol';
+import {_PAUSE_VERSION} from '../constants/facetVersions.sol';
 
 /// @title Pause
 /// @notice Implements pausing mechanism
@@ -12,12 +13,12 @@ import {_PAUSE_RESOLVER_KEY} from '../constants/resolverKeys.sol';
 abstract contract Pause is IPause, PauseInternal {
     /// @notice Constructor that disables the initializer
     constructor() {
-        _disableInitializers(_PAUSE_RESOLVER_KEY);
+        _disableInitializers(_PAUSE_RESOLVER_KEY, _PAUSE_VERSION);
     }
 
     function initializePause(
         bool _paused
-    ) external initializer(_PAUSE_RESOLVER_KEY) {
+    ) external initializer(_PAUSE_RESOLVER_KEY, _PAUSE_VERSION) {
         if (_paused) _pause();
         else _unpause();
     }

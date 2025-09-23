@@ -129,7 +129,7 @@ struct InitializableStorage {
 ### Initialized
 
 ```solidity
-event Initialized(bytes32 facet)
+event Initialized(bytes32 facet, uint256 version)
 ```
 
 _Triggered when the facet has been initialized or reinitialized._
@@ -137,13 +137,13 @@ _Triggered when the facet has been initialized or reinitialized._
 ### ContractIsAlreadyInitialized
 
 ```solidity
-error ContractIsAlreadyInitialized(bytes32 facet)
+error ContractIsAlreadyInitialized(bytes32 facet, uint256 version)
 ```
 
 ### initializer
 
 ```solidity
-modifier initializer(bytes32 _facetKey)
+modifier initializer(bytes32 _facetKey, uint256 _version)
 ```
 
 _Modifier to protect an initialization function so that it can only be invoked by functions with the
@@ -152,7 +152,7 @@ _Modifier to protect an initialization function so that it can only be invoked b
 ### \_disableInitializers
 
 ```solidity
-function _disableInitializers(bytes32 _facetKey) internal virtual
+function _disableInitializers(bytes32 _facetKey, uint256 _version) internal virtual
 ```
 
 \_Locks the contract, preventing any future reinitialization. This cannot be part of an initializer call.

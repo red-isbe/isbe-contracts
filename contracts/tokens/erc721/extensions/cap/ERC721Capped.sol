@@ -5,6 +5,7 @@ import {ERC721InternalCommon} from '../ERC721InternalCommon.sol';
 import {_ERC721_CAPPED_RESOLVER_KEY} from '../../../../constants/resolverKeys.sol';
 import {IERC721Capped} from './IERC721Capped.sol';
 import {_CAP_ROLE, _MINTER_ROLE} from '../../../../constants/roles.sol';
+import {_ERC721_CAPPED_VERSION} from '../../../../constants/facetVersions.sol';
 
 /**
  * @title ERC721Capped
@@ -15,7 +16,10 @@ import {_CAP_ROLE, _MINTER_ROLE} from '../../../../constants/roles.sol';
  */
 abstract contract ERC721Capped is IERC721Capped, ERC721InternalCommon {
     constructor() {
-        _disableInitializers(_ERC721_CAPPED_RESOLVER_KEY);
+        _disableInitializers(
+            _ERC721_CAPPED_RESOLVER_KEY,
+            _ERC721_CAPPED_VERSION
+        );
     }
 
     /**
@@ -26,7 +30,10 @@ abstract contract ERC721Capped is IERC721Capped, ERC721InternalCommon {
      */
     function initializeCap(
         uint256 newCap
-    ) external initializer(_ERC721_CAPPED_RESOLVER_KEY) {
+    )
+        external
+        initializer(_ERC721_CAPPED_RESOLVER_KEY, _ERC721_CAPPED_VERSION)
+    {
         _checkUintIsNotZero(newCap);
         _setCap(newCap);
         emit CapSet(_msgSender(), newCap);

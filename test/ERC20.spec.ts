@@ -107,7 +107,8 @@ describe('ERC20', function () {
                     'ContractIsAlreadyInitialized'
                 )
                 .withArgs(
-                    '0x2428f215905ecd05cc26794e218b9fad455e6ae2ca828b2f1c1903e8770265ad'
+                    '0x2428f215905ecd05cc26794e218b9fad455e6ae2ca828b2f1c1903e8770265ad',
+                    '1'
                 )
         })
 
@@ -136,7 +137,8 @@ describe('ERC20', function () {
                     'ContractIsAlreadyInitialized'
                 )
                 .withArgs(
-                    '0x2428f215905ecd05cc26794e218b9fad455e6ae2ca828b2f1c1903e8770265ad'
+                    '0x2428f215905ecd05cc26794e218b9fad455e6ae2ca828b2f1c1903e8770265ad',
+                    '1'
                 )
         })
     })
@@ -254,7 +256,8 @@ describe('ERC20', function () {
                     'ContractIsAlreadyInitialized'
                 )
                 .withArgs(
-                    '0x94ece6781e9aebbdab29d2bbc0301c80b7bcb1194c5c3efc08e3d35c7f6d741b'
+                    '0x94ece6781e9aebbdab29d2bbc0301c80b7bcb1194c5c3efc08e3d35c7f6d741b',
+                    '1'
                 )
 
             expect(await erc20Capped.cap()).to.equal(1000)

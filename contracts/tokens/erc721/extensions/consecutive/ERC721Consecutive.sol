@@ -5,6 +5,7 @@ import {IERC721Consecutive} from './IERC721Consecutive.sol';
 import {ERC721InternalCommon} from '../ERC721InternalCommon.sol';
 import {_ERC721_CONSECUTIVE_RESOLVER_KEY} from '../../../../constants/resolverKeys.sol';
 import {_MINTER_ROLE} from '../../../../constants/roles.sol';
+import {_ERC721_CONSECUTIVE_VERSION} from '../../../../constants/facetVersions.sol';
 
 /// @title ERC721Consecutive
 /// @notice Implements consecutive minting for ERC721 tokens (EIP-2309)
@@ -14,7 +15,10 @@ abstract contract ERC721Consecutive is
     ERC721InternalCommon
 {
     constructor() {
-        _disableInitializers(_ERC721_CONSECUTIVE_RESOLVER_KEY);
+        _disableInitializers(
+            _ERC721_CONSECUTIVE_RESOLVER_KEY,
+            _ERC721_CONSECUTIVE_VERSION
+        );
     }
 
     /// @notice Mints a consecutive range of tokens to `to`

@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 import {Common} from '../../core/Common.sol';
 import {IAccessControl} from './IAccessControl.sol';
 import {_ACCESS_CONTROL_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
+import {_ACCESS_CONTROL_VERSION} from '../../constants/facetVersions.sol';
 import {_ISBE_ROLE} from '../../constants/roles.sol';
 
 /// @title AccessControl
@@ -16,12 +17,18 @@ abstract contract AccessControl is IAccessControl, Common {
     }
     /// @notice Constructor that disables the initializer
     constructor() {
-        _disableInitializers(_ACCESS_CONTROL_RESOLVER_KEY);
+        _disableInitializers(
+            _ACCESS_CONTROL_RESOLVER_KEY,
+            _ACCESS_CONTROL_VERSION
+        );
     }
 
     function initializeAccessControl(
         IAccessControl.Rbac[] memory _rbacs
-    ) external initializer(_ACCESS_CONTROL_RESOLVER_KEY) {
+    )
+        external
+        initializer(_ACCESS_CONTROL_RESOLVER_KEY, _ACCESS_CONTROL_VERSION)
+    {
         _initializeRbacs(_rbacs);
     }
 

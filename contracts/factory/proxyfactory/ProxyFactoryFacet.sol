@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 import {_PROXY_FACTORY_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
 import {ProxyFactory} from './ProxyFactory.sol';
 import {IEIP2535Introspection} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {_PROXY_FACTORY_VERSION} from '../../constants/facetVersions.sol';
 
 /**
  * @title Proxy Factory Facet
@@ -16,7 +17,10 @@ import {IEIP2535Introspection} from '../../proxies/eip2535/interfaces/IEIP2535In
  */
 contract ProxyFactoryFacet is ProxyFactory, IEIP2535Introspection {
     constructor() {
-        _disableInitializers(_PROXY_FACTORY_RESOLVER_KEY);
+        _disableInitializers(
+            _PROXY_FACTORY_RESOLVER_KEY,
+            _PROXY_FACTORY_VERSION
+        );
     }
 
     function businessIdIntrospection()
