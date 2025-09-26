@@ -46,6 +46,7 @@ import './tasks/proxyFactory/deployUseCaseTo'
 import './tasks/proxyFactory/getConfigurationByProxy'
 import './tasks/deployTest'
 import './tasks/deployAll'
+import './tasks/deployAllClean'
 import './tasks/extract/byteCode'
 import './tasks/extract/StorageSlots'
 import './tasks/examples/curveAwareTask'
@@ -126,8 +127,13 @@ const NETWORK_CONFIGS: { [key: string]: NetworkConfigWithCurve } = {
         curve: 'secp256k1', // Standard Ethereum curve
     },
     localhost: {
-        url: 'http://127.0.0.1:8545',
-        curve: 'secp256k1', // Standard Ethereum curve
+        url: 'http://172.16.240.30:8545',
+        chainId: 2222,
+        accounts: ACCOUNTS,
+        gasPrice: 0, // Set minimum gas price to match base fee
+        gas: 100000000, // Match the block gas limit
+        blockGasLimit: 30000000,
+        curve: 'secp256k1', // secp256k1 test network
     },
     mvp: {
         url: 'https://besu-node-non-validator-1.mvp.envs.redisbe.com',

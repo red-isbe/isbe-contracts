@@ -1,7 +1,7 @@
 import { task, types } from 'hardhat/config'
 
 import { diamondCut } from '../../../scripts/diamond/cut/diamondCut'
-import { getSigner } from '../../../scripts/utils/getSigner'
+import { SignatureProviderFactory } from '../../deployment/providers/SignatureProviderFactory'
 
 /**
  npx hardhat diamondCut --network localhost \
@@ -45,7 +45,7 @@ task('diamondCut', 'updates a diamond')
             const { facetAddresses, actions, items, init, calldata, diamond } =
                 taskArgs
 
-            const signer = await getSigner(hre)
+            const signatureProvider = SignatureProviderFactory.create(hre)
 
             const result = await diamondCut(
                 facetAddresses,
@@ -54,7 +54,7 @@ task('diamondCut', 'updates a diamond')
                 init,
                 calldata,
                 diamond,
-                signer
+                signatureProvider
             )
 
             console.log('Diamond Cut result:', result)

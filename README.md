@@ -37,14 +37,16 @@ This project supports both **secp256k1** (standard Ethereum) and **secp256r1** (
 
 ### Available Networks
 
-| Network           | Type           | Curve     | Chain ID | URL                     |
-| ----------------- | -------------- | --------- | -------- | ----------------------- |
-| `hardhat`         | Local          | secp256k1 | -        | Local Hardhat           |
-| `localhost`       | Local          | secp256k1 | -        | http://127.0.0.1:8545   |
-| `mvp`             | ISBE MVP       | secp256k1 | 2023     | ISBE MVP Environment    |
-| `arsys`           | ISBE Arsys     | secp256k1 | 2024     | Arsys Environment       |
-| `kepler`          | IoBuilders     | secp256k1 | 1003     | Kepler Testnet          |
-| `customR1Network` | Besu secp256r1 | secp256r1 | 2222     | Custom Hyperledger Besu |
+| Network           | Type           | Curve     | Chain ID | Status          | URL                                        |
+| ----------------- | -------------- | --------- | -------- | --------------- | ------------------------------------------ |
+| `hardhat`         | Local          | secp256k1 | 31337    | ✅ Stable       | Local Hardhat Network                      |
+| `localhost`       | Local Besu     | secp256k1 | 2222     | ✅ Stable       | http://172.16.240.30:8545                  |
+| `mvp`             | ISBE MVP       | secp256k1 | 2023     | ✅ Stable       | https://besu-node-non-validator-1.mvp...   |
+| `arsys`           | ISBE Arsys     | secp256k1 | 2024     | ✅ Stable       | http://213.165.85.41:8545                  |
+| `kepler`          | IoBuilders     | secp256k1 | 1003     | ✅ Stable       | https://regular.pre.iosec.io.builders:8565 |
+| `customR1Network` | Besu secp256r1 | secp256r1 | 2222     | ⚠️ Experimental | http://172.16.240.30:8545                  |
+
+> ⚠️ **EXPERIMENTAL FEATURE WARNING**: The `customR1Network` (secp256r1 support) is currently experimental and not recommended for production use. This feature uses custom cryptographic implementations that may have compatibility issues. Use only for development and testing purposes.
 
 ### Deployment Commands
 
@@ -84,14 +86,19 @@ ACCOUNTS=privatekey1,privatekey2,privatekey3,privatekey4,privatekey5
 For Hyperledger Besu networks with secp256r1:
 
 ```bash
-# Generate secp256r1 accounts
-npx hardhat generate-secp256r1-env --count 5
+# Generate secp256r1 accounts (EXPERIMENTAL)
+npx hardhat generate-secp256r1-accounts --count 5
 
-# This creates a .env file like:
-; Curve: SECP256R1
-ACCOUNT_ADDRESS=0xGeneratedAddress
-ACCOUNT_PRIVATE_KEY=generatedprivatekey
-ACCOUNTS=privatekey1,privatekey2,privatekey3,privatekey4,privatekey5
+# Generate both secp256k1 and secp256r1 files with same private keys (EXPERIMENTAL)
+npx hardhat generate-env --dual --count 5
+
+# This creates two files:
+# .env.secp256k1 - Standard Ethereum accounts
+# .env.secp256r1 - Same keys but with secp256r1 addresses (EXPERIMENTAL)
+
+# Use the appropriate file:
+cp .env.secp256k1 .env  # For standard networks
+cp .env.secp256r1 .env  # For secp256r1 networks (EXPERIMENTAL)
 ```
 
 ### Account Validation
@@ -163,13 +170,23 @@ npm run test:coverage
 # Test deployment scripts
 npm run test:scripts
 
-# Run specific test suites
+# Run specific test suites (individual tests)
 npm run test:accessControl
 npm run test:erc20
-npm run test:BusinessLogicFactory
-npm run test:ProxyFactory
-npm run test:ConfigurationManagement
-npm run test:GlobalIsbePause
+npm run test:erc721
+npm run test:businessLogicFactory
+npm run test:proxyFactory
+npm run test:configurationManagement
+npm run test:globalIsbePause
+npm run test:didRegistry
+
+# Run test suites by category
+npm run test:core          # Access control, ownership, pause, reentrancy
+npm run test:tokens        # ERC20, ERC721, ERC165
+npm run test:proxies       # Beacon, ERC1967, Transparent proxies
+npm run test:governance    # All governance-related tests
+npm run test:identity      # DID Registry tests
+npm run test:utilities     # Asset tracker, hash timestamp
 ```
 
 ### Code Quality
@@ -244,42 +261,42 @@ npx hardhat deployTest
 npx hardhat deploy-isbe-factory --network <network>
 
 # Deploy business logic
-npx hardhat deploy-business-logic --resolver <resolver> --network <network>
+npx hardhat deployBusinessLogic --resolver <resolver> --network <network>
 
 # Get business logic address
-npx hardhat get-business-logic-address --business-id <id> --network <network>
+npx hardhat getBusinessLogicAddress --business-id <id> --network <network>
 
 # Get all business logics
-npx hardhat get-business-logics --network <network>
+npx hardhat getBusinessLogics --network <network>
 
 # Get business logic versions
-npx hardhat get-business-logic-versions --business-id <id> --network <network>
+npx hardhat getBusinessLogicVersions --business-id <id> --network <network>
 ```
 
 ### Configuration Management
 
 ```bash
 # Set configuration
-npx hardhat set-config --business-data <data> --network <network>
+npx hardhat setConfig --business-data <data> --network <network>
 
 # Get configuration
-npx hardhat get-config --config-id <id> --network <network>
+npx hardhat getConfig --config-id <id> --network <network>
 
 # Get facets from configuration
-npx hardhat config-facets --config-id <id> --network <network>
+npx hardhat facets --config-id <id> --network <network>
 ```
 
 ### Use Case Deployment
 
 ```bash
 # Deploy use case
-npx hardhat deploy-use-case --config-id <id> --network <network>
+npx hardhat deployUseCase --config-id <id> --network <network>
 
 # Deploy use case to specific address
-npx hardhat deploy-use-case-to --config-id <id> --salt <salt> --network <network>
+npx hardhat deployUseCaseTo --config-id <id> --salt <salt> --network <network>
 
 # Get configuration by proxy
-npx hardhat get-configuration-by-proxy --proxy <address> --network <network>
+npx hardhat getConfigurationByProxy --proxy <address> --network <network>
 ```
 
 ## 🔍 Verification and Monitoring
@@ -317,39 +334,39 @@ npx hardhat has-role --role <role> --account <address> --contract <address> --ne
 
 ```bash
 # Get all facets
-npx hardhat get-facets --diamond <address> --network <network>
+npx hardhat getFacets --diamond <address> --network <network>
 
 # Get facet address
-npx hardhat get-facet-address --selector <selector> --diamond <address> --network <network>
+npx hardhat getFacetAddress --selector <selector> --diamond <address> --network <network>
 
 # Get facet selectors
-npx hardhat get-facet-selectors --facet <address> --diamond <address> --network <network>
+npx hardhat getFacetSelectors --facet <address> --diamond <address> --network <network>
 
 # Perform diamond cut
-npx hardhat diamond-cut --cuts <cuts> --diamond <address> --network <network>
+npx hardhat diamondCut --cuts <cuts> --diamond <address> --network <network>
 ```
 
 ### Access Control
 
 ```bash
 # Grant role
-npx hardhat grant-role --role <role> --account <address> --contract <address> --network <network>
+npx hardhat grantRole --role <role> --account <address> --contract <address> --network <network>
 
 # Revoke role
-npx hardhat revoke-role --role <role> --account <address> --contract <address> --network <network>
+npx hardhat revokeRole --role <role> --account <address> --contract <address> --network <network>
 
 # Renounce role
-npx hardhat renounce-role --role <role> --contract <address> --network <network>
+npx hardhat renounceRole --role <role> --contract <address> --network <network>
 ```
 
 ### Pause Controls
 
 ```bash
 # Pause ISBE globally
-npx hardhat pause-isbe --network <network>
+npx hardhat pauseIsbe --network <network>
 
 # Unpause ISBE globally
-npx hardhat unpause-isbe --network <network>
+npx hardhat unpauseIsbe --network <network>
 
 # Pause specific contract
 npx hardhat pause --contract <address> --network <network>
@@ -358,7 +375,7 @@ npx hardhat pause --contract <address> --network <network>
 npx hardhat unpause --contract <address> --network <network>
 
 # Check if paused
-npx hardhat is-paused --contract <address> --network <network>
+npx hardhat isPaused --contract <address> --network <network>
 ```
 
 ## 🛠️ Curve-Aware Development
@@ -375,8 +392,12 @@ npx hardhat validate-accounts  # Shows SECP256K1 detected
 ### Working with secp256r1 (Hyperledger Besu)
 
 ```bash
-# Generate secp256r1 compatible accounts
-npx hardhat generate-secp256r1-env --count 5
+# Generate secp256r1 compatible accounts (EXPERIMENTAL)
+npx hardhat generate-secp256r1-accounts --count 5
+
+# Generate both curve types with same private keys (EXPERIMENTAL)
+npx hardhat generate-env --dual --count 5
+cp .env.secp256r1 .env  # Use secp256r1 version
 
 # Validate secp256r1 accounts
 npx hardhat validate-accounts  # Shows SECP256R1 detected
@@ -384,7 +405,7 @@ npx hardhat validate-accounts  # Shows SECP256R1 detected
 # Show secp256r1 account details
 npx hardhat show-secp256r1-accounts
 
-# Deploy to secp256r1 network
+# Deploy to secp256r1 network (EXPERIMENTAL)
 npx hardhat deployAll --network customR1Network
 ```
 
@@ -397,33 +418,47 @@ The project automatically detects the curve type based on your `.env` configurat
 3. **Task Compatibility**: All tasks work with both curves
 4. **Account Generation**: Separate tools for each curve type
 
-### Production-Ready Curve Support
+### ⚠️ EXPERIMENTAL SECP256R1 SUPPORT
 
-**Complete secp256r1 production deployment achieved:**
+> **🚨 WARNING: EXPERIMENTAL FEATURE**  
+> secp256r1 support is currently **EXPERIMENTAL** and **NOT PRODUCTION READY**.
+> This implementation uses custom cryptographic libraries and raw transaction handling
+> that may have compatibility issues, security vulnerabilities, or stability problems.
+>
+> **Use only for:**
+>
+> - Development and testing
+> - Research purposes
+> - Proof of concept implementations
+>
+> **DO NOT USE FOR:**
+>
+> - Production deployments
+> - Real value transactions
+> - Critical business applications
+
+**Experimental secp256r1 deployment:**
 
 ```bash
-# Deploy to secp256k1 networks (standard Ethereum)
+# Deploy to secp256k1 networks (PRODUCTION READY)
 npx hardhat deployAll --network hardhat --precommit
 npx hardhat deployAll --network mvp --precommit
 
-# Deploy to secp256r1 networks (Hyperledger Besu) - PRODUCTION READY
+# Deploy to secp256r1 networks (EXPERIMENTAL ONLY)
 npx hardhat deployAll --network customR1Network --precommit
-# ✅ 27 contracts deployed successfully
-# ✅ 13/13 validations passed
-# ✅ 4.5 minute deployment time
-# ✅ Full Diamond Pattern (EIP-2535) compliance
+# ⚠️ Experimental deployment with custom cryptography
+# ⚠️ May fail or behave unexpectedly
+# ⚠️ Not recommended for production use
 ```
 
-**Production Deployment Results:**
+**Current secp256r1 Implementation Status:**
 
-- ✅ **27/27 Contracts Deployed**: 100% deployment success rate on secp256r1
-- ✅ **13/13 Validations Passed**: All pre-commit validations successful
-- ✅ **100% Task Compatibility**: All Hardhat tasks work on both curves
-- ✅ **Production Network**: Deployed to Hyperledger Besu secp256r1 (Chain ID 2222)
-- ✅ **Diamond Pattern**: Full EIP-2535 compliance on secp256r1
-- ✅ **Governance Layer**: Complete role-based access control
-- ✅ **Performance**: 3ms network response time
-- ✅ **Security**: Full cryptographic validation passed
+- ⚠️ **Experimental Status**: Custom secp256r1 cryptographic implementation
+- ⚠️ **Limited Testing**: Not extensively tested in production scenarios
+- ⚠️ **Compatibility Issues**: May not work with standard Ethereum tools
+- ⚠️ **Security Concerns**: Custom signing implementation needs thorough audit
+- ⚠️ **Maintenance Burden**: Requires specialized knowledge to maintain
+- ⚠️ **Future Uncertainty**: Implementation may change or be deprecated
 
 See [Curve Compatibility Test Results](docs/Curve-Compatibility-Test-Results.md) for detailed production deployment metrics and validation reports.
 
@@ -444,10 +479,16 @@ npx hardhat complete-deployment-status --network hardhat
 ```
 
 ```bash
-# For secp256r1 networks (Hyperledger Besu)
-npx hardhat generate-secp256r1-env --count 5
+# For secp256r1 networks (EXPERIMENTAL - Hyperledger Besu)
+# Option 1: Generate secp256r1 only
+npx hardhat generate-secp256r1-accounts --count 5
+
+# Option 2: Generate both curves (RECOMMENDED)
+npx hardhat generate-env --dual --count 5
+cp .env.secp256r1 .env  # Use secp256r1 version
+
 npx hardhat validate-accounts
-npx hardhat deployAll --network customR1Network
+npx hardhat deployAll --network customR1Network  # EXPERIMENTAL
 npx hardhat verify-besu-deployment --network customR1Network
 ```
 
@@ -538,8 +579,9 @@ For detailed installation and usage instructions, visit the [package documentati
 - **Development Guidelines**: `docs/Development-guidelines.md`
 - **Diamond Pattern Guide**: `docs/Diamond-pattern-guidelines.md`
 - **Governance Architecture**: `docs/Gobernance-Layer-Architecture.md`
-- **Curve Compatibility Test Results**: `docs/Curve-Compatibility-Test-Results.md`
-- **Generated Documentation**: `docs/generated-temp/` (via `npm run docgen`)
+- **SECP256R1 Complete Guide**: `docs/SECP256R1_COMPLETE_GUIDE.md` ⚠️ _Experimental_
+- **Production Deployment Guide**: `docs/Production-Deployment-Guide.md`
+- **Generated Documentation**: `docs/generated/` (via `npm run docgen`)
 
 ## 🔧 Troubleshooting
 

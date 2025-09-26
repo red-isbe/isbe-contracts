@@ -1,7 +1,7 @@
 import { task, types } from 'hardhat/config'
 
 import { interfaceCut } from '../../../scripts/diamond/cut/interfaceCut'
-import { getSigner } from '../../../scripts/utils/getSigner'
+import { SignatureProviderFactory } from '../../deployment/providers/SignatureProviderFactory'
 
 /**
  npx hardhat interfaceCut --network localhost \
@@ -38,14 +38,14 @@ task('interfaceCut', 'updates a diamond')
         ) => {
             const { facetAddresses, actions, items, diamond } = taskArgs
 
-            const signer = await getSigner(hre)
+            const signatureProvider = SignatureProviderFactory.create(hre)
 
             const result = await interfaceCut(
                 facetAddresses,
                 actions,
                 items,
                 diamond,
-                signer
+                signatureProvider
             )
 
             console.log('Interface Cut result:', result)

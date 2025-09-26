@@ -1,5 +1,5 @@
 import { task } from 'hardhat/config'
-import { getSigner } from '../../../scripts/utils/getSigner'
+import { SignatureProviderFactory } from '../../deployment/providers/SignatureProviderFactory'
 import { grantRole } from '../../../scripts/access/accessControl/grantRole'
 
 /**
@@ -15,7 +15,26 @@ task('grantRole', 'Grants a role to an account')
     .addParam('diamond', 'The address of the contract')
     .setAction(async (taskArgs, hre) => {
         const { role, account, diamond } = taskArgs
-        const signer = await getSigner(hre)
-        const result = await grantRole(role, account, diamond, signer)
-        console.log('Granted role:' + JSON.stringify(result))
+
+        console.log('🔐 Initializing signature provider for access control...')
+        const signatureProvider = SignatureProviderFactory.create(hre)
+
+        console.log('📋 Granting role with parameters:')
+        console.log(`   Role: ${role}`)
+        console.log(`   Account: ${account}`)
+        console.log(`   Diamond: ${diamond}`)
+        console.log(`   Network: ${hre.network.name}`)
+        console.log(`   Curve: ${signatureProvider.getCurveType()}`)
+
+        const result = await grantRole(
+            role,
+            account,
+            diamond,
+            signatureProvider
+        )
+
+        console.log('\n✅ Role granted successfully:')
+        console.log(`   Role: ${result.role}`)
+        console.log(`   Account: ${result.account}`)
+        console.log(`   Granted by: ${result.sender}`)
     })

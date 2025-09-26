@@ -4,6 +4,10 @@ import { getEvent } from '../utils/getEvent'
 import { isValidBytes, isValidBytesAndLength } from '../utils/validation'
 import { Rbac } from './interfaces'
 
+/**
+ * Legacy function for backward compatibility
+ * @deprecated Use the signature provider version above
+ */
 export async function deployUseCaseTo(
     configId: string,
     configVersion: number,

@@ -20,6 +20,10 @@ task(
     .addOptionalParam('count', 'Number of private keys to generate', '5')
     .addOptionalParam('output', 'Output file path', '.env')
     .addFlag('backup', 'Backup existing .env file')
+    .addFlag(
+        'dual',
+        'Create both .env.secp256k1 and .env.secp256r1 with same private keys'
+    )
     .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
         console.log('🔐 Generating Random .env Configuration')
         console.log('='.repeat(45))
@@ -28,14 +32,20 @@ task(
         const curve = taskArgs.curve.toLowerCase()
         const count = parseInt(taskArgs.count)
         const outputPath = taskArgs.output
+        const isDualMode = taskArgs.dual
 
         // Validate parameters
-        if (!['secp256k1', 'secp256r1'].includes(curve)) {
+        if (!isDualMode && !['secp256k1', 'secp256r1'].includes(curve)) {
             throw new Error('Invalid curve. Must be secp256k1 or secp256r1')
         }
 
         if (count < 1 || count > 50) {
             throw new Error('Count must be between 1 and 50')
+        }
+
+        // Handle dual mode
+        if (isDualMode) {
+            return await handleDualMode(hre, count, taskArgs.backup)
         }
 
         console.log('📋 Configuration:')
@@ -188,6 +198,194 @@ async function generateSecp256r1Accounts(count: number) {
     }
 
     return accounts
+}
+
+/**
+ * Handle dual mode - create both secp256k1 and secp256r1 files with same private keys
+ */
+async function handleDualMode(
+    hre: HardhatRuntimeEnvironment,
+    count: number,
+    backup: boolean
+) {
+    console.log('🔄 Dual Mode: Creating both secp256k1 and secp256r1 files')
+    console.log('📋 Configuration:')
+    console.log(`   • Number of accounts: ${count}`)
+    console.log(`   • Files to create: .env.secp256k1, .env.secp256r1`)
+    console.log('')
+
+    // Check if both files already exist
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fs = require('fs')
+    const k1Path = join(process.cwd(), '.env.secp256k1')
+    const r1Path = join(process.cwd(), '.env.secp256r1')
+
+    if (fs.existsSync(k1Path) && fs.existsSync(r1Path) && !backup) {
+        console.log('⚠️  Both .env.secp256k1 and .env.secp256r1 already exist')
+        console.log(
+            '   Files not created to avoid overwriting existing configurations'
+        )
+        console.log('')
+        console.log('💡 To recreate files:')
+        console.log(
+            '   1. Remove existing files: rm .env.secp256k1 .env.secp256r1'
+        )
+        console.log('   2. Run the command again')
+        console.log('   3. Or use --backup flag to backup existing files')
+        return
+    }
+
+    try {
+        // Backup existing files if requested
+        if (backup) {
+            ;[k1Path, r1Path].forEach((filePath, index) => {
+                if (fs.existsSync(filePath)) {
+                    const fileName =
+                        index === 0 ? '.env.secp256k1' : '.env.secp256r1'
+                    const backupPath = `${fileName}.backup.${Date.now()}`
+                    try {
+                        fs.copyFileSync(filePath, backupPath)
+                        console.log(
+                            `📋 Backed up existing ${fileName} to: ${backupPath}`
+                        )
+                    } catch {
+                        console.warn(
+                            `⚠️  Could not backup existing ${fileName}`
+                        )
+                    }
+                }
+            })
+        }
+
+        // Generate base private keys
+        console.log('🔧 Generating private keys...')
+        const basePrivateKeys = []
+        for (let i = 0; i < count; i++) {
+            basePrivateKeys.push('0x' + randomBytes(32).toString('hex'))
+        }
+
+        // Create secp256k1 accounts
+        console.log('🔧 Creating secp256k1 accounts...')
+        const k1Accounts = []
+        for (const privateKey of basePrivateKeys) {
+            const wallet = new hre.ethers.Wallet(privateKey)
+            k1Accounts.push({
+                privateKey: privateKey,
+                address: wallet.address,
+            })
+        }
+
+        // Create secp256r1 accounts with same private keys
+        console.log('🔧 Creating secp256r1 accounts with same private keys...')
+        const { deriveEthereumAddress } = await import(
+            '../../utils/secp256r1Utils'
+        )
+
+        const r1Accounts = []
+        for (const privateKey of basePrivateKeys) {
+            try {
+                // For secp256r1, we need to derive the address from the private key
+                const cleanPrivateKey = privateKey.startsWith('0x')
+                    ? privateKey.slice(2)
+                    : privateKey
+
+                // Import elliptic for secp256r1 operations
+                // eslint-disable-next-line @typescript-eslint/no-require-imports
+                const EC = require('elliptic').ec
+                const ec = new EC('p256')
+                const keyPair = ec.keyFromPrivate(cleanPrivateKey, 'hex')
+                const publicKey = keyPair.getPublic()
+                const compressedPublicKey = publicKey.encode('hex', true)
+                const uncompressedPublicKey = publicKey.encode('hex', false)
+
+                // Derive Ethereum-compatible address using secp256r1 public key
+                const address = deriveEthereumAddress(uncompressedPublicKey)
+
+                r1Accounts.push({
+                    privateKey: privateKey,
+                    address: address,
+                    publicKey: uncompressedPublicKey,
+                    compressedPublicKey: compressedPublicKey,
+                })
+            } catch (error) {
+                console.warn(
+                    `⚠️  Could not generate secp256r1 address for key ${privateKey.substring(0, 8)}...`,
+                    error.message
+                )
+                // Fallback: use the secp256k1 address (for development purposes)
+                const wallet = new hre.ethers.Wallet(privateKey)
+                r1Accounts.push({
+                    privateKey: privateKey,
+                    address: wallet.address, // Fallback to k1 address
+                    publicKey: undefined,
+                    compressedPublicKey: undefined,
+                })
+            }
+        }
+
+        // Generate content for both files
+        const k1Content = generateEnvContent(k1Accounts, 'secp256k1')
+        const r1Content = generateEnvContent(r1Accounts, 'secp256r1')
+
+        // Write both files
+        writeFileSync(k1Path, k1Content, 'utf8')
+        writeFileSync(r1Path, r1Content, 'utf8')
+
+        console.log('✅ Successfully generated both .env files!')
+        console.log('')
+
+        // Display summary
+        console.log('📊 Generated Files Summary:')
+        console.log(
+            `   • .env.secp256k1: ${count} accounts (standard Ethereum)`
+        )
+        console.log(`   • .env.secp256r1: ${count} accounts (experimental)`)
+        console.log(`   • Same private keys used for both curves`)
+        console.log('')
+
+        // Display account comparison
+        console.log('🔑 Account Comparison (First 3):')
+        for (let i = 0; i < Math.min(3, count); i++) {
+            console.log(`   Account ${i + 1}:`)
+            console.log(`      Private Key: ${k1Accounts[i].privateKey}`)
+            console.log(`      secp256k1 Address: ${k1Accounts[i].address}`)
+            console.log(`      secp256r1 Address: ${r1Accounts[i].address}`)
+            console.log('')
+        }
+
+        if (count > 3) {
+            console.log(`   ... and ${count - 3} more accounts`)
+            console.log('')
+        }
+
+        // Usage instructions
+        console.log('🎯 Usage Instructions:')
+        console.log('   To use secp256k1 (standard Ethereum):')
+        console.log('   • Copy .env.secp256k1 to .env')
+        console.log('   • Deploy to networks: hardhat, mvp, arsys, kepler')
+        console.log('')
+        console.log('   To use secp256r1 (experimental):')
+        console.log('   • Copy .env.secp256r1 to .env')
+        console.log('   • Deploy to network: customR1Network')
+        console.log('')
+        console.log('   Quick commands:')
+        console.log('   cp .env.secp256k1 .env  # Use secp256k1')
+        console.log('   cp .env.secp256r1 .env  # Use secp256r1')
+        console.log('')
+
+        // Security warning
+        console.log('🔒 SECURITY WARNING:')
+        console.log('   • These are randomly generated test accounts')
+        console.log('   • DO NOT use these keys on production networks')
+        console.log('   • secp256r1 implementation is EXPERIMENTAL')
+        console.log('   • Store production keys securely')
+        console.log('')
+    } catch (error) {
+        console.error('')
+        console.error('❌ Error generating dual .env files:')
+        console.error(`   ${error.message}`)
+        throw error
+    }
 }
 
 /**

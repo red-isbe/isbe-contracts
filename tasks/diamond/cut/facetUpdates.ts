@@ -1,7 +1,7 @@
 import { task, types } from 'hardhat/config'
 
 import { facetUpdates } from '../../../scripts/diamond/cut/facetUpdates'
-import { getSigner } from '../../../scripts/utils/getSigner'
+import { SignatureProviderFactory } from '../../deployment/providers/SignatureProviderFactory'
 
 /**
  npx hardhat facetUpdates --network localhost \
@@ -35,14 +35,14 @@ task('facetUpdates', 'updates a diamond')
         ) => {
             const { facetAddresses, init, calldata, diamond } = taskArgs
 
-            const signer = await getSigner(hre)
+            const signatureProvider = SignatureProviderFactory.create(hre)
 
             const result = await facetUpdates(
                 facetAddresses,
                 init,
                 calldata,
                 diamond,
-                signer
+                signatureProvider
             )
 
             console.log('Facet Updates result:', result)

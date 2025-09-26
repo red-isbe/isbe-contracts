@@ -63,8 +63,8 @@ export function logNetworkInfo(hre: HardhatRuntimeEnvironment): void {
     if (info.url) console.log(`URL: ${info.url}`)
 
     if (info.curve === 'secp256r1') {
-        console.warn(
-            '⚠️  Warning: secp256r1 networks require custom signing implementation'
+        console.log(
+            '✅ secp256r1 network detected - using production secp256r1 wallet'
         )
     }
 }

@@ -3,6 +3,7 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { Wallet } from 'ethers'
 import { getNetworkCurve, isSecp256r1Network } from '../../utils/networkUtils'
 import { NetworkConfigWithCurve } from '../../types/hardhat'
+import { Secp256r1Wallet } from '../../utils/secp256r1TransactionSigner'
 
 /**
  * Get a signer that works with the current network's elliptic curve
@@ -38,20 +39,43 @@ export async function getCurveAwareSigner(hre: HardhatRuntimeEnvironment) {
 
         console.log(`   Using secp256r1 account: ${secp256r1Account.address}`)
 
-        // Create wallet with secp256r1 private key
-        // Note: This still uses ethers.js Wallet, which does secp256k1 signing
-        // For true secp256r1 signing, you would need custom implementation
+        // Create secp256r1 wallet with compatibility mode
+        // This will automatically use the appropriate signing method for the current Besu configuration
+        const secp256r1Wallet = new Secp256r1Wallet(privateKey, hre)
+
+        console.log(`   ✅ Created secp256r1-compatible wallet`)
+        console.log(`   📍 Address: ${secp256r1Wallet.address}`)
+
+        // Create a standard ethers wallet wrapper that uses our secp256r1 signing
         const wallet = new Wallet(privateKey, hre.ethers.provider)
 
-        // Verify the address matches what we expect
-        if (
-            wallet.address.toLowerCase() !==
-            secp256r1Account.address.toLowerCase()
-        ) {
-            console.warn(
-                `⚠️  Address mismatch! Expected ${secp256r1Account.address}, got ${wallet.address}. ` +
-                    'This may indicate the private key is for a different curve.'
+        // Override the signTransaction method to use our secp256r1 signer
+        wallet.signTransaction = async (transaction) => {
+            console.log('🔐 Deployment using secp256r1-compatible signing...')
+            console.log(`📋 Transaction type: ${transaction.type || 'legacy'}`)
+            console.log(`🎯 To: ${transaction.to || 'contract creation'}`)
+            const result = await secp256r1Wallet.signTransaction(transaction)
+            console.log(
+                `✅ Signed transaction length: ${result.length} characters`
             )
+            return result
+        }
+
+        // Also override sendTransaction for deployment compatibility
+        wallet.sendTransaction = async (transaction) => {
+            console.log(
+                '🚀 Deployment sendTransaction intercepted - using secp256r1...'
+            )
+
+            // Sign the transaction with our secp256r1 signer
+            const signedTx = await secp256r1Wallet.signTransaction(transaction)
+
+            // Broadcast the signed transaction
+            console.log('📡 Broadcasting secp256r1 signed transaction...')
+            const result = await wallet.provider!.broadcastTransaction(signedTx)
+
+            console.log(`✅ Transaction sent with hash: ${result.hash}`)
+            return result
         }
 
         return wallet

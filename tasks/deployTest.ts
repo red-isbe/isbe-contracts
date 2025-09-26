@@ -1,5 +1,6 @@
 import { task } from 'hardhat/config'
-import { getSigner } from '../scripts/utils/getSigner'
+import { SignatureProviderFactory } from './deployment/providers/SignatureProviderFactory'
+import { ISignatureProvider } from './deployment/providers/ISignatureProvider'
 import { deployIsbeFactory } from '../scripts/businessLogic/deployIsbeFactory' // Adjust path if needed
 import fs from 'fs'
 import path from 'path'
@@ -89,8 +90,14 @@ task(
 
     console.log('ISBE Factory deployed at:', GovernanceAddress)
 
-    // getting signer
-    const signer = await getSigner(hre)
+    // getting signature provider (automatically detects curve based on network)
+    const signatureProvider: ISignatureProvider =
+        SignatureProviderFactory.create(hre)
+    const signer = await signatureProvider.getSigner()
+
+    console.log(
+        `🔐 Using ${signatureProvider.getCurveType()} signature provider for deployment tests`
+    )
 
     // check governance facets and selectors
     const resultGovernanceFacets = await getFacets(GovernanceAddress, signer)
@@ -136,7 +143,10 @@ task(
     }
 
     // pause and unpause governance
-    const resultPauseGovernance = await pause(GovernanceAddress, signer)
+    const resultPauseGovernance = await pause(
+        GovernanceAddress,
+        signatureProvider
+    )
 
     console.log('Governance Pause result:', resultPauseGovernance)
 
@@ -145,7 +155,10 @@ task(
     if (!resultIsPauseGovernance.isPaused)
         throw Error('Governance pause did not work')
 
-    const resultUNPauseGovernance = await unpause(GovernanceAddress, signer)
+    const resultUNPauseGovernance = await unpause(
+        GovernanceAddress,
+        signatureProvider
+    )
 
     console.log('Governance Unpause result:', resultUNPauseGovernance)
 
@@ -175,7 +188,7 @@ task(
             DEFAULT_BUSINESS_LOGICS_IDS[i],
             bytecodeDefault,
             GovernanceAddress,
-            signer
+            signatureProvider
         )
 
         console.log('Default deployment result:', resultDeployDefaultBL)
@@ -226,7 +239,7 @@ task(
         CUSTOM_BUSINESS_LOGIC_ID,
         bytecode,
         GovernanceAddress,
-        signer
+        signatureProvider
     )
 
     console.log('Deployment result:', resultDeployBL)
@@ -376,7 +389,7 @@ task(
         DUMB_ROLE,
         accountAddress,
         UseCaseAddress,
-        signer
+        signatureProvider
     )
     console.log('Granted role: ' + JSON.stringify(resultGrantRole))
 
@@ -393,7 +406,7 @@ task(
         DUMB_ROLE,
         accountAddress,
         UseCaseAddress,
-        signer
+        signatureProvider
     )
     console.log('Revoked role: ' + JSON.stringify(resultRevoke))
 
@@ -406,18 +419,27 @@ task(
 
     if (resultHasRole_2.hasRole) throw new Error('Role not revoked')
 
-    await grantRole(DUMB_ROLE, accountAddress, UseCaseAddress, signer)
+    await grantRole(
+        DUMB_ROLE,
+        accountAddress,
+        UseCaseAddress,
+        signatureProvider
+    )
     console.log('Granted role again')
 
     const resultSetRoleAdmin = await setRoleAdmin(
         DUMB_ROLE,
         DUMB_ROLE_2,
         UseCaseAddress,
-        signer
+        signatureProvider
     )
     console.log('Set Role Admin: ' + JSON.stringify(resultSetRoleAdmin))
 
-    const resultRenounce = await renounceRole(DUMB_ROLE, UseCaseAddress, signer)
+    const resultRenounce = await renounceRole(
+        DUMB_ROLE,
+        UseCaseAddress,
+        signatureProvider
+    )
     console.log('Renounce role: ' + JSON.stringify(resultRenounce))
 
     for (let i = 0; i < USE_CASE_ROLES.length; i++) {
@@ -441,7 +463,7 @@ task(
     const resultPauseISBE = await pauseIsbe(
         UseCaseAddress,
         GovernanceAddress,
-        signer
+        signatureProvider
     )
 
     console.log('UseCase Pause result:', resultPauseISBE)
@@ -449,7 +471,7 @@ task(
     const resultUNPauseISBE = await unpauseIsbe(
         UseCaseAddress,
         GovernanceAddress,
-        signer
+        signatureProvider
     )
 
     console.log('UseCase UnPause result:', resultUNPauseISBE)

@@ -114,49 +114,32 @@ async function deployAllWithSecp256k1(
 }
 
 /**
- * Custom secp256r1 deployment strategy
+ * Production secp256r1 deployment strategy
  */
 async function deployAllWithSecp256r1() {
-    console.log('📋 Using secp256r1 deployment strategy...')
+    console.log('📋 Using production secp256r1 deployment strategy...')
 
-    console.warn('⚠️  secp256r1 deployment limitations:')
-    console.warn('    - Custom key management required')
-    console.warn('    - Transaction signing must be implemented')
-    console.warn('    - Network compatibility must be verified')
+    console.log('✅ secp256r1 deployment now fully supported!')
+    console.log('    • Production Secp256r1Wallet integrated')
+    console.log('    • Full EIP-155 transaction signing')
+    console.log('    • Smart contract deployment and interaction')
+    console.log('    • Regulatory compliance (NIST P-256)')
 
-    // For secp256r1 networks, you would need to:
-    // 1. Load secp256r1 private keys from secure storage
-    // 2. Create custom signers that use secp256r1
-    // 3. Modify the deployment orchestrator to use custom signers
-    // 4. Handle any network-specific configurations
+    console.log(
+        '\\n💡 Note: This is now handled automatically by the main deployAll task'
+    )
+    console.log('     Use: npx hardhat deployAll --network <secp256r1_network>')
+    console.log('\\n📁 For more details, see:')
+    console.log('     • docs/Secp256r1-Signature-Guide.md')
+    console.log('     • utils/Secp256r1Wallet.js')
+    console.log('     • scripts/production-secp256r1-deploy.js')
 
-    // Example of what you would need to implement:
-    console.log('\\n🔧 Required secp256r1 implementation steps:')
-    console.log('   1. Implement secp256r1 key loading')
-    console.log('   2. Create custom secp256r1 signers')
-    console.log('   3. Modify DeploymentOrchestrator for secp256r1')
-    console.log('   4. Update validation for secp256r1 networks')
+    // This example task now redirects to the main implementation
+    console.log(
+        '\\n➡️  Redirecting to main deployAll task with secp256r1 support...'
+    )
 
-    // Placeholder for actual implementation
-    const mockDeploymentResult = {
-        summary: {
-            startTime: new Date(),
-            endTime: new Date(),
-        },
-        businessLogics: [],
-        useCases: [],
-        governance: {
-            success: true,
-            addresses: {},
-        },
-    }
-
-    console.log('\\n✅ secp256r1 deployment simulation completed!')
-    console.log('💡 This would require implementing:')
-    console.log('   • secp256r1 cryptographic library integration')
-    console.log('   • Custom wallet and signer classes')
-    console.log('   • Modified deployment orchestration')
-    console.log('   • Network-specific configuration handling')
-
-    return mockDeploymentResult
+    throw new Error(
+        'This example task is obsolete. Use the main deployAll task which now has full secp256r1 support.'
+    )
 }

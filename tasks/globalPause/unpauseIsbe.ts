@@ -1,7 +1,7 @@
 import { task } from 'hardhat/config'
 
 import { unpauseIsbe } from '../../scripts/globalPause/unpauseIsbe'
-import { getSigner } from '../../scripts/utils/getSigner'
+import { SignatureProviderFactory } from '../deployment/providers/SignatureProviderFactory'
 
 /**
  npx hardhat unpauseIsbe --network localhost \
@@ -15,9 +15,13 @@ task('unpauseIsbe', 'Pauses a deployed smart contract')
     .setAction(async (taskArgs, hre) => {
         const { proxyAddress, factory } = taskArgs
 
-        const signer = await getSigner(hre)
+        const signatureProvider = SignatureProviderFactory.create(hre)
 
-        const result = await unpauseIsbe(proxyAddress, factory, signer)
+        const result = await unpauseIsbe(
+            proxyAddress,
+            factory,
+            signatureProvider
+        )
 
         console.log('UnPause result:', result)
     })

@@ -144,7 +144,10 @@ export async function deployIsbeFactory(
         ],
         init: ethers.ZeroAddress,
         initCalldata: initCalldata,
+        gasLimit: 2000000,
+        gasPrice: 875000000,
     })
+
     await diamondProxy.waitForDeployment()
     return await diamondProxy.getAddress()
 }

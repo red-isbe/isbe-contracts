@@ -8,6 +8,7 @@ import { DeploymentValidator } from './validators/DeploymentValidator'
 import { DeploymentResult, DeploymentOptions } from './types/DeploymentTypes'
 import { DeploymentTableRenderer } from './utils/DeploymentTableRenderer'
 import { NetworkConfigWithCurve } from '../../types/hardhat'
+import { Secp256r1Wallet } from '../../utils/Secp256r1Wallet'
 
 /**
  * Main orchestrator that coordinates the entire deployment process
@@ -84,22 +85,24 @@ export class DeploymentOrchestrator {
                 ? secp256r1Account.privateKey
                 : '0x' + secp256r1Account.privateKey
 
-            // Create wallet from private key and connect to provider
-            this.signer = new this.hre.ethers.Wallet(
+            // Create Secp256r1Wallet with proper secp256r1 signature support
+            this.signer = new Secp256r1Wallet(
                 privateKey,
                 this.hre.ethers.provider
             )
 
             const address = await this.signer.getAddress()
-            console.log(`🔐 Using secp256r1 signer: ${address}`)
+            console.log(`🔐 Using production secp256r1 wallet: ${address}`)
+            console.log(`✅ Signatures will use secp256r1 curve (NIST P-256)`)
 
-            // For secp256r1 networks, the governance address (secp256r1-derived) differs from signer address (secp256k1-derived)
-            // This is expected and normal - we use secp256k1 signing with secp256r1-derived addresses
+            // Update governance address to use secp256r1-derived address
+            this.config.governance.accountAddress = address
+
             console.log(
-                `📍 Governance account configured as: ${this.config.governance.accountAddress}`
+                `📍 Governance account: ${this.config.governance.accountAddress}`
             )
             console.log(
-                `🔑 Signing with Ethereum-compatible address: ${address}`
+                `🔑 Production-ready secp256r1 deployment wallet active`
             )
         } else {
             // Use standard Hardhat signers for secp256k1 networks
