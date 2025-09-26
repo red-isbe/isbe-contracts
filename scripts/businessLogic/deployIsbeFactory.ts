@@ -26,7 +26,7 @@ import {
     ISBE_PAUSER_ROLE,
     ISBE_ROLE,
     PROXY_DEPLOYER_ROLE,
-} from '../../test/constants'
+} from '../../utils/constants'
 
 let AccessControlFacetFactory: AccessControlGovernanceFacet__factory
 let IsbePausableFacetFactory: ISBEPauseFacet__factory
