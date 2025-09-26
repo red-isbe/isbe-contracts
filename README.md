@@ -579,6 +579,7 @@ For detailed installation and usage instructions, visit the [package documentati
 - **Development Guidelines**: `docs/Development-guidelines.md`
 - **Diamond Pattern Guide**: `docs/Diamond-pattern-guidelines.md`
 - **Governance Architecture**: `docs/Gobernance-Layer-Architecture.md`
+- **TypeScript Code Improvements**: `docs/TypeScript-Code-Improvements.md` 🆕
 - **SECP256R1 Complete Guide**: `docs/SECP256R1_COMPLETE_GUIDE.md` ⚠️ _Experimental_
 - **Production Deployment Guide**: `docs/Production-Deployment-Guide.md`
 - **Generated Documentation**: `docs/generated/` (via `npm run docgen`)

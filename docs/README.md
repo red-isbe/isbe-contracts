@@ -13,6 +13,7 @@
 ## Deployment Documentation
 
 - [Production Deployment Guide](Production-Deployment-Guide.md)
+- [TypeScript Code Improvements](docs/TypeScript-Code-Improvements.md) 🆕
 
 ## Secp256R1 Documentation
 
