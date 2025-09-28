@@ -1,6 +1,7 @@
 import { task } from 'hardhat/config'
 import {
     GenesisAlloc,
+    matchContractNames,
     retrieveSlotStructure,
 } from '../scripts/genesisGenerator'
 
@@ -15,7 +16,8 @@ task(
     console.log('✅ Deploy all (Done).')
 
     console.log('🚀 Genesis generation...')
-    const slotStructure: GenesisAlloc = await retrieveSlotStructure(hre)
+    let slotStructure: GenesisAlloc = await retrieveSlotStructure(hre)
+    slotStructure = await matchContractNames(hre, slotStructure)
     console.log(
         '✅ Slot structure retrieved.----------------------------------------------------------'
     )

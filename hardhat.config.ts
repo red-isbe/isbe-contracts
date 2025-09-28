@@ -47,6 +47,8 @@ import './tasks/extract/byteCode'
 import './tasks/extract/StorageSlots'
 import './tasks/genesisGeneration'
 
+import 'hardhat-storage-layout'
+
 import { randomBytes } from 'crypto'
 
 const ACCOUNTS = (
@@ -95,6 +97,14 @@ const config: HardhatUserConfig = {
         kepler: {
             url: 'https://regular.pre.iosec.io.builders:8565',
             chainId: 1003,
+            accounts: ACCOUNTS,
+            gasPrice: 0,
+            gas: 100000000,
+            blockGasLimit: 18800000,
+        },
+        besu_local: {
+            url: 'http://127.0.0.1:8545',
+            chainId: 2222,
             accounts: ACCOUNTS,
             gasPrice: 0,
             gas: 100000000,
