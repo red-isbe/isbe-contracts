@@ -14,7 +14,7 @@
         "size": "npx hardhat size-contracts",
         "test": "npx hardhat test",
         "test:parallel": "npx hardhat test --parallel",
-        "test:coverage": "npx hardhat coverage && node scripts/check-coverage.js",
+        "test:coverage": "npx hardhat coverage && npx ts-node scripts/check-coverage.ts",
         "test:accessControl": "npx hardhat test test/AccessControl.spec.ts",
         "test:assetEventTracker": "npx hardhat test test/AssetEventTracker.spec.ts",
         "test:eip2535AccessControl": "npx hardhat test test/EIP2535AccessControl.spec.ts",
@@ -57,7 +57,7 @@
         "slither:summary": "docker run -t --rm -v /var/run/docker.sock:/var/run/docker.sock -v \"$(pwd)\":\"/home/ethsec/contracts\" -w \"/home/ethsec/contracts\" -u 0:0 trailofbits/eth-security-toolbox /bin/sh -c \"solc-select install 0.8.28  && solc-select use 0.8.28  && slither . --print human-summary --solc-remaps @=node_modules/@\"",
         "slither": "npm run slither:summary && npm run slither:storageLayout && npm run slither:inheritance && npm run slither:analysis",
         "slither:analysis:local": "slither . --solc-remaps @=node_modules/@ | tee slither-output.txt && node scripts/check-slither.js",
-        "docgen": "npx hardhat docgen && node scripts/post-docgen.js",
+        "docgen": "npx hardhat docgen && npx ts-node scripts/post-docgen.ts",
         "deployAll": "npx hardhat deployAll"
     },
     "repository": {
@@ -95,6 +95,8 @@
         "solhint-plugin-prettier": "^0.1.0",
         "solidity-coverage": "^0.8.15",
         "solidity-docgen": "^0.6.0-beta.36",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.6.3",
         "typescript-eslint": "^8.31.1"
     },
     "overrides": {
