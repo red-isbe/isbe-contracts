@@ -168,21 +168,13 @@ const NETWORK_CONFIGS: { [key: string]: NetworkConfigWithCurve } = {
     customR1Network: {
         url: 'http://localhost:8545', // Desde WSL
         chainId: 2222,
-        accounts: [
-            'aaa7916a0918dec3f3ec3671e19801cbdc9e00f42bc230dbd84baf6b2219aaaa',
-        ], //! fake private key with balance
+        accounts: SECP256R1_ACCOUNT_KEYS, // Generated secp256r1 private keys
         gasPrice: 0,
         gas: 50000000,
         blockGasLimit: 0x1fffffffffffff,
         curve: 'secp256r1', // Custom network using secp256r1
         // Store account information for easy access
-        secp256r1Accounts: [
-            {
-                address: '0x6b5be277e2ddf8bbf6193205cb84cca3ab8576bc', //! fake private key with balance
-                privateKey:
-                    'aaa7916a0918dec3f3ec3671e19801cbdc9e00f42bc230dbd84baf6b2219daaa',
-            },
-        ],
+        secp256r1Accounts: SECP256R1_ACCOUNTS,
     },
 }
 
