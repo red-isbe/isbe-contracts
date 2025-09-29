@@ -114,7 +114,9 @@ interface NetworkConfigWithCurve {
         privateKey: string
     }>
 }
-
+console.log(
+    `   • Generated secp256r1 account: ${JSON.stringify(SECP256R1_ACCOUNTS, null, 2)}`
+)
 // Network configurations with curve information
 const NETWORK_CONFIGS: { [key: string]: NetworkConfigWithCurve } = {
     hardhat: {
@@ -164,15 +166,23 @@ const NETWORK_CONFIGS: { [key: string]: NetworkConfigWithCurve } = {
     },
     // Real Hyperledger Besu secp256r1 network
     customR1Network: {
-        url: 'http://172.16.240.30:8545',
+        url: 'http://localhost:8545', // Desde WSL
         chainId: 2222,
-        accounts: SECP256R1_ACCOUNT_KEYS, // Generated secp256r1 private keys
+        accounts: [
+            'aaa7916a0918dec3f3ec3671e19801cbdc9e00f42bc230dbd84baf6b2219aaaa',
+        ], //! fake private key with balance
         gasPrice: 0,
-        gas: 100000000,
-        blockGasLimit: 30000000,
+        gas: 50000000,
+        blockGasLimit: 0x1fffffffffffff,
         curve: 'secp256r1', // Custom network using secp256r1
         // Store account information for easy access
-        secp256r1Accounts: SECP256R1_ACCOUNTS,
+        secp256r1Accounts: [
+            {
+                address: '0x6b5be277e2ddf8bbf6193205cb84cca3ab8576bc', //! fake private key with balance
+                privateKey:
+                    'aaa7916a0918dec3f3ec3671e19801cbdc9e00f42bc230dbd84baf6b2219daaa',
+            },
+        ],
     },
 }
 
