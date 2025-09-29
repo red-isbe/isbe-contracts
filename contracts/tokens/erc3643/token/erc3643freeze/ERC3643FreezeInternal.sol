@@ -24,8 +24,7 @@ abstract contract ERC3643FreezeInternal is Common {
      * @param _freeze The freeze status (`true` = frozen, `false` = unfrozen).
      */
     function _setAddressFrozen(address _userAddress, bool _freeze) internal {
-        ERC3643FreezeStorage storage $ = _erc3643FreezeStorage();
-        $.frozen[_userAddress] = _freeze;
+        _erc3643FreezeStorage().frozen[_userAddress] = _freeze;
     }
 
     /**
@@ -34,8 +33,7 @@ abstract contract ERC3643FreezeInternal is Common {
      * @param _amount The amount of tokens to freeze.
      */
     function _freezePartialTokens(address _userAddress, uint256 _amount) internal {
-        ERC3643FreezeStorage storage $ = _erc3643FreezeStorage();
-        $.frozenTokens[_userAddress] += _amount;
+        _erc3643FreezeStorage().frozenTokens[_userAddress] += _amount;
     }
 
     /**
@@ -44,8 +42,7 @@ abstract contract ERC3643FreezeInternal is Common {
      * @param _amount The amount of tokens to unfreeze.
      */
     function _unfreezePartialTokens(address _userAddress, uint256 _amount) internal {
-        ERC3643FreezeStorage storage $ = _erc3643FreezeStorage();
-        $.frozenTokens[_userAddress] -= _amount;
+        _erc3643FreezeStorage().frozenTokens[_userAddress] -= _amount;
     }
 
     /**
