@@ -954,6 +954,26 @@ export async function deployERC3643UseCasesFacets(
         ISBE_LOUPE_RESOLVER_KEY,
         IsbeLoupeFacetFactory
     )
+    const accessControlFacet = await deployBusinessLogicFromFactory(
+        ACCESS_CONTROL_RESOLVER_KEY,
+        AccessControlFacetFactory
+    )
+    const pauseFacet = await deployBusinessLogicFromFactory(
+        PAUSE_RESOLVER_KEY,
+        ISBEPauseFacetFactory
+    )
+    const erc20Facet = await deployBusinessLogicFromFactory(
+        ERC20_RESOLVER_KEY,
+        ERC20FacetFactory
+    )
+    const erc3643MetadataFacet = await deployBusinessLogicFromFactory(
+        ERC3643_METADATA_RESOLVER_KEY,
+        ERC3643MetadataFacetFactory
+    )
+    const erc3643RegulatoryFacet = await deployBusinessLogicFromFactory(
+        ERC3643_REGULATORY_RESOLVER_KEY,
+        ERC3643RegulatoryFacetFactory
+    )
 
     // Set configuration for ERC3643
 
@@ -1005,5 +1025,10 @@ export async function deployERC3643UseCasesFacets(
         isbeCutFacet,
         isbeLoupeFacet,
         proxy,
+        accessControlFacet,
+        pauseFacet,
+        erc20Facet,
+        erc3643MetadataFacet,
+        erc3643RegulatoryFacet,
     }
 }
