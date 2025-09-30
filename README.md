@@ -29,7 +29,12 @@ npm run test
 
 # Generate documentation
 npm run docgen
+
+# Enable debug logging for troubleshooting (optional)
+DEBUG=true npm run compile
 ```
+
+> **🔇 Silent by Default**: The configuration system produces no output during normal operation. Use `DEBUG=true` to see detailed information when troubleshooting.
 
 ## 🌐 Network Support
 
@@ -133,6 +138,30 @@ npx hardhat show-secp256r1-accounts
 - **Configuration Management**: Diamond configuration management
 - **Proxy Factory**: Use case proxy deployment
 - **Global ISBE Pause**: Network-wide pause functionality
+
+## 🔇 **Silent Configuration System**
+
+🆕 **New in this version**: The configuration system is now **completely silent by default**, eliminating configuration noise from your builds and scripts.
+
+### Quick Start
+
+```bash
+# Silent operation (default) - clean output
+npx hardhat compile
+npx hardhat test
+npx hardhat deployAll --network mvp
+
+# Detailed debug output when troubleshooting
+DEBUG=true npx hardhat compile
+DEBUG=true npx hardhat deployAll --network mvp
+```
+
+### Benefits
+
+- **🔇 Clean Output**: No configuration noise cluttering your builds
+- **🚫 Silent Scripts**: All hardhat commands run quietly by default
+- **🔍 Debug When Needed**: Rich debugging information available when `DEBUG=true`
+- **🏠 Unified Networks**: All network configurations in one clear location (`config/networks.ts`)
 
 ## 🔧 **TypeScript Utilities & Code Quality**
 
@@ -697,26 +726,36 @@ For detailed installation and usage instructions, visit the [package documentati
 
 ### Network Connection Issues
 
-- Verify network URLs in `hardhat.config.ts`
+- Network configurations are now centralized in `config/networks.ts`
 - Check account balances
 - Validate network accessibility
+- Use `DEBUG=true` to see detailed configuration information
 
 ## 🚀 Advanced Usage
 
 ### Custom Network Configuration
 
+🆕 **New Unified Configuration System**: All network configurations are now centralized in `config/networks.ts` for better maintainability.
+
 To add a new network:
 
 ```typescript
-// In hardhat.config.ts
-customNetwork: {
-    url: 'your-network-url',
+// In config/networks.ts - add to getNetworkConfigs() return object
+myNewNetwork: {
+    url: process.env.MY_NETWORK_URL || 'https://your-network-url.com',
     chainId: yourChainId,
-    accounts: ACCOUNTS, // or SECP256R1_ACCOUNT_KEYS
+    accounts, // or secp256r1PrivateKeys for R1 networks
     gasPrice: 0,
     gas: 100000000,
-    curve: 'secp256k1' // or 'secp256r1'
-}
+    blockGasLimit: 30000000,
+    curve: 'secp256k1', // or 'secp256r1'
+} as NetworkConfigWithCurve,
+```
+
+**Environment Variable Support**: Override any network URL via environment variables:
+
+```bash
+export MY_NETWORK_URL="https://my-custom-endpoint.com"
 ```
 
 ### Environment-Specific Deployment

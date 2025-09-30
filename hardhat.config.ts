@@ -8,173 +8,46 @@ import 'hardhat-gas-reporter'
 
 // Configure dotenv globally without verbose logging
 import 'dotenv/config'
-import './tasks/businessLogic/deployIsbeFactory'
-import './tasks/businessLogic/deployBusinessLogic'
-import './tasks/businessLogic/getBusinessLogicAddress'
-import './tasks/businessLogic/getBusinessLogicVersions'
-import './tasks/businessLogic/getBusinessLogics'
-import './tasks/diamond/loupe/getFacets'
-import './tasks/diamond/loupe/getFacetAddress'
-import './tasks/diamond/loupe/getFacetAddresses'
-import './tasks/diamond/loupe/getFacetSelectors'
-import './tasks/diamond/cut/diamondCut'
-import './tasks/diamond/cut/facetUpdates'
-import './tasks/diamond/cut/interfaceCut'
-import './tasks/globalPause/pauseIsbe'
-import './tasks/globalPause/unpauseIsbe'
-import './tasks/pause/pause'
-import './tasks/pause/unpause'
-import './tasks/pause/isPaused'
-import './tasks/access/accessControl/getRoleAdmin'
-import './tasks/access/accessControl/getRoleMembers'
-import './tasks/access/accessControl/getRoleMembersCount'
-import './tasks/access/accessControl/getRolesByAccount'
-import './tasks/access/accessControl/getRolesByAccountCount'
-import './tasks/access/accessControl/grantRole'
-import './tasks/access/accessControl/hasRole'
-import './tasks/access/accessControl/renounceRole'
-import './tasks/access/accessControl/revokeRole'
-import './tasks/access/accessControl/setRoleAdmin'
-import './tasks/configMgmt/facets'
-import './tasks/configMgmt/facetAddress'
-import './tasks/configMgmt/facetAddresses'
-import './tasks/configMgmt/facetSelectors'
-import './tasks/configMgmt/getConfig'
-import './tasks/configMgmt/setConfig'
-import './tasks/proxyFactory/deployUseCase'
-import './tasks/proxyFactory/deployUseCaseTo'
-import './tasks/proxyFactory/getConfigurationByProxy'
-import './tasks/deployTest'
-import './tasks/deployAll'
-import './tasks/deployAllClean'
-import './tasks/extract/byteCode'
-import './tasks/extract/StorageSlots'
-import './tasks/examples/curveAwareTask'
-import './tasks/examples/curveAwareDeployAll'
-import './tasks/secp256r1/showAccounts'
-import './tasks/secp256r1/generateEnv'
-import './tasks/validation/validateAccounts'
-import './tasks/verification/verifyBesuDeployment'
-import './tasks/verification/deploymentStatus'
-import './tasks/verification/governanceRoles'
 
-import { randomBytes } from 'crypto'
-import { ethers } from 'ethers'
-import {
-    validateEnvAccounts,
-    logValidationResults,
-} from './utils/accountValidator'
+// Import unified configuration and task utilities
+import { getNetworkConfigs, ConfigManager, logger } from './config'
 
-// Validate .env accounts configuration
-const validation = validateEnvAccounts()
-if (!validation.allValid) {
-    console.warn('⚠️  Account validation issues detected:')
-    logValidationResults(validation)
+// Register all tasks with Hardhat CLI in a single import
+// This replaces the many individual task imports with a consolidated approach
+import './tasks/register'
+
+// Initialize configuration management
+const configManager = ConfigManager.getInstance()
+
+// Validate configuration and log results
+const configValidation = configManager.validateConfiguration()
+if (!configValidation.isValid) {
+    logger.error('❌ Configuration validation failed:')
+    configValidation.errors.forEach((error) => logger.error(`  - ${error}`))
+    logger.warn('⚠️  Continuing with potentially invalid configuration')
 }
 
-// Get accounts from .env or generate defaults for secp256k1 networks
-const ACCOUNTS = process.env.ACCOUNTS
-    ? process.env.ACCOUNTS.split(',').map(
-          (key) => '0x' + (key.startsWith('0x') ? key.slice(2) : key)
-      )
-    : Array.from({ length: 10 }, () => '0x' + randomBytes(32).toString('hex'))
+if (configValidation.warnings.length > 0) {
+    logger.warn('⚠️  Configuration warnings:')
+    configValidation.warnings.forEach((warning) =>
+        logger.warn(`  - ${warning}`)
+    )
+}
 
-// Get corrected secp256r1 accounts with proper Ethereum address derivation
-const SECP256R1_ACCOUNT_KEYS = process.env.ACCOUNTS
-    ? process.env.ACCOUNTS.split(',').map(
-          (key) => '0x' + (key.startsWith('0x') ? key.slice(2) : key)
-      )
-    : []
-
-const SECP256R1_ACCOUNTS = SECP256R1_ACCOUNT_KEYS.map((privateKey) => {
-    const wallet = new ethers.Wallet(privateKey)
-    return {
-        address: wallet.address,
-        privateKey: privateKey.startsWith('0x')
-            ? privateKey.slice(2)
-            : privateKey,
-    }
+// Log configuration summary (respects debug mode)
+const summary = configValidation.summary
+logger.summary('Configuration Summary', {
+    environment: summary.environment,
+    networksCount: summary.networksCount,
+    secp256k1Networks: summary.secp256k1Networks,
+    secp256r1Networks: summary.secp256r1Networks,
+    accountsCount: summary.accountsCount,
+    gasLimit: summary.gasLimit,
+    timeout: `${summary.timeout}ms`,
 })
-// Custom network configuration with curve support
-interface NetworkConfigWithCurve {
-    url?: string
-    chainId?: number
-    accounts?: string[]
-    gasPrice?: number
-    gas?: number
-    blockGasLimit?: number
-    curve?: 'secp256k1' | 'secp256r1' // Custom property for curve type
-    mining?: {
-        auto: boolean
-        interval: number
-    }
-    allowUnlimitedContractSize?: boolean
-    secp256r1Accounts?: Array<{
-        address: string
-        privateKey: string
-    }>
-}
 
-// Network configurations with curve information
-const NETWORK_CONFIGS: { [key: string]: NetworkConfigWithCurve } = {
-    hardhat: {
-        mining: {
-            auto: true,
-            interval: 0,
-        },
-        blockGasLimit: 30000000,
-        allowUnlimitedContractSize: true,
-        curve: 'secp256k1', // Standard Ethereum curve
-    },
-    localhost: {
-        url: 'http://172.16.240.30:8545',
-        chainId: 2222,
-        accounts: ACCOUNTS,
-        gasPrice: 0, // Set minimum gas price to match base fee
-        gas: 100000000, // Match the block gas limit
-        blockGasLimit: 30000000,
-        curve: 'secp256k1', // secp256k1 test network
-    },
-    mvp: {
-        url: 'https://besu-node-non-validator-1.mvp.envs.redisbe.com',
-        chainId: 2023,
-        accounts: ACCOUNTS,
-        gasPrice: 0,
-        gas: 100000000,
-        blockGasLimit: 0x1e84800,
-        curve: 'secp256k1', // ISBE MVP uses secp256k1
-    },
-    arsys: {
-        url: 'http://213.165.85.41:8545',
-        chainId: 2024,
-        accounts: ACCOUNTS,
-        gasPrice: 0,
-        gas: 100000000,
-        blockGasLimit: 0x1e84800,
-        curve: 'secp256k1', // ISBE Arsys uses secp256k1
-    },
-    kepler: {
-        url: 'https://regular.pre.iosec.io.builders:8565',
-        chainId: 1003,
-        accounts: ACCOUNTS,
-        gasPrice: 0,
-        gas: 100000000,
-        blockGasLimit: 18800000,
-        curve: 'secp256k1', // Kepler uses secp256k1
-    },
-    // Real Hyperledger Besu secp256r1 network
-    customR1Network: {
-        url: 'http://172.16.240.30:8545',
-        chainId: 2222,
-        accounts: SECP256R1_ACCOUNT_KEYS, // Generated secp256r1 private keys
-        gasPrice: 0,
-        gas: 100000000,
-        blockGasLimit: 30000000,
-        curve: 'secp256r1', // Custom network using secp256r1
-        // Store account information for easy access
-        secp256r1Accounts: SECP256R1_ACCOUNTS,
-    },
-}
+// Get network configurations from unified config
+const networkConfigs = getNetworkConfigs()
 
 const config: HardhatUserConfig = {
     solidity: {
@@ -187,10 +60,10 @@ const config: HardhatUserConfig = {
             },
         },
     },
-    networks: NETWORK_CONFIGS,
+    networks: networkConfigs,
     mocha: {
-        timeout: 60000,
-        parallel: true,
+        timeout: configManager.getTestingConfig().timeout,
+        parallel: configManager.getTestingConfig().parallel,
     },
     paths: {
         sources: './contracts',

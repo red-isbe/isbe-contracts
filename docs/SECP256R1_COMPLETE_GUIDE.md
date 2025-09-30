@@ -145,10 +145,15 @@ ACCOUNTS=key1,key2,key3,key4,key5
 ### 2. Validate Configuration
 
 ```bash
-# Validate secp256r1 account setup
+# Validate secp256r1 account setup (silent by default)
 npx hardhat validate-accounts
 
-# Expected output:
+# For detailed validation output
+DEBUG=true npx hardhat validate-accounts
+
+# Expected debug output:
+# [CONFIG] Loading configuration for environment: development
+# ✅ Loaded 5 valid accounts from environment
 # ✅ Curve: SECP256R1 detected
 # ⚠️ WARNING: Experimental implementation
 # ✅ Primary account: Valid secp256r1 derivation
@@ -157,18 +162,26 @@ npx hardhat validate-accounts
 
 ### 3. Network Configuration
 
-Ensure `hardhat.config.ts` has secp256r1 network:
+🆕 **New Unified Configuration**: secp256r1 network is now defined in `config/networks.ts`:
 
 ```typescript
+// In config/networks.ts - automatically configured
 customR1Network: {
-    url: 'http://your-besu-node:8545',
+    url: process.env.CUSTOM_R1_URL || 'http://172.16.240.30:8545',
     chainId: 2222,
-    accounts: SECP256R1_ACCOUNT_KEYS,
+    accounts: secp256r1PrivateKeys,
     curve: 'secp256r1', // Identifies as secp256r1 network
-    secp256r1Accounts: SECP256R1_ACCOUNTS,
+    secp256r1Accounts,
     gasPrice: 0,
-    gas: 100000000
+    gas: 100000000,
+    blockGasLimit: 30000000
 }
+```
+
+**Environment Override**: Set `CUSTOM_R1_URL` to use a different endpoint:
+
+```bash
+export CUSTOM_R1_URL="http://your-besu-node:8545"
 ```
 
 ## 📖 Usage Instructions
@@ -194,12 +207,17 @@ npx hardhat test-secp256r1-crypto
 # Deploy ISBE factory using secp256r1 (EXPERIMENTAL)
 npx hardhat deployIsbeFactory --network customR1Network
 
-# Deploy all contracts (EXPERIMENTAL)
+# Deploy all contracts (EXPERIMENTAL) - silent by default
 npx hardhat deployAll --network customR1Network
+
+# Deploy with detailed debug output (helpful for troubleshooting)
+DEBUG=true npx hardhat deployAll --network customR1Network
 
 # Verify deployment
 npx hardhat verify-besu-deployment --network customR1Network
 ```
+
+> **🔇 Silent by Default**: Deployments now run silently. Use `DEBUG=true` to see detailed secp256r1 operations and cryptographic details.
 
 ### Advanced Usage
 

@@ -86,26 +86,30 @@ const total: Record<keyof Thresholds, CoverageMetric> = {
 }
 ```
 
-### 2. Hardhat Configuration Improvements
+### 2. Hardhat Configuration Improvements ✅ **COMPLETED**
 
-**Status**: 🟡 Important  
+**Status**: ✅ **Implemented**  
 **Effort**: Medium  
 **Impact**: High
 
-The `hardhat.config.ts` file needs refactoring for better maintainability and error handling.
+🆕 **Update**: The hardhat configuration has been completely refactored with a new unified system!
 
-#### Issues Identified:
+#### ✅ **Issues Resolved**:
 
-- Repetitive account key processing logic
-- Lack of proper environment variable validation
-- Mixed configuration responsibilities
+- ✅ Repetitive account key processing logic → **Centralized in AccountManager**
+- ✅ Lack of proper environment variable validation → **Environment validation implemented**
+- ✅ Mixed configuration responsibilities → **Separated into dedicated modules**
+- ✅ **New**: Silent-by-default logging with debug mode
+- ✅ **New**: Unified network configuration with environment variable overrides
 
-#### Recommended Improvements:
+#### ✅ **Improvements Implemented**:
 
-**Extract Account Management**:
+**✅ Account Management Extracted** (`config/AccountManager.ts` - **Implemented**):
 
 ```typescript
-// config/AccountManager.ts
+// ✅ IMPLEMENTED: config/AccountManager.ts with debug-aware logging
+import { logger } from '../utils/logger'
+
 export class AccountManager {
     private static normalizePrivateKey(key: string): string {
         return key.startsWith('0x') ? key : `0x${key}`
@@ -163,17 +167,25 @@ export class AccountManager {
 }
 ```
 
-**Improve Network Configuration**:
+**✅ Network Configuration Unified** (`config/networks.ts` - **Implemented**):
+
+🆕 **Major Update**: All network configurations are now centralized in a single, clean file!
 
 ```typescript
-// config/NetworkConfig.ts
-export interface NetworkConfigWithCurve extends HardhatUserConfig['networks'][string] {
-    curve?: 'secp256k1' | 'secp256r1'
-    secp256r1Accounts?: Array<{
-        address: string
-        privateKey: string
-    }>
-}
+// ✅ IMPLEMENTED: config/networks.ts - Unified Network Configuration
+import { AccountManager } from './AccountManager'
+import type {
+    NetworkConfigWithCurve,
+    HardhatNetworkConfig,
+    NetworksConfig,
+} from '../types/networks'
+
+// Environment variables for dynamic configuration
+const LOCALHOST_URL = process.env.LOCALHOST_URL || 'http://172.16.240.30:8545'
+const MVP_URL =
+    process.env.MVP_URL ||
+    'https://besu-node-non-validator-1.mvp.envs.redisbe.com'
+// ... other environment variables
 
 export class NetworkConfigManager {
     private accounts: string[]
@@ -1149,9 +1161,12 @@ export function getCurrentEnvironment(): EnvironmentName {
     - ✅ Common constants and conversion functions
     - ✅ Type-safe validation with helpful error suggestions
 
-4. 🔄 **Improve `hardhat.config.ts`** 📋 **PENDING**
-    - Extract account management logic
-    - Add proper error handling and validation
+4. ✅ **Improve `hardhat.config.ts`** ✅ **COMPLETED**
+    - ✅ **Extract account management logic** → `config/AccountManager.ts`
+    - ✅ **Add proper error handling and validation** → Custom error classes integrated
+    - ✅ **Unified network configuration** → `config/networks.ts`
+    - ✅ **Silent-by-default logging** → `utils/logger.ts`
+    - ✅ **Environment variable support** → Network URL overrides
 
 ### Phase 2: Type Safety (Week 2) - Medium Priority
 
@@ -1169,9 +1184,11 @@ export function getCurrentEnvironment(): EnvironmentName {
 
 ### Phase 3: Architecture (Week 3) - Low Priority
 
-1. ✅ **Implement ConfigManager**
-    - Centralize configuration management
-    - Add environment-specific configs
+1. ✅ **Implement ConfigManager** ✅ **COMPLETED**
+    - ✅ **Centralize configuration management** → `config/ConfigManager.ts`
+    - ✅ **Add environment-specific configs** → Environment detection and validation
+    - ✅ **Unified network configuration** → `config/networks.ts`
+    - ✅ **Debug-aware logging** → `utils/logger.ts`
 
 2. ✅ **Add ContractFactory pattern**
     - Standardize contract interaction patterns
@@ -1246,23 +1263,46 @@ export async function deployBusinessLogic(
 }
 ```
 
-### 4. Replace console.log with Structured Logging
+### 4. Replace console.log with Structured Logging ✅ **IMPLEMENTED**
+
+✅ **We've implemented a debug-aware logger that's silent by default!**
 
 ```typescript
-// utils/logger.ts
+// ✅ IMPLEMENTED: utils/logger.ts
 export const logger = {
-    info: (message: string, meta?: any) =>
-        console.log(`ℹ️  ${message}`, meta || ''),
-    warn: (message: string, meta?: any) =>
-        console.warn(`⚠️  ${message}`, meta || ''),
-    error: (message: string, meta?: any) =>
-        console.error(`❌ ${message}`, meta || ''),
-    success: (message: string, meta?: any) =>
-        console.log(`✅ ${message}`, meta || ''),
-    debug: (message: string, meta?: any) => {
-        if (process.env.DEBUG) console.log(`🐛 ${message}`, meta || '')
+    error: (...args: any[]) => {
+        if (isDebugEnabled()) {
+            console.error(...args)
+        }
+    },
+    warn: (...args: any[]) => {
+        if (isDebugEnabled()) {
+            console.warn(...args)
+        }
+    },
+    info: (...args: any[]) => {
+        if (isDebugEnabled()) {
+            console.log(...args)
+        }
+    },
+    success: (message: string, details?: any) => {
+        if (isDebugEnabled()) {
+            console.log(`✅ ${message}`)
+            if (details) {
+                console.log('[DEBUG]', details)
+            }
+        }
+    },
+    summary: (title: string, data: Record<string, any>) => {
+        if (isDebugEnabled()) {
+            console.log(`📊 ${title}:`)
+            // ... detailed breakdown
+        }
+        // Silent in normal mode
     },
 }
+
+// Enable with: DEBUG=true or NODE_ENV=development
 ```
 
 ### 5. Constants File
