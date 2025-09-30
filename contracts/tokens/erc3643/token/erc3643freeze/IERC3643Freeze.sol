@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-// solhint-disable-next-line no-empty-blocks
-interface ITokenFreeze {
-    /// events
-
+/**
+ * @title IERC3643Freeze
+ * @notice Interface for freezing and unfreezing addresses and token balances in ERC-3643 tokens.
+ * @dev Defines full address freeze and partial token freeze operations,
+ *      together with read-only inspection functions.
+ */
+interface IERC3643Freeze {
     /**
      *  this event is emitted when the wallet of an investor is frozen or unfrozen
      *  the event is emitted by setAddressFrozen and batchSetAddressFrozen functions
@@ -35,8 +38,6 @@ interface ITokenFreeze {
      *  `_amount` is the amount of tokens that are unfrozen
      */
     event TokensUnfrozen(address indexed _userAddress, uint256 _amount);
-
-    /// functions
 
     /**
      *  @dev sets an address frozen status for this token.

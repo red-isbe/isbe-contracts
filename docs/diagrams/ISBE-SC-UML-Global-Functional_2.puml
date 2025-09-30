@@ -123,12 +123,23 @@ package "ERC721" {
 
 ' === ERC3643 ===
 package "ERC3643" {
+
+    ' --- Freeze ---
+    class IERC3643Freeze <<(I,#FFD700) interface>> #E6E6FA
+    class ERC3643FreezeInternal <<(A,#228B22) abstract contract>> #E6E6FA
+    class ERC3643Freeze <<(A,#228B22) abstract contract>> #E6E6FA
+    class ERC3643FreezeFacet <<(C,#1E90FF) contract>> #E6E6FA
+
+    ERC3643Freeze --|> IERC3643Freeze
+    ERC3643Freeze --|> ERC3643FreezeInternal
+    ERC3643FreezeFacet --|> ERC3643Freeze
+    ERC3643FreezeInternal --|> Common
     
     ' --- Regulatory Infrastructure ---
-    class IERC3643Regulatory <<(I,#FFD700) interface>> #FFE4B5
-    class ERC3643RegulatoryInternal <<(A,#228B22) abstract contract>> #FFE4B5
-    class ERC3643Regulatory <<(A,#228B22) abstract contract>> #FFE4B5
-    class ERC3643RegulatoryFacet <<(C,#1E90FF) contract>> #FFE4B5
+    class IERC3643Regulatory <<(I,#FFD700) interface>> #E6E6FA
+    class ERC3643RegulatoryInternal <<(A,#228B22) abstract contract>> #E6E6FA
+    class ERC3643Regulatory <<(A,#228B22) abstract contract>> #E6E6FA
+    class ERC3643RegulatoryFacet <<(C,#1E90FF) contract>> #E6E6FA
 
     ERC3643Regulatory --|> IERC3643Regulatory
     ERC3643Regulatory --|> ERC3643RegulatoryInternal
