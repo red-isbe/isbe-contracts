@@ -82,7 +82,6 @@ import {
 } from './constants'
 import { getEvent } from '../scripts/utils/getEvent'
 import { getIsbeFactory } from '../scripts/utils/getIsbeFactory'
-import { erc3643 } from '../typechain-types/contracts/tokens'
 
 export const CONFIGURATION_ID_ERC20 =
     '0x0000000000000000000000000000000000000000000000000000000000000020'
@@ -281,8 +280,7 @@ export async function deployGovernance(
                     rbacsUseCase,
                     init_pause,
                     init_BusinessId_UseCase,
-                    init_CallData_UseCase,
-                    isUseCaseOwnable
+                    init_CallData_UseCase
                 )
         }
         return {}
@@ -929,8 +927,7 @@ export async function deployERC3643UseCasesFacets(
     rbacs: any[],
     init_pause: boolean,
     init_BusinessIds: string[],
-    init_CallData: string[],
-    isOwnable: boolean = false
+    init_CallData: string[]
 ) {
     // Facet Factories
     const IsbeCutFacetFactory = await ethers.getContractFactory('IsbeCutFacet')
@@ -956,26 +953,6 @@ export async function deployERC3643UseCasesFacets(
     const isbeLoupeFacet = await deployBusinessLogicFromFactory(
         ISBE_LOUPE_RESOLVER_KEY,
         IsbeLoupeFacetFactory
-    )
-    const accessControlFacet = await deployBusinessLogicFromFactory(
-        ACCESS_CONTROL_RESOLVER_KEY,
-        AccessControlFacetFactory
-    )
-    const pauseFacet = await deployBusinessLogicFromFactory(
-        PAUSE_RESOLVER_KEY,
-        ISBEPauseFacetFactory
-    )
-    const erc20Facet = await deployBusinessLogicFromFactory(
-        ERC20_RESOLVER_KEY,
-        ERC20FacetFactory
-    )
-    const erc3643MetadataFacet = await deployBusinessLogicFromFactory(
-        ERC3643_METADATA_RESOLVER_KEY,
-        ERC3643MetadataFacetFactory
-    )
-    const erc3643RegulatoryFacet = await deployBusinessLogicFromFactory(
-        ERC3643_REGULATORY_RESOLVER_KEY,
-        ERC3643RegulatoryFacetFactory
     )
 
     // Set configuration for ERC3643
@@ -1007,9 +984,7 @@ export async function deployERC3643UseCasesFacets(
     const deployedEvent = await getEvent('UseCaseDeployed', tx, isbeFactory)
     const { proxy } = deployedEvent.args
 
-    const pause = ISBEPauseFacetFactory.attach(
-        proxy
-    ) as ISBEPauseFacet
+    const pause = ISBEPauseFacetFactory.attach(proxy) as ISBEPauseFacet
     const accessControl = AccessControlFacetFactory.attach(
         proxy
     ) as AccessControlFacet
