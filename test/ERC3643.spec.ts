@@ -763,6 +763,27 @@ describe('ERC3643 Token', function () {
                         .freezePartialTokens(aliceAddress, amount)
                 ).to.be.reverted
             })
+            it('GIVEN no TOKEN_AGENT_ROLE WHEN unfreezePartialTokens THEN reverts', async () => {
+                await accessControlFacet
+                    .connect(owner)
+                    .revokeRole(TOKEN_AGENT_ROLE, ownerAddress)
+            
+                await expect(
+                    erc3643.connect(owner).unfreezePartialTokens(aliceAddress, 10n)
+                ).to.be.reverted
+            })
+            
+            it('GIVEN contract paused WHEN unfreezePartialTokens THEN reverts', async () => {
+                await accessControlFacet
+                    .connect(owner)
+                    .grantRole(PAUSER_ROLE, ownerAddress)
+                await pauseFacet.connect(owner).pause()
+            
+                await expect(
+                    erc3643.connect(owner).unfreezePartialTokens(aliceAddress, 10n)
+                ).to.be.reverted
+            })
+            
             it('GIVEN no frozen tokens WHEN unfreezePartialTokens THEN reverts', async () => {
                 await expect(
                     erc3643.connect(owner).unfreezePartialTokens(aliceAddress, 10n)
