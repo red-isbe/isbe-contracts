@@ -38,8 +38,7 @@ abstract contract ERC3643RegulatoryInternal is Common {
      * @param _newIdentityRegistry The new Identity Registry contract address.
      */
     function _setIdentityRegistry(address _newIdentityRegistry) internal {
-        ERC3643RegulatoryStorage storage $ = _erc3643RegulatoryStorage();
-        $.identityRegistry = _newIdentityRegistry;
+        _erc3643RegulatoryStorage().identityRegistry = _newIdentityRegistry;
     }
 
     /**
@@ -47,8 +46,7 @@ abstract contract ERC3643RegulatoryInternal is Common {
      * @param _newCompliance The new Compliance contract address.
      */
     function _setCompliance(address _newCompliance) internal {
-        ERC3643RegulatoryStorage storage $ = _erc3643RegulatoryStorage();
-        $.compliance = _newCompliance;
+        _erc3643RegulatoryStorage().compliance = _newCompliance;
 
         if (_newCompliance != address(0)) {
             ICompliance(_newCompliance).bindToken(address(this));

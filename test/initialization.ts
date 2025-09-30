@@ -280,8 +280,7 @@ export async function deployGovernance(
                     rbacsUseCase,
                     init_pause,
                     init_BusinessId_UseCase,
-                    init_CallData_UseCase,
-                    isUseCaseOwnable
+                    init_CallData_UseCase
                 )
         }
         return {}
@@ -365,9 +364,7 @@ export async function deployGovernance(
         accessControlGovernanceFacet,
         useCaseProxy: useCaseDeployment.proxy,
         erc3643Metadata: useCaseDeployment.erc3643Metadata,
-        erc3643MetadataFacet: useCaseDeployment.erc3643MetadataFacet,
         erc3643Regulatory: useCaseDeployment.erc3643Regulatory,
-        erc3643RegulatoryFacet: useCaseDeployment.erc3643RegulatoryFacet,
     }
 }
 
@@ -930,44 +927,25 @@ export async function deployERC3643UseCasesFacets(
     rbacs: any[],
     init_pause: boolean,
     init_BusinessIds: string[],
-    init_CallData: string[],
-    isOwnable: boolean = false
+    init_CallData: string[]
 ) {
+    // Facet Factories
     const IsbeCutFacetFactory = await ethers.getContractFactory('IsbeCutFacet')
     const IsbeLoupeFacetFactory =
         await ethers.getContractFactory('IsbeLoupeFacet')
     const AccessControlFacetFactory =
         await ethers.getContractFactory('AccessControlFacet')
-    const Ownable2StepFacetFactory =
-        await ethers.getContractFactory('Ownable2StepFacet')
-    const OwnableFacetFactory = await ethers.getContractFactory('OwnableFacet')
+
+    const ERC20FacetFactory = await ethers.getContractFactory('ERC20Facet')
+
     const ERC3643MetadataFacetFactory = await ethers.getContractFactory(
         'ERC3643MetadataFacet'
     )
     const ERC3643RegulatoryFacetFactory = await ethers.getContractFactory(
         'ERC3643RegulatoryFacet'
     )
-    const AssetEventTrackerTestWrapperFactory = await ethers.getContractFactory(
-        'AssetEventTrackerTestWrapper'
-    )
-    const HashTimestampTestWrapperFactory = await ethers.getContractFactory(
-        'HashTimestampTestWrapper'
-    )
-    const MockTimestampFacetFactory =
-        await ethers.getContractFactory('MockTimestampFacet')
 
-    // ERC20 Facet Factories - needed for ERC3643 functionality
-    const ERC20SnapshotFacetFactory =
-        await ethers.getContractFactory('ERC20SnapshotFacet')
-    const ERC20BurnableFacetFactory =
-        await ethers.getContractFactory('ERC20BurnableFacet')
-    const ERC20CappedFacetFactory =
-        await ethers.getContractFactory('ERC20CappedFacet')
-    const ERC20ControllerFacetFactory = await ethers.getContractFactory(
-        'ERC20ControllerFacet'
-    )
-    const ERC20FacetFactory = await ethers.getContractFactory('ERC20Facet')
-
+    // Deploy all business logic contracts before setting configuration
     const isbeCutFacet = await deployBusinessLogicFromFactory(
         ISBE_CUT_RESOLVER_KEY,
         IsbeCutFacetFactory
@@ -984,105 +962,32 @@ export async function deployERC3643UseCasesFacets(
         PAUSE_RESOLVER_KEY,
         ISBEPauseFacetFactory
     )
-
-    const ownableFactory = isOwnable
-        ? OwnableFacetFactory
-        : Ownable2StepFacetFactory
-    const ownableFacet = await deployBusinessLogicFromFactory(
-        OWNABLE_RESOLVER_KEY,
-        ownableFactory
-    )
-
-    // Deploy ERC20 facets - required for ERC3643 functionality
-    const erc20SnapshotFacet = await deployBusinessLogicFromFactory(
-        ERC20_SNAPSHOT_RESOLVER_KEY,
-        ERC20SnapshotFacetFactory
-    )
-    const erc20BurnableFacet = await deployBusinessLogicFromFactory(
-        ERC20_BURNABLE_RESOLVER_KEY,
-        ERC20BurnableFacetFactory
-    )
-    const erc20CappedFacet = await deployBusinessLogicFromFactory(
-        ERC20_CAPPED_RESOLVER_KEY,
-        ERC20CappedFacetFactory
-    )
-    const erc20ControllerFacet = await deployBusinessLogicFromFactory(
-        ERC20_CONTROLLER_RESOLVER_KEY,
-        ERC20ControllerFacetFactory
-    )
     const erc20Facet = await deployBusinessLogicFromFactory(
         ERC20_RESOLVER_KEY,
         ERC20FacetFactory
     )
-
     const erc3643MetadataFacet = await deployBusinessLogicFromFactory(
         ERC3643_METADATA_RESOLVER_KEY,
         ERC3643MetadataFacetFactory
     )
-
     const erc3643RegulatoryFacet = await deployBusinessLogicFromFactory(
         ERC3643_REGULATORY_RESOLVER_KEY,
         ERC3643RegulatoryFacetFactory
     )
 
-    const assetEventTrackerFacet = await deployBusinessLogicFromFactory(
-        ASSET_EVENT_TRACKER_RESOLVER_KEY,
-        AssetEventTrackerTestWrapperFactory
-    )
-    const hashTimestampFacet = await deployBusinessLogicFromFactory(
-        HASH_TIMESTAMP_RESOLVER_KEY,
-        HashTimestampTestWrapperFactory
-    )
-    await deployBusinessLogicFromFactory(
-        MOCK_TIMESTAMP_RESOLVER_KEY,
-        MockTimestampFacetFactory
-    )
+    // Set configuration for ERC3643
 
     await isbeFactory.setConfiguration(CONFIGURATION_ID_ERC3643, [
-        {
-            businessId: OWNABLE_RESOLVER_KEY,
-            version: 1,
-        },
-        // ERC20 facets - required for ERC3643 functionality
-        {
-            businessId: ERC20_SNAPSHOT_RESOLVER_KEY,
-            version: 1,
-        },
-        {
-            businessId: ERC20_BURNABLE_RESOLVER_KEY,
-            version: 1,
-        },
-        {
-            businessId: ERC20_CAPPED_RESOLVER_KEY,
-            version: 1,
-        },
-        {
-            businessId: ERC20_CONTROLLER_RESOLVER_KEY,
-            version: 1,
-        },
         {
             businessId: ERC20_RESOLVER_KEY,
             version: 1,
         },
-        // ERC3643 specific facets
         {
             businessId: ERC3643_METADATA_RESOLVER_KEY,
             version: 1,
         },
         {
             businessId: ERC3643_REGULATORY_RESOLVER_KEY,
-            version: 1,
-        },
-        {
-            businessId: ASSET_EVENT_TRACKER_RESOLVER_KEY,
-            version: 1,
-        },
-        {
-            businessId: HASH_TIMESTAMP_RESOLVER_KEY,
-            version: 1,
-        },
-        {
-            businessId: MOCK_TIMESTAMP_RESOLVER_KEY,
             version: 1,
         },
     ])
@@ -1099,76 +1004,31 @@ export async function deployERC3643UseCasesFacets(
     const deployedEvent = await getEvent('UseCaseDeployed', tx, isbeFactory)
     const { proxy } = deployedEvent.args
 
+    const pause = ISBEPauseFacetFactory.attach(proxy) as ISBEPauseFacet
+    const accessControl = AccessControlFacetFactory.attach(
+        proxy
+    ) as AccessControlFacet
+    const erc20 = ERC20FacetFactory.attach(proxy) as ERC20Facet
     const erc3643Metadata = ERC3643MetadataFacetFactory.attach(
         proxy
     ) as ERC3643MetadataFacet
     const erc3643Regulatory = ERC3643RegulatoryFacetFactory.attach(
         proxy
     ) as ERC3643RegulatoryFacet
-    const pause = ISBEPauseFacetFactory.attach(proxy) as ISBEPauseFacet
-    const accessControl = AccessControlFacetFactory.attach(
-        proxy
-    ) as AccessControlFacet
-    const ownable = isOwnable
-        ? (OwnableFacetFactory.attach(proxy) as OwnableFacet)
-        : (Ownable2StepFacetFactory.attach(proxy) as Ownable2StepFacet)
-
-    // Attach ERC20 facets
-    const erc20Snapshot = ERC20SnapshotFacetFactory.attach(
-        proxy
-    ) as ERC20SnapshotFacet
-    const erc20Burnable = ERC20BurnableFacetFactory.attach(
-        proxy
-    ) as ERC20BurnableFacet
-    const erc20Capped = ERC20CappedFacetFactory.attach(
-        proxy
-    ) as ERC20CappedFacet
-    const erc20Controller = ERC20ControllerFacetFactory.attach(
-        proxy
-    ) as ERC20ControllerFacet
-    const erc20 = ERC20FacetFactory.attach(proxy) as ERC20Facet
-
-    const assetEventTracker = AssetEventTrackerTestWrapperFactory.attach(
-        proxy
-    ) as AssetEventTrackerTestWrapper
-    const hashTimestamp = HashTimestampTestWrapperFactory.attach(
-        proxy
-    ) as HashTimestampTestWrapper
-    const mockTimestamp = MockTimestampFacetFactory.attach(
-        proxy
-    ) as MockTimestampFacet
 
     return {
-        erc3643Metadata,
-        erc3643Regulatory,
         pause,
         accessControl,
-        ownable,
-        // ERC20 facets
-        erc20Snapshot,
-        erc20Burnable,
-        erc20Capped,
-        erc20Controller,
         erc20,
-        // Other facets
-        assetEventTracker,
-        hashTimestamp,
-        mockTimestamp,
-        // Raw facet deployments
-        erc3643MetadataFacet,
-        erc3643RegulatoryFacet,
-        pauseFacet,
-        accessControlFacet,
-        ownableFacet,
-        erc20SnapshotFacet,
-        erc20BurnableFacet,
-        erc20CappedFacet,
-        erc20ControllerFacet,
-        erc20Facet,
-        assetEventTrackerFacet,
-        hashTimestampFacet,
+        erc3643Metadata,
+        erc3643Regulatory,
         isbeCutFacet,
         isbeLoupeFacet,
         proxy,
+        accessControlFacet,
+        pauseFacet,
+        erc20Facet,
+        erc3643MetadataFacet,
+        erc3643RegulatoryFacet,
     }
 }
