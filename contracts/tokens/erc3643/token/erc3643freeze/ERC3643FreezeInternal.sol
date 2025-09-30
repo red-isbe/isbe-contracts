@@ -32,7 +32,10 @@ abstract contract ERC3643FreezeInternal is Common {
      * @param _userAddress The wallet address to freeze tokens for.
      * @param _amount The amount of tokens to freeze.
      */
-    function _freezePartialTokens(address _userAddress, uint256 _amount) internal {
+    function _freezePartialTokens(
+        address _userAddress,
+        uint256 _amount
+    ) internal {
         _erc3643FreezeStorage().frozenTokens[_userAddress] += _amount;
     }
 
@@ -41,7 +44,10 @@ abstract contract ERC3643FreezeInternal is Common {
      * @param _userAddress The wallet address to unfreeze tokens for.
      * @param _amount The amount of tokens to unfreeze.
      */
-    function _unfreezePartialTokens(address _userAddress, uint256 _amount) internal {
+    function _unfreezePartialTokens(
+        address _userAddress,
+        uint256 _amount
+    ) internal {
         _erc3643FreezeStorage().frozenTokens[_userAddress] -= _amount;
     }
 
@@ -59,7 +65,9 @@ abstract contract ERC3643FreezeInternal is Common {
      * @param _userAddress The wallet address to check.
      * @return The amount of frozen tokens.
      */
-    function _getFrozenTokens(address _userAddress) internal view returns (uint256) {
+    function _getFrozenTokens(
+        address _userAddress
+    ) internal view returns (uint256) {
         return _erc3643FreezeStorage().frozenTokens[_userAddress];
     }
 

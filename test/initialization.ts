@@ -42,6 +42,7 @@ import {
     IDidRegistry__factory,
     ERC3643MetadataFacet,
     ERC3643RegulatoryFacet,
+    ERC3643FreezeFacet,
 } from '../typechain-types'
 import {
     DEFAULT_ADMIN_ROLE,
@@ -79,6 +80,7 @@ import {
     DID_VERIFICATION_RELATIONSHIP_RESOLVER_KEY,
     ERC3643_METADATA_RESOLVER_KEY,
     ERC3643_REGULATORY_RESOLVER_KEY,
+    ERC3643_FREEZE_RESOLVER_KEY,
 } from './constants'
 import { getEvent } from '../scripts/utils/getEvent'
 import { getIsbeFactory } from '../scripts/utils/getIsbeFactory'
@@ -365,6 +367,7 @@ export async function deployGovernance(
         useCaseProxy: useCaseDeployment.proxy,
         erc3643Metadata: useCaseDeployment.erc3643Metadata,
         erc3643Regulatory: useCaseDeployment.erc3643Regulatory,
+        erc3643Freeze: useCaseDeployment.erc3643Freeze,
     }
 }
 
@@ -945,6 +948,9 @@ export async function deployERC3643UseCasesFacets(
         'ERC3643RegulatoryFacet'
     )
 
+    const ERC3643FreezeFacetFactory =
+        await ethers.getContractFactory('ERC3643FreezeFacet')
+
     // Deploy all business logic contracts before setting configuration
     const isbeCutFacet = await deployBusinessLogicFromFactory(
         ISBE_CUT_RESOLVER_KEY,
@@ -974,6 +980,10 @@ export async function deployERC3643UseCasesFacets(
         ERC3643_REGULATORY_RESOLVER_KEY,
         ERC3643RegulatoryFacetFactory
     )
+    const erc3643FreezeFacet = await deployBusinessLogicFromFactory(
+        ERC3643_FREEZE_RESOLVER_KEY,
+        ERC3643FreezeFacetFactory
+    )
 
     // Set configuration for ERC3643
 
@@ -988,6 +998,10 @@ export async function deployERC3643UseCasesFacets(
         },
         {
             businessId: ERC3643_REGULATORY_RESOLVER_KEY,
+            version: 1,
+        },
+        {
+            businessId: ERC3643_FREEZE_RESOLVER_KEY,
             version: 1,
         },
     ])
@@ -1015,6 +1029,9 @@ export async function deployERC3643UseCasesFacets(
     const erc3643Regulatory = ERC3643RegulatoryFacetFactory.attach(
         proxy
     ) as ERC3643RegulatoryFacet
+    const erc3643Freeze = ERC3643FreezeFacetFactory.attach(
+        proxy
+    ) as ERC3643FreezeFacet
 
     return {
         pause,
@@ -1022,6 +1039,7 @@ export async function deployERC3643UseCasesFacets(
         erc20,
         erc3643Metadata,
         erc3643Regulatory,
+        erc3643Freeze,
         isbeCutFacet,
         isbeLoupeFacet,
         proxy,
@@ -1030,5 +1048,6 @@ export async function deployERC3643UseCasesFacets(
         erc20Facet,
         erc3643MetadataFacet,
         erc3643RegulatoryFacet,
+        erc3643FreezeFacet,
     }
 }

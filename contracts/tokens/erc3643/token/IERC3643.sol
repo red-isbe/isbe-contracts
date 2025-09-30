@@ -20,4 +20,9 @@ import {IERC3643Freeze} from './erc3643freeze/IERC3643Freeze.sol';
  */
 
 // solhint-disable-next-line no-empty-blocks
-interface IERC3643 is IERC20Isbe, IERC3643Metadata, IERC3643Regulatory, IERC3643Freeze {}
+interface IERC3643 is
+    IERC20Isbe,
+    IERC3643Metadata,
+    IERC3643Regulatory,
+    IERC3643Freeze
+{}

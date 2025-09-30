@@ -17,7 +17,11 @@ interface IERC3643Freeze {
      *  if `_isFrozen` equals `false` the wallet is unfrozen after emission of the event
      *  `_owner` is the address of the agent who called the function to freeze the wallet
      */
-    event AddressFrozen(address indexed _userAddress, bool indexed _isFrozen, address indexed _owner);
+    event AddressFrozen(
+        address indexed _userAddress,
+        bool indexed _isFrozen,
+        address indexed _owner
+    );
 
     /**
      *  this event is emitted when a certain amount of tokens is frozen on a wallet
@@ -51,7 +55,10 @@ interface IERC3643Freeze {
      *  This function can only be called by a wallet set as agent of the token
      *  emits a `TokensFrozen` event
      */
-    function freezePartialTokens(address _userAddress, uint256 _amount) external;
+    function freezePartialTokens(
+        address _userAddress,
+        uint256 _amount
+    ) external;
 
     /**
      *  @dev unfreezes token amount specified for given address
@@ -60,7 +67,10 @@ interface IERC3643Freeze {
      *  This function can only be called by a wallet set as agent of the token
      *  emits a `TokensUnfrozen` event
      */
-    function unfreezePartialTokens(address _userAddress, uint256 _amount) external;
+    function unfreezePartialTokens(
+        address _userAddress,
+        uint256 _amount
+    ) external;
 
     /**
      *  @dev Returns the freezing status of a wallet
@@ -77,5 +87,7 @@ interface IERC3643Freeze {
      *  the amount of frozen tokens is always <= to the total balance of the wallet
      *  @param _userAddress the address of the wallet on which getFrozenTokens is called
      */
-    function getFrozenTokens(address _userAddress) external view returns (uint256);
+    function getFrozenTokens(
+        address _userAddress
+    ) external view returns (uint256);
 }

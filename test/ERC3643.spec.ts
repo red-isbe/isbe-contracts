@@ -3,7 +3,7 @@ import { ethers } from 'hardhat'
 import { Signer, ZeroAddress } from 'ethers'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { deployGovernance, CONFIGURATION_ID_ERC3643 } from './initialization'
-import { TOKEN_OWNER_ROLE, PAUSER_ROLE } from './constants'
+import { TOKEN_OWNER_ROLE, PAUSER_ROLE, TOKEN_AGENT_ROLE } from './constants'
 import { IERC3643, AccessControl, ERC20, ISBEPause } from '../typechain-types'
 import {
     MockCompliance,
@@ -636,6 +636,279 @@ describe('ERC3643 Token', function () {
 
                 expect(await erc3643.identityRegistry()).to.equal(ZeroAddress)
                 expect(await erc3643.compliance()).to.equal(ZeroAddress)
+            })
+        })
+    })
+
+    // ====================================================================
+    // FREEZE MODULE
+    // ====================================================================
+    describe('ERC3643 Freeze', () => {
+        beforeEach(async () => {
+            const fixture = async () => {
+                await accessControlFacet
+                    .connect(owner)
+                    .grantRole(TOKEN_AGENT_ROLE, ownerAddress)
+            }
+            await loadFixture(fixture)
+        })
+
+        describe('setAddressFrozen', () => {
+            it('GIVEN no TOKEN_AGENT_ROLE WHEN setAddressFrozen THEN reverts', async () => {
+                await accessControlFacet
+                    .connect(owner)
+                    .revokeRole(TOKEN_AGENT_ROLE, ownerAddress)
+
+                await expect(
+                    erc3643.connect(owner).setAddressFrozen(aliceAddress, true)
+                ).to.be.reverted
+            })
+
+            it('GIVEN contract paused WHEN setAddressFrozen THEN reverts', async () => {
+                await accessControlFacet
+                    .connect(owner)
+                    .grantRole(PAUSER_ROLE, ownerAddress)
+                await pauseFacet.connect(owner).pause()
+
+                await expect(
+                    erc3643.connect(owner).setAddressFrozen(aliceAddress, true)
+                ).to.be.reverted
+            })
+
+            it('GIVEN already frozen WHEN setAddressFrozen(true) again THEN event emitted and still frozen', async () => {
+                await erc3643.connect(owner).setAddressFrozen(aliceAddress, true)
+            
+                await expect(
+                    erc3643.connect(owner).setAddressFrozen(aliceAddress, true)
+                )
+                    .to.emit(erc3643, 'AddressFrozen')
+                    .withArgs(aliceAddress, true, ownerAddress)
+            
+                expect(await erc3643.isFrozen(aliceAddress)).to.equal(true)
+            })            
+
+            it('GIVEN valid input WHEN setAddressFrozen true THEN account is frozen and event emitted', async () => {
+                await expect(
+                    erc3643.connect(owner).setAddressFrozen(aliceAddress, true)
+                )
+                    .to.emit(erc3643, 'AddressFrozen')
+                    .withArgs(aliceAddress, true, ownerAddress)
+
+                expect(await erc3643.isFrozen(aliceAddress)).to.equal(true)
+            })
+
+            it('GIVEN frozen account WHEN setAddressFrozen false THEN account is unfrozen and event emitted', async () => {
+                await erc3643
+                    .connect(owner)
+                    .setAddressFrozen(aliceAddress, true)
+
+                await expect(
+                    erc3643.connect(owner).setAddressFrozen(aliceAddress, false)
+                )
+                    .to.emit(erc3643, 'AddressFrozen')
+                    .withArgs(aliceAddress, false, ownerAddress)
+
+                expect(await erc3643.isFrozen(aliceAddress)).to.equal(false)
+            })
+
+            it('GIVEN already frozen WHEN setAddressFrozen true again THEN stays frozen and emits event', async () => {
+                await erc3643
+                    .connect(owner)
+                    .setAddressFrozen(aliceAddress, true)
+
+                await expect(
+                    erc3643.connect(owner).setAddressFrozen(aliceAddress, true)
+                )
+                    .to.emit(erc3643, 'AddressFrozen')
+                    .withArgs(aliceAddress, true, ownerAddress)
+
+                expect(await erc3643.isFrozen(aliceAddress)).to.equal(true)
+            })
+
+            it('GIVEN already unfrozen WHEN setAddressFrozen false again THEN stays unfrozen and emits event', async () => {
+                await expect(
+                    erc3643.connect(owner).setAddressFrozen(aliceAddress, false)
+                )
+                    .to.emit(erc3643, 'AddressFrozen')
+                    .withArgs(aliceAddress, false, ownerAddress)
+
+                expect(await erc3643.isFrozen(aliceAddress)).to.equal(false)
+            })
+        })
+
+        describe('freezePartialTokens / unfreezePartialTokens', () => {
+            const amount = 100n
+
+            it('GIVEN no TOKEN_AGENT_ROLE WHEN freezePartialTokens THEN reverts', async () => {
+                await accessControlFacet
+                    .connect(owner)
+                    .revokeRole(TOKEN_AGENT_ROLE, ownerAddress)
+
+                await expect(
+                    erc3643
+                        .connect(owner)
+                        .freezePartialTokens(aliceAddress, amount)
+                ).to.be.reverted
+            })
+
+            it('GIVEN contract paused WHEN freezePartialTokens THEN reverts', async () => {
+                await accessControlFacet
+                    .connect(owner)
+                    .grantRole(PAUSER_ROLE, ownerAddress)
+                await pauseFacet.connect(owner).pause()
+
+                await expect(
+                    erc3643
+                        .connect(owner)
+                        .freezePartialTokens(aliceAddress, amount)
+                ).to.be.reverted
+            })
+            it('GIVEN no frozen tokens WHEN unfreezePartialTokens THEN reverts', async () => {
+                await expect(
+                    erc3643.connect(owner).unfreezePartialTokens(aliceAddress, 10n)
+                ).to.be.reverted
+            })
+            it('GIVEN no frozen tokens WHEN unfreezePartialTokens(0) THEN succeeds and emits', async () => {
+                await expect(
+                    erc3643.connect(owner).unfreezePartialTokens(aliceAddress, 0n)
+                )
+                    .to.emit(erc3643, 'TokensUnfrozen')
+                    .withArgs(aliceAddress, 0n)
+            
+                expect(await erc3643.getFrozenTokens(aliceAddress)).to.equal(0n)
+            })
+            it('GIVEN valid address WHEN freezePartialTokens THEN tokens are frozen and event emitted', async () => {
+                await expect(
+                    erc3643
+                        .connect(owner)
+                        .freezePartialTokens(aliceAddress, amount)
+                )
+                    .to.emit(erc3643, 'TokensFrozen')
+                    .withArgs(aliceAddress, amount)
+
+                expect(await erc3643.getFrozenTokens(aliceAddress)).to.equal(
+                    amount
+                )
+            })
+            it('GIVEN frozen tokens WHEN unfreezePartialTokens(0) THEN no change but event emitted', async () => {
+                await erc3643.connect(owner).freezePartialTokens(aliceAddress, 50n)
+            
+                await expect(
+                    erc3643.connect(owner).unfreezePartialTokens(aliceAddress, 0n)
+                )
+                    .to.emit(erc3643, 'TokensUnfrozen')
+                    .withArgs(aliceAddress, 0n)
+            
+                expect(await erc3643.getFrozenTokens(aliceAddress)).to.equal(50n)
+            })
+            
+
+            it('GIVEN frozen tokens WHEN unfreezePartialTokens THEN tokens reduced and event emitted', async () => {
+                await erc3643
+                    .connect(owner)
+                    .freezePartialTokens(aliceAddress, amount)
+
+                await expect(
+                    erc3643
+                        .connect(owner)
+                        .unfreezePartialTokens(aliceAddress, 40n)
+                )
+                    .to.emit(erc3643, 'TokensUnfrozen')
+                    .withArgs(aliceAddress, 40n)
+
+                expect(await erc3643.getFrozenTokens(aliceAddress)).to.equal(
+                    60n
+                )
+            })
+
+            it('GIVEN frozen tokens WHEN unfreeze all THEN balance returns to zero', async () => {
+                await erc3643
+                    .connect(owner)
+                    .freezePartialTokens(aliceAddress, amount)
+
+                await erc3643
+                    .connect(owner)
+                    .unfreezePartialTokens(aliceAddress, amount)
+
+                expect(await erc3643.getFrozenTokens(aliceAddress)).to.equal(0n)
+            })
+
+            it('GIVEN frozen tokens WHEN unfreeze more than frozen THEN reverts', async () => {
+                await erc3643
+                    .connect(owner)
+                    .freezePartialTokens(aliceAddress, 50n)
+
+                await expect(
+                    erc3643
+                        .connect(owner)
+                        .unfreezePartialTokens(aliceAddress, 100n)
+                ).to.be.reverted
+            })
+
+            it('GIVEN multiple freezes WHEN freezePartialTokens THEN totals accumulate', async () => {
+                await erc3643
+                    .connect(owner)
+                    .freezePartialTokens(aliceAddress, 30n)
+                await erc3643
+                    .connect(owner)
+                    .freezePartialTokens(aliceAddress, 20n)
+
+                expect(await erc3643.getFrozenTokens(aliceAddress)).to.equal(
+                    50n
+                )
+            })
+
+            it('GIVEN amount 0 WHEN freezePartialTokens THEN no effect but event emitted', async () => {
+                await expect(
+                    erc3643.connect(owner).freezePartialTokens(aliceAddress, 0n)
+                )
+                    .to.emit(erc3643, 'TokensFrozen')
+                    .withArgs(aliceAddress, 0n)
+
+                expect(await erc3643.getFrozenTokens(aliceAddress)).to.equal(0n)
+            })
+
+            it('GIVEN amount 0 WHEN unfreezePartialTokens THEN no effect but event emitted', async () => {
+                await expect(
+                    erc3643
+                        .connect(owner)
+                        .unfreezePartialTokens(aliceAddress, 0n)
+                )
+                    .to.emit(erc3643, 'TokensUnfrozen')
+                    .withArgs(aliceAddress, 0n)
+
+                expect(await erc3643.getFrozenTokens(aliceAddress)).to.equal(0n)
+            })
+        })
+
+        describe('getters', () => {
+            it('GIVEN never frozen WHEN call getters THEN return defaults', async () => {
+                expect(await erc3643.isFrozen(aliceAddress)).to.equal(false)
+                expect(await erc3643.getFrozenTokens(aliceAddress)).to.equal(0n)
+            })
+
+            it('GIVEN full freeze and partial freeze WHEN call getters THEN both reflected', async () => {
+                await erc3643
+                    .connect(owner)
+                    .setAddressFrozen(aliceAddress, true)
+                await erc3643
+                    .connect(owner)
+                    .freezePartialTokens(aliceAddress, 25n)
+
+                expect(await erc3643.isFrozen(aliceAddress)).to.equal(true)
+                expect(await erc3643.getFrozenTokens(aliceAddress)).to.equal(
+                    25n
+                )
+
+                // unfreeze address, tokens remain
+                await erc3643
+                    .connect(owner)
+                    .setAddressFrozen(aliceAddress, false)
+
+                expect(await erc3643.isFrozen(aliceAddress)).to.equal(false)
+                expect(await erc3643.getFrozenTokens(aliceAddress)).to.equal(
+                    25n
+                )
             })
         })
     })

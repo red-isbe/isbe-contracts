@@ -12,42 +12,39 @@ import {_TOKEN_AGENT_ROLE} from '../../../../constants/roles.sol';
  *      Applies access control, validation, and emits events.
  */
 abstract contract ERC3643Freeze is IERC3643Freeze, ERC3643FreezeInternal {
-
-    function setAddressFrozen(address _userAddress, bool _freeze)
-        external
-        override
-        onlyRole(_TOKEN_AGENT_ROLE)
-        whenNotPaused
-    {
+    function setAddressFrozen(
+        address _userAddress,
+        bool _freeze
+    ) external override onlyRole(_TOKEN_AGENT_ROLE) whenNotPaused {
         _setAddressFrozen(_userAddress, _freeze);
         emit AddressFrozen(_userAddress, _freeze, msg.sender);
     }
 
-    function freezePartialTokens(address _userAddress, uint256 _amount)
-        external
-        override
-        onlyRole(_TOKEN_AGENT_ROLE)
-        whenNotPaused
-    {
+    function freezePartialTokens(
+        address _userAddress,
+        uint256 _amount
+    ) external override onlyRole(_TOKEN_AGENT_ROLE) whenNotPaused {
         _freezePartialTokens(_userAddress, _amount);
         emit TokensFrozen(_userAddress, _amount);
     }
 
-    function unfreezePartialTokens(address _userAddress, uint256 _amount)
-        external
-        override
-        onlyRole(_TOKEN_AGENT_ROLE)
-        whenNotPaused
-    {
+    function unfreezePartialTokens(
+        address _userAddress,
+        uint256 _amount
+    ) external override onlyRole(_TOKEN_AGENT_ROLE) whenNotPaused {
         _unfreezePartialTokens(_userAddress, _amount);
         emit TokensUnfrozen(_userAddress, _amount);
     }
 
-    function isFrozen(address _userAddress) external view override returns (bool) {
+    function isFrozen(
+        address _userAddress
+    ) external view override returns (bool) {
         return _isFrozen(_userAddress);
     }
 
-    function getFrozenTokens(address _userAddress) external view override returns (uint256) {
+    function getFrozenTokens(
+        address _userAddress
+    ) external view override returns (uint256) {
         return _getFrozenTokens(_userAddress);
     }
 
