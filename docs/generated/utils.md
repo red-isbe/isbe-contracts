@@ -302,6 +302,24 @@ after timestamp is before the before timestamp. Ensures temporal consistency_
 function _isEmptyString(string _string) internal pure returns (bool)
 ```
 
+### \_isNotEmptyBytes32
+
+```solidity
+function _isNotEmptyBytes32(bytes32 _hash) internal pure returns (bool)
+```
+
+### \_isNotEmptyAddress
+
+```solidity
+function _isNotEmptyAddress(address _addr) internal pure returns (bool)
+```
+
+### \_isNotEmptySignature
+
+```solidity
+function _isNotEmptySignature(bytes4 _sig) internal pure returns (bool)
+```
+
 ---
 
 ## InitializeBusinessLogic

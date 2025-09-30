@@ -65,6 +65,10 @@ export const DID_VERIFICATION_METHOD_RESOLVER_KEY =
 export const DID_VERIFICATION_RELATIONSHIP_RESOLVER_KEY =
     '0x32bd32541f3651dc69848ddc9cad21896eabb6a11034c19b03683da6e19b76d7'
 
+// Client filtering facets
+export const CLIENT_FILTERING_RESOLVER_KEY =
+    '0x9d459b48dcede9ec86807b1af972b62ab0b2b0237e2187da45c02c25f3aeb016'
+
 // ================================
 // CONFIGURATION IDs - Use Case IDs
 // ================================
@@ -76,6 +80,8 @@ export const CONFIGURATION_ID_DID_REGISTRY =
     '0x00000000000000000000000000000000000000004449445F5245474953545259'
 export const CONFIGURATION_ID_HASH_TIMESTAMP =
     '0x56209af0faa47cd136c87cbd8b739b3beb4ac51cbba6ec828e2ae8421365929e'
+export const CONFIGURATION_ID_CLIENT_FILTERING =
+    '0x0000000000000000000000000000000000436C69656E7446696C746572696E67'
 
 // ================================
 // ARTIFACT PATHS - Contract Paths
@@ -126,6 +132,7 @@ export const ARTIFACT_PATHS = {
         'contracts/identity/didregistry/DidVerificationMethodFacet.sol',
     DID_VERIFICATION_RELATIONSHIP:
         'contracts/identity/didregistry/DidVerificationRelationshipFacet.sol',
+    CLIENT_FILTERING: 'contracts/client/filtering/ClientFilteringFacet.sol',
 } as const
 
 // ================================
@@ -164,6 +171,7 @@ export const CONTRACT_NAMES = {
     DID_CONTROLLER: 'DidControllerFacet',
     DID_VERIFICATION_METHOD: 'DidVerificationMethodFacet',
     DID_VERIFICATION_RELATIONSHIP: 'DidVerificationRelationshipFacet',
+    CLIENT_FILTERING: 'ClientFilteringFacet',
 } as const
 
 // ================================
@@ -317,6 +325,13 @@ export const BUSINESS_LOGIC_DEFINITIONS = [
         contractName: CONTRACT_NAMES.DID_VERIFICATION_RELATIONSHIP,
         artifactPath: ARTIFACT_PATHS.DID_VERIFICATION_RELATIONSHIP,
     },
+    // Client filtering
+    {
+        description: 'ClientFilteringFacet',
+        key: CLIENT_FILTERING_RESOLVER_KEY,
+        contractName: CONTRACT_NAMES.CLIENT_FILTERING,
+        artifactPath: ARTIFACT_PATHS.CLIENT_FILTERING,
+    },
 ] as const
 
 // ================================
@@ -396,6 +411,19 @@ export const HASH_TIMESTAMP_USE_CASE_CONFIG = {
     initCallData: [],
 } as UseCaseConfig
 
+// Hash Timestamp configuration
+export const CLIENT_FILTERING_USE_CASE_CONFIG = {
+    description: 'Client Filtering UseCase',
+    configurationId: CONFIGURATION_ID_CLIENT_FILTERING,
+    type: 'client_filtering',
+    businessLogicKeys: [CLIENT_FILTERING_RESOLVER_KEY],
+    versions: Array(1).fill(DEFAULT_VERSION), // [0]
+    rbacs: [],
+    initPause: false,
+    initBusinessIds: [],
+    initCallData: [],
+} as UseCaseConfig
+
 // ================================
 // DEFAULT CONFIGURATIONS - Default Configurations
 // ================================
@@ -404,6 +432,7 @@ export const DEFAULT_USE_CASE_CONFIGURATIONS = [
     DID_REGISTRY_USE_CASE_CONFIG,
     ERC721_USE_CASE_CONFIG,
     HASH_TIMESTAMP_USE_CASE_CONFIG,
+    CLIENT_FILTERING_USE_CASE_CONFIG,
 ] as const
 
 // ================================

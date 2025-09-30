@@ -15,6 +15,10 @@ import { getNetworkConfigs, ConfigManager, logger } from './config'
 // Register all tasks with Hardhat CLI in a single import
 // This replaces the many individual task imports with a consolidated approach
 import './tasks/register'
+import './tasks/client/registerFilter'
+import './tasks/client/getFiltersLength'
+import './tasks/client/getFiltersByPage'
+import './tasks/client/isFilterRegistered'
 
 // Initialize configuration management
 const configManager = ConfigManager.getInstance()

@@ -760,6 +760,20 @@ export MY_NETWORK_URL="https://my-custom-endpoint.com"
 
 ### Environment-Specific Deployment
 
+Available networks: hardhat, localhost, mvp, arsys, besuLocalDeployer.
+
+## User Roles
+
+In this repository we can find two different users:
+
+- Admin users: These users must maintain the project and allow access to other users with the specific role defined. These users are smart contract working group coordinators (IoBuilders). Also, at least on of these users must review any change to be applied to this repository from other admin or collab users.
+
+- Collab users: These users have read permissions to the repository. They can also submit pull requests in order to contribute to the repository. These pull requests must be validated by admin users.
+
+## Changes Procedure
+
+In order to include any change in this repository, we need to follow these steps:
+
 Use different `.env` files for different environments:
 
 ```bash
@@ -773,3 +787,13 @@ npx hardhat deployAll --network mvp
 ```
 
 This README provides comprehensive documentation for the ISBE contracts project, covering both secp256k1 and secp256r1 network support, all available tasks, and complete development workflows.
+
+## Deploy to isbe besu local deployer
+
+To deploy to Isbe besu local deployer, the test network provided on the repo, you need to add the correct .env variables, which are:
+
+- ACCOUNTS: A private key, for an account that exist on the network. It can´t start with 0x
+- ACCOUNT_ADDRESS: The wallet direction of that account. It has to start with 0x
+- PRIVATE_KEY: It should be the same value of ACCOUNTS
+
+Then you can do deployAll command and it should work as expected.
