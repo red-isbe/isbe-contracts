@@ -42,14 +42,15 @@ This project supports both **secp256k1** (standard Ethereum) and **secp256r1** (
 
 ### Available Networks
 
-| Network           | Type           | Curve     | Chain ID | Status          | URL                                        |
-| ----------------- | -------------- | --------- | -------- | --------------- | ------------------------------------------ |
-| `hardhat`         | Local          | secp256k1 | 31337    | ✅ Stable       | Local Hardhat Network                      |
-| `localhost`       | Local Besu     | secp256k1 | 2222     | ✅ Stable       | http://172.16.240.30:8545                  |
-| `mvp`             | ISBE MVP       | secp256k1 | 2023     | ✅ Stable       | https://besu-node-non-validator-1.mvp...   |
-| `arsys`           | ISBE Arsys     | secp256k1 | 2024     | ✅ Stable       | http://213.165.85.41:8545                  |
-| `kepler`          | IoBuilders     | secp256k1 | 1003     | ✅ Stable       | https://regular.pre.iosec.io.builders:8565 |
-| `customR1Network` | Besu secp256r1 | secp256r1 | 2222     | ⚠️ Experimental | http://172.16.240.30:8545                  |
+| Network             | Type           | Curve     | Chain ID | Status          | URL                                        |
+| ------------------- | -------------- | --------- | -------- | --------------- | ------------------------------------------ |
+| `hardhat`           | Local          | secp256k1 | 31337    | ✅ Stable       | Local Hardhat Network                      |
+| `localhost`         | Local Besu     | secp256k1 | 2222     | ✅ Stable       | http://172.16.240.30:8545                  |
+| `isbelocaldeployer` | Local Deploy   | secp256k1 | 2222     | ✅ Stable       | http://127.0.0.1:8545                      |
+| `mvp`               | ISBE MVP       | secp256k1 | 2023     | ✅ Stable       | https://besu-node-non-validator-1.mvp...   |
+| `arsys`             | ISBE Arsys     | secp256k1 | 2024     | ✅ Stable       | http://213.165.85.41:8545                  |
+| `kepler`            | IoBuilders     | secp256k1 | 1003     | ✅ Stable       | https://regular.pre.iosec.io.builders:8565 |
+| `customR1Network`   | Besu secp256r1 | secp256r1 | 2222     | ⚠️ Experimental | http://172.16.240.30:8545                  |
 
 > ⚠️ **EXPERIMENTAL FEATURE WARNING**: The `customR1Network` (secp256r1 support) is currently experimental and not recommended for production use. This feature uses custom cryptographic implementations that may have compatibility issues. Use only for development and testing purposes.
 

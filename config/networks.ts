@@ -21,6 +21,8 @@ const ARSYS_URL = process.env.ARSYS_URL || 'http://213.165.85.41:8545'
 const KEPLER_URL =
     process.env.KEPLER_URL || 'https://regular.pre.iosec.io.builders:8565'
 const CUSTOM_R1_URL = process.env.CUSTOM_R1_URL || 'http://172.16.240.30:8545'
+const ISBE_LOCAL_DEPLOYER_URL =
+    process.env.ISBE_LOCAL_DEPLOYER_URL || 'http://127.0.0.1:8545'
 
 /**
  * Gets all network configurations
@@ -98,6 +100,16 @@ export function getNetworkConfigs(): NetworksConfig {
             blockGasLimit: 30000000,
             curve: 'secp256r1',
             secp256r1Accounts,
+        } as NetworkConfigWithCurve,
+
+        isbelocaldeployer: {
+            url: ISBE_LOCAL_DEPLOYER_URL,
+            chainId: 2222,
+            accounts,
+            gasPrice: 0,
+            gas: 100000000,
+            blockGasLimit: 0x1e84800,
+            curve: 'secp256k1',
         } as NetworkConfigWithCurve,
     }
 }
