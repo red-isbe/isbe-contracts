@@ -106,19 +106,19 @@ export const ARTIFACT_PATHS = {
     // ERC721 facets
     ERC721: 'contracts/tokens/erc721/ERC721Facet.sol',
     ERC721_BURNABLE:
-        'contracts/tokens/erc721/extension/burn/ERC721BurnableFacet.sol',
+        'contracts/tokens/erc721/extensions/burn/ERC721BurnableFacet.sol',
     ERC721_ENUMERABLE:
-        'contracts/tokens/erc721/extension/enumerable/ERC721EnumerableFacet.sol',
+        'contracts/tokens/erc721/extensions/enumerable/ERC721EnumerableFacet.sol',
     ERC721_CAPPED:
-        'contracts/tokens/erc721/extension/cap/ERC721CappedFacet.sol',
+        'contracts/tokens/erc721/extensions/cap/ERC721CappedFacet.sol',
     ERC721_CONTROLLER:
-        'contracts/tokens/erc721/extension/controller/ERC721ControllerFacet.sol',
+        'contracts/tokens/erc721/extensions/controller/ERC721ControllerFacet.sol',
     ERC721_SNAPSHOT:
-        'contracts/tokens/erc721/extension/snapshot/ERC721SnapshotFacet.sol',
+        'contracts/tokens/erc721/extensions/snapshot/ERC721SnapshotFacet.sol',
     ERC721_ROYALTY:
-        'contracts/tokens/erc721/extension/royalty/ERC721RoyaltyFacet.sol',
+        'contracts/tokens/erc721/extensions/royalty/ERC721RoyaltyFacet.sol',
     ERC721_CONSECUTIVE:
-        'contracts/tokens/erc721/extension/consecutive/ERC721ConsecutiveFacet.sol',
+        'contracts/tokens/erc721/extensions/consecutive/ERC721ConsecutiveFacet.sol',
 
     // Utility facets
     HASH_TIMESTAMP: 'contracts/hashtimestamp/HashTimestampFacet.sol',

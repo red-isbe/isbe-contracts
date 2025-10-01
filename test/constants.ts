@@ -1,36 +1,8 @@
-export const PAUSER_ROLE =
-    '0x8c911f4537972e7549dbbd37a96b929a4b480f4fb156fc6344524bdf2ca50aa1'
+// Re-export shared constants from utils - maintaining backward compatibility
+export * from '../utils/constants'
 
-export const ISBE_ROLE =
-    '0xe02d3eaf0b5fb24a2d637286804770bf2618aa6d3b40cbf443b93f6cd1aac239'
-
-export const BUSINESS_LOGIC_DEPLOYER_ROLE =
-    '0xdc99c621188983b30fd7ff7b62ee13c081548c6b000e3c54b59686f091418069'
-
-export const GOVERNANCE_MANAGER_ROLE =
-    '0x44c016b7c7762ceb1f7aab96b102f733139c944c581ee882670e2636bebbc4c5'
-
-export const GOVERNANCE_CONFIGURATION_MANAGER_ROLE =
-    '0xc4fca0e2ae1ffe7494d7a1a0ee458ac6b6d84e022ad4f87c1742be5599e5e7fb'
-
-export const ASSET_EVENT_TRACKER_ROLE =
-    '0x46ffae7721ce7c213dfc98101d48d6a7f58e3c12f2945ae1fb4f2e2862a44ff1'
-
-export const HASH_TIMESTAMP_ROLE =
-    '0x3bb8341caefb6dc4800c130d6d6d2789f8c4e534bc168ff9a7eda2e2831a721f'
-
-export const CONTROLLER_ROLE =
-    '0x6bc432609a8af6e2d25fcffbe70872e0b3c63d88116a2b673c42dfbc130d9331'
-
-export const CAP_ROLE =
-    '0xd2231b344d69ba7f64c324f071f0ef91a388e60c2a6b529339afc42cf411cb61'
-
-export const SNAPSHOT_ROLE =
-    '0x0ca5e23bde0d5e6112f10b9752afc92df6901f9218a43771a113f0ee5ab6bd49'
-
-export const MINTER_ROLE =
-    '0xd8e8f9f9638a19d632dbb79025022db564483265e96ba99b2dd89df138e9cace'
-
+// Test-specific constants (if any needed only for tests)
+// Add any test-only constants here in the future
 export const ROYALTY_ROLE =
     '0xe87ed15151829ed3753553fc34d39b49f60370ac439fddb4e9304af60bce3045'
 

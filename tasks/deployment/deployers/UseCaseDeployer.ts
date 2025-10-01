@@ -19,7 +19,9 @@ interface BusinessLogicConfig {
  * Especializada en el despliegue de casos de uso
  */
 export class UseCaseDeployer {
-    constructor() {}
+    constructor(
+        private hre: import('hardhat/types').HardhatRuntimeEnvironment
+    ) {}
 
     async deployAll(
         configs: UseCaseConfig[],
@@ -135,15 +137,45 @@ export class UseCaseDeployer {
         factoryAddress: string,
         signer: Signer
     ): Promise<number> {
-        const configResult = await setConfig(
-            config.configurationId,
-            config.businessLogicKeys,
-            config.businessLogicKeys.map(
-                (_, index) => config.versions[index] || 0
-            ),
-            factoryAddress,
-            signer
-        )
+        // Check if this is a secp256r1 network
+        const networkConfig = this.hre.config.networks[
+            this.hre.network.name
+        ] as {
+            curve?: string
+            secp256r1Accounts?: Array<{ privateKey: string }>
+        }
+
+        let configResult: { version: number }
+
+        if (networkConfig.curve === 'secp256r1') {
+            console.log('      🔧 Using secp256r1-compatible setConfig...')
+            // Use secp256r1-compatible setConfig with raw transactions
+            const { setConfigSecp256r1 } = await import(
+                '../../../scripts/configMgmt/setConfigSecp256r1'
+            )
+            configResult = await setConfigSecp256r1(
+                this.hre,
+                config.configurationId,
+                config.businessLogicKeys,
+                config.businessLogicKeys.map(
+                    (_, index) => config.versions[index] || 0
+                ),
+                factoryAddress
+            )
+        } else {
+            console.log('      🔧 Using standard setConfig...')
+            // Use standard setConfig for secp256k1 networks
+            configResult = await setConfig(
+                config.configurationId,
+                config.businessLogicKeys,
+                config.businessLogicKeys.map(
+                    (_, index) => config.versions[index] || 0
+                ),
+                factoryAddress,
+                signer
+            )
+        }
+
         return configResult.version as number
     }
 
@@ -221,16 +253,46 @@ export class UseCaseDeployer {
     ): Promise<string> {
         console.log(`      🚀 Desplegando proxy...`)
 
-        const useCaseDeployed = await deployUseCase(
-            config.configurationId,
-            1, // versión de configuración
-            config.rbacs.map((rbac) => rbac.role),
-            config.rbacs.map((rbac) => rbac.members),
-            config.initBusinessIds,
-            config.initCallData,
-            factoryAddress,
-            signer
-        )
+        // Check if this is a secp256r1 network
+        const networkConfig = this.hre.config.networks[
+            this.hre.network.name
+        ] as {
+            curve?: string
+            secp256r1Accounts?: Array<{ privateKey: string }>
+        }
+
+        let useCaseDeployed: { proxy: string }
+
+        if (networkConfig.curve === 'secp256r1') {
+            console.log('      🔧 Using secp256r1-compatible deployUseCase...')
+            // Use secp256r1-compatible deployUseCase with raw transactions
+            const { deployUseCaseSecp256r1 } = await import(
+                '../../../scripts/proxyFactory/deployUseCaseSecp256r1'
+            )
+            useCaseDeployed = await deployUseCaseSecp256r1(
+                this.hre,
+                config.configurationId,
+                1, // versión de configuración
+                config.rbacs.map((rbac) => rbac.role),
+                config.rbacs.map((rbac) => rbac.members),
+                config.initBusinessIds,
+                config.initCallData,
+                factoryAddress
+            )
+        } else {
+            console.log('      🔧 Using standard deployUseCase...')
+            // Use standard deployUseCase for secp256k1 networks
+            useCaseDeployed = await deployUseCase(
+                config.configurationId,
+                1, // versión de configuración
+                config.rbacs.map((rbac) => rbac.role),
+                config.rbacs.map((rbac) => rbac.members),
+                config.initBusinessIds,
+                config.initCallData,
+                factoryAddress,
+                signer
+            )
+        }
 
         return useCaseDeployed.proxy
     }

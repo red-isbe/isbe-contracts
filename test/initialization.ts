@@ -116,15 +116,20 @@ async function deployBusinessLogicFromFactory(
         (log) =>
             log.topics[0] ===
             '0xe50cdcfd1b693a28ae23bc9a7b0614b649a9caaa7164a4aa2e8161ab6c8cd7a4'
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    )[0] as any
+    )[0] as {
+        args: {
+            businessAddress: string
+        }
+    }
     return contractFactory.attach(businessAddress.args.businessAddress)
 }
 
 export async function deployGovernance(
     owner: Signer,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    rbacsUseCase: any[] = [],
+    rbacsUseCase: Array<{
+        role: string
+        members: Array<string | Signer>
+    }> = [],
     configurationId: string = CONFIGURATION_ID_ERC20,
     init_pause: boolean = false,
     initCalldata: string = '0x',
