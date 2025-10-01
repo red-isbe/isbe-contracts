@@ -2,7 +2,7 @@
 pragma solidity ^0.8.28;
 
 import {_ERC3643_REGULATORY_RESOLVER_KEY} from '../../../../constants/resolverKeys.sol';
-import {ERC3643RegulatoryInternal} from './ERC3643RegulatoryInternal.sol';
+import {ERC3643InternalCommon} from '../ERC3643InternalCommon.sol';
 import {IERC3643Regulatory} from './IERC3643Regulatory.sol';
 import {_TOKEN_OWNER_ROLE} from '../../../../constants/roles.sol';
 import {IIdentityRegistry} from '../../identityregistry/IIdentityRegistry.sol';
@@ -16,7 +16,7 @@ import {ICompliance} from '../../compliance/ICompliance.sol';
  */
 abstract contract ERC3643Regulatory is
     IERC3643Regulatory,
-    ERC3643RegulatoryInternal
+    ERC3643InternalCommon
 {
     /**
      * @dev Disables further initializations for this facet using its resolver key.

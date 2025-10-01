@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {ERC3643FreezeInternal} from './ERC3643FreezeInternal.sol';
+import {ERC3643InternalCommon} from '../ERC3643InternalCommon.sol';
 import {IERC3643Freeze} from './IERC3643Freeze.sol';
 import {_TOKEN_AGENT_ROLE} from '../../../../constants/roles.sol';
 
@@ -11,7 +11,7 @@ import {_TOKEN_AGENT_ROLE} from '../../../../constants/roles.sol';
  * @dev Provides public methods to freeze/unfreeze addresses and token amounts.
  *      Applies access control, validation, and emits events.
  */
-abstract contract ERC3643Freeze is IERC3643Freeze, ERC3643FreezeInternal {
+abstract contract ERC3643Freeze is IERC3643Freeze, ERC3643InternalCommon {
     function setAddressFrozen(
         address _userAddress,
         bool _freeze
