@@ -112,10 +112,16 @@ Para trazabilidad fina, se recomienda vincular cada función con un ID de requis
 
 #### 4.3.2. ISBE Proxy
 
+> **Nota importante**: La funcionalidad de configuración del ISBE Proxy está dividida en dos momentos:
+>
+> 1. **Configuración inicial** durante el despliegue mediante el constructor
+> 2. **Actualizaciones posteriores** mediante la faceta `IsbeCutFacet`
+
 - **Constructor (`IsbeProxyArgs`)**:
     - Parámetros: `configurationManagement`, `configurationId`, `version`, `init[]`, `data[]`.
     - Comportamiento: Valida la configuración en `IConfigurationManagement`, establece estado activo y ejecuta inicializadores en orden.
-- **API pública**: No añade funciones externas; expone funcionalidad a través de facetas.
+- **Actualización de configuración**: Se realiza a través de `IsbeCutFacet.setIsbeProxyConfiguration()`, que permite cambiar la configuración activa del proxy después del despliegue.
+- **API pública**: La funcionalidad se expone a través de facetas, siendo `IsbeCutFacet` la responsable de las actualizaciones de configuración.
 
 ---
 
@@ -177,7 +183,7 @@ sequenceDiagram
     participant Gobernador
     participant IsbeCutFacet
     participant Proxy
-    Gobernador->>IsbeCutFacet: isbeCut(newManager, newId, newVersion, init[], data[])
+    Gobernador->>IsbeCutFacet: setIsbeProxyConfiguration(newManager, newId, newVersion, init[], data[])
     IsbeCutFacet->>Proxy: _setConfiguration(newManager, newId, newVersion)
     Proxy->>IConfigurationManagement: Validar configuración
     alt Válida
@@ -192,15 +198,15 @@ sequenceDiagram
 
 ### 4.6. Reglas de negocio asociadas
 
-| Contrato/Faceta              | Función                                      | Permiso requerido                   | Pausa afecta         |
-| ---------------------------- | -------------------------------------------- | ----------------------------------- | -------------------- |
-| DiamondCutOwnableFacet       | `diamondCut`, `interfaceCut`, `facetUpdates` | `onlyOwner`                         | Sí (`whenNotPaused`) |
-| DiamondCutAccessControlFacet | `diamondCut`, `interfaceCut`, `facetUpdates` | `onlyRole(GOVERNANCE_MANAGER_ROLE)` | Sí                   |
-| IsbeCutFacet                 | `isbeCut`                                    | `onlyRole(ISBE_GOVERNANCE_ROLE)`    | Sí                   |
-| IsbeProxyInternal            | `_facetAddress`                              | Ninguno (resolución)                | No                   |
-| Base EIP‑2535 / ISBE         | `fallback()`                                 | Ninguno                             | No                   |
+| Contrato/Faceta              | Función                                      | Permiso requerido                       | Pausa afecta         |
+| ---------------------------- | -------------------------------------------- | --------------------------------------- | -------------------- |
+| DiamondCutOwnableFacet       | `diamondCut`, `interfaceCut`, `facetUpdates` | `onlyOwner`                             | Sí (`whenNotPaused`) |
+| DiamondCutAccessControlFacet | `diamondCut`, `interfaceCut`, `facetUpdates` | `onlyRole(GOVERNANCE_MANAGER_ROLE)`     | Sí                   |
+| IsbeCutFacet                 | `setIsbeProxyConfiguration`                  | `onlyRole(_CONFIGURATION_MANAGER_ROLE)` | Sí                   |
+| IsbeProxyInternal            | `_facetAddress`                              | Ninguno (resolución)                    | No                   |
+| Base EIP‑2535 / ISBE         | `fallback()`                                 | Ninguno                                 | No                   |
 
-> ⚠️ **Nota**: Identificador exacto del rol (`GOVERNANCE_MANAGER_ROLE`) por confirmar en el commit.
+> ⚠️ **Nota**: Los roles han sido verificados en el código fuente. El rol para configuración ISBE es `_CONFIGURATION_MANAGER_ROLE`, no `ISBE_GOVERNANCE_ROLE` como se mencionaba anteriormente.
 
 ---
 
@@ -216,7 +222,7 @@ sequenceDiagram
 
 **ISBE Proxy**
 
-- `IIsbeCut`: `isbeCut(configurationManagement, configurationId, version, initAddresses, initData)`
+- `IIsbeCut`: `setIsbeProxyConfiguration(configurationManagement, configurationId, version, initAddresses, initData)`
 - `IConfigurationManagement`: `facets(id, version) → Facet[]`, `facetAddress(id, version, selector) → address`
 
 #### 4.7.2. Eventos
@@ -409,10 +415,11 @@ it('GIVEN a diamond with facets WHEN calling a function THEN it routes to correc
 
 #### **Funciones externas principales - ISBE Proxy**
 
-| Función                                                                                        | Tipo      | Descripción                                                                     |
-| ---------------------------------------------------------------------------------------------- | --------- | ------------------------------------------------------------------------------- |
-| `isbeCut(address configMgmt, bytes32 configId, uint256 version, address[] init, bytes[] data)` | Escritura | Cambia la configuración activa del proxy ISBE. Requiere permisos de gobernanza. |
-| `getConfiguration()`                                                                           | Lectura   | Devuelve la configuración actual del proxy (manager, id, version).              |
+| Función                                                                                                          | Tipo        | Descripción                                                                                                        |
+| ---------------------------------------------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------ |
+| `constructor(IsbeProxyArgs memory _args)`                                                                        | Constructor | Establece la configuración inicial del proxy durante el despliegue. Valida y aplica la configuración especificada. |
+| `setIsbeProxyConfiguration(address configMgmt, bytes32 configId, uint256 version, address[] init, bytes[] data)` | Escritura   | Cambia la configuración activa del proxy ISBE. Requiere permisos de gobernanza.                                    |
+| `getConfiguration()`                                                                                             | Lectura     | Devuelve la configuración actual del proxy (manager, id, version).                                                 |
 
 #### **Funciones internas críticas**
 
@@ -426,11 +433,12 @@ it('GIVEN a diamond with facets WHEN calling a function THEN it routes to correc
 
 #### **Estructuras de datos principales**
 
-| Nombre del struct  | Campos                                                                                                                                    | Descripción                                                                   |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| `DiamondStorage`   | `mapping(bytes4 => address) facetAddressAndSelectorPosition`<br/>`address[] facetAddresses`<br/>`mapping(address => FacetInfo) facetInfo` | Almacena el mapeo de selectores a facetas y metadatos asociados.              |
-| `FacetCut`         | `address facetAddress`<br/>`FacetCutAction action`<br/>`bytes4[] functionSelectors`                                                       | Define una operación de modificación de faceta (agregar/reemplazar/eliminar). |
-| `IsbeProxyStorage` | `address configurationManagement`<br/>`bytes32 configurationId`<br/>`uint256 version`                                                     | Almacena la configuración activa de un proxy ISBE.                            |
+| Nombre del struct  | Campos                                                                                                                                         | Descripción                                                                   |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `DiamondStorage`   | `mapping(bytes4 => address) facetAddressAndSelectorPosition`<br/>`address[] facetAddresses`<br/>`mapping(address => FacetInfo) facetInfo`      | Almacena el mapeo de selectores a facetas y metadatos asociados.              |
+| `FacetCut`         | `address facetAddress`<br/>`FacetCutAction action`<br/>`bytes4[] functionSelectors`                                                            | Define una operación de modificación de faceta (agregar/reemplazar/eliminar). |
+| `IsbeProxyArgs`    | `IConfigurationManagement configurationManagement`<br/>`bytes32 configurationId`<br/>`uint256 version`<br/>`address[] init`<br/>`bytes[] data` | Parámetros para el constructor del proxy ISBE.                                |
+| `IsbeProxyStorage` | `address configurationManagement`<br/>`bytes32 configurationId`<br/>`uint256 version`                                                          | Almacena la configuración activa de un proxy ISBE.                            |
 
 #### **Variables de almacenamiento críticas**
 
@@ -442,7 +450,7 @@ it('GIVEN a diamond with facets WHEN calling a function THEN it routes to correc
 ### 5.10. Roles
 
 - **`GOVERNANCE_MANAGER_ROLE`**: Permiso para ejecutar `diamondCut` en facetas con control de acceso.
-- **`ISBE_GOVERNANCE_ROLE`**: Permiso para cambiar configuraciones en proxies ISBE mediante `isbeCut`.
+- **`_CONFIGURATION_MANAGER_ROLE`**: Permiso para cambiar configuraciones en proxies ISBE mediante `setIsbeProxyConfiguration`.
 - **`PAUSER_ROLE`**: Permiso para pausar y despausar operaciones críticas.
 - **`DEFAULT_ADMIN_ROLE`**: Rol administrativo superior que puede gestionar otros roles.
 
@@ -509,13 +517,13 @@ console.log('Facet for selector:', facet)
 ```ts
 // ABI de IsbeCutFacet
 const isbeCutAbi = [
-    'function isbeCut(address configurationManagement, bytes32 configurationId, uint256 version, address[] calldata initAddresses, bytes[] calldata initData)',
+    'function setIsbeProxyConfiguration(address configurationManagement, bytes32 configurationId, uint256 version, address[] calldata initAddresses, bytes[] calldata initData)',
 ]
 
 const signer = new ethers.Wallet('<PRIVATE_KEY>', provider)
 const isbeCut = new ethers.Contract(diamondAddress, isbeCutAbi, signer)
 
-const tx = await isbeCut.isbeCut(
+const tx = await isbeCut.setIsbeProxyConfiguration(
     '0x<ConfigManager>',
     ethers.id('CONFIG_MAINNET_V2'),
     2n,
@@ -551,7 +559,7 @@ loupe.on('IsbeProxyConfigurationSet', (manager, id, version, inits, datas) => {
 #### Firmas principales
 
 - `diamondCut(cuts, _init, _calldata)`
-- `isbeCut(configManager, configId, version, init[], data[])`
+- `setIsbeProxyConfiguration(configurationManagement, configurationId, version, init[], data[])`
 - `facetAddress(selector)`
 - `facetAddresses()`
 

@@ -1,5 +1,5 @@
 import { ethers } from 'hardhat'
-import { Signer } from 'ethers'
+import { Signer, ContractFactory } from 'ethers'
 import {
     EIP2535AccessControl__factory,
     BusinessLogicFactoryFacet,
@@ -103,7 +103,7 @@ let isbeFactory: IIsbeFactory
 
 async function deployBusinessLogicFromFactory(
     resolverKey: string,
-    contractFactory: ethers.ContractFactory
+    contractFactory: ContractFactory
 ) {
     const deployTx = await (
         await isbeFactory.deploy(resolverKey, contractFactory.bytecode)
@@ -287,8 +287,9 @@ export async function deployGovernance(
                     init_BusinessId_UseCase,
                     init_CallData_UseCase
                 )
+            default:
+                throw new Error(`Unknown configuration id ${configId}`)
         }
-        return {}
     }
 
     const useCaseDeployment = await deployUseCase()
@@ -364,7 +365,6 @@ export async function deployGovernance(
         didVerificationRelationshipFacet:
             useCaseDeployment.didVerificationRelationshipFacet,
         didRegistry: useCaseDeployment.didRegistry,
-        erc721Capped: useCaseDeployment.erc721Capped,
         clientFilteringFacet: useCaseDeployment.clientFilteringFacet,
         clientFiltering: useCaseDeployment.clientFiltering,
         diamondCutAccessControlFacet,
