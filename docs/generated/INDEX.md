@@ -3,6 +3,7 @@
 - [access/accessControl](access/accessControl.md)
 - [access/ownable](access/ownable.md)
 - [assetevent](assetevent.md)
+- [client/filtering](client/filtering.md)
 - [core](core.md)
 - [factory](factory.md)
 - [factory/accessControl](factory/accessControl.md)

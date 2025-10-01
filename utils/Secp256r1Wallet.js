@@ -197,6 +197,21 @@ class Secp256r1Wallet extends ethers.AbstractSigner {
     }
 
     /**
+     * @description Performs an eth_call (read-only blockchain operation)
+     * @param {Object} transaction - Transaction object for the call
+     * @param {string|number} [blockTag] - Block tag for the call (optional)
+     * @returns {Promise<string>} Result of the eth_call
+     */
+    async call(transaction, blockTag) {
+        if (!this.provider) {
+            throw new Error('Provider not available on Secp256r1Wallet')
+        }
+
+        // Forward the eth_call to the provider without modification
+        return await this.provider.call(transaction, blockTag)
+    }
+
+    /**
      * @description Connects wallet to a new provider
      * @param {ethers.Provider} provider - New provider instance
      * @returns {Secp256r1Wallet} New wallet instance with the provider

@@ -3,6 +3,23 @@ export * from '../utils/constants'
 
 // Test-specific constants (if any needed only for tests)
 // Add any test-only constants here in the future
+export const ROYALTY_ROLE =
+    '0xe87ed15151829ed3753553fc34d39b49f60370ac439fddb4e9304af60bce3045'
+
+export const PROXY_DEPLOYER_ROLE =
+    '0xc6832bf28cac8042fe5597e3b605a7fa9af230954df24409efd82699171f3c26'
+
+export const ISBE_PAUSER_ROLE =
+    '0x643e67198985fdbcfc2807234f580aa2cab96bb7efe1ab3158da79255d493114'
+
+export const CONFIGURATION_MANAGER_ROLE =
+    '0xdc4b85a1ab8a3dbc4b47e1626cb620f2a5a5e4753d049a2d71f76e2cf26b1e0b'
+
+export const CLIENT_FILTERING_ROLE =
+    '0xcbb09df20dd6e5dbe10d3957a6ca4269c2c926a5334d2cbcd9ea39ab0593f79a'
+
+export const DEFAULT_ADMIN_ROLE =
+    '0x0000000000000000000000000000000000000000000000000000000000000000'
 export const ROLE_1 =
     '0x0000000000000000000000000000000000000000000000000000000000000001'
 export const ROLE_2 =
@@ -67,6 +84,8 @@ export const DID_VERIFICATION_METHOD_RESOLVER_KEY =
     '0xac8773db319c7049be61ab52c59325712b4ba639daa556105c3b1e20671238dd'
 export const DID_VERIFICATION_RELATIONSHIP_RESOLVER_KEY =
     '0x32bd32541f3651dc69848ddc9cad21896eabb6a11034c19b03683da6e19b76d7'
+export const CLIENT_FILTERING_RESOLVER_KEY =
+    '0x9d459b48dcede9ec86807b1af972b62ab0b2b0237e2187da45c02c25f3aeb016'
 
 export const FORBIDDEN_ERC165_INTERFACE_ID = '0xffffffff'
 

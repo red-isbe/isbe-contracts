@@ -51,4 +51,7 @@ bytes32 constant _MINTER_ROLE = 0xd8e8f9f9638a19d632dbb79025022db564483265e96ba9
 // keccak256('isbe.contracts.role.royalty');
 bytes32 constant _ROYALTY_ROLE = 0xe87ed15151829ed3753553fc34d39b49f60370ac439fddb4e9304af60bce3045;
 
+// keccak256('isbe.contracts.role.client.filtering');
+bytes32 constant _CLIENT_FILTERING_ROLE = 0xcbb09df20dd6e5dbe10d3957a6ca4269c2c926a5334d2cbcd9ea39ab0593f79a;
+
 // solhint-enable max-line-length

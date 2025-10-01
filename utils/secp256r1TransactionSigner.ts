@@ -1,6 +1,7 @@
 // utils/secp256r1TransactionSigner.ts
 import {
     Transaction,
+    TransactionRequest,
     keccak256,
     concat,
     toBeHex,
@@ -507,6 +508,30 @@ export class Secp256r1Wallet {
 
     async getAddress(): Promise<string> {
         return this.address
+    }
+
+    /**
+     * Perform an eth_call (read-only call to the blockchain)
+     * This forwards the call to the provider without modification
+     */
+    async call(
+        transaction: TransactionRequest,
+        blockTag?: string | number
+    ): Promise<string> {
+        const hre = this.signer['hre'] // Access the hre instance from signer
+        if (!hre?.ethers?.provider) {
+            throw new Error('Provider not available on Secp256r1Wallet')
+        }
+
+        console.log('📞 Performing eth_call with secp256r1 wallet...')
+        console.log(`   🎯 To: ${transaction.to}`)
+        console.log(`   📋 Data: ${transaction.data?.slice(0, 42)}...`)
+
+        // Forward the eth_call to the provider without modification
+        const result = await hre.ethers.provider.call(transaction, blockTag)
+
+        console.log(`   ✅ eth_call completed, result length: ${result.length}`)
+        return result
     }
 
     async testCapabilities(): Promise<void> {

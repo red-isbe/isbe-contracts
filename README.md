@@ -29,7 +29,12 @@ npm run test
 
 # Generate documentation
 npm run docgen
+
+# Enable debug logging for troubleshooting (optional)
+DEBUG=true npm run compile
 ```
+
+> **🔇 Silent by Default**: The configuration system produces no output during normal operation. Use `DEBUG=true` to see detailed information when troubleshooting.
 
 ## 🌐 Network Support
 
@@ -37,14 +42,15 @@ This project supports both **secp256k1** (standard Ethereum) and **secp256r1** (
 
 ### Available Networks
 
-| Network           | Type           | Curve     | Chain ID | Status          | URL                                        |
-| ----------------- | -------------- | --------- | -------- | --------------- | ------------------------------------------ |
-| `hardhat`         | Local          | secp256k1 | 31337    | ✅ Stable       | Local Hardhat Network                      |
-| `localhost`       | Local Besu     | secp256k1 | 2222     | ✅ Stable       | http://172.16.240.30:8545                  |
-| `mvp`             | ISBE MVP       | secp256k1 | 2023     | ✅ Stable       | https://besu-node-non-validator-1.mvp...   |
-| `arsys`           | ISBE Arsys     | secp256k1 | 2024     | ✅ Stable       | http://213.165.85.41:8545                  |
-| `kepler`          | IoBuilders     | secp256k1 | 1003     | ✅ Stable       | https://regular.pre.iosec.io.builders:8565 |
-| `customR1Network` | Besu secp256r1 | secp256r1 | 2222     | ⚠️ Experimental | http://172.16.240.30:8545                  |
+| Network             | Type           | Curve     | Chain ID | Status          | URL                                        |
+| ------------------- | -------------- | --------- | -------- | --------------- | ------------------------------------------ |
+| `hardhat`           | Local          | secp256k1 | 31337    | ✅ Stable       | Local Hardhat Network                      |
+| `localhost`         | Local Besu     | secp256k1 | 2222     | ✅ Stable       | http://172.16.240.30:8545                  |
+| `isbelocaldeployer` | Local Deploy   | secp256k1 | 2222     | ✅ Stable       | http://127.0.0.1:8545                      |
+| `mvp`               | ISBE MVP       | secp256k1 | 2023     | ✅ Stable       | https://besu-node-non-validator-1.mvp...   |
+| `arsys`             | ISBE Arsys     | secp256k1 | 2024     | ✅ Stable       | http://213.165.85.41:8545                  |
+| `kepler`            | IoBuilders     | secp256k1 | 1003     | ✅ Stable       | https://regular.pre.iosec.io.builders:8565 |
+| `customR1Network`   | Besu secp256r1 | secp256r1 | 2222     | ⚠️ Experimental | http://172.16.240.30:8545                  |
 
 > ⚠️ **EXPERIMENTAL FEATURE WARNING**: The `customR1Network` (secp256r1 support) is currently experimental and not recommended for production use. This feature uses custom cryptographic implementations that may have compatibility issues. Use only for development and testing purposes.
 
@@ -134,6 +140,30 @@ npx hardhat show-secp256r1-accounts
 - **Proxy Factory**: Use case proxy deployment
 - **Global ISBE Pause**: Network-wide pause functionality
 
+## 🔇 **Silent Configuration System**
+
+🆕 **New in this version**: The configuration system is now **completely silent by default**, eliminating configuration noise from your builds and scripts.
+
+### Quick Start
+
+```bash
+# Silent operation (default) - clean output
+npx hardhat compile
+npx hardhat test
+npx hardhat deployAll --network mvp
+
+# Detailed debug output when troubleshooting
+DEBUG=true npx hardhat compile
+DEBUG=true npx hardhat deployAll --network mvp
+```
+
+### Benefits
+
+- **🔇 Clean Output**: No configuration noise cluttering your builds
+- **🚫 Silent Scripts**: All hardhat commands run quietly by default
+- **🔍 Debug When Needed**: Rich debugging information available when `DEBUG=true`
+- **🏠 Unified Networks**: All network configurations in one clear location (`config/networks.ts`)
+
 ## 🔧 **TypeScript Utilities & Code Quality**
 
 This project includes comprehensive TypeScript utilities and improvements implemented in **Phase 1** of the code quality enhancement initiative.
@@ -212,6 +242,147 @@ validateBytecode('0x608060405...') // validates contract bytecode format
 - ✅ **Documentation**: JSDoc comments for all public functions
 
 For complete implementation details, see [`docs/TypeScript-Code-Improvements.md`](docs/TypeScript-Code-Improvements.md).
+
+## 🔐 **secp256r1 Signature Support**
+
+**⚠️ EXPERIMENTAL**: This project includes experimental support for secp256r1 elliptic curve signatures, commonly used in enterprise and government systems.
+
+### Current Implementation Status
+
+**✅ Working Features:**
+
+- Automatic curve detection based on network configuration
+- Raw transaction signing for secp256r1 networks
+- Enhanced event detection with multiple fallback strategies
+- Role-based access control with secp256r1 signatures
+- Comprehensive testing across both curve types
+
+**⚠️ Known Architectural Issues:**
+
+The current secp256r1 implementation has a **distributed architecture** with several maintenance challenges:
+
+#### Critical Issue: Address Derivation Inconsistency
+
+```typescript
+// Two different address derivation methods:
+// Method 1: secp256r1Utils.deriveEthereumAddress() - Custom Keccak-256
+// Method 2: AccountManager.getSecp256r1Accounts() - Uses ethers.Wallet
+```
+
+**Risk**: Could generate different addresses for the same private key, potentially causing deployment failures or asset loss.
+
+#### Distributed Logic
+
+secp256r1 functionality is spread across 6+ files:
+
+- `utils/secp256r1Utils.ts` - Cryptographic operations
+- `utils/networkUtils.ts` - Network detection
+- `config/AccountManager.ts` - Account management
+- `utils/secp256r1TransactionSigner.ts` - Transaction signing
+- `utils/SignatureProviderFactory.ts` - Provider selection
+- `utils/getCurveAwareSigner.ts` - Signer abstraction
+
+### Developer Usage
+
+#### Network Configuration
+
+```typescript
+// hardhat.config.ts - Add curve to network configuration
+export default {
+    networks: {
+        'secp256r1-network': {
+            url: 'https://your-secp256r1-network.com',
+            accounts: process.env.ACCOUNTS?.split(',') || [],
+            curve: 'secp256r1', // Enable secp256r1 support
+        },
+    },
+}
+```
+
+#### Automatic Curve Detection
+
+```bash
+# Automatic detection based on network configuration
+npx hardhat deployAll --network secp256r1-network
+# ✅ secp256r1 network detected - using secp256r1 wallet
+```
+
+#### Manual Provider Creation
+
+```typescript
+import { SignatureProviderFactory } from './tasks/deployment/providers/SignatureProviderFactory'
+
+// Automatically selects appropriate provider based on network
+const signatureProvider = SignatureProviderFactory.create(hre)
+const curveType = signatureProvider.getCurveType() // 'secp256r1' or 'secp256k1'
+```
+
+### Event Detection & Reliability
+
+**Enhanced for secp256r1**: The system includes robust event detection with multiple fallback strategies:
+
+1. **Standard Receipt Parsing**: Normal ethers.js event parsing
+2. **Block Log Retrieval**: Direct block log queries when receipt parsing fails
+3. **Contract State Validation**: Fallback validation using contract state queries
+
+```typescript
+// Example: Role granting with enhanced event detection
+const result = await grantRole(
+    roleToGrant,
+    accountToGrantTo,
+    diamond,
+    signatureProvider
+)
+// Automatically handles secp256r1 event detection challenges
+```
+
+### Development & Debugging
+
+#### Debug Mode
+
+```bash
+# Enable detailed secp256r1 debugging
+DEBUG=true npx hardhat deployAll --network secp256r1-network
+```
+
+#### Testing Both Curves
+
+```bash
+# Test secp256k1 behavior (default)
+npm run test
+
+# Test secp256r1 behavior (requires secp256r1 network)
+npm run test -- --network secp256r1-testnet
+```
+
+### Architecture Improvement Plan
+
+**📋 Strategy Document**: [`docs/secp256r1-Management-Strategy.md`](docs/secp256r1-Management-Strategy.md)
+
+**Planned Improvements**:
+
+- **Phase 1**: Fix address derivation inconsistency (Critical)
+- **Phase 2**: Unified Secp256r1Manager for centralized control
+- **Phase 3**: Enhanced error handling and monitoring
+
+### Known Limitations
+
+1. **Address Derivation**: Two different methods may generate different addresses
+2. **Distributed Configuration**: No centralized secp256r1 settings management
+3. **Error Handling**: Inconsistent error patterns across components
+4. **Testing Complexity**: Difficult to test all secp256r1 scenarios comprehensively
+
+### Production Readiness
+
+**Current Status**: ⚠️ **Use with Caution**
+
+- **Development/Testing**: ✅ Safe for development and testing
+- **Staging**: ⚠️ Requires careful address validation
+- **Production**: ❌ Wait for architecture improvements
+
+**Recommended**: Validate all addresses and test thoroughly before production deployment.
+
+For technical debt details and improvement roadmap, see [`docs/TypeScript-Code-Improvements.md`](docs/TypeScript-Code-Improvements.md).
 
 ## 📋 Development Tasks
 
@@ -541,6 +712,8 @@ npx hardhat deployAll --network customR1Network --precommit
 - ⚠️ **Security Concerns**: Custom signing implementation needs thorough audit
 - ⚠️ **Maintenance Burden**: Requires specialized knowledge to maintain
 - ⚠️ **Future Uncertainty**: Implementation may change or be deprecated
+- 🔧 **Event Detection Issues**: Raw transactions may not populate logs correctly in receipts
+- 🆕 **Fallback Validation**: Automatic state validation when events are missing (v1.2.0+)
 
 See [Curve Compatibility Test Results](docs/Curve-Compatibility-Test-Results.md) for detailed production deployment metrics and validation reports.
 
@@ -697,29 +870,72 @@ For detailed installation and usage instructions, visit the [package documentati
 
 ### Network Connection Issues
 
-- Verify network URLs in `hardhat.config.ts`
+- Network configurations are now centralized in `config/networks.ts`
 - Check account balances
 - Validate network accessibility
+- Use `DEBUG=true` to see detailed configuration information
+
+### secp256r1 Specific Issues (EXPERIMENTAL)
+
+5. **Event Detection Failures in secp256r1**:
+    - **Symptom**: "RoleGranted event not found in transaction receipt" during validation
+    - **Cause**: Raw secp256r1 transactions may not populate event logs correctly
+    - **Solution**: The system automatically falls back to direct state validation
+    - **Status**: ✅ Auto-resolved in v1.2.0+ with fallback validation
+
+6. **Low Gas Consumption with secp256r1**:
+    - **Symptom**: Successful transactions consuming unusually low gas (~36k vs ~150k)
+    - **Cause**: Transaction execution path differences or event emission issues
+    - **Solution**: Direct contract state validation confirms role grants
+    - **Impact**: Functional behavior is correct despite event detection issues
+
+7. **Role Constants Mismatch**:
+    - **Symptom**: ValidationError about wrong role being used
+    - **Fix**: Updated `ISBE_PAUSER_ROLE` constant from `ISBE_ROLE` value
+    - **Check**: Verify role constants match `contracts/constants/roles.sol`
 
 ## 🚀 Advanced Usage
 
 ### Custom Network Configuration
 
+🆕 **New Unified Configuration System**: All network configurations are now centralized in `config/networks.ts` for better maintainability.
+
 To add a new network:
 
 ```typescript
-// In hardhat.config.ts
-customNetwork: {
-    url: 'your-network-url',
+// In config/networks.ts - add to getNetworkConfigs() return object
+myNewNetwork: {
+    url: process.env.MY_NETWORK_URL || 'https://your-network-url.com',
     chainId: yourChainId,
-    accounts: ACCOUNTS, // or SECP256R1_ACCOUNT_KEYS
+    accounts, // or secp256r1PrivateKeys for R1 networks
     gasPrice: 0,
     gas: 100000000,
-    curve: 'secp256k1' // or 'secp256r1'
-}
+    blockGasLimit: 30000000,
+    curve: 'secp256k1', // or 'secp256r1'
+} as NetworkConfigWithCurve,
+```
+
+**Environment Variable Support**: Override any network URL via environment variables:
+
+```bash
+export MY_NETWORK_URL="https://my-custom-endpoint.com"
 ```
 
 ### Environment-Specific Deployment
+
+Available networks: hardhat, localhost, mvp, arsys, besuLocalDeployer.
+
+## User Roles
+
+In this repository we can find two different users:
+
+- Admin users: These users must maintain the project and allow access to other users with the specific role defined. These users are smart contract working group coordinators (IoBuilders). Also, at least on of these users must review any change to be applied to this repository from other admin or collab users.
+
+- Collab users: These users have read permissions to the repository. They can also submit pull requests in order to contribute to the repository. These pull requests must be validated by admin users.
+
+## Changes Procedure
+
+In order to include any change in this repository, we need to follow these steps:
 
 Use different `.env` files for different environments:
 
@@ -734,3 +950,13 @@ npx hardhat deployAll --network mvp
 ```
 
 This README provides comprehensive documentation for the ISBE contracts project, covering both secp256k1 and secp256r1 network support, all available tasks, and complete development workflows.
+
+## Deploy to isbe besu local deployer
+
+To deploy to Isbe besu local deployer, the test network provided on the repo, you need to add the correct .env variables, which are:
+
+- ACCOUNTS: A private key, for an account that exist on the network. It can´t start with 0x
+- ACCOUNT_ADDRESS: The wallet direction of that account. It has to start with 0x
+- PRIVATE_KEY: It should be the same value of ACCOUNTS
+
+Then you can do deployAll command and it should work as expected.

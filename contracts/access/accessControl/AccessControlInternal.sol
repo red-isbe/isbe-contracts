@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {_ACCESS_CONTROL_STORAGE_POSITION} from '../../constants/storagePositions.sol';
+import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 import {IAccessControl} from './IAccessControl.sol';
 import {ISBEContext} from '../../utils/ISBEContext.sol';
-import {_DEFAULT_ADMIN_ROLE} from '../../constants/roles.sol';
-import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 import {LibCommon} from '../../core/LibCommon.sol';
+import {_ACCESS_CONTROL_STORAGE_POSITION} from '../../constants/storagePositions.sol';
+import {_DEFAULT_ADMIN_ROLE} from '../../constants/roles.sol';
 
 /// @title AccessControlInternal
 /// @notice Internal logic for role-based access control
@@ -118,16 +118,14 @@ abstract contract AccessControlInternal is ISBEContext {
         bytes32[] memory _roles,
         address _account
     ) internal view virtual {
-        bool rolesOK = false;
-
-        for (uint256 index = 0; index < _roles.length; ++index) {
-            if (_hasRole(_roles[index], _account)) {
-                rolesOK = true;
-                break;
+        uint256 length = _roles.length;
+        for (; length > 0; ) {
+            unchecked {
+                --length;
             }
+            if (_hasRole(_roles[length], _account)) return;
         }
-
-        require(rolesOK, IAccessControl.AccountHasNoRoles(_account, _roles));
+        revert IAccessControl.AccountHasNoRoles(_account, _roles);
     }
 
     function _getRoleMembersCount(

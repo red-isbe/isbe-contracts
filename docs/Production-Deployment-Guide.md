@@ -61,10 +61,11 @@ npx hardhat complete-deployment-status --network customR1Network
 ### Network Configuration
 
 - [ ] **Network Access**: Target network URL is accessible
-- [ ] **Chain ID**: Correct chain ID configured in `hardhat.config.ts`
+- [ ] **Chain ID**: Correct chain ID configured in `config/networks.ts` 🆕 **New Unified Config**
 - [ ] **Account Setup**: Deployer accounts configured with sufficient balance
 - [ ] **Curve Type**: Correct curve type specified (`secp256k1` or `secp256r1`)
 - [ ] **Gas Configuration**: Gas price and limits configured appropriately
+- [ ] **Environment Variables**: Optional network URL overrides configured if needed
 
 ### Security Verification
 
@@ -91,8 +92,23 @@ The deployment process automatically follows this sequence:
 
 **Expected Output:**
 
+🆕 **Silent by Default**: The deployment process now runs silently. To see detailed output, use:
+
+```bash
+# Enable debug output for detailed information
+DEBUG=true npx hardhat deployAll --network mvp --precommit
 ```
-🏛️ Deploying governance system...
+
+**Debug Output:**
+
+```
+[CONFIG] Loading configuration for environment: production
+✅ Loaded 5 valid accounts from environment
+📊 Configuration Summary:
+  environment: production
+  networksCount: 6
+  accountsCount: 5
+🏦 Deploying governance system...
    📍 Factory address: 0x414356c5A4b6DE11FE92726a9B430AfD3Facfb5D
    ✅ Governance system successfully deployed
 ```
@@ -307,9 +323,10 @@ npx hardhat deployment-status --network <network> --start-block 0
     ```
 
 2. **Network Connection Issues**
-    - Verify network URL in `hardhat.config.ts`
+    - 🆕 Network configurations are now in `config/networks.ts`
     - Check firewall and network access
     - Confirm chain ID matches
+    - Use `DEBUG=true` to see detailed network information
 
 3. **Deployment Failures**
 

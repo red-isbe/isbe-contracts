@@ -9,15 +9,19 @@
 - [Development Guidelines](Development-guidelines.md)
 - [Diamond Pattern Guidelines](Diamond-pattern-guidelines.md)
 - [Project Bootstrapping](Project-bootstrapping.md)
+- [Configuration Migration Guide](Configuration-Migration-Guide.md) 🆕
 
 ## Deployment Documentation
 
 - [Production Deployment Guide](Production-Deployment-Guide.md)
-- [TypeScript Code Improvements](docs/TypeScript-Code-Improvements.md) 🆕
+- [Deployment Logging Improvements](DEPLOYMENT_LOGGING_IMPROVEMENTS.md) 🆕
+- [TypeScript Code Improvements](TypeScript-Code-Improvements.md) 🆕
+- [Configuration Migration Guide](Configuration-Migration-Guide.md) 🆕
 
 ## Secp256R1 Documentation
 
-- [Secp256R1 guide](SECP256R1_COMPLETE_GUIDE.md)
+- [Secp256R1 Complete Guide](SECP256R1_COMPLETE_GUIDE.md)
+- [Secp256R1 Management Strategy](secp256r1-Management-Strategy.md) 🆕
 
 ## Generated Documentation
 

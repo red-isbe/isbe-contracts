@@ -1,6 +1,6 @@
 {
     "name": "@alastria/isbe-contracts",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "description": "Repository of certified and audited smart contracts for use in the ISBE network",
     "scripts": {
         "compile": "npx hardhat compile",
@@ -41,6 +41,7 @@
         "test:tokens": "npx hardhat test test/ERC20.spec.ts test/ERC721.spec.ts test/ERC165.spec.ts",
         "test:proxies": "npx hardhat test test/IsbeBeaconProxy.spec.ts test/IsbeERC1967Proxy.spec.ts test/IsbeTransparentProxy.spec.ts",
         "test:utilities": "npx hardhat test test/AssetEventTracker.spec.ts test/HashTimestamp.spec.ts",
+        "test:ClientFiltering": "npx hardhat test test/client/ClientFiltering.spec.ts",
         "test:scripts": "npx hardhat deployTest",
         "lint:sol": "solhint 'contracts/**/*.sol' --max-warnings 0",
         "lint:sol:fix": "solhint 'contracts/**/*.sol' --fix --noPrompt",

@@ -1,5 +1,5 @@
 import { ethers } from 'hardhat'
-import { Signer } from 'ethers'
+import { Signer, ContractFactory } from 'ethers'
 import {
     EIP2535AccessControl__factory,
     BusinessLogicFactoryFacet,
@@ -40,6 +40,8 @@ import {
     ERC721RoyaltyFacet,
     ERC721ConsecutiveFacet,
     IDidRegistry__factory,
+    ClientFiltering,
+    ClientFiltering__factory,
 } from '../typechain-types'
 import {
     DEFAULT_ADMIN_ROLE,
@@ -75,6 +77,7 @@ import {
     DID_CONTROLLER_RESOLVER_KEY,
     DID_VERIFICATION_METHOD_RESOLVER_KEY,
     DID_VERIFICATION_RELATIONSHIP_RESOLVER_KEY,
+    CLIENT_FILTERING_RESOLVER_KEY,
 } from './constants'
 import { getEvent } from '../scripts/utils/getEvent'
 import { getIsbeFactory } from '../scripts/utils/getIsbeFactory'
@@ -85,6 +88,8 @@ export const CONFIGURATION_ID_ERC721 =
     '0x0000000000000000000000000000000000000000000000000000000000000721'
 export const CONFIGURATION_ID_DID_REGISTRY =
     '0x00000000000000000000000000000000000000004449445F5245474953545259'
+export const CONFIGURATION_ID_CLIENT_FILTERING =
+    '0x0000000000000000000000000000000000436C69656E7446696C746572696E67'
 
 let BusinessLogicFactoryFacetFactory: BusinessLogicFactoryFacet__factory
 let EIP2535AccessControlFactory: EIP2535AccessControl__factory
@@ -98,7 +103,7 @@ let isbeFactory: IIsbeFactory
 
 async function deployBusinessLogicFromFactory(
     resolverKey: string,
-    contractFactory: ethers.ContractFactory
+    contractFactory: ContractFactory
 ) {
     const deployTx = await (
         await isbeFactory.deploy(resolverKey, contractFactory.bytecode)
@@ -274,8 +279,17 @@ export async function deployGovernance(
                     init_BusinessId_UseCase,
                     init_CallData_UseCase
                 )
+            case CONFIGURATION_ID_CLIENT_FILTERING:
+                return await deployClientFilteringUseCaseFacets(
+                    owner,
+                    rbacsUseCase,
+                    init_pause,
+                    init_BusinessId_UseCase,
+                    init_CallData_UseCase
+                )
+            default:
+                throw new Error(`Unknown configuration id ${configId}`)
         }
-        return {}
     }
 
     const useCaseDeployment = await deployUseCase()
@@ -351,6 +365,8 @@ export async function deployGovernance(
         didVerificationRelationshipFacet:
             useCaseDeployment.didVerificationRelationshipFacet,
         didRegistry: useCaseDeployment.didRegistry,
+        clientFilteringFacet: useCaseDeployment.clientFilteringFacet,
+        clientFiltering: useCaseDeployment.clientFiltering,
         diamondCutAccessControlFacet,
         diamondLoupeFacet,
         accessControlGovernanceFacet,
@@ -909,5 +925,88 @@ export async function deployDidRegistryUseCaseFacets(
         didVerificationMethodFacet,
         didVerificationRelationshipFacet,
         didRegistry,
+    }
+}
+
+export async function deployClientFilteringUseCaseFacets(
+    owner: Signer,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    rbacs: any[],
+    init_pause: boolean,
+    init_BusinessIds: string[],
+    init_CallData: string[]
+) {
+    const IsbeCutFacetFactory = await ethers.getContractFactory('IsbeCutFacet')
+    const IsbeLoupeFacetFactory =
+        await ethers.getContractFactory('IsbeLoupeFacet')
+    const AccessControlFacetFactory =
+        await ethers.getContractFactory('AccessControlFacet')
+    const ClientFilteringFacet = await ethers.getContractFactory(
+        'ClientFilteringFacet'
+    )
+
+    const isbeCutFacet = await deployBusinessLogicFromFactory(
+        ISBE_CUT_RESOLVER_KEY,
+        IsbeCutFacetFactory
+    )
+    const isbeLoupeFacet = await deployBusinessLogicFromFactory(
+        ISBE_LOUPE_RESOLVER_KEY,
+        IsbeLoupeFacetFactory
+    )
+
+    const accessControlFacet = await deployBusinessLogicFromFactory(
+        ACCESS_CONTROL_RESOLVER_KEY,
+        AccessControlFacetFactory
+    )
+    const pauseFacet = await deployBusinessLogicFromFactory(
+        PAUSE_RESOLVER_KEY,
+        ISBEPauseFacetFactory
+    )
+
+    const clientFilteringFacet = await deployBusinessLogicFromFactory(
+        CLIENT_FILTERING_RESOLVER_KEY,
+        ClientFilteringFacet
+    )
+
+    await isbeFactory.setConfiguration(CONFIGURATION_ID_CLIENT_FILTERING, [
+        {
+            businessId: CLIENT_FILTERING_RESOLVER_KEY,
+            version: 1,
+        },
+    ])
+
+    const tx = await isbeFactory.deployUseCase(
+        CONFIGURATION_ID_CLIENT_FILTERING,
+        1,
+        rbacs,
+        init_pause,
+        init_BusinessIds,
+        init_CallData
+    )
+
+    const deployedEvent = await getEvent('UseCaseDeployed', tx, isbeFactory)
+    const { proxy } = deployedEvent.args
+
+    const pause = ISBEPauseFacetFactory.attach(proxy) as ISBEPauseFacet
+
+    const accessControl = AccessControlFacetFactory.attach(
+        proxy
+    ) as AccessControlFacet
+
+    const clientFiltering: ClientFiltering = ClientFiltering__factory.connect(
+        proxy,
+        owner
+    ) as ClientFiltering
+
+    return {
+        pause,
+        accessControl,
+        pauseFacet,
+        accessControlFacet,
+        isbeCutFacet,
+        isbeLoupeFacet,
+        proxy,
+        clientFilteringFacet,
+        clientFiltering,
     }
 }
