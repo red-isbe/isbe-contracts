@@ -1,6 +1,8 @@
 import { task, types } from 'hardhat/config'
 import { registerFilter } from '../../scripts/client/registerFilter'
-import { getSigner } from '../../scripts/utils/getSigner'
+import { SignatureProviderFactory } from '../deployment/providers/SignatureProviderFactory'
+import { ISignatureProvider } from '../deployment/providers/ISignatureProvider'
+import { NetworkConfigWithCurve } from '../../types/hardhat'
 import { ZeroAddress, ZeroHash } from 'ethers'
 
 /**
@@ -87,25 +89,71 @@ task('registerFilter', 'register filter')
                 clientFilteringAddress,
             } = taskArgs
 
-            const signer = await getSigner(hre)
+            console.log(`🔍 Network: ${hre.network.name}`)
 
-            // Convertir strings a los tipos correctos
-            const result = await registerFilter(
-                filterId,
-                BigInt(filterType),
-                transactionHash,
-                contractAddress,
-                signature,
-                jsonRpcMethod,
-                BigInt(initialBlock),
-                BigInt(endBlock),
-                clientFilteringAddress,
-                signer
-            )
+            // Check if we're on a secp256r1 network
+            const networkConfig = hre.config.networks[
+                hre.network.name
+            ] as NetworkConfigWithCurve
+            const isSecp256r1 = networkConfig.curve === 'secp256r1'
 
-            console.log(
-                'Register filter result:',
-                JSON.stringify(result, null, 2)
-            )
+            if (isSecp256r1) {
+                console.log(
+                    '✅ secp256r1 network detected - using enhanced validation'
+                )
+            }
+
+            try {
+                const signatureProvider: ISignatureProvider =
+                    SignatureProviderFactory.create(hre)
+                const signer = await signatureProvider.getSigner()
+
+                // Convertir strings a los tipos correctos
+                const result = await registerFilter(
+                    filterId,
+                    BigInt(filterType),
+                    transactionHash,
+                    contractAddress,
+                    signature,
+                    jsonRpcMethod,
+                    BigInt(initialBlock),
+                    BigInt(endBlock),
+                    clientFilteringAddress,
+                    signer
+                )
+
+                console.log('✅ Filter registered successfully')
+                console.log(
+                    'Register filter result:',
+                    JSON.stringify(result, null, 2)
+                )
+            } catch (error: unknown) {
+                const errorMessage =
+                    error instanceof Error ? error.message : String(error)
+                // Enhanced error handling for secp256r1
+                if (
+                    isSecp256r1 &&
+                    errorMessage.includes('Cannot find square root')
+                ) {
+                    console.error(
+                        '🚨 CRITICAL: secp256r1 signature generation failed'
+                    )
+                    console.error(
+                        '   This indicates the Besu client may not support secp256r1 properly'
+                    )
+                    console.error('   Required Actions:')
+                    console.error(
+                        '   1. Check Besu client version and secp256r1 support'
+                    )
+                    console.error('   2. Verify network configuration')
+                    console.error('   3. Test basic secp256r1 operations with:')
+                    console.error(
+                        '      npx hardhat quick-secp256r1-check --network customR1Network'
+                    )
+                    process.exit(1)
+                }
+
+                throw error
+            }
         }
     )

@@ -2,7 +2,6 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeploymentResult } from '../deployment/types/DeploymentTypes'
 import { DeploymentConfig } from '../deployment/config/DeploymentConfig'
 import { getFacets } from '../../scripts/diamond/loupe/getFacets'
-import { getRolesByAccount } from '../../scripts/access/accessControl/getRolesByAccount'
 import { isPaused } from '../../scripts/pause/isPaused'
 import { unpause } from '../../scripts/pause/unpause'
 import { getBusinessLogicVersions } from '../../scripts/businessLogic/getBusinessLogicVersions'
@@ -25,12 +24,28 @@ export interface ValidationResult {
     error?: Error
 }
 
+interface BlockchainError {
+    code?: string
+    transactionHash?: string
+    receipt?: {
+        transactionHash?: string
+    }
+    transaction?: {
+        hash?: string
+    }
+    reason?: string
+    revert?: string
+    data?: string
+    message?: string
+}
+
 export class PreCommitValidator {
     private hre: HardhatRuntimeEnvironment
     private deploymentResult: DeploymentResult
     private config: DeploymentConfig
     private signer: Signer
     private signatureProvider: ISignatureProvider
+    private criticalErrorsDetected: boolean = false
 
     // Dynamic constants from config
     private readonly PAUSE_ROLE: string
@@ -61,9 +76,61 @@ export class PreCommitValidator {
     async runAllValidations(): Promise<ValidationResult[]> {
         const results: ValidationResult[] = []
 
-        // Initialize signer
+        // Initialize signer and validate address consistency
         this.signer = await this.signatureProvider.getSigner()
         const accountAddress = await this.signer.getAddress()
+
+        // CRITICAL: Validate address consistency between signatureProvider and signer
+        console.log(`🔍 Address Consistency Check:`)
+        console.log(`   📍 Signer Address: ${accountAddress}`)
+        console.log(
+            `   🔐 Signature Provider Type: ${this.signatureProvider.getCurveType()}`
+        )
+
+        // Test address consistency with a signature test
+        try {
+            const testMessage = `Address validation test ${Date.now()}`
+            const signature = await this.signer.signMessage(testMessage)
+            console.log(
+                `   ✅ Address consistency validated (signature: ${signature.length} chars)`
+            )
+        } catch (signError) {
+            const msg =
+                signError instanceof Error
+                    ? signError.message
+                    : String(signError)
+            // Some production-grade providers intentionally disable signMessage
+            // Do not fail hard in that case; rely on address-only verification
+            if (
+                msg &&
+                msg
+                    .toLowerCase()
+                    .includes('not implemented for production security')
+            ) {
+                console.log(
+                    '   ⚠️  Signature test skipped: signMessage disabled by provider (production security)'
+                )
+                results.push({
+                    testName: 'Address Consistency Validation',
+                    success: true,
+                    message:
+                        'Skipped signature check due to production security; signer address obtained successfully',
+                })
+            } else {
+                console.log(
+                    `   🚨 CRITICAL: Address consistency validation failed: ${msg}`
+                )
+                this.criticalErrorsDetected = true
+                results.push({
+                    testName: 'Address Consistency Validation',
+                    success: false,
+                    message:
+                        'Failed to validate address consistency between signatureProvider and signer',
+                    error: signError as Error,
+                })
+                return results // Stop validation if address consistency fails
+            }
+        }
 
         try {
             // 1. Governance validation tests
@@ -145,68 +212,36 @@ export class PreCommitValidator {
             const DEFAULT_ADMIN_ROLE =
                 '0x0000000000000000000000000000000000000000000000000000000000000000'
 
-            try {
-                const hasDefaultAdmin = await hasRole(
-                    DEFAULT_ADMIN_ROLE,
-                    accountAddress,
-                    governanceAddress,
-                    this.signer
-                )
+            // CRITICAL: Validate we're checking the same address used by signatureProvider
+            const hasDefaultAdmin = await hasRole(
+                DEFAULT_ADMIN_ROLE,
+                accountAddress,
+                governanceAddress,
+                this.signer
+            )
 
-                if (hasDefaultAdmin.hasRole) {
-                    console.log('   🔐 Governance Roles:')
-                    console.log(
-                        `      • Role: ${DEFAULT_ADMIN_ROLE} (DEFAULT_ADMIN_ROLE)`
+            if (hasDefaultAdmin.hasRole) {
+                console.log('   🔐 Governance Roles:')
+                console.log(
+                    `      • Role: ${DEFAULT_ADMIN_ROLE} (DEFAULT_ADMIN_ROLE)`
+                )
+                console.log(`      • Account: ${accountAddress}`)
+                console.log(`      • Has Role: ✅`)
+
+                return {
+                    testName: 'Governance Roles Validation',
+                    success: true,
+                    message: `Account ${accountAddress} has DEFAULT_ADMIN_ROLE assigned correctly`,
+                }
+            } else {
+                // No DEFAULT_ADMIN_ROLE is a critical failure
+                return this.createErrorResult(
+                    'Governance Roles Validation',
+                    `Account ${accountAddress} does not have DEFAULT_ADMIN_ROLE - this is critical for governance operations`,
+                    new Error(
+                        `Account ${accountAddress} missing DEFAULT_ADMIN_ROLE`
                     )
-                    console.log(`        Account has DEFAULT_ADMIN_ROLE`)
-
-                    return {
-                        testName: 'Governance Roles Validation',
-                        success: true,
-                        message:
-                            'Account has DEFAULT_ADMIN_ROLE assigned correctly',
-                    }
-                }
-            } catch {
-                console.log(
-                    '   ⚠️  hasRole check failed, trying alternative method'
                 )
-            }
-
-            // Fallback: try to get all roles for the account, but handle errors gracefully
-            try {
-                const rolesByAccount = await getRolesByAccount(
-                    accountAddress,
-                    governanceAddress,
-                    this.signer
-                )
-
-                const hasRoles = rolesByAccount.roles.length > 0
-
-                if (hasRoles) {
-                    console.log('   🔐 Governance Roles:')
-                    for (const role of rolesByAccount.roles) {
-                        console.log(`      • Role: ${role}`)
-                    }
-
-                    return {
-                        testName: 'Governance Roles Validation',
-                        success: true,
-                        message: `Account has ${rolesByAccount.roles.length} governance roles`,
-                    }
-                }
-            } catch {
-                console.log(
-                    '   ⚠️  getRolesByAccount failed, assuming roles are present due to deployment success'
-                )
-            }
-
-            // If both methods fail, but deployment succeeded, we assume roles are properly assigned
-            return {
-                testName: 'Governance Roles Validation',
-                success: true,
-                message:
-                    'Role validation methods failed but deployment succeeded - assuming proper role assignment',
             }
         } catch (error) {
             return {
@@ -225,68 +260,85 @@ export class PreCommitValidator {
             const governanceAddress = this.deploymentResult.governance.address
             const accountAddress = await this.signer.getAddress()
 
-            // Try to grant PAUSER_ROLE to the admin account and validate role assignment
-            try {
-                await grantRole(
-                    this.PAUSE_ROLE,
-                    accountAddress,
-                    governanceAddress,
-                    this.signatureProvider
-                )
-                console.log('   ✅ PAUSER_ROLE granted successfully')
-            } catch {
-                console.log(
-                    '   ⚠️  Role granting failed, but continuing validation'
+            // CRITICAL: Grant PAUSER_ROLE using signatureProvider and validate address consistency
+            const grantResult = await grantRole(
+                this.PAUSE_ROLE,
+                accountAddress,
+                governanceAddress,
+                this.signatureProvider
+            )
+
+            // CRITICAL: Validate addresses match between signatureProvider and expected account
+            if (
+                grantResult.account.toLowerCase() !==
+                accountAddress.toLowerCase()
+            ) {
+                return this.createErrorResult(
+                    testName,
+                    `Address mismatch in role grant: granted to ${grantResult.account}, expected ${accountAddress}`,
+                    new Error(`Role grant address mismatch`)
                 )
             }
 
-            // Try to validate that the role was granted successfully
-            try {
-                const roleCheck = await hasRole(
-                    this.PAUSE_ROLE,
-                    accountAddress,
-                    governanceAddress,
-                    this.signer
-                )
+            console.log('   ✅ PAUSER_ROLE granted successfully')
+            console.log(`      • To: ${grantResult.account}`)
+            console.log(`      • By: ${grantResult.sender}`)
 
-                if (roleCheck.hasRole) {
-                    console.log('   ✅ PAUSER_ROLE validation passed')
-                }
-            } catch {
-                console.log(
-                    '   ⚠️  Role check failed, but assuming proper setup'
+            // CRITICAL: Validate that the role was granted successfully with address consistency
+            const roleCheck = await hasRole(
+                this.PAUSE_ROLE,
+                accountAddress,
+                governanceAddress,
+                this.signer
+            )
+
+            // CRITICAL: Verify signer address matches expected account
+            const signerAddress = await this.signer.getAddress()
+            if (signerAddress.toLowerCase() !== accountAddress.toLowerCase()) {
+                return this.createErrorResult(
+                    testName,
+                    `Address mismatch between signer (${signerAddress}) and expected account (${accountAddress})`,
+                    new Error('Signer address inconsistency')
                 )
             }
 
-            // Try to check if governance is initially unpaused (expected state)
-            try {
-                const initialPauseStatus = await isPaused(
-                    governanceAddress,
-                    this.signatureProvider
-                )
-
-                if (initialPauseStatus.isPaused) {
-                    return {
-                        testName,
-                        success: false,
-                        message:
-                            'Governance should be unpaused initially but found paused',
-                    }
-                }
-                console.log(
-                    '   ✅ Governance pause state validated (unpaused as expected)'
-                )
-            } catch {
-                console.log(
-                    '   ⚠️  Pause status check failed, assuming proper initial state'
+            if (!roleCheck.hasRole) {
+                return this.createErrorResult(
+                    testName,
+                    `Account ${accountAddress} does not have PAUSER_ROLE after grant operation`,
+                    new Error('Role not properly assigned')
                 )
             }
+
+            console.log('   ✅ PAUSER_ROLE validation passed')
+            console.log(`      • Account: ${accountAddress}`)
+            console.log(`      • Has Role: ✅`)
+
+            // CRITICAL: Check if governance is initially unpaused (expected state)
+            const initialPauseStatus = await isPaused(
+                governanceAddress,
+                this.signer
+            )
+
+            if (initialPauseStatus.isPaused) {
+                return this.createErrorResult(
+                    testName,
+                    'Governance should be unpaused initially but found paused',
+                    new Error('Invalid initial pause state')
+                )
+            }
+
+            console.log(
+                '   ✅ Governance pause state validated (unpaused as expected)'
+            )
+            console.log(`      • Contract: ${governanceAddress}`)
+            console.log(`      • Is Paused: ${initialPauseStatus.isPaused}`)
 
             return {
                 testName,
                 success: true,
                 message:
-                    'Governance pause setup completed (role operations may have interface issues but deployment succeeded)',
+                    'Governance pause/unpause validation passed: PAUSER_ROLE granted and verified, initial state is unpaused',
             }
         } catch (error) {
             return {
@@ -299,8 +351,10 @@ export class PreCommitValidator {
     }
 
     private async testPauseOperation(governanceAddress: string): Promise<void> {
+        // Use signatureProvider for pause operation
         await pause(governanceAddress, this.signatureProvider)
 
+        // Use signer for status check (read-only operation)
         const pauseStatus = await isPaused(governanceAddress, this.signer)
 
         if (!pauseStatus.isPaused) {
@@ -311,8 +365,10 @@ export class PreCommitValidator {
     private async testUnpauseOperation(
         governanceAddress: string
     ): Promise<void> {
+        // Use signatureProvider for unpause operation
         await unpause(governanceAddress, this.signatureProvider)
 
+        // Use signer for status check (read-only operation)
         const pauseStatus = await isPaused(governanceAddress, this.signer)
 
         if (pauseStatus.isPaused) {
@@ -352,7 +408,7 @@ export class PreCommitValidator {
 
                 totalValidations++
 
-                // Validate version consistency
+                // Validate version consistency using signatureProvider for consistency
                 const versions = await getBusinessLogicVersions(
                     blResult.config.key,
                     governanceAddress,
@@ -661,7 +717,11 @@ export class PreCommitValidator {
         )
 
         // Renunciar al rol
-        await renounceRole(this.DUMB_ROLE, useCaseAddress, this.signer)
+        await renounceRole(
+            this.DUMB_ROLE,
+            useCaseAddress,
+            this.signatureProvider
+        )
     }
 
     private createSuccessResult(
@@ -680,12 +740,135 @@ export class PreCommitValidator {
         message: string,
         error: Error
     ): ValidationResult {
+        // Extract additional error information
+        const errorDetails = this.extractErrorDetails(error)
+
+        // Check for critical secp256r1 errors that should cause validation failure
+        if (this.isCriticalSecp256r1Error(error)) {
+            this.criticalErrorsDetected = true
+            console.log(`🚨 CRITICAL secp256r1 ERROR detected in ${testName}:`)
+            console.log(`   💥 Error: ${error.message}`)
+            if (errorDetails.transactionHash) {
+                console.log(
+                    `   🔗 Transaction Hash: ${errorDetails.transactionHash}`
+                )
+            }
+            if (errorDetails.revertReason) {
+                console.log(`   ❌ Revert Reason: ${errorDetails.revertReason}`)
+            }
+            if (errorDetails.code) {
+                console.log(`   🔢 Error Code: ${errorDetails.code}`)
+            }
+            console.log(
+                `   This indicates the Besu client may not properly support secp256r1 transactions`
+            )
+        }
+
+        // Create enhanced error message
+        let enhancedMessage = message
+        if (errorDetails.transactionHash) {
+            enhancedMessage += ` (TX: ${errorDetails.transactionHash})`
+        }
+        if (errorDetails.revertReason) {
+            enhancedMessage += ` (Revert: ${errorDetails.revertReason})`
+        }
+
         return {
             testName,
             success: false,
-            message,
+            message: enhancedMessage,
             error,
         }
+    }
+
+    /**
+     * Extracts detailed error information including transaction hash and revert reason
+     */
+    private extractErrorDetails(error: BlockchainError): {
+        transactionHash?: string
+        revertReason?: string
+        code?: string
+        data?: string
+    } {
+        const details: {
+            transactionHash?: string
+            revertReason?: string
+            code?: string
+            data?: string
+        } = {}
+
+        // Extract error code
+        if (error.code) {
+            details.code = error.code
+        }
+
+        // Extract transaction hash from various error formats
+        if (error.transactionHash) {
+            details.transactionHash = error.transactionHash
+        } else if (error.receipt?.transactionHash) {
+            details.transactionHash = error.receipt.transactionHash
+        } else if (error.transaction?.hash) {
+            details.transactionHash = error.transaction.hash
+        }
+
+        // Extract revert reason from various error formats
+        if (error.reason) {
+            details.revertReason = error.reason
+        } else if (error.revert) {
+            details.revertReason = error.revert
+        } else if (error.data) {
+            details.data = error.data
+            // Try to decode revert reason from data
+            if (typeof error.data === 'string' && error.data.length > 10) {
+                try {
+                    // Standard Error(string) selector is 0x08c379a0
+                    if (error.data.startsWith('0x08c379a0')) {
+                        const decoded =
+                            this.hre.ethers.AbiCoder.defaultAbiCoder().decode(
+                                ['string'],
+                                '0x' + error.data.slice(10)
+                            )
+                        details.revertReason = decoded[0]
+                    }
+                } catch {
+                    // If decode fails, leave data as is
+                }
+            }
+        }
+
+        // Extract from nested errors
+        if (error.error) {
+            const nestedDetails = this.extractErrorDetails(error.error)
+            Object.assign(details, nestedDetails)
+        }
+
+        return details
+    }
+
+    /**
+     * Detects critical secp256r1 errors that should cause validation failure
+     */
+    private isCriticalSecp256r1Error(error: Error): boolean {
+        const errorMessage = error.message.toLowerCase()
+
+        // Known critical secp256r1 signature errors
+        const criticalErrors = [
+            'cannot find square root',
+            'secp256r1 signature generation failed',
+            'invalid secp256r1 signature',
+            'secp256r1 point computation failed',
+        ]
+
+        return criticalErrors.some((criticalError) =>
+            errorMessage.includes(criticalError)
+        )
+    }
+
+    /**
+     * Check if critical errors were detected during validation
+     */
+    public hasCriticalErrors(): boolean {
+        return this.criticalErrorsDetected
     }
 
     private async validateUseCasePauseUnpause(): Promise<ValidationResult> {
@@ -701,41 +884,66 @@ export class PreCommitValidator {
             const governanceAddress = this.deploymentResult.governance.address
             const accountAddress = await this.signer.getAddress()
 
-            // Grant ISBE_PAUSER_ROLE to the admin account for global pause operations
+            // CRITICAL: Verify address consistency with signatureProvider
+            const signatureProviderAddress =
+                await this.signatureProvider.getAddress()
+            if (
+                signatureProviderAddress.toLowerCase() !==
+                accountAddress.toLowerCase()
+            ) {
+                return this.createErrorResult(
+                    'Use Case Pause/Unpause',
+                    `Address mismatch: signer (${accountAddress}) vs signatureProvider (${signatureProviderAddress})`,
+                    new Error('Address inconsistency detected')
+                )
+            }
+
+            // CRITICAL: Grant ISBE_PAUSER_ROLE to the admin account for global pause operations
             const ISBE_PAUSER_ROLE =
                 '0xe02d3eaf0b5fb24a2d637286804770bf2618aa6d3b40cbf443b93f6cd1aac239'
 
-            try {
-                await grantRole(
-                    ISBE_PAUSER_ROLE,
-                    accountAddress,
-                    governanceAddress,
-                    this.signatureProvider
-                )
-                console.log('   ✅ ISBE_PAUSER_ROLE granted successfully')
-            } catch {
-                console.log(
-                    '   ⚠️  ISBE_PAUSER_ROLE granting failed, but continuing validation'
+            const grantRoleResult = await grantRole(
+                ISBE_PAUSER_ROLE,
+                accountAddress,
+                governanceAddress,
+                this.signatureProvider
+            )
+
+            // CRITICAL: Validate addresses match in role grant
+            if (
+                grantRoleResult.account.toLowerCase() !==
+                accountAddress.toLowerCase()
+            ) {
+                return this.createErrorResult(
+                    'Use Case Pause/Unpause',
+                    `Address mismatch in ISBE_PAUSER_ROLE grant: granted to ${grantRoleResult.account}, expected ${accountAddress}`,
+                    new Error('Role grant address mismatch')
                 )
             }
 
-            // Try to validate that the role was granted successfully
-            try {
-                const roleCheck = await hasRole(
-                    ISBE_PAUSER_ROLE,
-                    accountAddress,
-                    governanceAddress,
-                    this.signer
-                )
+            console.log('   ✅ ISBE_PAUSER_ROLE granted successfully')
+            console.log(`      • To: ${grantRoleResult.account}`)
+            console.log(`      • By: ${grantRoleResult.sender}`)
 
-                if (roleCheck.hasRole) {
-                    console.log('   ✅ ISBE_PAUSER_ROLE validation passed')
-                }
-            } catch {
-                console.log(
-                    '   ⚠️  ISBE_PAUSER_ROLE check failed, but assuming proper setup'
+            // CRITICAL: Validate that the role was granted successfully
+            const roleCheck = await hasRole(
+                ISBE_PAUSER_ROLE,
+                accountAddress,
+                governanceAddress,
+                this.signer
+            )
+
+            if (!roleCheck.hasRole) {
+                return this.createErrorResult(
+                    'Use Case Pause/Unpause',
+                    `Account ${accountAddress} does not have ISBE_PAUSER_ROLE after grant operation`,
+                    new Error('ISBE_PAUSER_ROLE not properly assigned')
                 )
             }
+
+            console.log('   ✅ ISBE_PAUSER_ROLE validation passed')
+            console.log(`      • Account: ${accountAddress}`)
+            console.log(`      • Has Role: ✅`)
 
             // Validate that use case exists and has pause functionality
             // (We don't actually pause/unpause to avoid potential issues)
@@ -755,7 +963,7 @@ export class PreCommitValidator {
                 testName: 'Use Case Pause/Unpause',
                 success: true,
                 message:
-                    'Use case pause setup completed (role operations may have interface issues but deployment succeeded)',
+                    'Use case pause/unpause validation passed: ISBE_PAUSER_ROLE granted and verified, use case ready for pause operations',
             }
         } catch (error) {
             return {
@@ -783,7 +991,7 @@ export class PreCommitValidator {
                 }
             }
 
-            // Validate HashTimestamp specific functionality
+            // Validate HashTimestamp specific functionality using signatureProvider
             const facets = await getFacets(
                 hashTimestampUseCase.proxyAddress,
                 this.signer

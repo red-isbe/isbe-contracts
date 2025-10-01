@@ -78,6 +78,12 @@ export async function getCurveAwareSigner(hre: HardhatRuntimeEnvironment) {
             return result
         }
 
+        // Override call method to use secp256r1 wallet for eth_call operations
+        wallet.call = async (transaction, blockTag?) => {
+            console.log('📞 eth_call intercepted - using secp256r1 wallet...')
+            return await secp256r1Wallet.call(transaction, blockTag)
+        }
+
         return wallet
     } else {
         // secp256k1 network - use standard Ethereum approach

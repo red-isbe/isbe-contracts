@@ -2,6 +2,8 @@ import { task, types } from 'hardhat/config'
 
 import { interfaceCut } from '../../../scripts/diamond/cut/interfaceCut'
 import { SignatureProviderFactory } from '../../deployment/providers/SignatureProviderFactory'
+import { ISignatureProvider } from '../../deployment/providers/ISignatureProvider'
+import { NetworkConfigWithCurve } from '../../../types/hardhat'
 
 /**
  npx hardhat interfaceCut --network localhost \
@@ -38,16 +40,61 @@ task('interfaceCut', 'updates a diamond')
         ) => {
             const { facetAddresses, actions, items, diamond } = taskArgs
 
-            const signatureProvider = SignatureProviderFactory.create(hre)
+            console.log(`🔍 Network: ${hre.network.name}`)
 
-            const result = await interfaceCut(
-                facetAddresses,
-                actions,
-                items,
-                diamond,
-                signatureProvider
-            )
+            // Check if we're on a secp256r1 network
+            const networkConfig = hre.config.networks[
+                hre.network.name
+            ] as NetworkConfigWithCurve
+            const isSecp256r1 = networkConfig.curve === 'secp256r1'
 
-            console.log('Interface Cut result:', result)
+            if (isSecp256r1) {
+                console.log(
+                    '✅ secp256r1 network detected - using enhanced validation'
+                )
+            }
+
+            try {
+                const signatureProvider: ISignatureProvider =
+                    SignatureProviderFactory.create(hre)
+
+                const result = await interfaceCut(
+                    facetAddresses,
+                    actions,
+                    items,
+                    diamond,
+                    signatureProvider
+                )
+
+                console.log('✅ Interface cut completed successfully')
+                console.log('Interface Cut result:', result)
+            } catch (error: unknown) {
+                const errorMessage =
+                    error instanceof Error ? error.message : String(error)
+                // Enhanced error handling for secp256r1
+                if (
+                    isSecp256r1 &&
+                    errorMessage.includes('Cannot find square root')
+                ) {
+                    console.error(
+                        '🚨 CRITICAL: secp256r1 signature generation failed'
+                    )
+                    console.error(
+                        '   This indicates the Besu client may not support secp256r1 properly'
+                    )
+                    console.error('   Required Actions:')
+                    console.error(
+                        '   1. Check Besu client version and secp256r1 support'
+                    )
+                    console.error('   2. Verify network configuration')
+                    console.error('   3. Test basic secp256r1 operations with:')
+                    console.error(
+                        '      npx hardhat quick-secp256r1-check --network customR1Network'
+                    )
+                    process.exit(1)
+                }
+
+                throw error
+            }
         }
     )
