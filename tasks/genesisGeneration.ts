@@ -1,6 +1,7 @@
 import { task } from 'hardhat/config'
 import {
     GenesisAlloc,
+    GenesisValidation,
     matchContractNames,
     retrieveSlotStructure,
 } from '../scripts/genesisGenerator'
@@ -30,4 +31,21 @@ task(
     )
 
     return result // propagate deployAll result if neeeded
+})
+
+
+task(
+    'genesis:validate',
+    'Validate genesis deployment'
+).setAction(async (taskArgs, hre) => {
+   
+    const validation:GenesisValidation = new GenesisValidation(hre, "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6");
+
+    await validation.validate();
+
+    console.log(
+        '✅ Genesis validation (Done).----------------------------------------------------------'
+    )
+
+    return // propagate deployAll result if neeeded
 })

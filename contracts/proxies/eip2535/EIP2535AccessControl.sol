@@ -46,4 +46,14 @@ contract EIP2535AccessControl is
         // Configure facets and execute initialization logic
         _configureFacets(_facets, _args.init, _args.initCalldata);
     }
+
+    function getInfo() public view returns (string memory name_, bytes4[] memory selectors, bytes4[] memory interfaces) {
+        DiamondStorage storage storage_;
+        bytes32 position = 0x14a872dcf5b21c7ac5c7a21241cb3088ada7d77b91d45cb734d07fb6e61a0e4e;
+
+        assembly {
+            storage_.slot := position
+        }
+        return ('EIP2535AccessControl',storage_.selectors,storage_.interfaces);
+    }   
 }

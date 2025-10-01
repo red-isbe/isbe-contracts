@@ -104,7 +104,6 @@ const config: HardhatUserConfig = {
         },
         besu_local: {
             url: 'http://127.0.0.1:8545',
-            chainId: 2222,
             accounts: ACCOUNTS,
             gasPrice: 0,
             gas: 100000000,
