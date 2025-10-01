@@ -30,6 +30,7 @@
         "test:ConfigurationManagement": "npx hardhat test test/governance/ConfigurationManagement.spec.ts",
         "test:GlobalIsbePause": "npx hardhat test test/governance/GlobalIsbePause.spec.ts",
         "test:IsbeProxy": "npx hardhat test test/governance/IsbeProxy.spec.ts",
+        "test:ClientFiltering": "npx hardhat test test/client/ClientFiltering.spec.ts",
         "test:scripts": "npx hardhat deployTest",
         "lint:sol": "solhint 'contracts/**/*.sol' --max-warnings 0",
         "lint:sol:fix": "solhint 'contracts/**/*.sol' --fix --noPrompt",
