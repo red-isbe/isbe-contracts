@@ -8,6 +8,13 @@ import { CleanBusinessLogicDeployer } from './deployers/CleanBusinessLogicDeploy
 import { CleanUseCaseDeployer } from './deployers/CleanUseCaseDeployer'
 import { DeploymentValidator } from './validators/DeploymentValidator'
 import { DeploymentTableRenderer } from './utils/DeploymentTableRenderer'
+import {
+    EnhancedLogger,
+    DeploymentTimer,
+    DeploymentProgressTracker,
+    LogConfig,
+    LogLevel,
+} from './utils/LoggingEnhancements'
 
 /**
  * Clean deployment orchestrator that uses signature provider abstraction
@@ -20,6 +27,7 @@ export class CleanDeploymentOrchestrator {
     private useCaseDeployer: CleanUseCaseDeployer
     private validator: DeploymentValidator
     private tableRenderer: DeploymentTableRenderer
+    private timer: DeploymentTimer
 
     constructor(
         private hre: HardhatRuntimeEnvironment,
@@ -27,6 +35,7 @@ export class CleanDeploymentOrchestrator {
     ) {
         // Create appropriate signature provider for the network
         this.signatureProvider = SignatureProviderFactory.create(hre)
+        this.timer = new DeploymentTimer()
 
         // Initialize deployers with the signature provider
         this.governanceDeployer = new CleanGovernanceDeployer(
@@ -44,13 +53,35 @@ export class CleanDeploymentOrchestrator {
         this.validator = new DeploymentValidator(hre)
         this.tableRenderer = new DeploymentTableRenderer()
 
-        console.log(
-            `✅ Clean orchestrator initialized with ${this.signatureProvider.getCurveType()} provider`
+        EnhancedLogger.log(
+            LogLevel.NORMAL,
+            `📋 Clean deployment orchestrator initialized`
         )
     }
 
     async deploy(options: DeploymentOptions = {}): Promise<DeploymentResult> {
-        console.log('🏗️ Starting clean curve-aware deployment...')
+        const address = await this.signatureProvider.getAddress()
+        const curveType = this.signatureProvider.getCurveType()
+
+        // Log deployment configuration once at the start
+        EnhancedLogger.logNetworkInfo(this.hre.network.name, curveType, address)
+
+        const totalBusinessLogics = this.config.businessLogics.length
+        const totalUseCases = this.config.useCases.length
+
+        if (LogConfig.isLevel(LogLevel.NORMAL)) {
+            console.log(`\n📋 DEPLOYMENT OVERVIEW:`)
+            console.log(
+                `   • Business logics to deploy: ${totalBusinessLogics}`
+            )
+            console.log(`   • Use cases to deploy: ${totalUseCases}`)
+        }
+
+        EnhancedLogger.logSection(
+            'Starting Clean Deployment',
+            'Using SignatureProvider pattern'
+        )
+        this.timer.startStep('Total Deployment')
 
         const result = this.initializeResult(options)
 
@@ -87,19 +118,20 @@ export class CleanDeploymentOrchestrator {
 
     private async initializeProvider(): Promise<void> {
         const address = await this.signatureProvider.getAddress()
-        const curve = this.signatureProvider.getCurveType()
 
-        console.log(`🔐 Signature provider ready:`)
-        console.log(`   • Address: ${address}`)
-        console.log(`   • Curve: ${curve}`)
-        console.log(`   • Network: ${this.hre.network.name}`)
+        // Only log if verbose - already shown in network info
+        EnhancedLogger.log(
+            LogLevel.VERBOSE,
+            `🔐 Signature provider initialized: ${address}`
+        )
 
         // Update governance address to use provider's address
         this.config.governance.accountAddress = address
     }
 
     private async deployGovernance(result: DeploymentResult): Promise<void> {
-        this.logStepStart(1, 'Deploying governance')
+        EnhancedLogger.logSection('Step 1: Governance Deployment')
+        this.timer.startStep('Governance Deployment')
 
         result.governance = await this.governanceDeployer.deploy(
             this.config.governance,
@@ -107,8 +139,9 @@ export class CleanDeploymentOrchestrator {
         )
         result.summary.completedSteps++
 
+        this.timer.endStep()
         console.log(
-            `   ✅ Governance deployed at: ${result.governance.address}`
+            `✅ Governance system deployed at: ${result.governance.address}`
         )
     }
 
@@ -118,21 +151,24 @@ export class CleanDeploymentOrchestrator {
     ): Promise<void> {
         if (options.skipBusinessLogics) return
 
-        this.logStepStart(2, 'Deploying business logics')
+        EnhancedLogger.logSection('Step 2: Business Logic Deployment')
+        this.timer.startStep('Business Logic Deployment')
 
-        // Use clean business logic deployer (no signer needed)
+        const progressTracker = new DeploymentProgressTracker(
+            'Business Logics',
+            this.config.businessLogics.length
+        )
+
+        // Use clean business logic deployer with progress tracking
         result.businessLogics = await this.businessLogicDeployer.deployAll(
             this.config.businessLogics,
-            result.governance!.address
+            result.governance!.address,
+            progressTracker
         )
         result.summary.completedSteps++
 
-        const successfulCount = result.businessLogics.filter(
-            (bl) => bl.success
-        ).length
-        console.log(
-            `   ✅ ${successfulCount}/${result.businessLogics.length} business logics deployed`
-        )
+        this.timer.endStep()
+        progressTracker.printSummary()
     }
 
     private async deployUseCases(
@@ -141,22 +177,25 @@ export class CleanDeploymentOrchestrator {
     ): Promise<void> {
         if (options.skipUseCases) return
 
-        this.logStepStart(3, 'Deploying use cases')
+        EnhancedLogger.logSection('Step 3: Use Case Deployment')
+        this.timer.startStep('Use Case Deployment')
 
-        // Use clean use case deployer (no signer needed)
+        const progressTracker = new DeploymentProgressTracker(
+            'Use Cases',
+            this.config.useCases.length
+        )
+
+        // Use clean use case deployer with progress tracking
         result.useCases = await this.useCaseDeployer.deployAll(
             this.config.useCases,
             result.governance!.address,
-            result.businessLogics
+            result.businessLogics,
+            progressTracker
         )
         result.summary.completedSteps++
 
-        const successfulUseCases = result.useCases.filter(
-            (uc) => uc.success
-        ).length
-        console.log(
-            `   ✅ ${successfulUseCases}/${result.useCases.length} use cases deployed`
-        )
+        this.timer.endStep()
+        progressTracker.printSummary()
     }
 
     private async runValidations(
@@ -211,46 +250,59 @@ export class CleanDeploymentOrchestrator {
     }
 
     private displayFinalStats(result: DeploymentResult): void {
-        const duration =
-            result.summary.endTime!.getTime() -
-            result.summary.startTime.getTime()
+        if (!LogConfig.isLevel(LogLevel.NORMAL)) return
 
-        console.log('\\n📈 CLEAN DEPLOYMENT STATISTICS:')
-        console.log('================================')
-        console.log(
-            `⏱️  Total duration: ${duration}ms (${(duration / 1000).toFixed(2)}s)`
-        )
-        console.log(
-            `🔐 Signature curve: ${this.signatureProvider.getCurveType()}`
-        )
-        console.log(
-            `📊 Completed steps: ${result.summary.completedSteps}/${result.summary.totalSteps}`
-        )
+        const duration = this.timer.getTotalTime()
+        const curveType = this.signatureProvider.getCurveType()
 
-        if (result.businessLogics.length > 0) {
-            const successful = result.businessLogics.filter(
-                (bl) => bl.success
-            ).length
-            const failed = result.businessLogics.filter(
-                (bl) => !bl.success
-            ).length
+        console.log('\\n📈 DEPLOYMENT SUMMARY:')
+        console.log('========================')
+        console.log(`⏱️  Duration: ${(duration / 1000).toFixed(2)}s`)
+        console.log(`🔐 Curve: ${curveType}`)
+        console.log(`🎯 Network: ${this.hre.network.name}`)
+
+        // Consolidated statistics
+        const stats = this.getDeploymentStats(result)
+        if (stats.businessLogics.total > 0) {
+            const icon = stats.businessLogics.failed === 0 ? '✅' : '⚠️ '
             console.log(
-                `🔧 Business logics: ${successful} successful, ${failed} failed`
+                `${icon} Business Logics: ${stats.businessLogics.successful}/${stats.businessLogics.total}`
             )
         }
 
-        if (result.useCases.length > 0) {
-            const successful = result.useCases.filter((uc) => uc.success).length
-            const failed = result.useCases.filter((uc) => !uc.success).length
+        if (stats.useCases.total > 0) {
+            const icon = stats.useCases.failed === 0 ? '✅' : '⚠️ '
             console.log(
-                `🎯 Use cases: ${successful} successful, ${failed} failed`
+                `${icon} Use Cases: ${stats.useCases.successful}/${stats.useCases.total}`
             )
         }
 
         if (result.validationResults.length > 0) {
+            const passed = result.validationResults.filter(
+                (v) => v.success
+            ).length
+            const icon =
+                passed === result.validationResults.length ? '✅' : '⚠️ '
             console.log(
-                `🔍 Validations executed: ${result.validationResults.length}`
+                `${icon} Validations: ${passed}/${result.validationResults.length}`
             )
+        }
+    }
+
+    private getDeploymentStats(result: DeploymentResult) {
+        return {
+            businessLogics: {
+                total: result.businessLogics.length,
+                successful: result.businessLogics.filter((bl) => bl.success)
+                    .length,
+                failed: result.businessLogics.filter((bl) => !bl.success)
+                    .length,
+            },
+            useCases: {
+                total: result.useCases.length,
+                successful: result.useCases.filter((uc) => uc.success).length,
+                failed: result.useCases.filter((uc) => !uc.success).length,
+            },
         }
     }
 

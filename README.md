@@ -243,6 +243,147 @@ validateBytecode('0x608060405...') // validates contract bytecode format
 
 For complete implementation details, see [`docs/TypeScript-Code-Improvements.md`](docs/TypeScript-Code-Improvements.md).
 
+## 🔐 **secp256r1 Signature Support**
+
+**⚠️ EXPERIMENTAL**: This project includes experimental support for secp256r1 elliptic curve signatures, commonly used in enterprise and government systems.
+
+### Current Implementation Status
+
+**✅ Working Features:**
+
+- Automatic curve detection based on network configuration
+- Raw transaction signing for secp256r1 networks
+- Enhanced event detection with multiple fallback strategies
+- Role-based access control with secp256r1 signatures
+- Comprehensive testing across both curve types
+
+**⚠️ Known Architectural Issues:**
+
+The current secp256r1 implementation has a **distributed architecture** with several maintenance challenges:
+
+#### Critical Issue: Address Derivation Inconsistency
+
+```typescript
+// Two different address derivation methods:
+// Method 1: secp256r1Utils.deriveEthereumAddress() - Custom Keccak-256
+// Method 2: AccountManager.getSecp256r1Accounts() - Uses ethers.Wallet
+```
+
+**Risk**: Could generate different addresses for the same private key, potentially causing deployment failures or asset loss.
+
+#### Distributed Logic
+
+secp256r1 functionality is spread across 6+ files:
+
+- `utils/secp256r1Utils.ts` - Cryptographic operations
+- `utils/networkUtils.ts` - Network detection
+- `config/AccountManager.ts` - Account management
+- `utils/secp256r1TransactionSigner.ts` - Transaction signing
+- `utils/SignatureProviderFactory.ts` - Provider selection
+- `utils/getCurveAwareSigner.ts` - Signer abstraction
+
+### Developer Usage
+
+#### Network Configuration
+
+```typescript
+// hardhat.config.ts - Add curve to network configuration
+export default {
+    networks: {
+        'secp256r1-network': {
+            url: 'https://your-secp256r1-network.com',
+            accounts: process.env.ACCOUNTS?.split(',') || [],
+            curve: 'secp256r1', // Enable secp256r1 support
+        },
+    },
+}
+```
+
+#### Automatic Curve Detection
+
+```bash
+# Automatic detection based on network configuration
+npx hardhat deployAll --network secp256r1-network
+# ✅ secp256r1 network detected - using secp256r1 wallet
+```
+
+#### Manual Provider Creation
+
+```typescript
+import { SignatureProviderFactory } from './tasks/deployment/providers/SignatureProviderFactory'
+
+// Automatically selects appropriate provider based on network
+const signatureProvider = SignatureProviderFactory.create(hre)
+const curveType = signatureProvider.getCurveType() // 'secp256r1' or 'secp256k1'
+```
+
+### Event Detection & Reliability
+
+**Enhanced for secp256r1**: The system includes robust event detection with multiple fallback strategies:
+
+1. **Standard Receipt Parsing**: Normal ethers.js event parsing
+2. **Block Log Retrieval**: Direct block log queries when receipt parsing fails
+3. **Contract State Validation**: Fallback validation using contract state queries
+
+```typescript
+// Example: Role granting with enhanced event detection
+const result = await grantRole(
+    roleToGrant,
+    accountToGrantTo,
+    diamond,
+    signatureProvider
+)
+// Automatically handles secp256r1 event detection challenges
+```
+
+### Development & Debugging
+
+#### Debug Mode
+
+```bash
+# Enable detailed secp256r1 debugging
+DEBUG=true npx hardhat deployAll --network secp256r1-network
+```
+
+#### Testing Both Curves
+
+```bash
+# Test secp256k1 behavior (default)
+npm run test
+
+# Test secp256r1 behavior (requires secp256r1 network)
+npm run test -- --network secp256r1-testnet
+```
+
+### Architecture Improvement Plan
+
+**📋 Strategy Document**: [`docs/secp256r1-Management-Strategy.md`](docs/secp256r1-Management-Strategy.md)
+
+**Planned Improvements**:
+
+- **Phase 1**: Fix address derivation inconsistency (Critical)
+- **Phase 2**: Unified Secp256r1Manager for centralized control
+- **Phase 3**: Enhanced error handling and monitoring
+
+### Known Limitations
+
+1. **Address Derivation**: Two different methods may generate different addresses
+2. **Distributed Configuration**: No centralized secp256r1 settings management
+3. **Error Handling**: Inconsistent error patterns across components
+4. **Testing Complexity**: Difficult to test all secp256r1 scenarios comprehensively
+
+### Production Readiness
+
+**Current Status**: ⚠️ **Use with Caution**
+
+- **Development/Testing**: ✅ Safe for development and testing
+- **Staging**: ⚠️ Requires careful address validation
+- **Production**: ❌ Wait for architecture improvements
+
+**Recommended**: Validate all addresses and test thoroughly before production deployment.
+
+For technical debt details and improvement roadmap, see [`docs/TypeScript-Code-Improvements.md`](docs/TypeScript-Code-Improvements.md).
+
 ## 📋 Development Tasks
 
 ### Build and Compilation
@@ -571,6 +712,8 @@ npx hardhat deployAll --network customR1Network --precommit
 - ⚠️ **Security Concerns**: Custom signing implementation needs thorough audit
 - ⚠️ **Maintenance Burden**: Requires specialized knowledge to maintain
 - ⚠️ **Future Uncertainty**: Implementation may change or be deprecated
+- 🔧 **Event Detection Issues**: Raw transactions may not populate logs correctly in receipts
+- 🆕 **Fallback Validation**: Automatic state validation when events are missing (v1.2.0+)
 
 See [Curve Compatibility Test Results](docs/Curve-Compatibility-Test-Results.md) for detailed production deployment metrics and validation reports.
 
@@ -731,6 +874,25 @@ For detailed installation and usage instructions, visit the [package documentati
 - Check account balances
 - Validate network accessibility
 - Use `DEBUG=true` to see detailed configuration information
+
+### secp256r1 Specific Issues (EXPERIMENTAL)
+
+5. **Event Detection Failures in secp256r1**:
+    - **Symptom**: "RoleGranted event not found in transaction receipt" during validation
+    - **Cause**: Raw secp256r1 transactions may not populate event logs correctly
+    - **Solution**: The system automatically falls back to direct state validation
+    - **Status**: ✅ Auto-resolved in v1.2.0+ with fallback validation
+
+6. **Low Gas Consumption with secp256r1**:
+    - **Symptom**: Successful transactions consuming unusually low gas (~36k vs ~150k)
+    - **Cause**: Transaction execution path differences or event emission issues
+    - **Solution**: Direct contract state validation confirms role grants
+    - **Impact**: Functional behavior is correct despite event detection issues
+
+7. **Role Constants Mismatch**:
+    - **Symptom**: ValidationError about wrong role being used
+    - **Fix**: Updated `ISBE_PAUSER_ROLE` constant from `ISBE_ROLE` value
+    - **Check**: Verify role constants match `contracts/constants/roles.sol`
 
 ## 🚀 Advanced Usage
 

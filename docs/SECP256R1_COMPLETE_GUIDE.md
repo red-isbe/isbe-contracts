@@ -1127,7 +1127,14 @@ With these improvements, the ISBE system will have **complete secp256r1 compatib
 
 ---
 
-**Document Version**: 2.0  
-**Last Updated**: October 2025  
-**Next Review**: December 2025  
+## 📚 Related Documentation
+
+- [Secp256R1 Management Strategy](secp256r1-Management-Strategy.md) - Strategic overview and management recommendations
+- [Deployment Logging Improvements](DEPLOYMENT_LOGGING_IMPROVEMENTS.md) - Enhanced logging for secp256r1 deployments
+
+---
+
+**Document Version**: 2.0
+**Last Updated**: October 2025
+**Next Review**: December 2025
 **Maintainer**: ISBE Development Team

@@ -16,6 +16,12 @@ import { renounceRole } from '../../scripts/access/accessControl/renounceRole'
 import { Signer } from 'ethers'
 import { ISignatureProvider } from '../deployment/providers/ISignatureProvider'
 import { SignatureProviderFactory } from '../deployment/providers/SignatureProviderFactory'
+import {
+    ValidationSummary,
+    EnhancedLogger,
+    LogLevel,
+    AddressFormatter,
+} from '../deployment/utils/LoggingEnhancements'
 
 export interface ValidationResult {
     testName: string
@@ -46,6 +52,7 @@ export class PreCommitValidator {
     private signer: Signer
     private signatureProvider: ISignatureProvider
     private criticalErrorsDetected: boolean = false
+    private validationSummary: ValidationSummary
 
     // Dynamic constants from config
     private readonly PAUSE_ROLE: string
@@ -63,6 +70,7 @@ export class PreCommitValidator {
         this.deploymentResult = deploymentResult
         this.config = config
         this.signatureProvider = SignatureProviderFactory.create(hre)
+        this.validationSummary = new ValidationSummary()
 
         // Initialize constants from config
         this.PAUSE_ROLE = config.validation.PAUSE_ROLE
@@ -71,20 +79,34 @@ export class PreCommitValidator {
         this.CONFIG_ID = config.validation.CONFIG_ID
         this.CUSTOM_BUSINESS_LOGIC_ID =
             config.validation.CUSTOM_BUSINESS_LOGIC_ID
+
+        EnhancedLogger.log(
+            LogLevel.VERBOSE,
+            '🔍 PreCommitValidator initialized with enhanced logging'
+        )
     }
 
     async runAllValidations(): Promise<ValidationResult[]> {
         const results: ValidationResult[] = []
+
+        EnhancedLogger.logSection(
+            'Pre-Commit Validation',
+            `Using ${this.signatureProvider.getCurveType()} signature provider`
+        )
 
         // Initialize signer and validate address consistency
         this.signer = await this.signatureProvider.getSigner()
         const accountAddress = await this.signer.getAddress()
 
         // CRITICAL: Validate address consistency between signatureProvider and signer
-        console.log(`🔍 Address Consistency Check:`)
-        console.log(`   📍 Signer Address: ${accountAddress}`)
-        console.log(
-            `   🔐 Signature Provider Type: ${this.signatureProvider.getCurveType()}`
+        EnhancedLogger.log(LogLevel.NORMAL, `🔍 Address Consistency Check:`)
+        EnhancedLogger.log(
+            LogLevel.NORMAL,
+            `   📍 Signer: ${AddressFormatter.format(accountAddress, 'full')}`
+        )
+        EnhancedLogger.log(
+            LogLevel.VERBOSE,
+            `   🔐 Provider Type: ${this.signatureProvider.getCurveType()}`
         )
 
         // Test address consistency with a signature test
@@ -165,6 +187,25 @@ export class PreCommitValidator {
                 error: error as Error,
             })
         }
+
+        // Add results to summary for enhanced reporting
+        results.forEach((result) => {
+            if (result.success) {
+                this.validationSummary.addSuccess(
+                    result.testName,
+                    result.message
+                )
+            } else {
+                this.validationSummary.addFailure(
+                    result.testName,
+                    result.message,
+                    result.error?.message
+                )
+            }
+        })
+
+        // Print enhanced summary
+        this.validationSummary.printSummary()
 
         return results
     }
@@ -900,7 +941,7 @@ export class PreCommitValidator {
 
             // CRITICAL: Grant ISBE_PAUSER_ROLE to the admin account for global pause operations
             const ISBE_PAUSER_ROLE =
-                '0xe02d3eaf0b5fb24a2d637286804770bf2618aa6d3b40cbf443b93f6cd1aac239'
+                '0x643e67198985fdbcfc2807234f580aa2cab96bb7efe1ab3158da79255d493114'
 
             const grantRoleResult = await grantRole(
                 ISBE_PAUSER_ROLE,

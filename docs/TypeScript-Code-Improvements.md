@@ -8,7 +8,318 @@ After analyzing the codebase, we identified several areas for improvement across
 
 ## 🚨 **Critical Issues (High Priority)**
 
-### 1. JavaScript to TypeScript Migration
+### 🆕 1. secp256r1 Event Handling Technical Debt
+
+**Status**: 🔴 Critical - Recently Introduced  
+**Effort**: High  
+**Impact**: High
+
+**Background**: Recent fixes for secp256r1 RoleGranted event detection have introduced significant technical debt that should be addressed in the next development cycle.
+
+#### Issues Identified:
+
+**A. Complex Event Detection Logic**
+
+The `grantRole.ts` file now contains multiple fallback mechanisms that make the code complex and hard to maintain:
+
+```typescript
+// Current problematic implementation (lines 182-250+)
+export async function grantRoleWithRawTransaction(
+    roleToGrant: string,
+    accountToGrantTo: string,
+    diamond: string,
+    signatureProvider: ISignatureProvider
+): Promise<{ role: string; account: string; sender: string }> {
+    // ... 200+ lines of complex logic with multiple fallbacks
+
+    // Multiple log parsing attempts
+    for (let i = 0; i < finalReceipt.logs.length; i++) {
+        /* ... */
+    }
+
+    // Receipt refetching logic
+    if (receipt.logs.length === 0) {
+        // Try multiple approaches to get logs
+        const freshReceipt = await provider.getTransactionReceipt(
+            txResponse.hash
+        )
+        // Try getting logs from the block directly
+        const logs = await provider.getLogs({
+            /* complex filter */
+        })
+    }
+
+    // Manual event parsing by topic hash
+    const matchingLogs = finalReceipt.logs.filter(
+        (log) => log.topics[0] === roleGrantedTopic
+    )
+
+    // Fallback state validation with dynamic imports
+    const { hasRole } = await import('./hasRole')
+    const roleCheck = await hasRole(
+        roleToGrant,
+        accountToGrantTo,
+        diamond,
+        signer
+    )
+}
+```
+
+**Problems:**
+
+- Single function with 250+ lines and multiple responsibilities
+- Complex nested fallback logic that's hard to follow
+- Dynamic imports that complicate dependency tracking
+- Hardcoded topic hashes and magic numbers
+- Mixed concerns: transaction execution, event parsing, state validation
+
+**B. Inconsistent Error Handling**
+
+```typescript
+// Current inconsistent patterns
+try {
+    const signer = await signatureProvider.getSigner()
+    provider = signer.provider
+} catch {
+    // Fallback to accessing HRE provider directly if signature provider exposes it
+    if ('hre' in signatureProvider && signatureProvider.hre?.ethers?.provider) {
+        provider = signatureProvider.hre.ethers.provider
+    }
+}
+
+// Mix of error handling styles
+console.log(
+    `   ⚠️  Could not verify role state: ${stateCheckError instanceof Error ? stateCheckError.message : String(stateCheckError)}`
+)
+```
+
+**Problems:**
+
+- Inconsistent error handling patterns (try/catch vs instanceof checks)
+- Silent failures in some fallback paths
+- Mixed console.log error reporting instead of structured errors
+- Provider access using string-in checks instead of proper interfaces
+
+**C. Role Constant Management Issue**
+
+Fixed a critical bug where wrong role constant was used:
+
+```typescript
+// Fixed in PreCommitValidator.ts (line 903)
+const ISBE_PAUSER_ROLE =
+    '0x643e67198985fdbcfc2807234f580aa2cab96bb7efe1ab3158da79255d493114' // CORRECT
+// Was: '0xe02d3eaf0b5fb24a2d637286804770bf2618aa6d3b40cbf443b93f6cd1aac239' // WRONG (ISBE_ROLE)
+```
+
+**Problems:**
+
+- Magic string constants scattered across files
+- No centralized role management
+- Easy to introduce similar errors in future
+
+#### Recommended Refactoring (High Priority):
+
+**1. Create Specialized Event Detection Service**
+
+```typescript
+// services/EventDetectionService.ts
+export interface EventDetectionResult<T = any> {
+    found: boolean
+    event?: T
+    source: 'receipt' | 'block-logs' | 'state-validation'
+    metadata: {
+        transactionHash: string
+        blockNumber: number
+        gasUsed: bigint
+        attempts: string[]
+    }
+}
+
+export class Secp256r1EventDetectionService {
+    constructor(
+        private provider: Provider,
+        private contractInterface: Interface
+    ) {}
+
+    async detectRoleGrantedEvent(
+        txHash: string,
+        expectedRole: string,
+        expectedAccount: string,
+        contractAddress: string
+    ): Promise<EventDetectionResult<RoleGrantedEvent>> {
+        const attempts: string[] = []
+
+        // Strategy 1: Standard receipt parsing
+        try {
+            const result = await this.parseFromReceipt(txHash)
+            if (result.found)
+                return {
+                    ...result,
+                    source: 'receipt',
+                    metadata: {
+                        /* ... */
+                    },
+                }
+            attempts.push('receipt-parsing')
+        } catch (error) {
+            attempts.push(`receipt-parsing-failed: ${error.message}`)
+        }
+
+        // Strategy 2: Block-based log retrieval
+        try {
+            const result = await this.parseFromBlockLogs(
+                txHash,
+                expectedRole,
+                contractAddress
+            )
+            if (result.found)
+                return {
+                    ...result,
+                    source: 'block-logs',
+                    metadata: {
+                        /* ... */
+                    },
+                }
+            attempts.push('block-logs')
+        } catch (error) {
+            attempts.push(`block-logs-failed: ${error.message}`)
+        }
+
+        // Strategy 3: Direct state validation
+        try {
+            const result = await this.validateFromContractState(
+                expectedRole,
+                expectedAccount,
+                contractAddress
+            )
+            return {
+                ...result,
+                source: 'state-validation',
+                metadata: {
+                    /* ... */
+                },
+            }
+        } catch (error) {
+            attempts.push(`state-validation-failed: ${error.message}`)
+            return {
+                found: false,
+                source: 'state-validation',
+                metadata: { attempts /* ... */ },
+            }
+        }
+    }
+
+    private async parseFromReceipt(
+        txHash: string
+    ): Promise<Partial<EventDetectionResult>> {
+        // Clean, focused implementation
+    }
+
+    private async parseFromBlockLogs(
+        txHash: string,
+        role: string,
+        address: string
+    ): Promise<Partial<EventDetectionResult>> {
+        // Clean, focused implementation
+    }
+
+    private async validateFromContractState(
+        role: string,
+        account: string,
+        address: string
+    ): Promise<Partial<EventDetectionResult>> {
+        // Clean, focused implementation
+    }
+}
+```
+
+**2. Centralized Role Constants**
+
+```typescript
+// constants/Roles.ts
+export const ISBE_ROLES = {
+    DEFAULT_ADMIN:
+        '0x0000000000000000000000000000000000000000000000000000000000000000',
+    PAUSER: '0x8c911f4537972e7549dbbd37a96b929a4b480f4fb156fc6344524bdf2ca50aa1',
+    ISBE_PAUSER:
+        '0x643e67198985fdbcfc2807234f580aa2cab96bb7efe1ab3158da79255d493114', // CORRECT VALUE
+    ISBE: '0xe02d3eaf0b5fb24a2d637286804770bf2618aa6d3b40cbf443b93f6cd1aac239',
+    // ... other roles from contracts/constants/roles.sol
+} as const
+
+// Type safety
+export type IsbeRoleType = keyof typeof ISBE_ROLES
+export type IsbeRoleValue = (typeof ISBE_ROLES)[IsbeRoleType]
+
+// Validation
+export function validateRole(role: string): role is IsbeRoleValue {
+    return Object.values(ISBE_ROLES).includes(role as IsbeRoleValue)
+}
+
+// Usage in PreCommitValidator.ts
+import { ISBE_ROLES } from '../constants/Roles'
+
+// Replace hardcoded string with constant
+const ISBE_PAUSER_ROLE = ISBE_ROLES.ISBE_PAUSER
+```
+
+**3. Simplified grantRole Function**
+
+```typescript
+// Refactored grantRole.ts
+export async function grantRole(
+    roleToGrant: string,
+    accountToGrantTo: string,
+    diamond: string,
+    signatureProvider: ISignatureProvider
+): Promise<{ role: string; account: string; sender: string }> {
+    // Input validation
+    validateRole(roleToGrant)
+    validateEthereumAddress(accountToGrantTo)
+    validateEthereumAddress(diamond)
+
+    // Execute transaction based on curve type
+    const txHash = await this.executeRoleGrant(
+        roleToGrant,
+        accountToGrantTo,
+        diamond,
+        signatureProvider
+    )
+
+    // Detect event with specialized service
+    const eventService = new Secp256r1EventDetectionService(
+        await signatureProvider.getSigner().provider,
+        AccessControlGovernanceFacet__factory.createInterface()
+    )
+
+    const result = await eventService.detectRoleGrantedEvent(
+        txHash,
+        roleToGrant,
+        accountToGrantTo,
+        diamond
+    )
+
+    if (!result.found) {
+        throw new TransactionError(
+            `Role grant verification failed: ${result.metadata.attempts.join(', ')}`,
+            txHash
+        )
+    }
+
+    // Log diagnostic info for secp256r1 debugging
+    if (signatureProvider.getCurveType() === 'secp256r1') {
+        logger.debug('secp256r1 role grant completed', {
+            source: result.source,
+            attempts: result.metadata.attempts.length,
+            gasUsed: result.metadata.gasUsed.toString(),
+        })
+    }
+
+    return result.event
+}
+```
+
+### 2. JavaScript to TypeScript Migration
 
 **Status**: 🔴 Critical  
 **Effort**: Medium  
@@ -1136,7 +1447,29 @@ export function getCurrentEnvironment(): EnvironmentName {
 
 ## 📋 **Implementation Roadmap**
 
-### Phase 1: Foundation (Week 1) - High Priority
+### Phase 0: Critical secp256r1 Debt Resolution (Week 1) - URGENT
+
+1. 🔴 **Refactor secp256r1 Event Detection** - URGENT
+    - ❌ Extract EventDetectionService from `grantRole.ts` (250+ line function)
+    - ❌ Centralize role constants from `contracts/constants/roles.sol`
+    - ❌ Replace hardcoded magic strings and topic hashes
+    - ❌ Implement proper error handling patterns
+    - ❌ Add structured logging for secp256r1 debugging
+    - ❌ Create proper interfaces for provider access patterns
+
+2. 🔴 **Role Constants Management** - URGENT
+    - ❌ Create `constants/Roles.ts` with type-safe role definitions
+    - ❌ Update `PreCommitValidator.ts` to use centralized constants
+    - ❌ Add role validation functions and type guards
+    - ❌ Sync with Solidity role definitions in build process
+
+3. 🔴 **Event Handling Architecture** - HIGH PRIORITY
+    - ❌ Separate transaction execution from event detection concerns
+    - ❌ Create reusable event detection patterns for other functions
+    - ❌ Implement proper retry and timeout mechanisms
+    - ❌ Add comprehensive logging for debugging secp256r1 issues
+
+### Phase 1: Foundation (Week 2) - High Priority
 
 1. ✅ **Convert JavaScript files to TypeScript** ✅ **COMPLETED**
     - ✅ `scripts/check-coverage.js` → `scripts/check-coverage.ts`
@@ -1351,11 +1684,150 @@ To begin implementing these recommendations:
 
 Remember: The goal is to improve code quality incrementally while maintaining the existing functionality. Start with the high-impact, low-effort improvements first!
 
-## 🏆 **Implementation Results (Phase 1 Completed)**
+## 🏆 **Implementation Results (Phase 1 Completed + Critical Debt Added)**
 
 ### ✅ **Successfully Implemented**
 
-As of **September 2025**, the following Phase 1 improvements have been successfully implemented:
+As of **October 2025**, the following Phase 1 improvements have been successfully implemented:
+
+### 🚨 **Critical Technical Debt Added (October 2025)**
+
+**secp256r1 Event Detection Fixes** - While functionally successful, recent fixes for secp256r1 RoleGranted event detection have introduced significant technical debt:
+
+- **250+ line function** in `grantRole.ts` with multiple fallback mechanisms
+- **Complex nested try/catch logic** for event detection across 3 different strategies
+- **Hardcoded role constants** that caused the original bug (wrong `ISBE_PAUSER_ROLE` value)
+- **Mixed error handling patterns** with both structured and console.log approaches
+- **Dynamic imports** and provider access via string-in checks
+- **Multiple concerns in single function**: transaction execution + event parsing + state validation
+
+**Impact**: The fixes work correctly and deployments now pass, but the code is harder to maintain and test. This should be prioritized for refactoring in the next development cycle.
+
+#### 🆕 D. secp256r1 Management Architecture Issues
+
+**Background**: Analysis of the secp256r1 implementation reveals a distributed architecture with inconsistencies and potential maintenance challenges.
+
+**Critical Inconsistency - Address Derivation**:
+
+```typescript
+// TWO DIFFERENT METHODS for secp256r1 address derivation:
+
+// Method 1: secp256r1Utils.ts - Custom Keccak-256 implementation
+export function deriveEthereumAddress(publicKey: string): string {
+    const pubKey = publicKey.startsWith('04') ? publicKey.slice(2) : publicKey
+    if (pubKey.length !== 128) {
+        throw new Error(`Invalid public key length: ${pubKey.length}, expected 128`)
+    }
+    const pubKeyBuffer = Buffer.from(pubKey, 'hex')
+    const hash = createKeccakHash(pubKeyBuffer)
+    return '0x' + hash.slice(-40)
+}
+
+// Method 2: AccountManager.ts - Uses ethers.Wallet
+static getSecp256r1Accounts(): Secp256r1Account[] {
+    const keys = this.getAccounts()
+    return keys.map((privateKey) => {
+        const wallet = new ethers.Wallet(privateKey)  // <-- DIFFERENT APPROACH!
+        return {
+            address: wallet.address,  // <-- Potentially different address!
+            privateKey: privateKey.startsWith('0x') ? privateKey.slice(2) : privateKey,
+        }
+    })
+}
+```
+
+**Risk**: This inconsistency could generate different addresses for the same private key, potentially causing:
+
+- Deployment failures to unexpected addresses
+- Transaction signing with wrong account
+- State validation failures
+- Asset loss or inaccessible contracts
+
+**Scattered Architecture Issues**:
+
+```typescript
+// secp256r1 logic spread across multiple files:
+
+// 1. Cryptographic operations - secp256r1Utils.ts
+export function generateSecp256r1KeyPair(): Secp256r1KeyPair
+export function signMessageHash(messageHash: string, privateKey: string)
+
+// 2. Network detection - networkUtils.ts
+export function isSecp256r1Network(hre: HardhatRuntimeEnvironment): boolean
+export function getNetworkCurve(hre: HardhatRuntimeEnvironment): EllipticCurve
+
+// 3. Account management - AccountManager.ts
+static getAccountsForCurve(curve: 'secp256k1' | 'secp256r1')
+
+// 4. Transaction signing - secp256r1TransactionSigner.ts
+export class Secp256r1TransactionSigner implements TransactionSigner
+
+// 5. Provider selection - SignatureProviderFactory.ts
+static create(hre: HardhatRuntimeEnvironment): ISignatureProvider
+
+// 6. Curve detection - getCurveAwareSigner.ts
+export async function getCurveAwareSigner()
+```
+
+**Problems with Current Distribution**:
+
+1. **No Single Source of Truth**: Configuration and behavior scattered across 6+ files
+2. **Inconsistent Validation**: Different validation rules in different modules
+3. **Mixed Responsibilities**: Account management mixes curve detection with account creation
+4. **Configuration Drift**: No centralized secp256r1-specific settings
+5. **Error Handling Inconsistencies**: Different error patterns across components
+6. **Testing Complexity**: Hard to test secp256r1 behavior comprehensively
+
+**Immediate Actions Required**:
+
+1. **Address Derivation Fix** (Critical - Next Sprint)
+    - Standardize on secp256r1Utils.deriveEthereumAddress approach
+    - Update AccountManager to use consistent address derivation
+    - Add validation tests for address consistency
+    - Audit existing deployments for address mismatches
+
+2. **Architecture Assessment** (High Priority)
+    - Create secp256r1 management strategy document
+    - Design unified Secp256r1Manager interface
+    - Plan migration strategy for existing scattered logic
+    - Define centralized configuration approach
+
+**Recommended Solution Path**:
+
+```typescript
+// Proposed unified architecture:
+
+// 1. Centralized Manager
+export class Secp256r1Manager {
+    private config: Secp256r1Config
+    private utils: Secp256r1Utils
+    private providers: Map<string, ISignatureProvider>
+
+    // Single source of truth for all secp256r1 operations
+    async createAccount(privateKey: string): Promise<Secp256r1Account>
+    async getProvider(network: string): Promise<ISignatureProvider>
+    async signTransaction(tx: Transaction): Promise<SignedTransaction>
+    validateConfiguration(): ValidationResult
+}
+
+// 2. Unified Configuration
+interface Secp256r1Config {
+    enabled: boolean
+    addressDerivationMethod: 'keccak256' // Standardize on one approach
+    fallbackStrategies: ('receipt' | 'block-logs' | 'state-validation')[]
+    validationLevel: 'strict' | 'permissive'
+    providers: ProviderConfig[]
+}
+
+// 3. Consistent Error Handling
+export class Secp256r1Error extends IsbeError {
+    constructor(operation: string, details: any, cause?: Error)
+}
+```
+
+**See**: `docs/secp256r1-Management-Strategy.md` for comprehensive refactoring plan.
+
+### ✅ **Legacy Phase 1 Improvements**
 
 #### **1. JavaScript to TypeScript Migration**
 
@@ -1455,4 +1927,43 @@ With Phase 1 successfully completed, the project is now ready for Phase 2 implem
 
 _This document serves as a living guide for improving TypeScript/JavaScript code quality in the ISBE contracts project. Update it as improvements are implemented and new patterns emerge._
 
-**Last Updated**: September 2025 - Phase 1 Implementation Completed ✅
+## 🚨 **URGENT: Next Development Priorities**
+
+Based on the recent secp256r1 fixes, the following should be addressed immediately:
+
+### 🔥 **Week 1 (Critical)**
+
+1. **Fix secp256r1 Address Derivation Inconsistency** - URGENT: Two different methods could generate different addresses
+2. **Extract EventDetectionService** from 250+ line `grantRoleWithRawTransaction` function
+3. **Centralize role constants** to prevent future bugs like the `ISBE_PAUSER_ROLE` mixup
+4. **Implement structured error handling** to replace mixed console.log patterns
+
+### 🔍 **Week 2 (High Priority)**
+
+5. **Design unified secp256r1 management architecture** - Create Secp256r1Manager class
+6. **Create proper interfaces** for provider access instead of string-in checks
+7. **Add comprehensive logging** for secp256r1 debugging and monitoring
+8. **Implement retry mechanisms** for event detection robustness
+
+### ⚡ **Week 3 (Medium Priority)**
+
+9. **Migrate scattered secp256r1 logic** to unified manager
+10. **Extract reusable patterns** for other functions that might face similar secp256r1 issues
+11. **Add comprehensive tests** for all event detection fallback scenarios
+12. **Create documentation** for secp256r1-specific troubleshooting
+
+### 📋 **New Documentation**
+
+- **secp256r1 Management Strategy**: `docs/secp256r1-Management-Strategy.md` - Comprehensive refactoring plan
+- **Architecture Analysis**: Detailed assessment of current distributed approach
+- **Migration Roadmap**: 3-phase implementation plan with risk assessment
+- **Critical Issues**: Address derivation inconsistency and scattered logic problems
+
+## 📚 Related Documentation
+
+- [Deployment Logging Improvements](DEPLOYMENT_LOGGING_IMPROVEMENTS.md) - Enhanced logging system implementation for better deployment visibility
+- [Secp256R1 Complete Guide](SECP256R1_COMPLETE_GUIDE.md) - Comprehensive secp256r1 implementation guide
+
+---
+
+**Last Updated**: October 2025 - Phase 1 Completed + secp256r1 Architectural Debt Documented ✅⚠️

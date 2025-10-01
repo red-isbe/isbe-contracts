@@ -6,17 +6,27 @@ import { DeploymentConfig } from './deployment/config/DeploymentConfig'
 import { logNetworkInfo } from '../utils/networkUtils'
 import { PreCommitValidator } from './validation/PreCommitValidator'
 import { SignatureProviderFactory } from './deployment/providers/SignatureProviderFactory'
+import {
+    LogConfig,
+    LogLevel,
+    EnhancedLogger,
+} from './deployment/utils/LoggingEnhancements'
 
 interface TaskArgs {
     precommit?: boolean
     info?: boolean
     legacy?: boolean
+    logLevel?: string
 }
 
 /**
  * Clean curve-aware deployment task using signature provider abstraction
- * npx hardhat deployAllClean --info
- * npx hardhat deployAllClean --legacy   # Use old implementation for compatibility
+ *
+ * Examples:
+ *   npx hardhat deployAllClean --network customR1Network --log-level minimal
+ *   npx hardhat deployAllClean --info --log-level verbose
+ *   npx hardhat deployAllClean --legacy --log-level debug
+ *   LOG_LEVEL=minimal npx hardhat deployAllClean --network customR1Network
  */
 task(
     'deployAllClean',
@@ -28,20 +38,31 @@ task(
         'legacy',
         'Use legacy DeploymentOrchestrator for backwards compatibility'
     )
+    .addOptionalParam(
+        'logLevel',
+        'Set logging verbosity: minimal, normal, verbose, debug',
+        'normal'
+    )
     .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
-        console.log('🚀 Starting clean curve-aware deployment...')
-        console.log('')
+        // Configure logging level
+        const logLevel = parseLogLevel(taskArgs.logLevel)
+        LogConfig.setLevel(logLevel)
 
-        // Display network information
-        logNetworkInfo(hre)
+        EnhancedLogger.log(
+            LogLevel.MINIMAL,
+            '🚀 Starting clean curve-aware deployment...'
+        )
+
+        // Display network information (reduced in minimal mode)
+        if (LogConfig.isLevel(LogLevel.NORMAL)) {
+            logNetworkInfo(hre)
+        }
 
         // Display signature provider information
         if (taskArgs.info) {
-            console.log('')
+            EnhancedLogger.log(LogLevel.NORMAL, '')
             displaySignatureProviderInfo(hre)
         }
-
-        console.log('')
 
         try {
             // Choose orchestrator based on legacy flag
@@ -260,4 +281,27 @@ function displayFinalSummary(
     console.log(
         `   • Network: ${deploymentResult.summary.networkName || 'unknown'}`
     )
+}
+
+/**
+ * Parse log level from string parameter
+ */
+function parseLogLevel(logLevelStr?: string): LogLevel {
+    if (!logLevelStr) return LogLevel.NORMAL
+
+    switch (logLevelStr.toLowerCase()) {
+        case 'minimal':
+            return LogLevel.MINIMAL
+        case 'normal':
+            return LogLevel.NORMAL
+        case 'verbose':
+            return LogLevel.VERBOSE
+        case 'debug':
+            return LogLevel.DEBUG
+        default:
+            console.warn(
+                `⚠️  Unknown log level '${logLevelStr}', using 'normal'`
+            )
+            return LogLevel.NORMAL
+    }
 }
