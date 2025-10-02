@@ -20,9 +20,66 @@ Proposal
 
 To streamline the contract deployment process, all contracts necessary for the ISBE infrastructure will be pre-deployed. They need to be available from the outset (first block) so that use cases can make use of them.
 
+This requires to extract al deployed bytecode form contracts and the entire slot structure at last block. This is very challening as there is almost no standard tooling to achive this.
+
+## Alternatives
+
+### Static slot extractio0n
+
+Vast majority of tooling performs static slot extraction. This require to check the order fields are created in solidity contract to generate the slot structructure. This method is very straightforward, however it has two severe limitations:
+
+- It is suitable for simple type fields (i.e uint, address, bytes32...). This types uses a single slot to keep field value. However, it cannot precalculate dinamic fields like mappings, string, bytes or dynamic arrays. Slot structure for those types are very complex and calculate slots by emulate EVM slot allocation is very complex
+- This process is compromised if slot structure is set manually. This is our case as it is required for diamind pattern.
+
+### Extract from Besu or Erigon
+
+As an alternative, it is possible to use **debug_storageRangeAt** operation. This is a JSON-RPC method (available in clients like Geth, Erigon, and Besu) that lets you enumerate a contract’s storage slots at a specific block. Instead of only reading known keys, it returns a page of key/value pairs starting from a given startKey (usually 0x0) up to a maximum number of results (maxResults), along with a nextKey that you can use to paginate through the entire storage trie. This provides a very powerful tool for dumping all storage contents of a contract at a chosen block state, which you can then decode using Solidity’s storage layout rules.
+
+**Example:**
+
+```json
+{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "debug_storageRangeAt",
+    "params": [
+        "0x<blockHash>", // Block hash
+        0, // tx index in selected block
+        "0x<address>", // Contract address
+        "0x0000000000000000000000000000000000000000000000000000000000000000", // startKey (0x00..000" innitial). This process returns next startkey
+        2048 // maxResults (for pagination)
+    ]
+}
+```
+
+This approach has a downfall: you need to know previously all contract addresses in order to extract slot information from them. In a regular deployment process in which all contracts are created by a creation transaction from an EOA, this is very simple. However if creation procedure is more comples as ISBE Diamond, this method would not be feasible as it requires to extract trace information a n detect CREATE/CREATE2 opcodes. Since this process depends on trace extraction, it makes more sense to use the following proposed procedure.
+
+### Extract slot information by detecting SSTORAGE opcode
+
+This case requires reviewing the trace of each transaction performed on the Hardhat network. It involves going through each trace in search of SSTORE opcodes. At first glance, this method seems simple, but the opcode does not have information on the stack about which contract it belongs to.
+
+In order to determine the contract, it is necessary to emulate the behaviour of the EVM and modify the contract address as it enters and exits CALL, CREATE, CREATE2 blocks...
+
+**Example:**
+
+```javascript
+const trace = await provider.send('debug_traceTransaction', [
+    txHash,
+    {
+        disableStack: false, // We need stack asociated with each OPCODE
+        disableMemory: false, // For contract bytecode (CREATE2)
+        disableStorage: false, //Not needed. Used for debug and audit purposes
+    },
+])
+```
+
+This method is more complex, but it extracts the entire slot structure for all transactions deployed in Hardhat so far.
+
 ## Decision
 
 Due to the large number of contracts to be deployed in the infrastructure and the amount of bootstrapping they require, the deployment process is complex. Therefore, priority will be given to those pre-deployment processes in Genesis that have the least impact on the current deployment process and are flexible enough so that the addition of new contracts does not cause problems for pre-deployment.
+
+Therefore, we plan to use third option "Extract slot information by detecting SSTORAGE opcode". It is the cleanest and more flexible procedure to extract slot structure.
 
 ## Description
 
@@ -49,19 +106,7 @@ The slot structure, on the other hand, is not so simple. The rules for generatin
 
 1. Compile
 2. Deploy the contract (for this test a constructor without params): we need a real EVM run of the constructor to record its SSTOREs, and the address to read code/storage afterward.
-3. Trace the deployment transaction: we need structLogs with SSTORE steps. Enabling stack/storage gives us enough context to identify slot keys robustly.
-
-```js
-const trace = await network.provider.send('debug_traceTransaction', [
-    tx.hash,
-    {
-        disableStack: false,
-        disableStorage: false,
-        disableMemory: true,
-    },
-])
-```
-
+3. Trace the deployment transaction: we need structLogs with SSTORE steps. Enabling stack/storage gives us enough context to identify slot keys robustly. We need to take track of context changes in EVM that implies contract owner changes. We need to emulate EVM behaviour.
 4. Collect the written slots: We check the entire trace to detect "SSTORE" op-code. If a SSTORE is detected process will store SLOT modified. It is essential to ensure we assign each SSTORE operation to the correct contract. If a transaction executes "CALL", "CREATE" or "CREATE2" opcodes, this changes the contract where the write opertion is executed. DELEGATECALL will not change contract.
 
 5. Read final values from chain state: guarantees we record the post-constructor state
@@ -70,22 +115,41 @@ const trace = await network.provider.send('debug_traceTransaction', [
 
 ```js
 {
-  "contract": "ContractName",
-  "address": "0x…",
-  "code": "0x…",
-  "storage": {
-    "0x…0000": "0x…0A",
-    "0x…0001": "0x…0B"
+  address:{
+    "contract": "ContractName",
+    "address": "0x…",
+    "code": "0x…",
+    "storage": {
+      "0x…0000": "0x…0A",
+      "0x…0001": "0x…0B"
+    }
   }
 }
 ```
 
+7. Using a genesis template, process includes previous information in genesis alloc informtion.
+
+Now generated genesis is ready to be deployed in a Besu network.
+
 ### Current known limitations
 
-This process extracts slot structure from a specific contract; it does not allow extraction from multiple contracts, which is necessary for the expected process.
+- This process asumes there is no SSTORE opcode within any STATICCALL block or nested block
+- This process won't take care about reverts. If a revert is triggered, SSTORE will be kept in result structure. It asumes a exhaustive test prodecure has been performed.
+
+### Audit
+
+Script has several in-code checks in order to ensure we get expected results. Proces will
+
+- check any EVM context change comes form a specific opcode (CALL, DELEGATECALL, CODECALL, STATICALL, CREATE or CREATE2). It will fail if not. There exist an specific simulated opcode "INITIAL (EOA)" to detect the initial context. This opcode is taken into consideration for context changes
+- check if CALL,DELEGATECALL,STATICALL... have a known destination.In other words, if any of those opcodes uses an unknown address process will fail inmediatelly
+- ensure the generated address for CREATE/CREATE2 is the same as the returned address at the end of the process. To simplify process we need to precalculate CREATE/CREATE2 deployed contract address by emulating EVM calculation procedures. At the end of the block the created address is returned (is onclude in stack). We check both addresses are the same to ensure precalculation procedure work as expected
+- check SSTORAGE opcode to extract slot an compare it to returned slot diffs from debug_traceTransaction
+
+Also it checks any returned value to ensure it is consistent (i.e: not unknown, empty string, empty array if it is not expected).
 
 ### Tests
 
+**PoC tests:**
 Two tests have been carried out
 
 - Contract deployment test: The contract is implemented with a constructor without parameters (for simplicity) and the code and slot structure are generated by standard output. This checks if contract deployment generates expected slot structure **(and it does)**
@@ -215,6 +279,11 @@ To check its behaviour a genesis.json has been created with code and slot struct
 
 To check contract data a regular call (contract + ABI) to **get()** is executed and result is compared to contract constructor data (**data contained is the same**)
 
+**Real tests:**
+Testing the resulting alloc structure for ISBE contracts is chsllenging.
+
+**this activity still in progress**
+
 ### Benefits
 
 This process can be included easily to current deployment process. High level steps:
@@ -233,15 +302,10 @@ For the sake of this project, we need to make absolutely sure this process works
 
 ### Implementation phases
 
-1. Create hardhat task invoking current development process (deployAll)
-2. Extract from Hardhat network all transactions grouped by contract (transactions generated in step 1)
-3. Extract from transactions modified slots
-4. Retrieve from chain each value for each slot
-5. Generate from template genesis file
-
-End of generation process
-
-6. Deploy besu network with generated genesis
-7. Check by using regular contract calls data stored in contract's state
-
-End of test process
+[X] Create hardhat task invoking current development process (deployAll)
+[X] Extract from Hardhat network all transactions grouped by contract (transactions generated in step 1)
+[X] Extract from transactions modified slots
+[X] Retrieve from chain each value for each slot
+[X] Generate from template genesis file
+[-] Testing resulting genesis
+[ ] Deploy in pre-production environment
