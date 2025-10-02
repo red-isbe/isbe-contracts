@@ -8,11 +8,9 @@ import {ERC3643RegulatoryInternal} from './erc3643regulatory/ERC3643RegulatoryIn
 /// @title ERC3643InternalCommon
 /// @notice Aggregates all ERC-3643 internal modules into a unified internal base.
 
+// solhint-disable-next-line no-empty-blocks
 abstract contract ERC3643InternalCommon is
     ERC3643MetadataInternal,
     ERC3643FreezeInternal,
     ERC3643RegulatoryInternal
-
-{
-  
-}
+{}

@@ -12,7 +12,7 @@ import {_TOKEN_OWNER_ROLE} from '../../../../constants/roles.sol';
  * @dev Provides public methods to update and retrieve token metadata such as name, symbol,
  *      onchain identity, and version. Applies access control, validation, and emits events.
  */
-abstract contract ERC3643Metadata is IERC3643Metadata, ERC3643InternalCommon  {
+abstract contract ERC3643Metadata is IERC3643Metadata, ERC3643InternalCommon {
     /**
      * @dev Disables further initializations for this facet using its resolver key.
      */

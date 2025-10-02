@@ -60,6 +60,9 @@ bytes32 constant _ERC3643_REGULATORY_STORAGE_POSITION = 0x77f33cda3a8ae313a958d1
 // keccak256('isbe.contracts.erc3643.freeze.storage');
 bytes32 constant _ERC3643_FREEZE_STORAGE_POSITION = 0x27f6de6c243b33bb392a1e63ddcbf96a71f9ff85e5053a0487b4a363c1ce1601;
 
+// keccak256('isbe.contracts.erc3643.control.storage');
+bytes32 constant _ERC3643_CONTROL_STORAGE_POSITION = 0x72d835f60ed84d9e97792d54a06b99959c3707d49cbd20abce0c598fa0e46898;
+
 //ERC721 storage position
 // keccak256('isbe.contracts.erc721.storage');
 bytes32 constant _ERC721_STORAGE_POSITION = 0x831e41d39c52997482833cb014c17663793796e3e15559f599f945b05d1d8c17;
