@@ -20,16 +20,16 @@ Proposal
 
 To streamline the contract deployment process, all contracts necessary for the ISBE infrastructure will be pre-deployed. They need to be available from the outset (first block) so that use cases can make use of them.
 
-This requires to extract al deployed bytecode form contracts and the entire slot structure at last block. This is very challening as there is almost no standard tooling to achive this.
+This requires to extract all deployed bytecode form contracts and the entire slot structure at last block. This is very challening as there is almost no standard tooling to achive this.
 
 ## Alternatives
 
-### Static slot extractio0n
+### Static slot extraction
 
-Vast majority of tooling performs static slot extraction. This require to check the order fields are created in solidity contract to generate the slot structructure. This method is very straightforward, however it has two severe limitations:
+Vast majority of tooling performs static slot extraction. This requires to check the order fields are created in solidity contract to generate the slot structure. This method is very straightforward, however it has two severe limitations:
 
-- It is suitable for simple type fields (i.e uint, address, bytes32...). This types uses a single slot to keep field value. However, it cannot precalculate dinamic fields like mappings, string, bytes or dynamic arrays. Slot structure for those types are very complex and calculate slots by emulate EVM slot allocation is very complex
-- This process is compromised if slot structure is set manually. This is our case as it is required for diamind pattern.
+- It is suitable for simple type fields (i.e uint, address, bytes32...). This types use a single slot to keep field value. However, it cannot precalculate dynamic fields like mappings, string, bytes or dynamic arrays. Slot structure for those types are very complex and calculate slots by emulating EVM slot allocation is very complex
+- This process is compromised if slot structure is set manually. This is our case as it is required for diamnd pattern.
 
 ### Extract from Besu or Erigon
 
@@ -52,9 +52,9 @@ As an alternative, it is possible to use **debug_storageRangeAt** operation. Thi
 }
 ```
 
-This approach has a downfall: you need to know previously all contract addresses in order to extract slot information from them. In a regular deployment process in which all contracts are created by a creation transaction from an EOA, this is very simple. However if creation procedure is more comples as ISBE Diamond, this method would not be feasible as it requires to extract trace information a n detect CREATE/CREATE2 opcodes. Since this process depends on trace extraction, it makes more sense to use the following proposed procedure.
+This approach has a downfall: you need to know previously all contract addresses in order to extract slot information from them. In a regular deployment process in which all contracts are created by a creation transaction from an EOA, this is very simple. However if creation procedure is more complex as ISBE Diamond, this method would not be feasible as it requires to extract trace information and detect CREATE/CREATE2 opcodes. Since this process depends on trace extraction, it makes more sense to use the following proposed procedure.
 
-### Extract slot information by detecting SSTORAGE opcode
+### Extract slot information by detecting SSTORE opcode
 
 This case requires reviewing the trace of each transaction performed on the Hardhat network. It involves going through each trace in search of SSTORE opcodes. At first glance, this method seems simple, but the opcode does not have information on the stack about which contract it belongs to.
 
@@ -66,7 +66,7 @@ In order to determine the contract, it is necessary to emulate the behaviour of 
 const trace = await provider.send('debug_traceTransaction', [
     txHash,
     {
-        disableStack: false, // We need stack asociated with each OPCODE
+        disableStack: false, // We need stack associated with each OPCODE
         disableMemory: false, // For contract bytecode (CREATE2)
         disableStorage: false, //Not needed. Used for debug and audit purposes
     },
@@ -79,7 +79,7 @@ This method is more complex, but it extracts the entire slot structure for all t
 
 Due to the large number of contracts to be deployed in the infrastructure and the amount of bootstrapping they require, the deployment process is complex. Therefore, priority will be given to those pre-deployment processes in Genesis that have the least impact on the current deployment process and are flexible enough so that the addition of new contracts does not cause problems for pre-deployment.
 
-Therefore, we plan to use third option "Extract slot information by detecting SSTORAGE opcode". It is the cleanest and more flexible procedure to extract slot structure.
+Therefore, we plan to use third option "Extract slot information by detecting SSTORAGE opcode". It is the cleanest and most flexible procedure to extract slot structure.
 
 ## Description
 
@@ -98,7 +98,7 @@ The slot structure, on the other hand, is not so simple. The rules for generatin
 **Briefly**:
 
 1. Deploy the contract on Hardhat’s in-memory chain.
-2. Trace the deployment transaction and any other transaction, and collect every SSTORE executed in the constructor. Result is a list of modified slots for this contrac
+2. Trace the deployment transaction and any other transaction, and collect every SSTORE executed in the constructor. Result is a list of modified slots for this contract
 3. Read final values from the chain state for those slots.
 4. Fetch runtime code and emit a normalized JSON.
 
@@ -107,7 +107,7 @@ The slot structure, on the other hand, is not so simple. The rules for generatin
 1. Compile
 2. Deploy the contract (for this test a constructor without params): we need a real EVM run of the constructor to record its SSTOREs, and the address to read code/storage afterward.
 3. Trace the deployment transaction: we need structLogs with SSTORE steps. Enabling stack/storage gives us enough context to identify slot keys robustly. We need to take track of context changes in EVM that implies contract owner changes. We need to emulate EVM behaviour.
-4. Collect the written slots: We check the entire trace to detect "SSTORE" op-code. If a SSTORE is detected process will store SLOT modified. It is essential to ensure we assign each SSTORE operation to the correct contract. If a transaction executes "CALL", "CREATE" or "CREATE2" opcodes, this changes the contract where the write opertion is executed. DELEGATECALL will not change contract.
+4. Collect the written slots: We check the entire trace to detect "SSTORE" op-code. If a SSTORE is detected process will store SLOT modified. It is essential to ensure we assign each SSTORE operation to the correct contract. If a transaction executes "CALL", "CREATE" or "CREATE2" opcodes, this changes the contract where the write operation is executed. DELEGATECALL will not change contract.
 
 5. Read final values from chain state: guarantees we record the post-constructor state
 
@@ -127,23 +127,23 @@ The slot structure, on the other hand, is not so simple. The rules for generatin
 }
 ```
 
-7. Using a genesis template, process includes previous information in genesis alloc informtion.
+7. Using a genesis template, process includes previous information in genesis alloc information.
 
 Now generated genesis is ready to be deployed in a Besu network.
 
 ### Current known limitations
 
-- This process asumes there is no SSTORE opcode within any STATICCALL block or nested block
-- This process won't take care about reverts. If a revert is triggered, SSTORE will be kept in result structure. It asumes a exhaustive test prodecure has been performed.
+- This process assumes there is no SSTORE opcode within any STATICCALL block or nested block
+- This process won't take care about reverts. If a revert is triggered, SSTORE will be kept in result structure. It assumes a exhaustive test prodecure has been performed.
 
 ### Audit
 
-Script has several in-code checks in order to ensure we get expected results. Proces will
+Script has several in-code checks in order to ensure we get expected results. Process will
 
-- check any EVM context change comes form a specific opcode (CALL, DELEGATECALL, CODECALL, STATICALL, CREATE or CREATE2). It will fail if not. There exist an specific simulated opcode "INITIAL (EOA)" to detect the initial context. This opcode is taken into consideration for context changes
-- check if CALL,DELEGATECALL,STATICALL... have a known destination.In other words, if any of those opcodes uses an unknown address process will fail inmediatelly
-- ensure the generated address for CREATE/CREATE2 is the same as the returned address at the end of the process. To simplify process we need to precalculate CREATE/CREATE2 deployed contract address by emulating EVM calculation procedures. At the end of the block the created address is returned (is onclude in stack). We check both addresses are the same to ensure precalculation procedure work as expected
-- check SSTORAGE opcode to extract slot an compare it to returned slot diffs from debug_traceTransaction
+- check any EVM context change comes from a specific opcode (CALL, DELEGATECALL, CODECALL, STATICALL, CREATE or CREATE2). It will fail if not. There exist an specific simulated opcode "INITIAL (EOA)" to detect the initial context. This opcode is taken into consideration for context changes
+- check if CALL,DELEGATECALL,STATICALL... have a known destination.In other words, if any of those opcodes uses an unknown address process will fail immediatelly
+- ensure the generated address for CREATE/CREATE2 is the same as the returned address at the end of the process. To simplify process we need to precalculate CREATE/CREATE2 deployed contract address by emulating EVM calculation procedures. At the end of the block the created address is returned (is include in stack). We check both addresses are the same to ensure precalculation procedure work as expected
+- check SSTORE opcode to extract slot an compare it to returned slot diffs from debug_traceTransaction
 
 Also it checks any returned value to ensure it is consistent (i.e: not unknown, empty string, empty array if it is not expected).
 
@@ -280,7 +280,7 @@ To check its behaviour a genesis.json has been created with code and slot struct
 To check contract data a regular call (contract + ABI) to **get()** is executed and result is compared to contract constructor data (**data contained is the same**)
 
 **Real tests:**
-Testing the resulting alloc structure for ISBE contracts is chsllenging.
+Testing the resulting alloc structure for ISBE contracts is challenging.
 
 **this activity still in progress**
 
@@ -298,14 +298,14 @@ It is relevant to point out that 1st step uses current deployment process "deplo
 
 Additionally, 5th step is very convenient as it may automate generation and testing procedures. As we know, mistakes in blockchain are very severe and potentially devastating. Not to mention if the problem occurs in the genesis block.
 
-For the sake of this project, we need to make absolutely sure this process works as expected and genesis file is correct. Therefore, we plan, as part of CI procedure, to start a Besu network using generated genesis and check stored values by using regular contract calls. This may require effort, however, it is fundamental to ensure genesis correctness.
+For the sake of this project, we need to make absolutely sure this process works as expected and genesis file is correct. Therefore, we plan, as part of CI procedure, to start a Besu network using generated genesis and check stored values by using regular contract calls. This may require effort, however, it is fundamental to ensure genesis block correctness.
 
 ### Implementation phases
 
-[X] Create hardhat task invoking current development process (deployAll)
-[X] Extract from Hardhat network all transactions grouped by contract (transactions generated in step 1)
-[X] Extract from transactions modified slots
-[X] Retrieve from chain each value for each slot
-[X] Generate from template genesis file
-[-] Testing resulting genesis
-[ ] Deploy in pre-production environment
+- ✅ Create hardhat task invoking current development process (deployAll)
+- ✅ Extract from Hardhat network all transactions grouped by contract (transactions generated in step 1)
+- ✅ Extract from transactions modified slots
+- ✅ Retrieve from chain each value for each slot
+- ✅ Generate from template genesis file
+- ⏳ Testing resulting genesis
+- ⬜ Deploy in pre-production environment
