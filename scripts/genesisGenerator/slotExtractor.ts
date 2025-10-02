@@ -91,13 +91,13 @@ class Nonces {
         this.map.set(address, start)
     }
 
-    getNext(address: string): bigint | undefined {
-        const next = this.map.get(address)
-        if (next === undefined) {
+    getNonce(address: string): bigint | undefined {
+        const current = this.map.get(address)
+        if (current === undefined) {
             return undefined
         }
-        this.map.set(address, next + 1n)
-        return next
+        this.map.set(address, current + 1n)
+        return current
     }
 
     getCurrent(address: string): bigint | undefined {
@@ -311,7 +311,7 @@ const normalize32 = (hex: string): Hex =>
  *    are consistent within this single trace.
  *
  *  Known limitations:
- *  - This function assumes no SSTORE occurs in an staticcall context or any nested context. If so the will be processed as if they were in a CALL context.
+ *  - This function assumes no SSTORE occurs in a STATICCALL context or any nested context. If so the will be processed as if they were in a CALL context.
  *  - This function assumes no REVERT occurs. If a revert occurs, all SSTOREs will be processed as if they were successful. Code must be tested.
  *
  * @param hre     Hardhat runtime environment (used for provider & code lookups).
@@ -335,7 +335,7 @@ export async function collectStorageSlotsByContract(
     if (!receipt) throw new Error(`Receipt for ${txHash} not found`)
 
     // If this is a contract creation tx, receipt.contractAddress is the root.
-    // Otherwise, use tx.to (could be a contract or an EOA—SSTOREs only make sense in contracts).
+    // Otherwise, use tx.to (could be a contract or an EOA, SSTOREs only make sense in contracts).
     // const rootOwnerRaw: Hex | undefined = (
     //     receipt.contractAddress
     //         ? receipt.contractAddress // Contract creation
@@ -365,13 +365,14 @@ export async function collectStorageSlotsByContract(
     // 2) Obtain the execution trace. We need:
     //    - stack: to read opcode parameters (e.g., SSTORE slot, CALL target)
     //    - memory: to reconstruct initcode for CREATE2 (offset/size windows)
-    //    - storage diffs per step are unnecessary, so disableStorage=true for lighter traces (slot values are read later)
+    //    - storage diffs per step are unnecessary, but it is used for double check and debugging purposes
+    process.stdout.write(`Requesting hardhat for trace...                         \r`);
     const trace = await provider.send('debug_traceTransaction', [
         txHash,
         {
             disableStack: false, // Opcode parameters and return values
             disableMemory: false, // For CREATE2 initcode reconstruction
-            disableStorage: false, // We don't need per-step storage diffs as THEY HAVE NO INFORMATION REGARDING CONTRACT OWNERSHIP
+            disableStorage: false, // We don't need per-step storage diffs as THEY HAVE NO INFORMATION REGARDING CONTRACT OWNERSHIP. Used for audiring purposes only
         },
     ])
 
@@ -398,14 +399,14 @@ export async function collectStorageSlotsByContract(
             console.log(
                 'Root owner ' +
                     ro +
-                    ' already known, it is a INVOCATION NO NEED TO INCRENMENT NONCE current nonce is ' +
+                    ' already known, it is an INVOCATION. NO NEED TO INCRENMENT NONCE current nonce is ' +
                     nonces.getCurrent(ro)
             )
         }
     }
     /*********************************************************************************************
      * Main loop: walk the trace steps, maintaining a simulated call stack of Frames keyed by depth.
-     * PREVIOUS* variables track the last step's values (depth, op, stack, memory)
+     * PREVIOUS* variables that track the last step's values (depth, op, stack, memory)
      * FRAMES takes track of the frame level (they have not relation with previous variables). Manages EVM environment (owners, opcodes)
      * STACK is used to keep track of the current execution context (in short: opcode params and return values are in the stack)
      * MEM (memory) is used to reconstruct initcode for CREATE2 (offset/size windows)
@@ -417,7 +418,6 @@ export async function collectStorageSlotsByContract(
     let previousStack: string[] = []
     let previousMem: string[] = []
     for (const step of structLogs) {
-        //console.log(`--- Step ${count} --- Opcode: ${step.op} Depth: ${step.depth} `);
         const op = step.op.toUpperCase()
         const st = step.stack
         //console.log(`Opcode: ${op} Depth: ${step.depth} Stack: ${st?.length} items`);
@@ -511,8 +511,8 @@ export async function collectStorageSlotsByContract(
                 }
             } else if (previousOp === 'CREATE') {
                 const creator = currentOwner
-                const nonce = nonces.getNext(creator)
-                console.log(`New nonce for ${creator} is ${nonce}`)
+                const nonce = nonces.getNonce(creator)
+                //console.log(`New nonce for ${creator} is ${nonce}`)
                 if (nonce === undefined) {
                     errorInfo(
                         previousStack,
@@ -552,7 +552,7 @@ export async function collectStorageSlotsByContract(
                 frames.set(depth, { owner: created, opcode: previousOp })
                 currentOwner = created
                 nonces.initialize(created, 0n) //Takes track of cretated contract. Starts with 0 as it has not yet created any contract
-                const nonce = nonces.getNext(creator) //NONCE IS NOT USED FOR CREATE2 BUT WE NEED TO INCREMENT FOR FUTURE CREATEs (MANDATORY)
+                const nonce = nonces.getNonce(creator) //NONCE IS NOT USED FOR CREATE2 BUT WE NEED TO INCREMENT FOR FUTURE CREATEs (MANDATORY)
                 if (nonce === undefined) {
                     errorInfo(
                         previousStack,
@@ -592,7 +592,7 @@ export async function collectStorageSlotsByContract(
             }
             const storedOp = frames.get(previousDepth)?.opcode
             if (!storedOp) {
-                // Inernal error, should never happen
+                // Internal error, should never happen
                 errorInfo(
                     st,
                     previousDepth,
@@ -626,7 +626,7 @@ export async function collectStorageSlotsByContract(
                 //console.log(`+${"--".repeat(d)} ${showStack(st)}`);
                 const returnedAddress = toAddrStr(st[st.length - 1])
                 if (returnedAddress !== potentialCreatedContract) {
-                    //double check if returned address is the same as stored owner (i.e. precalculated address)
+                    //double check if returned address is the same than stored owner (i.e. precalculated address)
                     errorInfo(
                         st,
                         previousDepth,
