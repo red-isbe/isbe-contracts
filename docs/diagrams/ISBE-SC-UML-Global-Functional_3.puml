@@ -95,6 +95,14 @@ package "ERC3643" {
 
     class ERC3643InternalCommon <<(A,#228B22) abstract contract>> #E6E6FA
 
+     ' --- Control ---
+    class IERC3643Control <<(I,#FFD700) interface>> #E6E6FA
+    class ERC3643Control <<(A,#228B22) abstract contract>> #E6E6FA
+    class ERC3643ControlFacet <<(C,#1E90FF) contract>> #E6E6FA
+
+    ERC3643ControlFacet --|> ERC3643Control
+    ERC3643Control --|> IERC3643Control 
+    ERC3643Control --|> ERC3643InternalCommon    
 
     ' --- Metadata ---
     class IERC3643Metadata <<(I,#FFD700) interface>> #E6E6FA
@@ -108,17 +116,6 @@ package "ERC3643" {
     ERC3643InternalCommon --|> ERC3643MetadataInternal 
     ERC3643MetadataInternal --|> ERC20InternalCommon 
 
-    ' --- Control ---
-    class IERC3643Control <<(I,#FFD700) interface>> #E6E6FA
-    class ERC3643ControlInternal <<(A,#228B22) abstract contract>> #E6E6FA
-    class ERC3643Control <<(A,#228B22) abstract contract>> #E6E6FA
-    class ERC3643ControlFacet <<(C,#1E90FF) contract>> #E6E6FA
-
-    ERC3643ControlFacet --|> ERC3643Control
-    ERC3643Control --|> IERC3643Control 
-    ERC3643Control --|> ERC3643InternalCommon    
-    ERC3643InternalCommon --|> ERC3643ControlInternal 
-    ERC3643ControlInternal --|> ERC20InternalCommon 
 
     ' --- Freeze ---
     class IERC3643Freeze <<(I,#FFD700) interface>> #E6E6FA
