@@ -21,6 +21,8 @@ const ARSYS_URL = process.env.ARSYS_URL || 'http://213.165.85.41:8545'
 const KEPLER_URL =
     process.env.KEPLER_URL || 'https://regular.pre.iosec.io.builders:8565'
 const CUSTOM_R1_URL = process.env.CUSTOM_R1_URL || 'http://172.16.240.30:8545'
+const CUSTOM_SECOND_R1_URL =
+    process.env.CUSTOM_SECOND_R1_URL || 'http://127.0.0.1:8545'
 const ISBE_LOCAL_DEPLOYER_URL =
     process.env.ISBE_LOCAL_DEPLOYER_URL || 'http://127.0.0.1:8545'
 
@@ -98,6 +100,20 @@ export function getNetworkConfigs(): NetworksConfig {
             gasPrice: 0,
             gas: 100000000,
             blockGasLimit: 30000000,
+            curve: 'secp256r1',
+            secp256r1Accounts,
+        } as NetworkConfigWithCurve,
+
+        // Custom second secp256r1 network call r1d1 repo:https://github.com/alastria/isbe-besu-local-deployer/tree/r1d1
+        customSecondR1Network: {
+            url: CUSTOM_SECOND_R1_URL, // 'http://127.0.0.1:8545'
+            chainId: 2222,
+            accounts: secp256r1PrivateKeys,
+            gasPrice: 0,
+            gas: 50000000,
+            blockGasLimit: 0x1fffffffffffff,
+            timeout: 60000,
+            httpTimeout: 60000,
             curve: 'secp256r1',
             secp256r1Accounts,
         } as NetworkConfigWithCurve,
