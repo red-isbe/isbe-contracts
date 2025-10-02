@@ -1,3 +1,4 @@
 export { retrieveSlotStructure, GenesisAlloc } from './slotExtractor'
 export { matchContractNames } from './contractMatcher'
-export { GenesisValidation } from './genesisValidation'
+export { buildGenesisWithAlloc } from './genesisBuilder'
+export { getFacetsValidate } from './genesisValidator'
