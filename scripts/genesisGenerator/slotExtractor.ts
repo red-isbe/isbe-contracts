@@ -366,7 +366,7 @@ export async function collectStorageSlotsByContract(
     //    - stack: to read opcode parameters (e.g., SSTORE slot, CALL target)
     //    - memory: to reconstruct initcode for CREATE2 (offset/size windows)
     //    - storage diffs per step are unnecessary, but it is used for double check and debugging purposes
-    process.stdout.write(`Requesting hardhat for trace...                         \r`);
+    process.stdout.write(`Requesting hardhat for trace...\r`)
     const trace = await provider.send('debug_traceTransaction', [
         txHash,
         {
@@ -375,7 +375,7 @@ export async function collectStorageSlotsByContract(
             disableStorage: false, // We don't need per-step storage diffs as THEY HAVE NO INFORMATION REGARDING CONTRACT OWNERSHIP. Used for audiring purposes only
         },
     ])
-
+    process.stdout.write(`                              \r`)
     //const callCode=(await provider.send('eth_getTransactionByHash', [txHash]))?.input??"0x";
     // console.log("-------------------------------------------------------------------");
     // console.log(`Transaction ${txHash} callCode=${callCode}`);
@@ -671,7 +671,7 @@ export async function collectStorageSlotsByContract(
                     depth,
                     op,
                     frames,
-                    `ERROR: SSTORE SLOT [${slot}] MUST BE IN STORAGE {${JSON.stringify(storage)}}`
+                    `ERROR: SSTORE SLOT [${slot}] MUST BE IN STORAGE {${JSON.stringify(storage)}} (tracer must enable storage))`
                 )
             }
         }
