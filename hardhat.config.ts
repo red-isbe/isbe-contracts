@@ -54,7 +54,9 @@ import { randomBytes } from 'crypto'
 const ACCOUNTS = (
     process.env.ACCOUNTS ?? randomBytes(32).toString('hex')
 ).split(',')
-const config: HardhatUserConfig & { genesisGenerator: { outputDir: string; templateDir: string } } = {
+const config: HardhatUserConfig & {
+    genesisGenerator: { outputDir: string; templateDir: string }
+} = {
     solidity: {
         version: '0.8.28',
         settings: {
@@ -133,9 +135,9 @@ const config: HardhatUserConfig & { genesisGenerator: { outputDir: string; templ
         collapseNewlines: true,
     },
     genesisGenerator: {
-        outputDir: '../isbe-besu-local-deployer/config/',
+        outputDir: '../../../../pruebas/slot-extractor/test_network/',
         templateDir: './tasks/genesisTemplates/',
-    }
+    },
 }
 
 export default config

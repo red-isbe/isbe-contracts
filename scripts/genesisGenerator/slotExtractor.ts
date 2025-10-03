@@ -590,7 +590,7 @@ export async function collectStorageSlotsByContract(
                     `ERRROR: storedOwner NOT FOUND for depth ${previousDepth}`
                 )
             }
-            const storedOp = frames.get(previousDepth)?.opcode
+            const storedOp = frames.get(previousDepth).opcode
             if (!storedOp) {
                 // Internal error, should never happen
                 errorInfo(
@@ -920,14 +920,14 @@ function errorInfo(
     message: string
 ) {
     throw new Error(`${message} \n
-    at from ${d} >> ${d2} stack length[${st.length}]: \n 
+    from ${d} >> ${d2} stack length[${st.length}]: \n 
     OPCODE: ${op} \n
     DUMP STACK----------------------------\n
     ${showStack(st)} \n
     DUMP FRAMES ---------------------------\n
     ${f.toString()} \n
     DUMP NONCES ----------------------------\n
-    ${nonces.toString()}
+    ${nonces.toString()} \n
     ---------------------------------------`)
 }
 
