@@ -78,6 +78,24 @@ bytes32 constant _DID_CONTROLLERS_STORAGE_POSITION = 0xf63f4b221a52b770150d67231
 // keccak256('isbe.contracts.did.vrelationships.storage');
 bytes32 constant _DID_VRELATIONSHIPS_STORAGE_POSITION = 0x069080572c15b1fdb02941c6065fda2799e12c178afaf7e09aba823ce980a70f;
 
+// keccak256('isbe.contracts.ens.registry.storage');
+bytes32 constant _ENS_REGISTRY_STORAGE_POSITION = 0x53b88d0c454d93bf0c49742517d0b10b89ae98101c3fe2be64ccce2e1e5565eb;
+
+// keccak256('isbe.contracts.ens.resolver.storage');
+bytes32 constant _ENS_RESOLVER_STORAGE_POSITION = 0x7eeeaab5d0be819b06a8a1fddd88d4ec954e275a771038fb9c79504b5436db40;
+
+// keccak256('isbe.contracts.ens.name.resolver.storage');
+bytes32 constant _ENS_NAME_RESOLVER_STORAGE_POSITION = 0x5eff8a500f88fba4046e3d61e7f676da1a7ca3587fd0ebc144bda1e423588f7e;
+
+// keccak256('isbe.contracts.ens.text.resolver.storage');
+bytes32 constant _ENS_TEXT_RESOLVER_STORAGE_POSITION = 0x1e672c9cd99f4330c7ff51d9660001df30edb65bd515bf0b2eda846ec4f4e7d0;
+
+// keccak256('isbe.contracts.ens.pubkey.resolver.storage');
+bytes32 constant _ENS_PUBKEY_RESOLVER_STORAGE_POSITION = 0x859e6d813267ce3ef180fdfaa2dc3a194ac15c80eefc44396e3776e8138cea88;
+
+// keccak256('isbe.contracts.ens.public.resolver.storage');
+bytes32 constant _ENS_PUBLIC_RESOLVER_STORAGE_POSITION = 0x967893912e0fbee483c21e14add1c0d9fbca3ca703ffe6488c9d498a23055aef;
+
 // keccak256('isbe.contracts.client.filtering.storage');
 bytes32 constant _CLIENT_FILTERING_STORAGE_POSITION = 0x2b5ee3d658648477f5de5bda80985048daa085b962feb1da017ffe621f5fb82e;
 

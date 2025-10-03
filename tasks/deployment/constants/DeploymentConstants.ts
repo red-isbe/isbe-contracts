@@ -69,6 +69,18 @@ export const DID_VERIFICATION_RELATIONSHIP_RESOLVER_KEY =
 export const CLIENT_FILTERING_RESOLVER_KEY =
     '0x9d459b48dcede9ec86807b1af972b62ab0b2b0237e2187da45c02c25f3aeb016'
 
+// ENS facets
+export const ENS_REGISTRY_RESOLVER_KEY =
+    '0xc0629a5fdc41a377e7fd772f766ce559d0fecbb52e72bd1b4915525935b59053'
+export const ENS_RESOLVER_RESOLVER_KEY =
+    '0x9daad5d269e40315c6ea27f7ccd5ec5e9cc50b975d6172504109b111170ce5d4'
+export const ENS_NAME_RESOLVER_RESOLVER_KEY =
+    '0xb220ec5bf774f9c3a891b2fc9f0b0bbfae8503f22056a0c835252f4a2feb5b4f'
+export const ENS_TEXT_RESOLVER_RESOLVER_KEY =
+    '0x153e8d37fcd8b283cb133570078b11503f8e93bb9437f0d6306f0e57443f9818'
+export const ENS_PUBKEY_RESOLVER_RESOLVER_KEY =
+    '0x1c46b1cdbebdf5f3d15aae4a89c2a8fca0d9eff35f1f040b17caebc1726f8260'
+
 // ================================
 // CONFIGURATION IDs - Use Case IDs
 // ================================
@@ -82,6 +94,10 @@ export const CONFIGURATION_ID_HASH_TIMESTAMP =
     '0x56209af0faa47cd136c87cbd8b739b3beb4ac51cbba6ec828e2ae8421365929e'
 export const CONFIGURATION_ID_CLIENT_FILTERING =
     '0x0000000000000000000000000000000000436C69656E7446696C746572696E67'
+export const CONFIGURATION_ID_ENS_REGISTRY =
+    '0x000000000000000000000000000000000000000000456E735265676973747279'
+export const CONFIGURATION_ID_ENS_PUBLIC_RESOLVER =
+    '0x0000000000000000000000000000000000000000456e735075626c6963526573'
 
 // ================================
 // ARTIFACT PATHS - Contract Paths
@@ -133,6 +149,17 @@ export const ARTIFACT_PATHS = {
     DID_VERIFICATION_RELATIONSHIP:
         'contracts/identity/didregistry/DidVerificationRelationshipFacet.sol',
     CLIENT_FILTERING: 'contracts/client/filtering/ClientFilteringFacet.sol',
+
+    // ENS facets
+    ENS_REGISTRY: 'contracts/identity/ens/ensregistry/EnsRegistryFacet.sol',
+    ENS_RESOLVER:
+        'contracts/identity/ens/publicresolver/ensresolver/EnsResolverFacet.sol',
+    ENS_NAME_RESOLVER:
+        'contracts/identity/ens/publicresolver/profiles/name/NameResolverFacet.sol',
+    ENS_TEXT_RESOLVER:
+        'contracts/identity/ens/publicresolver/profiles/text/TextResolverFacet.sol',
+    ENS_PUBKEY_RESOLVER:
+        'contracts/identity/ens/publicresolver/profiles/pubkey/PubkeyResolverFacet.sol',
 } as const
 
 // ================================
@@ -172,6 +199,13 @@ export const CONTRACT_NAMES = {
     DID_VERIFICATION_METHOD: 'DidVerificationMethodFacet',
     DID_VERIFICATION_RELATIONSHIP: 'DidVerificationRelationshipFacet',
     CLIENT_FILTERING: 'ClientFilteringFacet',
+
+    // ENS facets
+    ENS_REGISTRY: 'EnsRegistryFacet',
+    ENS_RESOLVER: 'EnsResolverFacet',
+    ENS_NAME_RESOLVER: 'NameResolverFacet',
+    ENS_TEXT_RESOLVER: 'TextResolverFacet',
+    ENS_PUBKEY_RESOLVER: 'PubkeyResolverFacet',
 } as const
 
 // ================================
@@ -332,6 +366,38 @@ export const BUSINESS_LOGIC_DEFINITIONS = [
         contractName: CONTRACT_NAMES.CLIENT_FILTERING,
         artifactPath: ARTIFACT_PATHS.CLIENT_FILTERING,
     },
+
+    // ENS facets
+    {
+        description: 'EnsRegistryFacet',
+        key: ENS_REGISTRY_RESOLVER_KEY,
+        contractName: CONTRACT_NAMES.ENS_REGISTRY,
+        artifactPath: ARTIFACT_PATHS.ENS_REGISTRY,
+    },
+    {
+        description: 'EnsResolverFacet',
+        key: ENS_RESOLVER_RESOLVER_KEY,
+        contractName: CONTRACT_NAMES.ENS_RESOLVER,
+        artifactPath: ARTIFACT_PATHS.ENS_RESOLVER,
+    },
+    {
+        description: 'NameResolverFacet',
+        key: ENS_NAME_RESOLVER_RESOLVER_KEY,
+        contractName: CONTRACT_NAMES.ENS_NAME_RESOLVER,
+        artifactPath: ARTIFACT_PATHS.ENS_NAME_RESOLVER,
+    },
+    {
+        description: 'TextResolverFacet',
+        key: ENS_TEXT_RESOLVER_RESOLVER_KEY,
+        contractName: CONTRACT_NAMES.ENS_TEXT_RESOLVER,
+        artifactPath: ARTIFACT_PATHS.ENS_TEXT_RESOLVER,
+    },
+    {
+        description: 'PubkeyResolverFacet',
+        key: ENS_PUBKEY_RESOLVER_RESOLVER_KEY,
+        contractName: CONTRACT_NAMES.ENS_PUBKEY_RESOLVER,
+        artifactPath: ARTIFACT_PATHS.ENS_PUBKEY_RESOLVER,
+    },
 ] as const
 
 // ================================
@@ -424,6 +490,37 @@ export const CLIENT_FILTERING_USE_CASE_CONFIG = {
     initCallData: [],
 } as UseCaseConfig
 
+// ENS Registry configuration
+export const ENS_REGISTRY_USE_CASE_CONFIG = {
+    description: 'ENS Registry UseCase',
+    configurationId: CONFIGURATION_ID_ENS_REGISTRY,
+    type: 'ens_registry',
+    businessLogicKeys: [ENS_REGISTRY_RESOLVER_KEY],
+    versions: Array(1).fill(DEFAULT_VERSION), // [0]
+    rbacs: [],
+    initPause: false,
+    initBusinessIds: [],
+    initCallData: [],
+} as UseCaseConfig
+
+// ENS Public Resolver configuration
+export const ENS_PUBLIC_RESOLVER_USE_CASE_CONFIG = {
+    description: 'ENS Public Resolver UseCase',
+    configurationId: CONFIGURATION_ID_ENS_PUBLIC_RESOLVER,
+    type: 'ens_public_resolver',
+    businessLogicKeys: [
+        ENS_RESOLVER_RESOLVER_KEY,
+        ENS_NAME_RESOLVER_RESOLVER_KEY,
+        ENS_TEXT_RESOLVER_RESOLVER_KEY,
+        ENS_PUBKEY_RESOLVER_RESOLVER_KEY,
+    ],
+    versions: Array(4).fill(DEFAULT_VERSION), // [0, 0, 0, 0]
+    rbacs: [],
+    initPause: false,
+    initBusinessIds: [],
+    initCallData: [],
+} as UseCaseConfig
+
 // ================================
 // DEFAULT CONFIGURATIONS - Default Configurations
 // ================================
@@ -433,6 +530,8 @@ export const DEFAULT_USE_CASE_CONFIGURATIONS = [
     ERC721_USE_CASE_CONFIG,
     HASH_TIMESTAMP_USE_CASE_CONFIG,
     CLIENT_FILTERING_USE_CASE_CONFIG,
+    ENS_REGISTRY_USE_CASE_CONFIG,
+    ENS_PUBLIC_RESOLVER_USE_CASE_CONFIG,
 ] as const
 
 // ================================

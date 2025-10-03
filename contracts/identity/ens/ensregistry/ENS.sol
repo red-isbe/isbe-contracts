@@ -10,33 +10,43 @@ pragma solidity ^0.8.28;
  */
 interface ENS {
     /**
-     * @notice Emitted when ownership of a subnode is assigned to a new owner
-     * @param node The parent node hash under which the subnode is created
-     * @param label The keccak256 hash of the subnode label being assigned
-     * @param owner The address receiving ownership of the new subnode
+     *  @notice Event emitted when the contract is initiated.
+     *  @param ownerRootNode The address of the root node belonging to the contract's owner.
      */
-    event NewOwner(bytes32 indexed node, bytes32 indexed label, address owner);
+    event EnsRegistryInitialised(address ownerRootNode);
+
+    /**
+     *  @notice Emitted when ownership of a sub-node is assigned to a new owner
+     *  @param node The parent node hash under which the sub-node is created
+     *  @param label The keccak256 hash of the sub-node label being assigned
+     *  @param newOwner The address receiving ownership of the new sub-node
+     */
+    event NewOwner(
+        bytes32 indexed node,
+        bytes32 indexed label,
+        address indexed newOwner
+    );
 
     /**
      * @notice Emitted when node ownership is transferred to a new account
      * @param node The node hash being transferred to new ownership
      * @param owner The address receiving ownership of the node
      */
-    event Transfer(bytes32 indexed node, address owner);
+    event Transfer(bytes32 indexed node, address indexed owner);
 
     /**
      * @notice Emitted when the resolver contract for a node is updated
      * @param node The node hash receiving the new resolver assignment
      * @param resolver The address of the new resolver contract
      */
-    event NewResolver(bytes32 indexed node, address resolver);
+    event NewResolver(bytes32 indexed node, address indexed resolver);
 
     /**
      * @notice Emitted when the time-to-live value for a node is modified
      * @param node The node hash receiving the new TTL value
      * @param ttl The new time-to-live value in seconds for caching purposes
      */
-    event NewTTL(bytes32 indexed node, uint64 ttl);
+    event NewTTL(bytes32 indexed node, uint64 indexed ttl);
 
     /**
      * @notice Emitted when operator approval status changes for an owner
@@ -47,8 +57,31 @@ interface ENS {
     event ApprovalForAll(
         address indexed owner,
         address indexed operator,
-        bool approved
+        bool indexed approved
     );
+
+    /***
+     * @notice Raised when an unauthorised address attempts to modify a node
+     * @dev Triggered when the caller lacks ownership or operator permissions for the node
+     * @param node The node hash that the caller attempted to modify
+     * @param caller The address that made the unauthorised attempt
+     */
+    error NotAuthorised(bytes32 node, address caller);
+
+    /**
+     * @notice Raised when a caller lacks the required ENS administrative role for the operation
+     * @dev Triggered when an address attempts to execute administrative ENS functions without
+     *       possessing either ENS_ROLE or ENS_MANAGER_ROLE permissions. This error ensures
+     *       proper access control for critical ENS registry management operations
+     * @param sender The address that attempted the unauthorised administrative operation
+     */
+    error CallerLacksENSAdministrativeRole(address sender);
+
+    /**
+     * @notice Initialises the ENS registry with a specified owner root node.
+     * @param _ownerRootNode The address of the owner's root node in the ENS registry.
+     */
+    function initialiseEnsRegistry(address _ownerRootNode) external;
 
     /**
      * @notice Sets complete record information for a node in a single transaction
@@ -64,7 +97,6 @@ interface ENS {
         address resolver,
         uint64 ttl
     ) external;
-
     /**
      * @notice Creates a subnode with complete record information
      * @dev Combines subnode creation with record setting for efficiency
@@ -97,62 +129,62 @@ interface ENS {
     ) external returns (bytes32 subnodeHash);
 
     /**
-     * @notice Updates the resolver contract address for a node
-     * @dev Requires caller to be the node owner or approved operator
-     * @param node The node hash to update with a new resolver
-     * @param resolver The address of the new resolver contract
+     *  @notice Updates the resolver contract address for a node.
+     *  @dev Requires caller to be the node owner or approved operator.
+     *  @param node The node hash to update with a new resolver.
+     *  @param resolver The address of the new resolver contract.
      */
     function setResolver(bytes32 node, address resolver) external;
 
     /**
-     * @notice Transfers ownership of a node to a new address
-     * @dev Requires caller to be the current node owner or approved operator
-     * @param node The node hash to transfer to new ownership
-     * @param owner The address to receive ownership of the node
+     *  @notice Transfers ownership of a node to a new address.
+     *  @dev Requires caller to be the current node owner or approved operator.
+     *  @param node The node hash to transfer to new ownership.
+     *  @param owner The address to receive ownership of the node.
      */
     function setOwner(bytes32 node, address owner) external;
 
     /**
-     * @notice Updates the time-to-live value for a node
-     * @dev Affects caching behaviour for resolvers and clients
-     * @param node The node hash to update with a new TTL value
-     * @param ttl The new time-to-live value in seconds
+     *  @notice Updates the time-to-live value for a node.
+     *  @dev Affects caching behaviour for resolvers and clients.
+     *  @param node The node hash to update with a new TTL value.
+     *  @param ttl The new time-to-live value in seconds.
      */
     function setTTL(bytes32 node, uint64 ttl) external;
 
     /**
-     * @notice Grants or revokes operator permissions for all caller's nodes
-     * @dev Allows operators to manage nodes on behalf of the owner
-     * @param operator The address to grant or revoke operator permissions
-     * @param approved Boolean indicating whether to grant or revoke permissions
+     *  @notice Grants or revokes operator permissions for all caller's nodes.
+     *  @dev Allows operators to manage nodes on behalf of the owner.
+     *  @param operator The address to grant or revoke operator permissions.
+     *  @param approved Boolean indicating whether to grant or revoke permissions.
      */
     function setApprovalForAll(address operator, bool approved) external;
 
     /**
      * @notice Retrieves the current owner address of a node
      * @dev Returns the address with management rights for the specified node
-     * @param node The node hash to query for ownership information
-     * @return ownerAddress The address that owns the specified node
+     * @param _node The node hash to query for ownership information
+     * @return ownerAddress_ The address that owns the specified node
      */
-    function owner(bytes32 node) external view returns (address ownerAddress);
+    function owner(bytes32 _node) external view returns (address ownerAddress_);
 
     /**
      * @notice Retrieves the resolver contract address for a node
      * @dev Returns the contract responsible for resolving queries for this node
-     * @param node The node hash to query for resolver information
-     * @return resolverAddress The address of the node's resolver contract
+     * @param _node The node hash to query for resolver information
+     * @return resolverAddress_ The address of the node's resolver contract
      */
     function resolver(
-        bytes32 node
-    ) external view returns (address resolverAddress);
+        bytes32 _node
+    ) external view returns (address resolverAddress_);
 
     /**
      * @notice Retrieves the time-to-live value for a node
      * @dev Returns the caching duration in seconds for the specified node
-     * @param node The node hash to query for TTL information
-     * @return ttlValue The time-to-live value in seconds
+     * @param _node The node hash to query for TTL information
+     * @return ttlValue_ The time-to-live value for a node
      */
-    function ttl(bytes32 node) external view returns (uint64 ttlValue);
+    function ttl(bytes32 _node) external view returns (uint64 ttlValue_);
 
     /**
      * @notice Checks whether a record exists for the specified node
