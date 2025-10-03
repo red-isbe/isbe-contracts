@@ -1,0 +1,13 @@
+services:
+  besu:
+    build: .
+    image: local/besu-qbft-genesis:latest
+    container_name: besu-qbft
+    ports:
+      - "8545:8545"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8545"]
+      interval: 5s
+      timeout: 2s
+      retries: 10

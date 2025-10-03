@@ -1,50 +1,47 @@
-import { HardhatUserConfig, task } from 'hardhat/config'
+import { task } from 'hardhat/config'
 import {
     buildGenesisWithAlloc,
     GenesisAlloc,
-    getFacetsValidate,
     matchContractNames,
     retrieveSlotStructure,
+    validateGenesis,
 } from '../scripts/genesisGenerator'
-import { LOUPE_ABI } from '../scripts/genesisGenerator/genesisValidator'
+import { HttpNetworkConfig, NetworkConfig } from 'hardhat/types'
 
+async function sleep(ms: number):Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
-const CONFIG_ID =
-    '0x0000000000000000000000000000000000000000000000000000000000000001'
+async function jsonRpcCall(
+  urlStr: string
+): Promise<boolean> {
+    const payload = JSON.stringify({
+        jsonrpc: "2.0",
+        id:0,
+        "method": "eth_blockNumber",
+        params:[],
+    })
 
-const PAUSE_ROLE =
-    '0x8c911f4537972e7549dbbd37a96b929a4b480f4fb156fc6344524bdf2ca50aa1'
+    try {
+        const response = await fetch(urlStr, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: payload
+        });
 
-const CUSTOM_BUSINESS_LOGIC_CODE_PATH =
-    './artifacts/contracts/hashtimestamp/HashTimestampFacet.sol/HashTimestampFacet.json'
-
-const CUSTOM_BUSINESS_LOGIC_ID =
-    '0xf4e751bf7e74c25f287942d8743e3d0fdfb08f29556e786178a50e2d69dc403a'
-
-const DEFAULT_BUSINESS_LOGICS_CODE_PATHS = [
-    './artifacts/contracts/proxies/isbeproxy/facets/IsbeCutFacet.sol/IsbeCutFacet.json',
-    './artifacts/contracts/proxies/isbeproxy/facets/IsbeLoupeFacet.sol/IsbeLoupeFacet.json',
-    './artifacts/contracts/access/accessControl/AccessControlFacet.sol/AccessControlFacet.json',
-    './artifacts/contracts/pause/ISBEPauseFacet.sol/ISBEPauseFacet.json',
-]
-
-const DEFAULT_BUSINESS_LOGICS_IDS = [
-    '0x3e325d62f8652528edf5d41ed730a283b473d9e55ee9b6631b261b52199eac25',
-    '0x360faa2d547f0a951a5b1da060a4ffb56888bf8ad05db9de4d6d09b3eae1e5e2',
-    '0xa4de16c45770db08a06a2cdfeb0229e16d2ff660f7f1bf74c3dc07212770c70c',
-    '0x7fabf0f3ed655fa26f86c82ae5da60e0ade03a5d35a9ff2985709278942966d3',
-]
-
-const USE_CASE_ROLES = [
-    '0x0000000000000000000000000000000000000000000000000000000000000000',
-    '0x8c911f4537972e7549dbbd37a96b929a4b480f4fb156fc6344524bdf2ca50aa1',
-    '0xe02d3eaf0b5fb24a2d637286804770bf2618aa6d3b40cbf443b93f6cd1aac239',
-]
-
-const DUMB_ROLE =
-    '0xfd7c9c0377a2a6c4d8b9979f202e292dafbdfc5571e38d678a0f17ba082ac055'
-const DUMB_ROLE_2 =
-    '0x17cb3e1f7aabf16b3fd269c288ae0a59540f78cdbba8f4f7fa08cd952b850fca'
+        const { data, errors } = await response.json();
+        if (response.ok) {
+            return true;
+        }else{
+            return false;
+        }
+    } catch (error: Error | any) {
+        console.error(error?.message);
+        return false;
+    }       
+}
 
 
 task(
@@ -99,43 +96,45 @@ task(
     'genesis:validate',
     'Validate genesis by extracting storage slots from deployment transactions in Hardhat network'
 ).addOptionalParam(
-    "proxyaddress",                  
+    "gobernanceaddress",                  
     "Gobernance Address",  
-    "0x2279b7a0a67db372996a5fab50d91eaa73d2ebe6"         
-  ).setAction(async (taskArgs, hre) => {
+    "0x2279b7a0a67db372996a5fab50d91eaa73d2ebe6"
+).setAction(async (taskArgs, hre) => {
     console.info("---------------------------------------------------------------------")
     console.info("🚀    ISBE Genesis validation started...")
     console.info("---------------------------------------------------------------------")
     
-    const provider = hre.ethers.provider;
-    const proxyaddress:string = taskArgs.proxyaddress;
-    console.log(`📄 Using address: ${proxyaddress}`);
-   
-    const contract = new hre.ethers.Contract(proxyaddress, LOUPE_ABI, provider);
-    const selector = contract.interface.getFunction("facets")?.selector
+    const gobernanceaddress = taskArgs.gobernanceaddress;
+    console.log(`📄 Using Gobernance Proxy Address: ${gobernanceaddress}`);
+    if(!gobernanceaddress || !/^0x[a-fA-F0-9]{40}$/.test(gobernanceaddress)) {
+        console.error("Invalid Gobernance Proxy Address");
+        return;
+    }
+    console.log(`Current network: ${hre.network.name}`);
+    const networkConfig:HttpNetworkConfig = hre.config.networks[hre.network.name] as HttpNetworkConfig;
+    if(!networkConfig) {
+        console.error(`Network ${hre.network.name} not found in hardhat config`);
+        return;
+    }
+    let url:string = networkConfig.url;
+    if ( !url) {
+        console.error(`Network ${hre.network.name} is missing url, chainId or accounts in hardhat config`);
+        return;
+    }
+    console.log(`Using network url: ${url}`);
 
-    console.log("Selector facets():", selector); // 0x7a0ed627
-    console.log('Diamond facets:')
-    // const facets = await contract.facets();
-    const facets = await provider.send("eth_call", [{
-        to: proxyaddress, 
-        data: selector 
-    },"latest"]);
-    console.log(facets);
+    while(!(await jsonRpcCall(url))) {
+        process.stdout.write(`Waiting for network ${hre.network.name} to be available... \r`)
+        await sleep(5000);
+    }
+    console.log(`Waiting for network ${hre.network.name} to be available [OK]           `);
 
-    // for (let i = 0; i < resultGovernanceFacets.facets.length; i++) {
-    //     console.log('  Facet :', resultGovernanceFacets.facets[i].facetAddress)
-    //     for (
-    //         let j = 0;
-    //         j < resultGovernanceFacets.facets[i].functionSelectors.length;
-    //         j++
-    //     ) {
-    //         console.log(
-    //             '     Selector : ',
-    //             resultGovernanceFacets.facets[i].functionSelectors[j]
-    //         )
-    //     }
-    // }
+    await validateGenesis(hre, url,gobernanceaddress);
+    
+    console.log(
+        '✅ Genesis validation (Done).----------------------------------------------------------'
+    );
+
 
     
 });

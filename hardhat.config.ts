@@ -104,12 +104,12 @@ const config: HardhatUserConfig & {
             gas: 100000000,
             blockGasLimit: 18800000,
         },
-        besu_local: {
+        genesis_validation_network: {
             url: 'http://127.0.0.1:8545',
             accounts: ACCOUNTS,
             gasPrice: 0,
-            gas: 100000000,
-            blockGasLimit: 18800000,
+            gas: 0,
+            blockGasLimit: 0, // Does not generate new blocks
         },
     },
     mocha: {
@@ -135,7 +135,7 @@ const config: HardhatUserConfig & {
         collapseNewlines: true,
     },
     genesisGenerator: {
-        outputDir: '../../../../pruebas/slot-extractor/test_network/',
+        outputDir: './infra_test/',
         templateDir: './tasks/genesisTemplates/',
     },
 }
