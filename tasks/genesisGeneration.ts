@@ -81,7 +81,7 @@ task(
     console.log(
         '✅ Slot structure retrieved.----------------------------------------------------------'
     )
-     await buildGenesisWithAlloc(genesisTemplateFile, slotStructure, outputFile);
+    await buildGenesisWithAlloc(genesisTemplateFile, slotStructure, outputFile);
     
 
     console.log(

@@ -16,18 +16,18 @@ type JSONGenesis = any;
  * - balance / nonce / code / contractName are overwritten if provided
  * - storage is merged by key (new values overwrite existing ones)
  */
-function mergeAlloc(allocBase: JSONGenesis = {}, allocAdditions: GenesisAlloc = {}): JSONGenesis {
+function mergeAlloc(allocBase: JSONGenesis = {}, allocAdditions: GenesisAlloc): JSONGenesis {
   console.log("Merging alloc additions into base genesis alloc...");
   console.log(`  Base alloc entries: ${Object.keys(allocBase).length}`);
-  console.log(`  Addition alloc entries: ${Object.keys(allocAdditions).length}`);
+  console.log(`  Addition alloc entries: ${allocAdditions.size}`);
 
   // Merge existing entries
 
-  for (const [addr, entry] of Object.entries(allocAdditions)) {
-    if(allocBase[addr] === undefined) {
-        allocBase[addr] = entry;
-    }else {
-        throw new Error(`Address ${addr} already exists in base genesis alloc.`);
+    for (const [addr, entry] of allocAdditions.entries()) {
+    if (allocBase[addr] === undefined) {
+      allocBase[addr] = entry;
+    } else {
+      throw new Error(`Address ${addr} already exists in base genesis alloc.`);
     }
   }
 

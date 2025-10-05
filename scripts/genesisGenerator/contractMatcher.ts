@@ -64,26 +64,28 @@ async function buildExactBytecodeIndex(hre: HardhatRuntimeEnvironment) {
  * @returns The same `alloc` object, with `contractName` filled when a match is found
  */
 export async function matchContractNames(
-    hre: HardhatRuntimeEnvironment,
-    alloc: GenesisAlloc
+  hre: HardhatRuntimeEnvironment,
+  alloc: GenesisAlloc // Map<string, GenesisAllocEntry>
 ): Promise<GenesisAlloc> {
-    const exactIndex = await buildExactBytecodeIndex(hre)
+  const exactIndex = await buildExactBytecodeIndex(hre);
 
-    for (const [addr, entry] of Object.entries(alloc)) {
-        if (!entry?.code) continue
+  for (const [addr, entry] of alloc.entries()) {
+    if (!entry?.code) continue;
 
-        const code = normHex(entry.code)
-        const match = exactIndex.get(code)
-        if (match) {
-            entry.contractName = match
-            alloc[addr] = entry
-        } else {
-            console.warn(
-                `⚠️  Warning: No exact bytecode match found for contract at address ${addr}`
-            )
-            entry.contractName = '<unknown>'
-        }
+    const code = normHex(entry.code);
+    const match = exactIndex.get(code);
+
+    if (match) {
+      entry.contractName = match;
+      alloc.set(addr, entry);
+    } else {
+      console.warn(
+        `⚠️  Warning: No exact bytecode match found for contract at address ${addr}`
+      );
+      entry.contractName = "<unknown>";
+      alloc.set(addr, entry);
     }
+  }
 
-    return alloc
+  return alloc;
 }

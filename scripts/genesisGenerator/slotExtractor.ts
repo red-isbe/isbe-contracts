@@ -19,7 +19,7 @@ export type GenesisAllocEntry = {
     storage: Record<string, string>
 }
 
-export type GenesisAlloc = GenesisAllocEntry[]
+export type GenesisAlloc = Map<string, GenesisAllocEntry>;
 
 type Hex = string
 
@@ -754,47 +754,53 @@ export async function collectStorageSlotsByContract(
  * const alloc = {};
  * await appendSlotStructure(hre, "0xabc...", alloc, { defaultBalance: "0x1", fetchCodeIfMissing: true });
  */
-async function appendSlotStructure(
-    hre: HardhatRuntimeEnvironment,
-    txHash: string,
-    alloc: GenesisAlloc
+export async function appendSlotStructure(
+  hre: HardhatRuntimeEnvironment,
+  txHash: string,
+  alloc: GenesisAlloc
 ): Promise<GenesisAlloc> {
-    // 1) Discover (contracts) affected by the transaction
-    const newData: Map<
-        string,
-        Set<string>
-    > = await collectStorageSlotsByContract(hre, txHash)
 
-    // 2)  Merge with previous alloc
-    for (const [contractName, slots] of newData.entries()) {
-        // Buscar la entrada existente por nombre
-        let entry = alloc.find((e) => e.contractName === contractName)
+  // 1) Descubrir (address -> Set<slot>) afectados por la tx
+  const newData: Map<string, Set<string>> =
+    await collectStorageSlotsByContract(hre, txHash);
 
-        // Contract does not exist, create a new entry and asing bytecode
-        const bytecode: string = await hre.ethers.provider.getCode(contractName)
-        if (!entry) {
-            entry = {
-                contractName,
-                balance: '0x0',
-                nonce: '0x0',
-                code: bytecode, // Bytecode
-                storage: {},
-            }
-            alloc.push(entry)
-        }
+  if (newData.size === 0) return alloc;
 
-        // if it is empty do not process it
-        if (slots.size === 0) continue
+  const provider = hre.ethers.provider;
 
-        // Insert slot with "0x0" value if it does not exist
-        for (const slot of slots) {
-            if (!(slot in entry.storage)) {
-                entry.storage[slot] = '0x0'
-            }
-        }
+  // 2) Procesar cada contrato afectado
+  for (const [rawAddress, slots] of newData.entries()) {
+    const address = rawAddress.toLowerCase();
+    console.log(`Contract ${address} has ${slots.size} slots modified`);
+
+    // Obtener o crear la entrada en alloc (Map)
+    let entry = alloc.get(address);
+    if (!entry) {
+        console.log(`New contract found ${address} with ${slots.size} slots modified, creating default entry`);
+        const storage:Record<string, string> = {};
+        slots.forEach((slot) => {
+            if (!(slot in storage)) storage[slot] = "0x0";
+            //console.log(`   New slot found ${slot}: initializing to 0x0`);
+        });
+        entry = {
+            contractName: "NONAME",    
+            balance: "0",
+            nonce: "0",
+            code: await provider.getCode(address) ?? "ERROR NO CODE",
+            storage,
+        };
+        alloc.set(address, entry);
+    }else{
+        //console.log(`Contract ${address} with ${slots.size} slots modified already in alloc`);
+        const storage = entry.storage ?? {};
+         slots.forEach((slot) => {
+            if (!(slot in storage)) storage[slot] = "0x0";
+            //console.log(`   New slot found ${slot}: initializing to 0x0`);
+        });  
     }
-
-    return alloc
+  }
+  // Map + Set ya garantizan unicidad por (address, slot)
+  return alloc;
 }
 
 /**
@@ -831,7 +837,6 @@ async function retrieveTransactions(hre: HardhatRuntimeEnvironment) {
     for (let i = 0; i <= blockNumber; i++) {
         const block: Block | null = await hre.ethers.provider.getBlock(i)
         if (!block) throw new Error(`Block ${i} not found`)
-
         transactions.push(...block.transactions)
         console.log(
             `Block ${i} processed, ${block.transactions.length} transactions found.`
@@ -846,8 +851,8 @@ async function retrieveSlotValues(
 ): Promise<GenesisAlloc> {
     const provider = hre.ethers.provider
 
-    for (const entry of alloc) {
-        const address = entry.contractName?.toLowerCase()
+    for (const [contractAddress, entry] of alloc) {
+        const address = contractAddress?.toLowerCase()
         if (!address) continue
 
         const slots = Object.keys(entry.storage)
@@ -866,7 +871,9 @@ async function retrieveSlotValues(
                         const valueHex = await provider.getStorage(address, pos)
                         entry.storage[slot] = valueHex ?? '0x0'
                     } catch {
-                        // si falla la lectura, conserva el valor actual
+                        throw new Error(
+                            `Failed to fetch storage for ${address} slot ${slot}`
+                        )
                     }
                 })
             )
@@ -887,10 +894,11 @@ export async function retrieveSlotStructure(
     hre: HardhatRuntimeEnvironment
 ): Promise<GenesisAlloc> {
     const transactions: Array<string> = await retrieveTransactions(hre)
-    let alloc: GenesisAlloc = []
+    let alloc: GenesisAlloc = new Map<string, GenesisAllocEntry>();
     for (const txHash of transactions) {
         console.log(`\n🔍 Analyzing transaction ${txHash} ...`)
         alloc = await appendSlotStructure(hre, txHash, alloc)
+        console.log("Current alloc size: " + alloc.size + " contracts\n");
     }
 
     alloc = await retrieveSlotValues(hre, alloc)
