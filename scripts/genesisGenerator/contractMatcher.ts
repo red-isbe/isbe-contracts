@@ -89,3 +89,10 @@ export async function matchContractNames(
 
   return alloc;
 }
+
+export async function singleContractMatcher(address: string, hre: HardhatRuntimeEnvironment): Promise<string> {
+  const exactIndex = await buildExactBytecodeIndex(hre);
+  const deployedCode = await hre.ethers.provider.getCode(address);
+  const match = exactIndex.get(deployedCode);
+  return match ? match : "<unknown>";
+}

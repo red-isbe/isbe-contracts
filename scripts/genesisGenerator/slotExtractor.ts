@@ -851,7 +851,7 @@ async function retrieveSlotValues(
 ): Promise<GenesisAlloc> {
     const provider = hre.ethers.provider
 
-    for (const [contractAddress, entry] of alloc) {
+    for (const [contractAddress, entry] of alloc) {                                                                    
         const address = contractAddress?.toLowerCase()
         if (!address) continue
 
