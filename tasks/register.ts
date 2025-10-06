@@ -76,3 +76,9 @@ import './validation/validateAccounts'
 import './verification/verifyBesuDeployment'
 import './verification/deploymentStatus'
 import './verification/governanceRoles'
+
+// Client filtering
+import './client/registerFilter'
+import './client/getFiltersLength'
+import './client/getFiltersByPage'
+import './client/isFilterRegistered'
