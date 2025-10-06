@@ -1,0 +1,14 @@
+@startuml
+title Flujo 1 · Cambiar metadata (setData protegido por 734)
+
+actor Operator as Op
+participant "Key Manager\n(ERC-734)" as KM
+participant "Identity / Metadata\n(ERC-725)" as ID
+
+Op -> KM : Solicita ejecutar setData(key,value)\n(con sus claves)
+KM -> KM : Verifica propósito/peso/umbral\n(p.ej., MANAGEMENT_KEY ≥ threshold)
+KM -> ID : setData(key, value)
+ID --> KM : ok
+KM --> Op : Éxito
+ID -> ID : Emitir evento DataChanged(key, value)
+@enduml

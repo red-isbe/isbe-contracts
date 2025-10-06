@@ -32,7 +32,7 @@ A transfer in an ERC‑3643 token goes through the following validation flow:
 
 This mechanism ensures **compliance-by-design**, preventing unauthorized transactions at the protocol level.
 
-![](./diagrams/ERC-3643/erc3643_transfer_flow.png)
+![](./diagrams/erc3643_transfer_flow.png)
 
 ---
 
@@ -90,7 +90,7 @@ Each layer plays a specific role:
 - **Identity Registry** verifies that wallets meet eligibility requirements based on claims.
 - **Storage** and **registries** keep modular and upgradeable control of all mappings.
 
-![](./diagrams/ERC-3643/erc3643_core_architecture.png)
+![](./diagrams/erc3643_core_architecture.png)
 
 ---
 
@@ -138,7 +138,7 @@ Governance is enforced through a combination of:
 
 Each contract (token, compliance, registry) enforces role validation independently. Agents can be revoked without contract redeployment, enabling secure delegation.
 
-![](./diagrams/ERC-3643/erc3643_governance_model.png)
+![](./diagrams/erc3643_governance_model.png)
 
 # 3. ERC‑3643 Reference Implementation
 
@@ -159,7 +159,7 @@ Key characteristics:
 - Uses CREATE2 for deterministic addresses
 - Preconfigured to support cross-chain deployment and interoperability
 
-![](./diagrams/ERC-3643/erc3643_reference_architecture.png)
+![](./diagrams/erc3643_reference_architecture.png)
 
 ---
 
@@ -182,7 +182,7 @@ The reference implementation includes:
 - Deterministic identity addresses using `CREATE2`
 - Optional ONCHAINID assignment to the token itself for metadata (e.g., ISIN, prospectus)
 
-![](./diagrams/ERC-3643/onchainid_reference_architecture.png)
+![](./diagrams/onchainid_reference_architecture.png)
 
 ---
 
@@ -242,13 +242,13 @@ There are typically two main authorities:
 - Issuer-level isolation for governance or upgrades
 - Option to transfer or lock the authority post-deployment
 
-![](./diagrams/ERC-3643/erc3643_implementation_authority.png)
+![](./diagrams/erc3643_implementation_authority.png)
 
 _Figure: ERC‑3643 Implementation Authority structure_
 
 &nbsp;
 
-![](./diagrams/ERC-3643/onchainid_implementation_authority.png)
+![](./diagrams/onchainid_implementation_authority.png)
 
 _Figure: ONCHAINID Implementation Authority structure_
 
