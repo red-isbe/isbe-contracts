@@ -47,9 +47,20 @@ export async function validateGenesis(hre:HardhatRuntimeEnvironment, url:string,
     // Detalle
     console.log("\n📋 SELECTOR DETAIL:");
     for (const [i, f] of facets.entries()) {
-    console.log(`\n${i + 1}. Facet: ${f.facetAddress} (${f.facetName})`);
-    console.log("   * Selectors:");
-    for (const s of f.selectors) console.log(`      ${s}`);
+        console.log(`\n${i + 1}. Facet: ${f.facetAddress} (${f.facetName})`);
+        console.log("   * Selectors:");
+        for (const s of f.selectors){
+            console.log(`          ${s}`);
+        }
     }
+
+    console.log(`\n\n--- Calling pause() function ---------------------------------------`);
+    const artifactPausable = await import('../../artifacts/contracts/pause/ISBEPauseFacet.sol/ISBEPauseFacet.json');
+    const pausableContract = new hre.ethers.Contract(businessAddress, artifactPausable.abi, provider);
+    const paused = await pausableContract.paused();
+    console.log(`Current paused state: ${paused}`);
+
+    
+
 
 }
