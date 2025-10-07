@@ -3,7 +3,7 @@
 # 1. Resumen ejecutivo
 
 ## 1.1 Objetivo y alcance
-- **Objetivo:** describir el **patrón de identidad on-chain** basado en **ERC-725 (identidad/metadata)**, **ERC-734 (gestión de claves)** y **ERC-735 (claims)**.
+- **Objetivo:** describir el **patrón de identidad smart contract** basado en **ERC-725 (identidad/metadata)**, **ERC-734 (gestión de claves)** y **ERC-735 (claims)**.
 - **Alcance:** qué estandariza cada ERC, cómo se **combinan**, **modelo de datos** (claves y claims), **operaciones** básicas y consideraciones de **privacidad/seguridad**.
 - **Fuera de alcance:** comparativa con **DID/VC** (DOC-003) e integración con **ERC-3643** (DOC-004).
 
@@ -24,25 +24,15 @@
 ## 2.1 Componentes y límites
 
 ```mermaid
-graph LR
-    subgraph Identidad[Identidad 725]
-        MetadataStore[Metadata Store]
-        IdentityContract[Identity Contract]
+graph TB
+    subgraph "Identidad On-Chain"
+        ID725["ERC-725<br/>(Identity + Metadata<br/>getData/setData)"]
+        KM734["ERC-734<br/>(Key Manager<br/>keys, purposes, weights, thresholds)"]
+        CL735["ERC-735<br/>(Claims Registry<br/>add/remove/get/verify)"]
     end
-    
-    subgraph Control[Control 734]
-        KeyManagement[Key Management]
-        AccessControl[Access Control]
-    end
-    
-    subgraph Claims[Claims 735]
-        ClaimRegistry[Claim Registry]
-        Verification[Verification]
-    end
-    
-    IdentityContract --> KeyManagement[autoriza]
-    KeyManagement --> MetadataStore[controla escritura]
-    ClaimRegistry --> Verification[valida firma]
+
+    KM734 -->|"Autoriza<br/>setData / gobierno"| ID725
+    KM734 -->|"Autoriza<br/>operaciones sensibles"| CL735
 ```
 
 | ERC | Es | Hace | NO hace |
@@ -51,36 +41,38 @@ graph LR
 | 734 | Control de acceso | Multifirma y rotación | No guarda metadata/claims |
 | 735 | Claims verificables | Afirmaciones firmadas | No define trust policy |
 
-## 2.2 Fronteras y flujos
+## 2.2 Flujos principales
 
-### Fronteras
-- **On-chain:** toda escritura pasa por 734 (≥ umbral)
-- **Trust:** verificación externa de claims
-- **Datos:** PII siempre off-chain
-
-### Flujos principales
 ```mermaid
 sequenceDiagram
-    participant C as Cliente
-    participant I as Identity(725)
-    participant K as KeyMgmt(734)
-    participant CL as Claims(735)
+    actor Op as Operator
+    actor Is as Issuer
+    actor Vf as Verifier
+    participant KM as ERC-734<br/>Key Manager
+    participant ID as ERC-725<br/>Identity
+    participant CL as ERC-735<br/>Claims
 
-    %% Metadata
     rect rgb(200, 220, 240)
-        Note over C,I: Metadata
-        C->>K: addKey(mgmtKey)
-        K->>I: setData(key,value)
-        I-->>C: DataChanged
+        Note over Op,ID: A) Cambio de metadata protegido
+        Op->>KM: Solicitar setData(nsKey, value)<br/>(purpose=MANAGEMENT, weight ≥ threshold)
+        KM->>ID: setData(nsKey, value)
+        ID-->>KM: ok (emit DataChanged)
+        KM-->>Op: confirmado
     end
 
-    %% Claims
     rect rgb(220, 240, 200)
-        Note over C,CL: Claims
-        C->>CL: addClaim(...)
-        CL->>K: checkAuth()
-        CL->>CL: verifySig()
-        CL-->>C: ClaimAdded
+        Note over Is,CL: B) Alta de claim firmado
+        Is->>CL: addClaim(topic, issuer=Is, signature, data, uri)
+        CL->>CL: verificar firma (issuer == ecrecover(payload))
+        CL-->>Is: ok (emit ClaimAdded)
+    end
+
+    rect rgb(240, 220, 200)
+        Note over Vf,CL: C) Verificación por tercero
+        Vf->>CL: getClaim(topic, issuer=Is)
+        CL-->>Vf: {topic, issuer, signature, data, uri}
+        Vf->>Vf: validar firma y estado (vigencia/revocación)<br/>+ aplicar política (allowlist/temas)
+        Vf-->>Vf: decisión (accept / reject)
     end
 ```
 
@@ -144,23 +136,6 @@ bytes32 payload = keccak256(abi.encodePacked(
 ));
 ```
 
-### Operaciones principales
-```solidity
-interface IERC735 {
-    function addClaim(
-        bytes32 _topic,
-        uint256 _scheme,
-        address _issuer,
-        bytes calldata _signature,
-        bytes calldata _data,
-        string calldata _uri
-    ) external returns (bytes32 claimRequestId);
-    
-    function removeClaim(bytes32 _claimId) 
-        external returns (bool success);
-}
-```
-
 ### Validación claims
 ```solidity
 function validateClaim(Claim memory c) internal view returns (bool) {
@@ -219,7 +194,11 @@ event ClaimRevoked(
 
 ### Pasos
 1. Deploy contrato identity
-2. Configurar claves iniciales:
+2. Configurar claves iniciales
+3. Establecer umbrales
+4. Inicializar metadata
+
+### Implementación
 ```solidity
 function setupIdentity(address[] calldata controllers) external {
     require(msg.sender == address(this), "Only identity");
@@ -238,16 +217,48 @@ function setupIdentity(address[] calldata controllers) external {
 }
 ```
 
+### Flujo detallado
+```mermaid
+sequenceDiagram
+    actor A as Admin
+    participant ID as ERC-725<br/>Identity
+    participant KM as ERC-734<br/>KeyMgr
+
+    rect rgb(200, 220, 240)
+        Note over A,KM: Despliegue e inicialización
+        A->>ID: deploy / instantiate()
+        A->>KM: bindTo(ID)
+    end
+
+    rect rgb(220, 240, 200)
+        Note over A,KM: Altas de claves
+        A->>KM: addKey(kMgmt, MANAGEMENT, ... , weight)
+        KM-->>A: KeyAdded
+        A->>KM: addKey(kOps, ACTION, ... , weight)
+        KM-->>A: KeyAdded
+        A->>KM: addKey(kClaim, CLAIM_SIGNER, ... , weight)
+        KM-->>A: KeyAdded
+    end
+
+    rect rgb(240, 220, 200)
+        Note over A,KM: Umbrales y metadata
+        A->>KM: setThreshold(MANAGEMENT, 2)
+        KM-->>A: ThresholdChanged
+        A->>KM: setThreshold(ACTION, 1)
+        KM-->>A: ThresholdChanged
+    end
+```
+
 ## 4.2 Rotación claves
 
-### Pasos seguros
+### Pasos
 1. Añadir nueva clave
 2. Verificar umbral alcanzado
 3. Retirar clave antigua
 4. Actualizar metadata
 
+### Implementación
 ```solidity
-// Ejemplo rotación
 function rotateKey(bytes32 oldKey, bytes32 newKey, uint256 purpose) external {
     require(keyHasPurpose(msg.sender, MANAGEMENT_KEY), "Not authorized");
     
@@ -262,9 +273,47 @@ function rotateKey(bytes32 oldKey, bytes32 newKey, uint256 purpose) external {
 }
 ```
 
+### Flujo detallado
+```mermaid
+sequenceDiagram
+    actor A as Admin
+    participant KM as ERC-734<br/>KeyMgr
+
+    rect rgb(200, 220, 240)
+        Note over A,KM: Rotación normal (control mantenido)
+        A->>KM: addKey(kNew, PURPOSES..., weight)
+        KM-->>A: KeyAdded
+        A->>KM: (opcional) ajustar thresholds
+        KM-->>A: ThresholdChanged
+        A->>KM: removeKey(kOld, PURPOSES...)
+        KM-->>A: KeyRemoved
+    end
+
+    rect rgb(220, 240, 200)
+        Note over A,KM: Recuperación (clave comprometida/perdida)
+        alt Multifirma disponible (≥ threshold)
+            A->>KM: removeKey(kCompromised)
+            KM-->>A: KeyRemoved
+            A->>KM: addKey(kRecovery, MANAGEMENT, weight)
+            KM-->>A: KeyAdded
+        else Procedimiento de emergencia (gobernanza)
+            A->>KM: addKey(kEmerg, MANAGEMENT, highWeight)
+            KM-->>A: KeyAdded
+            A->>KM: removeKey(kCompromised)
+            KM-->>A: KeyRemoved
+        end
+    end
+```
+
 ## 4.3 Gestión claims
 
-### Emisión
+### Pasos emisor
+1. Preparar datos (sin PII)
+2. Generar payload canónico
+3. Firmar payload
+4. Emitir claim
+
+### Implementación emisión
 ```solidity
 function issueClaim(
     address subject,
@@ -288,7 +337,13 @@ function issueClaim(
 }
 ```
 
-### Verificación
+### Pasos verificador
+1. Obtener claim
+2. Validar firma
+3. Verificar estado
+4. Aplicar política
+
+### Implementación verificación
 ```solidity
 function verifyClaim(bytes32 claimId) external view returns (bool) {
     Claim memory c = getClaim(claimId);
@@ -301,9 +356,44 @@ function verifyClaim(bytes32 claimId) external view returns (bool) {
 }
 ```
 
+### Flujo detallado
+```mermaid
+sequenceDiagram
+    actor Is as Issuer
+    actor Vf as Verifier
+    participant CL as ERC-735<br/>Claims
+    participant ID as ERC-725<br/>Identity (subject)
+
+    rect rgb(200, 220, 240)
+        Note over Is,CL: Emisión
+        Is->>Is: build data (hash/flags)<br/>+ (opcional) uri
+        Is->>Is: payload = keccak256(topic, subject=ID, keccak256(data))
+        Is->>Is: signature = sign(issuerPrivKey, payload)
+        Is->>CL: addClaim(topic, issuer=Is, signature, data, uri)
+        CL->>CL: ecrecover(signature, payload) == issuer ?
+        CL-->>Is: ClaimAdded(topic, issuer, claimId)
+    end
+
+    rect rgb(220, 240, 200)
+        Note over Vf,CL: Verificación
+        Vf->>CL: getClaim(topic, issuer=Is)
+        CL-->>Vf: {topic, issuer, signature, data, uri}
+        Vf->>Vf: recompute payload + verify signature
+        Vf->>Vf: check state (revoked == false,<br/>validFrom/validTo)
+        Vf->>Vf: apply policy (issuer allowlist,<br/>topics requeridos, grace period)
+        Vf-->>Vf: decision (accept / reject)
+    end
+```
+
 ## 4.4 Revocación
 
-### Soft delete (recomendado)
+### Pasos
+1. Verificar autorización
+2. Actualizar estado
+3. Emitir evento
+4. Propagar cambio
+
+### Implementación
 ```solidity
 function revokeClaim(bytes32 claimId) external {
     require(msg.sender == getClaim(claimId).issuer, "Not issuer");
@@ -311,6 +401,41 @@ function revokeClaim(bytes32 claimId) external {
     claimStatus[claimId].revoked = true;
     emit ClaimRevoked(claimId, msg.sender, block.timestamp);
 }
+```
+
+### Flujo detallado
+```mermaid
+sequenceDiagram
+    actor Is as Issuer
+    participant CL as ERC-735<br/>Claims
+    actor Vf as Verifier
+
+    rect rgb(200, 220, 240)
+        Note over Is,CL: Revocación
+        Is->>CL: revokeClaim(claimId)
+        CL-->>Is: ClaimRevoked(claimId, issuer, ts)
+    end
+
+    rect rgb(220, 240, 200)
+        Note over Is,CL: Actualización de tiempos/estado
+        alt Tiempos firmados en `data`
+            Is->>Is: preparar nuevo data (validFrom/validTo)
+            Is->>Is: nuevo payload + firma
+            Is->>CL: addClaim(topic, issuer, signature, data, uri)
+            CL-->>Is: ClaimAdded(newClaimId)
+        else Estado mutable en tabla
+            Is->>CL: updateState(claimId, flags/fechas)
+            CL-->>Is: StateUpdated(claimId)
+        end
+    end
+
+    rect rgb(240, 220, 200)
+        Note over Vf,CL: Consumo tras cambios
+        Vf->>CL: getClaim / checkRevoked / vigencia
+        CL-->>Vf: estado actual (no revocado / vigente?)
+        Vf->>Vf: aplicar política (allowlist, topic, tolerancias)
+        Vf-->>Vf: decisión
+    end
 ```
 
 # 5. Roles y reglas
