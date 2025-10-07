@@ -24,25 +24,36 @@
 ## 2.1 Componentes y límites
 
 ```mermaid
-graph LR
-    subgraph DID
-        Document
-        VerificationMethods[Verification Methods]
+graph TB
+    subgraph "Identidad Distribuida"
+        subgraph DID[DID Document]
+            direction TB
+            Doc[Document]
+            VM[Verification Methods<br/>authentication, assertion, etc]
+            Svc[Services<br/>endpoints, status, etc]
+            Doc --> VM
+            Doc --> Svc
+        end
+        
+        subgraph VCs[Verifiable Credentials]
+            direction TB
+            Cred[Credentials<br/>claims firmados]
+            St[Status Registry<br/>revocación/vigencia]
+            Cred --> St
+        end
+        
+        subgraph Infrastructure[Infraestructura]
+            direction TB
+            Res[DID Resolver<br/>document lookup]
+            StatusCheck[Status Checker<br/>verificación estado]
+            Res --> Doc
+            StatusCheck --> St
+        end
     end
-    
-    subgraph VC
-        Credentials
-        Status
-    end
-    
-    subgraph Services
-        Resolver
-        StatusRegistry[Status Registry]
-    end
-    
-    Document --> VerificationMethods[declara]
-    Credentials --> Status[referencia]
-    Resolver --> Document[resuelve]
+
+    classDef default fill:#f9f9f9,stroke:#333,stroke-width:2px;
+    classDef highlight fill:#e1f3d8,stroke:#333,stroke-width:2px;
+    class Cred,VM highlight
 ```
 
 [Tabla de componentes se mantiene igual...]
