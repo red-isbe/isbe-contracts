@@ -25,36 +25,7 @@
 
 ## 2.1 Componentes y límites
 
-```plantuml
-@startuml
-title Relación ERC-725 · ERC-734 · ERC-735 (vista de componentes)
-
-skinparam linetype ortho
-skinparam shadowing false
-skinparam defaultTextAlignment center
-skinparam ArrowFontSize 12
-skinparam rectangle {
-  BackgroundColor white
-  BorderColor black
-  RoundCorner 10
-}
-
-package "Identidad On-Chain" {
-  rectangle ID725 as "ERC-725\n(Identity + Metadata\ngetData/setData)"
-  rectangle KM734 as "ERC-734\n(Key Manager\nkeys, purposes, weights, thresholds)"
-  rectangle CL735 as "ERC-735\n(Claims Registry\nadd/remove/get/verify)"
-}
-
-' Autorización interna
-KM734 -down-> ID725 : Autoriza\nsetData / gobierno
-KM734 -down-> CL735 : Autoriza\noperaciones sensibles
-
-' Flujo de lectura
-ID725 -[hidden]-> CL735
-CL735 -[hidden]-> ID725
-
-@enduml
-```
+![](./diagrams/identidad_onchain_componentes_relacion_erc725_erc734_erc735.png)
 
 | ERC | ¿Qué es? | Para qué sirve | Qué **no** hace |
 |---|---|---|---|
@@ -81,38 +52,7 @@ CL735 -[hidden]-> ID725
 
 ## 2.3 Diagrama de alto nivel (secuencia única)
 
-```plantuml
-@startuml
-title Secuencia: metadata protegida, alta de claim y verificación
-autonumber
-actor Operator as Op
-actor Issuer as Is
-actor Verifier as Vf
-participant "ERC-734\nKey Manager" as KM
-participant "ERC-725\nIdentity" as ID
-participant "ERC-735\nClaims" as CL
-
-group (A) Cambio de metadata protegido
-  Op -> KM : Solicitar setData(nsKey, value)\n(purpose=MANAGEMENT, weight ≥ threshold)
-  KM -> ID : setData(nsKey, value)
-  ID --> KM : ok (emit DataChanged)
-  KM --> Op : confirmado
-end
-
-group (B) Alta de claim firmado
-  Is -> CL : addClaim(topic, issuer=Is, signature, data, uri)
-  CL -> CL : verificar firma (issuer == ecrecover(payload))
-  CL --> Is : ok (emit ClaimAdded)
-end
-
-group (C) Verificación por tercero
-  Vf -> CL : getClaim(topic, issuer=Is)
-  CL --> Vf : {topic, issuer, signature, data, uri}
-  Vf -> Vf : validar firma y estado (vigencia/revocación)\n+ aplicar política (allowlist/temas)
-  Vf --> Vf : decisión (accept / reject)
-end
-@enduml
-```
+![](./diagrams/identidad_onchain_secuencia_alto_nivel_erc725_erc734_erc735.png)
 
 # 3. Modelo de datos
 
@@ -370,39 +310,7 @@ function isClaimActive(Claim memory c) public view returns (bool) {
 - Umbral de gobierno = 1 en contexto regulado
 - PII en `setData` (irreversible)
 
-```plantuml
-@startuml
-title 5.1 Alta/configuración de identidad y claves
-autonumber
-actor Admin as A
-participant "ERC-725\nIdentity" as ID
-participant "ERC-734\nKeyMgr" as KM
-
-== Despliegue e inicialización ==
-A -> ID : deploy / instantiate()
-A -> KM : bindTo(ID)
-
-== Altas de claves ==
-A -> KM : addKey(kMgmt, MANAGEMENT, ... , weight)
-KM --> A : KeyAdded
-A -> KM : addKey(kOps, ACTION, ... , weight)
-KM --> A : KeyAdded
-A -> KM : addKey(kClaim, CLAIM_SIGNER, ... , weight)
-KM --> A : KeyAdded
-
-== Umbrales ==
-A -> KM : setThreshold(MANAGEMENT, 2)
-KM --> A : ThresholdChanged
-A -> KM : setThreshold(ACTION, 1)
-KM --> A : ThresholdChanged
-
-== Metadata no PII ==
-A -> KM : authorize setData(ns("policy.uri"), uri)
-KM -> ID : setData(key, value)
-ID --> KM : DataChanged
-KM --> A : ok
-@enduml
-```
+![](./diagrams/identidad_onchain_playbook_alta_configuracion_identidad_y_claves.png)
 
 ## 4.2 Rotación/recuperación de claves
 
@@ -431,37 +339,7 @@ KM --> A : ok
 - Quitar primero la vieja → perder **umbral** temporalmente
 - No actualizar **inventario**/catálogo de claves (auditoría)
 
-```plantuml
-@startuml
-title 5.2 Rotación/recuperación de claves
-autonumber
-actor Admin as A
-participant "ERC-734\nKeyMgr" as KM
-
-group Rotación normal (control mantenido)
-  A -> KM : addKey(kNew, PURPOSES..., weight)
-  KM --> A : KeyAdded
-  A -> KM : (opcional) ajustar thresholds
-  KM --> A : ThresholdChanged
-  A -> KM : removeKey(kOld, PURPOSES...)
-  KM --> A : KeyRemoved
-end
-
-group Recuperación (clave comprometida/perdida)
-  alt Multifirma disponible (≥ threshold)
-    A -> KM : removeKey(kCompromised)
-    KM --> A : KeyRemoved
-    A -> KM : addKey(kRecovery, MANAGEMENT, weight)
-    KM --> A : KeyAdded
-  else Procedimiento de emergencia (gobernanza)
-    A -> KM : addKey(kEmerg, MANAGEMENT, highWeight)
-    KM --> A : KeyAdded
-    A -> KM : removeKey(kCompromised)
-    KM --> A : KeyRemoved
-  end
-end
-@enduml
-```
+![](./diagrams/identidad_onchain_playbook_rotacion_recuperacion_claves.png)
 
 ## 4.3 Alta y verificación de claims
 
@@ -497,32 +375,7 @@ end
 - Confiar solo en uri sin integridad
 - No incluir subject en el payload (riesgo de replay)
 
-```plantuml
-@startuml
-title 5.3 Alta y verificación de claims
-autonumber
-actor Issuer as Is
-actor Verifier as Vf
-participant "ERC-735\nClaims" as CL
-participant "ERC-725\nIdentity (subject)" as ID
-
-== Emisión ==
-Is -> Is : build data (hash/flags)\n+ (opcional) uri
-Is -> Is : payload = keccak256(topic, subject=ID, keccak256(data))
-Is -> Is : signature = sign(issuerPrivKey, payload)
-Is -> CL : addClaim(topic, issuer=Is, signature, data, uri)
-CL -> CL : ecrecover(signature, payload) == issuer ?
-CL --> Is : ClaimAdded(topic, issuer, claimId)
-
-== Verificación ==
-Vf -> CL : getClaim(topic, issuer=Is)
-CL --> Vf : {topic, issuer, signature, data, uri}
-Vf -> Vf : recompute payload + verify signature
-Vf -> Vf : check state (revoked == false,\nvalidFrom/validTo)
-Vf -> Vf : apply policy (issuer allowlist,\ntopics requeridos, grace period)
-Vf --> Vf : decision (accept / reject)
-@enduml
-```
+![](./diagrams/identidad_onchain_playbook_alta_y_verificacion_de_claims.png)
 
 ## 4.4 Revocación/actualización de claims
 
@@ -553,38 +406,8 @@ Vf --> Vf : decision (accept / reject)
 - Mantener expiraciones largas sin revisiones operativas
 - Depender solo de expiración sin canal de revocación
 
-```plantuml
-@startuml
-title 5.4 Revocación/actualización de claims
-autonumber
-actor Issuer as Is
-participant "ERC-735\nClaims" as CL
-actor Verifier as Vf
+![](./diagrams/identidad_onchain_playbook_revocacion_actualizacion_de_claims.png)
 
-group Revocación
-  Is -> CL : revokeClaim(claimId)
-  CL --> Is : ClaimRevoked(claimId, issuer, ts)
-end
-
-group Actualización de tiempos/estado
-  alt Tiempos firmados en `data`
-    Is -> Is : preparar nuevo data (validFrom/validTo)
-    Is -> Is : nuevo payload + firma
-    Is -> CL : addClaim(topic, issuer, signature, data, uri)
-    CL --> Is : ClaimAdded(newClaimId)
-  else Estado mutable en tabla
-    Is -> CL : updateState(claimId, flags/fechas)  <<si está soportado>>
-    CL --> Is : StateUpdated(claimId)
-  end
-end
-
-== Consumo tras cambios ==
-Vf -> CL : getClaim / checkRevoked / vigencia
-CL --> Vf : estado actual (no revocado / vigente?)
-Vf -> Vf : aplicar política (allowlist, topic, tolerancias)
-Vf --> Vf : decisión
-@enduml
-```
 # 5. Roles (mínimo necesario)
 
 ## 5.1 Roles

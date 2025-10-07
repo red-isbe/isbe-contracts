@@ -1,0 +1,30 @@
+@startuml
+title Secuencia: metadata protegida, alta de claim y verificación
+autonumber
+actor Operator as Op
+actor Issuer as Is
+actor Verifier as Vf
+participant "ERC-734\nKey Manager" as KM
+participant "ERC-725\nIdentity" as ID
+participant "ERC-735\nClaims" as CL
+
+group (A) Cambio de metadata protegido
+  Op -> KM : Solicitar setData(nsKey, value)\n(purpose=MANAGEMENT, weight ≥ threshold)
+  KM -> ID : setData(nsKey, value)
+  ID --> KM : ok (emit DataChanged)
+  KM --> Op : confirmado
+end
+
+group (B) Alta de claim firmado
+  Is -> CL : addClaim(topic, issuer=Is, signature, data, uri)
+  CL -> CL : verificar firma (issuer == ecrecover(payload))
+  CL --> Is : ok (emit ClaimAdded)
+end
+
+group (C) Verificación por tercero
+  Vf -> CL : getClaim(topic, issuer=Is)
+  CL --> Vf : {topic, issuer, signature, data, uri}
+  Vf -> Vf : validar firma y estado (vigencia/revocación)\n+ aplicar política (allowlist/temas)
+  Vf --> Vf : decisión (accept / reject)
+end
+@enduml

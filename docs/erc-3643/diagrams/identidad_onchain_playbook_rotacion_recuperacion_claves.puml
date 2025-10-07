@@ -1,0 +1,29 @@
+@startuml
+title 5.2 Rotación/recuperación de claves
+autonumber
+actor Admin as A
+participant "ERC-734\nKeyMgr" as KM
+
+group Rotación normal (control mantenido)
+  A -> KM : addKey(kNew, PURPOSES..., weight)
+  KM --> A : KeyAdded
+  A -> KM : (opcional) ajustar thresholds
+  KM --> A : ThresholdChanged
+  A -> KM : removeKey(kOld, PURPOSES...)
+  KM --> A : KeyRemoved
+end
+
+group Recuperación (clave comprometida/perdida)
+  alt Multifirma disponible (≥ threshold)
+    A -> KM : removeKey(kCompromised)
+    KM --> A : KeyRemoved
+    A -> KM : addKey(kRecovery, MANAGEMENT, weight)
+    KM --> A : KeyAdded
+  else Procedimiento de emergencia (gobernanza)
+    A -> KM : addKey(kEmerg, MANAGEMENT, highWeight)
+    KM --> A : KeyAdded
+    A -> KM : removeKey(kCompromised)
+    KM --> A : KeyRemoved
+  end
+end
+@enduml

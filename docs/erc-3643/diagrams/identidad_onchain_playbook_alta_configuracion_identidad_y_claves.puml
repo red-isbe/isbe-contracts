@@ -1,0 +1,31 @@
+@startuml
+title 5.1 Alta/configuración de identidad y claves
+autonumber
+actor Admin as A
+participant "ERC-725\nIdentity" as ID
+participant "ERC-734\nKeyMgr" as KM
+
+== Despliegue e inicialización ==
+A -> ID : deploy / instantiate()
+A -> KM : bindTo(ID)
+
+== Altas de claves ==
+A -> KM : addKey(kMgmt, MANAGEMENT, ... , weight)
+KM --> A : KeyAdded
+A -> KM : addKey(kOps, ACTION, ... , weight)
+KM --> A : KeyAdded
+A -> KM : addKey(kClaim, CLAIM_SIGNER, ... , weight)
+KM --> A : KeyAdded
+
+== Umbrales ==
+A -> KM : setThreshold(MANAGEMENT, 2)
+KM --> A : ThresholdChanged
+A -> KM : setThreshold(ACTION, 1)
+KM --> A : ThresholdChanged
+
+== Metadata no PII ==
+A -> KM : authorize setData(ns("policy.uri"), uri)
+KM -> ID : setData(key, value)
+ID --> KM : DataChanged
+KM --> A : ok
+@enduml
