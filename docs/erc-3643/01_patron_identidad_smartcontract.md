@@ -1,4 +1,4 @@
-# DOC-001 · Patrón de identidad on-chain (ERC-725/734/735)
+# DOC-001 · Patrón de identidad Smart Contract (ERC-725/734/735)
 
 # 1. Resumen ejecutivo
 

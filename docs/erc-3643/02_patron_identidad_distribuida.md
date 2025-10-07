@@ -22,3 +22,5 @@ Operaciones (playbooks)
 Roles (mínimo necesario)
 5.1 Roles (Issuer, Holder, Verifier, Controller/Resolver)
 5.2 Reglas prácticas (separación de claves, política de aceptación, manejo de status)
+
+# DOC-002 · Patrón de identidad distribuida (DID/VC)
