@@ -31,7 +31,6 @@
 - [security](security.md)
 - [tokens](tokens.md)
 - [tokens/erc20](tokens/erc20.md)
-- [tokens/erc20/extensions](tokens/erc20/extensions.md)
 - [tokens/erc20/extensions/burn](tokens/erc20/extensions/burn.md)
 - [tokens/erc20/extensions/cap](tokens/erc20/extensions/cap.md)
 - [tokens/erc20/extensions/controller](tokens/erc20/extensions/controller.md)

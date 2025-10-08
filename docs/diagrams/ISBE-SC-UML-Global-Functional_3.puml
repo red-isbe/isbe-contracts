@@ -48,7 +48,6 @@ package "ERC20 and ERC3643" {
     class ERC20 <<(A,#228B22) abstract contract>> #FFB6C1
     class ERC20Facet <<(C,#1E90FF) contract>> #FFB6C1
     class ERC20Internal <<(A,#228B22) abstract contract>> #FFB6C1
-    class ERC20InternalCommon <<(A,#228B22) abstract contract>> #FFB6C1
 
     class ERC20Burnable <<(A,#228B22) abstract contract>> #FFB6C1
     class ERC20BurnableFacet <<(C,#1E90FF) contract>> #FFB6C1
@@ -68,8 +67,7 @@ package "ERC20 and ERC3643" {
     IERC20Isbe --|> IERC20
     IERC20Isbe --|> IERC20Metadata
     
-    ERC20InternalCommon --|> ERC20SnapshotInternal
-    ERC20InternalCommon --|> ERC20CappedInternal
+  
     ERC20Internal --|> Common
     ERC20Facet --|> ERC20
 
@@ -87,9 +85,6 @@ package "ERC20 and ERC3643" {
     ERC20SnapshotFacet --|> ERC20Snapshot
     ERC20SnapshotInternal --|> ERC20Internal
 
-
-    class ERC3643InternalCommon <<(A,#228B22) abstract contract>> #E6E6FA
-
      ' --- Control ---
     class IERC3643Control <<(I,#FFD700) interface>> #E6E6FA
     class ERC3643Control <<(A,#228B22) abstract contract>> #E6E6FA
@@ -106,8 +101,7 @@ package "ERC20 and ERC3643" {
 
     ERC3643MetadataFacet --|> ERC3643Metadata 
     ERC3643Metadata --|> IERC3643Metadata   
-    ERC3643InternalCommon --|> ERC3643MetadataInternal 
-    ERC3643MetadataInternal --|> ERC20InternalCommon 
+    ERC3643MetadataInternal --|> Common 
 
 
     ' --- Freeze ---
@@ -118,8 +112,7 @@ package "ERC20 and ERC3643" {
 
     ERC3643FreezeFacet --|> ERC3643Freeze
     ERC3643Freeze --|> IERC3643Freeze  
-    ERC3643InternalCommon --|> ERC3643FreezeInternal
-    ERC3643FreezeInternal --|> ERC20InternalCommon 
+    ERC3643FreezeInternal --|> Common 
     
     ' --- Regulatory Infrastructure ---
     class IERC3643Regulatory <<(I,#FFD700) interface>> #E6E6FA
@@ -129,15 +122,22 @@ package "ERC20 and ERC3643" {
     
     ERC3643RegulatoryFacet --|> ERC3643Regulatory
     ERC3643Regulatory --|> IERC3643Regulatory   
-    ERC3643InternalCommon --|> ERC3643RegulatoryInternal
     ERC3643RegulatoryInternal --|> Common
 
     
 
     ' --- ERC203643 Internal Common ---
     class ERC203643InternalCommon <<(A,#228B22) abstract contract>> #FFFF99
-    ERC203643InternalCommon --|> ERC3643InternalCommon
-    ERC203643InternalCommon --|> ERC20InternalCommon
+    ERC203643InternalCommon --|> ERC20SnapshotInternal
+    ERC203643InternalCommon --|> ERC20CappedInternal
+
+    ERC203643InternalCommon --|> ERC3643RegulatoryInternal
+    ERC203643InternalCommon --|> ERC3643FreezeInternal
+    ERC203643InternalCommon --|> ERC3643MetadataInternal 
+
+
+
+
     
     ERC3643Control --|> ERC203643InternalCommon
     ERC3643Metadata --|> ERC203643InternalCommon
