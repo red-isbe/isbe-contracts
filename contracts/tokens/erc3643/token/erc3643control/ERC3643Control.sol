@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {ERC3643InternalCommon} from '../ERC3643InternalCommon.sol';
+import {ERC203643InternalCommon} from '../../../ERC203643InternalCommon.sol';
 import {IERC3643Control} from './IERC3643Control.sol';
 import {_TOKEN_AGENT_ROLE} from '../../../../constants/roles.sol';
 
@@ -15,7 +15,7 @@ import {IERC3643Freeze} from '../erc3643freeze/IERC3643Freeze.sol';
  * @dev Provides public methods to manage balances under regulatory rules.
  *      Applies access control, validation, and emits events.
  */
-abstract contract ERC3643Control is IERC3643Control, ERC3643InternalCommon {
+abstract contract ERC3643Control is IERC3643Control, ERC203643InternalCommon {
     /**
      * @notice Forces a token transfer from `_from` to `_to`.
      * @dev Restricted to token agent.

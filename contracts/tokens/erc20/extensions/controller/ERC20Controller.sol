@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {ERC20InternalCommon} from '../ERC20InternalCommon.sol';
+import {ERC203643InternalCommon} from '../../../ERC203643InternalCommon.sol';
 import {IERC20Controller} from './IERC20Controller.sol';
 import {_CONTROLLER_ROLE} from '../../../../constants/roles.sol';
 
 /// @title ERC20Controller
 /// @notice Implements force mechanism
-/// @dev Inherits from IERC20Controller and ERC20InternalCommon
-abstract contract ERC20Controller is IERC20Controller, ERC20InternalCommon {
+/// @dev Inherits from IERC20Controller and ERC203643InternalCommon
+abstract contract ERC20Controller is IERC20Controller, ERC203643InternalCommon {
     function forceTransfer(
         address _from,
         address _to,

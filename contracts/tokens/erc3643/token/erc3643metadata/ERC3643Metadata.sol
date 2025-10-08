@@ -2,7 +2,7 @@
 pragma solidity ^0.8.28;
 
 import {_ERC3643_METADATA_RESOLVER_KEY} from '../../../../constants/resolverKeys.sol';
-import {ERC3643InternalCommon} from '../ERC3643InternalCommon.sol';
+import {ERC203643InternalCommon} from '../../../ERC203643InternalCommon.sol';
 import {IERC3643Metadata} from './IERC3643Metadata.sol';
 import {_TOKEN_OWNER_ROLE} from '../../../../constants/roles.sol';
 
@@ -12,7 +12,7 @@ import {_TOKEN_OWNER_ROLE} from '../../../../constants/roles.sol';
  * @dev Provides public methods to update and retrieve token metadata such as name, symbol,
  *      onchain identity, and version. Applies access control, validation, and emits events.
  */
-abstract contract ERC3643Metadata is IERC3643Metadata, ERC3643InternalCommon {
+abstract contract ERC3643Metadata is IERC3643Metadata, ERC203643InternalCommon {
     /**
      * @dev Disables further initializations for this facet using its resolver key.
      */

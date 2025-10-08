@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {ERC20InternalCommon} from './extensions/ERC20InternalCommon.sol';
+import {ERC203643InternalCommon} from '../ERC203643InternalCommon.sol';
 import {IERC20Isbe} from './IERC20Isbe.sol';
 import {_ERC20_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
@@ -15,7 +15,7 @@ import {IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IER
  *      OpenZeppelin interfaces. It includes additional helper functions such as `increaseAllowance` and
  *      `decreaseAllowance` for more granular control over token allowances.
  */
-abstract contract ERC20 is IERC20Isbe, ERC20InternalCommon {
+abstract contract ERC20 is IERC20Isbe, ERC203643InternalCommon {
     /// @notice Constructor that assigns the deployer as the default admin
     constructor() {
         _disableInitializers(_ERC20_RESOLVER_KEY);

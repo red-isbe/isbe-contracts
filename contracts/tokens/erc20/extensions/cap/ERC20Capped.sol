@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {ERC20InternalCommon} from '../ERC20InternalCommon.sol';
+import {ERC203643InternalCommon} from '../../../ERC203643InternalCommon.sol';
 import {_ERC20_CAPPED_RESOLVER_KEY} from '../../../../constants/resolverKeys.sol';
 import {IERC20Capped} from './IERC20Capped.sol';
 import {_CAP_ROLE, _MINTER_ROLE} from '../../../../constants/roles.sol';
 
 /// @title ERC20Capped
 /// @notice Implements capped mechanism
-/// @dev Inherits from IERC20Capped and ERC20InternalCommon
-abstract contract ERC20Capped is IERC20Capped, ERC20InternalCommon {
+/// @dev Inherits from IERC20Capped and ERC203643InternalCommon
+abstract contract ERC20Capped is IERC20Capped, ERC203643InternalCommon {
     constructor() {
         _disableInitializers(_ERC20_CAPPED_RESOLVER_KEY);
     }
