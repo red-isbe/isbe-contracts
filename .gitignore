@@ -150,3 +150,6 @@ ignition/deployments/chain-31337
 /test/**/*.js
 /.idea/
 /gas-report.txt
+
+# ignores generated genesis. It can be regenerated
+infra_test/qbftConfigFile.json
