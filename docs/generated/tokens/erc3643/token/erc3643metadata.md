@@ -228,6 +228,21 @@ Setting the address to zero indicates that no onchain identity is currently boun
 | -------------- | ------- | ------------------------------------------- |
 | \_newOnchainID | address | The new onchain identity address to assign. |
 
+### \_setVersion
+
+```solidity
+function _setVersion(string _newVersion) internal
+```
+
+_Internal function to update the version string in storage.
+The version should follow semantic versioning (e.g., "3.0.0")._
+
+#### Parameters
+
+| Name         | Type   | Description                       |
+| ------------ | ------ | --------------------------------- |
+| \_newVersion | string | The new version string to assign. |
+
 ### \_onchainID
 
 ```solidity

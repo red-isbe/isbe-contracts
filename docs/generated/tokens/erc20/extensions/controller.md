@@ -2,7 +2,7 @@
 
 Implements force mechanism
 
-_Inherits from IERC20Controller and ERC20InternalCommon_
+_Inherits from IERC20Controller and ERC203643InternalCommon_
 
 ### forceTransfer
 

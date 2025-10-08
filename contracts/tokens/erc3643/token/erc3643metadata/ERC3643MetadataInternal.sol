@@ -28,9 +28,8 @@ abstract contract ERC3643MetadataInternal is ERC20InternalCommon {
         address _newOnchainID,
         string memory _newVersion
     ) internal {
-        ERC3643MetadataStorage storage $ = _erc3643MetadataStorage();
-        $.onchainid = _newOnchainID;
-        $.version = _newVersion;
+        _setVersion(_newVersion);
+        _setOnchainID(_newOnchainID);
     }
 
     /**
@@ -41,6 +40,16 @@ abstract contract ERC3643MetadataInternal is ERC20InternalCommon {
     function _setOnchainID(address _newOnchainID) internal {
         ERC3643MetadataStorage storage $ = _erc3643MetadataStorage();
         $.onchainid = _newOnchainID;
+    }
+
+    /**
+     * @dev Internal function to update the version string in storage.
+     * The version should follow semantic versioning (e.g., "3.0.0").
+     * @param _newVersion The new version string to assign.
+     */
+    function _setVersion(string memory _newVersion) internal {
+        ERC3643MetadataStorage storage $ = _erc3643MetadataStorage();
+        $.version = _newVersion;
     }
 
     /**

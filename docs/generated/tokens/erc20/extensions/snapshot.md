@@ -2,7 +2,7 @@
 
 Implements snapshot mechanism
 
-_Inherits from IERC20Snapshot and ERC20InternalCommon_
+_Inherits from IERC20Snapshot and ERC203643InternalCommon_
 
 ### snapshot
 

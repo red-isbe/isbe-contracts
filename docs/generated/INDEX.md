@@ -29,6 +29,7 @@
 - [proxies/transparent](proxies/transparent.md)
 - [proxies/utils](proxies/utils.md)
 - [security](security.md)
+- [tokens](tokens.md)
 - [tokens/erc20](tokens/erc20.md)
 - [tokens/erc20/extensions](tokens/erc20/extensions.md)
 - [tokens/erc20/extensions/burn](tokens/erc20/extensions/burn.md)

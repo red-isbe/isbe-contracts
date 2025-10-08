@@ -4,7 +4,6 @@ pragma solidity ^0.8.28;
 import {ERC20InternalCommon} from './erc20/extensions/ERC20InternalCommon.sol';
 import {ERC3643InternalCommon} from './erc3643/token/ERC3643InternalCommon.sol';
 
-
 /// @title ERC3643InternalCommon
 /// @notice Aggregates all ERC-3643 internal modules into a unified internal base.
 

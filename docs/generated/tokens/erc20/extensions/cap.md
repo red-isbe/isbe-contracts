@@ -2,7 +2,7 @@
 
 Implements capped mechanism
 
-_Inherits from IERC20Capped and ERC20InternalCommon_
+_Inherits from IERC20Capped and ERC203643InternalCommon_
 
 ### constructor
 
