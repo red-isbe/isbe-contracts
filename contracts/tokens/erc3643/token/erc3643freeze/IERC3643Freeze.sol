@@ -39,6 +39,13 @@ interface IERC3643Freeze {
      */
     event TokensUnfrozen(address indexed _userAddress, uint256 _amount);
 
+    /// @notice Error indicating that an attempt was made to unfreeze more tokens than are frozen
+    /// @param account The address attempting to unfreeze tokens
+    /// @param requested The amount requested to unfreeze
+    /// @param available The amount actually frozen
+    error UnfreezeAmountExceedsFrozen(address account, uint256 requested, uint256 available);
+
+
     /**
      *  @dev sets an address frozen status for this token.
      *  @param _userAddress The address for which to update frozen status

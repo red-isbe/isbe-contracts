@@ -9,8 +9,8 @@ import {ERC20CappedInternal} from './erc20/extensions/cap/ERC20CappedInternal.so
 import {ERC20SnapshotInternal} from './erc20/extensions/snapshot/ERC20SnapshotInternal.sol';
 import {ERC20Internal} from './erc20/ERC20Internal.sol';
 
-/// @title ERC3643InternalCommon
-/// @notice Aggregates all ERC-3643 internal modules into a unified internal base.
+/// @title ERC203643InternalCommon
+/// @notice Aggregates the internal functions of ERC20, ERC3643
 
 // solhint-disable-next-line no-empty-blocks
 abstract contract ERC203643InternalCommon is
