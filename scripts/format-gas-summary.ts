@@ -2,7 +2,6 @@
 
 import { readFileSync, writeFileSync } from 'fs'
 import { join } from 'path'
-const NETWORK_BLOCK_GAS_LIMIT = 20_000_000
 
 // Formats the gas usage summary Markdown file for better readability.
 function formatGasSummary(): void {
@@ -25,6 +24,7 @@ function improveFormatting(content: string): string {
 
     let out = `# ⛽ Gas Usage Report\n\n`
     out += `> Generated on ${ts}\n\n`
+    let blockGasLimit: number = 30_000_000
 
     // Extract configuration from the header line
     const cfg = lines.find((l) => l.includes('Solc version')) || ''
@@ -33,6 +33,7 @@ function improveFormatting(content: string): string {
         const opt = cfg.match(/Optimizer enabled: (\w+)/)?.[1] || ''
         const runs = cfg.match(/Runs: (\d+)/)?.[1] || ''
         const limit = cfg.match(/Block limit: (\d+)/)?.[1] || ''
+        blockGasLimit = Number(limit)
 
         out += `## Configuration\n\n`
         out += `| Setting | Value |\n|---|---|\n`
@@ -42,7 +43,7 @@ function improveFormatting(content: string): string {
         if (runs)
             out += `| Optimizer Runs | ${Number(runs).toLocaleString()} |\n`
         if (limit)
-            out += `| Block Gas Limit | ${Number(limit).toLocaleString()} |\n`
+            out += `| Block Gas Limit | ${blockGasLimit.toLocaleString()} |\n`
         out += `\n`
     }
 
@@ -78,12 +79,12 @@ function improveFormatting(content: string): string {
         if (line.includes('·') && !line.includes('·---')) {
             const clean = line.replace(/[│|]/g, '').trim()
             if (inMethods) {
-                const row = formatMethodRow(clean)
+                const row = formatMethodRow(clean, blockGasLimit)
                 if (row) methodRows.push(row)
                 continue
             }
             if (inDeploys) {
-                const row = formatDeployRow(clean)
+                const row = formatDeployRow(clean, blockGasLimit)
                 if (row) deployRows.push(row)
             }
         }
@@ -168,8 +169,11 @@ function abbreviateMethodName(method: string): string {
     return replaceAll(result, 'uint', 'u')
 }
 
-function calculateGasPercentage(gasUsed: number): string {
-    return ((gasUsed * 100) / NETWORK_BLOCK_GAS_LIMIT).toString().concat('%')
+function calculateGasPercentage(
+    gasUsed: number,
+    blockGasLimit: number
+): string {
+    return ((gasUsed * 100) / blockGasLimit).toString().concat('%')
 }
 
 function replaceAll(
@@ -180,7 +184,10 @@ function replaceAll(
     return init.split(searchValue).join(replaceValue)
 }
 
-function formatMethodRow(line: string): MethodRow | null {
+function formatMethodRow(
+    line: string,
+    blockGasLimit: number
+): MethodRow | null {
     const MINIMUM_PARTS_COUNT = 6
     const CONTRACT_INDEX = 0
     const METHOD_INDEX = 1
@@ -201,7 +208,9 @@ function formatMethodRow(line: string): MethodRow | null {
     const min = parseInt(parts[MIN_INDEX]) || 0
     const max = parseInt(parts[MAX_INDEX]) || 0
     const avg = parseInt(parts[AVG_INDEX]) || 0
-    const bar: string = renderProgressBar(calculateGasPercentage(avg))
+    const bar: string = renderProgressBar(
+        calculateGasPercentage(avg, blockGasLimit)
+    )
     const calls = parseInt(parts[CALLS_INDEX]) || 0
 
     return { contract, method, min, max, avg, bar, calls }
@@ -213,7 +222,10 @@ interface DeployRow {
     percent: string
 }
 
-function formatDeployRow(line: string): DeployRow | null {
+function formatDeployRow(
+    line: string,
+    blockGasLimit: number
+): DeployRow | null {
     const parts = line
         .split('·')
         .map((p) => p.trim())
@@ -228,7 +240,8 @@ function formatDeployRow(line: string): DeployRow | null {
 
     for (const p of parts) {
         if (/^\d+$/.test(p)) cost = parseInt(p)
-        if (p.includes('%')) percent = calculateGasPercentage(cost)
+        if (p.includes('%'))
+            percent = calculateGasPercentage(cost, blockGasLimit)
     }
 
     if (!contract || cost === 0) return null
