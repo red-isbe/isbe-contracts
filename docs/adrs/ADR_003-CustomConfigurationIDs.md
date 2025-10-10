@@ -17,12 +17,7 @@ Proposal
 
 ## Context
 
-ISBE Factory currently supports 5 predefined Configuration IDs for standard use cases:
-
-- ERC20
-- ERC721
-- ERC3643
-- HashTimestamp
+ISBE Factory currently supports predefined Configuration IDs for standard use cases.
 
 Each Configuration ID represents a fixed Diamond Proxy configuration with specific facets.
 
@@ -30,64 +25,59 @@ Each Configuration ID represents a fixed Diamond Proxy configuration with specif
 
 **Purpose**: This ADR proposes a Custom Configuration ID system to test a user-facing no-code client application (ISBE Portal) where end-users can select optional facets for ERC20 deployments.
 
-**User Selection**: The no-code application allows users to choose:
+**User Selection**: The no-code application allows users to choose per example:
 
 - Deploy with **Mintable** only
 - Deploy with **Burnable** only
 - Deploy with **both Mintable and Burnable**
 - Deploy with **neither** (basic ERC20)
 
-The system automatically includes mandatory facets (Pausable, AccessControl, Snapshot) without user intervention.
-
 **Testing Scope**: Initial implementation focuses on ERC20 use case for validation and testing.
 
 ## Decision
 
-Implement a Custom Configuration ID System for testing a user no-code client application that allows:
+Implement a Custom Configuration ID System for testing a user no-code client application based on deterministic bitmask generation:
 
-1. **Users select optional facets** from available ERC20 extensions:
-    - ERC20Mintable
-    - ERC20Burnable
+1. **Configuration IDs are deterministic bitmasks**, not random hashes:
+    - Same facet selection always produces the same Configuration ID
+    - No hash collisions
+    - IDs can be pre-calculated for all possible combinations
 
-    Users can deploy with Mintable only, Burnable only, both, or neither.
+2. **Create a Facet selection model**:
 
-2. **System automatically includes mandatory facets** without user intervention:
-    - Pausable (emergency stop mechanism)
-    - AccessControl (role-based permissions)
-    - Snapshot (state capture for auditing)
+    Each facet is assigned a specific bit position, allowing deterministic ID generation.
 
-3. **Generate unique Configuration IDs** using ethers.js:
+3. **Generate Configuration IDs using bitmask algorithm, example:**:
+   A specialized script will be created to generate all possible Configuration IDs for ERC20 use cases.
 
-    ```typescript
-    import { ethers } from 'ethers'
+4. **One-time configuration registration**:
+    - Governance registers all possible Configuration IDs **once**
+    - Each Configuration ID maps to its specific facet combination
+    - Future optional facets can be added by defining new bit positions
+    - Pre-registration ensures all valid combinations are available for users
 
-    // Recommended: Use ethers.id() for deterministic IDs from strings
-    const customConfigId = ethers.id(`ERC20_${facetSelection}_${version}`)
+5. **User deployment workflow from no-code application example**:
 
-    // Alternative: Use solidityPackedKeccak256 for complex encoding
-    const customConfigId = ethers.solidityPackedKeccak256(
-        ['string', 'string', 'address', 'uint256'],
-        [useCaseName, version, userAddress, timestamp]
-    )
+    ```
+    Frontend (User Interface)
+       ↓
+    1. User selects: Token Name, Symbol, Optional Facets (Mintable/Burnable)
+       ↓
+    2. Frontend calculates deterministic Configuration ID from selection
+       ↓
+    3. Frontend calls backend/smart contract:
+       └─→ factory.deploy(configurationId)
+           └─→ Returns: proxyAddress
+       ↓
+    4. Frontend initializes deployed proxy:
+       └─→ proxy.initializeMetadata(name, symbol, decimals)
+       └─→ proxy.grantRole(ADMIN_ROLE, userAddress)
+       └─→ proxy.grantRole(MINTER_ROLE, userAddress) [if Mintable selected]
+       ↓
+    5. User's custom ERC20 token is ready
     ```
 
-4. **Register and deploy** using existing task infrastructure:
-
-    ```bash
-    # Step 1: Register configuration using existing setConfig task
-    npx hardhat setConfig \
-        --network customR1Network \
-        --config-id "${customConfigId}" \
-        --business-ids '[...]' \
-        --versions '[...]' \
-        --factory "${factoryAddress}"
-
-    # Step 2: Deploy proxy using existing deployUseCase task
-    npx hardhat deployUseCase \
-        --network customR1Network \
-        --configuration-id "${customConfigId}" \
-        --factory "${factoryAddress}"
-    ```
+    **Key**: Configuration ID is calculated client-side using the same bitmask algorithm. Backend only needs to call `factory.deploy()` with the pre-calculated ID.
 
 User no-code application workflow example:
 
@@ -106,7 +96,38 @@ User no-code application workflow example:
 }
 ```
 
-Users only specify optional facets. System automatically adds mandatory facets: `ERC20Core`, `ERC20Metadata`, `Pausable`, `AccessControl`, and `Snapshot`.
+````
+
+**Note**: Mandatory facets are automatically included by the system. Users only specify optional facets.
+
+## Implementation Phases
+
+### Phase 1: Deterministic ID Generation
+
+- Create deterministic bitmask generator script
+- Define bit positions for mandatory and optional facets
+- Generate all possible Configuration IDs for ERC20
+- Document bitmask structure for future extensions
+
+### Phase 2: Configuration Registration
+
+- Deploy business logic facets (if not already deployed)
+- Verify all configurations are correctly registered in factory
+- Document registered Configuration IDs
+
+### Phase 3: No-Code Application Integration
+
+- Implement `CustomConfigBuilder` utility for Configuration ID calculation
+- Implement `FacetCompatibilityValidator` for validation
+- Create deployment and initialization workflows
+- Integration tests
+
+### Phase 4: Testing and Documentation
+
+- Test all Configuration ID combinations
+- Validate deterministic ID generation
+- Complete user and developer documentation
+- User acceptance testing with no-code application
 
 ## Mandatory Facets
 
@@ -116,7 +137,6 @@ All ERC20 custom configurations MUST include these facets:
 2. **ERC20Metadata**: Token name, symbol, and decimals (requires initialization parameters)
 3. **Pausable**: Emergency stop mechanism for security
 4. **AccessControl**: Role-based permissions for governance
-5. **Snapshot**: State capture for auditing and compliance
 
 ## Configurable Elements
 
@@ -130,32 +150,9 @@ All ERC20 custom configurations MUST include these facets:
 
 ### Optional Facets
 
-Users can select these facets via the no-code application:
-
-1. **ERC20Mintable**: Allows authorized accounts to mint new tokens
-2. **ERC20Burnable**: Allows token holders to burn their tokens
+Users can select these facets via the no-code application ids:
 
 The system enforces mandatory facets while allowing flexible selection of optional facets and configuration of metadata parameters.
-
-## Roles and Permissions
-
-**Current Roles**:
-
-- `DEFAULT_ADMIN_ROLE`: Manages governance and all roles
-- `PAUSER_ROLE`: Can pause/unpause contracts
-
-**Proposed Role**: `VALIDATED_DEPLOYER_ROLE`
-
-- **Purpose**: Allow users to select optional facets (Mintable, Burnable) for ERC20 custom configurations
-- **Restrictions**: Cannot remove or modify mandatory facets (ERC20Core, ERC20Metadata, Pausable, AccessControl, Snapshot)
-- **Assignment**: Granted by DEFAULT_ADMIN_ROLE to authorized deployers
-- **Use Case**: Testing user no-code client application where end-users build custom ERC20 configurations
-
-User workflow with `VALIDATED_DEPLOYER_ROLE`:
-
-1. User selects optional facets: Mintable only, Burnable only, both, or neither
-2. System enforces mandatory facets: ERC20Core, ERC20Metadata, Pausable, AccessControl, Snapshot
-3. Configuration is validated and deployed with all required facets
 
 ## Implementation
 
@@ -176,144 +173,124 @@ ISBE already provides the necessary infrastructure for custom configurations:
 
 ### New Components Required
 
-**CustomConfigBuilder** (TypeScript utility):
+**Deterministic Bitmask Generator Script**:
+- Generates all possible Configuration IDs for ERC20 use cases
+- Implements bitmask algorithm (mandatory bits + optional bits)
+- Outputs mapping: `{facet_combination => configurationId}`
+- Can be extended for future optional facets
 
-- Builds business logic arrays from user facet selection
-- Generates Configuration IDs using `ethers.id()`
+**CustomConfigBuilder** (TypeScript utility):
+- Calculates Configuration ID from user facet selection using bitmask
 - Validates facet existence in deployed business logics
-- Auto-includes mandatory facets (ERC20Core, ERC20Metadata, Pausable, AccessControl, Snapshot)
+- Maps Configuration ID to business logic array for registration
 
 **FacetCompatibilityValidator** (TypeScript utility):
-
 - Detects selector conflicts between facets
 - Validates facet dependencies
-- Determines initialization order
 - Enforces mandatory facets policy
 
-**deployCustomUseCase** (New Hardhat task):
+### No-Code Application Integration
 
-- Simplified interface for custom ERC20 configurations
-- Accepts optional facets only (Mintable, Burnable)
-- Auto-generates Configuration ID
-- Calls existing `setConfig` and `deployUseCase` tasks
+Frontend calculates Configuration ID client-side and calls backend:
 
-### CLI Usage
+```typescript
+// Frontend: User selects facets
+const userSelection = {
+    name: "My Token",
+    symbol: "MTK",
+    mintable: true,
+    burnable: false
+};
 
-```bash
-# Deploy with Mintable only
-npx hardhat deployCustomUseCase \
-    --network customR1Network \
-    --name "MintableToken" \
-    --facets "ERC20Mintable"
+// Frontend: Calculate deterministic Configuration ID
+const configId = calculateBitmask(userSelection);
 
-# Deploy with both Mintable and Burnable
-npx hardhat deployCustomUseCase \
-    --network customR1Network \
-    --name "FullToken" \
-    --facets "ERC20Mintable,ERC20Burnable"
+// Backend: Deploy proxy
+const proxyAddress = await factory.deploy(configId);
 
-# Deploy basic ERC20 (no optional facets)
-npx hardhat deployCustomUseCase \
-    --network customR1Network \
-    --name "BasicToken"
-
-# Using JSON configuration
-npx hardhat deployCustomUseCase \
-    --network customR1Network \
-    --config custom-token.json
-
-# Validation only (dry-run)
-npx hardhat deployCustomUseCase \
-    --network customR1Network \
-    --config custom-token.json \
-    --validate
-```
-
-### User Workflow
-
-1. Explore available optional facets: `npx hardhat listAvailableFacets --network customR1Network`
-2. Create configuration specifying only optional facets (JSON or CLI parameters)
-3. Validate: `deployCustomUseCase --validate`
-4. Deploy: `deployCustomUseCase` (system adds mandatory facets, registers config, and deploys proxy)
-5. Verify: `npx hardhat verifyCustomDeployment --address <proxy>`
+// Backend: Initialize token
+await initializeToken(proxyAddress, userSelection);
+````
 
 ## Implementation Phases
 
-### Phase 1: Core Infrastructure
+### Phase 1: Deterministic ID Generation
 
-- Implement `CustomConfigBuilder` and `FacetCompatibilityValidator`
-- Configuration ID generation algorithm
-- Mandatory facets enforcement
-- Unit tests
+- Create deterministic bitmask generator script
+- Define bit positions for mandatory and optional facets
+- Generate all possible Configuration IDs for ERC20
+- Document bitmask structure for future extensions
 
-### Phase 2: Deployment Task
+### Phase 2: Configuration Registration
 
-- Implement `deployCustomUseCase` Hardhat task
-- CLI and JSON configuration support
-- Integration tests with dev network
+- Deploy business logic facets (if not already deployed)
+- Use register all Configuration IDs via `setConfiguration()`
+- Verify all configurations are correctly registered in factory
+- Document registered Configuration IDs
 
-### Phase 3: Developer Tools
+### Phase 3: No-Code Application Integration
 
-- `listAvailableFacets` task
-- `verifyCustomDeployment` task
-- Auto-generate facet documentation
-- Configuration templates and examples
+- Implement `CustomConfigBuilder` utility for Configuration ID calculation
+- Implement `FacetCompatibilityValidator` for validation
+- Create deployment and initialization workflows
+- Integration tests with customR1Network
 
-### Phase 4: Integration
+### Phase 4: Testing and Documentation
 
-- Integrate with existing `deployAll` task
-- CI/CD validation pipelines
-- Complete documentation
-- User acceptance testing
+- Test all Configuration ID combinations
+- Validate deterministic ID generation
+- Complete user and developer documentation
+- User acceptance testing with no-code application
 
 ## Risks and Mitigation
 
-### Selector Conflicts
+### Bitmask Collision
 
-**Risk**: Function signature collisions between facets
+**Risk**: Incorrect bit assignment causes Configuration ID collisions
 
-**Mitigation**: Comprehensive selector validation pre-deployment, automated conflict detection, detailed error messages
+**Mitigation**: Clear bit position documentation, automated validation script, unit tests for all combinations
 
-### Circular Dependencies
+### Future Facet Extensions
 
-**Risk**: Facets with circular dependencies prevent initialization
+**Risk**: Adding new optional facets requires updating bitmask structure
 
-**Mitigation**: Dependency graph analysis with cycle detection, early validation failure, documented dependencies
+**Mitigation**: Reserve bit positions for future use, document extension procedure, maintain backward compatibility
 
 ### Invalid Configurations
 
-**Risk**: Users create non-functional configurations
+**Risk**: Users select incompatible facet combinations
 
-**Mitigation**: Multi-layer validation, dry-run mode, templates and examples, mandatory facets enforcement
+**Mitigation**: Pre-registration ensures all valid combinations, FacetCompatibilityValidator enforces rules, clear error messages
 
-## Example
+**Workflow**:
 
-Deploy ERC20 token with Mintable facet via no-code client application:
+1. Frontend calculates deterministic Configuration ID from facet selection
+    - Bitmask: Mandatory (bits 0-4) + Mintable (bit 5) = `0x...003F`
 
-```json
-{
-    "name": "MintableToken",
-    "version": "1.0.0",
-    "facets": [{ "name": "ERC20Mintable" }],
-    "initialization": {
-        "ERC20Metadata": {
-            "name": "Mintable Token",
-            "symbol": "MINT",
-            "decimals": 18
-        }
-    }
-}
-```
+2. Frontend calls: `factory.deploy(0x...003F)`
+    - Returns: `proxyAddress`
 
-Users specify only optional facets. System automatically includes mandatory facets: `ERC20Core`, `ERC20Metadata`, `Pausable`, `AccessControl`, and `Snapshot`.
+3. Frontend initializes token:
+    - `proxy.initializeMetadata("Mintable Token", "MINT", 18)`
+    - `proxy.grantRole(ADMIN_ROLE, userAddress)`
+    - `proxy.grantRole(MINTER_ROLE, userAddress)`
 
-**User Options**:
+**A example Possible Configurations**:
 
-- Deploy with `ERC20Mintable` only
-- Deploy with `ERC20Burnable` only
-- Deploy with both: `"facets": [{ "name": "ERC20Mintable" }, { "name": "ERC20Burnable" }]`
-- Deploy with neither: `"facets": []` (basic ERC20 with mandatory facets only)
+| Mintable | Burnable | Configuration ID | Description |
+| -------- | -------- | ---------------- | ----------- |
+| No       | No       | `0x...001F`      | Basic ERC20 |
+| Yes      | No       | `0x...003F`      | + Mintable  |
+| No       | Yes      | `0x...005F`      | + Burnable  |
+| Yes      | Yes      | `0x...007F`      | Full        |
 
 ## Conclusion
 
-Custom Configuration IDs enable testing for a user-facing no-code client application where end-users build custom ERC20 configurations by selecting optional facets (Mintable, Burnable). The system enforces mandatory facets (ERC20Core, ERC20Metadata, Pausable, AccessControl, Snapshot) while providing flexibility for optional features. This design balances user choice with platform security and compliance requirements.
+Custom Configuration IDs use deterministic bitmasks to enable a user-facing no-code client application where end-users build custom ERC20 tokens by selecting optional facets. The bitmask approach ensures:
+
+- No hash collisions
+- Pre-calculable Configuration IDs
+- Efficient one-time registration
+- Future extensibility with new optional facets
+
+This design balances user flexibility with platform security and deterministic behavior.
