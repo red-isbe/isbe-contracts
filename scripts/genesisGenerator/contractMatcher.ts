@@ -1,32 +1,12 @@
 import type { HardhatRuntimeEnvironment, Artifact } from 'hardhat/types'
 import { GenesisAlloc } from './slotExtractor'
+import { id as keccak256 } from "ethers";
 
-/**
- * NOTE / WARNING
- * --------------
- * This function performs an **exact byte-for-byte match** between each `code` found in your
- * `GenesisAlloc` and the `deployedBytecode` from local Hardhat artifacts.
- *
- * This approach is correct and fast **only if**:
- *   1) You always spin up a fresh Hardhat network with the same accounts,
- *   2) You deploy in the same order (same nonces),
- *   3) You compile with the same solc version/settings,
- *   4) Linked libraries are deployed at the exact same addresses as in your artifacts.
- *
- * If any of the above changes (e.g., different deployment order, different solc build/metadata,
- * or different library addresses), the exact comparison will fail. In that case, you would need
- * a more tolerant strategy (e.g., stripping metadata or masking library addresses via linkReferences).
- */
+type contractData ={
+  contractCode?: Map<string, string>, // address -> bytecode
+  selectorIndex?: Map<string, string> // selector -> address
+}
 
-// Given types:
-// export type GenesisAllocEntry = {
-//   balance?: string
-//   nonce?: string
-//   code: string
-//   storage: Record<string, string>
-//   contractName!: string
-// }
-// export type GenesisAlloc = Record<string, GenesisAllocEntry>
 
 function normHex(hex?: string): string {
     if (!hex) return '0x'
@@ -54,6 +34,56 @@ async function buildExactBytecodeIndex(hre: HardhatRuntimeEnvironment) {
     }
 
     return index
+}
+
+
+export async function buildFunctionSelectorIndex(
+  hre: HardhatRuntimeEnvironment
+): Promise<Map<string, string>> {
+  const index = new Map<string, string>(); // selector -> signature
+
+  const fqns = await hre.artifacts.getAllFullyQualifiedNames();
+
+  for (const fqn of fqns) {
+    const art = await hre.artifacts.readArtifact(fqn);
+    const iface = new hre.ethers.Interface(art.abi);
+
+    for (const frag of iface.fragments) {
+      if (frag.type !== "function") continue;
+
+      // Garantizamos que el fragmento es funcional
+      if (typeof frag.format !== "function") {
+        throw new Error(`❌ Invalid fragment detected in ${fqn}: missing .format()`);
+      }
+
+      const signature = frag.format("sighash");
+      if (typeof signature !== "string" || !signature.includes("(")) {
+        throw new Error(
+          `❌ Invalid function signature for fragment in ${fqn}: ${JSON.stringify(
+            frag
+          )}`
+        );
+      }
+
+      // Calculamos selector = keccak256(signature)[0:4 bytes]
+      const selector = keccak256(signature).slice(0, 10).toLowerCase();
+
+      const existing = index.get(selector);
+      if (!existing) {
+        index.set(selector, signature);
+      } else if (existing !== signature) {
+        throw new Error(
+          `⚠️ Selector collision detected:
+              Selector: ${selector}
+              Existing: ${existing}
+              New:      ${signature}
+              Contract: ${fqn}`
+        );
+      }
+    }
+  }
+
+  return index;
 }
 
 /**
@@ -90,9 +120,32 @@ export async function matchContractNames(
   return alloc;
 }
 
-export async function singleContractMatcher(address: string, hre: HardhatRuntimeEnvironment): Promise<string> {
-  const exactIndex = await buildExactBytecodeIndex(hre);
-  const deployedCode = await hre.ethers.provider.getCode(address);
-  const match = exactIndex.get(deployedCode);
-  return match ? match : "<unknown>";
+
+
+export class ContractMatcher{
+
+  private matchIndex: contractData = {};
+
+  async init(hre: HardhatRuntimeEnvironment){
+    this.matchIndex.contractCode = await buildExactBytecodeIndex(hre);
+    this.matchIndex.selectorIndex = await buildFunctionSelectorIndex(hre);
+    console.log(`ContractMatcher: Indexes built: ${this.matchIndex.contractCode.size} contracts, ${this.matchIndex.selectorIndex.size} selectors`);
+  }
+
+  async singleContractMatcher(address: string, hre: HardhatRuntimeEnvironment): Promise<string> {
+    const deployedCode = await hre.ethers.provider.getCode(address);
+    if(!this.matchIndex || !this.matchIndex.contractCode){
+      throw new Error("ContractMatcher: Indexes not built");
+    }
+    const match = this.matchIndex.contractCode.get(deployedCode);
+    return match ? match : "<unknown>";
+  }
+
+  matchSelector(selector: string): string {
+    if(!this.matchIndex || !this.matchIndex.selectorIndex){
+      throw new Error("ContractMatcher: Indexes not built");
+    }
+    const match = this.matchIndex.selectorIndex.get(selector.toLowerCase());
+    return match ? match : "<unknown>";
+  }
 }

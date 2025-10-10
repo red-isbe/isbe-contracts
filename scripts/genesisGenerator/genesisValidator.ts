@@ -1,5 +1,5 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { singleContractMatcher } from "./contractMatcher";
+import { ContractMatcher } from "./contractMatcher";
 
 // Tipo de dato de la estructura base devuelta por facets()
 type RawFacetEntry = [string, string[]];
@@ -13,6 +13,9 @@ interface Facet {
 }
 
 export async function validateGenesis(hre:HardhatRuntimeEnvironment, businessAddress:string) {
+    const contractMatcher = new ContractMatcher();
+    await contractMatcher.init(hre);
+    
     const provider = hre.ethers.provider;
     const currentBlockNumber = await hre.ethers.provider.getBlockNumber();
     console.log(`Current block number: ${currentBlockNumber}`);
@@ -24,12 +27,12 @@ export async function validateGenesis(hre:HardhatRuntimeEnvironment, businessAdd
     const result = await loupeAdapterContract.facets();
 
 
-   const facets: Facet[] = await Promise.all(
+    const facets: Facet[] = await Promise.all(
     result.map(async ([facetAddress, selectors]: [string, string[]]): Promise<Facet> => ({
         facetAddress,
         selectors,
         numSelectors: selectors.length,
-        facetName: await singleContractMatcher(facetAddress, hre) // ojo al nombre
+        facetName: await contractMatcher.singleContractMatcher(facetAddress, hre)
     }))
     );
 
@@ -48,9 +51,9 @@ export async function validateGenesis(hre:HardhatRuntimeEnvironment, businessAdd
     console.log("\n📋 SELECTOR DETAIL:");
     for (const [i, f] of facets.entries()) {
         console.log(`\n${i + 1}. Facet: ${f.facetAddress} (${f.facetName})`);
-        console.log("   * Selectors:");
+        console.log("* Selectors:");
         for (const s of f.selectors){
-            console.log(`          ${s}`);
+            console.log(`  ${contractMatcher.matchSelector(s)} ${".".repeat(90 - contractMatcher.matchSelector(s).length)} [ ${s} ]`);
         }
     }
 

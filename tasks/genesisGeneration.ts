@@ -65,13 +65,6 @@ task(
         )
         hre.network.name = 'hardhat'
 
-        const businessAddress="0x2279b7a0a67db372996a5fab50d91eaa73d2ebe6"
-        const artifactLoupe = await import('../artifacts/contracts/proxies/eip2535/facets/DiamondLoupeFacet.sol/DiamondLoupeFacet.json');
-        const loupeAdapterContract = new hre.ethers.Contract(businessAddress, artifactLoupe.abi, hre.ethers.provider);
-        const resultLoupe = await loupeAdapterContract.facets();
-         await validateGenesis(hre, "0x2279b7a0a67db372996a5fab50d91eaa73d2ebe6")
-
-
         let templateDir = (
             hre.config as unknown as {
                 genesisGenerator: { templateDir: string }
