@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
-import { IIsbeFactory, AccessControl } from '../../typechain-types'
+import { IIsbeFactory, AccessControl, ProxyFactoryFacet } from '../../typechain-types'
 import { Signer } from 'ethers'
 import { CONFIGURATION_ID_ERC20, deployGovernance } from '../initialization'
 import {
@@ -15,6 +15,13 @@ import {
     RANDOM_HASH_FOR_CONFIGURATION_ID,
 } from '../constants'
 import { EventLog } from 'ethers'
+import { ContractRegistry } from '../../scripts/genesisGenerator'
+
+const registryFile: string | undefined = process.env.REGISTRY_LOCATION;
+if(registryFile) {
+    console.log(`********************************     Using registry file: ${registryFile}`);
+}
+
 
 describe('ProxyFactory', function () {
     let admin: Signer
@@ -34,20 +41,53 @@ describe('ProxyFactory', function () {
     }
 
     async function deployIsbeFactory() {
-        const result = await deployGovernance(admin)
 
-        isbeFactory = await ethers.getContractAt(
-            'IIsbeFactory',
-            await result.governanceContract.getAddress()
-        )
+        if(!registryFile) {
+            const result = await deployGovernance(admin)
+            isbeFactory = await ethers.getContractAt(
+                'IIsbeFactory',
+                await result.governanceContract.getAddress()
+            )
+    
+            accessControl = await ethers.getContractAt(
+                'AccessControl',
+                await result.governanceContract.getAddress()
+            )
 
-        accessControl = await ethers.getContractAt(
-            'AccessControl',
-            await result.governanceContract.getAddress()
-        )
-        expect(
-            await result.proxyFactoryFacet.businessIdIntrospection()
-        ).to.be.equal(PROXY_FACTORY_RESOLVER_KEY)
+            expect(
+                await result.proxyFactoryFacet.businessIdIntrospection()
+            ).to.be.equal(PROXY_FACTORY_RESOLVER_KEY)
+        }else{
+            const contractRegistry = new ContractRegistry();
+            contractRegistry.retrieveContractRegistry(registryFile);
+            
+            const EIP2535AccessControlAddress = contractRegistry.getAddress('EIP2535AccessControl');
+            const proxyFactoryFacetAddress = contractRegistry.getAddress('ProxyFactoryFacet');
+            console.log("************************************************************************************************1");
+            console.log(`EIP2535AccessControlAddress: ${EIP2535AccessControlAddress}`);
+            console.log(`proxyFactoryFacetAddress: ${proxyFactoryFacetAddress}`);
+
+            isbeFactory = await ethers.getContractAt(
+                'IIsbeFactory',
+                EIP2535AccessControlAddress
+            );
+            
+            accessControl = await ethers.getContractAt(
+                'AccessControl',
+                EIP2535AccessControlAddress
+            )
+
+             const ProxyFactoryFacetFactory =
+                    await ethers.getContractFactory('ProxyFactoryFacet')
+            const proxyFactoryFacet: ProxyFactoryFacet = ProxyFactoryFacetFactory.attach(proxyFactoryFacetAddress) as ProxyFactoryFacet;
+            const selector:string = proxyFactoryFacet.interface.getFunction("businessIdIntrospection").selector;
+            console.log(`selector: ${selector}`);
+            console.log("************************************************************************************************1.1");
+            expect(
+                await proxyFactoryFacet.businessIdIntrospection()
+            ).to.be.equal(PROXY_FACTORY_RESOLVER_KEY)
+            console.log("************************************************************************************************2");
+        }
     }
 
     beforeEach(async () => {

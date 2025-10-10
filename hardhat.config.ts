@@ -110,6 +110,8 @@ const config: HardhatUserConfig & {
             gasPrice: 0,
             gas: 0,
             blockGasLimit: 0, // Does not generate new blocks
+            // @ts-ignore: Custom property for genesis validation network
+            ISBE_GENESIS_VALIDATION_NETWORK: true, // Indicates that this is a genesis validation network and contract must not be deployed
         },
     },
     mocha: {
@@ -135,7 +137,7 @@ const config: HardhatUserConfig & {
         collapseNewlines: true,
     },
     genesisGenerator: {
-        outputDir: './infra_test/',
+        outputDir: '../isbe-besu-local-deployer/config/',
         templateDir: './tasks/genesisTemplates/',
     },
 }

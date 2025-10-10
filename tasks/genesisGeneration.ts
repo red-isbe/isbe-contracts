@@ -1,12 +1,15 @@
 import { task } from 'hardhat/config'
 import {
     buildGenesisWithAlloc,
-    GenesisAlloc,
+    type GenesisAlloc,
     matchContractNames,
     retrieveSlotStructure,
     validateGenesis,
+    ContractRegistry,
 } from '../scripts/genesisGenerator'
 import { HttpNetworkConfig } from 'hardhat/types'
+
+const REGISTRY_FILENAME = "isbe-contract-registry.json";
 
 async function sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms))
@@ -52,6 +55,7 @@ task(
         'qbftConfigFile.json'
     )
     .setAction(async (taskArgs, hre) => {
+        const contractRegistry = new ContractRegistry();
         console.info(
             '---------------------------------------------------------------------'
         )
@@ -60,6 +64,13 @@ task(
             '---------------------------------------------------------------------'
         )
         hre.network.name = 'hardhat'
+
+        const businessAddress="0x2279b7a0a67db372996a5fab50d91eaa73d2ebe6"
+        const artifactLoupe = await import('../artifacts/contracts/proxies/eip2535/facets/DiamondLoupeFacet.sol/DiamondLoupeFacet.json');
+        const loupeAdapterContract = new hre.ethers.Contract(businessAddress, artifactLoupe.abi, hre.ethers.provider);
+        const resultLoupe = await loupeAdapterContract.facets();
+         await validateGenesis(hre, "0x2279b7a0a67db372996a5fab50d91eaa73d2ebe6")
+
 
         let templateDir = (
             hre.config as unknown as {
@@ -79,6 +90,8 @@ task(
         const templateFile = taskArgs.template
         const genesisTemplateFile = templateDir + templateFile
         const outputFile = outputDir + templateFile
+
+        const registryFile = (outputDir.endsWith('/') ? outputDir : outputDir + '/') + REGISTRY_FILENAME;
         console.log(`📄 Using template file: ${genesisTemplateFile}`)
 
         console.log('🚀 DeployAll...')
@@ -95,6 +108,15 @@ task(
             genesisTemplateFile,
             slotStructure,
             outputFile
+        )
+        console.log(
+            '✅ Genesis file generated successfully.-----------------------------------------------'
+        )
+
+        contractRegistry.dumpRegistry(slotStructure, registryFile);
+
+        console.log(
+            '✅ Contract registry generated----------------------------------------------------------'
         )
 
         const tableData = Array.from(slotStructure.entries()).map(
@@ -161,6 +183,18 @@ task(
         }
         console.log(`Using network url: ${url}`)
 
+        let outputDir = (
+            hre.config as unknown as { genesisGenerator: { outputDir: string } }
+        ).genesisGenerator.outputDir
+        if (outputDir.slice(-1) !== '/') {
+            outputDir += '/'
+        }
+        const registryFile = (outputDir.endsWith('/') ? outputDir : outputDir + '/') + REGISTRY_FILENAME;
+        const contractRegistry = new ContractRegistry();
+        contractRegistry.retrieveContractRegistry(registryFile);
+        console.log(
+            '✅ Contract registry retrieved----------------------------------------------------------'
+        )
         while (!(await jsonRpcCall(url))) {
             process.stdout.write(
                 `Waiting for network ${hre.network.name} to be available... \r`
@@ -171,9 +205,11 @@ task(
             `Waiting for network ${hre.network.name} to be available [OK]           `
         )
 
-        await validateGenesis(hre, url, gobernanceaddress)
+        await validateGenesis(hre, gobernanceaddress)
 
         console.log(
             '✅ Genesis validation (Done).----------------------------------------------------------'
         )
+
+        return registryFile;
     })

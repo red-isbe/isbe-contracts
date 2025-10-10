@@ -12,7 +12,7 @@ interface Facet {
   facetName?: string;
 }
 
-export async function validateGenesis(hre:HardhatRuntimeEnvironment, url:string, businessAddress:string) {
+export async function validateGenesis(hre:HardhatRuntimeEnvironment, businessAddress:string) {
     const provider = hre.ethers.provider;
     const currentBlockNumber = await hre.ethers.provider.getBlockNumber();
     console.log(`Current block number: ${currentBlockNumber}`);
