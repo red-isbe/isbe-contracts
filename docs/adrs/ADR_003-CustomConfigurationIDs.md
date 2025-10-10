@@ -22,7 +22,6 @@ ISBE Factory currently supports 5 predefined Configuration IDs for standard use 
 - ERC20
 - ERC721
 - ERC3643
-- DID
 - HashTimestamp
 
 Each Configuration ID represents a fixed Diamond Proxy configuration with specific facets.
@@ -57,18 +56,38 @@ Implement a Custom Configuration ID System for testing a user no-code client app
     - AccessControl (role-based permissions)
     - Snapshot (state capture for auditing)
 
-3. **Generate unique Configuration IDs** using deterministic hashing:
+3. **Generate unique Configuration IDs** using ethers.js:
 
-    ```solidity
-    customConfigId = keccak256(abi.encodePacked(
-        useCaseName,
-        version,
-        msg.sender,
-        block.timestamp
-    ))
+    ```typescript
+    import { ethers } from 'ethers'
+
+    // Recommended: Use ethers.id() for deterministic IDs from strings
+    const customConfigId = ethers.id(`ERC20_${facetSelection}_${version}`)
+
+    // Alternative: Use solidityPackedKeccak256 for complex encoding
+    const customConfigId = ethers.solidityPackedKeccak256(
+        ['string', 'string', 'address', 'uint256'],
+        [useCaseName, version, userAddress, timestamp]
+    )
     ```
 
-4. **Register and deploy** via factory: `setConfiguration()` then `deploy()`
+4. **Register and deploy** using existing task infrastructure:
+
+    ```bash
+    # Step 1: Register configuration using existing setConfig task
+    npx hardhat setConfig \
+        --network customR1Network \
+        --config-id "${customConfigId}" \
+        --business-ids '[...]' \
+        --versions '[...]' \
+        --factory "${factoryAddress}"
+
+    # Step 2: Deploy proxy using existing deployUseCase task
+    npx hardhat deployUseCase \
+        --network customR1Network \
+        --configuration-id "${customConfigId}" \
+        --factory "${factoryAddress}"
+    ```
 
 User no-code application workflow example:
 
@@ -94,19 +113,29 @@ Users only specify optional facets. System automatically adds mandatory facets: 
 All ERC20 custom configurations MUST include these facets:
 
 1. **ERC20Core**: Base ERC20 implementation
-2. **ERC20Metadata**: Token name, symbol, and decimals
+2. **ERC20Metadata**: Token name, symbol, and decimals (requires initialization parameters)
 3. **Pausable**: Emergency stop mechanism for security
 4. **AccessControl**: Role-based permissions for governance
 5. **Snapshot**: State capture for auditing and compliance
 
-## Optional Facets
+## Configurable Elements
+
+### Mandatory Facet Parameters
+
+**ERC20Metadata** (required initialization):
+
+- `name`: Token name (e.g., "My Token")
+- `symbol`: Token symbol (e.g., "MTK")
+- `decimals`: Token decimals (typically 18)
+
+### Optional Facets
 
 Users can select these facets via the no-code application:
 
 1. **ERC20Mintable**: Allows authorized accounts to mint new tokens
 2. **ERC20Burnable**: Allows token holders to burn their tokens
 
-The system enforces mandatory facets while allowing flexible selection of optional facets.
+The system enforces mandatory facets while allowing flexible selection of optional facets and configuration of metadata parameters.
 
 ## Roles and Permissions
 
@@ -130,13 +159,43 @@ User workflow with `VALIDATED_DEPLOYER_ROLE`:
 
 ## Implementation
 
-### Core Components
+### Existing Infrastructure
 
-**CustomConfigBuilder**: Builds business logic arrays, generates Configuration IDs, validates facet existence
+ISBE already provides the necessary infrastructure for custom configurations:
 
-**FacetCompatibilityValidator**: Detects selector conflicts, validates dependencies, determines initialization order, enforces mandatory facets
+**Existing Tasks**:
 
-**Hardhat Task**: `deployCustomUseCase` for CLI and JSON-based deployments
+- `setConfig` (tasks/configMgmt/setConfig.ts): Registers custom configuration IDs with business logic facets
+- `deployUseCase` (tasks/proxyFactory/deployUseCase.ts): Deploys proxy with specified configuration ID
+- `deployUseCaseTo` (tasks/proxyFactory/deployUseCaseTo.ts): Deploys proxy to deterministic address
+
+**Configuration Management**:
+
+- `ConfigurationManagement.sol`: Handles registration and versioning of configurations
+- `setConfiguration(bytes32 configurationId, BusinessData[] businessIds)`: Core function for registering configurations
+
+### New Components Required
+
+**CustomConfigBuilder** (TypeScript utility):
+
+- Builds business logic arrays from user facet selection
+- Generates Configuration IDs using `ethers.id()`
+- Validates facet existence in deployed business logics
+- Auto-includes mandatory facets (ERC20Core, ERC20Metadata, Pausable, AccessControl, Snapshot)
+
+**FacetCompatibilityValidator** (TypeScript utility):
+
+- Detects selector conflicts between facets
+- Validates facet dependencies
+- Determines initialization order
+- Enforces mandatory facets policy
+
+**deployCustomUseCase** (New Hardhat task):
+
+- Simplified interface for custom ERC20 configurations
+- Accepts optional facets only (Mintable, Burnable)
+- Auto-generates Configuration ID
+- Calls existing `setConfig` and `deployUseCase` tasks
 
 ### CLI Usage
 
