@@ -1,31 +1,38 @@
 #!/bin/bash
 
-BESU_DIR=../isbe-besu-local-deployer
-EXEC_BESU="bash install.sh -y"
+# Default values
+BESU_DIR="../isbe-besu-local-deployer"
+EXEC_BESU="bash install.sh -b"
 
 # Flags
 SKIP_GEN=false
 SKIP_BESU_STARTUP=false
 
 # Parse arguments
-for arg in "$@"; do
-  case $arg in
+while [[ $# -gt 0 ]]; do
+  case $1 in
     --skip-gen)
       SKIP_GEN=true
+      shift
       ;;
     --skip-besu-startup)
       SKIP_BESU_STARTUP=true
+      shift
+      ;;
+    --besu-dir)
+      BESU_DIR="$2"
+      shift 2
       ;;
     *)
-      echo "⚠️  Unknown argument: $arg"
+      echo "⚠️  Unknown argument: $1"
+      shift
       ;;
   esac
 done
 
-
-
-
-
+echo "📁 BESU_DIR set to: $BESU_DIR"
+echo "   (use --besu-dir <path> to override)"
+echo ""
 
 # Step 1: Genesis generation
 if [ "$SKIP_GEN" = false ]; then
@@ -35,9 +42,6 @@ else
   echo "⏩ Skipping genesis generation (--skip-gen)"
 fi
 
-# cd infra_test
-# docker compose up -d --build
-# cd ..
 # Step 2: Start Besu node network
 if [ "$SKIP_BESU_STARTUP" = false ]; then
   echo "******************************************************************************************"
@@ -50,13 +54,7 @@ else
   echo "⏩ Skipping Besu startup (--skip-besu-startup)"
 fi
 
-
-npx hardhat genesis:validate --network genesis_validation_network --gobernanceaddress 0x2279b7a0a67db372996a5fab50d91eaa73d2ebe6
-
-REGISTRY_LOCATION=infra_test/isbe-contract-registry.json npx hardhat test test/governance/ProxyFactory.spec.ts --network genesis_validation_network
-# npx hardhat test test/governance/ProxyFactory.spec.ts --network genesis_validation_network
-
-
-# cd infra_test
-# docker compose down
-# cd ..
+# Step 3: Validate genesis
+echo "🔍 Validating genesis..."
+npx hardhat genesis:validate --network genesis_validation_network \
+  --gobernanceaddress 0x2279b7a0a67db372996a5fab50d91eaa73d2ebe6

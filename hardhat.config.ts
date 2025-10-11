@@ -106,10 +106,10 @@ const config: HardhatUserConfig & {
         },
         genesis_validation_network: {
             url: 'http://127.0.0.1:8545',
-            accounts: ACCOUNTS,
             gasPrice: 0,
-            gas: 0,
-            blockGasLimit: 0, // Does not generate new blocks
+            accounts: {
+                mnemonic: "test test test test test test test test test test test junk", // Same as hardhat default
+            },
             // @ts-ignore: Custom property for genesis validation network
             ISBE_GENESIS_VALIDATION_NETWORK: true, // Indicates that this is a genesis validation network and contract must not be deployed
         },
