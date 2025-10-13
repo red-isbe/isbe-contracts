@@ -9,7 +9,7 @@ import {
 } from '../scripts/genesisGenerator'
 import { HttpNetworkConfig } from 'hardhat/types'
 
-const REGISTRY_FILENAME = "isbe-contract-registry.json";
+const REGISTRY_FILENAME = 'isbe-contract-registry.json'
 
 async function sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms))
@@ -55,7 +55,7 @@ task(
         'qbftConfigFile.json'
     )
     .setAction(async (taskArgs, hre) => {
-        const contractRegistry = new ContractRegistry();
+        const contractRegistry = new ContractRegistry()
         console.info(
             '---------------------------------------------------------------------'
         )
@@ -84,11 +84,13 @@ task(
         const genesisTemplateFile = templateDir + templateFile
         const outputFile = outputDir + templateFile
 
-        const registryFile = (outputDir.endsWith('/') ? outputDir : outputDir + '/') + REGISTRY_FILENAME;
+        const registryFile =
+            (outputDir.endsWith('/') ? outputDir : outputDir + '/') +
+            REGISTRY_FILENAME
         console.log(`📄 Using template file: ${genesisTemplateFile}`)
 
         console.log('🚀 DeployAll...')
-        const result = await hre.run('deployAll')
+        const result = await hre.run('deployAllClean')
         console.log('✅ Deploy all (Done).')
 
         console.log('🚀 Genesis generation...')
@@ -106,7 +108,7 @@ task(
             '✅ Genesis file generated successfully.-----------------------------------------------'
         )
 
-        contractRegistry.dumpRegistry(slotStructure, registryFile);
+        contractRegistry.dumpRegistry(slotStructure, registryFile)
 
         console.log(
             '✅ Contract registry generated----------------------------------------------------------'
@@ -182,9 +184,11 @@ task(
         if (outputDir.slice(-1) !== '/') {
             outputDir += '/'
         }
-        const registryFile = (outputDir.endsWith('/') ? outputDir : outputDir + '/') + REGISTRY_FILENAME;
-        const contractRegistry = new ContractRegistry();
-        contractRegistry.retrieveContractRegistry(registryFile);
+        const registryFile =
+            (outputDir.endsWith('/') ? outputDir : outputDir + '/') +
+            REGISTRY_FILENAME
+        const contractRegistry = new ContractRegistry()
+        contractRegistry.retrieveContractRegistry(registryFile)
         console.log(
             '✅ Contract registry retrieved----------------------------------------------------------'
         )
@@ -204,5 +208,5 @@ task(
             '✅ Genesis validation (Done).----------------------------------------------------------'
         )
 
-        return registryFile;
+        return registryFile
     })
