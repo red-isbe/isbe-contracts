@@ -1,7 +1,9 @@
 import { task, types } from 'hardhat/config'
-import * as dotenv from 'dotenv'
+
 import { facetUpdates } from '../../../scripts/diamond/cut/facetUpdates'
-import { getSigner } from '../../../scripts/utils/getSigner'
+import { SignatureProviderFactory } from '../../deployment/providers/SignatureProviderFactory'
+import { ISignatureProvider } from '../../deployment/providers/ISignatureProvider'
+import { NetworkConfigWithCurve } from '../../../types/hardhat'
 
 /**
  npx hardhat facetUpdates --network localhost \
@@ -10,8 +12,6 @@ import { getSigner } from '../../../scripts/utils/getSigner'
   --calldata '0x1234567812345678' \
   --diamond "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6"
  */
-
-dotenv.config()
 
 task('facetUpdates', 'updates a diamond')
     .addParam(
@@ -37,16 +37,61 @@ task('facetUpdates', 'updates a diamond')
         ) => {
             const { facetAddresses, init, calldata, diamond } = taskArgs
 
-            const signer = await getSigner(hre)
+            console.log(`🔍 Network: ${hre.network.name}`)
 
-            const result = await facetUpdates(
-                facetAddresses,
-                init,
-                calldata,
-                diamond,
-                signer
-            )
+            // Check if we're on a secp256r1 network
+            const networkConfig = hre.config.networks[
+                hre.network.name
+            ] as NetworkConfigWithCurve
+            const isSecp256r1 = networkConfig.curve === 'secp256r1'
 
-            console.log('Facet Updates result:', result)
+            if (isSecp256r1) {
+                console.log(
+                    '✅ secp256r1 network detected - using enhanced validation'
+                )
+            }
+
+            try {
+                const signatureProvider: ISignatureProvider =
+                    SignatureProviderFactory.create(hre)
+
+                const result = await facetUpdates(
+                    facetAddresses,
+                    init,
+                    calldata,
+                    diamond,
+                    signatureProvider
+                )
+
+                console.log('✅ Facet updates completed successfully')
+                console.log('Facet Updates result:', result)
+            } catch (error: unknown) {
+                const errorMessage =
+                    error instanceof Error ? error.message : String(error)
+                // Enhanced error handling for secp256r1
+                if (
+                    isSecp256r1 &&
+                    errorMessage.includes('Cannot find square root')
+                ) {
+                    console.error(
+                        '🚨 CRITICAL: secp256r1 signature generation failed'
+                    )
+                    console.error(
+                        '   This indicates the Besu client may not support secp256r1 properly'
+                    )
+                    console.error('   Required Actions:')
+                    console.error(
+                        '   1. Check Besu client version and secp256r1 support'
+                    )
+                    console.error('   2. Verify network configuration')
+                    console.error('   3. Test basic secp256r1 operations with:')
+                    console.error(
+                        '      npx hardhat quick-secp256r1-check --network customR1Network'
+                    )
+                    process.exit(1)
+                }
+
+                throw error
+            }
         }
     )

@@ -97,7 +97,7 @@ export class DeploymentTableRenderer {
         widths: number[]
     ): void {
         const statusIcon = useCase.success ? '✅' : '❌'
-        const statusText = useCase.success ? 'Successful' : 'Failed'
+        const statusText = useCase.success ? 'Success' : 'Failed'
 
         const cells = [
             this.padString(index.toString(), widths[0], 'center'),

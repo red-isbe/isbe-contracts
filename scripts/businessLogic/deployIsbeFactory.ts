@@ -26,7 +26,7 @@ import {
     ISBE_PAUSER_ROLE,
     ISBE_ROLE,
     PROXY_DEPLOYER_ROLE,
-} from '../../test/constants'
+} from '../../utils/constants'
 
 let AccessControlFacetFactory: AccessControlGovernanceFacet__factory
 let IsbePausableFacetFactory: ISBEPauseFacet__factory
@@ -144,7 +144,10 @@ export async function deployIsbeFactory(
         ],
         init: ethers.ZeroAddress,
         initCalldata: initCalldata,
+        gasLimit: 2000000,
+        gasPrice: 875000000,
     })
+
     await diamondProxy.waitForDeployment()
     return await diamondProxy.getAddress()
 }

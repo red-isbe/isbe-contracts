@@ -1,7 +1,7 @@
 import { task } from 'hardhat/config'
-import * as dotenv from 'dotenv'
+
 import { pauseIsbe } from '../../scripts/globalPause/pauseIsbe'
-import { getSigner } from '../../scripts/utils/getSigner'
+import { SignatureProviderFactory } from '../deployment/providers/SignatureProviderFactory'
 
 /**
  npx hardhat pauseIsbe --network localhost \
@@ -9,17 +9,15 @@ import { getSigner } from '../../scripts/utils/getSigner'
   --factory "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6"
  */
 
-dotenv.config()
-
 task('pauseIsbe', 'Pauses a deployed smart contract')
     .addParam('proxyAddress', 'The address of the contract to pause')
     .addParam('factory', 'The factory contract address')
     .setAction(async (taskArgs, hre) => {
         const { proxyAddress, factory } = taskArgs
 
-        const signer = await getSigner(hre)
+        const signatureProvider = SignatureProviderFactory.create(hre)
 
-        const result = await pauseIsbe(proxyAddress, factory, signer)
+        const result = await pauseIsbe(proxyAddress, factory, signatureProvider)
 
         console.log('Pause result:', result)
     })

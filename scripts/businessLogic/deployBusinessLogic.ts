@@ -1,13 +1,17 @@
 import { BigNumberish, Signer } from 'ethers'
+import { ISignatureProvider } from '../../tasks/deployment/providers/ISignatureProvider'
 import { getIsbeFactory } from '../utils/getIsbeFactory'
 import { getEvent } from '../utils/getEvent'
 import { isValidBytes, isValidBytesAndLength } from '../utils/validation'
 
+/**
+ * Deploy business logic using signature provider pattern (supports both secp256k1 and secp256r1)
+ */
 export async function deployBusinessLogic(
     businessId: string,
     bytecode: string,
     factory: string,
-    signer: Signer
+    signatureProvider: ISignatureProvider
 ): Promise<{
     businessId: string
     businessAddress: string
@@ -19,10 +23,159 @@ export async function deployBusinessLogic(
     if (!isValidBytes(bytecode))
         throw new Error('Invalid byte code format : ' + bytecode)
 
+    console.log(
+        `🔐 Using ${signatureProvider.getCurveType()} signature for business logic deployment...`
+    )
+
+    // For secp256r1, use raw transactions to avoid "Cannot find square root" error
+    if (signatureProvider.getCurveType() === 'secp256r1') {
+        return await deployBusinessLogicWithRawTransaction(
+            businessId,
+            bytecode,
+            factory,
+            signatureProvider
+        )
+    }
+
+    // For secp256k1, use the standard contract interface
+    const signer = await signatureProvider.getSigner()
     const businessLogicFactory = await getIsbeFactory(factory, signer)
 
+    console.log('📡 Sending deployBusinessLogic transaction...')
     const tx = await businessLogicFactory.deploy(businessId, bytecode)
 
+    console.log('⏳ Waiting for transaction to be mined...')
+    const deployedEvent = await getEvent('Deployed', tx, businessLogicFactory)
+
+    const {
+        businessId: deployedBusinessId,
+        businessAddress,
+        version,
+    } = deployedEvent.args
+
+    return {
+        businessId: deployedBusinessId,
+        businessAddress,
+        version: version.toString(),
+    }
+}
+
+/**
+ * Deploy business logic using raw transactions for secp256r1 compatibility
+ * Avoids the "Cannot find square root" error by bypassing ethers Contract interface
+ */
+async function deployBusinessLogicWithRawTransaction(
+    businessId: string,
+    bytecode: string,
+    factory: string,
+    signatureProvider: ISignatureProvider
+): Promise<{
+    businessId: string
+    businessAddress: string
+    version: BigNumberish
+}> {
+    // Import BusinessLogicFactory interface for encoding function data
+    const { BusinessLogicFactoryFacet__factory } = await import(
+        '../../typechain-types'
+    )
+
+    // Create interface for encoding function data
+    const factoryInterface =
+        BusinessLogicFactoryFacet__factory.createInterface()
+
+    // Encode the deploy function call
+    const functionData = factoryInterface.encodeFunctionData('deploy', [
+        businessId,
+        bytecode,
+    ])
+
+    console.log('📡 Sending deployBusinessLogic raw transaction...')
+
+    let txResponse
+    try {
+        // Send raw transaction using signature provider
+        txResponse = await signatureProvider.sendTransaction({
+            to: factory,
+            data: functionData,
+            gasLimit: 3000000n, // Higher gas limit for deployment
+        })
+
+        console.log(`   🔗 Transaction submitted: ${txResponse.hash}`)
+    } catch (error) {
+        console.log(error)
+        console.log('❌ Raw transaction failed to submit')
+        throw new Error(
+            `Failed to submit deployBusinessLogic raw transaction: ${error instanceof Error ? error.message : String(error)}`
+        )
+    }
+
+    console.log('⏳ Waiting for raw transaction to be mined...')
+    let receipt
+    try {
+        receipt = await txResponse.wait()
+        if (!receipt || receipt.status !== 1) {
+            throw new Error('Transaction failed or was reverted')
+        }
+    } catch (error) {
+        console.log(`❌ Raw transaction failed to mine`)
+        console.log(`   🔗 Transaction Hash: ${txResponse.hash}`)
+        throw error
+    }
+
+    // Parse Deployed event from the receipt
+    const deployedEvent = receipt.logs
+        .map((log) => {
+            try {
+                return factoryInterface.parseLog(log)
+            } catch {
+                return null
+            }
+        })
+        .find((log) => log && log.name === 'Deployed')
+
+    if (!deployedEvent) {
+        throw new Error('Deployed event not found in transaction receipt')
+    }
+
+    const {
+        businessId: deployedBusinessId,
+        businessAddress,
+        version,
+    } = deployedEvent.args
+
+    return {
+        businessId: deployedBusinessId,
+        businessAddress,
+        version: version.toString(),
+    }
+}
+
+/**
+ * Legacy function for backward compatibility
+ * @deprecated Use the signature provider version above
+ */
+export async function deployBusinessLogicLegacy(
+    businessId: string,
+    bytecode: string,
+    factory: string,
+    signer: Signer
+): Promise<{
+    businessId: string
+    businessAddress: string
+    version: BigNumberish
+}> {
+    console.warn(
+        '⚠️  Using legacy deployBusinessLogic - consider switching to signature provider version'
+    )
+
+    if (!isValidBytesAndLength(businessId, 32))
+        throw new Error('Invalid business Id format : ' + businessId)
+
+    if (!isValidBytes(bytecode))
+        throw new Error('Invalid byte code format : ' + bytecode)
+
+    const businessLogicFactory = await getIsbeFactory(factory, signer)
+    const tx = await businessLogicFactory.deploy(businessId, bytecode)
     const deployedEvent = await getEvent('Deployed', tx, businessLogicFactory)
 
     const {

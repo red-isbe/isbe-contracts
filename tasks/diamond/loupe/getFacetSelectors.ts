@@ -1,5 +1,5 @@
 import { task } from 'hardhat/config'
-import * as dotenv from 'dotenv'
+
 import { getFacetSelectors } from '../../../scripts/diamond/loupe/getFacetSelectors'
 import { getSigner } from '../../../scripts/utils/getSigner'
 
@@ -8,8 +8,6 @@ import { getSigner } from '../../../scripts/utils/getSigner'
   --diamond "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6" \
   --facet-address "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0"
  */
-
-dotenv.config()
 
 task('getFacetSelectors', 'Deploys business logic contract')
     .addParam('diamond', 'The diamond contract address')

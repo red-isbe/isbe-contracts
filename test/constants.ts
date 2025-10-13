@@ -1,36 +1,8 @@
-export const PAUSER_ROLE =
-    '0x8c911f4537972e7549dbbd37a96b929a4b480f4fb156fc6344524bdf2ca50aa1'
+// Re-export shared constants from utils - maintaining backward compatibility
+export * from '../utils/constants'
 
-export const ISBE_ROLE =
-    '0xe02d3eaf0b5fb24a2d637286804770bf2618aa6d3b40cbf443b93f6cd1aac239'
-
-export const BUSINESS_LOGIC_DEPLOYER_ROLE =
-    '0xdc99c621188983b30fd7ff7b62ee13c081548c6b000e3c54b59686f091418069'
-
-export const GOVERNANCE_MANAGER_ROLE =
-    '0x44c016b7c7762ceb1f7aab96b102f733139c944c581ee882670e2636bebbc4c5'
-
-export const GOVERNANCE_CONFIGURATION_MANAGER_ROLE =
-    '0xc4fca0e2ae1ffe7494d7a1a0ee458ac6b6d84e022ad4f87c1742be5599e5e7fb'
-
-export const ASSET_EVENT_TRACKER_ROLE =
-    '0x46ffae7721ce7c213dfc98101d48d6a7f58e3c12f2945ae1fb4f2e2862a44ff1'
-
-export const HASH_TIMESTAMP_ROLE =
-    '0x3bb8341caefb6dc4800c130d6d6d2789f8c4e534bc168ff9a7eda2e2831a721f'
-
-export const CONTROLLER_ROLE =
-    '0x6bc432609a8af6e2d25fcffbe70872e0b3c63d88116a2b673c42dfbc130d9331'
-
-export const CAP_ROLE =
-    '0xd2231b344d69ba7f64c324f071f0ef91a388e60c2a6b529339afc42cf411cb61'
-
-export const SNAPSHOT_ROLE =
-    '0x0ca5e23bde0d5e6112f10b9752afc92df6901f9218a43771a113f0ee5ab6bd49'
-
-export const MINTER_ROLE =
-    '0xd8e8f9f9638a19d632dbb79025022db564483265e96ba99b2dd89df138e9cace'
-
+// Test-specific constants (if any needed only for tests)
+// Add any test-only constants here in the future
 export const ROYALTY_ROLE =
     '0xe87ed15151829ed3753553fc34d39b49f60370ac439fddb4e9304af60bce3045'
 
@@ -42,6 +14,9 @@ export const ISBE_PAUSER_ROLE =
 
 export const CONFIGURATION_MANAGER_ROLE =
     '0xdc4b85a1ab8a3dbc4b47e1626cb620f2a5a5e4753d049a2d71f76e2cf26b1e0b'
+
+export const CLIENT_FILTERING_ROLE =
+    '0xcbb09df20dd6e5dbe10d3957a6ca4269c2c926a5334d2cbcd9ea39ab0593f79a'
 
 export const DEFAULT_ADMIN_ROLE =
     '0x0000000000000000000000000000000000000000000000000000000000000000'
@@ -109,6 +84,8 @@ export const DID_VERIFICATION_METHOD_RESOLVER_KEY =
     '0xac8773db319c7049be61ab52c59325712b4ba639daa556105c3b1e20671238dd'
 export const DID_VERIFICATION_RELATIONSHIP_RESOLVER_KEY =
     '0x32bd32541f3651dc69848ddc9cad21896eabb6a11034c19b03683da6e19b76d7'
+export const CLIENT_FILTERING_RESOLVER_KEY =
+    '0x9d459b48dcede9ec86807b1af972b62ab0b2b0237e2187da45c02c25f3aeb016'
 
 export const FORBIDDEN_ERC165_INTERFACE_ID = '0xffffffff'
 
@@ -136,3 +113,22 @@ export const ASSERTION_RELATIONSHIP = 'assertionMethod'
 export const KEY_AGREEMENT_RELATIONSHIP = 'keyAgreement'
 export const CAPABILITY_INVOCATION_RELATIONSHIP = 'capabilityInvocation'
 export const CAPABILITY_DELEGATION_RELATIONSHIP = 'capabilityDelegation'
+
+export const ENS_ROLE =
+    '0x91d1777781884d03a6757a803996e38de2a42967fb37eeaca72729271025a9e2'
+export const ENS_MANAGER_ROLE =
+    '0x6e23e5e4b53b45e5b32b8b2e8e9a8c48b8a7c3b9c2b8a9a7b9a8c4b8b9a8c9b9'
+
+// Resolver keys
+export const ENS_REGISTRY_RESOLVER_KEY =
+    '0xc0629a5fdc41a377e7fd772f766ce559d0fecbb52e72bd1b4915525935b59053'
+export const ENS_RESOLVER_RESOLVER_KEY =
+    '0x9daad5d269e40315c6ea27f7ccd5ec5e9cc50b975d6172504109b111170ce5d4'
+export const ENS_NAME_RESOLVER_RESOLVER_KEY =
+    '0xb220ec5bf774f9c3a891b2fc9f0b0bbfae8503f22056a0c835252f4a2feb5b4f'
+export const ENS_TEXT_RESOLVER_RESOLVER_KEY =
+    '0x153e8d37fcd8b283cb133570078b11503f8e93bb9437f0d6306f0e57443f9818'
+export const ENS_PUBKEY_RESOLVER_RESOLVER_KEY =
+    '0x1c46b1cdbebdf5f3d15aae4a89c2a8fca0d9eff35f1f040b17caebc1726f8260'
+export const ENS_PUBLIC_RESOLVER_RESOLVER_KEY =
+    '0x01286e867987641a8805e8007327a88f6ebe0d80426ec755c0f86f57d5913c61'

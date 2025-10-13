@@ -30,6 +30,7 @@ import {
     VerificationRelationshipResultValidator,
 } from './utils'
 import { RollArgsStruct } from '../../typechain-types/contracts/identity/didregistry/IDidRegistry'
+import { randomHex, randomInt, TestConstants, EMPTY_VALUES } from '../testUtils'
 
 enum EllipticType {
     NONE = 0,
@@ -47,8 +48,8 @@ describe('DiDRegistry', function () {
     let didVerificationRelationshipFacet: DidVerificationRelationshipFacet
     let didRegistry: IDidRegistry
     let mockTimestap: MockTimestampFacet
-    const emptyString = ''
-    const emptyBytes = randomHx(0)
+    const emptyString = EMPTY_VALUES.string
+    const emptyBytes = EMPTY_VALUES.bytes
     let did: string
     let baseDocument: string
     let vMethodId: string
@@ -64,31 +65,14 @@ describe('DiDRegistry', function () {
     }
 
     const randomizeDidDocument = (wallet: HDNodeWallet) => {
-        baseDocument = randomStr()
-        vMethodId = randomStr()
-        publicKeyInvalindLength = randomHx()
-        publicKey65Incorrect = randomHx(65)
+        baseDocument = TestConstants.randomBaseDocument()
+        vMethodId = TestConstants.randomVerificationMethodId()
+        publicKeyInvalindLength = randomHex()
+        publicKey65Incorrect = randomHex(65)
         publicKey65 = walletToPublicKey(wallet)
         publicKey64 = '0x'.concat(publicKey65.slice(4))
         notBefore = randomInt()
         notAfter = notBefore + 1000000000000000000n
-    }
-
-    // Generar string hexadecimal aleatorio
-    function randomHx(length: number = 32): string {
-        return ethers.hexlify(ethers.randomBytes(length))
-    }
-
-    // Generar string aleatorio desde bytes
-    function randomStr(length: number = 10): string {
-        const bytes = ethers.randomBytes(Math.ceil(length / 2))
-        const hex = ethers.hexlify(bytes).slice(2) // Quitar '0x'
-        return hex.slice(0, length)
-    }
-
-    function randomInt(): bigint {
-        const randomBytes = ethers.randomBytes(32)
-        return ethers.toBigInt(ethers.hexlify(randomBytes))
     }
 
     async function deployInitial() {
@@ -174,7 +158,7 @@ describe('DiDRegistry', function () {
                     )
                 }
                 await loadFixture(fixture)
-                did = randomStr()
+                did = TestConstants.randomDid()
             })
             it('GIVEN initialized didRegistry WHEN try to insert did document with empty did THEN it fails', async () => {
                 await expect(
@@ -443,7 +427,10 @@ describe('DiDRegistry', function () {
 
             it('GIVEN an inserted document WHEN try to update with empty did THEN it fails', async () => {
                 await expect(
-                    didRegistry.updateBaseDocument('', randomStr())
+                    didRegistry.updateBaseDocument(
+                        '',
+                        TestConstants.randomDid()
+                    )
                 ).to.be.revertedWithCustomError(
                     didDocumentDetailedFacet,
                     'EmptyString'
@@ -452,7 +439,10 @@ describe('DiDRegistry', function () {
 
             it('GIVEN an inserted document WHEN try to update with empty baseDocument THEN it fails', async () => {
                 await expect(
-                    didRegistry.updateBaseDocument(randomStr(), '')
+                    didRegistry.updateBaseDocument(
+                        TestConstants.randomDid(),
+                        ''
+                    )
                 ).to.be.revertedWithCustomError(
                     didDocumentDetailedFacet,
                     'EmptyString'
@@ -460,9 +450,12 @@ describe('DiDRegistry', function () {
             })
 
             it('GIVEN an inserted document WHEN try to update an not inserted did THEN it fails', async () => {
-                const neewDid = randomStr()
+                const neewDid = TestConstants.randomDid()
                 await expect(
-                    didRegistry.updateBaseDocument(neewDid, randomStr())
+                    didRegistry.updateBaseDocument(
+                        neewDid,
+                        TestConstants.randomDid()
+                    )
                 )
                     .to.be.revertedWithCustomError(
                         didDocumentDetailedFacet,
@@ -472,7 +465,12 @@ describe('DiDRegistry', function () {
             })
 
             it('GIVEN an inserted document WHEN try to update without rights THEN it fails', async () => {
-                await expect(didRegistry.updateBaseDocument(did, randomStr()))
+                await expect(
+                    didRegistry.updateBaseDocument(
+                        did,
+                        TestConstants.randomDid()
+                    )
+                )
                     .to.be.revertedWithCustomError(
                         didDocumentDetailedFacet,
                         'ControllerNotAuthorized'
@@ -481,7 +479,7 @@ describe('DiDRegistry', function () {
             })
 
             it('GIVEN initialized didRegistry WHEN try to insert did document in current time THEN it success', async () => {
-                const newBaseDocument = randomStr()
+                const newBaseDocument = TestConstants.randomDid()
                 await mockTimestap.setMockedTimestamp(notBefore + 1n)
                 await expect(
                     didRegistry.updateBaseDocument(did, newBaseDocument)
@@ -520,7 +518,7 @@ describe('DiDRegistry', function () {
                 await expect(
                     didRegistry.addVerificationMethod(
                         emptyString,
-                        randomStr(),
+                        TestConstants.randomDid(),
                         publicKey64,
                         EllipticType.SECP_256_K1
                     )
@@ -532,7 +530,7 @@ describe('DiDRegistry', function () {
             it('GIVEN an inserted document WHEN try to add V.M. with empty vMethod THEN it fails', async () => {
                 await expect(
                     didRegistry.addVerificationMethod(
-                        randomStr(),
+                        TestConstants.randomDid(),
                         emptyString,
                         publicKey64,
                         EllipticType.SECP_256_K1
@@ -545,8 +543,8 @@ describe('DiDRegistry', function () {
             it('GIVEN an inserted document WHEN try to add V.M. with empty PK THEN it fails', async () => {
                 await expect(
                     didRegistry.addVerificationMethod(
-                        randomStr(),
-                        randomStr(),
+                        TestConstants.randomDid(),
+                        TestConstants.randomDid(),
                         emptyBytes,
                         EllipticType.SECP_256_K1
                     )
@@ -558,8 +556,8 @@ describe('DiDRegistry', function () {
             it('GIVEN an inserted document WHEN try to add V.M. with empty elliptic type THEN it fails', async () => {
                 await expect(
                     didRegistry.addVerificationMethod(
-                        randomStr(),
-                        randomStr(),
+                        TestConstants.randomDid(),
+                        TestConstants.randomDid(),
                         publicKey64,
                         EllipticType.NONE
                     )
@@ -569,11 +567,11 @@ describe('DiDRegistry', function () {
                 )
             })
             it('GIVEN an inserted document WHEN try to add V.M. with not inserted did THEN it fails', async () => {
-                const newDid = randomStr()
+                const newDid = TestConstants.randomDid()
                 await expect(
                     didRegistry.addVerificationMethod(
                         newDid,
-                        randomStr(),
+                        TestConstants.randomDid(),
                         publicKey64,
                         EllipticType.SECP_256_K1
                     )
@@ -600,7 +598,7 @@ describe('DiDRegistry', function () {
                     .withArgs(did, vMethodId)
             })
             it('GIVEN an inserted document WHEN try to add V.M. with inserted PK THEN it fails', async () => {
-                const newVMethodId = randomStr()
+                const newVMethodId = TestConstants.randomDid()
                 await expect(
                     didRegistry.addVerificationMethod(
                         did,
@@ -616,7 +614,7 @@ describe('DiDRegistry', function () {
                     .withArgs(publicKey64)
             })
             it('GIVEN an inserted document WHEN try to add V.M. with a non controller THEN it fails', async () => {
-                const newMethodId = randomStr()
+                const newMethodId = TestConstants.randomDid()
                 await expect(
                     didRegistry
                         .connect(other)
@@ -634,7 +632,7 @@ describe('DiDRegistry', function () {
                     .withArgs(did, otherAddress)
             })
             it('GIVEN an inserted document WHEN try to add V.M. of same elliptic type than NW THEN it success', async () => {
-                const newVMethodId = randomStr()
+                const newVMethodId = TestConstants.randomDid()
                 const newPublicKey = walletToPublicKey(
                     deriveWallet(wallet, '1')
                 )
@@ -719,7 +717,7 @@ describe('DiDRegistry', function () {
                 await expect(
                     didRegistry.revokeVerificationMethod(
                         emptyString,
-                        randomStr(),
+                        TestConstants.randomDid(),
                         randomInt()
                     )
                 ).to.be.revertedWithCustomError(
@@ -730,7 +728,7 @@ describe('DiDRegistry', function () {
             it('GIVEN an inserted document WHEN try to revoke V.M. with empty vMethod THEN it fails', async () => {
                 await expect(
                     didRegistry.revokeVerificationMethod(
-                        randomStr(),
+                        TestConstants.randomDid(),
                         emptyString,
                         randomInt()
                     )
@@ -740,11 +738,11 @@ describe('DiDRegistry', function () {
                 )
             })
             it('GIVEN an inserted document WHEN try to revoke V.M. with not inserted did THEN it fails', async () => {
-                const newDid = randomStr()
+                const newDid = TestConstants.randomDid()
                 await expect(
                     didRegistry.revokeVerificationMethod(
                         newDid,
-                        randomStr(),
+                        TestConstants.randomDid(),
                         notBefore
                     )
                 )
@@ -755,7 +753,7 @@ describe('DiDRegistry', function () {
                     .withArgs(newDid)
             })
             it('GIVEN an inserted document WHEN try to revoke V.M. with inserted vMethodId THEN it fails', async () => {
-                const newVMethodId = randomStr()
+                const newVMethodId = TestConstants.randomDid()
                 await expect(
                     didRegistry.revokeVerificationMethod(
                         did,
@@ -870,7 +868,7 @@ describe('DiDRegistry', function () {
                 await expect(
                     didRegistry.expireVerificationMethod(
                         emptyString,
-                        randomStr(),
+                        TestConstants.randomDid(),
                         randomInt()
                     )
                 ).to.be.revertedWithCustomError(
@@ -881,7 +879,7 @@ describe('DiDRegistry', function () {
             it('GIVEN an inserted document WHEN try to expire V.M. with empty vMethod THEN it fails', async () => {
                 await expect(
                     didRegistry.expireVerificationMethod(
-                        randomStr(),
+                        TestConstants.randomDid(),
                         emptyString,
                         randomInt()
                     )
@@ -891,11 +889,11 @@ describe('DiDRegistry', function () {
                 )
             })
             it('GIVEN an inserted document WHEN try to expire V.M. with not inserted did THEN it fails', async () => {
-                const newDid = randomStr()
+                const newDid = TestConstants.randomDid()
                 await expect(
                     didRegistry.expireVerificationMethod(
                         newDid,
-                        randomStr(),
+                        TestConstants.randomDid(),
                         notBefore
                     )
                 )
@@ -906,7 +904,7 @@ describe('DiDRegistry', function () {
                     .withArgs(newDid)
             })
             it('GIVEN an inserted document WHEN try to expire V.M. with inserted vMethodId THEN it fails', async () => {
-                const newVMethodId = randomStr()
+                const newVMethodId = TestConstants.randomDid()
                 await expect(
                     didRegistry.expireVerificationMethod(
                         did,
@@ -991,7 +989,7 @@ describe('DiDRegistry', function () {
                 ).to.be.false
             })
             it('GIVEN an inserted document WHEN try to expire V.M. of added NW THEN it success', async () => {
-                const newVMethodId = randomStr()
+                const newVMethodId = TestConstants.randomDid()
                 await didRegistry.addVerificationMethod(
                     did,
                     newVMethodId,
@@ -1054,7 +1052,7 @@ describe('DiDRegistry', function () {
             let rolledWallet: HDNodeWallet
             const rollArgsTemplate: RollArgsStruct = {
                 did: did,
-                vMethodId: randomStr(),
+                vMethodId: TestConstants.randomDid(),
                 publicKey: publicKey65,
                 ellipticType: EllipticType.SECP_256_K1,
                 notBefore: 0n,
@@ -1189,7 +1187,7 @@ describe('DiDRegistry', function () {
                 )
             })
             it('GIVEN an inserted document WHEN try to roll V.M. with did non existent THEN it fails', async () => {
-                rollArgs.did = randomStr()
+                rollArgs.did = TestConstants.randomDid()
                 await expect(
                     didRegistry.rollVerificationMethod(rollArgs)
                 ).to.be.revertedWithCustomError(
@@ -1207,7 +1205,7 @@ describe('DiDRegistry', function () {
                     .withArgs(did, vMethodId)
             })
             it('GIVEN an inserted document WHEN try to roll V.M. with oldVMethodId non existent THEN it fails', async () => {
-                rollArgs.oldVMethodId = randomStr()
+                rollArgs.oldVMethodId = TestConstants.randomDid()
                 await expect(didRegistry.rollVerificationMethod(rollArgs))
                     .to.be.revertedWithCustomError(
                         didVerificationMethodFacet,
@@ -1387,7 +1385,7 @@ describe('DiDRegistry', function () {
                 ).to.be.false
             })
             it('GIVEN an inserted document WHEN try to roll V.M. recently added THEN it success', async () => {
-                const newVMethodId = randomStr()
+                const newVMethodId = TestConstants.randomDid()
                 const vmWallet = deriveWallet(wallet, '1')
                 await didRegistry.addVerificationMethod(
                     did,
@@ -1493,8 +1491,8 @@ describe('DiDRegistry', function () {
                 await expect(
                     didRegistry.addVerificationRelationship(
                         emptyString,
-                        randomStr(),
-                        randomStr(),
+                        TestConstants.randomDid(),
+                        TestConstants.randomDid(),
                         notBefore,
                         notAfter
                     )
@@ -1507,9 +1505,9 @@ describe('DiDRegistry', function () {
             it('GIVEN an inserted document WHEN try to add V.R. with empty name THEN it fails', async () => {
                 await expect(
                     didRegistry.addVerificationRelationship(
-                        randomStr(),
+                        TestConstants.randomDid(),
                         emptyString,
-                        randomStr(),
+                        TestConstants.randomDid(),
                         notBefore,
                         notAfter
                     )
@@ -1522,8 +1520,8 @@ describe('DiDRegistry', function () {
             it('GIVEN an inserted document WHEN try to add V.R. with empty vMethodId THEN it fails', async () => {
                 await expect(
                     didRegistry.addVerificationRelationship(
-                        randomStr(),
-                        randomStr(),
+                        TestConstants.randomDid(),
+                        TestConstants.randomDid(),
                         emptyString,
                         notBefore,
                         notAfter
@@ -1537,9 +1535,9 @@ describe('DiDRegistry', function () {
             it('GIVEN an inserted document WHEN try to add V.R. with empty notBefore THEN it fails', async () => {
                 await expect(
                     didRegistry.addVerificationRelationship(
-                        randomStr(),
-                        randomStr(),
-                        randomStr(),
+                        TestConstants.randomDid(),
+                        TestConstants.randomDid(),
+                        TestConstants.randomDid(),
                         0n,
                         notAfter
                     )
@@ -1552,9 +1550,9 @@ describe('DiDRegistry', function () {
             it('GIVEN an inserted document WHEN try to add V.R. with empty notAfter THEN it fails', async () => {
                 await expect(
                     didRegistry.addVerificationRelationship(
-                        randomStr(),
-                        randomStr(),
-                        randomStr(),
+                        TestConstants.randomDid(),
+                        TestConstants.randomDid(),
+                        TestConstants.randomDid(),
                         notBefore,
                         0n
                     )
@@ -1565,12 +1563,12 @@ describe('DiDRegistry', function () {
             })
 
             it('GIVEN an inserted document WHEN try to add V.R. with non existent DID THEN it fails', async () => {
-                const wrongDid = randomStr()
+                const wrongDid = TestConstants.randomDid()
                 await expect(
                     didRegistry.addVerificationRelationship(
                         wrongDid,
-                        randomStr(),
-                        randomStr(),
+                        TestConstants.randomDid(),
+                        TestConstants.randomDid(),
                         notBefore,
                         notAfter
                     )
@@ -1583,11 +1581,11 @@ describe('DiDRegistry', function () {
             })
 
             it('GIVEN an inserted document WHEN try to add V.R. with non existent vMethod THEN it fails', async () => {
-                const wrongVMethod = randomStr()
+                const wrongVMethod = TestConstants.randomDid()
                 await expect(
                     didRegistry.addVerificationRelationship(
                         did,
-                        randomStr(),
+                        TestConstants.randomDid(),
                         wrongVMethod,
                         notBefore,
                         notAfter
@@ -1606,7 +1604,7 @@ describe('DiDRegistry', function () {
                         .connect(other)
                         .addVerificationRelationship(
                             did,
-                            randomStr(),
+                            TestConstants.randomDid(),
                             vMethodId,
                             notBefore,
                             notAfter
@@ -1620,7 +1618,7 @@ describe('DiDRegistry', function () {
             })
 
             it('GIVEN an inserted document WHEN try to add V.R. with non valid name THEN it fails', async () => {
-                const wrongName = randomStr()
+                const wrongName = TestConstants.randomDid()
                 await expect(
                     didRegistry.addVerificationRelationship(
                         did,
@@ -1793,7 +1791,10 @@ describe('DiDRegistry', function () {
 
             it('GIVEN deployed DiDRegistry WHEN try to add empty did THEN it fails', async () => {
                 await expect(
-                    didRegistry.addController(emptyString, randomStr())
+                    didRegistry.addController(
+                        emptyString,
+                        TestConstants.randomDid()
+                    )
                 ).to.be.revertedWithCustomError(
                     didControllerFacet,
                     'EmptyString'
@@ -1801,15 +1802,23 @@ describe('DiDRegistry', function () {
             })
             it('GIVEN deployed DiDRegistry WHEN try to add empty controller THEN it fails', async () => {
                 await expect(
-                    didRegistry.addController(randomStr(), emptyString)
+                    didRegistry.addController(
+                        TestConstants.randomDid(),
+                        emptyString
+                    )
                 ).to.be.revertedWithCustomError(
                     didControllerFacet,
                     'EmptyString'
                 )
             })
             it('GIVEN deployed DiDRegistry WHEN try to add non existent did THEN it fails', async () => {
-                const randomDiD = randomStr()
-                await expect(didRegistry.addController(randomDiD, randomStr()))
+                const randomDiD = TestConstants.randomDid()
+                await expect(
+                    didRegistry.addController(
+                        randomDiD,
+                        TestConstants.randomDid()
+                    )
+                )
                     .to.be.revertedWithCustomError(
                         didControllerFacet,
                         'DidNotExists'
@@ -1817,7 +1826,7 @@ describe('DiDRegistry', function () {
                     .withArgs(randomDiD)
             })
             it('GIVEN deployed DiDRegistry WHEN try to add non existent controller THEN it fails', async () => {
-                const randomDiD = randomStr()
+                const randomDiD = TestConstants.randomDid()
                 await expect(didRegistry.addController(did, randomDiD))
                     .to.be.revertedWithCustomError(
                         didControllerFacet,
@@ -1835,11 +1844,11 @@ describe('DiDRegistry', function () {
             })
             it('GIVEN two inserted documents WHEN try to add controller THEN it success', async () => {
                 // GIVEN
-                const controller = randomStr()
+                const controller = TestConstants.randomDid()
                 await didRegistry.insertDidDocument(
                     controller,
-                    randomStr(),
-                    randomStr(),
+                    TestConstants.randomDid(),
+                    TestConstants.randomDid(),
                     publicKey64,
                     EllipticType.SECP_256_K1,
                     notBefore,
@@ -1857,11 +1866,11 @@ describe('DiDRegistry', function () {
         describe('revokeController', () => {
             let wallet: HDNodeWallet
             async function addNewController() {
-                const controller = randomStr()
+                const controller = TestConstants.randomDid()
                 await didRegistry.insertDidDocument(
                     controller,
-                    randomStr(),
-                    randomStr(),
+                    TestConstants.randomDid(),
+                    TestConstants.randomDid(),
                     publicKey64,
                     EllipticType.SECP_256_K1,
                     notBefore,
@@ -1900,7 +1909,10 @@ describe('DiDRegistry', function () {
 
             it('GIVEN deployed DiDRegistry WHEN try to revoke empty did THEN it fails', async () => {
                 await expect(
-                    didRegistry.revokeController(emptyString, randomStr())
+                    didRegistry.revokeController(
+                        emptyString,
+                        TestConstants.randomDid()
+                    )
                 ).to.be.revertedWithCustomError(
                     didControllerFacet,
                     'EmptyString'
@@ -1908,16 +1920,22 @@ describe('DiDRegistry', function () {
             })
             it('GIVEN deployed DiDRegistry WHEN try to revoke empty controller THEN it fails', async () => {
                 await expect(
-                    didRegistry.revokeController(randomStr(), emptyString)
+                    didRegistry.revokeController(
+                        TestConstants.randomDid(),
+                        emptyString
+                    )
                 ).to.be.revertedWithCustomError(
                     didControllerFacet,
                     'EmptyString'
                 )
             })
             it('GIVEN deployed DiDRegistry WHEN try to revoke non existent did THEN it fails', async () => {
-                const randomDiD = randomStr()
+                const randomDiD = TestConstants.randomDid()
                 await expect(
-                    didRegistry.revokeController(randomDiD, randomStr())
+                    didRegistry.revokeController(
+                        randomDiD,
+                        TestConstants.randomDid()
+                    )
                 )
                     .to.be.revertedWithCustomError(
                         didControllerFacet,
@@ -1926,7 +1944,7 @@ describe('DiDRegistry', function () {
                     .withArgs(randomDiD)
             })
             it('GIVEN deployed DiDRegistry WHEN try to revoke non existent controller THEN it fails', async () => {
-                const randomDiD = randomStr()
+                const randomDiD = TestConstants.randomDid()
                 await expect(didRegistry.revokeController(did, randomDiD))
                     .to.be.revertedWithCustomError(
                         didControllerFacet,
@@ -1936,11 +1954,11 @@ describe('DiDRegistry', function () {
             })
             it('GIVEN deployed DiDRegistry WHEN try to revoke not linked controller THEN it fails', async () => {
                 // GIVEN
-                const controller = randomStr()
+                const controller = TestConstants.randomDid()
                 await didRegistry.insertDidDocument(
                     controller,
-                    randomStr(),
-                    randomStr(),
+                    TestConstants.randomDid(),
+                    TestConstants.randomDid(),
                     publicKey64,
                     EllipticType.SECP_256_K1,
                     notBefore,
@@ -1969,11 +1987,11 @@ describe('DiDRegistry', function () {
 
         describe('getDids', () => {
             const insertedDids = [
-                randomStr(),
-                randomStr(),
-                randomStr(),
-                randomStr(),
-                randomStr(),
+                TestConstants.randomDid(),
+                TestConstants.randomDid(),
+                TestConstants.randomDid(),
+                TestConstants.randomDid(),
+                TestConstants.randomDid(),
             ]
 
             beforeEach(async () => {
@@ -2038,11 +2056,11 @@ describe('DiDRegistry', function () {
         describe('getDidsByVerificationRelationship', () => {
             let wallet: HDNodeWallet
             const insertedDids = [
-                randomStr(),
-                randomStr(),
-                randomStr(),
-                randomStr(),
-                randomStr(),
+                TestConstants.randomDid(),
+                TestConstants.randomDid(),
+                TestConstants.randomDid(),
+                TestConstants.randomDid(),
+                TestConstants.randomDid(),
             ]
             before(async () => {
                 wallet = walletOfFirstSigner()
@@ -2168,12 +2186,12 @@ describe('DiDRegistry', function () {
 
             beforeEach(async () => {
                 randomizeDidDocument(walletOfFirstSigner())
-                controller = randomStr()
+                controller = TestConstants.randomDid()
                 insertedDids = [
-                    randomStr(),
-                    randomStr(),
-                    randomStr(),
-                    randomStr(),
+                    TestConstants.randomDid(),
+                    TestConstants.randomDid(),
+                    TestConstants.randomDid(),
+                    TestConstants.randomDid(),
                 ]
                 const fixture = async () => {
                     await didRegistry.initializeDiDRegistry(

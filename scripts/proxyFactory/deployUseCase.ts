@@ -4,6 +4,10 @@ import { getEvent } from '../utils/getEvent'
 import { isValidBytes, isValidBytesAndLength } from '../utils/validation'
 import { Rbac } from './interfaces'
 
+/**
+ * Legacy function for backward compatibility
+ * @deprecated Use the signature provider version above
+ */
 export async function deployUseCase(
     configId: string,
     configVersion: number,
@@ -19,6 +23,9 @@ export async function deployUseCase(
     rbacs: Rbac[]
     proxy: string
 }> {
+    console.warn(
+        '⚠️  Using legacy deployUseCase - consider switching to signature provider version'
+    )
     if (!isValidBytesAndLength(configId, 32))
         throw new Error('Invalid config Id format : ' + configId)
 
