@@ -1,6 +1,7 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { ContractMatcher } from "./contractMatcher";
 import { CONFIGURATION_ID_DID_REGISTRY } from "../../test/initialization";
+import { TransactionResponse } from "ethers";
 
 // Tipo de dato de la estructura base devuelta por facets()
 type RawFacetEntry = [string, string[]];
@@ -11,6 +12,13 @@ interface Facet {
   selectors: string[];
   numSelectors: number;
   facetName?: string;
+}
+
+async function processTX(message:string,tx:Promise<TransactionResponse>):Promise<void> {
+    const pTx:TransactionResponse = await tx;
+    process.stdout.write(`\x1b[31m ${message} - Waiting TX to be processed (TX: ${(await tx).hash})...\x1b[0m\r`);
+    await pTx.wait();
+    process.stdout.write(`${message} - TX  processed (TX: ${(await tx).hash})...                                  \n`);
 }
 
 async function validateFacests(hre: HardhatRuntimeEnvironment, businessAddress:string) {
@@ -61,7 +69,7 @@ async function validateFacests(hre: HardhatRuntimeEnvironment, businessAddress:s
     console.log(`\n\n--- FACETS VALIDATION COMPLETED ---------------------------------------\n`);   
 }
 
-async function functionValidatePausable(hre:HardhatRuntimeEnvironment, businessAddress:string) {
+async function validatePausable(hre:HardhatRuntimeEnvironment, businessAddress:string) {
     
     const provider = hre.ethers.provider;
     const [signer]= await hre.ethers.getSigners();
@@ -77,7 +85,7 @@ async function functionValidatePausable(hre:HardhatRuntimeEnvironment, businessA
     console.log(`Current paused state: ${paused}`);
     
     process.stdout.write('\x1b[31mWaiting TX (pause) to be processed...\x1b[0m\r');
-    await (await pausableContract.pause()).wait();
+    await processTX("Pause",pausableContract.pause());
     paused = await pausableContract.paused();
     console.log(`PAUSE:  paused state: ${paused}                    `);
 
@@ -85,7 +93,7 @@ async function functionValidatePausable(hre:HardhatRuntimeEnvironment, businessA
     console.log(`Authority level of signer: ${authorityLevel}`);
 
     process.stdout.write('\x1b[31mWaiting TX (unpause) to be processed...\x1b[0m\r');;
-    await (await pausableContract.unpause()).wait();
+    await processTX("Unpause", pausableContract.unpause());
     paused = await pausableContract.paused();
     console.log(`UNPAUSE: paused state: ${paused}              `);
 
@@ -110,12 +118,11 @@ async function validateRoles(hre:HardhatRuntimeEnvironment, businessAddress:stri
         console.log(`  Role ${i}: ${r}`);
     });
 
-    console.log(Array.from(roles)[roleNumber - 1]);
     let role: string = ""+ Array.from(roles)[roleNumber - 1]
     console.log(`\nTesting last role: ${role}`);
 
     process.stdout.write('\x1b[31mWaiting TX (renounceRole) to be processed...\x1b[0m\r');
-    await (await accessControlContract.revokeRole(role,signerAddress)).wait();
+    await processTX("Revoke Role", accessControlContract.revokeRole(role,signerAddress));
     console.log(`Renounced role ${role}`);
     roles = await accessControlContract.getRolesByAccount(signerAddress,0n,roleNumber-1);
     roles.forEach((r:string,i:number) => {
@@ -123,7 +130,7 @@ async function validateRoles(hre:HardhatRuntimeEnvironment, businessAddress:stri
     });
 
     process.stdout.write('\x1b[31mWaiting TX (rgrantRole) to be processed...\x1b[0m\r');
-    await (await accessControlContract.grantRole(role, signerAddress)).wait();
+    await processTX("Grant Role", accessControlContract.grantRole(role,signerAddress));
     console.log(`Granded role ${role}`);
     roles = await accessControlContract.getRolesByAccount(signerAddress,0n,roleNumber);
     roles.forEach((r:string,i:number) => {
@@ -149,11 +156,29 @@ async function validateBusinesLogic(hre:HardhatRuntimeEnvironment, businessAddre
     console.log("\n\n--- BUSINESS LOGIC COMPLETED ---------------------------------------\n");
 }
 
+// async function validateGlobalPause(hre:HardhatRuntimeEnvironment, businessAddress:string) {
+//     console.log(`\n\n--- GLOBAL PAUSE/UNPAUSE TEST ---------------------------------------\n`);
+//     const provider = hre.ethers.provider;
+//     const [signer]= await hre.ethers.getSigners();
+//     console.log(`Using signer address: ${await signer.getAddress()}`);
+//     const artifact = await import('../../artifacts/contracts/factory/globalisbepause/GlobalIsbePause.sol/GlobalIsbePause.json');
+//     const globalPauseIsbeContract = new hre.ethers.Contract(businessAddress, artifact.abi, provider);
+
+//     const IsbeProxyAddress = "0x194de74ce288462b223b49271bc7d7350beb3329";
+//     const artifactPausable = await import('../../artifacts/contracts/pause/ISBEPauseFacet.sol/ISBEPauseFacet.json');
+//     const pausableContract = new hre.ethers.Contract(IsbeProxyAddress, artifactPausable.abi, signer);
+
+//     let paused = await pausableContract.paused();
+//     console.log(`Current paused state: ${paused}`);
+
+// }
+
 export async function validateGenesis(hre:HardhatRuntimeEnvironment, businessAddress:string) {
     console.log(`\n\n=== VALIDATING GENESIS DEPLOYMENT ===================================\n`);
     await validateFacests(hre, businessAddress);
+    //await validateGlobalPause(hre, businessAddress);
     await validateBusinesLogic(hre, businessAddress);
     await validateRoles(hre, businessAddress);
-    await functionValidatePausable(hre, businessAddress);
+    await validatePausable(hre, businessAddress);
     console.log(`\n\n=== GENESIS VALIDATION COMPLETED ===================================`);
 }
