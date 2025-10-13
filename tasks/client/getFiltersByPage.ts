@@ -3,7 +3,7 @@ import { getSigner } from '../../scripts/utils/getSigner'
 import { getFiltersByPage } from '../../scripts/client/getFiltersByPage'
 
 /**
- npx hardhat getFiltersLength --network localhost \
+ npx hardhat getFiltersByPage --network localhost \
   --client-filtering-address "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6" \
   --page-number 1 \
   --page-size 10

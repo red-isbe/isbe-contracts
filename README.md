@@ -357,7 +357,7 @@ npm run test -- --network secp256r1-testnet
 
 ### Architecture Improvement Plan
 
-**📋 Strategy Document**: [`docs/secp256r1-Management-Strategy.md`](docs/secp256r1-Management-Strategy.md)
+**📋 Complete Guide**: [`docs/SECP256R1_COMPLETE_GUIDE.md`](docs/SECP256R1_COMPLETE_GUIDE.md)
 
 **Planned Improvements**:
 
@@ -478,6 +478,13 @@ npm run slither:storageLayout
 
 # Analyze inheritance structure
 npm run slither:inheritance
+```
+
+### Gas Analysis
+
+```bash
+# Run tests with gas reporting enabled
+npm run test:gas
 ```
 
 ### Documentation
@@ -715,7 +722,7 @@ npx hardhat deployAll --network customR1Network --precommit
 - 🔧 **Event Detection Issues**: Raw transactions may not populate logs correctly in receipts
 - 🆕 **Fallback Validation**: Automatic state validation when events are missing (v1.2.0+)
 
-See [Curve Compatibility Test Results](docs/Curve-Compatibility-Test-Results.md) for detailed production deployment metrics and validation reports.
+For detailed technical information and implementation status, see [`docs/SECP256R1_COMPLETE_GUIDE.md`](docs/SECP256R1_COMPLETE_GUIDE.md).
 
 ## 📊 Examples
 
@@ -840,7 +847,13 @@ For detailed installation and usage instructions, visit the [package documentati
 - **TypeScript Code Improvements**: `docs/TypeScript-Code-Improvements.md` 🎯 _Phase 1 Completed_
 - **SECP256R1 Complete Guide**: `docs/SECP256R1_COMPLETE_GUIDE.md` ⚠️ _Experimental_
 - **Production Deployment Guide**: `docs/Production-Deployment-Guide.md`
+- **Gas Usage Summary**: [`docs/generated/gas-usage-summary.md`](docs/generated/gas-usage-summary.md) 📊 _Auto-updated on each commit_
 - **Generated Documentation**: `docs/generated/` (via `npm run docgen`)
+
+### 📊 Gas Measurement
+
+- **Gas Reporting**: Test execution with gas consumption analysis using Hardhat's built-in gas reporter
+- **Integration**: Gas reporting available through `npm run test:gas` command
 
 ## 🔧 Troubleshooting
 

@@ -155,7 +155,7 @@ export class ConfigManager {
                 },
                 testing: {
                     timeout: 60000,
-                    parallel: true,
+                    parallel: false,
                     coverage: {
                         threshold: {
                             lines: 100,

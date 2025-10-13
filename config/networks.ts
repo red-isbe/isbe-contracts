@@ -14,9 +14,9 @@ import type {
 
 // Environment variables for dynamic configuration
 const LOCALHOST_URL = process.env.LOCALHOST_URL || 'http://172.16.240.30:8545'
-const MVP_URL =
-    process.env.MVP_URL ||
-    'https://besu-node-non-validator-1.mvp.envs.redisbe.com'
+const DEV_URL =
+    process.env.DEV_URL ||
+    'https://besu-node-validator-1-rpc.dev.aws.envs.redisbe.com/'
 const ARSYS_URL = process.env.ARSYS_URL || 'http://213.165.85.41:8545'
 const KEPLER_URL =
     process.env.KEPLER_URL || 'https://regular.pre.iosec.io.builders:8565'
@@ -60,12 +60,12 @@ export function getNetworkConfigs(): NetworksConfig {
         } as NetworkConfigWithCurve,
 
         // ISBE MVP Network (secp256k1)
-        mvp: {
-            url: MVP_URL,
+        dev: {
+            url: DEV_URL,
             chainId: 2023,
             accounts,
             gasPrice: 0,
-            gas: 100000000,
+            gas: 20_000_000,
             blockGasLimit: 0x1e84800, // 32,000,000
             curve: 'secp256k1',
         } as NetworkConfigWithCurve,
