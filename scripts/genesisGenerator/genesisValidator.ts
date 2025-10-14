@@ -151,32 +151,42 @@ async function validateBusinesLogic(hre:HardhatRuntimeEnvironment, businessAddre
     const businessLogicContract = new hre.ethers.Contract(businessAddress, artifact.abi, provider);
 
     const businessLogics:string[] = await businessLogicContract.getBusinessLogics();
-    console.log(businessLogics);
+    //console.log(businessLogics);
+    businessLogics.forEach((b:string,i:number) => {
+        console.log(`  Business Logic ${i}: ${b}`);
+    });
 
     console.log("\n\n--- BUSINESS LOGIC COMPLETED ---------------------------------------\n");
 }
 
-// async function validateGlobalPause(hre:HardhatRuntimeEnvironment, businessAddress:string) {
-//     console.log(`\n\n--- GLOBAL PAUSE/UNPAUSE TEST ---------------------------------------\n`);
-//     const provider = hre.ethers.provider;
-//     const [signer]= await hre.ethers.getSigners();
-//     console.log(`Using signer address: ${await signer.getAddress()}`);
-//     const artifact = await import('../../artifacts/contracts/factory/globalisbepause/GlobalIsbePause.sol/GlobalIsbePause.json');
-//     const globalPauseIsbeContract = new hre.ethers.Contract(businessAddress, artifact.abi, provider);
+async function validateGlobalPause(hre:HardhatRuntimeEnvironment, businessAddress:string) {
+    console.log(`\n\n--- GLOBAL PAUSE/UNPAUSE TEST ---------------------------------------\n`);
+    const provider = hre.ethers.provider;
+    const [signer]= await hre.ethers.getSigners();
+    console.log(`Using signer address: ${await signer.getAddress()}`);
+    const artifact = await import('../../artifacts/contracts/factory/globalisbepause/GlobalIsbePause.sol/GlobalIsbePause.json');
+    const globalPauseIsbeContract = new hre.ethers.Contract(businessAddress, artifact.abi, signer);
 
-//     const IsbeProxyAddress = "0x194de74ce288462b223b49271bc7d7350beb3329";
-//     const artifactPausable = await import('../../artifacts/contracts/pause/ISBEPauseFacet.sol/ISBEPauseFacet.json');
-//     const pausableContract = new hre.ethers.Contract(IsbeProxyAddress, artifactPausable.abi, signer);
+    const IsbeProxyAddress = "0x301dc252d2e09eac1a34f017bdc240d2d72037c2";
+    const artifactPausable = await import('../../artifacts/contracts/pause/ISBEPauseFacet.sol/ISBEPauseFacet.json');
+    const pausableContract = new hre.ethers.Contract(IsbeProxyAddress, artifactPausable.abi, signer);
 
-//     let paused = await pausableContract.paused();
-//     console.log(`Current paused state: ${paused}`);
+    let paused = await pausableContract.paused();
+    console.log(`CURRENT paused state: ${paused}`);
 
-// }
+    await processTX("Global Pause", globalPauseIsbeContract.pauseIsbe(IsbeProxyAddress));
+
+    paused = await pausableContract.paused();
+    console.log(`NEW paused state: ${paused}`);
+
+    await processTX("Global UnPause", globalPauseIsbeContract.unpauseIsbe(IsbeProxyAddress));
+
+}
 
 export async function validateGenesis(hre:HardhatRuntimeEnvironment, businessAddress:string) {
     console.log(`\n\n=== VALIDATING GENESIS DEPLOYMENT ===================================\n`);
     await validateFacests(hre, businessAddress);
-    //await validateGlobalPause(hre, businessAddress);
+    await validateGlobalPause(hre, businessAddress);
     await validateBusinesLogic(hre, businessAddress);
     await validateRoles(hre, businessAddress);
     await validatePausable(hre, businessAddress);
