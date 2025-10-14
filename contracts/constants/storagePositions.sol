@@ -8,12 +8,6 @@ bytes32 constant _DIAMOND_STORAGE_POSITION = 0x14a872dcf5b21c7ac5c7a21241cb3088a
 // keccak256('isbe.contracts.isbe.proxy.storage')
 bytes32 constant _ISBE_PROXY_STORAGE_POSITION = 0x04fb5b1674918eac185959cfae932d99373bdf254d85286d6561bd7c87ae22e8;
 
-// keccak256('isbe.contracts.erc20.storage');
-bytes32 constant _ERC20_STORAGE_POSITION = 0xd93ac5c223af8b55b10aca6a04761f021176cb4baf866e7484f3c8d7325c3a93;
-
-// keccak256('isbe.contracts.erc20.capped.storage');
-bytes32 constant _ERC20_CAPPED_STORAGE_POSITION = 0x856c4e5ce77b898d0ed139a2efc3542d6f10ce029e0a2516ae963aa6a9348766;
-
 // keccak256('isbe.contracts.access.control.storage');
 bytes32 constant _ACCESS_CONTROL_STORAGE_POSITION = 0xb335729b1c9d0dd5cb00f5400f21de5f6cbacc7f26b7f1d63701569692e3b8ee;
 
@@ -50,6 +44,13 @@ bytes32 constant _CONFIGURATION_MANAGEMENT_STORAGE_POSITION = 0x4beef12830ad37da
 // keccak256('isbe.contracts.proxy.factory.storage');
 bytes32 constant _PROXY_FACTORY_STORAGE_POSITION = 0xaa8d33df53b16b2997ff500eedf8d4d1e966355596b60403562e732c9efb474a;
 
+//ERC20 storage position
+// keccak256('isbe.contracts.erc20.storage');
+bytes32 constant _ERC20_STORAGE_POSITION = 0xd93ac5c223af8b55b10aca6a04761f021176cb4baf866e7484f3c8d7325c3a93;
+
+// keccak256('isbe.contracts.erc20.snapshot.storage');
+bytes32 constant _ERC20_SNAPSHOT_STORAGE_POSITION = 0x3c2d5e4f4e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b;
+
 //ERC3643 storage position
 // keccak256('isbe.contracts.erc3643.metadata.storage');
 bytes32 constant _ERC3643_METADATA_STORAGE_POSITION = 0x84ed0b9176400cfe0bb1701ac1a14a9c7d7e2130c0db5a7adfbb9aa29de4d7f2;
@@ -62,6 +63,10 @@ bytes32 constant _ERC3643_FREEZE_STORAGE_POSITION = 0x27f6de6c243b33bb392a1e63dd
 
 // keccak256('isbe.contracts.erc3643.control.storage');
 bytes32 constant _ERC3643_CONTROL_STORAGE_POSITION = 0x72d835f60ed84d9e97792d54a06b99959c3707d49cbd20abce0c598fa0e46898;
+
+//ERC203643 storage position
+// keccak256('isbe.contracts.erc203643.capped.storage');
+bytes32 constant _ERC203643_CAPPED_STORAGE_POSITION = 0x1f4e8e2a5e3c4b6f8e2d3c4b5a6f7e8d9c0b1a2b3c4d5e6f7e8d9c0b1a2b3c4b;
 
 //ERC721 storage position
 // keccak256('isbe.contracts.erc721.storage');

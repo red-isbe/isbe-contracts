@@ -2,7 +2,7 @@
 pragma solidity ^0.8.28;
 
 import {ERC20Internal} from '../../ERC20Internal.sol';
-import {_ERC20_CAPPED_STORAGE_POSITION} from '../../../../constants/storagePositions.sol';
+import {_ERC20_SNAPSHOT_STORAGE_POSITION} from '../../../../constants/storagePositions.sol';
 import {IERC20Snapshot} from './IERC20Snapshot.sol';
 import {Arrays} from '@openzeppelin/contracts/utils/Arrays.sol';
 import {Counters} from '@openzeppelin/contracts/utils/Counters.sol';
@@ -59,24 +59,18 @@ abstract contract ERC20SnapshotInternal is ERC20Internal {
         return currentId;
     }
 
-    function _beforeTokenTransfer(
-        address _from,
-        address _to,
-        uint256 /*amount*/
-    ) internal virtual override {
-        if (_from == address(0)) {
-            // mint
-            _updateAccountSnapshot(_to);
-            return _updateTotalSupplySnapshot();
-        }
-        if (_to == address(0)) {
-            // burn
-            _updateAccountSnapshot(_from);
-            return _updateTotalSupplySnapshot();
-        }
-        // transfer
-        _updateAccountSnapshot(_from);
-        _updateAccountSnapshot(_to);
+    function _updateAccountSnapshot(address _account) internal {
+        _updateSnapshot(
+            _erc20SnapshotStorage().accountBalanceSnapshots[_account],
+            _balanceOf(_account)
+        );
+    }
+
+    function _updateTotalSupplySnapshot() internal {
+        _updateSnapshot(
+            _erc20SnapshotStorage().totalSupplySnapshots,
+            _totalSupply()
+        );
     }
 
     function _getCurrentSnapshotId() internal view virtual returns (uint256) {
@@ -105,27 +99,13 @@ abstract contract ERC20SnapshotInternal is ERC20Internal {
         pure
         returns (ERC20SnapshotStorage storage storage_)
     {
-        bytes32 position = _ERC20_CAPPED_STORAGE_POSITION;
+        bytes32 position = _ERC20_SNAPSHOT_STORAGE_POSITION;
         // slither-disable-start assembly
         // solhint-disable-next-line no-inline-assembly
         assembly {
             storage_.slot := position
         }
         // slither-disable-end assembly
-    }
-
-    function _updateAccountSnapshot(address _account) private {
-        _updateSnapshot(
-            _erc20SnapshotStorage().accountBalanceSnapshots[_account],
-            _balanceOf(_account)
-        );
-    }
-
-    function _updateTotalSupplySnapshot() private {
-        _updateSnapshot(
-            _erc20SnapshotStorage().totalSupplySnapshots,
-            _totalSupply()
-        );
     }
 
     function _updateSnapshot(

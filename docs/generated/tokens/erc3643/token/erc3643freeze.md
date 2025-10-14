@@ -3,7 +3,8 @@
 External contract implementing ERC-3643 freeze functionality.
 
 _Provides public methods to freeze/unfreeze addresses and token amounts.
-Applies access control, validation, and emits events._
+Applies access control, validation, and emits events.
+Uses granular FREEZE_ROLE instead of broad TOKEN_AGENT_ROLE for better permission management._
 
 ### setAddressFrozen
 
@@ -11,11 +12,14 @@ Applies access control, validation, and emits events._
 function setAddressFrozen(address _userAddress, bool _freeze) external
 ```
 
-@dev sets an address frozen status for this token.
-@param \_userAddress The address for which to update frozen status
-@param \_freeze Frozen status of the address
-This function can only be called by a wallet set as agent of the token
-emits an `AddressFrozen` event
+_Sets the freeze status of a wallet_
+
+#### Parameters
+
+| Name          | Type    | Description                                                                                                                            |
+| ------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| \_userAddress | address | The address for which to update frozen status                                                                                          |
+| \_freeze      | bool    | Freeze status of the address Requirements: - Caller must have FREEZE_ROLE - Contract must not be paused Emits: - {AddressFrozen} event |
 
 ### freezePartialTokens
 
@@ -23,11 +27,14 @@ emits an `AddressFrozen` event
 function freezePartialTokens(address _userAddress, uint256 _amount) external
 ```
 
-@dev freezes token amount specified for given address.
-@param \_userAddress The address for which to update frozen tokens
-@param \_amount Amount of Tokens to be frozen
-This function can only be called by a wallet set as agent of the token
-emits a `TokensFrozen` event
+_Freezes a specified amount of tokens for a given address_
+
+#### Parameters
+
+| Name          | Type    | Description                                                                                                                                                                            |
+| ------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| \_userAddress | address | The address for which to freeze tokens                                                                                                                                                 |
+| \_amount      | uint256 | Amount of tokens to freeze Requirements: - Caller must have FREEZE_ROLE - Contract must not be paused - Amount must not exceed user's free token balance Emits: - {TokensFrozen} event |
 
 ### unfreezePartialTokens
 
@@ -35,11 +42,14 @@ emits a `TokensFrozen` event
 function unfreezePartialTokens(address _userAddress, uint256 _amount) external
 ```
 
-@dev unfreezes token amount specified for given address
-@param \_userAddress The address for which to update frozen tokens
-@param \_amount Amount of Tokens to be unfrozen
-This function can only be called by a wallet set as agent of the token
-emits a `TokensUnfrozen` event
+_Unfreezes a specified amount of tokens for a given address_
+
+#### Parameters
+
+| Name          | Type    | Description                                                                                                                                                                                  |
+| ------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| \_userAddress | address | The address for which to unfreeze tokens                                                                                                                                                     |
+| \_amount      | uint256 | Amount of tokens to unfreeze Requirements: - Caller must have FREEZE_ROLE - Contract must not be paused - Amount must not exceed user's frozen token balance Emits: - {TokensUnfrozen} event |
 
 ### isFrozen
 
@@ -47,12 +57,19 @@ emits a `TokensUnfrozen` event
 function isFrozen(address _userAddress) external view returns (bool)
 ```
 
-@dev Returns the freezing status of a wallet
-if isFrozen returns `true` the wallet is frozen
-if isFrozen returns `false` the wallet is not frozen
-isFrozen returning `true` doesn't mean that the balance is free, tokens could be blocked by
-a partial freeze or the whole token could be blocked by pause
-@param \_userAddress the address of the wallet on which isFrozen is called
+_Returns the freeze status of a wallet_
+
+#### Parameters
+
+| Name          | Type    | Description                            |
+| ------------- | ------- | -------------------------------------- |
+| \_userAddress | address | The address to check freeze status for |
+
+#### Return Values
+
+| Name | Type | Description                                                                                                                                                                                 |
+| ---- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [0]  | bool | bool True if the address is completely frozen, false otherwise Note: This returns the complete freeze status. An address can still have partially frozen tokens even if this returns false. |
 
 ### getFrozenTokens
 
@@ -60,15 +77,33 @@ a partial freeze or the whole token could be blocked by pause
 function getFrozenTokens(address _userAddress) external view returns (uint256)
 ```
 
-@dev Returns the amount of tokens that are partially frozen on a wallet
-the amount of frozen tokens is always <= to the total balance of the wallet
-@param \_userAddress the address of the wallet on which getFrozenTokens is called
+_Returns the amount of partially frozen tokens for a given address_
+
+#### Parameters
+
+| Name          | Type    | Description                            |
+| ------------- | ------- | -------------------------------------- |
+| \_userAddress | address | The address to check frozen tokens for |
+
+#### Return Values
+
+| Name | Type    | Description                                                                                                                                                                                                                |
+| ---- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [0]  | uint256 | uint256 The amount of tokens that are partially frozen Note: This only returns partially frozen tokens. If the address is completely frozen (isFrozen = true), all tokens are effectively frozen regardless of this value. |
 
 ### \_implementedInterfaces
 
 ```solidity
 function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
 ```
+
+_Returns the interfaces implemented by this contract_
+
+#### Return Values
+
+| Name         | Type     | Description                    |
+| ------------ | -------- | ------------------------------ |
+| interfaces\_ | bytes4[] | Array of interface identifiers |
 
 ---
 
@@ -272,6 +307,22 @@ this event is emitted when a certain amount of tokens is unfrozen on a wallet
 the event is emitted by unfreezePartialTokens and batchUnfreezePartialTokens functions
 `_userAddress` is the wallet of the investor that is concerned by the freezing status
 `_amount` is the amount of tokens that are unfrozen
+
+### UnfreezeAmountExceedsFrozen
+
+```solidity
+error UnfreezeAmountExceedsFrozen(address account, uint256 requested, uint256 available)
+```
+
+Error indicating that an attempt was made to unfreeze more tokens than are frozen
+
+#### Parameters
+
+| Name      | Type    | Description                               |
+| --------- | ------- | ----------------------------------------- |
+| account   | address | The address attempting to unfreeze tokens |
+| requested | uint256 | The amount requested to unfreeze          |
+| available | uint256 | The amount actually frozen                |
 
 ### setAddressFrozen
 

@@ -2,15 +2,15 @@
 pragma solidity ^0.8.28;
 
 import {_ERC3643_METADATA_RESOLVER_KEY} from '../../../../constants/resolverKeys.sol';
-import {ERC203643InternalCommon} from '../../../ERC203643InternalCommon.sol';
+import {ERC203643InternalCommon} from '../../../erc203643/ERC203643InternalCommon.sol';
 import {IERC3643Metadata} from './IERC3643Metadata.sol';
-import {_TOKEN_OWNER_ROLE} from '../../../../constants/roles.sol';
+import {_METADATA_ROLE} from '../../../../constants/roles.sol';
 
 /**
  * @title ERC3643Metadata
  * @notice External contract implementing ERC-3643 metadata management.
  * @dev Provides public methods to update and retrieve token metadata such as name, symbol,
- *      onchain identity, and version. Applies access control, validation, and emits events.
+ *      onchain identity, and version. Uses METADATA_ROLE for granular permission control.
  */
 abstract contract ERC3643Metadata is IERC3643Metadata, ERC203643InternalCommon {
     /**
@@ -48,16 +48,24 @@ abstract contract ERC3643Metadata is IERC3643Metadata, ERC203643InternalCommon {
 
     /**
      * @notice Updates the token name.
-     * @dev Restricted to token owner. Requires non-empty input and unpaused state.
-     *      Emits a {UpdatedTokenInformation} event.
+     * @dev Restricted to metadata role. Requires non-empty input and unpaused state.
+     *      Updates the ERC20 name storage and emits regulatory compliance event.
      * @param _newName The new name to assign to the token.
+     *
+     * Requirements:
+     * - Caller must have METADATA_ROLE
+     * - Contract must not be paused
+     * - _newName must not be empty
+     *
+     * Emits:
+     * - {UpdatedTokenInformation} event with all current token metadata
      */
     function setName(
         string memory _newName
     )
         external
         override
-        onlyRole(_TOKEN_OWNER_ROLE)
+        onlyRole(_METADATA_ROLE)
         emptyString(_newName)
         whenNotPaused
     {
@@ -73,16 +81,24 @@ abstract contract ERC3643Metadata is IERC3643Metadata, ERC203643InternalCommon {
 
     /**
      * @notice Updates the token symbol.
-     * @dev Restricted to token owner. Requires non-empty input and unpaused state.
-     *      Emits a {UpdatedTokenInformation} event.
+     * @dev Restricted to metadata role. Requires non-empty input and unpaused state.
+     *      Updates the ERC20 symbol storage and emits regulatory compliance event.
      * @param _newSymbol The new symbol to assign to the token.
+     *
+     * Requirements:
+     * - Caller must have METADATA_ROLE
+     * - Contract must not be paused
+     * - _newSymbol must not be empty
+     *
+     * Emits:
+     * - {UpdatedTokenInformation} event with all current token metadata
      */
     function setSymbol(
         string memory _newSymbol
     )
         external
         override
-        onlyRole(_TOKEN_OWNER_ROLE)
+        onlyRole(_METADATA_ROLE)
         emptyString(_newSymbol)
         whenNotPaused
     {
@@ -98,16 +114,27 @@ abstract contract ERC3643Metadata is IERC3643Metadata, ERC203643InternalCommon {
 
     /**
      * @notice Updates the onchain identity address.
-     * @dev Restricted to token owner. Can be set to zero. Requires unpaused state.
-     *      Emits a {UpdatedTokenInformation} event.
+     * @dev Restricted to metadata role. Requires unpaused state.
+     *      Updates ERC3643-specific storage and emits regulatory compliance event.
      * @param _newOnchainID The new onchain identity address to assign.
+     *
+     * Requirements:
+     * - Caller must have METADATA_ROLE
+     * - Contract must not be paused
+     * - _newOnchainID must not be zero address
+     *
+     * Emits:
+     * - {UpdatedTokenInformation} event with all current token metadata
+     *
+     * Note: The onchainID provides additional regulatory and compliance information
+     * about the token, managed by the issuer for ERC3643 compliance.
      */
     function setOnchainID(
         address _newOnchainID
     )
         external
         override
-        onlyRole(_TOKEN_OWNER_ROLE)
+        onlyRole(_METADATA_ROLE)
         whenNotPaused
         addressIsNotZero(_newOnchainID)
     {
@@ -123,7 +150,10 @@ abstract contract ERC3643Metadata is IERC3643Metadata, ERC203643InternalCommon {
 
     /**
      * @notice Returns the current onchain identity address.
-     * @return The address of the token's onchain identity.
+     * @return address The address of the token's onchain identity contract.
+     *
+     * Note: The onchain identity contains additional information about the token
+     * and is used for regulatory compliance in ERC3643 mode.
      */
     function onchainID() external view override returns (address) {
         return _onchainID();
@@ -131,7 +161,10 @@ abstract contract ERC3643Metadata is IERC3643Metadata, ERC203643InternalCommon {
 
     /**
      * @notice Returns the current version string of the token.
-     * @return The TREX version string (e.g., "3.0.0").
+     * @return string The ERC3643/TREX version string (e.g., "4.0.0").
+     *
+     * Note: Version follows semantic versioning and indicates the
+     * ERC3643 protocol version implemented by this token.
      */
     function version() external view override returns (string memory) {
         return _version();

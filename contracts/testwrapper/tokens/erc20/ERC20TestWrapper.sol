@@ -2,9 +2,9 @@
 pragma solidity ^0.8.28;
 
 import {_ERC20_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
-import {ERC20Capped} from '../../../tokens/erc20/extensions/cap/ERC20Capped.sol';
+import {ERC203643Capped} from '../../../tokens/erc203643/erc203643capped/ERC203643Capped.sol';
 import {ERC20Burnable} from '../../../tokens/erc20/extensions/burn/ERC20Burnable.sol';
-import {ERC20Controller} from '../../../tokens/erc20/extensions/controller/ERC20Controller.sol';
+import {ERC203643Controller} from '../../../tokens/erc203643/erc203643controller/ERC203643Controller.sol';
 import {ERC20Snapshot} from '../../../tokens/erc20/extensions/snapshot/ERC20Snapshot.sol';
 import {ERC20} from '../../../tokens/erc20/ERC20.sol';
 import {IEIP2535Introspection} from '../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
@@ -13,9 +13,9 @@ import {IEIP2535Introspection} from '../../../proxies/eip2535/interfaces/IEIP253
 contract ERC20TestWrapper is
     ERC20,
     ERC20Burnable,
-    ERC20Capped,
+    ERC203643Capped,
     ERC20Snapshot,
-    ERC20Controller,
+    ERC203643Controller,
     IEIP2535Introspection
 {
     function interfacesIntrospection()
@@ -75,8 +75,8 @@ contract ERC20TestWrapper is
         override(
             ERC20,
             ERC20Burnable,
-            ERC20Capped,
-            ERC20Controller,
+            ERC203643Capped,
+            ERC203643Controller,
             ERC20Snapshot
         )
         returns (bytes4[] memory interfaces_)
@@ -87,9 +87,9 @@ contract ERC20TestWrapper is
         interfaceGroups[--interfacesLength] = ERC20._implementedInterfaces();
         interfaceGroups[--interfacesLength] = ERC20Burnable
             ._implementedInterfaces();
-        interfaceGroups[--interfacesLength] = ERC20Capped
+        interfaceGroups[--interfacesLength] = ERC203643Capped
             ._implementedInterfaces();
-        interfaceGroups[--interfacesLength] = ERC20Controller
+        interfaceGroups[--interfacesLength] = ERC203643Controller
             ._implementedInterfaces();
         interfaceGroups[--interfacesLength] = ERC20Snapshot
             ._implementedInterfaces();

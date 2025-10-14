@@ -160,10 +160,16 @@ struct Snapshots {
 function _snapshot() internal virtual returns (uint256)
 ```
 
-### \_beforeTokenTransfer
+### \_updateAccountSnapshot
 
 ```solidity
-function _beforeTokenTransfer(address _from, address _to, uint256) internal virtual
+function _updateAccountSnapshot(address _account) internal
+```
+
+### \_updateTotalSupplySnapshot
+
+```solidity
+function _updateTotalSupplySnapshot() internal
 ```
 
 ### \_getCurrentSnapshotId

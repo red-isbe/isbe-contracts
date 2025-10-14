@@ -5,7 +5,7 @@ import {IERC20Isbe} from '../../erc20/IERC20Isbe.sol';
 import {IERC3643Metadata} from './erc3643metadata/IERC3643Metadata.sol';
 import {IERC3643Regulatory} from './erc3643regulatory/IERC3643Regulatory.sol';
 import {IERC3643Freeze} from './erc3643freeze/IERC3643Freeze.sol';
-import {IERC3643Control} from './erc3643control/IERC3643Control.sol';
+import {IERC203643Controller} from '../../erc203643/erc203643controller/IERC203643Controller.sol';
 
 /**
  * @title IERC3643
@@ -26,5 +26,5 @@ interface IERC3643 is
     IERC3643Metadata,
     IERC3643Regulatory,
     IERC3643Freeze,
-    IERC3643Control
+    IERC203643Controller
 {}

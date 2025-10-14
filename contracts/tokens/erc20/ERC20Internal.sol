@@ -76,10 +76,6 @@ abstract contract ERC20Internal is Common {
         _beforeTokenTransfer(_from, _to, _amount);
         ERC20Storage storage $ = _erc20Storage();
         uint256 fromBalance = $.balances[_from];
-        require(
-            fromBalance >= _amount,
-            IERC20Isbe.TransferAmountExceedsBalance()
-        );
         unchecked {
             $.balances[_from] = fromBalance - _amount;
             // Overflow not possible: the sum of all balances is capped by totalSupply, and the sum is preserved by
@@ -137,10 +133,7 @@ abstract contract ERC20Internal is Common {
 
         ERC20Storage storage $ = _erc20Storage();
         uint256 accountBalance = $.balances[_account];
-        require(
-            accountBalance >= _amount,
-            IERC20Isbe.BurnAmountExceedsBalance()
-        );
+
         unchecked {
             $.balances[_account] = accountBalance - _amount;
             // Overflow not possible: amount <= accountBalance <= totalSupply.

@@ -2,8 +2,9 @@
 
 External contract implementing ERC-3643 regulatory infrastructure management.
 
-_Provides public methods to update and retrieve references to IdentityRegistry and Compliance contracts.
-Applies access control, validation, and emits events._
+_Provides public methods to configure Identity Registry and Compliance contracts.
+Setting IdentityRegistry enables ERC3643 mode globally in the unified architecture.
+Uses REGULATORY_ROLE for granular permission control over regulatory infrastructure._
 
 ### constructor
 
@@ -22,14 +23,14 @@ function initializeERC3643Regulatory(address _newIdentityRegistry, address _newC
 Initializes the regulatory references of the token.
 
 _Can only be called once via the initializer modifier.
-Emits {IdentityRegistryAdded} and {ComplianceAdded} events._
+Setting IdentityRegistry enables ERC3643 mode globally._
 
 #### Parameters
 
-| Name                  | Type    | Description                                    |
-| --------------------- | ------- | ---------------------------------------------- |
-| \_newIdentityRegistry | address | The initial IdentityRegistry contract address. |
-| \_newCompliance       | address | The initial Compliance contract address.       |
+| Name                  | Type    | Description                                                                                                                                                                                                                                                                   |
+| --------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| \_newIdentityRegistry | address | The initial IdentityRegistry contract address.                                                                                                                                                                                                                                |
+| \_newCompliance       | address | The initial Compliance contract address. Effects: - Sets up regulatory infrastructure references - Enables ERC3643 mode if IdentityRegistry is non-zero - Calls bindToken on compliance contract if non-zero Emits: - {IdentityRegistryAdded} event - {ComplianceAdded} event |
 
 ### setIdentityRegistry
 
@@ -37,16 +38,15 @@ Emits {IdentityRegistryAdded} and {ComplianceAdded} events._
 function setIdentityRegistry(address _newIdentityRegistry) external
 ```
 
-Updates the IdentityRegistry reference.
+Updates the IdentityRegistry contract reference.
 
-_Restricted to token owner. Can be set to zero.
-Emits an {IdentityRegistryAdded} event._
+_Restricted to regulatory role. Critical function that enables/disables ERC3643 mode._
 
 #### Parameters
 
-| Name                  | Type    | Description                                |
-| --------------------- | ------- | ------------------------------------------ |
-| \_newIdentityRegistry | address | The new IdentityRegistry contract address. |
+| Name                  | Type    | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| --------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| \_newIdentityRegistry | address | The new IdentityRegistry contract address. Requirements: - Caller must have REGULATORY_ROLE - Contract must not be paused Effects: - Updates IdentityRegistry reference - Enables ERC3643 mode if non-zero (affects all transfers globally) - Disables ERC3643 mode if zero (reverts to ERC20 mode) Emits: - {IdentityRegistryAdded} event Note: This is the key trigger that switches between ERC20 and ERC3643 modes in the unified architecture. All transfer validations will change behavior. |
 
 ### setCompliance
 
@@ -54,17 +54,15 @@ Emits an {IdentityRegistryAdded} event._
 function setCompliance(address _newCompliance) external
 ```
 
-Updates the Compliance reference.
+Updates the Compliance contract reference.
 
-_Restricted to token owner. Can be set to zero.
-Calls `bindToken` on the compliance contract if non-zero.
-Emits a {ComplianceAdded} event._
+_Restricted to regulatory role. Automatically binds token to new compliance._
 
 #### Parameters
 
-| Name            | Type    | Description                          |
-| --------------- | ------- | ------------------------------------ |
-| \_newCompliance | address | The new Compliance contract address. |
+| Name            | Type    | Description                                                                                                                                                                                                                                                                                                                                                                                 |
+| --------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| \_newCompliance | address | The new Compliance contract address. Requirements: - Caller must have REGULATORY_ROLE - Contract must not be paused Effects: - Updates Compliance contract reference - Calls bindToken(address(this)) on compliance if non-zero Emits: - {ComplianceAdded} event Note: The compliance contract provides additional transfer rules and regulatory checks beyond basic identity verification. |
 
 ### identityRegistry
 
@@ -72,13 +70,13 @@ Emits a {ComplianceAdded} event._
 function identityRegistry() external view returns (contract IIdentityRegistry)
 ```
 
-Returns the current IdentityRegistry reference.
+Returns the current IdentityRegistry contract.
 
 #### Return Values
 
-| Name | Type                       | Description                                        |
-| ---- | -------------------------- | -------------------------------------------------- |
-| [0]  | contract IIdentityRegistry | The IdentityRegistry contract linked to the token. |
+| Name | Type                       | Description                                                                                                                                                                                                                                       |
+| ---- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [0]  | contract IIdentityRegistry | IIdentityRegistry The IdentityRegistry contract interface. Note: If this returns a contract with non-zero address, the token operates in ERC3643 mode with full regulatory compliance checks. If zero, the token operates in standard ERC20 mode. |
 
 ### compliance
 
@@ -86,13 +84,13 @@ Returns the current IdentityRegistry reference.
 function compliance() external view returns (contract ICompliance)
 ```
 
-Returns the current Compliance reference.
+Returns the current Compliance contract.
 
 #### Return Values
 
-| Name | Type                 | Description                                  |
-| ---- | -------------------- | -------------------------------------------- |
-| [0]  | contract ICompliance | The Compliance contract linked to the token. |
+| Name | Type                 | Description                                                                                                                                                                                                                                     |
+| ---- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [0]  | contract ICompliance | ICompliance The Compliance contract interface. Note: The compliance contract provides additional transfer validation rules beyond basic identity verification, such as country restrictions, holding limits, and other regulatory requirements. |
 
 ### \_implementedInterfaces
 

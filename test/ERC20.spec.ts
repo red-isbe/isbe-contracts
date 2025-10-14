@@ -6,8 +6,8 @@ import {
     ERC20,
     ERC20Burnable,
     ERC20Snapshot,
-    ERC20Capped,
-    ERC20Controller,
+    ERC203643Capped,
+    ERC203643Controller,
 } from '../typechain-types'
 import {
     CAP_ROLE,
@@ -15,7 +15,7 @@ import {
     SNAPSHOT_ROLE,
     CONTROLLER_ROLE,
     ERC20_RESOLVER_KEY,
-    ERC20_CAPPED_RESOLVER_KEY,
+    ERC203643_CAPPED_RESOLVER_KEY,
 } from './constants'
 import { deployGovernance } from './initialization'
 describe('ERC20', function () {
@@ -28,8 +28,8 @@ describe('ERC20', function () {
     let erc20: ERC20
     let erc20Snapshot: ERC20Snapshot
     let erc20Burnable: ERC20Burnable
-    let erc20Capped: ERC20Capped
-    let erc20Controller: ERC20Controller
+    let erc203643Capped: ERC203643Capped
+    let erc203643Controller: ERC203643Controller
     let accessControl: AccessControl
 
     let owner: Signer
@@ -51,8 +51,9 @@ describe('ERC20', function () {
 
         if (initialize) {
             const ERC20Factory = await ethers.getContractFactory('ERC20Facet')
-            const CappedFactory =
-                await ethers.getContractFactory('ERC20CappedFacet')
+            const CappedFactory = await ethers.getContractFactory(
+                'ERC203643CappedFacet'
+            )
 
             // Use the interfaces to encode the init data
             data.push(
@@ -70,7 +71,7 @@ describe('ERC20', function () {
             )
 
             businessIds.push(ERC20_RESOLVER_KEY)
-            businessIds.push(ERC20_CAPPED_RESOLVER_KEY)
+            businessIds.push(ERC203643_CAPPED_RESOLVER_KEY)
         }
 
         const result = await deployGovernance(
@@ -86,8 +87,8 @@ describe('ERC20', function () {
         erc20 = result.erc20
         erc20Snapshot = result.erc20Snapshot
         erc20Burnable = result.erc20Burnable
-        erc20Capped = result.erc20Capped
-        erc20Controller = result.erc20Controller
+        erc203643Capped = result.erc203643Capped
+        erc203643Controller = result.erc203643Controller
 
         accessControl = result.accessControl
         erc20Facet = result.erc20Facet
@@ -253,33 +254,33 @@ describe('ERC20', function () {
         it('GIVEN an ERC20 WHEN initializeCap with Zero THEN it fails', async () => {
             await deploy()
             await expect(
-                erc20Capped.initializeCap(0)
-            ).to.be.revertedWithCustomError(erc20Capped, 'CapIsZero')
+                erc203643Capped.initializeCap(0)
+            ).to.be.revertedWithCustomError(erc203643Capped, 'CapIsZero')
         })
 
         it('GIVEN an ERC20 WHEN cap is initialized THEN it can be retrieved', async () => {
             await deploy()
-            await expect(erc20Capped.initializeCap(1000))
-                .to.emit(erc20Capped, 'CapSet')
+            await expect(erc203643Capped.initializeCap(1000))
+                .to.emit(erc203643Capped, 'CapSet')
                 .withArgs(ownerAddress, 1000)
-            await expect(erc20Capped.initializeCap(1))
+            await expect(erc203643Capped.initializeCap(1))
                 .to.be.revertedWithCustomError(
                     erc20,
                     'ContractIsAlreadyInitialized'
                 )
                 .withArgs(
-                    '0x94ece6781e9aebbdab29d2bbc0301c80b7bcb1194c5c3efc08e3d35c7f6d741b'
+                    '0x1f3e5d6c7b8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f60718293a4b5c6d7e8'
                 )
 
-            expect(await erc20Capped.cap()).to.equal(1000)
+            expect(await erc203643Capped.cap()).to.equal(1000)
         })
 
         it('GIVEN an initialized ERC20 WHEN mint over cap THEN it fails', async () => {
             await deploy(true)
-            expect(await erc20Capped.cap()).to.equal(1000)
+            expect(await erc203643Capped.cap()).to.equal(1000)
             await expect(
-                erc20Capped.mint(ownerAddress, 1001)
-            ).revertedWithCustomError(erc20Capped, 'CapExceeded')
+                erc203643Capped.mint(ownerAddress, 1001)
+            ).revertedWithCustomError(erc203643Capped, 'CapExceeded')
         })
 
         it('GIVEN an initialized ERC20 WHEN setting cap below total supply THEN it fails', async () => {
@@ -289,13 +290,13 @@ describe('ERC20', function () {
             await accessControl.grantRole(MINTER_ROLE, ownerAddress)
             await accessControl.grantRole(CAP_ROLE, ownerAddress)
 
-            await erc20Capped.mint(ownerAddress, totalSupply)
+            await erc203643Capped.mint(ownerAddress, totalSupply)
 
             const newCap = totalSupply - 1
 
-            await expect(erc20Capped.setCap(newCap))
+            await expect(erc203643Capped.setCap(newCap))
                 .revertedWithCustomError(
-                    erc20Capped,
+                    erc203643Capped,
                     'NewCapIsLessThanTotalSupply'
                 )
                 .withArgs(newCap, totalSupply)
@@ -304,19 +305,17 @@ describe('ERC20', function () {
         it('GIVEN an initialized ERC20 WHEN setting cap on a paused token THEN it fails', async () => {
             await deploy(true, true)
 
-            await expect(erc20Capped.setCap(1000000)).revertedWithCustomError(
-                erc20,
-                'IsPaused'
-            )
+            await expect(
+                erc203643Capped.setCap(1000000)
+            ).revertedWithCustomError(erc20, 'IsPaused')
         })
 
         it('GIVEN an initialized ERC20 WHEN non capper setting cap THEN it fails', async () => {
             await deploy(true)
 
-            await expect(erc20Capped.setCap(1)).to.be.revertedWithCustomError(
-                accessControl,
-                'AccountHasNoRole'
-            )
+            await expect(
+                erc203643Capped.setCap(1)
+            ).to.be.revertedWithCustomError(accessControl, 'AccountHasNoRole')
         })
 
         it('GIVEN an initialized ERC20 WHEN setting cap over total supply THEN it succeeds', async () => {
@@ -326,12 +325,12 @@ describe('ERC20', function () {
             await accessControl.grantRole(MINTER_ROLE, ownerAddress)
             await accessControl.grantRole(CAP_ROLE, ownerAddress)
 
-            await erc20Capped.mint(ownerAddress, totalSupply)
+            await erc203643Capped.mint(ownerAddress, totalSupply)
 
             const newCap = totalSupply + 1
 
-            await expect(erc20Capped.setCap(newCap))
-                .to.emit(erc20Capped, 'CapSet')
+            await expect(erc203643Capped.setCap(newCap))
+                .to.emit(erc203643Capped, 'CapSet')
                 .withArgs(ownerAddress, newCap)
         })
     })
@@ -343,7 +342,7 @@ describe('ERC20', function () {
             await accessControl.grantRole(MINTER_ROLE, ownerAddress)
 
             await expect(
-                erc20Capped.mint(ethers.ZeroAddress, 100)
+                erc203643Capped.mint(ethers.ZeroAddress, 100)
             ).to.revertedWithCustomError(erc20, 'AddressZero')
         })
 
@@ -351,7 +350,7 @@ describe('ERC20', function () {
             await deploy(true, true)
 
             await expect(
-                erc20Capped.mint(ownerAddress, 100)
+                erc203643Capped.mint(ownerAddress, 100)
             ).to.revertedWithCustomError(erc20, 'IsPaused')
         })
 
@@ -359,7 +358,7 @@ describe('ERC20', function () {
             await deploy(true)
 
             await expect(
-                erc20Capped.mint(ownerAddress, 0)
+                erc203643Capped.mint(ownerAddress, 0)
             ).revertedWithCustomError(accessControl, 'AccountHasNoRole')
         })
 
@@ -368,8 +367,8 @@ describe('ERC20', function () {
 
             await accessControl.grantRole(MINTER_ROLE, ownerAddress)
 
-            await expect(erc20Capped.mint(ownerAddress, 100))
-                .to.emit(erc20Capped, 'Transfer')
+            await expect(erc203643Capped.mint(ownerAddress, 100))
+                .to.emit(erc203643Capped, 'Transfer')
                 .withArgs(ethers.ZeroAddress, ownerAddress, 100)
         })
     })
@@ -380,7 +379,7 @@ describe('ERC20', function () {
 
             await accessControl.grantRole(MINTER_ROLE, ownerAddress)
 
-            await erc20Capped.mint(ownerAddress, 100)
+            await erc203643Capped.mint(ownerAddress, 100)
         }
 
         it('GIVEN an ERC20 initialized WHEN try to burn without enough balance THEN it fails', async () => {
@@ -419,7 +418,7 @@ describe('ERC20', function () {
             if (init_pause) return
 
             await accessControl.grantRole(MINTER_ROLE, ownerAddress)
-            await erc20Capped.mint(otherAccountAddress, 50)
+            await erc203643Capped.mint(otherAccountAddress, 50)
             await erc20.connect(otherAccount).approve(ownerAddress, 100)
         }
 
@@ -469,7 +468,7 @@ describe('ERC20', function () {
             if (init_pause) return
 
             await accessControl.grantRole(MINTER_ROLE, ownerAddress)
-            await erc20Capped.mint(ownerAddress, 100)
+            await erc203643Capped.mint(ownerAddress, 100)
             return { erc20, owner, otherAccount }
         }
 
@@ -520,8 +519,8 @@ describe('ERC20', function () {
             if (init_pause) return
 
             await accessControl.grantRole(MINTER_ROLE, ownerAddress)
-            await erc20Capped.mint(ownerAddress, 100)
-            await erc20Capped.mint(otherAccountAddress, 100)
+            await erc203643Capped.mint(ownerAddress, 100)
+            await erc203643Capped.mint(otherAccountAddress, 100)
             await erc20.connect(otherAccount).approve(ownerAddress, 100)
         }
 
@@ -602,7 +601,7 @@ describe('ERC20', function () {
             if (init_pause) return
 
             await accessControl.grantRole(MINTER_ROLE, ownerAddress)
-            await erc20Capped.mint(ownerAddress, 100)
+            await erc203643Capped.mint(ownerAddress, 100)
             return { erc20, owner, otherAccount }
         }
 
@@ -655,7 +654,7 @@ describe('ERC20', function () {
             ).to.be.equal(0)
             expect(await erc20Snapshot.totalSupplyAt(1)).to.be.equal(100)
             await erc20.transfer(otherAccountAddress, 25)
-            await erc20Capped.mint(otherAccountAddress, 25)
+            await erc203643Capped.mint(otherAccountAddress, 25)
             expect(
                 await erc20Snapshot.balanceOfAt(ownerAddress, 1)
             ).to.be.equal(100)
@@ -680,38 +679,40 @@ describe('ERC20', function () {
             await accessControl.grantRole(MINTER_ROLE, ownerAddress)
             await accessControl.grantRole(CONTROLLER_ROLE, ownerAddress)
 
-            await erc20Capped.mint(otherAccountAddress, MINTED)
+            await erc203643Capped.mint(otherAccountAddress, MINTED)
         }
 
         it('GIVEN an ERC20 initialized WHEN try to force burn a paused token THEN it fails', async () => {
             await prepare(true)
 
             await expect(
-                erc20Controller.forceBurn(otherAccountAddress, MINTED - 1)
+                erc203643Controller.forceBurn(otherAccountAddress, MINTED - 1)
             ).to.be.revertedWithCustomError(erc20, 'IsPaused')
         })
 
         it('GIVEN an ERC20 initialized WHEN non controller tries to force burn THEN it fails', async () => {
             await prepare()
 
-            erc20Controller = erc20Controller.connect(otherAccount)
+            erc203643Controller = erc203643Controller.connect(otherAccount)
 
             await expect(
-                erc20Controller.forceBurn(otherAccountAddress, MINTED - 1)
+                erc203643Controller.forceBurn(otherAccountAddress, MINTED - 1)
             ).to.be.revertedWithCustomError(accessControl, 'AccountHasNoRole')
         })
 
         it('GIVEN an ERC20 WHEN forceBurn from zero address THEN it fails', async () => {
             await prepare()
             await expect(
-                erc20Controller.forceBurn(ethers.ZeroAddress, MINTED)
+                erc203643Controller.forceBurn(ethers.ZeroAddress, MINTED)
             ).revertedWithCustomError(erc20, 'AddressZero')
         })
 
         it('GIVEN an ERC20 WHEN it is prepared THEN a force burn can be made', async () => {
             await prepare()
-            await expect(erc20Controller.forceBurn(otherAccountAddress, MINTED))
-                .to.emit(erc20Controller, 'ForceBurn')
+            await expect(
+                erc203643Controller.forceBurn(otherAccountAddress, MINTED)
+            )
+                .to.emit(erc203643Controller, 'ForceBurn')
                 .withArgs(ownerAddress, otherAccountAddress, MINTED)
 
             expect(await erc20.totalSupply()).to.be.equal(0)
@@ -722,7 +723,7 @@ describe('ERC20', function () {
             await prepare(true)
 
             await expect(
-                erc20Controller.forceTransfer(
+                erc203643Controller.forceTransfer(
                     otherAccountAddress,
                     ownerAddress,
                     MINTED - 1
@@ -733,10 +734,10 @@ describe('ERC20', function () {
         it('GIVEN an ERC20 initialized WHEN non controller tries to force transfer THEN it fails', async () => {
             await prepare()
 
-            erc20Controller = erc20Controller.connect(otherAccount)
+            erc203643Controller = erc203643Controller.connect(otherAccount)
 
             await expect(
-                erc20Controller.forceTransfer(
+                erc203643Controller.forceTransfer(
                     otherAccountAddress,
                     ownerAddress,
                     MINTED - 1
@@ -747,7 +748,7 @@ describe('ERC20', function () {
         it('GIVEN an ERC20 WHEN forceTransfer from zero address THEN fails', async () => {
             await prepare()
             await expect(
-                erc20Controller.forceTransfer(
+                erc203643Controller.forceTransfer(
                     ethers.ZeroAddress,
                     ownerAddress,
                     MINTED
@@ -758,13 +759,13 @@ describe('ERC20', function () {
         it('GIVEN an ERC20 WHEN it is prepared THEN a force transfer can be made', async () => {
             await prepare()
             await expect(
-                erc20Controller.forceTransfer(
+                erc203643Controller.forceTransfer(
                     otherAccountAddress,
                     ownerAddress,
                     MINTED
                 )
             )
-                .to.emit(erc20Controller, 'ForceTransfer')
+                .to.emit(erc203643Controller, 'ForceTransfer')
                 .withArgs(
                     ownerAddress,
                     otherAccountAddress,

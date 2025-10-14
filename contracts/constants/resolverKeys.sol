@@ -18,14 +18,8 @@ bytes32 constant _ERC20_RESOLVER_KEY = 0x2428f215905ecd05cc26794e218b9fad455e6ae
 // keccak256('isbe.contracts.erc20.burnable.resolver.key');
 bytes32 constant _ERC20_BURNABLE_RESOLVER_KEY = 0x81c694c8d5a595cfca0b2b486a8e2aff0a72d8063c636a02c1ca1cc12e55d471;
 
-// keccak256('isbe.contracts.erc20.capped.resolver.key');
-bytes32 constant _ERC20_CAPPED_RESOLVER_KEY = 0x94ece6781e9aebbdab29d2bbc0301c80b7bcb1194c5c3efc08e3d35c7f6d741b;
-
 // keccak256('isbe.contracts.erc20.snapshot.resolver.key');
 bytes32 constant _ERC20_SNAPSHOT_RESOLVER_KEY = 0xc4968fe952eba32a52cb112176a56b4e86a0fbaff835dc8336fa0e804a0af398;
-
-// keccak256('isbe.contracts.erc20.controller.resolver.key');
-bytes32 constant _ERC20_CONTROLLER_RESOLVER_KEY = 0xed76d446b6029b8a177fda4fc38162d9dc0dc29ab636541fd6e75ae60fe17151;
 
 // keccak256('isbe.contracts.pause.resolver.key');
 bytes32 constant _PAUSE_RESOLVER_KEY = 0x7fabf0f3ed655fa26f86c82ae5da60e0ade03a5d35a9ff2985709278942966d3;
@@ -76,8 +70,12 @@ bytes32 constant _ERC3643_REGULATORY_RESOLVER_KEY = 0xd611e027d42ed421b59243a309
 // keccak256('isbe.contracts.global.isbe.erc3643.freeze.resolver.key');
 bytes32 constant _ERC3643_FREEZE_RESOLVER_KEY = 0xb4f0898a6b06b69baf87b46c4c2932dc9b05f07368e9b14ceee64d5d44e8f273;
 
-// keccak256('isbe.contracts.global.isbe.erc3643.control.resolver.key');
-bytes32 constant _ERC3643_CONTROL_RESOLVER_KEY = 0x1f3e2e3e4f3a5e8e2c3d6f4b5a7c8d9e0f1a2b3c4d5e6f708192a3b4c5d6e7f8;
+//ERC203643 ResolverKeys
+// keccak256('isbe.contracts.erc203643.controller.resolver.key');
+bytes32 constant _ERC203643_CONTROLLER_RESOLVER_KEY = 0x9b1f4e8c6d7a5b4c3e2f1a0b9c8d7e6f5a4b3c2d1e0f9e8d7c6b5a4b3c2d1e0f;
+
+// keccak256('isbe.contracts.erc203643.capped.resolver.key');
+bytes32 constant _ERC203643_CAPPED_RESOLVER_KEY = 0x1f3e5d6c7b8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f60718293a4b5c6d7e8;
 
 //ERC721 ResolverKeys
 // keccak256('isbe.contracts.erc721.burnable.resolver.key');

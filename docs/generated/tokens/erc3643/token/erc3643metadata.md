@@ -3,7 +3,7 @@
 External contract implementing ERC-3643 metadata management.
 
 _Provides public methods to update and retrieve token metadata such as name, symbol,
-onchain identity, and version. Applies access control, validation, and emits events._
+onchain identity, and version. Uses METADATA_ROLE for granular permission control._
 
 ### constructor
 
@@ -39,14 +39,14 @@ function setName(string _newName) external
 
 Updates the token name.
 
-_Restricted to token owner. Requires non-empty input and unpaused state.
-Emits a {UpdatedTokenInformation} event._
+_Restricted to metadata role. Requires non-empty input and unpaused state.
+Updates the ERC20 name storage and emits regulatory compliance event._
 
 #### Parameters
 
-| Name      | Type   | Description                          |
-| --------- | ------ | ------------------------------------ |
-| \_newName | string | The new name to assign to the token. |
+| Name      | Type   | Description                                                                                                                                                                                                              |
+| --------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| \_newName | string | The new name to assign to the token. Requirements: - Caller must have METADATA_ROLE - Contract must not be paused - \_newName must not be empty Emits: - {UpdatedTokenInformation} event with all current token metadata |
 
 ### setSymbol
 
@@ -56,14 +56,14 @@ function setSymbol(string _newSymbol) external
 
 Updates the token symbol.
 
-_Restricted to token owner. Requires non-empty input and unpaused state.
-Emits a {UpdatedTokenInformation} event._
+_Restricted to metadata role. Requires non-empty input and unpaused state.
+Updates the ERC20 symbol storage and emits regulatory compliance event._
 
 #### Parameters
 
-| Name        | Type   | Description                            |
-| ----------- | ------ | -------------------------------------- |
-| \_newSymbol | string | The new symbol to assign to the token. |
+| Name        | Type   | Description                                                                                                                                                                                                                  |
+| ----------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| \_newSymbol | string | The new symbol to assign to the token. Requirements: - Caller must have METADATA_ROLE - Contract must not be paused - \_newSymbol must not be empty Emits: - {UpdatedTokenInformation} event with all current token metadata |
 
 ### setOnchainID
 
@@ -73,14 +73,14 @@ function setOnchainID(address _newOnchainID) external
 
 Updates the onchain identity address.
 
-_Restricted to token owner. Can be set to zero. Requires unpaused state.
-Emits a {UpdatedTokenInformation} event._
+_Restricted to metadata role. Requires unpaused state.
+Updates ERC3643-specific storage and emits regulatory compliance event._
 
 #### Parameters
 
-| Name           | Type    | Description                                 |
-| -------------- | ------- | ------------------------------------------- |
-| \_newOnchainID | address | The new onchain identity address to assign. |
+| Name           | Type    | Description                                                                                                                                                                                                                                                                                                                                                                              |
+| -------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| \_newOnchainID | address | The new onchain identity address to assign. Requirements: - Caller must have METADATA_ROLE - Contract must not be paused - \_newOnchainID must not be zero address Emits: - {UpdatedTokenInformation} event with all current token metadata Note: The onchainID provides additional regulatory and compliance information about the token, managed by the issuer for ERC3643 compliance. |
 
 ### onchainID
 
@@ -92,9 +92,9 @@ Returns the current onchain identity address.
 
 #### Return Values
 
-| Name | Type    | Description                                  |
-| ---- | ------- | -------------------------------------------- |
-| [0]  | address | The address of the token's onchain identity. |
+| Name | Type    | Description                                                                                                                                                                                     |
+| ---- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [0]  | address | address The address of the token's onchain identity contract. Note: The onchain identity contains additional information about the token and is used for regulatory compliance in ERC3643 mode. |
 
 ### version
 
@@ -106,9 +106,9 @@ Returns the current version string of the token.
 
 #### Return Values
 
-| Name | Type   | Description                              |
-| ---- | ------ | ---------------------------------------- |
-| [0]  | string | The TREX version string (e.g., "3.0.0"). |
+| Name | Type   | Description                                                                                                                                                             |
+| ---- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [0]  | string | string The ERC3643/TREX version string (e.g., "4.0.0"). Note: Version follows semantic versioning and indicates the ERC3643 protocol version implemented by this token. |
 
 ### \_implementedInterfaces
 

@@ -50,8 +50,15 @@ abstract contract ERC3643FreezeInternal is Common {
         uint256 _amount
     ) internal {
         uint256 frozen = _erc3643FreezeStorage().frozenTokens[_userAddress];
-        
-        require(frozen >= _amount, IERC3643Freeze.UnfreezeAmountExceedsFrozen(_userAddress, _amount, frozen));
+
+        require(
+            frozen >= _amount,
+            IERC3643Freeze.UnfreezeAmountExceedsFrozen(
+                _userAddress,
+                _amount,
+                frozen
+            )
+        );
 
         _erc3643FreezeStorage().frozenTokens[_userAddress] -= _amount;
     }

@@ -3,7 +3,12 @@ import { ethers } from 'hardhat'
 import { Signer, ZeroAddress } from 'ethers'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { deployGovernance, CONFIGURATION_ID_ERC3643 } from './initialization'
-import { TOKEN_OWNER_ROLE, PAUSER_ROLE, TOKEN_AGENT_ROLE } from './constants'
+import {
+    METADATA_ROLE,
+    REGULATORY_ROLE,
+    FREEZE_ROLE,
+    PAUSER_ROLE,
+} from './constants'
 import { IERC3643, AccessControl, ERC20, ISBEPause } from '../typechain-types'
 import {
     MockCompliance,
@@ -110,7 +115,7 @@ describe('ERC3643 Token', function () {
                 const fixture = async () => {
                     await accessControlFacet
                         .connect(owner)
-                        .grantRole(TOKEN_OWNER_ROLE, ownerAddress)
+                        .grantRole(METADATA_ROLE, ownerAddress)
                 }
                 await loadFixture(fixture)
             })
@@ -176,7 +181,7 @@ describe('ERC3643 Token', function () {
                 const fixture = async () => {
                     await accessControlFacet
                         .connect(owner)
-                        .grantRole(TOKEN_OWNER_ROLE, ownerAddress)
+                        .grantRole(METADATA_ROLE, ownerAddress)
                     await erc20Facet
                         .connect(owner)
                         .initializeErc20(tokenName, tokenSymbol, tokenDecimals)
@@ -231,7 +236,7 @@ describe('ERC3643 Token', function () {
                 it('GIVEN no TOKEN_OWNER_ROLE WHEN setName THEN reverts', async () => {
                     await accessControlFacet
                         .connect(owner)
-                        .revokeRole(TOKEN_OWNER_ROLE, ownerAddress)
+                        .revokeRole(METADATA_ROLE, ownerAddress)
                     await expect(erc3643.connect(owner).setName('Nope')).to.be
                         .reverted
                 })
@@ -282,7 +287,7 @@ describe('ERC3643 Token', function () {
                 it('GIVEN no TOKEN_OWNER_ROLE WHEN setSymbol THEN reverts', async () => {
                     await accessControlFacet
                         .connect(owner)
-                        .revokeRole(TOKEN_OWNER_ROLE, ownerAddress)
+                        .revokeRole(METADATA_ROLE, ownerAddress)
                     await expect(erc3643.connect(owner).setSymbol('NOPE')).to.be
                         .reverted
                 })
@@ -339,7 +344,7 @@ describe('ERC3643 Token', function () {
                 it('GIVEN no TOKEN_OWNER_ROLE WHEN setOnchainID THEN reverts', async () => {
                     await accessControlFacet
                         .connect(owner)
-                        .revokeRole(TOKEN_OWNER_ROLE, ownerAddress)
+                        .revokeRole(METADATA_ROLE, ownerAddress)
                     await expect(
                         erc3643.connect(owner).setOnchainID(aliceAddress)
                     ).to.be.reverted
@@ -396,7 +401,7 @@ describe('ERC3643 Token', function () {
             const fixture = async () => {
                 await accessControlFacet
                     .connect(owner)
-                    .grantRole(TOKEN_OWNER_ROLE, ownerAddress)
+                    .grantRole(REGULATORY_ROLE, ownerAddress)
             }
             await loadFixture(fixture)
         })
@@ -515,7 +520,7 @@ describe('ERC3643 Token', function () {
             it('GIVEN no TOKEN_OWNER_ROLE WHEN setIdentityRegistry THEN reverts', async () => {
                 await accessControlFacet
                     .connect(owner)
-                    .revokeRole(TOKEN_OWNER_ROLE, ownerAddress)
+                    .revokeRole(REGULATORY_ROLE, ownerAddress)
 
                 await expect(
                     erc3643
@@ -573,7 +578,7 @@ describe('ERC3643 Token', function () {
             it('GIVEN no TOKEN_OWNER_ROLE WHEN setCompliance THEN reverts', async () => {
                 await accessControlFacet
                     .connect(owner)
-                    .revokeRole(TOKEN_OWNER_ROLE, ownerAddress)
+                    .revokeRole(REGULATORY_ROLE, ownerAddress)
                 await expect(
                     erc3643.connect(owner).setCompliance(complianceAddress)
                 ).to.be.reverted
@@ -648,7 +653,7 @@ describe('ERC3643 Token', function () {
             const fixture = async () => {
                 await accessControlFacet
                     .connect(owner)
-                    .grantRole(TOKEN_AGENT_ROLE, ownerAddress)
+                    .grantRole(FREEZE_ROLE, ownerAddress)
             }
             await loadFixture(fixture)
         })
@@ -657,7 +662,7 @@ describe('ERC3643 Token', function () {
             it('GIVEN no TOKEN_AGENT_ROLE WHEN setAddressFrozen THEN reverts', async () => {
                 await accessControlFacet
                     .connect(owner)
-                    .revokeRole(TOKEN_AGENT_ROLE, ownerAddress)
+                    .revokeRole(FREEZE_ROLE, ownerAddress)
 
                 await expect(
                     erc3643.connect(owner).setAddressFrozen(aliceAddress, true)
@@ -744,7 +749,7 @@ describe('ERC3643 Token', function () {
             it('GIVEN no TOKEN_AGENT_ROLE WHEN freezePartialTokens THEN reverts', async () => {
                 await accessControlFacet
                     .connect(owner)
-                    .revokeRole(TOKEN_AGENT_ROLE, ownerAddress)
+                    .revokeRole(FREEZE_ROLE, ownerAddress)
 
                 await expect(
                     erc3643
@@ -768,7 +773,7 @@ describe('ERC3643 Token', function () {
             it('GIVEN no TOKEN_AGENT_ROLE WHEN unfreezePartialTokens THEN reverts', async () => {
                 await accessControlFacet
                     .connect(owner)
-                    .revokeRole(TOKEN_AGENT_ROLE, ownerAddress)
+                    .revokeRole(FREEZE_ROLE, ownerAddress)
 
                 await expect(
                     erc3643

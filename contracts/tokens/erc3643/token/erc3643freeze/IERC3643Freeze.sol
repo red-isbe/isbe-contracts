@@ -43,8 +43,11 @@ interface IERC3643Freeze {
     /// @param account The address attempting to unfreeze tokens
     /// @param requested The amount requested to unfreeze
     /// @param available The amount actually frozen
-    error UnfreezeAmountExceedsFrozen(address account, uint256 requested, uint256 available);
-
+    error UnfreezeAmountExceedsFrozen(
+        address account,
+        uint256 requested,
+        uint256 available
+    );
 
     /**
      *  @dev sets an address frozen status for this token.

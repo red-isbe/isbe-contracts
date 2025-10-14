@@ -51,10 +51,13 @@ bytes32 constant _MINTER_ROLE = 0xd8e8f9f9638a19d632dbb79025022db564483265e96ba9
 // keccak256('isbe.contracts.role.royalty');
 bytes32 constant _ROYALTY_ROLE = 0xe87ed15151829ed3753553fc34d39b49f60370ac439fddb4e9304af60bce3045;
 
-// keccak256('isbe.contracts.role.token.owner');
-bytes32 constant _TOKEN_OWNER_ROLE = 0x94cfc4e707c237182ee63ac42e9f9e1bcdff703cb2a92c4b5e50c4ae86f7f28d;
+// keccak256("isbe.contracts.role.freeze")
+bytes32 constant _FREEZE_ROLE = 0xa4e18dbe5b5a07c8c736c28f272d9ef8b1c38dc1fc3a3e57f4a79d5ebd8dc8f4;
 
-// keccak256('isbe.contracts.role.token.agent');
-bytes32 constant _TOKEN_AGENT_ROLE = 0xb6f35cf5493efddae235e307acfda2a4d8b05301dd9562b613d27dd1a7d44af4;
+// keccak256("isbe.contracts.role.metadata")
+bytes32 constant _METADATA_ROLE = 0x37c3b5a6b2e6b682d82cfaf5a8dc82ff6b64b930f276ee684d6368f079b14b8f;
+
+// keccak256("isbe.contracts.role.regulatory")
+bytes32 constant _REGULATORY_ROLE = 0x14eb35b88f6ef5e40610e3f30b90e8c0c32d045865e637f6c5bdb10d60afbf11;
 
 // solhint-enable max-line-length
