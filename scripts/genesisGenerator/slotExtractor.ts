@@ -19,7 +19,7 @@ export type GenesisAllocEntry = {
     storage: Record<string, string>
 }
 
-export type GenesisAlloc = Map<string, GenesisAllocEntry>;
+export type GenesisAlloc = Map<string, GenesisAllocEntry>
 
 type Hex = string
 
@@ -326,7 +326,7 @@ export async function collectStorageSlotsByContract(
     //     contract: string
     //     slot: string
     // }>()
-    const result = new Map<string, Set<string>>()
+    const resultStorage = new Map<string, Set<string>>()
     const provider = hre.network.provider
 
     // 1) Load tx & receipt to identify root owner (the address whose storage is written at depth=1)
@@ -367,7 +367,7 @@ export async function collectStorageSlotsByContract(
     //    - stack: to read opcode parameters (e.g., SSTORE slot, CALL target)
     //    - memory: to reconstruct initcode for CREATE2 (offset/size windows)
     //    - storage diffs per step are unnecessary, but it is used for double check and debugging purposes
-    process.stdout.write('\x1b[31mRequesting TX trace from Hardhat...\x1b[0m\r');
+    process.stdout.write('\x1b[31mRequesting TX trace from Hardhat...\x1b[0m\r')
     const trace = await provider.send('debug_traceTransaction', [
         txHash,
         {
@@ -376,7 +376,9 @@ export async function collectStorageSlotsByContract(
             disableStorage: false, // We don't need per-step storage diffs as THEY HAVE NO INFORMATION REGARDING CONTRACT OWNERSHIP. Used for audiring purposes only
         },
     ])
-    process.stdout.write(`                                                                         \r`)
+    process.stdout.write(
+        `                                                                         \r`
+    )
     //const callCode=(await provider.send('eth_getTransactionByHash', [txHash]))?.input??"0x";
     // console.log("-------------------------------------------------------------------");
     // console.log(`Transaction ${txHash} callCode=${callCode}`);
@@ -391,19 +393,21 @@ export async function collectStorageSlotsByContract(
         const ro = rootOwner.toLowerCase()
         frames.set(1, { owner: ro, opcode: previousOp })
         // For a freshly created root contract, its first internal CREATE uses nonce=1.
+
+        resultStorage.set(ro, new Set()) // In any case, we create an entry as it can have SSTOREs
         if (nonces.getCurrent(ro) === undefined) {
             console.log(
                 'Root owner ' + ro + ' not known, initializing nonce to 1'
             )
             nonces.initialize(ro, 1n) // as it is creating a contract nonce starts with 1 not 0
-            if (result.has(ro)) {
-                throw new Error(
-                    'Internal error: root owner ' +
-                        ro +
-                        ' already in result map'
-                )
-            }
-            result.set(ro.toLowerCase(), new Set())
+            // if (resultStorage.has(ro)) {
+            //     throw new Error(
+            //         'Internal error: root owner ' +
+            //             ro +
+            //             ' already in result map'
+            //     )
+            // }
+            resultStorage.set(ro.toLowerCase(), new Set())
         } else {
             console.log(
                 'Root owner ' +
@@ -472,7 +476,7 @@ export async function collectStorageSlotsByContract(
                         depth,
                         op,
                         frames,
-                        result,
+                        resultStorage,
                         `ERROR IN CALL: CONTACT NOT FOUND for callee ${callee} at depth ${depth}`
                     )
                 }
@@ -496,7 +500,7 @@ export async function collectStorageSlotsByContract(
                         depth,
                         op,
                         frames,
-                        result,
+                        resultStorage,
                         `ERROR IN DELEGATECALL: CONTACT NOT FOUND for callee ${callee} at depth ${depth}`
                     )
                 }
@@ -518,7 +522,7 @@ export async function collectStorageSlotsByContract(
                         depth,
                         op,
                         frames,
-                        result,
+                        resultStorage,
                         `ERROR IN STATICCALL: CONTACT NOT FOUND for callee ${callee} at depth ${depth}`
                     )
                 }
@@ -533,7 +537,7 @@ export async function collectStorageSlotsByContract(
                         depth,
                         op,
                         frames,
-                        result,
+                        resultStorage,
                         `ERRROR: CONTACT NOT FOUND for creator ${creator} nonce ${nonce}`
                     )
                     return new Map() // Not needed as errorInfo throws an exception; but to satisfy typescript
@@ -548,7 +552,7 @@ export async function collectStorageSlotsByContract(
                 frames.set(depth, { owner: created, opcode: previousOp })
                 currentOwner = created
                 nonces.initialize(created, 0n) //Takes track of cretated contract. Starts with 0 as it has not yet created any contract
-                result.set(created.toLocaleLowerCase(), new Set())
+                resultStorage.set(created.toLocaleLowerCase(), new Set())
             } else if (previousOp === 'CREATE2') {
                 const creator = currentOwner
                 const salt = toBeHex(wordFromTop(previousStack, 3), 32)
@@ -575,11 +579,11 @@ export async function collectStorageSlotsByContract(
                         depth,
                         op,
                         frames,
-                        result,
+                        resultStorage,
                         `ERRROR: CONTACT NOT FOUND in nonces for creator2 ${creator} nonce ${nonce}`
                     )
                 }
-                result.set(created.toLocaleLowerCase(), new Set())
+                resultStorage.set(created.toLocaleLowerCase(), new Set())
             } else if (previousOp != '<NONE (EOA)>') {
                 //Internal error. Should never happen.previousOp could be <NONE (EOA)> in the first step of a contract creation transaction
                 errorInfo(
@@ -588,7 +592,7 @@ export async function collectStorageSlotsByContract(
                     depth,
                     op,
                     frames,
-                    result,
+                    resultStorage,
                     `ERRROR: UNKNOWN OPCODE ${previousOp} CANNOT ENTER IN A DEEPER DEPTH ${depth} from ${previousDepth}`
                 )
             }
@@ -605,7 +609,7 @@ export async function collectStorageSlotsByContract(
                     depth,
                     op,
                     frames,
-                    result,
+                    resultStorage,
                     `ERRROR: storedOwner NOT FOUND for depth ${previousDepth}`
                 )
             }
@@ -618,7 +622,7 @@ export async function collectStorageSlotsByContract(
                     depth,
                     op,
                     frames,
-                    result,
+                    resultStorage,
                     `ERRROR: storedOp NOT FOUND for depth ${previousDepth}`
                 )
             }
@@ -633,7 +637,7 @@ export async function collectStorageSlotsByContract(
                     depth,
                     storedOp,
                     frames,
-                    result,
+                    resultStorage,
                     `ERRROR: EXITING TO THE SAME OWNER ${currentOwner} AT A DEEPER DEPTH ${depth} from ${previousDepth}`
                 )
             }
@@ -654,7 +658,7 @@ export async function collectStorageSlotsByContract(
                         depth,
                         storedOp,
                         frames,
-                        result,
+                        resultStorage,
                         `ERRROR: RETURNED ADDRESS ${returnedAddress} NOT MATCHING STORED OWNER ${potentialCreatedContract} for depth ${previousDepth} `
                     )
                 }
@@ -672,7 +676,7 @@ export async function collectStorageSlotsByContract(
                     depth,
                     op,
                     frames,
-                    result,
+                    resultStorage,
                     `ERRROR: UNKNOWN STORED OPCODE ${storedOp} CANNOT EXIT TO A PREVIOUS DEPTH ${depth} from ${previousDepth}`
                 )
             }
@@ -686,7 +690,20 @@ export async function collectStorageSlotsByContract(
                 `${'--'.repeat(depth)}> [SSTORE] (owner, slot) (${currentOwner}, ${slot}) `
             )
             //result.push({ contract: currentOwner, slot })
-            result.get(currentOwner.toLowerCase())?.add(slot)
+            const storageOwner = resultStorage.get(currentOwner.toLowerCase())
+            if (!storageOwner) {
+                errorInfo(
+                    st,
+                    previousDepth,
+                    depth,
+                    op,
+                    frames,
+                    resultStorage,
+                    `ERRROR: UNKNOWN CONTRACT IN RESULTSTORAGE ${currentOwner} CANNOT STORE SLOT ${slot} `
+                )
+                return new Map<string, Set<string>>() // Not needed as errorInfo throws an exception; but to satisfy typescript
+            }
+            storageOwner.add(slot)
             sstoreCount++
             if (!Object.prototype.hasOwnProperty.call(storage ?? {}, slot)) {
                 // Internal error, should never happen as storage tracing is enabled
@@ -696,7 +713,7 @@ export async function collectStorageSlotsByContract(
                     depth,
                     op,
                     frames,
-                    result,
+                    resultStorage,
                     `ERROR: SSTORE SLOT [${slot}] MUST BE IN STORAGE {${JSON.stringify(storage)}} (tracer must enable storage))`
                 )
             }
@@ -704,9 +721,9 @@ export async function collectStorageSlotsByContract(
 
         previousDepth = depth
         previousOp = op
-        count++
         previousStack = st
         previousMem = mem
+        count++
     }
 
     console.log(
@@ -715,7 +732,7 @@ export async function collectStorageSlotsByContract(
 
     console.log(`Processed ${sstoreCount} SSTORAGE / ${count} OPCODES`)
 
-    return result
+    return resultStorage
 }
 
 /**
@@ -755,52 +772,61 @@ export async function collectStorageSlotsByContract(
  * await appendSlotStructure(hre, "0xabc...", alloc, { defaultBalance: "0x1", fetchCodeIfMissing: true });
  */
 export async function appendSlotStructure(
-  hre: HardhatRuntimeEnvironment,
-  txHash: string,
-  alloc: GenesisAlloc
+    hre: HardhatRuntimeEnvironment,
+    txHash: string,
+    alloc: GenesisAlloc
 ): Promise<GenesisAlloc> {
+    // 1) Descubrir (address -> Set<slot>) afectados por la tx
+    const newData: Map<
+        string,
+        Set<string>
+    > = await collectStorageSlotsByContract(hre, txHash)
 
-  // 1) Descubrir (address -> Set<slot>) afectados por la tx
-  const newData: Map<string, Set<string>> =
-    await collectStorageSlotsByContract(hre, txHash);
+    // console.log("\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+    // newData.forEach((slots, address) => {
+    //     console.log(`Contract ${address} has ${slots.size} slots modified`);
+    // });
+    // console.log("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
 
-  if (newData.size === 0) return alloc;
+    if (newData.size === 0) return alloc
 
-  const provider = hre.ethers.provider;
+    const provider = hre.ethers.provider
 
-  // 2) Procesar cada contrato afectado
-  for (const [rawAddress, slots] of newData.entries()) {
-    const address = rawAddress.toLowerCase();
-    console.log(`Contract ${address} has ${slots.size} slots modified`);
+    // 2) Procesar cada contrato afectado
+    for (const [rawAddress, slots] of newData.entries()) {
+        const address = rawAddress.toLowerCase()
+        console.log(`Contract ${address} has ${slots.size} slots modified`)
 
-    // Obtener o crear la entrada en alloc (Map)
-    let entry = alloc.get(address);
-    if (!entry) {
-        console.log(`New contract found ${address} with ${slots.size} slots modified, creating default entry`);
-        const storage:Record<string, string> = {};
-        slots.forEach((slot) => {
-            if (!(slot in storage)) storage[slot] = "0x0";
-            //console.log(`   New slot found ${slot}: initializing to 0x0`);
-        });
-        entry = {
-            contractName: "NONAME",    
-            balance: "0",
-            nonce: "0",
-            code: await provider.getCode(address) ?? "ERROR NO CODE",
-            storage,
-        };
-        alloc.set(address, entry);
-    }else{
-        //console.log(`Contract ${address} with ${slots.size} slots modified already in alloc`);
-        const storage = entry.storage ?? {};
-         slots.forEach((slot) => {
-            if (!(slot in storage)) storage[slot] = "0x0";
-            //console.log(`   New slot found ${slot}: initializing to 0x0`);
-        });  
+        // Obtener o crear la entrada en alloc (Map)
+        let entry = alloc.get(address)
+        if (!entry) {
+            console.log(
+                `New contract found ${address} with ${slots.size} slots modified, creating default entry`
+            )
+            const storage: Record<string, string> = {}
+            slots.forEach((slot) => {
+                if (!(slot in storage)) storage[slot] = '0x0'
+                //console.log(`   New slot found ${slot}: initializing to 0x0`);
+            })
+            entry = {
+                contractName: 'NONAME',
+                balance: '0',
+                nonce: '0',
+                code: (await provider.getCode(address)) ?? 'ERROR NO CODE',
+                storage,
+            }
+            alloc.set(address, entry)
+        } else {
+            //console.log(`Contract ${address} with ${slots.size} slots modified already in alloc`);
+            const storage = entry.storage ?? {}
+            slots.forEach((slot) => {
+                if (!(slot in storage)) storage[slot] = '0x0'
+                //console.log(`   New slot found ${slot}: initializing to 0x0`);
+            })
+        }
     }
-  }
-  // Map + Set ya garantizan unicidad por (address, slot)
-  return alloc;
+    // Map + Set ya garantizan unicidad por (address, slot)
+    return alloc
 }
 
 /**
@@ -851,7 +877,7 @@ async function retrieveSlotValues(
 ): Promise<GenesisAlloc> {
     const provider = hre.ethers.provider
 
-    for (const [contractAddress, entry] of alloc) {                                                                    
+    for (const [contractAddress, entry] of alloc) {
         const address = contractAddress?.toLowerCase()
         if (!address) continue
 
@@ -894,11 +920,11 @@ export async function retrieveSlotStructure(
     hre: HardhatRuntimeEnvironment
 ): Promise<GenesisAlloc> {
     const transactions: Array<string> = await retrieveTransactions(hre)
-    let alloc: GenesisAlloc = new Map<string, GenesisAllocEntry>();
+    let alloc: GenesisAlloc = new Map<string, GenesisAllocEntry>()
     for (const txHash of transactions) {
         console.log(`\n🔍 Analyzing transaction ${txHash} ...`)
         alloc = await appendSlotStructure(hre, txHash, alloc)
-        console.log("Current alloc size: " + alloc.size + " contracts\n");
+        console.log('Current alloc size: ' + alloc.size + ' contracts\n')
     }
 
     alloc = await retrieveSlotValues(hre, alloc)
