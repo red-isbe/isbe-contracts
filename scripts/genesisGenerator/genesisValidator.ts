@@ -14,11 +14,16 @@ interface Facet {
   facetName?: string;
 }
 
+
+const ISBE_PROXY_ADDRESS = "0x301dc252d2e09eac1a34f017bdc240d2d72037c2";
+
+
+
 async function processTX(message:string,tx:Promise<TransactionResponse>):Promise<void> {
     const pTx:TransactionResponse = await tx;
-    process.stdout.write(`\x1b[31m ${message} - Waiting TX to be processed (TX: ${(await tx).hash})...\x1b[0m\r`);
+    process.stdout.write(`\x1b[31m ${message} - Process transaction (TX: ${(await tx).hash})...\x1b[0m\r`);
     await pTx.wait();
-    process.stdout.write(`${message} - TX  processed (TX: ${(await tx).hash})...                                  \n`);
+    process.stdout.write(`${message} - Process transaction (TX: ${(await tx).hash}) \x1b[32m[OK]\x1b[0m              \n`);
 }
 
 async function validateFacests(hre: HardhatRuntimeEnvironment, businessAddress:string) {
@@ -26,8 +31,6 @@ async function validateFacests(hre: HardhatRuntimeEnvironment, businessAddress:s
     await contractMatcher.init(hre);
     
     const provider = hre.ethers.provider;
-    const currentBlockNumber = await hre.ethers.provider.getBlockNumber();
-    console.log(`Current block number: ${currentBlockNumber}`);
 
     console.log(`\n\n--- Calling facets() function ---------------------------------------`);
 
@@ -60,9 +63,9 @@ async function validateFacests(hre: HardhatRuntimeEnvironment, businessAddress:s
     console.log("\n📋 SELECTOR DETAIL:");
     for (const [i, f] of facets.entries()) {
         console.log(`\n${i + 1}. Facet: ${f.facetAddress} (${f.facetName})`);
-        console.log("* Selectors:");
+        console.log(" * Selectors:");
         for (const s of f.selectors){
-            console.log(`  ${contractMatcher.matchSelector(s)} ${".".repeat(90 - contractMatcher.matchSelector(s).length)} [ ${s} ]`);
+            console.log(`   ${contractMatcher.matchSelector(s)} ${".".repeat(90 - contractMatcher.matchSelector(s).length)} [ ${s} ]`);
         }
     }
 
@@ -119,15 +122,15 @@ async function validateRoles(hre:HardhatRuntimeEnvironment, businessAddress:stri
     });
 
     let role: string = ""+ Array.from(roles)[roleNumber - 1]
-    console.log(`\nTesting last role: ${role}`);
+    console.log(`\nTesting last role: ${role} \n`);
 
-    process.stdout.write('\x1b[31mWaiting TX (renounceRole) to be processed...\x1b[0m\r');
     await processTX("Revoke Role", accessControlContract.revokeRole(role,signerAddress));
     console.log(`Renounced role ${role}`);
     roles = await accessControlContract.getRolesByAccount(signerAddress,0n,roleNumber-1);
     roles.forEach((r:string,i:number) => {
         console.log(`  Role ${i}: ${r}`);
     });
+    console.log("");
 
     process.stdout.write('\x1b[31mWaiting TX (rgrantRole) to be processed...\x1b[0m\r');
     await processTX("Grant Role", accessControlContract.grantRole(role,signerAddress));
@@ -167,25 +170,41 @@ async function validateGlobalPause(hre:HardhatRuntimeEnvironment, businessAddres
     const artifact = await import('../../artifacts/contracts/factory/globalisbepause/GlobalIsbePause.sol/GlobalIsbePause.json');
     const globalPauseIsbeContract = new hre.ethers.Contract(businessAddress, artifact.abi, signer);
 
-    const IsbeProxyAddress = "0x301dc252d2e09eac1a34f017bdc240d2d72037c2";
+    
     const artifactPausable = await import('../../artifacts/contracts/pause/ISBEPauseFacet.sol/ISBEPauseFacet.json');
-    const pausableContract = new hre.ethers.Contract(IsbeProxyAddress, artifactPausable.abi, signer);
+    const pausableContract = new hre.ethers.Contract(ISBE_PROXY_ADDRESS, artifactPausable.abi, signer);
 
     let paused = await pausableContract.paused();
     console.log(`CURRENT paused state: ${paused}`);
 
-    await processTX("Global Pause", globalPauseIsbeContract.pauseIsbe(IsbeProxyAddress));
+    await processTX("Global Pause", globalPauseIsbeContract.pauseIsbe(ISBE_PROXY_ADDRESS));
 
     paused = await pausableContract.paused();
     console.log(`NEW paused state: ${paused}`);
 
-    await processTX("Global UnPause", globalPauseIsbeContract.unpauseIsbe(IsbeProxyAddress));
+    await processTX("Global UnPause", globalPauseIsbeContract.unpauseIsbe(ISBE_PROXY_ADDRESS));
+}
+
+
+async function validateProxyFactory(hre:HardhatRuntimeEnvironment, businessAddress:string) {
+    console.log(`\n\n--- VALIDATING PROXY FACTORY ---------------------------------------\n`);
+    const provider = hre.ethers.provider;
+    const [signer]= await hre.ethers.getSigners();
+    console.log(`Using signer address: ${await signer.getAddress()}`);
+    const artifact = await import('../../artifacts/contracts/factory/proxyfactory/ProxyFactoryFacet.sol/ProxyFactoryFacet.json');
+    const proxyFactory = new hre.ethers.Contract(businessAddress, artifact.abi, signer);
+
+    const configurations = await proxyFactory.getConfigurationByProxy(ISBE_PROXY_ADDRESS);
+    console.log(`Configuration for ISBE Proxy (${ISBE_PROXY_ADDRESS}):`);
+    console.log(`  - Configuration ID: \t${configurations[0]}`);
+    console.log(`  - Version: \t\t${configurations[1]}`);
 
 }
 
 export async function validateGenesis(hre:HardhatRuntimeEnvironment, businessAddress:string) {
     console.log(`\n\n=== VALIDATING GENESIS DEPLOYMENT ===================================\n`);
     await validateFacests(hre, businessAddress);
+    await validateProxyFactory(hre, businessAddress);
     await validateGlobalPause(hre, businessAddress);
     await validateBusinesLogic(hre, businessAddress);
     await validateRoles(hre, businessAddress);

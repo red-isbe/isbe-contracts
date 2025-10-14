@@ -795,7 +795,7 @@ export async function appendSlotStructure(
     // 2) Procesar cada contrato afectado
     for (const [rawAddress, slots] of newData.entries()) {
         const address = rawAddress.toLowerCase()
-        console.log(`Contract ${address} has ${slots.size} slots modified`)
+        //console.log(`Contract ${address} has ${slots.size} slots modified`)
 
         // Obtener o crear la entrada en alloc (Map)
         let entry = alloc.get(address)
