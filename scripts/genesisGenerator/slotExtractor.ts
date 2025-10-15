@@ -117,7 +117,7 @@ class Nonces {
 const nonces = new Nonces()
 
 /**
- * Frames management. It has informatio regaring all contexts (depths) (opcodes,owners)
+ * Frames management. It has information regaring all contexts (depths) (opcodes,owners)
  */
 class Frames {
     private map: Map<number, Frame> = new Map<number, Frame>()
@@ -179,21 +179,6 @@ const wordFromTop = (st: string[], nFromTop: number): bigint => {
 }
 
 /**
- * Heuristically flag “tiny” addresses (numeric value ≤ 0xff).
- *
- * Useful in tracers to filter out stack words that are *probably not* real
- * contract addresses—e.g., small constants like `0x40`, `0x60`, `0x64`
- * (common memory offsets) or **precompile addresses** (on Ethereum, 0x01..0x13).
- *
- * @param addr  A hex string address (e.g., "0x...") to test.
- * @returns     `true` if the numeric value ≤ 0xff (255), otherwise `false`.
- *
- * @example
- * looksTiny("0x0000000000000000000000000000000000000040") // → true  (likely an offset)
- * looksTiny("0x0000000000000000000000000000000000000009") // → true  (precompile 0x09)
- * looksTiny("0x8ba1f109551bd432803012645ac136ddd64dba72") // → false (normal address)
- *
-/**
  * Return a byte slice from the EVM linear memory snapshot.
  *
  * `memWords` is the trace’s memory dump represented as an array of 32-byte hex
@@ -233,39 +218,6 @@ const memorySlice = (
     if (!memWords || size === 0) return '0x'
     const concat = '0x' + memWords.map((w) => w.replace(/^0x/, '')).join('')
     return dataSlice(concat, offset, offset + size)
-}
-
-/**
- * Resolve the callee address for CALL-like opcodes from a stack snapshot.
- *
- * Many tracers expose the EVM stack as an array where the **top of stack is the last element**.
- * Right before CALL/CALLCODE/DELEGATECALL/STATICCALL executes, the stack layout is (top→down):
- *
- *  CALL/CALLCODE:
- *    [0]=gas, [1]=to, [2]=value, [3]=inOffset, [4]=inSize, [5]=outOffset, [6]=outSize
- *
- *  DELEGATECALL/STATICCALL:
- *    [0]=gas, [1]=to, [2]=inOffset, [3]=inSize, [4]=outOffset, [5]=outSize
- *
- * However, some clients or tooling can present slight variations. To be robust, we try a set of
- * candidate indices “fromTop” and validate each candidate address by checking for bytecode on-chain.
- *
- * @param hre  Hardhat runtime, used to query code via provider.getCode
- * @param op   Opcode mnemonic at this step (e.g. "CALL", "DELEGATECALL")
- * @param st   Stack snapshot (hex strings), top is st[st.length - 1]
- * @returns    Lowercased 20-byte hex address string (0x…)
- */
-
-/**
- * Dumps complete state of the sctack .
- * @param st Stack at this moment
- * @param fromTop Stack could be very big, so we can limit the output to the last n elements. 0 means all the stack
- * @returns stringified stack
- */
-function showStack(st: string[], fromTop: number = 0): string {
-    if (fromTop == 0) return JSON.stringify(st)
-    if (st.length <= fromTop) return JSON.stringify(st)
-    return JSON.stringify(st.slice(-fromTop))
 }
 
 /**
@@ -926,6 +878,18 @@ export async function retrieveSlotStructure(
         `\n🎉 Genesis allocation structure completed. ${Object.keys(alloc).length} contracts with modified storage.`
     )
     return alloc
+}
+
+/**
+ * Dumps complete state of the sctack .
+ * @param st Stack at this moment
+ * @param fromTop Stack could be very big, so we can limit the output to the last n elements. 0 means all the stack
+ * @returns stringified stack
+ */
+function showStack(st: string[], fromTop: number = 0): string {
+    if (fromTop == 0) return JSON.stringify(st)
+    if (st.length <= fromTop) return JSON.stringify(st)
+    return JSON.stringify(st.slice(-fromTop))
 }
 
 /**
