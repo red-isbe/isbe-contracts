@@ -309,6 +309,7 @@ const normalize32 = (hex: string): Hex =>
  *    want to roll back, add a failure check on frame exit (not shown here).
  *  - We keep a local `nextCreateNonce` per creator so that subsequent CREATE predictions
  *    are consistent within this single trace.
+ *   This function does not extract slot's value, only a set of modified slots per contract. Values are extracted in a later step.
  *
  *  Known limitations:
  *  - This function assumes no SSTORE occurs in a STATICCALL context or any nested context. If so the will be processed as if they were in a CALL context.
@@ -389,34 +390,24 @@ export async function collectStorageSlotsByContract(
     // 3) State for our simulated call stack + CREATE nonce tracking
 
     let previousOp = '<NONE (EOA)>'
-    if (rootOwner) {
-        const ro = rootOwner.toLowerCase()
-        frames.set(1, { owner: ro, opcode: previousOp })
-        // For a freshly created root contract, its first internal CREATE uses nonce=1.
+    const ro = rootOwner.toLowerCase()
+    frames.set(1, { owner: ro, opcode: previousOp })
+    // For a freshly created root contract, its first internal CREATE uses nonce=1.
 
-        resultStorage.set(ro, new Set()) // In any case, we create an entry as it can have SSTOREs
-        if (nonces.getCurrent(ro) === undefined) {
-            console.log(
-                'Root owner ' + ro + ' not known, initializing nonce to 1'
-            )
-            nonces.initialize(ro, 1n) // as it is creating a contract nonce starts with 1 not 0
-            // if (resultStorage.has(ro)) {
-            //     throw new Error(
-            //         'Internal error: root owner ' +
-            //             ro +
-            //             ' already in result map'
-            //     )
-            // }
-            resultStorage.set(ro.toLowerCase(), new Set())
-        } else {
-            console.log(
-                'Root owner ' +
-                    ro +
-                    ' already known, it is an INVOCATION. NO NEED TO INCRENMENT NONCE current nonce is ' +
-                    nonces.getCurrent(ro)
-            )
-        }
+    resultStorage.set(ro, new Set()) // In any case, we create an entry as it can have SSTOREs
+    if (nonces.getCurrent(ro) === undefined) {
+        console.log('Root owner ' + ro + ' not known, initializing nonce to 1')
+        nonces.initialize(ro, 1n) // as it is creating a contract nonce starts with 1 not 0
+        resultStorage.set(ro.toLowerCase(), new Set())
+    } else {
+        console.log(
+            'Root owner ' +
+                ro +
+                ' already known, it is an INVOCATION. NO NEED TO INCRENMENT NONCE current nonce is ' +
+                nonces.getCurrent(ro)
+        )
     }
+
     /*********************************************************************************************
      * Main loop: walk the trace steps, maintaining a simulated call stack of Frames keyed by depth.
      * PREVIOUS* variables that track the last step's values (depth, op, stack, memory)
@@ -431,6 +422,8 @@ export async function collectStorageSlotsByContract(
     let previousStack: string[] = []
     let previousMem: string[] = []
     let sstoreCount = 0
+
+    // LOOP to process all opcodes
     for (const step of structLogs) {
         const op = step.op.toUpperCase()
         const st = step.stack
@@ -468,8 +461,8 @@ export async function collectStorageSlotsByContract(
                 )
                 frames.set(depth, { owner: callee, opcode: previousOp })
                 currentOwner = callee
+                // Double check if called contract  exists
                 if (nonces.getCurrent(callee) === undefined) {
-                    // Double check if called contract  exists
                     errorInfo(
                         previousStack,
                         previousDepth,
@@ -492,8 +485,8 @@ export async function collectStorageSlotsByContract(
                     `${'--'.repeat(depth)} + DELEGATECALL callee: ${callee}  STACK [${previousStack.length}] `
                 )
                 frames.set(depth, { owner: currentOwner, opcode: previousOp }) // DELEGATECALL inherits owner from caller
+                // Double check if called contract  exists
                 if (nonces.getCurrent(callee) === undefined) {
-                    // Double check if called contract  exists
                     errorInfo(
                         previousStack,
                         previousDepth,
@@ -514,8 +507,8 @@ export async function collectStorageSlotsByContract(
                 )
                 frames.set(depth, { owner: callee, opcode: previousOp })
                 currentOwner = callee
+                // Double check if called contract  exists
                 if (nonces.getCurrent(callee) === undefined) {
-                    // Double check if called contract  exists
                     errorInfo(
                         previousStack,
                         previousDepth,
