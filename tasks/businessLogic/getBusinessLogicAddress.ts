@@ -1,5 +1,5 @@
 import { task } from 'hardhat/config'
-import * as dotenv from 'dotenv'
+
 import { getBusinessLogicAddress } from '../../scripts/businessLogic/getBusinessLogicAddress'
 import { getSigner } from '../../scripts/utils/getSigner'
 
@@ -9,8 +9,6 @@ import { getSigner } from '../../scripts/utils/getSigner'
   --factory "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6" \
   --business-version "1"
  */
-
-dotenv.config()
 
 task('getBusinessLogicAddress', 'Deploys business logic contract')
     .addParam('businessId', 'The business ID')

@@ -1,2 +1,2 @@
 npx lint-staged
-npx hardhat test
+npx hardhat test --parallel

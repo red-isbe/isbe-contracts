@@ -5,52 +5,50 @@ import '@typechain/hardhat'
 import 'hardhat-contract-sizer'
 import 'solidity-docgen'
 import 'hardhat-gas-reporter'
-import './tasks/businessLogic/deployIsbeFactory'
-import './tasks/businessLogic/deployBusinessLogic'
-import './tasks/businessLogic/getBusinessLogicAddress'
-import './tasks/businessLogic/getBusinessLogicVersions'
-import './tasks/businessLogic/getBusinessLogics'
-import './tasks/diamond/loupe/getFacets'
-import './tasks/diamond/loupe/getFacetAddress'
-import './tasks/diamond/loupe/getFacetAddresses'
-import './tasks/diamond/loupe/getFacetSelectors'
-import './tasks/diamond/cut/diamondCut'
-import './tasks/diamond/cut/facetUpdates'
-import './tasks/diamond/cut/interfaceCut'
-import './tasks/globalPause/pauseIsbe'
-import './tasks/globalPause/unpauseIsbe'
-import './tasks/pause/pause'
-import './tasks/pause/unpause'
-import './tasks/pause/isPaused'
-import './tasks/access/accessControl/getRoleAdmin'
-import './tasks/access/accessControl/getRoleMembers'
-import './tasks/access/accessControl/getRoleMembersCount'
-import './tasks/access/accessControl/getRolesByAccount'
-import './tasks/access/accessControl/getRolesByAccountCount'
-import './tasks/access/accessControl/grantRole'
-import './tasks/access/accessControl/hasRole'
-import './tasks/access/accessControl/renounceRole'
-import './tasks/access/accessControl/revokeRole'
-import './tasks/access/accessControl/setRoleAdmin'
-import './tasks/configMgmt/facets'
-import './tasks/configMgmt/facetAddress'
-import './tasks/configMgmt/facetAddresses'
-import './tasks/configMgmt/facetSelectors'
-import './tasks/configMgmt/getConfig'
-import './tasks/configMgmt/setConfig'
-import './tasks/proxyFactory/deployUseCase'
-import './tasks/proxyFactory/deployUseCaseTo'
-import './tasks/proxyFactory/getConfigurationByProxy'
-import './tasks/deployTest'
-import './tasks/deployAll'
-import './tasks/extract/byteCode'
-import './tasks/extract/StorageSlots'
 
-import { randomBytes } from 'crypto'
+// Configure dotenv globally without verbose logging
+import 'dotenv/config'
 
-const ACCOUNTS = (
-    process.env.ACCOUNTS ?? randomBytes(32).toString('hex')
-).split(',')
+// Import unified configuration and task utilities
+import { getNetworkConfigs, ConfigManager, logger } from './config'
+
+// Register all tasks with Hardhat CLI in a single import
+// This replaces the many individual task imports with a consolidated approach
+import './tasks/register'
+
+// Initialize configuration management
+const configManager = ConfigManager.getInstance()
+
+// Validate configuration and log results
+const configValidation = configManager.validateConfiguration()
+if (!configValidation.isValid) {
+    logger.error('❌ Configuration validation failed:')
+    configValidation.errors.forEach((error) => logger.error(`  - ${error}`))
+    logger.warn('⚠️  Continuing with potentially invalid configuration')
+}
+
+if (configValidation.warnings.length > 0) {
+    logger.warn('⚠️  Configuration warnings:')
+    configValidation.warnings.forEach((warning) =>
+        logger.warn(`  - ${warning}`)
+    )
+}
+
+// Log configuration summary (respects debug mode)
+const summary = configValidation.summary
+logger.summary('Configuration Summary', {
+    environment: summary.environment,
+    networksCount: summary.networksCount,
+    secp256k1Networks: summary.secp256k1Networks,
+    secp256r1Networks: summary.secp256r1Networks,
+    accountsCount: summary.accountsCount,
+    gasLimit: summary.gasLimit,
+    timeout: `${summary.timeout}ms`,
+})
+
+// Get network configurations from unified config
+const networkConfigs = getNetworkConfigs()
+
 const config: HardhatUserConfig = {
     solidity: {
         version: '0.8.28',
@@ -62,47 +60,10 @@ const config: HardhatUserConfig = {
             },
         },
     },
-    networks: {
-        hardhat: {
-            mining: {
-                auto: true,
-                interval: 0,
-            },
-            blockGasLimit: 30000000,
-            allowUnlimitedContractSize: true,
-        },
-        localhost: {
-            url: 'http://127.0.0.1:8545',
-            // No need for accounts; Hardhat provides them
-        },
-        mvp: {
-            url: 'https://besu-node-non-validator-1.mvp.envs.redisbe.com',
-            chainId: 2023,
-            accounts: ACCOUNTS,
-            gasPrice: 0,
-            gas: 100000000,
-            blockGasLimit: 0x1e84800,
-        },
-        arsys: {
-            url: 'http://213.165.85.41:8545',
-            chainId: 2024,
-            accounts: ACCOUNTS,
-            gasPrice: 0,
-            gas: 100000000,
-            blockGasLimit: 0x1e84800,
-        },
-        kepler: {
-            url: 'https://regular.pre.iosec.io.builders:8565',
-            chainId: 1003,
-            accounts: ACCOUNTS,
-            gasPrice: 0,
-            gas: 100000000,
-            blockGasLimit: 18800000,
-        },
-    },
+    networks: networkConfigs,
     mocha: {
-        timeout: 60000,
-        parallel: true,
+        timeout: configManager.getTestingConfig().timeout,
+        parallel: configManager.getTestingConfig().parallel,
     },
     paths: {
         sources: './contracts',
@@ -121,6 +82,17 @@ const config: HardhatUserConfig = {
         pages: 'items',
         exclude: ['testwrapper'],
         collapseNewlines: true,
+    },
+    gasReporter: {
+        enabled: process.env.REPORT_GAS === 'true',
+        showMethodSig: true,
+        includeIntrinsicGas: false,
+        reportPureAndViewMethods: true,
+        excludeAutoGeneratedGetters: true,
+        reportFormat: 'markdown',
+        outputFile: 'docs/generated/gas-usage-summary.md',
+        noColors: true,
+        currency: 'EUR',
     },
 }
 

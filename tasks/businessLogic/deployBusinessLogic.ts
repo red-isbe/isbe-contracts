@@ -1,5 +1,5 @@
 import { task } from 'hardhat/config'
-import * as dotenv from 'dotenv'
+
 import path from 'path'
 import { deployBusinessLogic } from '../../scripts/businessLogic/deployBusinessLogic'
 import fs from 'fs'
@@ -11,8 +11,6 @@ import { getSigner } from '../../scripts/utils/getSigner'
   --factory "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6" \
   --bytecode-path "./artifacts/contracts/hashtimestamp/HashTimestampFacet.sol/HashTimestampFacet.json"
  */
-
-dotenv.config()
 
 task('deployBusinessLogic', 'Deploys business logic contract')
     .addParam('businessId', 'The business ID')

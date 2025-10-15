@@ -7,6 +7,8 @@ import { UseCaseDeployer } from './deployers/UseCaseDeployer'
 import { DeploymentValidator } from './validators/DeploymentValidator'
 import { DeploymentResult, DeploymentOptions } from './types/DeploymentTypes'
 import { DeploymentTableRenderer } from './utils/DeploymentTableRenderer'
+import { NetworkConfigWithCurve } from '../../types/hardhat'
+import { Secp256r1Wallet } from '../../utils/Secp256r1Wallet'
 
 /**
  * Main orchestrator that coordinates the entire deployment process
@@ -68,14 +70,51 @@ export class DeploymentOrchestrator {
     }
 
     private async initializeSigner(): Promise<void> {
-        const signers = await this.hre.ethers.getSigners()
-        if (signers.length === 0) {
-            throw new Error('No signers available')
-        }
+        // Check if this is a secp256r1 network and use appropriate signer
+        const networkConfig = this.hre.config.networks[
+            this.hre.network.name
+        ] as NetworkConfigWithCurve
 
-        this.signer = signers[0]
-        const address = await this.signer.getAddress()
-        console.log(`🔐 Using signer: ${address}`)
+        if (
+            networkConfig.curve === 'secp256r1' &&
+            networkConfig.secp256r1Accounts
+        ) {
+            // Use secp256r1 account from network configuration
+            const secp256r1Account = networkConfig.secp256r1Accounts[0]
+            const privateKey = secp256r1Account.privateKey.startsWith('0x')
+                ? secp256r1Account.privateKey
+                : '0x' + secp256r1Account.privateKey
+
+            // Create Secp256r1Wallet with proper secp256r1 signature support
+            this.signer = new Secp256r1Wallet(
+                privateKey,
+                this.hre.ethers.provider
+            )
+
+            const address = await this.signer.getAddress()
+            console.log(`🔐 Using production secp256r1 wallet: ${address}`)
+            console.log(`✅ Signatures will use secp256r1 curve (NIST P-256)`)
+
+            // Update governance address to use secp256r1-derived address
+            this.config.governance.accountAddress = address
+
+            console.log(
+                `📍 Governance account: ${this.config.governance.accountAddress}`
+            )
+            console.log(
+                `🔑 Production-ready secp256r1 deployment wallet active`
+            )
+        } else {
+            // Use standard Hardhat signers for secp256k1 networks
+            const signers = await this.hre.ethers.getSigners()
+            if (signers.length === 0) {
+                throw new Error('No signers available')
+            }
+
+            this.signer = signers[0]
+            const address = await this.signer.getAddress()
+            console.log(`🔐 Using signer: ${address}`)
+        }
     }
 
     private async deployGovernance(result: DeploymentResult): Promise<void> {

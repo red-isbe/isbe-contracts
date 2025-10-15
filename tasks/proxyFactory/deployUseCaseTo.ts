@@ -1,5 +1,5 @@
 import { task, types } from 'hardhat/config'
-import * as dotenv from 'dotenv'
+
 import { deployUseCaseTo } from '../../scripts/proxyFactory/deployUseCaseTo'
 import { getSigner } from '../../scripts/utils/getSigner'
 
@@ -14,8 +14,6 @@ import { getSigner } from '../../scripts/utils/getSigner'
   --salt "0x0000000000000000000000000000000000000000000000000000000000000001" \
   --factory "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6"
  */
-
-dotenv.config()
 
 task('deployUseCaseTo', 'Sets config')
     .addParam('configId', 'The configuration ID')

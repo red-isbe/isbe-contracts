@@ -1,5 +1,5 @@
 import { task } from 'hardhat/config'
-import * as dotenv from 'dotenv'
+
 import { getFacets } from '../../../scripts/diamond/loupe/getFacets'
 import { getSigner } from '../../../scripts/utils/getSigner'
 
@@ -7,8 +7,6 @@ import { getSigner } from '../../../scripts/utils/getSigner'
  npx hardhat getFacets --network localhost \
   --diamond "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6"
  */
-
-dotenv.config()
 
 task('getFacets', 'Deploys business logic contract')
     .addParam('diamond', 'The diamond contract address')
