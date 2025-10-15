@@ -324,6 +324,50 @@ Error indicating that an attempt was made to unfreeze more tokens than are froze
 | requested | uint256 | The amount requested to unfreeze          |
 | available | uint256 | The amount actually frozen                |
 
+### InsufficientFreeBalance
+
+```solidity
+error InsufficientFreeBalance(address account, uint256 requested, uint256 freeBalance)
+```
+
+Error when attempting to transfer more tokens than available free balance
+
+#### Parameters
+
+| Name        | Type    | Description                                  |
+| ----------- | ------- | -------------------------------------------- |
+| account     | address | The address attempting the transfer          |
+| requested   | uint256 | The amount requested to transfer             |
+| freeBalance | uint256 | The actual free (unfrozen) balance available |
+
+### SenderIsFrozen
+
+```solidity
+error SenderIsFrozen(address sender)
+```
+
+Error when sender account is completely frozen
+
+#### Parameters
+
+| Name   | Type    | Description               |
+| ------ | ------- | ------------------------- |
+| sender | address | The frozen sender address |
+
+### RecipientIsFrozen
+
+```solidity
+error RecipientIsFrozen(address recipient)
+```
+
+Error when recipient account is completely frozen
+
+#### Parameters
+
+| Name      | Type    | Description                  |
+| --------- | ------- | ---------------------------- |
+| recipient | address | The frozen recipient address |
+
 ### setAddressFrozen
 
 ```solidity

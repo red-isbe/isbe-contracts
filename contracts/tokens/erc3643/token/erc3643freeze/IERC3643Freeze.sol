@@ -59,6 +59,14 @@ interface IERC3643Freeze {
         uint256 freeBalance
     );
 
+    /// @notice Error when sender account is completely frozen
+    /// @param sender The frozen sender address
+    error SenderIsFrozen(address sender);
+
+    /// @notice Error when recipient account is completely frozen
+    /// @param recipient The frozen recipient address
+    error RecipientIsFrozen(address recipient);
+
     /**
      *  @dev sets an address frozen status for this token.
      *  @param _userAddress The address for which to update frozen status

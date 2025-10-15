@@ -24,6 +24,12 @@ interface IERC3643Regulatory {
      */
     event ComplianceAdded(address indexed _newCompliance);
 
+    // --- Custom Errors ---
+
+    /// @notice Error indicating that the recipient address is not verified in the Identity Registry.
+    /// @param account The unverified recipient address.
+    error RecipientNotVerified(address account);
+
     /**
      *  @dev sets the Identity Registry for the token
      *  @param _newIdentityRegistry the address of the Identity Registry to set

@@ -32,12 +32,6 @@ interface IERC203643Controller {
         uint256 amount
     );
 
-    // --- Custom Errors ---
-
-    /// @notice Error indicating that the recipient address is not verified in the Identity Registry.
-    /// @param account The unverified recipient address.
-    error RecipientNotVerified(address account);
-
     // --- Functions ---
 
     /**

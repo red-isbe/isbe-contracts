@@ -164,20 +164,6 @@ Emitted when tokens are forcefully burned from an account
 | from     | address | The address the tokens are burned from |
 | amount   | uint256 | The number of tokens burned            |
 
-### RecipientNotVerified
-
-```solidity
-error RecipientNotVerified(address account)
-```
-
-Error indicating that the recipient address is not verified in the Identity Registry.
-
-#### Parameters
-
-| Name    | Type    | Description                       |
-| ------- | ------- | --------------------------------- |
-| account | address | The unverified recipient address. |
-
 ### forceTransfer
 
 ```solidity

@@ -41,9 +41,10 @@ package "ERC20 and ERC3643" {
     class IERC20Metadata <<(I,#FFD700) interface>> #FFB6C1
     class IERC20Isbe <<(I,#FFD700) interface>> #FFB6C1
     class IERC20Burnable <<(I,#FFD700) interface>> #FFB6C1
-    class IERC20Capped <<(I,#FFD700) interface>> #FFB6C1
-    class IERC20Controller <<(I,#FFD700) interface>> #FFB6C1
     class IERC20Snapshot <<(I,#FFD700) interface>> #FFB6C1
+    class IERC203643Capped <<(I,#FFD700) interface>> #FFFF99
+    class IERC203643Controller <<(I,#FFD700) interface>> #FFFF99
+    
 
     class ERC20 <<(A,#228B22) abstract contract>> #FFB6C1
     class ERC20Facet <<(C,#1E90FF) contract>> #FFB6C1
@@ -52,16 +53,18 @@ package "ERC20 and ERC3643" {
     class ERC20Burnable <<(A,#228B22) abstract contract>> #FFB6C1
     class ERC20BurnableFacet <<(C,#1E90FF) contract>> #FFB6C1
 
-    class ERC20Capped <<(A,#228B22) abstract contract>> #FFB6C1
-    class ERC20CappedFacet <<(C,#1E90FF) contract>> #FFB6C1
-    class ERC20CappedInternal <<(A,#228B22) abstract contract>> #FFB6C1
-
-    class ERC20Controller <<(A,#228B22) abstract contract>> #FFB6C1
-    class ERC20ControllerFacet <<(C,#1E90FF) contract>> #FFB6C1
-
     class ERC20Snapshot <<(A,#228B22) abstract contract>> #FFB6C1
     class ERC20SnapshotFacet <<(C,#1E90FF) contract>> #FFB6C1
     class ERC20SnapshotInternal <<(A,#228B22) abstract contract>> #FFB6C1
+
+    class ERC203643Capped <<(A,#228B22) abstract contract>> #FFFF99
+    class ERC203643CappedFacet <<(C,#1E90FF) contract>> #FFFF99
+    class ERC203643CappedInternal <<(A,#228B22) abstract contract>> #FFFF99
+
+    class ERC203643Controller <<(A,#228B22) abstract contract>> #FFFF99
+    class ERC203643ControllerFacet <<(C,#1E90FF) contract>> #FFFF99
+
+    
 
     ERC20 --|> IERC20Isbe
     IERC20Isbe --|> IERC20
@@ -74,24 +77,18 @@ package "ERC20 and ERC3643" {
     ERC20Burnable --|> IERC20Burnable
     ERC20BurnableFacet --|> ERC20Burnable
 
-    ERC20Capped --|> IERC20Capped
-    ERC20CappedFacet --|> ERC20Capped
-    ERC20CappedInternal --|> ERC20Internal
+    ERC203643Capped --|> IERC203643Capped
+    ERC203643CappedFacet --|> ERC203643Capped
+    ERC203643CappedInternal --|> ERC20Internal
 
-    ERC20Controller --|> IERC20Controller
-    ERC20ControllerFacet --|> ERC20Controller
+    ERC203643Controller --|> IERC203643Controller
+    ERC203643ControllerFacet --|> ERC203643Controller
 
     ERC20Snapshot --|> IERC20Snapshot
     ERC20SnapshotFacet --|> ERC20Snapshot
     ERC20SnapshotInternal --|> ERC20Internal
 
-     ' --- Control ---
-    class IERC3643Control <<(I,#FFD700) interface>> #E6E6FA
-    class ERC3643Control <<(A,#228B22) abstract contract>> #E6E6FA
-    class ERC3643ControlFacet <<(C,#1E90FF) contract>> #E6E6FA
 
-    ERC3643ControlFacet --|> ERC3643Control
-    ERC3643Control --|> IERC3643Control 
 
     ' --- Metadata ---
     class IERC3643Metadata <<(I,#FFD700) interface>> #E6E6FA
@@ -129,7 +126,7 @@ package "ERC20 and ERC3643" {
     ' --- ERC203643 Internal Common ---
     class ERC203643InternalCommon <<(A,#228B22) abstract contract>> #FFFF99
     ERC203643InternalCommon --|> ERC20SnapshotInternal
-    ERC203643InternalCommon --|> ERC20CappedInternal
+    ERC203643InternalCommon --|> ERC203643CappedInternal
 
     ERC203643InternalCommon --|> ERC3643RegulatoryInternal
     ERC203643InternalCommon --|> ERC3643FreezeInternal
@@ -139,15 +136,15 @@ package "ERC20 and ERC3643" {
 
 
     
-    ERC3643Control --|> ERC203643InternalCommon
+ 
     ERC3643Metadata --|> ERC203643InternalCommon
     ERC3643Regulatory --|> ERC203643InternalCommon
     ERC3643Freeze --|> ERC203643InternalCommon
 
     ERC20 --|> ERC203643InternalCommon
     ERC20Burnable --|> ERC203643InternalCommon
-    ERC20Capped --|> ERC203643InternalCommon
-    ERC20Controller --|> ERC203643InternalCommon
+    ERC203643Capped --|> ERC203643InternalCommon
+    ERC203643Controller --|> ERC203643InternalCommon
     ERC20Snapshot --|> ERC203643InternalCommon
 
 }

@@ -279,6 +279,20 @@ this event is emitted when the Compliance has been set for the token
 the event is emitted by the token constructor and by the setCompliance function
 `_compliance` is the address of the Compliance contract of the token
 
+### RecipientNotVerified
+
+```solidity
+error RecipientNotVerified(address account)
+```
+
+Error indicating that the recipient address is not verified in the Identity Registry.
+
+#### Parameters
+
+| Name    | Type    | Description                       |
+| ------- | ------- | --------------------------------- |
+| account | address | The unverified recipient address. |
+
 ### setIdentityRegistry
 
 ```solidity

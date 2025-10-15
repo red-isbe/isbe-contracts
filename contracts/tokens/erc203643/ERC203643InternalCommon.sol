@@ -2,19 +2,17 @@
 pragma solidity ^0.8.28;
 
 import {ERC203643CappedInternal} from './erc203643capped/ERC203643CappedInternal.sol';
-
 import {ERC3643MetadataInternal} from '../erc3643/token/erc3643metadata/ERC3643MetadataInternal.sol';
 import {ERC3643FreezeInternal} from '../erc3643/token/erc3643freeze/ERC3643FreezeInternal.sol';
 import {ERC3643RegulatoryInternal} from '../erc3643/token/erc3643regulatory/ERC3643RegulatoryInternal.sol';
-
 import {ERC20SnapshotInternal} from '../erc20/extensions/snapshot/ERC20SnapshotInternal.sol';
+
+import {_CONTROLLER_ROLE} from '../../constants/roles.sol';
 
 import {IERC20Isbe} from '../erc20/IERC20Isbe.sol';
 import {IERC3643Freeze} from '../erc3643/token/erc3643freeze/IERC3643Freeze.sol';
-
-import {_CONTROLLER_ROLE} from '../../constants/roles.sol';
 import {IIdentityRegistry} from '../erc3643/identityregistry/IIdentityRegistry.sol';
-import {IERC203643Controller} from './erc203643controller/IERC203643Controller.sol';
+import {IERC3643Regulatory} from '../erc3643/token/erc3643regulatory/IERC3643Regulatory.sol';
 
 /// @title ERC203643InternalCommon
 /// @notice Aggregates the internal functions of ERC20, ERC3643
@@ -32,44 +30,55 @@ abstract contract ERC203643InternalCommon is
         address _to,
         uint256 _amount
     ) internal virtual override {
-        // === SNAPSHOT LOGIC (from ERC20SnapshotInternal) ===
-        if (_from == address(0)) {
-            // mint
-            _updateAccountSnapshot(_to);
-            _updateTotalSupplySnapshot();
-        } else if (_to == address(0)) {
-            // burn
-            _updateAccountSnapshot(_from);
-            _updateTotalSupplySnapshot();
-        } else {
-            // transfer
-            _updateAccountSnapshot(_from);
-            _updateAccountSnapshot(_to);
-        }
+        // === VARIABLES COMUNES ===
+        uint256 balanceOfFrom;
+        uint256 frozen;
+        uint256 freeBalance;
+        bool hasIdentityRegistry = _identityRegistry() != address(0);
+        bool hasControllerRole = _hasRole(_CONTROLLER_ROLE, msg.sender);
 
-        // === ERC203643 BUSINESS LOGIC ===
-        // === MINT (_from == address(0)) ===
+        // ==========================================================================
+        // MINT OPERATIONS (_from == address(0))
+        // ==========================================================================
         if (_from == address(0)) {
-            if (_identityRegistry() != address(0)) {
+            // Snapshot logic
+            _updateAccountSnapshot(_to);
+            _updateTotalSupplySnapshot();
+
+            // mint() - Mint validation
+            // In ERC20 mode: no additional validation needed
+            // In ERC3643 mode: recipient must be verified in IdentityRegistry
+            if (hasIdentityRegistry) {
                 require(
                     IIdentityRegistry(_identityRegistry()).isVerified(_to),
-                    IERC203643Controller.RecipientNotVerified(_to)
+                    IERC3643Regulatory.RecipientNotVerified(_to)
                 );
             }
         }
-
-        // === BURN (_to == address(0)) ===
+        // ==========================================================================
+        // BURN OPERATIONS (_to == address(0))
+        // ==========================================================================
         else if (_to == address(0)) {
-            uint256 balanceOfFrom = _balanceOf(_from);
+            // Snapshot logic
+            _updateAccountSnapshot(_from);
+            _updateTotalSupplySnapshot();
+
+            // Calculate balance once for burn operations
+            balanceOfFrom = _balanceOf(_from);
             require(
                 balanceOfFrom >= _amount,
                 IERC20Isbe.BurnAmountExceedsBalance()
             );
 
-            // Solo los controladores pueden hacer burn con descongelamiento automático
-            if (_hasRole(_CONTROLLER_ROLE, msg.sender)) {
-                uint256 frozen = _getFrozenTokens(_from);
-                uint256 freeBalance = balanceOfFrom > frozen
+            // Burn validation with freeze management
+            // In ERC20 mode: burn() / burnFrom() no additional validations | forceBurn() no additional validations
+            // In ERC3643 mode: burn() / burnFrom() don't exist (not exposed) | forceBurn() auto-unfreeze if needed
+            if (hasControllerRole) {
+                // forceBurn() - Controller burn with auto-unfreeze capability
+                // In ERC20 mode: frozen = 0, so freeBalance = balanceOfFrom (no unfreeze needed)
+                // In ERC3643 mode: auto-unfreeze frozen tokens if needed to complete the burn
+                frozen = _getFrozenTokens(_from);
+                freeBalance = balanceOfFrom > frozen
                     ? (balanceOfFrom - frozen)
                     : 0;
 
@@ -79,33 +88,42 @@ abstract contract ERC203643InternalCommon is
                     emit IERC3643Freeze.TokensUnfrozen(_from, tokensToUnfreeze);
                 }
             }
+            // else: burn() / burnFrom() - Normal burn operations
+            // (No additional logic needed here)
         }
-
-        // === TRANSFER (_from != address(0) && _to != address(0)) ===
+        // ==========================================================================
+        // TRANSFER OPERATIONS (_from != address(0) && _to != address(0))
+        // ==========================================================================
         else {
-            uint256 balanceOfFrom = _balanceOf(_from);
+            // Snapshot logic
+            _updateAccountSnapshot(_from);
+            _updateAccountSnapshot(_to);
+
+            // Calculate balance once for transfer operations
+            balanceOfFrom = _balanceOf(_from);
             require(
                 balanceOfFrom >= _amount,
                 IERC20Isbe.TransferAmountExceedsBalance()
             );
 
-            // 1. Si hay identityRegistry configurado (ERC3643), verificar destinatario
-            if (_identityRegistry() != address(0)) {
+            // ERC3643 mode validations - Transfer validation with regulatory compliance and freeze management
+            // In ERC20 mode: transfer() and forceTransfer() behave identically here (no additional validations)
+            if (hasIdentityRegistry) {
+                // Verify recipient identity (required for both normal and force transfers)
                 require(
                     IIdentityRegistry(_identityRegistry()).isVerified(_to),
-                    IERC203643Controller.RecipientNotVerified(_to)
+                    IERC3643Regulatory.RecipientNotVerified(_to)
                 );
 
-                // 2. Verificar si es transferencia forzada (por controlador)
-                bool isForcedTransfer = _hasRole(_CONTROLLER_ROLE, msg.sender);
-
-                uint256 frozen = _getFrozenTokens(_from);
-                uint256 freeBalance = balanceOfFrom > frozen
+                // Calculate freeze info once
+                frozen = _getFrozenTokens(_from);
+                freeBalance = balanceOfFrom > frozen
                     ? (balanceOfFrom - frozen)
                     : 0;
 
-                if (isForcedTransfer) {
-                    // Transferencia forzada: descongelar si es necesario
+                if (hasControllerRole) {
+                    // forceTransfer() - Forced transfer with auto-unfreeze capability
+                    // Auto-unfreeze if needed to complete the transfer
                     if (freeBalance < _amount) {
                         uint256 tokensToUnfreeze = _amount - freeBalance;
                         _unfreezePartialTokens(_from, tokensToUnfreeze);
@@ -114,11 +132,17 @@ abstract contract ERC203643InternalCommon is
                             tokensToUnfreeze
                         );
                     }
-                }
-                // Transferencia normal: verificar que el destinatario no esté congelado
-                // y que haya suficiente balance libre
-                else {
-                    require(!_isFrozen(_to), 'Recipient is frozen');
+                } else {
+                    // transfer() / transferFrom() - Normal transfer operations
+                    // Strict validation: both accounts not frozen + sufficient free balance
+                    require(
+                        !_isFrozen(_from),
+                        IERC3643Freeze.SenderIsFrozen(_from)
+                    );
+                    require(
+                        !_isFrozen(_to),
+                        IERC3643Freeze.RecipientIsFrozen(_to)
+                    );
                     require(
                         freeBalance >= _amount,
                         IERC3643Freeze.InsufficientFreeBalance(
@@ -129,6 +153,7 @@ abstract contract ERC203643InternalCommon is
                     );
                 }
             }
+            // else: ERC20 mode - no additional validations needed for any transfer type
         }
     }
 }
