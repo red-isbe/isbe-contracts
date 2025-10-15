@@ -59,6 +59,10 @@ interface IERC3643Freeze {
         uint256 freeBalance
     );
 
+    /// @notice Error when attempting to transfer tokens to a frozen address
+    /// @param recipient The frozen address that cannot receive tokens
+    error RecipientAddressFrozen(address recipient);
+
     /**
      *  @dev sets an address frozen status for this token.
      *  @param _userAddress The address for which to update frozen status

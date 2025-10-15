@@ -118,7 +118,7 @@ abstract contract ERC203643InternalCommon is
                 // Transferencia normal: verificar que el destinatario no esté congelado
                 // y que haya suficiente balance libre
                 else {
-                    require(!_isFrozen(_to), 'Recipient is frozen');
+                    revert IERC3643Freeze.RecipientAddressFrozen(_to);
                     require(
                         freeBalance >= _amount,
                         IERC3643Freeze.InsufficientFreeBalance(
