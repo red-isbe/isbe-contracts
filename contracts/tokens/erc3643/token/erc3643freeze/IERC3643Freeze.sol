@@ -49,6 +49,16 @@ interface IERC3643Freeze {
         uint256 available
     );
 
+    /// @notice Error when attempting to transfer more tokens than available free balance
+    /// @param account The address attempting the transfer
+    /// @param requested The amount requested to transfer
+    /// @param freeBalance The actual free (unfrozen) balance available
+    error InsufficientFreeBalance(
+        address account,
+        uint256 requested,
+        uint256 freeBalance
+    );
+
     /**
      *  @dev sets an address frozen status for this token.
      *  @param _userAddress The address for which to update frozen status

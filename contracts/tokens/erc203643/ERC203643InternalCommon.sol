@@ -115,18 +115,19 @@ abstract contract ERC203643InternalCommon is
                         );
                     }
                 }
-
                 // Transferencia normal: verificar que el destinatario no esté congelado
                 // y que haya suficiente balance libre
-                /*comentado para evitar error de compilacion hasta definir custom error
-                    else {
+                else {
                     require(!_isFrozen(_to), 'Recipient is frozen');
                     require(
                         freeBalance >= _amount,
-                        'Insufficient free balance'
+                        IERC3643Freeze.InsufficientFreeBalance(
+                            _from,
+                            _amount,
+                            freeBalance
+                        )
                     );
-                    }
-                    */
+                }
             }
         }
     }
