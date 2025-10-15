@@ -952,6 +952,14 @@ export async function deployERC3643UseCasesFacets(
     const ERC3643FreezeFacetFactory =
         await ethers.getContractFactory('ERC3643FreezeFacet')
 
+    const ERC203643CappedFacetFactory = await ethers.getContractFactory(
+        'ERC203643CappedFacet'
+    )
+
+    const ERC203643ControllerFacetFactory = await ethers.getContractFactory(
+        'ERC203643ControllerFacet'
+    )
+
     // Deploy all business logic contracts before setting configuration
     const isbeCutFacet = await deployBusinessLogicFromFactory(
         ISBE_CUT_RESOLVER_KEY,
@@ -985,6 +993,14 @@ export async function deployERC3643UseCasesFacets(
         ERC3643_FREEZE_RESOLVER_KEY,
         ERC3643FreezeFacetFactory
     )
+    const erc203643CappedFacet = await deployBusinessLogicFromFactory(
+        ERC203643_CAPPED_RESOLVER_KEY,
+        ERC203643CappedFacetFactory
+    )
+    const erc203643ControllerFacet = await deployBusinessLogicFromFactory(
+        ERC203643_CONTROLLER_RESOLVER_KEY,
+        ERC203643ControllerFacetFactory
+    )
 
     // Set configuration for ERC3643
 
@@ -1003,6 +1019,14 @@ export async function deployERC3643UseCasesFacets(
         },
         {
             businessId: ERC3643_FREEZE_RESOLVER_KEY,
+            version: 1,
+        },
+        {
+            businessId: ERC203643_CAPPED_RESOLVER_KEY,
+            version: 1,
+        },
+        {
+            businessId: ERC203643_CONTROLLER_RESOLVER_KEY,
             version: 1,
         },
     ])
@@ -1033,6 +1057,12 @@ export async function deployERC3643UseCasesFacets(
     const erc3643Freeze = ERC3643FreezeFacetFactory.attach(
         proxy
     ) as ERC3643FreezeFacet
+    const erc203643Capped = ERC203643CappedFacetFactory.attach(
+        proxy
+    ) as ERC203643CappedFacet
+    const erc203643Controller = ERC203643ControllerFacetFactory.attach(
+        proxy
+    ) as ERC203643ControllerFacet
 
     return {
         pause,
@@ -1041,6 +1071,8 @@ export async function deployERC3643UseCasesFacets(
         erc3643Metadata,
         erc3643Regulatory,
         erc3643Freeze,
+        erc203643Capped,
+        erc203643Controller,
         isbeCutFacet,
         isbeLoupeFacet,
         proxy,
@@ -1050,5 +1082,7 @@ export async function deployERC3643UseCasesFacets(
         erc3643MetadataFacet,
         erc3643RegulatoryFacet,
         erc3643FreezeFacet,
+        erc203643CappedFacet,
+        erc203643ControllerFacet,
     }
 }
