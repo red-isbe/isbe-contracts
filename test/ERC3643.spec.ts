@@ -8,8 +8,17 @@ import {
     REGULATORY_ROLE,
     FREEZE_ROLE,
     PAUSER_ROLE,
+    CONTROLLER_ROLE,
+    MINTER_ROLE,
 } from './constants'
-import { IERC3643, AccessControl, ERC20, ISBEPause } from '../typechain-types'
+import {
+    IERC3643,
+    AccessControl,
+    ERC20,
+    ISBEPause,
+    IERC203643Controller,
+    IERC203643Capped,
+} from '../typechain-types'
 import {
     MockCompliance,
     MockIdentityRegistry,
@@ -950,6 +959,441 @@ describe('ERC3643 Token', function () {
                 expect(await erc3643.getFrozenTokens(aliceAddress)).to.equal(
                     25n
                 )
+            })
+        })
+    })
+    // ====================================================================
+    // CONTROLLER MODULE
+    // ====================================================================
+    describe('ERC3643 Controller', () => {
+        // --------------------------------------------------------------------
+        // when ERC3643 is NOT initialized
+        // --------------------------------------------------------------------
+        describe('when ERC3643 is not initialized but ERC20 is', () => {
+            //** ERC20 module test cover its main use cases. We reserve this space for future implementations that may involve ERC20 behavior not expected by its standard implementation and caused by futures interactions with any logic change from ERC3643 Controller */
+        })
+
+        // --------------------------------------------------------------------
+        // when ERC3643 is initialized
+        // --------------------------------------------------------------------
+        describe('when ERC3643 is initialized', () => {
+            const totalBalance = 1000n
+            const frozenAmount = 400n
+            const freeBalance = totalBalance - frozenAmount // 600n
+
+            let erc3643Capped: IERC203643Capped
+            let erc3643Controller: IERC203643Controller
+            let bob: Signer
+            let bobAddress: string
+
+            beforeEach(async () => {
+                const fixture = async () => {
+                    const signers = await ethers.getSigners()
+                    bob = signers[2] as unknown as Signer
+                    bobAddress = await bob.getAddress()
+
+                    // necessary roles of TOKEN_OWNER_ROLE
+                    await accessControlFacet
+                        .connect(owner)
+                        .grantRole(CONTROLLER_ROLE, ownerAddress)
+                    await accessControlFacet
+                        .connect(owner)
+                        .grantRole(MINTER_ROLE, ownerAddress)
+                    await accessControlFacet
+                        .connect(owner)
+                        .grantRole(FREEZE_ROLE, ownerAddress)
+
+                    // Initialize ERC20
+                    await erc20Facet
+                        .connect(owner)
+                        .initializeErc20(tokenName, tokenSymbol, tokenDecimals)
+
+                    // Initialize ERC3643 modules
+                    await erc3643
+                        .connect(owner)
+                        .initializeERC3643Metadata(
+                            tokenOnchainIDAddress,
+                            version
+                        )
+                    await erc3643
+                        .connect(owner)
+                        .initializeERC3643Regulatory(
+                            identityRegistryAddress,
+                            complianceAddress
+                        )
+
+                    // Get controller and capped interfaces
+                    erc3643Controller = (await ethers.getContractAt(
+                        'IERC203643Controller',
+                        proxyAddress
+                    )) as IERC203643Controller
+
+                    erc3643Capped = (await ethers.getContractAt(
+                        'IERC203643Capped',
+                        proxyAddress
+                    )) as IERC203643Capped
+
+                    // Setup identity registry to allow alice and bob BEFORE minting
+                    await identityRegistryMock.setIsVerified(aliceAddress, true)
+                    await identityRegistryMock.setIsVerified(bobAddress, true)
+
+                    // Initialize cap before minting
+                    await erc3643Capped
+                        .connect(owner)
+                        .initializeCap(totalBalance * 10n) // Cap 10x the balance to allow minting
+
+                    // Mint tokens to alice (requires identity verification in ERC3643 mode)
+                    await erc3643Capped
+                        .connect(owner)
+                        .mint(aliceAddress, totalBalance)
+                }
+                await loadFixture(fixture)
+            })
+
+            describe('forceTransfer', () => {
+                it('GIVEN no CONTROLLER_ROLE WHEN forceTransfer THEN reverts', async () => {
+                    await accessControlFacet
+                        .connect(owner)
+                        .revokeRole(CONTROLLER_ROLE, ownerAddress)
+
+                    await expect(
+                        erc3643Controller
+                            .connect(owner)
+                            .forceTransfer(aliceAddress, bobAddress, 100n)
+                    ).to.be.reverted
+                })
+
+                it('GIVEN contract paused WHEN forceTransfer THEN reverts', async () => {
+                    await accessControlFacet
+                        .connect(owner)
+                        .grantRole(PAUSER_ROLE, ownerAddress)
+                    await pauseFacet.connect(owner).pause()
+
+                    await expect(
+                        erc3643Controller
+                            .connect(owner)
+                            .forceTransfer(aliceAddress, bobAddress, 100n)
+                    ).to.be.reverted
+                })
+
+                it('GIVEN unverified recipient WHEN forceTransfer THEN reverts', async () => {
+                    await identityRegistryMock.setIsVerified(bobAddress, false)
+
+                    await expect(
+                        erc3643Controller
+                            .connect(owner)
+                            .forceTransfer(aliceAddress, bobAddress, 100n)
+                    ).to.be.reverted
+                })
+
+                it('GIVEN valid inputs WHEN forceTransfer within free balance THEN succeeds and emits ForceTransfer', async () => {
+                    const transferAmount = 500n
+
+                    await expect(
+                        erc3643Controller
+                            .connect(owner)
+                            .forceTransfer(
+                                aliceAddress,
+                                bobAddress,
+                                transferAmount
+                            )
+                    )
+                        .to.emit(erc3643Controller, 'ForceTransfer')
+                        .withArgs(
+                            ownerAddress,
+                            aliceAddress,
+                            bobAddress,
+                            transferAmount
+                        )
+                        .and.to.emit(erc20Facet, 'Transfer')
+                        .withArgs(aliceAddress, bobAddress, transferAmount)
+
+                    expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                        transferAmount
+                    )
+                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                        totalBalance - transferAmount
+                    )
+                })
+
+                it('GIVEN frozen tokens WHEN forceTransfer exceeds free balance THEN auto-unfreezes and emits TokensUnfrozen', async () => {
+                    // Freeze part of alice's tokens
+                    await erc3643
+                        .connect(owner)
+                        .freezePartialTokens(aliceAddress, frozenAmount)
+
+                    const transferAmount = 800n // Exceeds free balance (600)
+                    const expectedUnfreeze = transferAmount - freeBalance // 200n
+
+                    await expect(
+                        erc3643Controller
+                            .connect(owner)
+                            .forceTransfer(
+                                aliceAddress,
+                                bobAddress,
+                                transferAmount
+                            )
+                    )
+                        .to.emit(erc3643, 'TokensUnfrozen')
+                        .withArgs(aliceAddress, expectedUnfreeze)
+                        .and.to.emit(erc3643Controller, 'ForceTransfer')
+                        .withArgs(
+                            ownerAddress,
+                            aliceAddress,
+                            bobAddress,
+                            transferAmount
+                        )
+                        .and.to.emit(erc20Facet, 'Transfer')
+                        .withArgs(aliceAddress, bobAddress, transferAmount)
+
+                    expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                        transferAmount
+                    )
+                    expect(
+                        await erc3643.getFrozenTokens(aliceAddress)
+                    ).to.equal(frozenAmount - expectedUnfreeze)
+                })
+
+                it('GIVEN all tokens frozen WHEN forceTransfer entire balance THEN unfreezes all and succeeds', async () => {
+                    // Freeze all tokens
+                    await erc3643
+                        .connect(owner)
+                        .freezePartialTokens(aliceAddress, totalBalance)
+
+                    await expect(
+                        erc3643Controller
+                            .connect(owner)
+                            .forceTransfer(
+                                aliceAddress,
+                                bobAddress,
+                                totalBalance
+                            )
+                    )
+                        .to.emit(erc3643, 'TokensUnfrozen')
+                        .withArgs(aliceAddress, totalBalance)
+                        .and.to.emit(erc3643Controller, 'ForceTransfer')
+                        .withArgs(
+                            ownerAddress,
+                            aliceAddress,
+                            bobAddress,
+                            totalBalance
+                        )
+
+                    expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                        totalBalance
+                    )
+                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                        0n
+                    )
+                    expect(
+                        await erc3643.getFrozenTokens(aliceAddress)
+                    ).to.equal(0n)
+                })
+
+                it('GIVEN zero amount WHEN forceTransfer THEN succeeds without unfreeze', async () => {
+                    await expect(
+                        erc3643Controller
+                            .connect(owner)
+                            .forceTransfer(aliceAddress, bobAddress, 0n)
+                    )
+                        .to.emit(erc3643Controller, 'ForceTransfer')
+                        .withArgs(ownerAddress, aliceAddress, bobAddress, 0n)
+                        .and.to.not.emit(erc3643, 'TokensUnfrozen')
+
+                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                        totalBalance
+                    )
+                })
+
+                it('GIVEN insufficient total balance WHEN forceTransfer THEN reverts', async () => {
+                    const excessiveAmount = totalBalance + 1n
+
+                    await expect(
+                        erc3643Controller
+                            .connect(owner)
+                            .forceTransfer(
+                                aliceAddress,
+                                bobAddress,
+                                excessiveAmount
+                            )
+                    ).to.be.reverted
+                })
+
+                it('GIVEN recipient is frozen WHEN forceTransfer THEN succeeds (forced transfer ignores recipient freeze)', async () => {
+                    await erc3643
+                        .connect(owner)
+                        .setAddressFrozen(bobAddress, true)
+
+                    const transferAmount = 100n
+
+                    await expect(
+                        erc3643Controller
+                            .connect(owner)
+                            .forceTransfer(
+                                aliceAddress,
+                                bobAddress,
+                                transferAmount
+                            )
+                    )
+                        .to.emit(erc3643Controller, 'ForceTransfer')
+                        .withArgs(
+                            ownerAddress,
+                            aliceAddress,
+                            bobAddress,
+                            transferAmount
+                        )
+
+                    expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                        transferAmount
+                    )
+                })
+            })
+
+            describe('forceBurn', () => {
+                it('GIVEN no CONTROLLER_ROLE WHEN forceBurn THEN reverts', async () => {
+                    await accessControlFacet
+                        .connect(owner)
+                        .revokeRole(CONTROLLER_ROLE, ownerAddress)
+
+                    await expect(
+                        erc3643Controller
+                            .connect(owner)
+                            .forceBurn(aliceAddress, 100n)
+                    ).to.be.reverted
+                })
+
+                it('GIVEN contract paused WHEN forceBurn THEN reverts', async () => {
+                    await accessControlFacet
+                        .connect(owner)
+                        .grantRole(PAUSER_ROLE, ownerAddress)
+                    await pauseFacet.connect(owner).pause()
+
+                    await expect(
+                        erc3643Controller
+                            .connect(owner)
+                            .forceBurn(aliceAddress, 100n)
+                    ).to.be.reverted
+                })
+
+                it('GIVEN valid inputs WHEN forceBurn within free balance THEN succeeds and emits ForceBurn', async () => {
+                    const burnAmount = 300n
+                    const initialSupply = await erc20Facet.totalSupply()
+
+                    await expect(
+                        erc3643Controller
+                            .connect(owner)
+                            .forceBurn(aliceAddress, burnAmount)
+                    )
+                        .to.emit(erc3643Controller, 'ForceBurn')
+                        .withArgs(ownerAddress, aliceAddress, burnAmount)
+                        .and.to.emit(erc20Facet, 'Transfer')
+                        .withArgs(aliceAddress, ZeroAddress, burnAmount)
+
+                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                        totalBalance - burnAmount
+                    )
+                    expect(await erc20Facet.totalSupply()).to.equal(
+                        initialSupply - burnAmount
+                    )
+                })
+
+                it('GIVEN frozen tokens WHEN forceBurn exceeds free balance THEN auto-unfreezes and emits TokensUnfrozen', async () => {
+                    // Freeze part of alice's tokens
+                    await erc3643
+                        .connect(owner)
+                        .freezePartialTokens(aliceAddress, frozenAmount)
+
+                    const burnAmount = 700n // Exceeds free balance (600)
+                    const expectedUnfreeze = burnAmount - freeBalance // 100n
+
+                    await expect(
+                        erc3643Controller
+                            .connect(owner)
+                            .forceBurn(aliceAddress, burnAmount)
+                    )
+                        .to.emit(erc3643, 'TokensUnfrozen')
+                        .withArgs(aliceAddress, expectedUnfreeze)
+                        .and.to.emit(erc3643Controller, 'ForceBurn')
+                        .withArgs(ownerAddress, aliceAddress, burnAmount)
+                        .and.to.emit(erc20Facet, 'Transfer')
+                        .withArgs(aliceAddress, ZeroAddress, burnAmount)
+
+                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                        totalBalance - burnAmount
+                    )
+                    expect(
+                        await erc3643.getFrozenTokens(aliceAddress)
+                    ).to.equal(frozenAmount - expectedUnfreeze)
+                })
+
+                it('GIVEN all tokens frozen WHEN forceBurn entire balance THEN unfreezes all and succeeds', async () => {
+                    // Freeze all tokens
+                    await erc3643
+                        .connect(owner)
+                        .freezePartialTokens(aliceAddress, totalBalance)
+
+                    await expect(
+                        erc3643Controller
+                            .connect(owner)
+                            .forceBurn(aliceAddress, totalBalance)
+                    )
+                        .to.emit(erc3643, 'TokensUnfrozen')
+                        .withArgs(aliceAddress, totalBalance)
+                        .and.to.emit(erc3643Controller, 'ForceBurn')
+                        .withArgs(ownerAddress, aliceAddress, totalBalance)
+
+                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                        0n
+                    )
+                    expect(
+                        await erc3643.getFrozenTokens(aliceAddress)
+                    ).to.equal(0n)
+                })
+
+                it('GIVEN zero amount WHEN forceBurn THEN succeeds without unfreeze', async () => {
+                    await expect(
+                        erc3643Controller
+                            .connect(owner)
+                            .forceBurn(aliceAddress, 0n)
+                    )
+                        .to.emit(erc3643Controller, 'ForceBurn')
+                        .withArgs(ownerAddress, aliceAddress, 0n)
+                        .and.to.not.emit(erc3643, 'TokensUnfrozen')
+
+                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                        totalBalance
+                    )
+                })
+
+                it('GIVEN insufficient total balance WHEN forceBurn THEN reverts', async () => {
+                    const excessiveAmount = totalBalance + 1n
+
+                    await expect(
+                        erc3643Controller
+                            .connect(owner)
+                            .forceBurn(aliceAddress, excessiveAmount)
+                    ).to.be.reverted
+                })
+
+                it('GIVEN sender is frozen WHEN forceBurn THEN succeeds (forced burn ignores sender freeze)', async () => {
+                    await erc3643
+                        .connect(owner)
+                        .setAddressFrozen(aliceAddress, true)
+
+                    const burnAmount = 100n
+
+                    await expect(
+                        erc3643Controller
+                            .connect(owner)
+                            .forceBurn(aliceAddress, burnAmount)
+                    )
+                        .to.emit(erc3643Controller, 'ForceBurn')
+                        .withArgs(ownerAddress, aliceAddress, burnAmount)
+
+                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                        totalBalance - burnAmount
+                    )
+                })
             })
         })
     })
