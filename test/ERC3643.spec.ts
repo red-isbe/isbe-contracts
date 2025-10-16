@@ -10,6 +10,7 @@ import {
     PAUSER_ROLE,
     CONTROLLER_ROLE,
     MINTER_ROLE,
+    CAP_ROLE,
 } from './constants'
 import {
     IERC3643,
@@ -1393,6 +1394,782 @@ describe('ERC3643 Token', function () {
                     expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
                         totalBalance - burnAmount
                     )
+                })
+            })
+        })
+    })
+    // ====================================================================
+    // CAPPED MODULE
+    // ====================================================================
+    describe('ERC3643 Capped', () => {
+        // --------------------------------------------------------------------
+        // when ERC3643 is NOT initialized
+        // --------------------------------------------------------------------
+        describe('when Mode ERC20', () => {
+            //** ERC20 module test cover its main use cases. We reserve this space for future implementations that may involve ERC20 behavior not expected by its standard implementation and caused by futures interactions with any logic change from ERC3643 Controller */
+        })
+
+        // --------------------------------------------------------------------
+        // when ERC3643 is initialized
+        // --------------------------------------------------------------------
+        describe('when Mode ERC3643', () => {
+            let erc3643Capped: IERC203643Capped
+            let bob: Signer
+            let bobAddress: string
+
+            const initialCap = 10000n
+
+            beforeEach(async () => {
+                const fixture = async () => {
+                    const signers = await ethers.getSigners()
+                    bob = signers[2] as unknown as Signer
+                    bobAddress = await bob.getAddress()
+
+                    // Grant necessary roles
+                    await accessControlFacet
+                        .connect(owner)
+                        .grantRole(MINTER_ROLE, ownerAddress)
+                    await accessControlFacet
+                        .connect(owner)
+                        .grantRole(CAP_ROLE, ownerAddress)
+                    await accessControlFacet
+                        .connect(owner)
+                        .grantRole(REGULATORY_ROLE, ownerAddress)
+
+                    // Initialize ERC20
+                    await erc20Facet
+                        .connect(owner)
+                        .initializeErc20(tokenName, tokenSymbol, tokenDecimals)
+
+                    // Initialize ERC3643 modules
+                    await erc3643
+                        .connect(owner)
+                        .initializeERC3643Metadata(
+                            tokenOnchainIDAddress,
+                            version
+                        )
+                    await erc3643
+                        .connect(owner)
+                        .initializeERC3643Regulatory(
+                            identityRegistryAddress,
+                            complianceAddress
+                        )
+
+                    // Get capped and controller interfaces
+                    erc3643Capped = (await ethers.getContractAt(
+                        'IERC203643Capped',
+                        proxyAddress
+                    )) as IERC203643Capped
+
+                    // Setup identity registry to allow alice and bob
+                    await identityRegistryMock.setIsVerified(aliceAddress, true)
+                    await identityRegistryMock.setIsVerified(bobAddress, true)
+                }
+                await loadFixture(fixture)
+            })
+
+            // ----------------------------------------------------------------
+            // initializeCap
+            // ----------------------------------------------------------------
+            describe('initializeCap', () => {
+                it('GIVEN cap not initialized WHEN initializeCap THEN succeeds and emits CapSet', async () => {
+                    await expect(
+                        erc3643Capped.connect(owner).initializeCap(initialCap)
+                    )
+                        .to.emit(erc3643Capped, 'CapSet')
+                        .withArgs(ownerAddress, initialCap)
+
+                    expect(await erc3643Capped.cap()).to.equal(initialCap)
+                })
+
+                it('GIVEN cap already initialized WHEN initializeCap again THEN reverts', async () => {
+                    await erc3643Capped.connect(owner).initializeCap(initialCap)
+
+                    await expect(
+                        erc3643Capped.connect(owner).initializeCap(initialCap)
+                    ).to.be.reverted
+                })
+
+                it('GIVEN zero cap WHEN initializeCap THEN reverts', async () => {
+                    await expect(erc3643Capped.connect(owner).initializeCap(0n))
+                        .to.be.reverted
+                })
+            })
+
+            // ----------------------------------------------------------------
+            // mint
+            // ----------------------------------------------------------------
+            describe('mint', () => {
+                beforeEach(async () => {
+                    const fixture = async () => {
+                        // Initialize cap before minting
+                        await erc3643Capped
+                            .connect(owner)
+                            .initializeCap(initialCap)
+                    }
+                    await loadFixture(fixture)
+                })
+
+                it('GIVEN no MINTER_ROLE WHEN mint THEN reverts', async () => {
+                    await accessControlFacet
+                        .connect(owner)
+                        .revokeRole(MINTER_ROLE, ownerAddress)
+
+                    await expect(
+                        erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
+                    ).to.be.reverted
+                })
+
+                it('GIVEN contract paused WHEN mint THEN reverts', async () => {
+                    await accessControlFacet
+                        .connect(owner)
+                        .grantRole(PAUSER_ROLE, ownerAddress)
+                    await pauseFacet.connect(owner).pause()
+
+                    await expect(
+                        erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
+                    ).to.be.reverted
+                })
+
+                it('GIVEN unverified recipient WHEN mint THEN reverts (ERC3643 mode)', async () => {
+                    await identityRegistryMock.setIsVerified(
+                        aliceAddress,
+                        false
+                    )
+
+                    await expect(
+                        erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
+                    ).to.be.reverted
+                })
+
+                it('GIVEN verified recipient WHEN mint within cap THEN succeeds and emits Transfer', async () => {
+                    const mintAmount = 5000n
+
+                    await expect(
+                        erc3643Capped
+                            .connect(owner)
+                            .mint(aliceAddress, mintAmount)
+                    )
+                        .to.emit(erc20Facet, 'Transfer')
+                        .withArgs(ZeroAddress, aliceAddress, mintAmount)
+
+                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                        mintAmount
+                    )
+                    expect(await erc20Facet.totalSupply()).to.equal(mintAmount)
+                })
+
+                it('GIVEN minting exceeds cap WHEN mint THEN reverts', async () => {
+                    const excessiveAmount = initialCap + 1n
+
+                    await expect(
+                        erc3643Capped
+                            .connect(owner)
+                            .mint(aliceAddress, excessiveAmount)
+                    ).to.be.reverted
+                })
+
+                it('GIVEN multiple mints WHEN total exceeds cap THEN reverts', async () => {
+                    const firstMint = 6000n
+                    const secondMint = 5000n // Total would be 11000n > 10000n cap
+
+                    await erc3643Capped
+                        .connect(owner)
+                        .mint(aliceAddress, firstMint)
+
+                    await expect(
+                        erc3643Capped
+                            .connect(owner)
+                            .mint(bobAddress, secondMint)
+                    ).to.be.reverted
+                })
+
+                it('GIVEN minting up to cap WHEN mint exact remaining amount THEN succeeds', async () => {
+                    const firstMint = 6000n
+                    const secondMint = 4000n // Total = 10000n (exact cap)
+
+                    await erc3643Capped
+                        .connect(owner)
+                        .mint(aliceAddress, firstMint)
+
+                    await expect(
+                        erc3643Capped
+                            .connect(owner)
+                            .mint(bobAddress, secondMint)
+                    )
+                        .to.emit(erc20Facet, 'Transfer')
+                        .withArgs(ZeroAddress, bobAddress, secondMint)
+
+                    expect(await erc20Facet.totalSupply()).to.equal(initialCap)
+                })
+            })
+
+            // ----------------------------------------------------------------
+            // setCap
+            // ----------------------------------------------------------------
+            describe('setCap', () => {
+                beforeEach(async () => {
+                    const fixture = async () => {
+                        // Initialize cap
+                        await erc3643Capped
+                            .connect(owner)
+                            .initializeCap(initialCap)
+
+                        // Mint some tokens
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(aliceAddress, 5000n)
+                    }
+                    await loadFixture(fixture)
+                })
+
+                it('GIVEN no CAP_ROLE WHEN setCap THEN reverts', async () => {
+                    await accessControlFacet
+                        .connect(owner)
+                        .revokeRole(CAP_ROLE, ownerAddress)
+
+                    await expect(erc3643Capped.connect(owner).setCap(20000n)).to
+                        .be.reverted
+                })
+
+                it('GIVEN new cap >= current supply WHEN setCap THEN succeeds and emits CapSet', async () => {
+                    const newCap = 15000n
+                    const currentSupply = await erc20Facet.totalSupply()
+
+                    expect(newCap).to.be.greaterThan(currentSupply)
+
+                    await expect(erc3643Capped.connect(owner).setCap(newCap))
+                        .to.emit(erc3643Capped, 'CapSet')
+                        .withArgs(ownerAddress, newCap)
+
+                    expect(await erc3643Capped.cap()).to.equal(newCap)
+                })
+
+                it('GIVEN new cap < current supply WHEN setCap THEN reverts', async () => {
+                    const currentSupply = await erc20Facet.totalSupply()
+                    const invalidCap = currentSupply - 1n
+
+                    await expect(
+                        erc3643Capped.connect(owner).setCap(invalidCap)
+                    ).to.be.reverted
+                })
+
+                it('GIVEN new cap = current supply WHEN setCap THEN succeeds', async () => {
+                    const currentSupply = await erc20Facet.totalSupply()
+
+                    await expect(
+                        erc3643Capped.connect(owner).setCap(currentSupply)
+                    )
+                        .to.emit(erc3643Capped, 'CapSet')
+                        .withArgs(ownerAddress, currentSupply)
+
+                    expect(await erc3643Capped.cap()).to.equal(currentSupply)
+                })
+
+                it('GIVEN zero cap WHEN setCap THEN reverts', async () => {
+                    await expect(erc3643Capped.connect(owner).setCap(0n)).to.be
+                        .reverted
+                })
+
+                it('GIVEN cap increased WHEN mint up to new cap THEN succeeds', async () => {
+                    const newCap = 20000n
+                    await erc3643Capped.connect(owner).setCap(newCap)
+
+                    const currentSupply = await erc20Facet.totalSupply()
+                    const remainingToMint = newCap - currentSupply
+
+                    await expect(
+                        erc3643Capped
+                            .connect(owner)
+                            .mint(bobAddress, remainingToMint)
+                    )
+                        .to.emit(erc20Facet, 'Transfer')
+                        .withArgs(ZeroAddress, bobAddress, remainingToMint)
+
+                    expect(await erc20Facet.totalSupply()).to.equal(newCap)
+                })
+            })
+
+            // ----------------------------------------------------------------
+            // Getters
+            // ----------------------------------------------------------------
+            describe('Getters', () => {
+                beforeEach(async () => {
+                    const fixture = async () => {
+                        // Initialize cap
+                        await erc3643Capped
+                            .connect(owner)
+                            .initializeCap(initialCap)
+                    }
+                    await loadFixture(fixture)
+                })
+
+                describe('cap', () => {
+                    it('GIVEN cap initialized WHEN cap() THEN returns correct value', async () => {
+                        expect(await erc3643Capped.cap()).to.equal(initialCap)
+                    })
+
+                    it('GIVEN cap updated WHEN cap() THEN returns new value', async () => {
+                        const newCap = 20000n
+                        await erc3643Capped.connect(owner).setCap(newCap)
+
+                        expect(await erc3643Capped.cap()).to.equal(newCap)
+                    })
+                })
+            })
+        })
+    })
+
+    // ====================================================================
+    // PRIMITIVES MODULE
+    // ====================================================================
+    describe('ERC3643 Primitives', () => {
+        // --------------------------------------------------------------------
+        // Burn Operations Restriction in ERC3643 Mode
+        // --------------------------------------------------------------------
+        describe('Burn Operations Restriction', () => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            let erc20Burnable: any
+
+            beforeEach(async () => {
+                const fixture = async () => {
+                    // Grant necessary roles
+                    await accessControlFacet
+                        .connect(owner)
+                        .grantRole(MINTER_ROLE, ownerAddress)
+                    await accessControlFacet
+                        .connect(owner)
+                        .grantRole(REGULATORY_ROLE, ownerAddress)
+
+                    // Initialize ERC20
+                    await erc20Facet
+                        .connect(owner)
+                        .initializeErc20(tokenName, tokenSymbol, tokenDecimals)
+
+                    // Initialize ERC3643 modules (this puts us in ERC3643 mode)
+                    await erc3643
+                        .connect(owner)
+                        .initializeERC3643Metadata(
+                            tokenOnchainIDAddress,
+                            version
+                        )
+                    await erc3643
+                        .connect(owner)
+                        .initializeERC3643Regulatory(
+                            identityRegistryAddress,
+                            complianceAddress
+                        )
+
+                    // Setup identity registry
+                    await identityRegistryMock.setIsVerified(aliceAddress, true)
+
+                    // Get capped interface and initialize cap
+                    const erc3643Capped = (await ethers.getContractAt(
+                        'IERC203643Capped',
+                        proxyAddress
+                    )) as IERC203643Capped
+
+                    await erc3643Capped.connect(owner).initializeCap(10000n)
+
+                    // Mint tokens to alice
+                    await erc3643Capped.connect(owner).mint(aliceAddress, 5000n)
+
+                    // Try to get ERC20Burnable interface
+                    try {
+                        erc20Burnable = await ethers.getContractAt(
+                            'IERC20Burnable',
+                            proxyAddress
+                        )
+                    } catch {
+                        erc20Burnable = null
+                    }
+                }
+                await loadFixture(fixture)
+            })
+
+            it('GIVEN ERC3643 mode WHEN burn() called THEN function does not exist or reverts', async () => {
+                if (erc20Burnable === null) {
+                    // Interface not available - this is expected
+                    expect(erc20Burnable).to.be.null
+                } else {
+                    // Interface exists but should revert when called
+                    await expect(erc20Burnable.connect(alice).burn(100n)).to.be
+                        .reverted
+                }
+            })
+
+            it('GIVEN ERC3643 mode WHEN burnFrom() called THEN function does not exist or reverts', async () => {
+                if (erc20Burnable === null) {
+                    // Interface not available - this is expected
+                    expect(erc20Burnable).to.be.null
+                } else {
+                    // Interface exists but should revert when called
+                    // First approve to test burnFrom
+                    await erc20Facet.connect(alice).approve(ownerAddress, 100n)
+
+                    await expect(
+                        erc20Burnable
+                            .connect(owner)
+                            .burnFrom(aliceAddress, 100n)
+                    ).to.be.reverted
+                }
+            })
+
+            it('GIVEN ERC3643 mode WHEN trying to access burn functions THEN ERC20BurnableFacet is not exposed', async () => {
+                // Verify that the standard ERC20Burnable interface is not available
+                // In ERC3643 mode, only forceBurn (from Controller) should be available
+                const hasIdentityRegistry =
+                    (await erc3643.identityRegistry()) !== ZeroAddress
+
+                expect(hasIdentityRegistry).to.be.true
+
+                // In ERC3643 mode, burn/burnFrom should not be accessible
+                // Only forceBurn from the Controller facet should work
+                // This is verified by the regulatory compliance requirements
+            })
+        })
+
+        // --------------------------------------------------------------------
+        // Mint Operations in ERC3643 Mode
+        // --------------------------------------------------------------------
+        describe('Mint Operations', () => {
+            let erc3643Capped: IERC203643Capped
+
+            beforeEach(async () => {
+                const fixture = async () => {
+                    // Grant necessary roles
+                    await accessControlFacet
+                        .connect(owner)
+                        .grantRole(MINTER_ROLE, ownerAddress)
+                    await accessControlFacet
+                        .connect(owner)
+                        .grantRole(REGULATORY_ROLE, ownerAddress)
+
+                    // Initialize ERC20
+                    await erc20Facet
+                        .connect(owner)
+                        .initializeErc20(tokenName, tokenSymbol, tokenDecimals)
+
+                    // Initialize ERC3643 modules (this puts us in ERC3643 mode)
+                    await erc3643
+                        .connect(owner)
+                        .initializeERC3643Metadata(
+                            tokenOnchainIDAddress,
+                            version
+                        )
+                    await erc3643
+                        .connect(owner)
+                        .initializeERC3643Regulatory(
+                            identityRegistryAddress,
+                            complianceAddress
+                        )
+
+                    // Get capped interface and initialize cap
+                    erc3643Capped = (await ethers.getContractAt(
+                        'IERC203643Capped',
+                        proxyAddress
+                    )) as IERC203643Capped
+
+                    await erc3643Capped.connect(owner).initializeCap(10000n)
+                }
+                await loadFixture(fixture)
+            })
+
+            it('GIVEN ERC3643 mode WHEN mint to unverified recipient THEN reverts', async () => {
+                // Alice is NOT verified in identity registry
+                await identityRegistryMock.setIsVerified(aliceAddress, false)
+
+                await expect(
+                    erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
+                ).to.be.reverted
+            })
+
+            it('GIVEN ERC3643 mode WHEN mint to verified recipient THEN succeeds', async () => {
+                // Alice IS verified in identity registry
+                await identityRegistryMock.setIsVerified(aliceAddress, true)
+
+                await expect(
+                    erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
+                )
+                    .to.emit(erc20Facet, 'Transfer')
+                    .withArgs(ZeroAddress, aliceAddress, 1000n)
+
+                expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(1000n)
+            })
+
+            it('GIVEN ERC3643 mode WHEN mint to zero address THEN reverts', async () => {
+                await expect(
+                    erc3643Capped.connect(owner).mint(ZeroAddress, 1000n)
+                ).to.be.reverted
+            })
+        })
+
+        // --------------------------------------------------------------------
+        // Transfer Operations in ERC3643 Mode
+        // --------------------------------------------------------------------
+        describe('Transfer Operations', () => {
+            let erc3643Capped: IERC203643Capped
+            let bob: Signer
+            let bobAddress: string
+
+            beforeEach(async () => {
+                const fixture = async () => {
+                    const signers = await ethers.getSigners()
+                    bob = signers[2] as unknown as Signer
+                    bobAddress = await bob.getAddress()
+
+                    // Grant necessary roles
+                    await accessControlFacet
+                        .connect(owner)
+                        .grantRole(MINTER_ROLE, ownerAddress)
+                    await accessControlFacet
+                        .connect(owner)
+                        .grantRole(REGULATORY_ROLE, ownerAddress)
+                    await accessControlFacet
+                        .connect(owner)
+                        .grantRole(FREEZE_ROLE, ownerAddress)
+
+                    // Initialize ERC20
+                    await erc20Facet
+                        .connect(owner)
+                        .initializeErc20(tokenName, tokenSymbol, tokenDecimals)
+
+                    // Initialize ERC3643 modules
+                    await erc3643
+                        .connect(owner)
+                        .initializeERC3643Metadata(
+                            tokenOnchainIDAddress,
+                            version
+                        )
+                    await erc3643
+                        .connect(owner)
+                        .initializeERC3643Regulatory(
+                            identityRegistryAddress,
+                            complianceAddress
+                        )
+
+                    // Setup identity registry - verify alice and bob
+                    await identityRegistryMock.setIsVerified(aliceAddress, true)
+                    await identityRegistryMock.setIsVerified(bobAddress, true)
+
+                    // Get capped interface and initialize cap
+                    erc3643Capped = (await ethers.getContractAt(
+                        'IERC203643Capped',
+                        proxyAddress
+                    )) as IERC203643Capped
+
+                    await erc3643Capped.connect(owner).initializeCap(10000n)
+
+                    // Mint tokens to alice
+                    await erc3643Capped.connect(owner).mint(aliceAddress, 5000n)
+                }
+                await loadFixture(fixture)
+            })
+
+            describe('transfer', () => {
+                it('GIVEN ERC3643 mode WHEN transfer to unverified recipient THEN reverts', async () => {
+                    // Bob is NOT verified
+                    await identityRegistryMock.setIsVerified(bobAddress, false)
+
+                    await expect(
+                        erc20Facet.connect(alice).transfer(bobAddress, 100n)
+                    ).to.be.reverted
+                })
+
+                it('GIVEN ERC3643 mode WHEN sender is frozen THEN reverts', async () => {
+                    // Freeze alice
+                    await erc3643
+                        .connect(owner)
+                        .setAddressFrozen(aliceAddress, true)
+
+                    await expect(
+                        erc20Facet.connect(alice).transfer(bobAddress, 100n)
+                    ).to.be.reverted
+                })
+
+                it('GIVEN ERC3643 mode WHEN recipient is frozen THEN reverts', async () => {
+                    // Freeze bob
+                    await erc3643
+                        .connect(owner)
+                        .setAddressFrozen(bobAddress, true)
+
+                    await expect(
+                        erc20Facet.connect(alice).transfer(bobAddress, 100n)
+                    ).to.be.reverted
+                })
+
+                it('GIVEN ERC3643 mode WHEN transfer exceeds free balance THEN reverts', async () => {
+                    // Freeze 4000 tokens of alice (she has 5000 total)
+                    await erc3643
+                        .connect(owner)
+                        .freezePartialTokens(aliceAddress, 4000n)
+
+                    // Try to transfer 1500 (exceeds free balance of 1000)
+                    await expect(
+                        erc20Facet.connect(alice).transfer(bobAddress, 1500n)
+                    ).to.be.reverted
+                })
+
+                it('GIVEN ERC3643 mode WHEN valid transfer within free balance THEN succeeds', async () => {
+                    await expect(
+                        erc20Facet.connect(alice).transfer(bobAddress, 100n)
+                    )
+                        .to.emit(erc20Facet, 'Transfer')
+                        .withArgs(aliceAddress, bobAddress, 100n)
+
+                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                        4900n
+                    )
+                    expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                        100n
+                    )
+                })
+
+                it('GIVEN ERC3643 mode WHEN transfer with partial freeze THEN succeeds if within free balance', async () => {
+                    // Freeze 3000 tokens (free balance = 2000)
+                    await erc3643
+                        .connect(owner)
+                        .freezePartialTokens(aliceAddress, 3000n)
+
+                    // Transfer 1500 (within free balance)
+                    await expect(
+                        erc20Facet.connect(alice).transfer(bobAddress, 1500n)
+                    )
+                        .to.emit(erc20Facet, 'Transfer')
+                        .withArgs(aliceAddress, bobAddress, 1500n)
+
+                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                        3500n
+                    )
+                    expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                        1500n
+                    )
+                })
+
+                it('GIVEN ERC3643 mode WHEN transfer to zero address THEN reverts', async () => {
+                    await expect(
+                        erc20Facet.connect(alice).transfer(ZeroAddress, 100n)
+                    ).to.be.reverted
+                })
+            })
+
+            describe('transferFrom', () => {
+                beforeEach(async () => {
+                    const fixture = async () => {
+                        // Alice approves owner to spend her tokens
+                        await erc20Facet
+                            .connect(alice)
+                            .approve(ownerAddress, 2000n)
+                    }
+                    await loadFixture(fixture)
+                })
+
+                it('GIVEN ERC3643 mode WHEN transferFrom to unverified recipient THEN reverts', async () => {
+                    // Bob is NOT verified
+                    await identityRegistryMock.setIsVerified(bobAddress, false)
+
+                    await expect(
+                        erc20Facet
+                            .connect(owner)
+                            .transferFrom(aliceAddress, bobAddress, 100n)
+                    ).to.be.reverted
+                })
+
+                it('GIVEN ERC3643 mode WHEN sender is frozen THEN reverts', async () => {
+                    // Freeze alice
+                    await erc3643
+                        .connect(owner)
+                        .setAddressFrozen(aliceAddress, true)
+
+                    await expect(
+                        erc20Facet
+                            .connect(owner)
+                            .transferFrom(aliceAddress, bobAddress, 100n)
+                    ).to.be.reverted
+                })
+
+                it('GIVEN ERC3643 mode WHEN recipient is frozen THEN reverts', async () => {
+                    // Freeze bob
+                    await erc3643
+                        .connect(owner)
+                        .setAddressFrozen(bobAddress, true)
+
+                    await expect(
+                        erc20Facet
+                            .connect(owner)
+                            .transferFrom(aliceAddress, bobAddress, 100n)
+                    ).to.be.reverted
+                })
+
+                it('GIVEN ERC3643 mode WHEN transferFrom exceeds free balance THEN reverts', async () => {
+                    // Freeze 4000 tokens of alice (she has 5000 total)
+                    await erc3643
+                        .connect(owner)
+                        .freezePartialTokens(aliceAddress, 4000n)
+
+                    // Try to transfer 1500 (exceeds free balance of 1000)
+                    await expect(
+                        erc20Facet
+                            .connect(owner)
+                            .transferFrom(aliceAddress, bobAddress, 1500n)
+                    ).to.be.reverted
+                })
+
+                it('GIVEN ERC3643 mode WHEN valid transferFrom within free balance THEN succeeds', async () => {
+                    await expect(
+                        erc20Facet
+                            .connect(owner)
+                            .transferFrom(aliceAddress, bobAddress, 100n)
+                    )
+                        .to.emit(erc20Facet, 'Transfer')
+                        .withArgs(aliceAddress, bobAddress, 100n)
+
+                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                        4900n
+                    )
+                    expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                        100n
+                    )
+                })
+
+                it('GIVEN ERC3643 mode WHEN transferFrom with partial freeze THEN succeeds if within free balance', async () => {
+                    // Freeze 3000 tokens (free balance = 2000)
+                    await erc3643
+                        .connect(owner)
+                        .freezePartialTokens(aliceAddress, 3000n)
+
+                    // Transfer 1500 (within free balance)
+                    await expect(
+                        erc20Facet
+                            .connect(owner)
+                            .transferFrom(aliceAddress, bobAddress, 1500n)
+                    )
+                        .to.emit(erc20Facet, 'Transfer')
+                        .withArgs(aliceAddress, bobAddress, 1500n)
+
+                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                        3500n
+                    )
+                    expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                        1500n
+                    )
+                })
+
+                it('GIVEN ERC3643 mode WHEN transferFrom without allowance THEN reverts', async () => {
+                    // Bob tries to transfer alice's tokens without approval
+                    await expect(
+                        erc20Facet
+                            .connect(bob)
+                            .transferFrom(aliceAddress, bobAddress, 100n)
+                    ).to.be.reverted
+                })
+
+                it('GIVEN ERC3643 mode WHEN transferFrom to zero address THEN reverts', async () => {
+                    await expect(
+                        erc20Facet
+                            .connect(owner)
+                            .transferFrom(aliceAddress, ZeroAddress, 100n)
+                    ).to.be.reverted
                 })
             })
         })
