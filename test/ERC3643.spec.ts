@@ -969,14 +969,14 @@ describe('ERC3643 Token', function () {
         // --------------------------------------------------------------------
         // when ERC3643 is NOT initialized
         // --------------------------------------------------------------------
-        describe('when ERC3643 is not initialized but ERC20 is', () => {
+        describe('when Mode ERC20', () => {
             //** ERC20 module test cover its main use cases. We reserve this space for future implementations that may involve ERC20 behavior not expected by its standard implementation and caused by futures interactions with any logic change from ERC3643 Controller */
         })
 
         // --------------------------------------------------------------------
         // when ERC3643 is initialized
         // --------------------------------------------------------------------
-        describe('when ERC3643 is initialized', () => {
+        describe('when Mode ERC3643', () => {
             const totalBalance = 1000n
             const frozenAmount = 400n
             const freeBalance = totalBalance - frozenAmount // 600n
