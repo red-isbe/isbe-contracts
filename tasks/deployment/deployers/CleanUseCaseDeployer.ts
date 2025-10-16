@@ -42,6 +42,9 @@ export class CleanUseCaseDeployer {
         for (const config of configs) {
             try {
                 console.log(`\n   🏗️ Deploying use case: ${config.description}`)
+                console.log(
+                    `      📝 Configuration ID: ${config.configurationId}`
+                )
                 const result = await this.deploySingle(
                     config,
                     factoryAddress,
@@ -64,7 +67,7 @@ export class CleanUseCaseDeployer {
                 )
                 results.push(deploymentResult)
                 console.error(
-                    `      ❌ Error deploying ${config.description}:`,
+                    `      ❌ Error deploying ${config?.description || 'Unknown Use Case'}:`,
                     deploymentResult.error
                 )
             }

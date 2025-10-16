@@ -7,10 +7,13 @@ import {_ASSET_EVENT_TRACKER_ROLE} from '../constants/roles.sol';
 
 /// @title AssetEventTracker
 /// @notice Implements generic state tracking for an asset using events
+/// @author ISBE Development Team
 abstract contract AssetEventTracker is
     IAssetEventTracker,
     AssetEventTrackerInternal
 {
+    /// @notice Record a new state for the asset
+    /// @param _newState The new state to record
     function recordState(
         uint256 _newState
     )
@@ -23,6 +26,10 @@ abstract contract AssetEventTracker is
         _recordState(_newState);
     }
 
+    /// @notice Get paginated list of asset events
+    /// @param _pageNumber The page number to fetch (0-based)
+    /// @param _resultsPerPage Number of results per page
+    /// @return assetEvents_ Array of asset events for the requested page
     function getAssetEvents(
         uint256 _pageNumber,
         uint256 _resultsPerPage
@@ -30,6 +37,8 @@ abstract contract AssetEventTracker is
         return _getAssetEvents(_pageNumber, _resultsPerPage);
     }
 
+    /// @notice Get the most recent asset event
+    /// @return Latest recorded asset event
     function getLatestAssetEvent()
         external
         view
@@ -39,16 +48,23 @@ abstract contract AssetEventTracker is
         return _getLatestAssetEvent();
     }
 
+    /// @notice Get the current state of the asset
+    /// @return Current state value
     function getCurrentState() external view override returns (uint256) {
         return _getCurrentState();
     }
 
+    /// @notice Check if transitioning to a new state is allowed
+    /// @param _newState The state to check
+    /// @return Whether the state change is allowed
     function isStateChangeAllowed(
         uint256 _newState
     ) external view returns (bool) {
         return _isStateChangeAllowed(_getCurrentState(), _newState);
     }
 
+    /// @notice Get the list of implemented interfaces
+    /// @return interfaces_ Array of interface IDs
     function _implementedInterfaces()
         internal
         pure

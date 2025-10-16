@@ -3,6 +3,7 @@ pragma solidity ^0.8.28;
 
 /// @title IAssetEventTracker
 /// @notice Interface to track asset events
+/// @author ISBE Development Team
 interface IAssetEventTracker {
     struct AssetEvent {
         uint256 state;
@@ -14,8 +15,8 @@ interface IAssetEventTracker {
     /// @param timestamp The block timestamp when the state was recorded
     /// @param sender The address that submitted the state to be recorded
     event StateRecorded(
-        uint256 state,
-        uint256 timestamp,
+        uint256 indexed state,
+        uint256 indexed timestamp,
         address indexed sender
     );
 

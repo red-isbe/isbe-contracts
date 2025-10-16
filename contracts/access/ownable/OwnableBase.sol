@@ -15,6 +15,8 @@ abstract contract OwnableBase is IOwnable, Common {
         _disableInitializers(_OWNABLE_RESOLVER_KEY);
     }
 
+    /// @notice Initializes the ownership contract
+    /// @param _admin The initial owner address
     function initializeOwnable(
         address _admin
     ) external initializer(_OWNABLE_RESOLVER_KEY) addressIsNotZero(_admin) {
@@ -22,15 +24,20 @@ abstract contract OwnableBase is IOwnable, Common {
         emit OwnershipTransferred(_msgSender(), _admin);
     }
 
+    /// @notice Allows the owner to renounce their ownership
     function renounceOwnership() external override onlyOwner whenNotPaused {
         _transferOwnership(address(0));
         emit OwnershipRenounced(_msgSender());
     }
 
+    /// @notice Returns the current owner address
+    /// @return The address of the current owner
     function owner() external view override returns (address) {
         return _owner();
     }
 
+    /// @notice Returns the interfaces implemented by this contract
+    /// @return interfaces_ Array of interface IDs
     function _implementedInterfaces()
         internal
         pure

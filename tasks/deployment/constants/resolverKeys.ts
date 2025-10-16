@@ -1,0 +1,82 @@
+import { ResolverKeys } from './types'
+
+// ISBE system base facets
+export const BASE_RESOLVER_KEYS: ResolverKeys = {
+    ISBE_CUT:
+        '0x3e325d62f8652528edf5d41ed730a283b473d9e55ee9b6631b261b52199eac25',
+    ISBE_LOUPE:
+        '0x360faa2d547f0a951a5b1da060a4ffb56888bf8ad05db9de4d6d09b3eae1e5e2',
+    ACCESS_CONTROL:
+        '0xa4de16c45770db08a06a2cdfeb0229e16d2ff660f7f1bf74c3dc07212770c70c',
+    PAUSE: '0x7fabf0f3ed655fa26f86c82ae5da60e0ade03a5d35a9ff2985709278942966d3',
+}
+
+// ERC20 facets
+export const ERC20_RESOLVER_KEYS: ResolverKeys = {
+    ERC20: '0x2428f215905ecd05cc26794e218b9fad455e6ae2ca828b2f1c1903e8770265ad',
+    SNAPSHOT:
+        '0xc4968fe952eba32a52cb112176a56b4e86a0fbaff835dc8336fa0e804a0af398',
+    BURNABLE:
+        '0x81c694c8d5a595cfca0b2b486a8e2aff0a72d8063c636a02c1ca1cc12e55d471',
+    CAPPED: '0x94ece6781e9aebbdab29d2bbc0301c80b7bcb1194c5c3efc08e3d35c7f6d741b',
+    CONTROLLER:
+        '0xed76d446b6029b8a177fda4fc38162d9dc0dc29ab636541fd6e75ae60fe17151',
+}
+
+// ERC721 facets
+export const ERC721_RESOLVER_KEYS: ResolverKeys = {
+    ERC721: '0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413',
+    BURNABLE:
+        '0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731',
+    ENUMERABLE:
+        '0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5',
+    CAPPED: '0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c',
+    CONTROLLER:
+        '0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367',
+    SNAPSHOT:
+        '0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d',
+    ROYALTY:
+        '0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76',
+    CONSECUTIVE:
+        '0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4',
+}
+
+// Utility facets
+export const UTILITY_RESOLVER_KEYS: ResolverKeys = {
+    HASH_TIMESTAMP:
+        '0xf4e751bf7e74c25f287942d8743e3d0fdfb08f29556e786178a50e2d69dc403a',
+    OWNABLE:
+        '0x32d893fe746ed6e72cf641731066f84e26611cdd03031f873957cb1a29071a5f',
+}
+
+// DID Registry facets
+export const DID_RESOLVER_KEYS: ResolverKeys = {
+    DOCUMENT_DETAILED:
+        '0x5a02d9131742d56d318dab3c9e499ea3b8e4388b578aac9d31b55350b1076873',
+    CONTROLLER:
+        '0x26339b1ee881bb2790df0ed18d4f8f5f6b66c9855aac4f506052b0cf2f51188c',
+    VERIFICATION_METHOD:
+        '0xac8773db319c7049be61ab52c59325712b4ba639daa556105c3b1e20671238dd',
+    VERIFICATION_RELATIONSHIP:
+        '0x32bd32541f3651dc69848ddc9cad21896eabb6a11034c19b03683da6e19b76d7',
+}
+
+// Client filtering facets
+export const CLIENT_RESOLVER_KEYS: ResolverKeys = {
+    FILTERING:
+        '0x9d459b48dcede9ec86807b1af972b62ab0b2b0237e2187da45c02c25f3aeb016',
+}
+
+// ENS facets
+export const ENS_RESOLVER_KEYS: ResolverKeys = {
+    REGISTRY:
+        '0xc0629a5fdc41a377e7fd772f766ce559d0fecbb52e72bd1b4915525935b59053',
+    RESOLVER:
+        '0x9daad5d269e40315c6ea27f7ccd5ec5e9cc50b975d6172504109b111170ce5d4',
+    NAME_RESOLVER:
+        '0xb220ec5bf774f9c3a891b2fc9f0b0bbfae8503f22056a0c835252f4a2feb5b4f',
+    TEXT_RESOLVER:
+        '0x153e8d37fcd8b283cb133570078b11503f8e93bb9437f0d6306f0e57443f9818',
+    PUBKEY_RESOLVER:
+        '0x1c46b1cdbebdf5f3d15aae4a89c2a8fca0d9eff35f1f040b17caebc1726f8260',
+}

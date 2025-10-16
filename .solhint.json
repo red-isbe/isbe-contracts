@@ -37,6 +37,16 @@
         "state-visibility": "error",
         "quotes": ["error", "single"],
         "not-rely-on-time": "off",
-        "ordering": "error"
+        "ordering": "error",
+        "use-natspec": "off",
+        "interface-starts-with-i": "off",
+        "duplicated-imports": "off",
+        "function-max-lines": "off",
+        "no-global-import": "off",
+        "gas-indexed-events": "off",
+        "gas-calldata-parameters": "off",
+        "gas-increment-by-one": "off",
+        "gas-strict-inequalities": "off",
+        "gas-small-strings": "off"
     }
 }

@@ -1294,9 +1294,336 @@ export default tseslint.config(
 )
 ```
 
+## 🚨 **secp256r1 Technical Debt (Urgent)**
+
+### 11. secp256r1 Address Derivation Issue
+
+**Status**: 🔴 Critical  
+**Effort**: High  
+**Impact**: High
+
+```typescript
+// secp256r1Utils.ts - Current derivation method
+export function deriveEthereumAddress(publicKey: string): string {
+    const pubKey = publicKey.startsWith('04') ? publicKey.slice(2) : publicKey
+    if (pubKey.length !== 128) {
+        throw new Error(`Invalid public key length: ${pubKey.length}, expected 128`)
+    }
+    const pubKeyBuffer = Buffer.from(pubKey, 'hex')
+    const hash = createKeccakHash(pubKeyBuffer)
+    return '0x' + hash.slice(-40)
+}
+
+// AccountManager.ts - Different method using ethers.Wallet
+static getSecp256r1Accounts(): Secp256r1Account[] {
+    const keys = this.getAccounts()
+    return keys.map((privateKey) => {
+        const wallet = new ethers.Wallet(privateKey)
+        return {
+            address: wallet.address,
+            privateKey: privateKey.startsWith('0x') ? privateKey.slice(2) : privateKey,
+        }
+    })
+}
+```
+
+**Problems**:
+
+- Two different methods for deriving Ethereum addresses from secp256r1 keys
+- Potential inconsistency in address generation
+- Risk of deploying contracts to unexpected addresses
+- Possible transaction signing issues
+
+**Solution**:
+
+```typescript
+// New unified secp256r1 address management
+export class Secp256r1AddressManager {
+    private static instance: Secp256r1AddressManager
+
+    private constructor() {}
+
+    static getInstance(): Secp256r1AddressManager {
+        if (!this.instance) {
+            this.instance = new Secp256r1AddressManager()
+        }
+        return this.instance
+    }
+
+    deriveAddress(input: { publicKey?: string; privateKey?: string }): string {
+        if (input.privateKey) {
+            return this.deriveFromPrivateKey(input.privateKey)
+        }
+        if (input.publicKey) {
+            return this.deriveFromPublicKey(input.publicKey)
+        }
+        throw new Error('Either publicKey or privateKey must be provided')
+    }
+
+    private deriveFromPrivateKey(privateKey: string): string {
+        // Standardized derivation using ethers.Wallet
+        const normalizedKey = privateKey.startsWith('0x')
+            ? privateKey
+            : `0x${privateKey}`
+        const wallet = new ethers.Wallet(normalizedKey)
+        return wallet.address.toLowerCase()
+    }
+
+    private deriveFromPublicKey(publicKey: string): string {
+        // Direct derivation for public keys
+        const normalizedKey = publicKey.startsWith('04')
+            ? publicKey.slice(2)
+            : publicKey
+        if (normalizedKey.length !== 128) {
+            throw new Error(
+                `Invalid public key length: ${normalizedKey.length}, expected 128`
+            )
+        }
+        const pubKeyBuffer = Buffer.from(normalizedKey, 'hex')
+        const hash = createKeccakHash(pubKeyBuffer)
+        return `0x${hash.slice(-40)}`.toLowerCase()
+    }
+}
+
+// Updated account manager
+export class AccountManager {
+    static getSecp256r1Accounts(): Secp256r1Account[] {
+        const addressManager = Secp256r1AddressManager.getInstance()
+        return this.getAccounts().map((privateKey) => ({
+            address: addressManager.deriveAddress({ privateKey }),
+            privateKey: privateKey.startsWith('0x')
+                ? privateKey.slice(2)
+                : privateKey,
+        }))
+    }
+}
+```
+
+### 12. Centralized secp256r1 Event Detection
+
+**Status**: 🔴 Critical  
+**Effort**: High  
+**Impact**: High
+
+```typescript
+// Current scattered event detection logic
+export async function grantRoleWithRawTransaction(
+    roleToGrant: string,
+    accountToGrantTo: string,
+    diamond: string,
+    signatureProvider: ISignatureProvider
+): Promise<{ role: string; account: string; sender: string }> {
+    // ... 250+ lines of complex nested fallback logic
+}
+```
+
+**Solution**:
+
+```typescript
+// services/Secp256r1EventDetectionService.ts
+export interface EventDetectionResult<T = any> {
+    found: boolean
+    event?: T
+    source: 'receipt' | 'block-logs' | 'state-validation'
+    metadata: EventMetadata
+}
+
+interface EventMetadata {
+    transactionHash: string
+    blockNumber: number
+    gasUsed: bigint
+    attempts: string[]
+}
+
+export class Secp256r1EventDetectionService {
+    constructor(
+        private provider: Provider,
+        private contractInterface: Interface,
+        private logger = createLogger('Secp256r1EventDetection')
+    ) {}
+
+    async detectEvent(
+        txHash: string,
+        eventName: string,
+        expectedValues: Record<string, any>
+    ): Promise<EventDetectionResult> {
+        const attempts: string[] = []
+        let result: Partial<EventDetectionResult>
+
+        // Strategy 1: Standard receipt parsing
+        try {
+            result = await this.parseFromReceipt(
+                txHash,
+                eventName,
+                expectedValues
+            )
+            if (result.found)
+                return this.createResult(result, 'receipt', attempts)
+            attempts.push('receipt-parsing')
+        } catch (error) {
+            this.logger.debug('Receipt parsing failed', { error })
+            attempts.push(`receipt-parsing-failed: ${error.message}`)
+        }
+
+        // Strategy 2: Block-based log retrieval
+        try {
+            result = await this.parseFromBlockLogs(
+                txHash,
+                eventName,
+                expectedValues
+            )
+            if (result.found)
+                return this.createResult(result, 'block-logs', attempts)
+            attempts.push('block-logs')
+        } catch (error) {
+            this.logger.debug('Block logs parsing failed', { error })
+            attempts.push(`block-logs-failed: ${error.message}`)
+        }
+
+        // Strategy 3: State validation
+        try {
+            result = await this.validateFromContractState(expectedValues)
+            return this.createResult(result, 'state-validation', attempts)
+        } catch (error) {
+            this.logger.debug('State validation failed', { error })
+            attempts.push(`state-validation-failed: ${error.message}`)
+            return {
+                found: false,
+                source: 'state-validation',
+                metadata: { attempts },
+            }
+        }
+    }
+
+    private createResult(
+        result: Partial<EventDetectionResult>,
+        source: string,
+        attempts: string[]
+    ): EventDetectionResult {
+        return {
+            ...result,
+            source,
+            metadata: {
+                attempts,
+                ...result.metadata,
+            },
+        }
+    }
+
+    // Implementation of detection strategies...
+}
+```
+
+### 13. Unified secp256r1 Management
+
+**Status**: 🔴 Critical  
+**Effort**: High  
+**Impact**: High
+
+```typescript
+// Current: Scattered logic across multiple files
+// - secp256r1Utils.ts
+// - secp256r1TransactionSigner.ts
+// - secp256r1DeploymentUtils.ts
+// - networkUtils.ts
+// - AccountManager.ts
+```
+
+**Solution**:
+
+```typescript
+// New unified manager
+export class Secp256r1Manager {
+    private static instance: Secp256r1Manager
+    private addressManager = Secp256r1AddressManager.getInstance()
+    private eventDetection: Secp256r1EventDetectionService
+    private networkConfig: NetworkConfigWithCurve
+    private logger = createLogger('Secp256r1Manager')
+
+    private constructor(networkConfig: NetworkConfigWithCurve) {
+        this.networkConfig = networkConfig
+    }
+
+    static getInstance(
+        networkConfig: NetworkConfigWithCurve
+    ): Secp256r1Manager {
+        if (!this.instance) {
+            this.instance = new Secp256r1Manager(networkConfig)
+        }
+        return this.instance
+    }
+
+    // Address management
+    deriveAddress(input: { publicKey?: string; privateKey?: string }): string {
+        return this.addressManager.deriveAddress(input)
+    }
+
+    // Event detection
+    async detectEvent(
+        txHash: string,
+        eventName: string,
+        expectedValues: Record<string, any>
+    ): Promise<EventDetectionResult> {
+        return this.eventDetection.detectEvent(
+            txHash,
+            eventName,
+            expectedValues
+        )
+    }
+
+    // Transaction signing
+    async signTransaction(tx: TransactionRequest): Promise<SignedTransaction> {
+        // Implementation using secp256r1TransactionSigner
+    }
+
+    // Network validation
+    isSecp256r1Network(): boolean {
+        return this.networkConfig.curve === 'secp256r1'
+    }
+
+    // Configuration validation
+    validateConfiguration(): ConfigurationValidationResult {
+        // Implementation
+    }
+
+    // Diagnostic utilities
+    async validateDeployment(
+        deploymentResult: DeploymentResult
+    ): Promise<void> {
+        // Implementation
+    }
+
+    getDiagnosticInfo(): SepcDiagnosticInfo {
+        return {
+            networkType: this.networkConfig.curve,
+            chainId: this.networkConfig.chainId,
+            validationSettings: this.networkConfig.validation,
+        }
+    }
+}
+
+// Usage example
+const manager = Secp256r1Manager.getInstance(networkConfig)
+
+// Address derivation
+const address = manager.deriveAddress({ privateKey: '0x123...' })
+
+// Event detection
+const result = await manager.detectEvent(txHash, 'RoleGranted', {
+    role: ROLES.ADMIN,
+    account: address,
+})
+
+// Transaction signing
+const signedTx = await manager.signTransaction({
+    to: address,
+    value: parseEther('1.0'),
+})
+```
+
 ## 🏗️ **Architecture Improvements**
 
-### 11. Factory Pattern for Contract Interactions
+### 14. Factory Pattern for Contract Interactions
 
 **Status**: 🟢 Nice to Have  
 **Effort**: Medium  
@@ -1545,6 +1872,60 @@ export function getCurrentEnvironment(): EnvironmentName {
     - Add connection pooling for contract interactions
     - Implement smart caching strategies
 
+### 15. Enhanced Event Detection for All Curve Types
+
+```typescript
+// services/EventDetectionService.ts
+export class EventDetectionService {
+    constructor(
+        private provider: Provider,
+        private contractInterface: Interface,
+        private curveType: 'secp256k1' | 'secp256r1'
+    ) {}
+
+    async detectEvent(
+        txHash: string,
+        eventName: string,
+        expectedValues: Record<string, any>,
+        options?: EventDetectionOptions
+    ): Promise<EventDetectionResult> {
+        // Use appropriate strategy based on curve type
+        const strategy = this.getDetectionStrategy(options)
+        return strategy.detectEvent(txHash, eventName, expectedValues)
+    }
+
+    private getDetectionStrategy(
+        options?: EventDetectionOptions
+    ): IEventDetectionStrategy {
+        if (this.curveType === 'secp256r1') {
+            return new Secp256r1EventDetectionStrategy(
+                this.provider,
+                this.contractInterface,
+                options
+            )
+        }
+        return new StandardEventDetectionStrategy(
+            this.provider,
+            this.contractInterface,
+            options
+        )
+    }
+}
+
+// Usage
+const eventService = new EventDetectionService(
+    provider,
+    contractInterface,
+    'secp256r1'
+)
+
+const result = await eventService.detectEvent(txHash, 'Transfer', {
+    from: sender,
+    to: recipient,
+    value: amount,
+})
+```
+
 ## 🎯 **Quick Wins (Start Immediately)**
 
 You can implement these improvements right away with minimal effort:
@@ -1683,6 +2064,135 @@ To begin implementing these recommendations:
 5. **Create small, focused PRs**: Don't try to implement everything at once
 
 Remember: The goal is to improve code quality incrementally while maintaining the existing functionality. Start with the high-impact, low-effort improvements first!
+
+## 🎨 **Code Style & Quality**
+
+### 16. ESLint Improvements
+
+**Status**: 🟡 Important  
+**Effort**: Low  
+**Impact**: Medium
+
+Enhance ESLint configuration for better code quality:
+
+```typescript
+// .eslintrc.js
+module.exports = {
+    root: true,
+    parser: '@typescript-eslint/parser',
+    plugins: ['@typescript-eslint', 'security', 'sonarjs', 'import', 'unicorn'],
+    extends: [
+        'eslint:recommended',
+        'plugin:@typescript-eslint/recommended',
+        'plugin:security/recommended',
+        'plugin:sonarjs/recommended',
+        'plugin:import/errors',
+        'plugin:import/warnings',
+        'plugin:import/typescript',
+    ],
+    rules: {
+        // TypeScript
+        '@typescript-eslint/explicit-function-return-type': 'warn',
+        '@typescript-eslint/no-unused-vars': 'error',
+        '@typescript-eslint/no-explicit-any': 'error',
+        '@typescript-eslint/prefer-nullish-coalescing': 'warn',
+        '@typescript-eslint/prefer-optional-chain': 'warn',
+        '@typescript-eslint/strict-boolean-expressions': 'warn',
+
+        // Security
+        'security/detect-object-injection': 'error',
+        'security/detect-non-literal-require': 'error',
+        'security/detect-possible-timing-attacks': 'warn',
+
+        // Best Practices
+        'sonarjs/cognitive-complexity': ['error', 20],
+        'sonarjs/no-duplicate-string': 'warn',
+        'sonarjs/no-identical-functions': 'warn',
+
+        // Import/Export
+        'import/no-cycle': 'error',
+        'import/no-self-import': 'error',
+        'import/no-useless-path-segments': 'error',
+
+        // General
+        'no-console': ['error', { allow: ['warn', 'error'] }],
+        'prefer-const': 'error',
+        'no-var': 'error',
+    },
+    overrides: [
+        {
+            files: ['**/*.test.ts', '**/test/**/*'],
+            rules: {
+                '@typescript-eslint/no-explicit-any': 'off',
+                'sonarjs/no-duplicate-string': 'off',
+            },
+        },
+    ],
+}
+```
+
+### 17. Path Aliases
+
+**Status**: 🟡 Important  
+**Effort**: Low  
+**Impact**: Medium
+
+```typescript
+// tsconfig.json
+{
+    "compilerOptions": {
+        "baseUrl": ".",
+        "paths": {
+            "@core/*": ["src/core/*"],
+            "@utils/*": ["src/utils/*"],
+            "@types/*": ["src/types/*"],
+            "@config/*": ["src/config/*"],
+            "@services/*": ["src/services/*"],
+            "@test/*": ["test/*"]
+        }
+    }
+}
+
+// Usage
+import { Secp256r1Manager } from '@core/secp256r1/Secp256r1Manager'
+import { EventDetectionService } from '@services/events/EventDetectionService'
+import { NetworkConfig } from '@types/networks'
+```
+
+### 18. TypeScript Configuration
+
+**Status**: 🟡 Important  
+**Effort**: Low  
+**Impact**: Medium
+
+```json
+// tsconfig.json
+{
+    "compilerOptions": {
+        "target": "es2020",
+        "module": "commonjs",
+        "lib": ["es2020"],
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "resolveJsonModule": true,
+        "declaration": true,
+        "declarationMap": true,
+        "sourceMap": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "noUncheckedIndexedAccess": true,
+        "importsNotUsedAsValues": "error",
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true
+    },
+    "include": ["src", "test", "scripts", "tasks"],
+    "exclude": ["node_modules", "dist"]
+}
+```
 
 ## 🏆 **Implementation Results (Phase 1 Completed + Critical Debt Added)**
 
@@ -1926,6 +2436,165 @@ With Phase 1 successfully completed, the project is now ready for Phase 2 implem
 ---
 
 _This document serves as a living guide for improving TypeScript/JavaScript code quality in the ISBE contracts project. Update it as improvements are implemented and new patterns emerge._
+
+## 📈 **Performance Improvements**
+
+### 19. Concurrent Processing
+
+**Status**: 🟡 Important  
+**Effort**: Medium  
+**Impact**: High
+
+```typescript
+// services/ConcurrentEventDetector.ts
+export class ConcurrentEventDetector {
+    constructor(
+        private provider: Provider,
+        private contractInterface: Interface,
+        private options: ConcurrentDetectionOptions = {}
+    ) {}
+
+    async detectEvents(
+        transactions: string[],
+        eventName: string,
+        expectedValues: Record<string, any>[]
+    ): Promise<EventDetectionResult[]> {
+        const batchSize = this.options.batchSize || 10
+        const results: EventDetectionResult[] = []
+
+        // Process in batches
+        for (let i = 0; i < transactions.length; i += batchSize) {
+            const batch = transactions.slice(i, i + batchSize)
+            const batchPromises = batch.map((txHash, index) =>
+                this.detectSingleEvent(
+                    txHash,
+                    eventName,
+                    expectedValues[i + index]
+                )
+            )
+
+            const batchResults = await Promise.allSettled(batchPromises)
+            results.push(...this.processBatchResults(batchResults))
+        }
+
+        return results
+    }
+
+    private async detectSingleEvent(
+        txHash: string,
+        eventName: string,
+        expectedValues: Record<string, any>
+    ): Promise<EventDetectionResult> {
+        const detector = new EventDetectionService(
+            this.provider,
+            this.contractInterface
+        )
+        return detector.detectEvent(txHash, eventName, expectedValues)
+    }
+
+    private processBatchResults(
+        results: PromiseSettledResult<EventDetectionResult>[]
+    ): EventDetectionResult[] {
+        return results.map((result) => {
+            if (result.status === 'fulfilled') {
+                return result.value
+            }
+            return {
+                found: false,
+                source: 'error',
+                error: result.reason,
+                metadata: {
+                    error: true,
+                    message: result.reason?.message || 'Unknown error',
+                },
+            }
+        })
+    }
+}
+
+// Usage example
+const detector = new ConcurrentEventDetector(provider, contractInterface, {
+    batchSize: 5,
+    timeout: 30000,
+    retries: 3,
+})
+
+const results = await detector.detectEvents([tx1, tx2, tx3], 'Transfer', [
+    { from: addr1 },
+    { from: addr2 },
+    { from: addr3 },
+])
+```
+
+### 20. Cache Management
+
+**Status**: 🟡 Important  
+**Effort**: Medium  
+**Impact**: High
+
+```typescript
+// services/CacheManager.ts
+export class CacheManager {
+    private static instance: CacheManager
+    private cache = new Map<string, CacheEntry>()
+    private ttl: number
+
+    private constructor(ttl = 5 * 60 * 1000) {
+        this.ttl = ttl
+    }
+
+    static getInstance(ttl?: number): CacheManager {
+        if (!this.instance) {
+            this.instance = new CacheManager(ttl)
+        }
+        return this.instance
+    }
+
+    async get<T>(
+        key: string,
+        fetchFn: () => Promise<T>,
+        options?: CacheOptions
+    ): Promise<T> {
+        const entry = this.cache.get(key)
+        if (entry && !this.isExpired(entry)) {
+            return entry.value as T
+        }
+
+        const value = await fetchFn()
+        this.set(key, value, options)
+        return value
+    }
+
+    set(key: string, value: any, options?: CacheOptions): void {
+        this.cache.set(key, {
+            value,
+            timestamp: Date.now(),
+            ttl: options?.ttl || this.ttl,
+        })
+    }
+
+    delete(key: string): void {
+        this.cache.delete(key)
+    }
+
+    clear(): void {
+        this.cache.clear()
+    }
+
+    private isExpired(entry: CacheEntry): boolean {
+        return Date.now() - entry.timestamp > entry.ttl
+    }
+}
+
+// Usage example
+const cache = CacheManager.getInstance()
+
+const result = await cache.get(
+    `event-${txHash}`,
+    () => eventDetector.detectEvent(txHash, eventName, values),
+    { ttl: 60000 } // 1 minute TTL
+)
+```
 
 ## 🚨 **URGENT: Next Development Priorities**
 

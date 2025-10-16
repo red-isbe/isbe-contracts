@@ -122,13 +122,34 @@ Requirements:
 function allowance(address _owner, address _spender) external view returns (uint256)
 ```
 
+Get the amount of tokens that an owner allowed a spender to manage
+
+#### Parameters
+
+| Name      | Type    | Description                           |
+| --------- | ------- | ------------------------------------- |
+| \_owner   | address | The address which owns the funds      |
+| \_spender | address | The address which can spend the funds |
+
+#### Return Values
+
+| Name | Type    | Description          |
+| ---- | ------- | -------------------- |
+| [0]  | uint256 | The allowance amount |
+
 ### decimals
 
 ```solidity
 function decimals() external view returns (uint8)
 ```
 
-_Returns the decimals places of the token._
+Returns the number of decimals used for token amounts
+
+#### Return Values
+
+| Name | Type  | Description        |
+| ---- | ----- | ------------------ |
+| [0]  | uint8 | The token decimals |
 
 ### symbol
 
@@ -136,7 +157,13 @@ _Returns the decimals places of the token._
 function symbol() external view returns (string)
 ```
 
-_Returns the symbol of the token._
+Returns the token symbol
+
+#### Return Values
+
+| Name | Type   | Description             |
+| ---- | ------ | ----------------------- |
+| [0]  | string | The symbol of the token |
 
 ### name
 
@@ -144,7 +171,13 @@ _Returns the symbol of the token._
 function name() external view returns (string)
 ```
 
-_Returns the name of the token._
+Returns the token name
+
+#### Return Values
+
+| Name | Type   | Description           |
+| ---- | ------ | --------------------- |
+| [0]  | string | The name of the token |
 
 ### totalSupply
 
@@ -152,7 +185,13 @@ _Returns the name of the token._
 function totalSupply() external view returns (uint256)
 ```
 
-_Returns the amount of tokens in existence._
+Returns the total supply of tokens
+
+#### Return Values
+
+| Name | Type    | Description            |
+| ---- | ------- | ---------------------- |
+| [0]  | uint256 | The total token supply |
 
 ### balanceOf
 
@@ -160,11 +199,33 @@ _Returns the amount of tokens in existence._
 function balanceOf(address _account) external view returns (uint256)
 ```
 
+Returns the token balance of an account
+
+#### Parameters
+
+| Name      | Type    | Description                     |
+| --------- | ------- | ------------------------------- |
+| \_account | address | Address of the account to query |
+
+#### Return Values
+
+| Name | Type    | Description                 |
+| ---- | ------- | --------------------------- |
+| [0]  | uint256 | The account's token balance |
+
 ### \_implementedInterfaces
 
 ```solidity
 function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
 ```
+
+Returns the list of interfaces implemented by this contract
+
+#### Return Values
+
+| Name         | Type     | Description            |
+| ------------ | -------- | ---------------------- |
+| interfaces\_ | bytes4[] | Array of interface IDs |
 
 ---
 
