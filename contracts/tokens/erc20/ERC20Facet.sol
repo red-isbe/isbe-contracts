@@ -33,6 +33,7 @@ contract ERC20Facet is ERC20, IEIP2535Introspection {
         selectors_ = new bytes4[](selectorsLength);
         selectors_[--selectorsLength] = this.initializeErc20.selector;
         selectors_[--selectorsLength] = this.transfer.selector;
+        selectors_[--selectorsLength] = this.batchTransfer.selector;
         selectors_[--selectorsLength] = this.approve.selector;
         selectors_[--selectorsLength] = this.transferFrom.selector;
         selectors_[--selectorsLength] = this.increaseAllowance.selector;

@@ -34,6 +34,36 @@ interface IERC20Isbe is IERC20, IERC20Metadata {
     error InsufficientAllowance();
 
     /**
+     * @notice Transfer tokens to multiple addresses in a single transaction (batch operation)
+     * @dev Transfers tokens from the caller's account to multiple recipients.
+     *      
+     *      **ERC20 Mode:** Simple batch transfers without additional validations
+     *      **ERC3643 Mode:** Requires all recipients to be verified and sender/recipients not frozen
+     *      
+     *      IMPORTANT: THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_toList.length` IS TOO HIGH,
+     *      USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
+     *
+     * @param _toList The addresses of the receivers (all must be verified for ERC3643)
+     * @param _amounts The number of tokens to transfer to each corresponding receiver
+     *
+     * Requirements:
+     * - Caller must have sufficient balance for the total amount
+     * - Arrays must have the same length
+     * - For ERC3643: all addresses in `_toList` must be verified in Identity Registry
+     * - For ERC3643: caller and all recipients must not be frozen
+     *
+     * Emits:
+     * - {Transfer} event for each transfer via internal transfer mechanism
+     *
+     * Reverts:
+     * - {TransferAmountExceedsBalance} if caller has insufficient balance
+     */
+    function batchTransfer(
+        address[] calldata _toList,
+        uint256[] calldata _amounts
+    ) external;
+
+    /**
      * @notice Initializes the ERC20 token with the given name, symbol, and decimals.
      * @param _newName The name of the ERC20 token to be initialized.
      * @param _newSymbol The symbol of the ERC20 token to be initialized.
