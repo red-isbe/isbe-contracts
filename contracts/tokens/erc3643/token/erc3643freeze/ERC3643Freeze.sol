@@ -76,6 +76,78 @@ abstract contract ERC3643Freeze is IERC3643Freeze, ERC203643InternalCommon {
     }
 
     /**
+     * @dev Batch sets the freeze status for multiple wallets
+     * @param _userAddresses Array of addresses to update
+     * @param _freeze Array of freeze statuses (true/false)
+     *
+     * Requirements:
+     * - Caller must have FREEZE_ROLE
+     * - Contract must not be paused
+     * - Arrays must have the same length
+     *
+     * Emits:
+     * - {AddressFrozen} event for each address
+     */
+    function batchSetAddressFrozen(
+        address[] calldata _userAddresses,
+        bool[] calldata _freeze
+    ) external override onlyRole(_FREEZE_ROLE) whenNotPaused {
+        require(_userAddresses.length == _freeze.length, "Length mismatch");
+        for (uint256 i = 0; i < _userAddresses.length; ++i) {
+            _setAddressFrozen(_userAddresses[i], _freeze[i]);
+            emit AddressFrozen(_userAddresses[i], _freeze[i], msg.sender);
+        }
+    }
+
+    /**
+     * @dev Batch freezes specified amounts of tokens for multiple addresses
+     * @param _userAddresses Array of addresses to freeze tokens for
+     * @param _amounts Array of amounts to freeze
+     *
+     * Requirements:
+     * - Caller must have FREEZE_ROLE
+     * - Contract must not be paused
+     * - Arrays must have the same length
+     *
+     * Emits:
+     * - {TokensFrozen} event for each address
+     */
+    function batchFreezePartialTokens(
+        address[] calldata _userAddresses,
+        uint256[] calldata _amounts
+    ) external override onlyRole(_FREEZE_ROLE) whenNotPaused {
+        require(_userAddresses.length == _amounts.length, "Length mismatch");
+        for (uint256 i = 0; i < _userAddresses.length; ++i) {
+            _freezePartialTokens(_userAddresses[i], _amounts[i]);
+            emit TokensFrozen(_userAddresses[i], _amounts[i]);
+        }
+    }
+
+    /**
+     * @dev Batch unfreezes specified amounts of tokens for multiple addresses
+     * @param _userAddresses Array of addresses to unfreeze tokens for
+     * @param _amounts Array of amounts to unfreeze
+     *
+     * Requirements:
+     * - Caller must have FREEZE_ROLE
+     * - Contract must not be paused
+     * - Arrays must have the same length
+     *
+     * Emits:
+     * - {TokensUnfrozen} event for each address
+     */
+    function batchUnfreezePartialTokens(
+        address[] calldata _userAddresses,
+        uint256[] calldata _amounts
+    ) external override onlyRole(_FREEZE_ROLE) whenNotPaused {
+        require(_userAddresses.length == _amounts.length, "Length mismatch");
+        for (uint256 i = 0; i < _userAddresses.length; ++i) {
+            _unfreezePartialTokens(_userAddresses[i], _amounts[i]);
+            emit TokensUnfrozen(_userAddresses[i], _amounts[i]);
+        }
+    }
+
+    /**
      * @dev Returns the freeze status of a wallet
      * @param _userAddress The address to check freeze status for
      * @return bool True if the address is completely frozen, false otherwise

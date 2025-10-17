@@ -101,6 +101,48 @@ interface IERC3643Freeze {
     ) external;
 
     /**
+     *  @dev function allowing to set frozen addresses in batch
+     *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_userAddresses.length` IS TOO HIGH,
+     *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
+     *  @param _userAddresses The addresses for which to update frozen status
+     *  @param _freeze Frozen status of the corresponding address
+     *  This function can only be called by a wallet set as agent of the token
+     *  emits _userAddresses.length `AddressFrozen` events
+     */
+    function batchSetAddressFrozen(
+        address[] calldata _userAddresses,
+        bool[] calldata _freeze
+    ) external;
+
+    /**
+     *  @dev function allowing to freeze tokens partially in batch
+     *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_userAddresses.length` IS TOO HIGH,
+     *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
+     *  @param _userAddresses The addresses on which tokens need to be frozen
+     *  @param _amounts the amount of tokens to freeze on the corresponding address
+     *  This function can only be called by a wallet set as agent of the token
+     *  emits _userAddresses.length `TokensFrozen` events
+     */
+    function batchFreezePartialTokens(
+        address[] calldata _userAddresses,
+        uint256[] calldata _amounts
+    ) external;
+
+    /**
+     *  @dev function allowing to unfreeze tokens partially in batch
+     *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_userAddresses.length` IS TOO HIGH,
+     *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
+     *  @param _userAddresses The addresses on which tokens need to be unfrozen
+     *  @param _amounts the amount of tokens to unfreeze on the corresponding address
+     *  This function can only be called by a wallet set as agent of the token
+     *  emits _userAddresses.length `TokensUnfrozen` events
+     */
+    function batchUnfreezePartialTokens(
+        address[] calldata _userAddresses,
+        uint256[] calldata _amounts
+    ) external;
+
+    /**
      *  @dev Returns the freezing status of a wallet
      *  if isFrozen returns `true` the wallet is frozen
      *  if isFrozen returns `false` the wallet is not frozen
