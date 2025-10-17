@@ -8,6 +8,7 @@ import {ERC3643RegulatoryInternal} from '../erc3643/token/erc3643regulatory/ERC3
 import {ERC20SnapshotInternal} from '../erc20/extensions/snapshot/ERC20SnapshotInternal.sol';
 
 import {_CONTROLLER_ROLE} from '../../constants/roles.sol';
+import {_RECOVERY_ROLE} from '../../constants/roles.sol';
 
 import {IERC20Isbe} from '../erc20/IERC20Isbe.sol';
 import {IERC3643Freeze} from '../erc3643/token/erc3643freeze/IERC3643Freeze.sol';
@@ -36,6 +37,7 @@ abstract contract ERC203643InternalCommon is
         uint256 freeBalance;
         bool hasIdentityRegistry = _identityRegistry() != address(0);
         bool hasControllerRole = _hasRole(_CONTROLLER_ROLE, msg.sender);
+        bool hasRecoveryRole = _hasRole(_RECOVERY_ROLE, msg.sender);
 
         // ==========================================================================
         // MINT OPERATIONS (_from == address(0))
@@ -121,7 +123,7 @@ abstract contract ERC203643InternalCommon is
                     ? (balanceOfFrom - frozen)
                     : 0;
 
-                if (hasControllerRole) {
+                if (hasControllerRole || hasRecoveryRole) {
                     // forceTransfer() - Forced transfer with auto-unfreeze capability
                     // Auto-unfreeze if needed to complete the transfer
                     if (freeBalance < _amount) {

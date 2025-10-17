@@ -70,6 +70,9 @@ bytes32 constant _ERC3643_REGULATORY_RESOLVER_KEY = 0xd611e027d42ed421b59243a309
 // keccak256('isbe.contracts.global.isbe.erc3643.freeze.resolver.key');
 bytes32 constant _ERC3643_FREEZE_RESOLVER_KEY = 0xb4f0898a6b06b69baf87b46c4c2932dc9b05f07368e9b14ceee64d5d44e8f273;
 
+// keccak256('isbe.contracts.global.isbe.erc3643.recovery.resolver.key');
+bytes32 constant _ERC3643_RECOVERY_RESOLVER_KEY = 0x2f59403873a4d80c3817c2b3cf0c1d5105a6c508c118b0c8b9c38582c4068b8f;
+
 //ERC203643 ResolverKeys
 // keccak256('isbe.contracts.erc203643.controller.resolver.key');
 bytes32 constant _ERC203643_CONTROLLER_RESOLVER_KEY = 0x9b1f4e8c6d7a5b4c3e2f1a0b9c8d7e6f5a4b3c2d1e0f9e8d7c6b5a4b3c2d1e0f;

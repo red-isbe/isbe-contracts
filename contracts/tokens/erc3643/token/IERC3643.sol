@@ -7,6 +7,7 @@ import {IERC3643Regulatory} from './erc3643regulatory/IERC3643Regulatory.sol';
 import {IERC3643Freeze} from './erc3643freeze/IERC3643Freeze.sol';
 import {IERC203643Controller} from '../../erc203643/erc203643controller/IERC203643Controller.sol';
 import {IERC203643Capped} from '../../erc203643/erc203643capped/IERC203643Capped.sol';
+import {IERC3643Recovery} from './erc3643recovery/IERC3643Recovery.sol';
 
 /**
  * @title IERC3643
@@ -29,4 +30,5 @@ interface IERC3643 is
     IERC3643Freeze,
     IERC203643Controller,
     IERC203643Capped,
+    IERC3643Recovery
 {}
