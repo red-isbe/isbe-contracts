@@ -47,9 +47,11 @@ contract ERC203643ControllerFacet is
         override
         returns (bytes4[] memory selectors_)
     {
-        uint256 selectorsLength = 2;
+        uint256 selectorsLength = 4;
         selectors_ = new bytes4[](selectorsLength);
         selectors_[--selectorsLength] = this.forceTransfer.selector;
         selectors_[--selectorsLength] = this.forceBurn.selector;
+        selectors_[--selectorsLength] = this.batchForceBurn.selector;
+        selectors_[--selectorsLength] = this.batchForceTransfer.selector;
     }
 }

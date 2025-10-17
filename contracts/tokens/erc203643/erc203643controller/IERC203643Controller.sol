@@ -77,4 +77,56 @@ interface IERC203643Controller {
      * Emits a `Transfer` event to address(0)
      */
     function forceBurn(address _from, uint256 _amount) external;
+
+    /**
+     * @notice Burns tokens from multiple accounts by an authorized controller (batch operation)
+     * @dev This function should only be callable by an authorized controller (e.g., regulator or admin contract).
+     *      No approval required from token holders.
+     *
+     *      For ERC3643 tokens: tokens may be unfrozen if needed.
+     *      In case any `_userAddresses[i]` has not enough free tokens (unfrozen tokens)
+     *      but has a total balance higher or equal to the `_amounts[i]`
+     *      the tokens will be unfrozen to complete the burn.
+     *
+     *      IMPORTANT: THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_userAddresses.length` IS TOO HIGH,
+     *      USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
+     *
+     * @param _userAddresses The addresses to burn tokens from
+     * @param _amounts The number of tokens to burn from each corresponding address
+     *
+     * Emits a `ForceBurn` event for each burn
+     * Emits a `TokensUnfrozen` event if `_amounts[i]` is higher than the free balance of `_userAddresses[i]` (ERC3643 only)
+     * Emits a `Transfer` event to address(0) for each burn
+     */
+    function batchForceBurn(
+        address[] calldata _userAddresses,
+        uint256[] calldata _amounts
+    ) external;
+
+    /**
+     * @notice Transfers tokens from multiple accounts to multiple recipients by an authorized controller (batch operation)
+     * @dev This function should only be callable by an authorized controller (e.g., regulator or admin contract).
+     *      No approval required from token holders.
+     *
+     *      For ERC3643 tokens: recipients must be verified and tokens may be unfrozen if needed.
+     *      In case any `_fromList[i]` address has not enough free tokens (unfrozen tokens)
+     *      but has a total balance higher or equal to the `_amounts[i]`
+     *      the tokens will be unfrozen to complete the transfer.
+     *
+     *      IMPORTANT: THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_fromList.length` IS TOO HIGH,
+     *      USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
+     *
+     * @param _fromList The addresses to transfer tokens from
+     * @param _toList The addresses to transfer tokens to
+     * @param _amounts The number of tokens to transfer for each corresponding pair
+     *
+     * Emits a `ForceTransfer` event for each transfer
+     * Emits a `TokensUnfrozen` event if `_amounts[i]` is higher than the free balance of `_fromList[i]` (ERC3643 only)
+     * Emits a `Transfer` event for each transfer
+     */
+    function batchForceTransfer(
+        address[] calldata _fromList,
+        address[] calldata _toList,
+        uint256[] calldata _amounts
+    ) external;
 }
