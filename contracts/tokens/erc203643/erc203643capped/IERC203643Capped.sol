@@ -81,6 +81,38 @@ interface IERC203643Capped {
     function mint(address _to, uint256 _amount) external;
 
     /**
+     * @notice Mint tokens to multiple addresses by an authorized minter (batch operation)
+     * @dev No approval required from token holders.
+     *      Respects the supply cap - will revert if minting would exceed the cap.
+     *
+     *      **ERC20 Mode:** Simple batch minting without additional validations
+     *      **ERC3643 Mode:** Requires all recipients to be verified in Identity Registry
+     *
+     *      IMPORTANT: THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_toList.length` IS TOO HIGH,
+     *      USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
+     *
+     * @param _toList The addresses to mint tokens to (all must be verified for ERC3643)
+     * @param _amounts The number of tokens to mint to each corresponding address
+     *
+     * Requirements:
+     * - Caller must have MINTER_ROLE
+     * - Contract must not be paused
+     * - Arrays must have the same length
+     * - For ERC3643: all addresses in `_toList` must be verified in Identity Registry
+     * - Total supply after minting must not exceed cap
+     *
+     * Emits:
+     * - {Transfer} event from address(0) for each mint via internal mint mechanism
+     *
+     * Reverts:
+     * - {CapExceeded} if batch minting would exceed the supply cap
+     */
+    function batchMint(
+        address[] calldata _toList,
+        uint256[] calldata _amounts
+    ) external;
+
+    /**
      * @notice Update the supply cap
      * @dev Administrative function to modify the maximum token supply
      * @param _newCap The new maximum supply cap

@@ -44,10 +44,11 @@ contract ERC203643CappedFacet is ERC203643Capped, IEIP2535Introspection {
         override
         returns (bytes4[] memory selectors_)
     {
-        uint256 selectorsLength = 4;
+        uint256 selectorsLength = 5;
         selectors_ = new bytes4[](selectorsLength);
         selectors_[--selectorsLength] = this.initializeCap.selector;
         selectors_[--selectorsLength] = this.mint.selector;
+        selectors_[--selectorsLength] = this.batchMint.selector;
         selectors_[--selectorsLength] = this.setCap.selector;
         selectors_[--selectorsLength] = this.cap.selector;
     }

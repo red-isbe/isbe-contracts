@@ -53,6 +53,57 @@ abstract contract ERC203643Capped is IERC203643Capped, ERC203643InternalCommon {
     }
 
     /**
+     * @notice Mint tokens to multiple addresses by an authorized minter (batch operation)
+     * @dev No approval required from token holders.
+     *      Respects the supply cap - will revert if minting would exceed the cap.
+     *
+     *      **ERC20 Mode:** Simple batch minting without additional validations
+     *      **ERC3643 Mode:** Requires all recipients to be verified in Identity Registry
+     *
+     *      IMPORTANT: THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_toList.length` IS TOO HIGH,
+     *      USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
+     *
+     * @param _toList The addresses to mint tokens to (all must be verified for ERC3643)
+     * @param _amounts The number of tokens to mint to each corresponding address
+     *
+     * Requirements:
+     * - Caller must have MINTER_ROLE
+     * - Contract must not be paused
+     * - Arrays must have the same length
+     * - For ERC3643: all addresses in `_toList` must be verified in Identity Registry
+     * - Total supply after minting must not exceed cap
+     *
+     * Emits:
+     * - {Transfer} event from address(0) for each mint via internal mint mechanism
+     *
+     * Reverts:
+     * - {CapExceeded} if batch minting would exceed the supply cap
+     */
+    function batchMint(
+        address[] calldata _toList,
+        uint256[] calldata _amounts
+    ) external override whenNotPaused onlyRole(_MINTER_ROLE) {
+        require(_toList.length == _amounts.length, "Length mismatch");
+        
+        // Calculate total amount to mint for cap validation
+        uint256 totalAmount = 0;
+        for (uint256 i = 0; i < _amounts.length; ++i) {
+            totalAmount += _amounts[i];
+        }
+        
+        // Check cap for the entire batch
+        require(
+            _totalSupply() + totalAmount <= _cap(),
+            IERC203643Capped.CapExceeded()
+        );
+        
+        // Perform individual mints
+        for (uint256 i = 0; i < _toList.length; ++i) {
+            _mint(_toList[i], _amounts[i]);
+        }
+    }
+
+    /**
      * @notice Update the supply cap
      * @dev Administrative function to modify the maximum token supply.
      *      Emits a {CapSet} event if successful.
