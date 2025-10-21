@@ -99,6 +99,36 @@ abstract contract ERC203643CappedInternal is ERC20Internal {
     }
 
     /**
+     * @dev Calculates the total amount from an array and validates it against the cap
+     * @param _amounts Array of amounts to sum
+     * @return totalAmount The total sum of all amounts in the array
+     *
+     * Requirements:
+     * - The total supply + total amount must not exceed the cap
+     *
+     * Reverts:
+     * - {CapExceeded} if the batch minting would exceed the supply cap
+     */
+    function _checkTotalAmount(
+        uint256[] calldata _amounts
+    ) internal view returns (uint256 totalAmount) {
+        // Calculate total amount for cap validation
+        uint256 amountsLength = _amounts.length;
+        for (uint256 i; i < amountsLength; ) {
+            unchecked {
+                totalAmount += _amounts[i];
+                ++i;
+            }
+        }
+
+        // Check cap for the entire batch
+        require(
+            _totalSupply() + totalAmount <= _cap(),
+            IERC203643Capped.CapExceeded()
+        );
+    }
+
+    /**
      * @dev Private function to access the capped storage
      * @return storage_ The storage struct for capped functionality
      */

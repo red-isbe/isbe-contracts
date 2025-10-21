@@ -90,21 +90,8 @@ abstract contract ERC203643Capped is IERC203643Capped, ERC203643InternalCommon {
             NotSameLengthArray(toListLength, amountsLength)
         );
 
-        // Calculate total amount to check cap
-        uint256 totalAmount;
-        uint256 amountsLengthCached = amountsLength;
-        for (uint256 i; i < amountsLengthCached; ) {
-            totalAmount += _amounts[i];
-            unchecked {
-                ++i;
-            }
-        }
-
-        // Check cap for the entire batch
-        require(
-            _totalSupply() + totalAmount <= _cap(),
-            IERC203643Capped.CapExceeded()
-        );
+        // Validate total amount against cap
+        _checkTotalAmount(_amounts);
 
         // Perform individual mints
         uint256 toListLengthCached = toListLength;
