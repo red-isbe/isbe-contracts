@@ -103,6 +103,10 @@ export const CONFIGURATION_ID_ENS_REGISTRY =
 export const CONFIGURATION_ID_ENS_PUBLIC_RESOLVER =
     '0x0000000000000000000000000000000000000000456e735075626c6963526573'
 
+// New configuration IDs for optimized testing
+export const CONFIGURATION_ID_PROXY_TESTS =
+    '0x0000000000000000000000000000000000000000000000000000000000000050'
+
 let BusinessLogicFactoryFacetFactory: BusinessLogicFactoryFacet__factory
 let EIP2535AccessControlFactory: EIP2535AccessControl__factory
 let ISBEPauseFacetFactory: ISBEPauseFacet__factory
@@ -274,6 +278,14 @@ export async function deployGovernance(
                     init_BusinessId_UseCase,
                     init_CallData_UseCase,
                     isUseCaseOwnable
+                )
+            case CONFIGURATION_ID_PROXY_TESTS:
+                return await deployProxyTestsUseCaseFacets(
+                    owner,
+                    rbacsUseCase,
+                    init_pause,
+                    init_BusinessId_UseCase,
+                    init_CallData_UseCase
                 )
             case CONFIGURATION_ID_ERC721:
                 return await deployERC721UseCasesFacets(
@@ -1271,5 +1283,115 @@ export async function deployEnsRegistryUseCaseFacets(
         proxy,
         ensRegistryFacet,
         ensRegistry,
+    }
+}
+
+export async function deployProxyTestsUseCaseFacets(
+    owner: Signer,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    rbacs: any[],
+    init_pause: boolean,
+    init_BusinessIds: string[],
+    init_CallData: string[]
+) {
+    // Minimal set of factories for proxy testing
+    const IsbeCutFacetFactory = await ethers.getContractFactory('IsbeCutFacet')
+    const IsbeLoupeFacetFactory =
+        await ethers.getContractFactory('IsbeLoupeFacet')
+    const AccessControlFacetFactory =
+        await ethers.getContractFactory('AccessControlFacet')
+    const ERC20FacetFactory = await ethers.getContractFactory('ERC20Facet')
+    const HashTimestampTestWrapperFactory = await ethers.getContractFactory(
+        'HashTimestampTestWrapper'
+    )
+    const AssetEventTrackerTestWrapperFactory = await ethers.getContractFactory(
+        'AssetEventTrackerTestWrapper'
+    )
+
+    // Deploy minimal business logic contracts
+    const isbeCutFacet = await deployBusinessLogicFromFactory(
+        ISBE_CUT_RESOLVER_KEY,
+        IsbeCutFacetFactory
+    )
+    const isbeLoupeFacet = await deployBusinessLogicFromFactory(
+        ISBE_LOUPE_RESOLVER_KEY,
+        IsbeLoupeFacetFactory
+    )
+    const accessControlFacet = await deployBusinessLogicFromFactory(
+        ACCESS_CONTROL_RESOLVER_KEY,
+        AccessControlFacetFactory
+    )
+    const pauseFacet = await deployBusinessLogicFromFactory(
+        PAUSE_RESOLVER_KEY,
+        ISBEPauseFacetFactory
+    )
+    const erc20Facet = await deployBusinessLogicFromFactory(
+        ERC20_RESOLVER_KEY,
+        ERC20FacetFactory
+    )
+    const assetEventTrackerFacet = await deployBusinessLogicFromFactory(
+        ASSET_EVENT_TRACKER_RESOLVER_KEY,
+        AssetEventTrackerTestWrapperFactory
+    )
+    const hashTimestampFacet = await deployBusinessLogicFromFactory(
+        HASH_TIMESTAMP_RESOLVER_KEY,
+        HashTimestampTestWrapperFactory
+    )
+
+    // Set minimal configuration for proxy tests
+    await isbeFactory.setConfiguration(CONFIGURATION_ID_PROXY_TESTS, [
+        {
+            businessId: ERC20_RESOLVER_KEY,
+            version: 1,
+        },
+        {
+            businessId: ASSET_EVENT_TRACKER_RESOLVER_KEY,
+            version: 1,
+        },
+        {
+            businessId: HASH_TIMESTAMP_RESOLVER_KEY,
+            version: 1,
+        },
+    ])
+
+    const tx = await isbeFactory.deployUseCase(
+        CONFIGURATION_ID_PROXY_TESTS,
+        1,
+        rbacs,
+        init_pause,
+        init_BusinessIds,
+        init_CallData
+    )
+
+    const deployedEvent = await getEvent('UseCaseDeployed', tx, isbeFactory)
+    const { proxy } = deployedEvent.args
+
+    // Attach minimal contracts to proxy
+    const erc20 = ERC20FacetFactory.attach(proxy) as ERC20Facet
+    const pause = ISBEPauseFacetFactory.attach(proxy) as ISBEPauseFacet
+    const accessControl = AccessControlFacetFactory.attach(
+        proxy
+    ) as AccessControlFacet
+    const assetEventTracker = AssetEventTrackerTestWrapperFactory.attach(
+        proxy
+    ) as AssetEventTrackerTestWrapper
+    const hashTimestamp = HashTimestampTestWrapperFactory.attach(
+        proxy
+    ) as HashTimestampTestWrapper
+
+    return {
+        erc20,
+        pause,
+        accessControl,
+        assetEventTracker,
+        hashTimestamp,
+        erc20Facet,
+        pauseFacet,
+        accessControlFacet,
+        assetEventTrackerFacet,
+        hashTimestampFacet,
+        isbeCutFacet,
+        isbeLoupeFacet,
+        proxy,
     }
 }

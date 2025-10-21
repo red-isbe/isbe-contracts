@@ -26,7 +26,6 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { TestConstants } from '../testUtils'
 
 describe('ENS Public Resolver', () => {
-    let adminAccount: Signer
     let account_2: Signer
     let account_3: Signer
     let adminAccountAddress: string
@@ -54,97 +53,117 @@ describe('ENS Public Resolver', () => {
     let TEST_PUBKEY_X: string
     let TEST_PUBKEY_Y: string
 
-    // Initialize randomized test data
-    const initializeTestData = () => {
-        TEST_NAME = TestConstants.randomEnsName()
-        const textRecord = TestConstants.randomTextRecord()
-        TEST_TEXT_KEY = textRecord.key
-        TEST_TEXT_VALUE = textRecord.value
-        const pubkeyPair = TestConstants.randomPubkeyPair()
-        TEST_PUBKEY_X = pubkeyPair.x
-        TEST_PUBKEY_Y = pubkeyPair.y
-    }
-
-    before(async () => {
-        ;[adminAccount, account_2, account_3] = await ethers.getSigners()
-        adminAccountAddress = await adminAccount.getAddress()
-        account_2Address = await account_2.getAddress()
-        account_3Address = await account_3.getAddress()
+    async function deployFixture(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        rbacsUseCase: any[] = [
+            {
+                role: PAUSER_ROLE,
+                members: [],
+            },
+            {
+                role: ENS_MANAGER_ROLE,
+                members: [],
+            },
+        ],
+        init_pause: boolean = false
+    ) {
+        const [adminAccountSigner, account2Signer, account3Signer] =
+            await ethers.getSigners()
+        const adminAccountAddress = await adminAccountSigner.getAddress()
+        const account2Address = await account2Signer.getAddress()
+        const account3Address = await account3Signer.getAddress()
 
         // Initialize randomized test data
-        initializeTestData()
-    })
+        const testName = TestConstants.randomEnsName()
+        const textRecord = TestConstants.randomTextRecord()
+        const testTextKey = textRecord.key
+        const testTextValue = textRecord.value
+        const pubkeyPair = TestConstants.randomPubkeyPair()
+        const testPubkeyX = pubkeyPair.x
+        const testPubkeyY = pubkeyPair.y
 
-    async function deployEnsRegistry() {
-        const result = await deployGovernance(
-            adminAccount,
-            [
-                {
-                    role: PAUSER_ROLE,
-                    members: [adminAccount],
-                },
-                {
-                    role: ENS_MANAGER_ROLE,
-                    members: [adminAccount],
-                },
-            ],
+        // Update rbacs with actual addresses
+        const updatedRbacs = rbacsUseCase.map((rbac) => ({
+            ...rbac,
+            members:
+                rbac.members.length > 0 ? rbac.members : [adminAccountAddress],
+        }))
+
+        // Deploy ENS Registry first
+        const registryResult = await deployGovernance(
+            adminAccountSigner,
+            updatedRbacs,
             CONFIGURATION_ID_ENS_REGISTRY,
             false
         )
 
         // Grant ENS roles to admin for registry
-        await result.accessControlGovernance!.grantRole(
+        await registryResult.accessControlGovernance!.grantRole(
             ENS_ROLE,
             adminAccountAddress
         )
-        await result.accessControlGovernance!.grantRole(
+        await registryResult.accessControlGovernance!.grantRole(
             ENS_MANAGER_ROLE,
             adminAccountAddress
         )
 
         // Initialize ENS Registry
-        await result.ensRegistry!.initialiseEnsRegistry(adminAccountAddress)
-
-        return result.ensRegistry!
-    }
-
-    async function deploy(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        rbacsUseCase: any[] = [
-            {
-                role: PAUSER_ROLE,
-                members: [adminAccount],
-            },
-            {
-                role: ENS_MANAGER_ROLE,
-                members: [adminAccount],
-            },
-        ],
-        init_pause: boolean = false
-    ) {
-        // Deploy ENS Registry first
-        ensRegistry = await deployEnsRegistry()
+        await registryResult.ensRegistry!.initialiseEnsRegistry(
+            adminAccountAddress
+        )
 
         // Deploy Public Resolver using the dedicated function
         const result = await deployEnsPublicResolverUseCaseFacets(
-            adminAccount,
-            rbacsUseCase,
+            adminAccountSigner,
+            updatedRbacs,
             init_pause,
             [],
             []
         )
 
-        publicResolver = result.publicResolver!
-        ensResolver = result.ensResolverFacet!
-        nameResolver = result.nameResolverFacet!
-        textResolver = result.textResolverFacet!
-        pubkeyResolver = result.pubkeyResolverFacet!
-        pause = result.pause!
-        accessControl = result.accessControl!
+        return {
+            adminAccount: adminAccountSigner,
+            account_2: account2Signer,
+            account_3: account3Signer,
+            adminAccountAddress,
+            account_2Address: account2Address,
+            account_3Address: account3Address,
+            publicResolver: result.publicResolver!,
+            ensResolver: result.ensResolverFacet!,
+            nameResolver: result.nameResolverFacet!,
+            textResolver: result.textResolverFacet!,
+            pubkeyResolver: result.pubkeyResolverFacet!,
+            pause: result.pause!,
+            accessControl: result.accessControl!,
+            ensRegistry: registryResult.ensRegistry!,
+            TEST_NAME: testName,
+            TEST_TEXT_KEY: testTextKey,
+            TEST_TEXT_VALUE: testTextValue,
+            TEST_PUBKEY_X: testPubkeyX,
+            TEST_PUBKEY_Y: testPubkeyY,
+        }
     }
 
     beforeEach(async () => {
-        await loadFixture(deploy)
+        const contracts = await loadFixture(deployFixture)
+        account_2 = contracts.account_2
+        account_3 = contracts.account_3
+        adminAccountAddress = contracts.adminAccountAddress
+        account_2Address = contracts.account_2Address
+        account_3Address = contracts.account_3Address
+        publicResolver = contracts.publicResolver
+        ensResolver = contracts.ensResolver
+        nameResolver = contracts.nameResolver
+        textResolver = contracts.textResolver
+        pubkeyResolver = contracts.pubkeyResolver
+        pause = contracts.pause
+        accessControl = contracts.accessControl
+        ensRegistry = contracts.ensRegistry
+        TEST_NAME = contracts.TEST_NAME
+        TEST_TEXT_KEY = contracts.TEST_TEXT_KEY
+        TEST_TEXT_VALUE = contracts.TEST_TEXT_VALUE
+        TEST_PUBKEY_X = contracts.TEST_PUBKEY_X
+        TEST_PUBKEY_Y = contracts.TEST_PUBKEY_Y
     })
 
     describe('Paused', () => {
