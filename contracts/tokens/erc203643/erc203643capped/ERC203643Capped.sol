@@ -3,7 +3,6 @@ pragma solidity ^0.8.28;
 
 import {ERC203643InternalCommon} from '../ERC203643InternalCommon.sol';
 import {IERC203643Capped} from './IERC203643Capped.sol';
-import {IERC203643Errors} from '../IERC203643Errors.sol';
 import {_ERC203643_CAPPED_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
 import {_CAP_ROLE, _MINTER_ROLE} from '../../../constants/roles.sol';
 
@@ -84,9 +83,12 @@ abstract contract ERC203643Capped is IERC203643Capped, ERC203643InternalCommon {
         address[] calldata _toList,
         uint256[] calldata _amounts
     ) external override whenNotPaused onlyRole(_MINTER_ROLE) {
-        if (_toList.length != _amounts.length) {
-            revert IERC203643Errors.ArrayLengthMismatch();
-        }
+        uint256 toListLength = _toList.length;
+        uint256 amountsLength = _amounts.length;
+        require(
+            toListLength == amountsLength,
+            NotSameLengthArray(toListLength, amountsLength)
+        );
 
         // Calculate total amount to check cap
         uint256 totalAmount = 0;

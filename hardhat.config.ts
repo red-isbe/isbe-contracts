@@ -103,7 +103,6 @@ const config: HardhatUserConfig = {
     mocha: {
         timeout: 60000,
         parallel: true,
-        require: ['test/helpers/bigIntSerializationInParallel.ts'],
     },
     paths: {
         sources: './contracts',

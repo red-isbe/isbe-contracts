@@ -3,7 +3,6 @@ pragma solidity ^0.8.28;
 
 import {ERC203643InternalCommon} from '../erc203643/ERC203643InternalCommon.sol';
 import {IERC20Isbe} from './IERC20Isbe.sol';
-import {IERC203643Errors} from '../erc203643/IERC203643Errors.sol';
 import {_ERC20_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
@@ -88,9 +87,12 @@ abstract contract ERC20 is IERC20Isbe, ERC203643InternalCommon {
         address[] calldata _toList,
         uint256[] calldata _amounts
     ) external override whenNotPaused {
-        if (_toList.length != _amounts.length) {
-            revert IERC203643Errors.ArrayLengthMismatch();
-        }
+        uint256 toListLength = _toList.length;
+        uint256 amountsLength = _amounts.length;
+        require(
+            toListLength == amountsLength,
+            NotSameLengthArray(toListLength, amountsLength)
+        );
 
         address from = _msgSender();
 

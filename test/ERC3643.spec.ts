@@ -1009,7 +1009,7 @@ describe('ERC3643 Token', function () {
                             [aliceAddress, bobAddress],
                             ['100']
                         )
-                ).to.be.revertedWithCustomError(erc3643, 'ArrayLengthMismatch')
+                ).to.be.revertedWithCustomError(erc3643, 'NotSameLengthArray')
             })
 
             it('GIVEN empty arrays WHEN batchFreezePartialTokens THEN succeeds without operations', async () => {
@@ -1201,7 +1201,7 @@ describe('ERC3643 Token', function () {
                             [aliceAddress, bobAddress],
                             ['100']
                         )
-                ).to.be.revertedWithCustomError(erc3643, 'ArrayLengthMismatch')
+                ).to.be.revertedWithCustomError(erc3643, 'NotSameLengthArray')
             })
 
             it('GIVEN empty arrays WHEN batchUnfreezePartialTokens THEN succeeds without operations', async () => {
@@ -1832,7 +1832,7 @@ describe('ERC3643 Token', function () {
                             .batchForceBurn([aliceAddress, bobAddress], [100n])
                     ).to.be.revertedWithCustomError(
                         erc20Facet,
-                        'ArrayLengthMismatch'
+                        'NotSameLengthArray'
                     )
                 })
 
@@ -2127,7 +2127,7 @@ describe('ERC3643 Token', function () {
                             )
                     ).to.be.revertedWithCustomError(
                         erc20Facet,
-                        'ArrayLengthMismatch'
+                        'NotSameLengthArray'
                     )
                 })
 
@@ -2142,7 +2142,7 @@ describe('ERC3643 Token', function () {
                             )
                     ).to.be.revertedWithCustomError(
                         erc20Facet,
-                        'ArrayLengthMismatch'
+                        'NotSameLengthArray'
                     )
                 })
 
@@ -3294,14 +3294,14 @@ describe('ERC3643 Token', function () {
 
             // batchTransfer
             describe('batchTransfer', () => {
-                it('GIVEN ERC3643 mode WHEN arrays length mismatch THEN reverts with ArrayLengthMismatch', async () => {
+                it('GIVEN ERC3643 mode WHEN arrays length mismatch THEN reverts with NotSameLengthArray', async () => {
                     await expect(
                         erc20Facet
                             .connect(alice)
                             .batchTransfer([bobAddress], [100n, 200n])
                     ).to.be.revertedWithCustomError(
                         erc20Facet,
-                        'ArrayLengthMismatch'
+                        'NotSameLengthArray'
                     )
                 })
 
