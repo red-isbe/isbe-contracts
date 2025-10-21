@@ -278,9 +278,10 @@ abstract contract ERC20Internal is Common {
     ) internal view returns (uint256 totalAmount) {
         // Calculate total amount for balance validation
         uint256 amountsLength = _amounts.length;
-        for (uint256 i = 0; i < amountsLength; ++i) {
+        for (uint256 i; i < amountsLength; ) {
             unchecked {
                 totalAmount += _amounts[i];
+                ++i;
             }
         }
 

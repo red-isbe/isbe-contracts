@@ -97,9 +97,13 @@ abstract contract ERC203643Controller is
             NotSameLengthArray(userAddressesLength, amountsLength)
         );
 
-        for (uint256 i = 0; i < _userAddresses.length; ++i) {
+        uint256 length = userAddressesLength;
+        for (uint256 i; i < length; ) {
             _burn(_userAddresses[i], _amounts[i]);
             emit ForceBurn(_msgSender(), _userAddresses[i], _amounts[i]);
+            unchecked {
+                ++i;
+            }
         }
     }
 
@@ -137,7 +141,8 @@ abstract contract ERC203643Controller is
             NotSameLengthArray(toListLength, amountsLength)
         );
 
-        for (uint256 i = 0; i < _fromList.length; ++i) {
+        uint256 length = _fromList.length;
+        for (uint256 i; i < length; ) {
             _transfer(_fromList[i], _toList[i], _amounts[i]);
             emit ForceTransfer(
                 _msgSender(),
@@ -145,6 +150,9 @@ abstract contract ERC203643Controller is
                 _toList[i],
                 _amounts[i]
             );
+            unchecked {
+                ++i;
+            }
         }
     }
 

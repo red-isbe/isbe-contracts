@@ -99,9 +99,13 @@ abstract contract ERC3643Freeze is IERC3643Freeze, ERC203643InternalCommon {
             NotSameLengthArray(userAddressesLength, freezeLength)
         );
 
-        for (uint256 i = 0; i < _userAddresses.length; ++i) {
+        uint256 length = userAddressesLength;
+        for (uint256 i; i < length; ) {
             _setAddressFrozen(_userAddresses[i], _freeze[i]);
             emit AddressFrozen(_userAddresses[i], _freeze[i], msg.sender);
+            unchecked {
+                ++i;
+            }
         }
     }
 
@@ -129,9 +133,13 @@ abstract contract ERC3643Freeze is IERC3643Freeze, ERC203643InternalCommon {
             NotSameLengthArray(userAddressesLength, amountsLength)
         );
 
-        for (uint256 i = 0; i < _userAddresses.length; ++i) {
+        uint256 length = userAddressesLength;
+        for (uint256 i; i < length; ) {
             _freezePartialTokens(_userAddresses[i], _amounts[i]);
             emit TokensFrozen(_userAddresses[i], _amounts[i]);
+            unchecked {
+                ++i;
+            }
         }
     }
 
@@ -159,9 +167,13 @@ abstract contract ERC3643Freeze is IERC3643Freeze, ERC203643InternalCommon {
             NotSameLengthArray(userAddressesLength, amountsLength)
         );
 
-        for (uint256 i = 0; i < _userAddresses.length; ++i) {
+        uint256 length = userAddressesLength;
+        for (uint256 i; i < length; ) {
             _unfreezePartialTokens(_userAddresses[i], _amounts[i]);
             emit TokensUnfrozen(_userAddresses[i], _amounts[i]);
+            unchecked {
+                ++i;
+            }
         }
     }
 

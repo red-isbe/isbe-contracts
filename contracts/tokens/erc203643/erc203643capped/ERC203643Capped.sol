@@ -91,9 +91,13 @@ abstract contract ERC203643Capped is IERC203643Capped, ERC203643InternalCommon {
         );
 
         // Calculate total amount to check cap
-        uint256 totalAmount = 0;
-        for (uint256 i = 0; i < _amounts.length; ++i) {
+        uint256 totalAmount;
+        uint256 amountsLengthCached = amountsLength;
+        for (uint256 i; i < amountsLengthCached; ) {
             totalAmount += _amounts[i];
+            unchecked {
+                ++i;
+            }
         }
 
         // Check cap for the entire batch
@@ -103,8 +107,12 @@ abstract contract ERC203643Capped is IERC203643Capped, ERC203643InternalCommon {
         );
 
         // Perform individual mints
-        for (uint256 i = 0; i < _toList.length; ++i) {
+        uint256 toListLengthCached = toListLength;
+        for (uint256 i; i < toListLengthCached; ) {
             _mint(_toList[i], _amounts[i]);
+            unchecked {
+                ++i;
+            }
         }
     }
 

@@ -100,8 +100,12 @@ abstract contract ERC20 is IERC20Isbe, ERC203643InternalCommon {
         _checkTotalAmount(from, _amounts);
 
         // Perform individual transfers
-        for (uint256 i = 0; i < _toList.length; ++i) {
+        uint256 length = toListLength;
+        for (uint256 i; i < length; ) {
             _transfer(from, _toList[i], _amounts[i]);
+            unchecked {
+                ++i;
+            }
         }
     }
 
