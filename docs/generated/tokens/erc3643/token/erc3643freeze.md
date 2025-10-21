@@ -51,6 +51,51 @@ _Unfreezes a specified amount of tokens for a given address_
 | \_userAddress | address | The address for which to unfreeze tokens                                                                                                                                                     |
 | \_amount      | uint256 | Amount of tokens to unfreeze Requirements: - Caller must have FREEZE_ROLE - Contract must not be paused - Amount must not exceed user's frozen token balance Emits: - {TokensUnfrozen} event |
 
+### batchSetAddressFrozen
+
+```solidity
+function batchSetAddressFrozen(address[] _userAddresses, bool[] _freeze) external
+```
+
+_Batch sets the freeze status for multiple wallets_
+
+#### Parameters
+
+| Name            | Type      | Description                                                                                                                                                                                         |
+| --------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| \_userAddresses | address[] | Array of addresses to update                                                                                                                                                                        |
+| \_freeze        | bool[]    | Array of freeze statuses (true/false) Requirements: - Caller must have FREEZE_ROLE - Contract must not be paused - Arrays must have the same length Emits: - {AddressFrozen} event for each address |
+
+### batchFreezePartialTokens
+
+```solidity
+function batchFreezePartialTokens(address[] _userAddresses, uint256[] _amounts) external
+```
+
+_Batch freezes specified amounts of tokens for multiple addresses_
+
+#### Parameters
+
+| Name            | Type      | Description                                                                                                                                                                             |
+| --------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| \_userAddresses | address[] | Array of addresses to freeze tokens for                                                                                                                                                 |
+| \_amounts       | uint256[] | Array of amounts to freeze Requirements: - Caller must have FREEZE_ROLE - Contract must not be paused - Arrays must have the same length Emits: - {TokensFrozen} event for each address |
+
+### batchUnfreezePartialTokens
+
+```solidity
+function batchUnfreezePartialTokens(address[] _userAddresses, uint256[] _amounts) external
+```
+
+_Batch unfreezes specified amounts of tokens for multiple addresses_
+
+#### Parameters
+
+| Name            | Type      | Description                                                                                                                                                                                 |
+| --------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| \_userAddresses | address[] | Array of addresses to unfreeze tokens for                                                                                                                                                   |
+| \_amounts       | uint256[] | Array of amounts to unfreeze Requirements: - Caller must have FREEZE_ROLE - Contract must not be paused - Arrays must have the same length Emits: - {TokensUnfrozen} event for each address |
+
 ### isFrozen
 
 ```solidity
@@ -403,6 +448,48 @@ function unfreezePartialTokens(address _userAddress, uint256 _amount) external
 @param \_amount Amount of Tokens to be unfrozen
 This function can only be called by a wallet set as agent of the token
 emits a `TokensUnfrozen` event
+
+### batchSetAddressFrozen
+
+```solidity
+function batchSetAddressFrozen(address[] _userAddresses, bool[] _freeze) external
+```
+
+@dev function allowing to set frozen addresses in batch
+IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_userAddresses.length` IS TOO HIGH,
+USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
+@param \_userAddresses The addresses for which to update frozen status
+@param \_freeze Frozen status of the corresponding address
+This function can only be called by a wallet set as agent of the token
+emits \_userAddresses.length `AddressFrozen` events
+
+### batchFreezePartialTokens
+
+```solidity
+function batchFreezePartialTokens(address[] _userAddresses, uint256[] _amounts) external
+```
+
+@dev function allowing to freeze tokens partially in batch
+IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_userAddresses.length` IS TOO HIGH,
+USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
+@param \_userAddresses The addresses on which tokens need to be frozen
+@param \_amounts the amount of tokens to freeze on the corresponding address
+This function can only be called by a wallet set as agent of the token
+emits \_userAddresses.length `TokensFrozen` events
+
+### batchUnfreezePartialTokens
+
+```solidity
+function batchUnfreezePartialTokens(address[] _userAddresses, uint256[] _amounts) external
+```
+
+@dev function allowing to unfreeze tokens partially in batch
+IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_userAddresses.length` IS TOO HIGH,
+USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
+@param \_userAddresses The addresses on which tokens need to be unfrozen
+@param \_amounts the amount of tokens to unfreeze on the corresponding address
+This function can only be called by a wallet set as agent of the token
+emits \_userAddresses.length `TokensUnfrozen` events
 
 ### isFrozen
 

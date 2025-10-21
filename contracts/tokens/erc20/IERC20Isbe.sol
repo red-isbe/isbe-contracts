@@ -36,10 +36,10 @@ interface IERC20Isbe is IERC20, IERC20Metadata {
     /**
      * @notice Transfer tokens to multiple addresses in a single transaction (batch operation)
      * @dev Transfers tokens from the caller's account to multiple recipients.
-     *      
+     *
      *      **ERC20 Mode:** Simple batch transfers without additional validations
      *      **ERC3643 Mode:** Requires all recipients to be verified and sender/recipients not frozen
-     *      
+     *
      *      IMPORTANT: THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_toList.length` IS TOO HIGH,
      *      USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
      *

@@ -3,6 +3,7 @@ pragma solidity ^0.8.28;
 
 import {ERC203643InternalCommon} from '../../../erc203643/ERC203643InternalCommon.sol';
 import {IERC3643Freeze} from './IERC3643Freeze.sol';
+import {IERC203643Errors} from '../../../erc203643/IERC203643Errors.sol';
 import {_FREEZE_ROLE} from '../../../../constants/roles.sol';
 
 /**
@@ -92,7 +93,9 @@ abstract contract ERC3643Freeze is IERC3643Freeze, ERC203643InternalCommon {
         address[] calldata _userAddresses,
         bool[] calldata _freeze
     ) external override onlyRole(_FREEZE_ROLE) whenNotPaused {
-        require(_userAddresses.length == _freeze.length, "Length mismatch");
+        if (_userAddresses.length != _freeze.length) {
+            revert IERC203643Errors.ArrayLengthMismatch();
+        }
         for (uint256 i = 0; i < _userAddresses.length; ++i) {
             _setAddressFrozen(_userAddresses[i], _freeze[i]);
             emit AddressFrozen(_userAddresses[i], _freeze[i], msg.sender);
@@ -116,7 +119,9 @@ abstract contract ERC3643Freeze is IERC3643Freeze, ERC203643InternalCommon {
         address[] calldata _userAddresses,
         uint256[] calldata _amounts
     ) external override onlyRole(_FREEZE_ROLE) whenNotPaused {
-        require(_userAddresses.length == _amounts.length, "Length mismatch");
+        if (_userAddresses.length != _amounts.length) {
+            revert IERC203643Errors.ArrayLengthMismatch();
+        }
         for (uint256 i = 0; i < _userAddresses.length; ++i) {
             _freezePartialTokens(_userAddresses[i], _amounts[i]);
             emit TokensFrozen(_userAddresses[i], _amounts[i]);
@@ -140,7 +145,9 @@ abstract contract ERC3643Freeze is IERC3643Freeze, ERC203643InternalCommon {
         address[] calldata _userAddresses,
         uint256[] calldata _amounts
     ) external override onlyRole(_FREEZE_ROLE) whenNotPaused {
-        require(_userAddresses.length == _amounts.length, "Length mismatch");
+        if (_userAddresses.length != _amounts.length) {
+            revert IERC203643Errors.ArrayLengthMismatch();
+        }
         for (uint256 i = 0; i < _userAddresses.length; ++i) {
             _unfreezePartialTokens(_userAddresses[i], _amounts[i]);
             emit TokensUnfrozen(_userAddresses[i], _amounts[i]);

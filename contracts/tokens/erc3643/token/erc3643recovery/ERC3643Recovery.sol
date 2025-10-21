@@ -13,12 +13,11 @@ import {IIdentity} from '../../../../identity/IIdentity.sol';
  * @dev Allows authorized agents to recover tokens from lost wallets to new verified wallets.
  */
 abstract contract ERC3643Recovery is IERC3643Recovery, ERC203643InternalCommon {
-    
     /**
      * @notice Recovers tokens from a lost wallet to a new wallet for an investor
      * @dev This function should only be callable by an authorized recovery agent.
      *      Performs comprehensive validation and transfers all tokens from lost to new wallet.
-     *      
+     *
      *      If the lost wallet has frozen tokens, they will be automatically unfrozen
      *      before the transfer to ensure complete recovery.
      *
@@ -32,20 +31,29 @@ abstract contract ERC3643Recovery is IERC3643Recovery, ERC203643InternalCommon {
         address _newWallet,
         address _investorOnchainID
     ) external override whenNotPaused onlyRole(_RECOVERY_ROLE) returns (bool) {
-        
         // Validate input addresses
-        require(_lostWallet != address(0), 'Invalid lost wallet');
-        require(_newWallet != address(0), 'Invalid new wallet');
-        require(_investorOnchainID != address(0), 'Invalid investor onchain ID');
-        require(_lostWallet != _newWallet, 'Lost and new wallet cannot be the same');
-        
+        if (_lostWallet == address(0)) {
+            revert IERC3643Recovery.InvalidLostWallet();
+        }
+        if (_newWallet == address(0)) {
+            revert IERC3643Recovery.InvalidNewWallet();
+        }
+        if (_investorOnchainID == address(0)) {
+            revert IERC3643Recovery.InvalidInvestorOnchainID();
+        }
+        if (_lostWallet == _newWallet) {
+            revert IERC3643Recovery.SameWalletAddress();
+        }
+
         // Check if lost wallet has any balance to recover
         uint256 lostWalletBalance = _balanceOf(_lostWallet);
-        require(lostWalletBalance != 0, 'no tokens to recover');
-        
+        if (lostWalletBalance == 0) {
+            revert IERC3643Recovery.NoTokensToRecover();
+        }
+
         // Validate that the new wallet belongs to the investor (key validation)
         IIdentity onchainID = IIdentity(_investorOnchainID);
-        
+
         /* esto ver como queda al final
         bytes32 walletKey = keccak256(abi.encode(_newWallet));
         if (!onchainID.keyHasPurpose(walletKey, 1)) {
@@ -53,19 +61,24 @@ abstract contract ERC3643Recovery is IERC3643Recovery, ERC203643InternalCommon {
             return false;
         }
         */
-        
+
         // Store frozen state and tokens before transfer
         uint256 frozenTokens = _getFrozenTokens(_lostWallet);
         bool wasAddressFrozen = _isFrozen(_lostWallet);
-        
+
         // Get country information and register new wallet in Identity Registry
         address identityRegistry = _identityRegistry();
-        uint16 investorCountry = IIdentityRegistry(identityRegistry).investorCountry(_lostWallet);
-        IIdentityRegistry(identityRegistry).registerIdentity(_newWallet, onchainID, investorCountry);
-        
+        uint16 investorCountry = IIdentityRegistry(identityRegistry)
+            .investorCountry(_lostWallet);
+        IIdentityRegistry(identityRegistry).registerIdentity(
+            _newWallet,
+            onchainID,
+            investorCountry
+        );
+
         // Transfer all tokens from lost wallet to new wallet
         _transfer(_lostWallet, _newWallet, lostWalletBalance);
-        
+
         // Restore frozen state on new wallet
         if (frozenTokens > 0) {
             _freezePartialTokens(_newWallet, frozenTokens);
@@ -73,13 +86,13 @@ abstract contract ERC3643Recovery is IERC3643Recovery, ERC203643InternalCommon {
         if (wasAddressFrozen) {
             _setAddressFrozen(_newWallet, true);
         }
-        
+
         // Remove lost wallet from Identity Registry
         IIdentityRegistry(identityRegistry).deleteIdentity(_lostWallet);
-        
+
         // Emit success event
         emit RecoverySuccess(_lostWallet, _newWallet, _investorOnchainID);
-        
+
         return true;
     }
 

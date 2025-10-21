@@ -3,6 +3,7 @@ pragma solidity ^0.8.28;
 
 import {ERC203643InternalCommon} from '../ERC203643InternalCommon.sol';
 import {IERC203643Capped} from './IERC203643Capped.sol';
+import {IERC203643Errors} from '../IERC203643Errors.sol';
 import {_ERC203643_CAPPED_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
 import {_CAP_ROLE, _MINTER_ROLE} from '../../../constants/roles.sol';
 
@@ -83,20 +84,22 @@ abstract contract ERC203643Capped is IERC203643Capped, ERC203643InternalCommon {
         address[] calldata _toList,
         uint256[] calldata _amounts
     ) external override whenNotPaused onlyRole(_MINTER_ROLE) {
-        require(_toList.length == _amounts.length, "Length mismatch");
-        
-        // Calculate total amount to mint for cap validation
+        if (_toList.length != _amounts.length) {
+            revert IERC203643Errors.ArrayLengthMismatch();
+        }
+
+        // Calculate total amount to check cap
         uint256 totalAmount = 0;
         for (uint256 i = 0; i < _amounts.length; ++i) {
             totalAmount += _amounts[i];
         }
-        
+
         // Check cap for the entire batch
         require(
             _totalSupply() + totalAmount <= _cap(),
             IERC203643Capped.CapExceeded()
         );
-        
+
         // Perform individual mints
         for (uint256 i = 0; i < _toList.length; ++i) {
             _mint(_toList[i], _amounts[i]);

@@ -38,7 +38,9 @@ contract ERC3643FreezeFacet is ERC3643Freeze, IEIP2535Introspection {
         selectors_[--selectorsLength] = this.unfreezePartialTokens.selector;
         selectors_[--selectorsLength] = this.batchSetAddressFrozen.selector;
         selectors_[--selectorsLength] = this.batchFreezePartialTokens.selector;
-        selectors_[--selectorsLength] = this.batchUnfreezePartialTokens.selector;
+        selectors_[--selectorsLength] = this
+            .batchUnfreezePartialTokens
+            .selector;
         selectors_[--selectorsLength] = this.isFrozen.selector;
         selectors_[--selectorsLength] = this.getFrozenTokens.selector;
     }

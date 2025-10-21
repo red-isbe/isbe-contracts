@@ -46,6 +46,7 @@
 - [tokens/erc3643/token](tokens/erc3643/token.md)
 - [tokens/erc3643/token/erc3643freeze](tokens/erc3643/token/erc3643freeze.md)
 - [tokens/erc3643/token/erc3643metadata](tokens/erc3643/token/erc3643metadata.md)
+- [tokens/erc3643/token/erc3643recovery](tokens/erc3643/token/erc3643recovery.md)
 - [tokens/erc3643/token/erc3643regulatory](tokens/erc3643/token/erc3643regulatory.md)
 - [tokens/erc3643/trustedissuersregistry](tokens/erc3643/trustedissuersregistry.md)
 - [tokens/erc721](tokens/erc721.md)

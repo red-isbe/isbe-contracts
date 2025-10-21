@@ -95,7 +95,8 @@ interface IERC203643Controller {
      * @param _amounts The number of tokens to burn from each corresponding address
      *
      * Emits a `ForceBurn` event for each burn
-     * Emits a `TokensUnfrozen` event if `_amounts[i]` is higher than the free balance of `_userAddresses[i]` (ERC3643 only)
+     * Emits a `TokensUnfrozen` event if `_amounts[i]`
+     * is higher than the free balance of `_userAddresses[i]` (ERC3643 only)
      * Emits a `Transfer` event to address(0) for each burn
      */
     function batchForceBurn(
@@ -104,8 +105,10 @@ interface IERC203643Controller {
     ) external;
 
     /**
-     * @notice Transfers tokens from multiple accounts to multiple recipients by an authorized controller (batch operation)
-     * @dev This function should only be callable by an authorized controller (e.g., regulator or admin contract).
+     * @notice Transfers tokens from multiple accounts to multiple recipients
+     * by an authorized controller (batch operation)
+     * @dev This function should only be callable by
+     * an authorized controller (e.g., regulator or admin contract).
      *      No approval required from token holders.
      *
      *      For ERC3643 tokens: recipients must be verified and tokens may be unfrozen if needed.

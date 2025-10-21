@@ -51,6 +51,30 @@ ERC203643InternalCommon.\_beforeTokenTransfer.
 | \_to     | address | The address to mint tokens to |
 | \_amount | uint256 | The number of tokens to mint  |
 
+### batchMint
+
+```solidity
+function batchMint(address[] _toList, uint256[] _amounts) external
+```
+
+Mint tokens to multiple addresses by an authorized minter (batch operation)
+
+\_No approval required from token holders.
+Respects the supply cap - will revert if minting would exceed the cap.
+
+     **ERC20 Mode:** Simple batch minting without additional validations
+     **ERC3643 Mode:** Requires all recipients to be verified in Identity Registry
+
+     IMPORTANT: THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_toList.length` IS TOO HIGH,
+     USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION_
+
+#### Parameters
+
+| Name      | Type      | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| --------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| \_toList  | address[] | The addresses to mint tokens to (all must be verified for ERC3643)                                                                                                                                                                                                                                                                                                                                                                                                  |
+| \_amounts | uint256[] | The number of tokens to mint to each corresponding address Requirements: - Caller must have MINTER_ROLE - Contract must not be paused - Arrays must have the same length - For ERC3643: all addresses in `_toList` must be verified in Identity Registry - Total supply after minting must not exceed cap Emits: - {Transfer} event from address(0) for each mint via internal mint mechanism Reverts: - {CapExceeded} if batch minting would exceed the supply cap |
+
 ### setCap
 
 ```solidity
@@ -347,6 +371,30 @@ Respects the supply cap - will revert if minting would exceed the cap.
 | -------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | \_to     | address | The address to mint tokens to (must be verified for ERC3643)                                                                                                                                                                                                                                                                                              |
 | \_amount | uint256 | The number of tokens to mint Requirements: - Caller must have MINTER_ROLE - Contract must not be paused - For ERC3643: `_to` must be verified in Identity Registry - Total supply after minting must not exceed cap Emits: - {Transfer} event from address(0) via internal mint mechanism Reverts: - {CapExceeded} if minting would exceed the supply cap |
+
+### batchMint
+
+```solidity
+function batchMint(address[] _toList, uint256[] _amounts) external
+```
+
+Mint tokens to multiple addresses by an authorized minter (batch operation)
+
+\_No approval required from token holders.
+Respects the supply cap - will revert if minting would exceed the cap.
+
+     **ERC20 Mode:** Simple batch minting without additional validations
+     **ERC3643 Mode:** Requires all recipients to be verified in Identity Registry
+
+     IMPORTANT: THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_toList.length` IS TOO HIGH,
+     USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION_
+
+#### Parameters
+
+| Name      | Type      | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| --------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| \_toList  | address[] | The addresses to mint tokens to (all must be verified for ERC3643)                                                                                                                                                                                                                                                                                                                                                                                                  |
+| \_amounts | uint256[] | The number of tokens to mint to each corresponding address Requirements: - Caller must have MINTER_ROLE - Contract must not be paused - Arrays must have the same length - For ERC3643: all addresses in `_toList` must be verified in Identity Registry - Total supply after minting must not exceed cap Emits: - {Transfer} event from address(0) for each mint via internal mint mechanism Reverts: - {CapExceeded} if batch minting would exceed the supply cap |
 
 ### setCap
 

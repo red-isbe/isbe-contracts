@@ -3,6 +3,7 @@ pragma solidity ^0.8.28;
 
 import {ERC203643InternalCommon} from '../erc203643/ERC203643InternalCommon.sol';
 import {IERC20Isbe} from './IERC20Isbe.sol';
+import {IERC203643Errors} from '../erc203643/IERC203643Errors.sol';
 import {_ERC20_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
@@ -61,10 +62,10 @@ abstract contract ERC20 is IERC20Isbe, ERC203643InternalCommon {
     /**
      * @notice Transfer tokens to multiple addresses in a single transaction (batch operation)
      * @dev Transfers tokens from the caller's account to multiple recipients.
-     *      
+     *
      *      **ERC20 Mode:** Simple batch transfers without additional validations
      *      **ERC3643 Mode:** Requires all recipients to be verified and sender/recipients not frozen
-     *      
+     *
      *      IMPORTANT: THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_toList.length` IS TOO HIGH,
      *      USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
      *
@@ -87,22 +88,24 @@ abstract contract ERC20 is IERC20Isbe, ERC203643InternalCommon {
         address[] calldata _toList,
         uint256[] calldata _amounts
     ) external override whenNotPaused {
-        require(_toList.length == _amounts.length, 'Length mismatch');
-        
+        if (_toList.length != _amounts.length) {
+            revert IERC203643Errors.ArrayLengthMismatch();
+        }
+
         address from = _msgSender();
-        
+
         // Calculate total amount for balance validation
         uint256 totalAmount = 0;
         for (uint256 i = 0; i < _amounts.length; ++i) {
             totalAmount += _amounts[i];
         }
-        
+
         // Check sender has sufficient balance for entire batch
         require(
             _balanceOf(from) >= totalAmount,
             IERC20Isbe.TransferAmountExceedsBalance()
         );
-        
+
         // Perform individual transfers
         for (uint256 i = 0; i < _toList.length; ++i) {
             _transfer(from, _toList[i], _amounts[i]);

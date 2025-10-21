@@ -44,6 +44,29 @@ Requirements:
 - `to` cannot be the zero address.
 - the caller must have a balance of at least `amount`.\_
 
+### batchTransfer
+
+```solidity
+function batchTransfer(address[] _toList, uint256[] _amounts) external
+```
+
+Transfer tokens to multiple addresses in a single transaction (batch operation)
+
+\_Transfers tokens from the caller's account to multiple recipients.
+
+     **ERC20 Mode:** Simple batch transfers without additional validations
+     **ERC3643 Mode:** Requires all recipients to be verified and sender/recipients not frozen
+
+     IMPORTANT: THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_toList.length` IS TOO HIGH,
+     USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION_
+
+#### Parameters
+
+| Name      | Type      | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| --------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| \_toList  | address[] | The addresses of the receivers (all must be verified for ERC3643)                                                                                                                                                                                                                                                                                                                                                                                                                |
+| \_amounts | uint256[] | The number of tokens to transfer to each corresponding receiver Requirements: - Caller must have sufficient balance for the total amount - Arrays must have the same length - For ERC3643: all addresses in `_toList` must be verified in Identity Registry - For ERC3643: caller and all recipients must not be frozen Emits: - {Transfer} event for each transfer via internal transfer mechanism Reverts: - {TransferAmountExceedsBalance} if caller has insufficient balance |
+
 ### approve
 
 ```solidity
@@ -491,6 +514,29 @@ error InsufficientAllowance()
 ```
 
 Error thrown when an operation tries to spend more tokens than the assigned allowance.
+
+### batchTransfer
+
+```solidity
+function batchTransfer(address[] _toList, uint256[] _amounts) external
+```
+
+Transfer tokens to multiple addresses in a single transaction (batch operation)
+
+\_Transfers tokens from the caller's account to multiple recipients.
+
+     **ERC20 Mode:** Simple batch transfers without additional validations
+     **ERC3643 Mode:** Requires all recipients to be verified and sender/recipients not frozen
+
+     IMPORTANT: THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_toList.length` IS TOO HIGH,
+     USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION_
+
+#### Parameters
+
+| Name      | Type      | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| --------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| \_toList  | address[] | The addresses of the receivers (all must be verified for ERC3643)                                                                                                                                                                                                                                                                                                                                                                                                                |
+| \_amounts | uint256[] | The number of tokens to transfer to each corresponding receiver Requirements: - Caller must have sufficient balance for the total amount - Arrays must have the same length - For ERC3643: all addresses in `_toList` must be verified in Identity Registry - For ERC3643: caller and all recipients must not be frozen Emits: - {Transfer} event for each transfer via internal transfer mechanism Reverts: - {TransferAmountExceedsBalance} if caller has insufficient balance |
 
 ### initializeErc20
 

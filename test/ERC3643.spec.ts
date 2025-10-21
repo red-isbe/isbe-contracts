@@ -981,6 +981,9 @@ describe('ERC3643 Token', function () {
             const totalBalance = 1000n
             const frozenAmount = 400n
             const freeBalance = totalBalance - frozenAmount // 600n
+            const totalBalanceStr = '1000'
+            const frozenAmountStr = '400'
+            const freeBalanceStr = '600'
 
             let erc3643Capped: IERC203643Capped
             let erc3643Controller: IERC203643Controller
@@ -1393,6 +1396,741 @@ describe('ERC3643 Token', function () {
 
                     expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
                         totalBalance - burnAmount
+                    )
+                })
+            })
+
+            describe('batchForceBurn', () => {
+                let charlie: Signer
+                let charlieAddress: string
+
+                beforeEach(async () => {
+                    const signers = await ethers.getSigners()
+                    charlie = signers[3] as unknown as Signer
+                    charlieAddress = await charlie.getAddress()
+
+                    // Setup charlie with tokens
+                    await identityRegistryMock.setIsVerified(
+                        charlieAddress,
+                        true
+                    )
+                    await erc3643Capped
+                        .connect(owner)
+                        .mint(charlieAddress, BigInt(totalBalanceStr))
+                })
+
+                it('GIVEN no CONTROLLER_ROLE WHEN batchForceBurn THEN reverts', async () => {
+                    await accessControlFacet
+                        .connect(owner)
+                        .revokeRole(CONTROLLER_ROLE, ownerAddress)
+
+                    await expect(
+                        erc3643Controller
+                            .connect(owner)
+                            .batchForceBurn([aliceAddress], [100n])
+                    ).to.be.reverted
+                })
+
+                it('GIVEN contract paused WHEN batchForceBurn THEN reverts', async () => {
+                    await accessControlFacet
+                        .connect(owner)
+                        .grantRole(PAUSER_ROLE, ownerAddress)
+                    await pauseFacet.connect(owner).pause()
+
+                    await expect(
+                        erc3643Controller
+                            .connect(owner)
+                            .batchForceBurn([aliceAddress], [100n])
+                    ).to.be.reverted
+                })
+
+                it('GIVEN arrays length mismatch WHEN batchForceBurn THEN reverts', async () => {
+                    await expect(
+                        erc3643Controller
+                            .connect(owner)
+                            .batchForceBurn([aliceAddress, bobAddress], [100n])
+                    ).to.be.revertedWithCustomError(
+                        erc20Facet,
+                        'ArrayLengthMismatch'
+                    )
+                })
+
+                it('GIVEN empty arrays WHEN batchForceBurn THEN succeeds without operations', async () => {
+                    const initialBalance =
+                        await erc20Facet.balanceOf(aliceAddress)
+
+                    await erc3643Controller
+                        .connect(owner)
+                        .batchForceBurn([], [])
+
+                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                        initialBalance
+                    )
+                })
+
+                it('GIVEN valid batch within free balance WHEN batchForceBurn THEN succeeds and emits multiple ForceBurn events', async () => {
+                    const burnAmount1 = 100n
+                    const burnAmount2 = 200n
+
+                    const aliceInitialBalance =
+                        await erc20Facet.balanceOf(aliceAddress)
+                    const charlieInitialBalance =
+                        await erc20Facet.balanceOf(charlieAddress)
+                    const initialSupply = await erc20Facet.totalSupply()
+
+                    const tx = await erc3643Controller
+                        .connect(owner)
+                        .batchForceBurn(
+                            [aliceAddress, charlieAddress],
+                            [burnAmount1, burnAmount2]
+                        )
+
+                    // Check ForceBurn events
+                    await expect(tx)
+                        .to.emit(erc3643Controller, 'ForceBurn')
+                        .withArgs(ownerAddress, aliceAddress, burnAmount1)
+
+                    await expect(tx)
+                        .to.emit(erc3643Controller, 'ForceBurn')
+                        .withArgs(ownerAddress, charlieAddress, burnAmount2)
+
+                    // Check Transfer events
+                    await expect(tx)
+                        .to.emit(erc20Facet, 'Transfer')
+                        .withArgs(aliceAddress, ZeroAddress, burnAmount1)
+
+                    await expect(tx)
+                        .to.emit(erc20Facet, 'Transfer')
+                        .withArgs(charlieAddress, ZeroAddress, burnAmount2)
+
+                    // Verify balances
+                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                        aliceInitialBalance - burnAmount1
+                    )
+                    expect(await erc20Facet.balanceOf(charlieAddress)).to.equal(
+                        charlieInitialBalance - burnAmount2
+                    )
+
+                    // Verify total supply decreased
+                    expect(await erc20Facet.totalSupply()).to.equal(
+                        initialSupply - burnAmount1 - burnAmount2
+                    )
+                })
+
+                it('GIVEN frozen tokens WHEN batchForceBurn exceeds free balance THEN auto-unfreezes and emits TokensUnfrozen', async () => {
+                    // Freeze tokens for alice and charlie
+                    await erc3643
+                        .connect(owner)
+                        .freezePartialTokens(
+                            aliceAddress,
+                            BigInt(frozenAmountStr)
+                        )
+                    await erc3643
+                        .connect(owner)
+                        .freezePartialTokens(
+                            charlieAddress,
+                            BigInt(frozenAmountStr)
+                        )
+
+                    const aliceBurnAmount = 700n // Exceeds free balance (600)
+                    const charlieBurnAmount = 500n // Within free balance
+
+                    const aliceExpectedUnfreeze =
+                        aliceBurnAmount - BigInt(freeBalanceStr) // 100n
+
+                    const tx = await erc3643Controller
+                        .connect(owner)
+                        .batchForceBurn(
+                            [aliceAddress, charlieAddress],
+                            [aliceBurnAmount, charlieBurnAmount]
+                        )
+
+                    // Alice should trigger unfreeze
+                    await expect(tx)
+                        .to.emit(erc3643, 'TokensUnfrozen')
+                        .withArgs(aliceAddress, aliceExpectedUnfreeze)
+
+                    // Charlie should NOT trigger unfreeze (within free balance)
+                    const receipt = await tx.wait()
+                    const unfreezeEvents = receipt?.logs.filter((log) => {
+                        if (!('fragment' in log)) return false
+                        return (
+                            log.fragment?.name === 'TokensUnfrozen' &&
+                            log.args?.[0] === charlieAddress
+                        )
+                    })
+                    expect(unfreezeEvents?.length).to.equal(0)
+
+                    // Verify frozen tokens updated correctly
+                    expect(
+                        await erc3643.getFrozenTokens(aliceAddress)
+                    ).to.equal(BigInt(frozenAmountStr) - aliceExpectedUnfreeze)
+                    expect(
+                        await erc3643.getFrozenTokens(charlieAddress)
+                    ).to.equal(BigInt(frozenAmountStr))
+
+                    // Verify balances
+                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                        BigInt(totalBalanceStr) - aliceBurnAmount
+                    )
+                    expect(await erc20Facet.balanceOf(charlieAddress)).to.equal(
+                        BigInt(totalBalanceStr) - charlieBurnAmount
+                    )
+                })
+
+                it('GIVEN insufficient total balance in one address WHEN batchForceBurn THEN reverts entire batch', async () => {
+                    const validAmount = 100n
+                    const excessiveAmount = BigInt(totalBalanceStr) + 1n
+
+                    // Alice burn is valid, charlie burn exceeds balance
+                    await expect(
+                        erc3643Controller
+                            .connect(owner)
+                            .batchForceBurn(
+                                [aliceAddress, charlieAddress],
+                                [validAmount, excessiveAmount]
+                            )
+                    ).to.be.reverted
+
+                    // Verify no tokens were burned (atomic operation)
+                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                        BigInt(totalBalanceStr)
+                    )
+                    expect(await erc20Facet.balanceOf(charlieAddress)).to.equal(
+                        BigInt(totalBalanceStr)
+                    )
+                })
+
+                it('GIVEN addresses are frozen WHEN batchForceBurn THEN succeeds (ignores address freeze)', async () => {
+                    await erc3643
+                        .connect(owner)
+                        .setAddressFrozen(aliceAddress, true)
+                    await erc3643
+                        .connect(owner)
+                        .setAddressFrozen(charlieAddress, true)
+
+                    const burnAmount1 = 100n
+                    const burnAmount2 = 150n
+
+                    const tx = await erc3643Controller
+                        .connect(owner)
+                        .batchForceBurn(
+                            [aliceAddress, charlieAddress],
+                            [burnAmount1, burnAmount2]
+                        )
+
+                    await expect(tx)
+                        .to.emit(erc3643Controller, 'ForceBurn')
+                        .withArgs(ownerAddress, aliceAddress, burnAmount1)
+
+                    await expect(tx)
+                        .to.emit(erc3643Controller, 'ForceBurn')
+                        .withArgs(ownerAddress, charlieAddress, burnAmount2)
+
+                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                        BigInt(totalBalanceStr) - burnAmount1
+                    )
+                    expect(await erc20Facet.balanceOf(charlieAddress)).to.equal(
+                        BigInt(totalBalanceStr) - burnAmount2
+                    )
+                })
+
+                it('GIVEN large batch WHEN batchForceBurn THEN succeeds (gas test)', async () => {
+                    // Create 5 accounts with tokens
+                    const signers = await ethers.getSigners()
+                    const batchSize = 5
+                    const addresses: string[] = []
+                    const amounts: bigint[] = []
+
+                    for (let i = 0; i < batchSize; i++) {
+                        const signer = signers[4 + i] as unknown as Signer
+                        const address = await signer.getAddress()
+                        addresses.push(address)
+                        amounts.push(50n)
+
+                        await identityRegistryMock.setIsVerified(address, true)
+                        await erc3643Capped.connect(owner).mint(address, 200n)
+                    }
+
+                    const initialSupply = await erc20Facet.totalSupply()
+
+                    await erc3643Controller
+                        .connect(owner)
+                        .batchForceBurn(addresses, amounts)
+
+                    // Verify total supply
+                    const totalBurned = amounts.reduce(
+                        (acc, val) => acc + val,
+                        0n
+                    )
+                    expect(await erc20Facet.totalSupply()).to.equal(
+                        initialSupply - totalBurned
+                    )
+
+                    // Verify each balance
+                    for (let i = 0; i < batchSize; i++) {
+                        expect(
+                            await erc20Facet.balanceOf(addresses[i])
+                        ).to.equal(200n - amounts[i])
+                    }
+                })
+            })
+
+            describe('batchForceTransfer', () => {
+                let charlie: Signer
+                let charlieAddress: string
+                let david: Signer
+                let davidAddress: string
+
+                beforeEach(async () => {
+                    const signers = await ethers.getSigners()
+                    charlie = signers[3] as unknown as Signer
+                    charlieAddress = await charlie.getAddress()
+                    david = signers[4] as unknown as Signer
+                    davidAddress = await david.getAddress()
+
+                    // Setup charlie with tokens
+                    await identityRegistryMock.setIsVerified(
+                        charlieAddress,
+                        true
+                    )
+                    await erc3643Capped
+                        .connect(owner)
+                        .mint(charlieAddress, BigInt(totalBalanceStr))
+
+                    // Setup david as verified recipient
+                    await identityRegistryMock.setIsVerified(davidAddress, true)
+                })
+
+                it('GIVEN no CONTROLLER_ROLE WHEN batchForceTransfer THEN reverts', async () => {
+                    await accessControlFacet
+                        .connect(owner)
+                        .revokeRole(CONTROLLER_ROLE, ownerAddress)
+
+                    await expect(
+                        erc3643Controller
+                            .connect(owner)
+                            .batchForceTransfer(
+                                [aliceAddress],
+                                [bobAddress],
+                                [100n]
+                            )
+                    ).to.be.reverted
+                })
+
+                it('GIVEN contract paused WHEN batchForceTransfer THEN reverts', async () => {
+                    await accessControlFacet
+                        .connect(owner)
+                        .grantRole(PAUSER_ROLE, ownerAddress)
+                    await pauseFacet.connect(owner).pause()
+
+                    await expect(
+                        erc3643Controller
+                            .connect(owner)
+                            .batchForceTransfer(
+                                [aliceAddress],
+                                [bobAddress],
+                                [100n]
+                            )
+                    ).to.be.reverted
+                })
+
+                it('GIVEN fromList and toList length mismatch WHEN batchForceTransfer THEN reverts', async () => {
+                    await expect(
+                        erc3643Controller
+                            .connect(owner)
+                            .batchForceTransfer(
+                                [aliceAddress, charlieAddress],
+                                [bobAddress],
+                                [100n, 200n]
+                            )
+                    ).to.be.revertedWithCustomError(
+                        erc20Facet,
+                        'ArrayLengthMismatch'
+                    )
+                })
+
+                it('GIVEN fromList and amounts length mismatch WHEN batchForceTransfer THEN reverts', async () => {
+                    await expect(
+                        erc3643Controller
+                            .connect(owner)
+                            .batchForceTransfer(
+                                [aliceAddress, charlieAddress],
+                                [bobAddress, davidAddress],
+                                [100n]
+                            )
+                    ).to.be.revertedWithCustomError(
+                        erc20Facet,
+                        'ArrayLengthMismatch'
+                    )
+                })
+
+                it('GIVEN unverified recipient WHEN batchForceTransfer THEN reverts entire batch', async () => {
+                    await identityRegistryMock.setIsVerified(bobAddress, false)
+
+                    await expect(
+                        erc3643Controller
+                            .connect(owner)
+                            .batchForceTransfer(
+                                [aliceAddress, charlieAddress],
+                                [bobAddress, davidAddress],
+                                [100n, 200n]
+                            )
+                    ).to.be.reverted
+
+                    // Verify no transfers occurred
+                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                        BigInt(totalBalanceStr)
+                    )
+                    expect(await erc20Facet.balanceOf(charlieAddress)).to.equal(
+                        BigInt(totalBalanceStr)
+                    )
+                    expect(await erc20Facet.balanceOf(bobAddress)).to.equal(0n)
+                    expect(await erc20Facet.balanceOf(davidAddress)).to.equal(
+                        0n
+                    )
+                })
+
+                it('GIVEN empty arrays WHEN batchForceTransfer THEN succeeds without operations', async () => {
+                    const initialBalance =
+                        await erc20Facet.balanceOf(aliceAddress)
+
+                    await erc3643Controller
+                        .connect(owner)
+                        .batchForceTransfer([], [], [])
+
+                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                        initialBalance
+                    )
+                })
+
+                it('GIVEN valid batch within free balance WHEN batchForceTransfer THEN succeeds and emits multiple ForceTransfer events', async () => {
+                    const transferAmount1 = 200n
+                    const transferAmount2 = 300n
+
+                    const tx = await erc3643Controller
+                        .connect(owner)
+                        .batchForceTransfer(
+                            [aliceAddress, charlieAddress],
+                            [bobAddress, davidAddress],
+                            [transferAmount1, transferAmount2]
+                        )
+
+                    // Check ForceTransfer events
+                    await expect(tx)
+                        .to.emit(erc3643Controller, 'ForceTransfer')
+                        .withArgs(
+                            ownerAddress,
+                            aliceAddress,
+                            bobAddress,
+                            transferAmount1
+                        )
+
+                    await expect(tx)
+                        .to.emit(erc3643Controller, 'ForceTransfer')
+                        .withArgs(
+                            ownerAddress,
+                            charlieAddress,
+                            davidAddress,
+                            transferAmount2
+                        )
+
+                    // Check Transfer events
+                    await expect(tx)
+                        .to.emit(erc20Facet, 'Transfer')
+                        .withArgs(aliceAddress, bobAddress, transferAmount1)
+
+                    await expect(tx)
+                        .to.emit(erc20Facet, 'Transfer')
+                        .withArgs(charlieAddress, davidAddress, transferAmount2)
+
+                    // Verify balances
+                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                        BigInt(totalBalanceStr) - transferAmount1
+                    )
+                    expect(await erc20Facet.balanceOf(charlieAddress)).to.equal(
+                        BigInt(totalBalanceStr) - transferAmount2
+                    )
+                    expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                        transferAmount1
+                    )
+                    expect(await erc20Facet.balanceOf(davidAddress)).to.equal(
+                        transferAmount2
+                    )
+                })
+
+                it('GIVEN frozen tokens WHEN batchForceTransfer exceeds free balance THEN auto-unfreezes and emits TokensUnfrozen', async () => {
+                    // Freeze tokens for alice and charlie
+                    await erc3643
+                        .connect(owner)
+                        .freezePartialTokens(
+                            aliceAddress,
+                            BigInt(frozenAmountStr)
+                        )
+                    await erc3643
+                        .connect(owner)
+                        .freezePartialTokens(
+                            charlieAddress,
+                            BigInt(frozenAmountStr)
+                        )
+
+                    const aliceTransferAmount = 700n // Exceeds free balance (600)
+                    const charlieTransferAmount = 500n // Within free balance
+
+                    const aliceExpectedUnfreeze =
+                        aliceTransferAmount - BigInt(freeBalanceStr) // 100n
+
+                    const tx = await erc3643Controller
+                        .connect(owner)
+                        .batchForceTransfer(
+                            [aliceAddress, charlieAddress],
+                            [bobAddress, davidAddress],
+                            [aliceTransferAmount, charlieTransferAmount]
+                        )
+
+                    // Alice should trigger unfreeze
+                    await expect(tx)
+                        .to.emit(erc3643, 'TokensUnfrozen')
+                        .withArgs(aliceAddress, aliceExpectedUnfreeze)
+
+                    // Charlie should NOT trigger unfreeze (within free balance)
+                    const receipt = await tx.wait()
+                    const unfreezeEvents = receipt?.logs.filter((log) => {
+                        if (!('fragment' in log)) return false
+                        return (
+                            log.fragment?.name === 'TokensUnfrozen' &&
+                            log.args?.[0] === charlieAddress
+                        )
+                    })
+                    expect(unfreezeEvents?.length).to.equal(0)
+
+                    // Verify frozen tokens updated correctly
+                    expect(
+                        await erc3643.getFrozenTokens(aliceAddress)
+                    ).to.equal(BigInt(frozenAmountStr) - aliceExpectedUnfreeze)
+                    expect(
+                        await erc3643.getFrozenTokens(charlieAddress)
+                    ).to.equal(BigInt(frozenAmountStr))
+
+                    // Verify balances
+                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                        BigInt(totalBalanceStr) - aliceTransferAmount
+                    )
+                    expect(await erc20Facet.balanceOf(charlieAddress)).to.equal(
+                        BigInt(totalBalanceStr) - charlieTransferAmount
+                    )
+                    expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                        aliceTransferAmount
+                    )
+                    expect(await erc20Facet.balanceOf(davidAddress)).to.equal(
+                        charlieTransferAmount
+                    )
+                })
+
+                it('GIVEN insufficient total balance in one address WHEN batchForceTransfer THEN reverts entire batch', async () => {
+                    const validAmount = 100n
+                    const excessiveAmount = BigInt(totalBalanceStr) + 1n
+
+                    await expect(
+                        erc3643Controller
+                            .connect(owner)
+                            .batchForceTransfer(
+                                [aliceAddress, charlieAddress],
+                                [bobAddress, davidAddress],
+                                [validAmount, excessiveAmount]
+                            )
+                    ).to.be.reverted
+
+                    // Verify no transfers occurred (atomic operation)
+                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                        BigInt(totalBalanceStr)
+                    )
+                    expect(await erc20Facet.balanceOf(charlieAddress)).to.equal(
+                        BigInt(totalBalanceStr)
+                    )
+                    expect(await erc20Facet.balanceOf(bobAddress)).to.equal(0n)
+                    expect(await erc20Facet.balanceOf(davidAddress)).to.equal(
+                        0n
+                    )
+                })
+
+                it('GIVEN sender is frozen WHEN batchForceTransfer THEN succeeds (ignores sender freeze)', async () => {
+                    await erc3643
+                        .connect(owner)
+                        .setAddressFrozen(aliceAddress, true)
+                    await erc3643
+                        .connect(owner)
+                        .setAddressFrozen(charlieAddress, true)
+
+                    const transferAmount1 = 150n
+                    const transferAmount2 = 250n
+
+                    const tx = await erc3643Controller
+                        .connect(owner)
+                        .batchForceTransfer(
+                            [aliceAddress, charlieAddress],
+                            [bobAddress, davidAddress],
+                            [transferAmount1, transferAmount2]
+                        )
+
+                    await expect(tx)
+                        .to.emit(erc3643Controller, 'ForceTransfer')
+                        .withArgs(
+                            ownerAddress,
+                            aliceAddress,
+                            bobAddress,
+                            transferAmount1
+                        )
+
+                    await expect(tx)
+                        .to.emit(erc3643Controller, 'ForceTransfer')
+                        .withArgs(
+                            ownerAddress,
+                            charlieAddress,
+                            davidAddress,
+                            transferAmount2
+                        )
+
+                    expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                        transferAmount1
+                    )
+                    expect(await erc20Facet.balanceOf(davidAddress)).to.equal(
+                        transferAmount2
+                    )
+                })
+
+                it('GIVEN recipient is frozen WHEN batchForceTransfer THEN succeeds (ignores recipient freeze)', async () => {
+                    await erc3643
+                        .connect(owner)
+                        .setAddressFrozen(bobAddress, true)
+                    await erc3643
+                        .connect(owner)
+                        .setAddressFrozen(davidAddress, true)
+
+                    const transferAmount1 = 100n
+                    const transferAmount2 = 200n
+
+                    const tx = await erc3643Controller
+                        .connect(owner)
+                        .batchForceTransfer(
+                            [aliceAddress, charlieAddress],
+                            [bobAddress, davidAddress],
+                            [transferAmount1, transferAmount2]
+                        )
+
+                    await expect(tx)
+                        .to.emit(erc3643Controller, 'ForceTransfer')
+                        .withArgs(
+                            ownerAddress,
+                            aliceAddress,
+                            bobAddress,
+                            transferAmount1
+                        )
+
+                    await expect(tx)
+                        .to.emit(erc3643Controller, 'ForceTransfer')
+                        .withArgs(
+                            ownerAddress,
+                            charlieAddress,
+                            davidAddress,
+                            transferAmount2
+                        )
+
+                    expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                        transferAmount1
+                    )
+                    expect(await erc20Facet.balanceOf(davidAddress)).to.equal(
+                        transferAmount2
+                    )
+                })
+
+                it('GIVEN large batch WHEN batchForceTransfer THEN succeeds (gas test)', async () => {
+                    // Create 5 senders and 5 recipients with tokens
+                    const signers = await ethers.getSigners()
+                    const batchSize = 5
+                    const fromAddresses: string[] = []
+                    const toAddresses: string[] = []
+                    const amounts: bigint[] = []
+
+                    for (let i = 0; i < batchSize; i++) {
+                        const fromSigner = signers[5 + i] as unknown as Signer
+                        const toSigner = signers[10 + i] as unknown as Signer
+                        const fromAddress = await fromSigner.getAddress()
+                        const toAddress = await toSigner.getAddress()
+
+                        fromAddresses.push(fromAddress)
+                        toAddresses.push(toAddress)
+                        amounts.push(50n)
+
+                        await identityRegistryMock.setIsVerified(
+                            fromAddress,
+                            true
+                        )
+                        await identityRegistryMock.setIsVerified(
+                            toAddress,
+                            true
+                        )
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(fromAddress, 200n)
+                    }
+
+                    await erc3643Controller
+                        .connect(owner)
+                        .batchForceTransfer(fromAddresses, toAddresses, amounts)
+
+                    // Verify each transfer
+                    for (let i = 0; i < batchSize; i++) {
+                        expect(
+                            await erc20Facet.balanceOf(fromAddresses[i])
+                        ).to.equal(200n - amounts[i])
+                        expect(
+                            await erc20Facet.balanceOf(toAddresses[i])
+                        ).to.equal(amounts[i])
+                    }
+                })
+
+                it('GIVEN same recipient multiple times WHEN batchForceTransfer THEN accumulates amounts correctly', async () => {
+                    const amount1 = 100n
+                    const amount2 = 150n
+
+                    await erc3643Controller.connect(owner).batchForceTransfer(
+                        [aliceAddress, charlieAddress],
+                        [bobAddress, bobAddress], // Same recipient
+                        [amount1, amount2]
+                    )
+
+                    // Bob should receive both amounts
+                    expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                        amount1 + amount2
+                    )
+                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                        BigInt(totalBalanceStr) - amount1
+                    )
+                    expect(await erc20Facet.balanceOf(charlieAddress)).to.equal(
+                        BigInt(totalBalanceStr) - amount2
+                    )
+                })
+
+                it('GIVEN same sender multiple times WHEN batchForceTransfer THEN deducts amounts correctly', async () => {
+                    const amount1 = 100n
+                    const amount2 = 150n
+
+                    await erc3643Controller.connect(owner).batchForceTransfer(
+                        [aliceAddress, aliceAddress], // Same sender
+                        [bobAddress, davidAddress],
+                        [amount1, amount2]
+                    )
+
+                    // Alice should lose both amounts
+                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                        BigInt(totalBalanceStr) - amount1 - amount2
+                    )
+                    expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                        amount1
+                    )
+                    expect(await erc20Facet.balanceOf(davidAddress)).to.equal(
+                        amount2
                     )
                 })
             })
@@ -2170,6 +2908,212 @@ describe('ERC3643 Token', function () {
                             .connect(owner)
                             .transferFrom(aliceAddress, ZeroAddress, 100n)
                     ).to.be.reverted
+                })
+            })
+
+            // batchTransfer
+            describe('batchTransfer', () => {
+                it('GIVEN ERC3643 mode WHEN arrays length mismatch THEN reverts with ArrayLengthMismatch', async () => {
+                    await expect(
+                        erc20Facet
+                            .connect(alice)
+                            .batchTransfer([bobAddress], [100n, 200n])
+                    ).to.be.revertedWithCustomError(
+                        erc20Facet,
+                        'ArrayLengthMismatch'
+                    )
+                })
+
+                it('GIVEN ERC3643 mode WHEN empty arrays THEN succeeds without operations', async () => {
+                    const initialBalance =
+                        await erc20Facet.balanceOf(aliceAddress)
+
+                    await erc20Facet.connect(alice).batchTransfer([], [])
+
+                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                        initialBalance
+                    )
+                })
+
+                it('GIVEN ERC3643 mode WHEN batchTransfer to unverified recipient THEN reverts', async () => {
+                    await identityRegistryMock.setIsVerified(bobAddress, false)
+
+                    await expect(
+                        erc20Facet
+                            .connect(alice)
+                            .batchTransfer([bobAddress], [100n])
+                    ).to.be.reverted
+                })
+
+                it('GIVEN ERC3643 mode WHEN sender is frozen THEN reverts', async () => {
+                    await erc3643
+                        .connect(owner)
+                        .setAddressFrozen(aliceAddress, true)
+
+                    await expect(
+                        erc20Facet
+                            .connect(alice)
+                            .batchTransfer([bobAddress], [100n])
+                    ).to.be.reverted
+                })
+
+                it('GIVEN ERC3643 mode WHEN recipient is frozen THEN reverts', async () => {
+                    await erc3643
+                        .connect(owner)
+                        .setAddressFrozen(bobAddress, true)
+
+                    await expect(
+                        erc20Facet
+                            .connect(alice)
+                            .batchTransfer([bobAddress], [100n])
+                    ).to.be.reverted
+                })
+
+                it('GIVEN ERC3643 mode WHEN batchTransfer exceeds free balance THEN reverts', async () => {
+                    const totalBalance =
+                        await erc20Facet.balanceOf(aliceAddress)
+                    const frozenAmount = 2000n
+
+                    // Freeze some tokens
+                    await erc3643
+                        .connect(owner)
+                        .freezePartialTokens(aliceAddress, frozenAmount)
+
+                    const freeBalance = totalBalance - frozenAmount
+                    const excessAmount = freeBalance + 1n
+
+                    await expect(
+                        erc20Facet
+                            .connect(alice)
+                            .batchTransfer([bobAddress], [excessAmount])
+                    ).to.be.reverted
+                })
+
+                it('GIVEN ERC3643 mode WHEN valid batchTransfer within free balance THEN succeeds and emits multiple Transfer events', async () => {
+                    const amount1 = 100n
+                    const amount2 = 200n
+                    const amount3 = 150n
+
+                    const signers = await ethers.getSigners()
+                    const charlie = signers[3] as unknown as Signer
+                    const charlieAddress = await charlie.getAddress()
+
+                    await identityRegistryMock.setIsVerified(
+                        charlieAddress,
+                        true
+                    )
+
+                    const aliceInitialBalance =
+                        await erc20Facet.balanceOf(aliceAddress)
+                    const bobInitialBalance =
+                        await erc20Facet.balanceOf(bobAddress)
+
+                    const tx = await erc20Facet
+                        .connect(alice)
+                        .batchTransfer(
+                            [bobAddress, charlieAddress, bobAddress],
+                            [amount1, amount2, amount3]
+                        )
+
+                    // Check Transfer events
+                    await expect(tx)
+                        .to.emit(erc20Facet, 'Transfer')
+                        .withArgs(aliceAddress, bobAddress, amount1)
+
+                    await expect(tx)
+                        .to.emit(erc20Facet, 'Transfer')
+                        .withArgs(aliceAddress, charlieAddress, amount2)
+
+                    await expect(tx)
+                        .to.emit(erc20Facet, 'Transfer')
+                        .withArgs(aliceAddress, bobAddress, amount3)
+
+                    // Verify balances
+                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                        aliceInitialBalance - amount1 - amount2 - amount3
+                    )
+                    expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                        bobInitialBalance + amount1 + amount3
+                    )
+                    expect(await erc20Facet.balanceOf(charlieAddress)).to.equal(
+                        amount2
+                    )
+                })
+
+                it('GIVEN ERC3643 mode WHEN batchTransfer with partial freeze THEN succeeds if within free balance', async () => {
+                    const frozenAmount = 400n
+
+                    // Freeze some tokens
+                    await erc3643
+                        .connect(owner)
+                        .freezePartialTokens(aliceAddress, frozenAmount)
+
+                    const amount1 = 200n
+                    const amount2 = 300n
+
+                    const aliceInitialBalance =
+                        await erc20Facet.balanceOf(aliceAddress)
+
+                    await erc20Facet
+                        .connect(alice)
+                        .batchTransfer(
+                            [bobAddress, bobAddress],
+                            [amount1, amount2]
+                        )
+
+                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                        aliceInitialBalance - amount1 - amount2
+                    )
+                })
+
+                it('GIVEN ERC3643 mode WHEN batchTransfer exceeds total balance THEN reverts', async () => {
+                    const totalBalance =
+                        await erc20Facet.balanceOf(aliceAddress)
+                    const excessAmount = totalBalance + 1n
+
+                    await expect(
+                        erc20Facet
+                            .connect(alice)
+                            .batchTransfer([bobAddress], [excessAmount])
+                    ).to.be.reverted
+                })
+
+                it('GIVEN ERC3643 mode WHEN large batch THEN succeeds (gas test)', async () => {
+                    const signers = await ethers.getSigners()
+                    const batchSize = 5
+                    const addresses: string[] = []
+                    const amounts: bigint[] = []
+
+                    for (let i = 0; i < batchSize; i++) {
+                        const signer = signers[4 + i] as unknown as Signer
+                        const address = await signer.getAddress()
+                        addresses.push(address)
+                        amounts.push(50n)
+
+                        await identityRegistryMock.setIsVerified(address, true)
+                    }
+
+                    const aliceInitialBalance =
+                        await erc20Facet.balanceOf(aliceAddress)
+
+                    await erc20Facet
+                        .connect(alice)
+                        .batchTransfer(addresses, amounts)
+
+                    const totalTransferred = amounts.reduce(
+                        (acc, val) => acc + val,
+                        0n
+                    )
+                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                        aliceInitialBalance - totalTransferred
+                    )
+
+                    // Verify each recipient received their amount
+                    for (let i = 0; i < batchSize; i++) {
+                        expect(
+                            await erc20Facet.balanceOf(addresses[i])
+                        ).to.equal(amounts[i])
+                    }
                 })
             })
         })

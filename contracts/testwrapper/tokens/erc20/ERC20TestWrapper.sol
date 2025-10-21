@@ -12,9 +12,9 @@ import {IEIP2535Introspection} from '../../../proxies/eip2535/interfaces/IEIP253
 // solhint-disable-next-line
 contract ERC20TestWrapper is
     ERC20,
+    ERC20Snapshot,
     ERC20Burnable,
     ERC203643Capped,
-    ERC20Snapshot,
     ERC203643Controller,
     IEIP2535Introspection
 {

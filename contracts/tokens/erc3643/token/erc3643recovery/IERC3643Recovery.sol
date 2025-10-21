@@ -8,13 +8,15 @@ pragma solidity ^0.8.28;
  *      allowing authorized agents to transfer tokens from lost wallets to new ones.
  */
 interface IERC3643Recovery {
-    
     /**
      *  this event is emitted when an investor successfully recovers his tokens
      *  the event is emitted by the recoveryAddress function
-     *  `_lostWallet` is the address of the wallet that the investor lost access to
-     *  `_newWallet` is the address of the wallet that the investor provided for the recovery
-     *  `_investorOnchainID` is the address of the onchainID of the investor who asked for a recovery
+     *  `_lostWallet` is the address of the wallet that the investor
+     *  lost access to
+     *  `_newWallet` is the address of the wallet that the investor
+     *  provided for the recovery
+     *  `_investorOnchainID` is the address of the onchainID
+     *  of the investor who asked for a recovery
      */
     event RecoverySuccess(
         address indexed _lostWallet,
@@ -34,6 +36,31 @@ interface IERC3643Recovery {
         address indexed _newWallet,
         address indexed _investorOnchainID
     );
+
+    /**
+     * @notice Thrown when the lost wallet address is zero.
+     */
+    error InvalidLostWallet();
+
+    /**
+     * @notice Thrown when the new wallet address is zero.
+     */
+    error InvalidNewWallet();
+
+    /**
+     * @notice Thrown when the investor onchain ID address is zero.
+     */
+    error InvalidInvestorOnchainID();
+
+    /**
+     * @notice Thrown when the lost wallet and new wallet are the same address.
+     */
+    error SameWalletAddress();
+
+    /**
+     * @notice Thrown when the lost wallet has no tokens to recover.
+     */
+    error NoTokensToRecover();
 
     /**
      *  @dev recovery function used to force transfer tokens from a

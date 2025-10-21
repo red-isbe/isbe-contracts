@@ -3,6 +3,7 @@ pragma solidity ^0.8.28;
 
 import {ERC203643InternalCommon} from '../ERC203643InternalCommon.sol';
 import {IERC203643Controller} from './IERC203643Controller.sol';
+import {IERC203643Errors} from '../IERC203643Errors.sol';
 import {_CONTROLLER_ROLE} from '../../../constants/roles.sol';
 
 /// @title ERC203643Controller
@@ -82,14 +83,17 @@ abstract contract ERC203643Controller is
      * @param _amounts The number of tokens to burn from each corresponding address
      *
      * Emits a `ForceBurn` event for each burn
-     * Emits a `TokensUnfrozen` event if `_amounts[i]` is higher than the free balance of `_userAddresses[i]` (ERC3643 only)
+     * Emits a `TokensUnfrozen` event if `_amounts[i]`
+     * is higher than the free balance of `_userAddresses[i]` (ERC3643 only)
      * Emits a `Transfer` event to address(0) for each burn
      */
     function batchForceBurn(
         address[] calldata _userAddresses,
         uint256[] calldata _amounts
     ) external override whenNotPaused onlyRole(_CONTROLLER_ROLE) {
-        require(_userAddresses.length == _amounts.length, "Length mismatch");
+        if (_userAddresses.length != _amounts.length) {
+            revert IERC203643Errors.ArrayLengthMismatch();
+        }
         for (uint256 i = 0; i < _userAddresses.length; ++i) {
             _burn(_userAddresses[i], _amounts[i]);
             emit ForceBurn(_msgSender(), _userAddresses[i], _amounts[i]);
@@ -97,7 +101,8 @@ abstract contract ERC203643Controller is
     }
 
     /**
-     * @notice Transfers tokens from multiple accounts to multiple recipients by an authorized controller (batch operation)
+     * @notice Transfers tokens from multiple accounts to multiple recipients
+     * by an authorized controller (batch operation)
      * @dev This function should only be callable by an authorized controller (e.g., regulator or admin contract).
      *      No approval required from token holders.
      *
@@ -122,11 +127,20 @@ abstract contract ERC203643Controller is
         address[] calldata _toList,
         uint256[] calldata _amounts
     ) external override whenNotPaused onlyRole(_CONTROLLER_ROLE) {
-        require(_fromList.length == _toList.length, "Length mismatch");
-        require(_fromList.length == _amounts.length, "Length mismatch");
+        if (_fromList.length != _toList.length) {
+            revert IERC203643Errors.ArrayLengthMismatch();
+        }
+        if (_fromList.length != _amounts.length) {
+            revert IERC203643Errors.ArrayLengthMismatch();
+        }
         for (uint256 i = 0; i < _fromList.length; ++i) {
             _transfer(_fromList[i], _toList[i], _amounts[i]);
-            emit ForceTransfer(_msgSender(), _fromList[i], _toList[i], _amounts[i]);
+            emit ForceTransfer(
+                _msgSender(),
+                _fromList[i],
+                _toList[i],
+                _amounts[i]
+            );
         }
     }
 
