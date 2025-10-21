@@ -21,7 +21,6 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { TestConstants, randomAddress, randomInt } from '../testUtils'
 
 describe('ENS Registry', () => {
-    let adminAccount: Signer
     let account_2: Signer
     let account_3: Signer
     let adminAccountAddress: string
@@ -39,53 +38,49 @@ describe('ENS Registry', () => {
     let TEST_RESOLVER: string
     let TEST_TTL: number
 
-    // Initialize randomized test data
-    const initializeTestData = () => {
-        const testString = TestConstants.randomEnsName().replace('.eth', '')
-        TEST_LABEL = ethers.keccak256(ethers.toUtf8Bytes(testString))
-        SUB_NODE = ethers.solidityPackedKeccak256(
-            ['bytes32', 'bytes32'],
-            [ZeroHash, TEST_LABEL]
-        )
-        TEST_RESOLVER = randomAddress()
-        TEST_TTL = Number(randomInt() % BigInt(86400)) + 1 // Random TTL between 1-86400 seconds
-    }
-
-    before(async () => {
-        ;[adminAccount, account_2, account_3] = await ethers.getSigners()
-        adminAccountAddress = await adminAccount.getAddress()
-        account_2Address = await account_2.getAddress()
-        account_3Address = await account_3.getAddress()
-
-        // Initialize randomized test data
-        initializeTestData()
-    })
-
-    async function deploy(
+    async function deployFixture(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         rbacsUseCase: any[] = [
             {
                 role: PAUSER_ROLE,
-                members: [adminAccount],
+                members: [],
             },
             {
                 role: ENS_MANAGER_ROLE,
-                members: [adminAccount],
+                members: [],
             },
         ],
         init_pause: boolean = false
     ) {
+        const [adminAccountSigner, account2Signer, account3Signer] =
+            await ethers.getSigners()
+        const adminAccountAddress = await adminAccountSigner.getAddress()
+        const account2Address = await account2Signer.getAddress()
+        const account3Address = await account3Signer.getAddress()
+
+        // Initialize randomized test data
+        const testString = TestConstants.randomEnsName().replace('.eth', '')
+        const testLabel = ethers.keccak256(ethers.toUtf8Bytes(testString))
+        const subNode = ethers.solidityPackedKeccak256(
+            ['bytes32', 'bytes32'],
+            [ZeroHash, testLabel]
+        )
+        const testResolver = randomAddress()
+        const testTtl = Number(randomInt() % BigInt(86400)) + 1
+
+        // Update rbacs with actual addresses
+        const updatedRbacs = rbacsUseCase.map((rbac) => ({
+            ...rbac,
+            members:
+                rbac.members.length > 0 ? rbac.members : [adminAccountAddress],
+        }))
+
         const result = await deployGovernance(
-            adminAccount,
-            rbacsUseCase,
+            adminAccountSigner,
+            updatedRbacs,
             CONFIGURATION_ID_ENS_REGISTRY,
             init_pause
         )
-
-        ensRegistry = result.ensRegistry!
-        ensRegistryFacet = result.ensRegistryFacet!
-        pause = result.pause!
-        accessControl = result.accessControl!
 
         // Grant ENS roles to admin
         await result.accessControlGovernance!.grantRole(
@@ -96,10 +91,40 @@ describe('ENS Registry', () => {
             ENS_MANAGER_ROLE,
             adminAccountAddress
         )
+
+        return {
+            adminAccount: adminAccountSigner,
+            account_2: account2Signer,
+            account_3: account3Signer,
+            adminAccountAddress,
+            account_2Address: account2Address,
+            account_3Address: account3Address,
+            ensRegistry: result.ensRegistry!,
+            ensRegistryFacet: result.ensRegistryFacet!,
+            pause: result.pause!,
+            accessControl: result.accessControl!,
+            TEST_LABEL: testLabel,
+            SUB_NODE: subNode,
+            TEST_RESOLVER: testResolver,
+            TEST_TTL: testTtl,
+        }
     }
 
     beforeEach(async () => {
-        await loadFixture(deploy)
+        const contracts = await loadFixture(deployFixture)
+        account_2 = contracts.account_2
+        account_3 = contracts.account_3
+        adminAccountAddress = contracts.adminAccountAddress
+        account_2Address = contracts.account_2Address
+        account_3Address = contracts.account_3Address
+        ensRegistry = contracts.ensRegistry
+        ensRegistryFacet = contracts.ensRegistryFacet
+        pause = contracts.pause
+        accessControl = contracts.accessControl
+        TEST_LABEL = contracts.TEST_LABEL
+        SUB_NODE = contracts.SUB_NODE
+        TEST_RESOLVER = contracts.TEST_RESOLVER
+        TEST_TTL = contracts.TEST_TTL
     })
 
     describe('Paused', () => {

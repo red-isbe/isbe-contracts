@@ -145,6 +145,14 @@ export class TestConstants {
     static randomBaseDocument(): string {
         return randomString(20)
     }
+
+    /**
+     * Generate a random bytes32 value (32 bytes hex string)
+     * @returns A 32-byte hex string with '0x' prefix
+     */
+    static randomBytes32(): string {
+        return randomBytes32()
+    }
 }
 
 /**

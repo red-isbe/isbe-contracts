@@ -1,74 +1,76 @@
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
+import { loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers'
 import {
-    IsbeTransparentProxy__factory,
     IsbeProxyAdmin,
-    IsbeProxyAdmin__factory,
     ERC20TestWrapperTransparent__factory,
     ERC20TestWrapperTransparent,
 } from '../typechain-types'
 import { DEFAULT_ADMIN_ROLE, MINTER_ROLE } from './constants'
-import { Signer } from 'ethers'
 
 const NAME = 'My Token'
 const SYMBOL = 'MTK'
 const DECIMALS = 18
 
 describe('TransparentProxy', function () {
-    let admin: Signer
-    let TransparentProxyFactory: IsbeTransparentProxy__factory
-    let ProxyAdminFactory: IsbeProxyAdmin__factory
     let proxyAdmin: IsbeProxyAdmin
-
     let ERC20TestWrapperTransparentFactory: ERC20TestWrapperTransparent__factory
-    let erc20ImplementationTransparent: ERC20TestWrapperTransparent
     let erc20Transparent: ERC20TestWrapperTransparent
 
-    async function deployInitial() {
-        ;[admin] = await ethers.getSigners()
-        ERC20TestWrapperTransparentFactory = await ethers.getContractFactory(
-            'ERC20TestWrapperTransparent'
-        )
-        erc20ImplementationTransparent =
-            await ERC20TestWrapperTransparentFactory.deploy()
+    async function deployFixture() {
+        const [adminSigner] = await ethers.getSigners()
+        const adminAddress = await adminSigner.getAddress()
 
+        const erc20TestWrapperTransparentFactory =
+            await ethers.getContractFactory('ERC20TestWrapperTransparent')
+        const erc20ImplementationTransparent =
+            await erc20TestWrapperTransparentFactory.deploy()
         await erc20ImplementationTransparent.waitForDeployment()
 
-        TransparentProxyFactory = await ethers.getContractFactory(
+        const proxyAdminFactory =
+            await ethers.getContractFactory('IsbeProxyAdmin')
+        const proxyAdminInstance = await proxyAdminFactory.deploy()
+        await proxyAdminInstance.waitForDeployment()
+
+        const transparentProxyFactory = await ethers.getContractFactory(
             'IsbeTransparentProxy'
         )
-        ProxyAdminFactory = await ethers.getContractFactory('IsbeProxyAdmin')
-        proxyAdmin = await ProxyAdminFactory.deploy()
-
-        await proxyAdmin.waitForDeployment()
-    }
-
-    before(async () => {
-        await deployInitial()
-    })
-
-    beforeEach(async () => {
-        const transparentProxy = await TransparentProxyFactory.deploy(
+        const transparentProxy = await transparentProxyFactory.deploy(
             await erc20ImplementationTransparent.getAddress(),
-            await proxyAdmin.getAddress()
+            await proxyAdminInstance.getAddress()
         )
-
         await transparentProxy.waitForDeployment()
 
-        erc20Transparent = ERC20TestWrapperTransparentFactory.attach(
-            await transparentProxy.getAddress()
-        ) as ERC20TestWrapperTransparent
+        const erc20TransparentInstance =
+            erc20TestWrapperTransparentFactory.attach(
+                await transparentProxy.getAddress()
+            ) as ERC20TestWrapperTransparent
 
-        await erc20Transparent.initializeErc20(NAME, SYMBOL, DECIMALS)
-        await erc20Transparent.initializeCap(10000)
-        const adminAddress = await admin.getAddress()
-        await erc20Transparent.initializeAccessControl([
+        await erc20TransparentInstance.initializeErc20(NAME, SYMBOL, DECIMALS)
+        await erc20TransparentInstance.initializeCap(10000)
+        await erc20TransparentInstance.initializeAccessControl([
             {
                 role: DEFAULT_ADMIN_ROLE,
                 members: [adminAddress],
             },
         ])
-        await erc20Transparent.grantRole(MINTER_ROLE, adminAddress)
+        await erc20TransparentInstance.grantRole(MINTER_ROLE, adminAddress)
+
+        return {
+            admin: adminSigner,
+            proxyAdmin: proxyAdminInstance,
+            ERC20TestWrapperTransparentFactory:
+                erc20TestWrapperTransparentFactory,
+            erc20Transparent: erc20TransparentInstance,
+        }
+    }
+
+    beforeEach(async () => {
+        const contracts = await loadFixture(deployFixture)
+        proxyAdmin = contracts.proxyAdmin
+        ERC20TestWrapperTransparentFactory =
+            contracts.ERC20TestWrapperTransparentFactory
+        erc20Transparent = contracts.erc20Transparent
     })
 
     it('GIVEN an ERC20 deployed WHEN using Transparent Proxy THEN it can be initialized', async () => {
