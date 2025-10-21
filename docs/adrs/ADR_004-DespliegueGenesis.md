@@ -20,7 +20,7 @@ Proposal
 
 To streamline the contract deployment process, all contracts necessary for the ISBE infrastructure will be pre-deployed. They need to be available from the outset (first block) so that use cases can make use of them.
 
-This requires to extract all deployed bytecode form contracts and the entire slot structure at last block. This is very challening as there is almost no standard tooling to achive this.
+This requires to extract all deployed bytecode form contracts and the entire slot structure at last block. This is very challenging as there is almost no standard tooling to achieve this.
 
 ## Alternatives
 
@@ -28,8 +28,8 @@ This requires to extract all deployed bytecode form contracts and the entire slo
 
 Vast majority of tooling performs static slot extraction. This requires to check the order fields are created in solidity contract to generate the slot structure. This method is very straightforward, however it has two severe limitations:
 
-- It is suitable for simple type fields (i.e uint, address, bytes32...). This types use a single slot to keep field value. However, it cannot precalculate dynamic fields like mappings, string, bytes or dynamic arrays. Slot structure for those types are very complex and calculate slots by emulating EVM slot allocation is very complex
-- This process is compromised if slot structure is set manually. This is our case as it is required for diamnd pattern.
+- It is suitable for simple type fields (i.e uint, address, bytes32...). These types use a single slot to keep field value. However, it cannot precalculate dynamic fields like mappings, string, bytes or dynamic arrays. Slot structure for those types are very complex and calculate slots by emulating EVM slot allocation is very complex
+- This process is compromised if slot structure is set manually. This is our case as it is required for diamond pattern.
 
 ### Extract from Besu or Erigon
 
@@ -52,7 +52,7 @@ As an alternative, it is possible to use **debug_storageRangeAt** operation. Thi
 }
 ```
 
-This approach has a downfall: you need to know previously all contract addresses in order to extract slot information from them. In a regular deployment process in which all contracts are created by a creation transaction from an EOA, this is very simple. However if creation procedure is more complex as ISBE Diamond, this method would not be feasible as it requires to extract trace information and detect CREATE/CREATE2 opcodes. Since this process depends on trace extraction, it makes more sense to use the following proposed procedure.
+This approach has a downfall: you need to know previously all contract addresses in order to extract slot information from them. In a regular deployment process in which all contracts are created by a creation transaction from an EOA, this is very simple. However, if creation procedure is more complex as ISBE Diamond, this method would not be feasible as it requires to extract trace information and detect CREATE/CREATE2 opcodes. Since this process depends on trace extraction, it makes more sense to use the following proposed procedure.
 
 ### Extract slot information by detecting SSTORE opcode
 
@@ -195,7 +195,7 @@ contract SubConrtact{
     }
     return str;
   }
-  
+
   function setStr(uint _a) public {
     string storage str;
     assembly {
@@ -229,7 +229,7 @@ contract Lock {
   constructor() payable {
 
     pp storage p;
-   
+
     unlockTime = 0xFF;
     owner = payable(msg.sender);
 
