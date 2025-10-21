@@ -1,5 +1,6 @@
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
+import { loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers'
 import {
     ERC20TestWrapper,
     ERC20TestWrapper__factory,
@@ -48,40 +49,79 @@ describe('EIP2535AccessControlProxy', function () {
     let facetList: IEIP2535Introspection[]
     let facetAddresses: string[]
 
-    async function deployInitial() {
-        ;[admin, nonAdmin, pauser, governanceManager] =
-            await ethers.getSigners()
-        // Despliegue AccessControl logic
-        ERC20TestWrapperFactory =
+    async function deployFixture() {
+        const [
+            adminSigner,
+            nonAdminSigner,
+            pauserSigner,
+            governanceManagerSigner,
+        ] = await ethers.getSigners()
+
+        const erc20TestWrapperFactory =
             await ethers.getContractFactory('ERC20TestWrapper')
-        DiamondCutAccessControlFacetFactory = await ethers.getContractFactory(
-            'DiamondCutAccessControlFacet'
-        )
-        DiamondLoupeFacetFactory =
+        const diamondCutAccessControlFacetFactory =
+            await ethers.getContractFactory('DiamondCutAccessControlFacet')
+        const diamondLoupeFacetFactory =
             await ethers.getContractFactory('DiamondLoupeFacet')
-        EIP2535AccessControlFactory = await ethers.getContractFactory(
+        const eip2535AccessControlFactory = await ethers.getContractFactory(
             'EIP2535AccessControl'
         )
-        ISBEPauseFacetFactory =
+        const isbePauseFacetFactory =
             await ethers.getContractFactory('ISBEPauseFacet')
-        erc20Impl = await ERC20TestWrapperFactory.deploy()
-        diamondCutFacet = await DiamondCutAccessControlFacetFactory.deploy()
-        diamondLoupeFacet = await DiamondLoupeFacetFactory.deploy()
-        pauseFacet = await ISBEPauseFacetFactory.deploy()
-        await erc20Impl.waitForDeployment()
-        await diamondCutFacet.waitForDeployment()
-        await diamondLoupeFacet.waitForDeployment()
-        await pauseFacet.waitForDeployment()
-        expect(await diamondCutFacet.businessIdIntrospection()).to.be.equal(
-            DIAMOND_CUT_RESOLVER_KEY
-        )
-        expect(await diamondLoupeFacet.businessIdIntrospection()).to.be.equal(
-            DIAMOND_LOUPE_RESOLVER_KEY
-        )
+
+        const erc20ImplInstance = await erc20TestWrapperFactory.deploy()
+        const diamondCutFacetInstance =
+            await diamondCutAccessControlFacetFactory.deploy()
+        const diamondLoupeFacetInstance =
+            await diamondLoupeFacetFactory.deploy()
+        const pauseFacetInstance = await isbePauseFacetFactory.deploy()
+
+        await erc20ImplInstance.waitForDeployment()
+        await diamondCutFacetInstance.waitForDeployment()
+        await diamondLoupeFacetInstance.waitForDeployment()
+        await pauseFacetInstance.waitForDeployment()
+
+        expect(
+            await diamondCutFacetInstance.businessIdIntrospection()
+        ).to.be.equal(DIAMOND_CUT_RESOLVER_KEY)
+        expect(
+            await diamondLoupeFacetInstance.businessIdIntrospection()
+        ).to.be.equal(DIAMOND_LOUPE_RESOLVER_KEY)
+
+        return {
+            admin: adminSigner,
+            nonAdmin: nonAdminSigner,
+            pauser: pauserSigner,
+            governanceManager: governanceManagerSigner,
+            EIP2535AccessControlFactory: eip2535AccessControlFactory,
+            DiamondCutAccessControlFacetFactory:
+                diamondCutAccessControlFacetFactory,
+            DiamondLoupeFacetFactory: diamondLoupeFacetFactory,
+            ERC20TestWrapperFactory: erc20TestWrapperFactory,
+            ISBEPauseFacetFactory: isbePauseFacetFactory,
+            erc20Impl: erc20ImplInstance,
+            pauseFacet: pauseFacetInstance,
+            diamondCutFacet: diamondCutFacetInstance,
+            diamondLoupeFacet: diamondLoupeFacetInstance,
+        }
     }
 
-    before(async () => {
-        await deployInitial()
+    beforeEach(async () => {
+        const contracts = await loadFixture(deployFixture)
+        admin = contracts.admin
+        nonAdmin = contracts.nonAdmin
+        pauser = contracts.pauser
+        governanceManager = contracts.governanceManager
+        EIP2535AccessControlFactory = contracts.EIP2535AccessControlFactory
+        DiamondCutAccessControlFacetFactory =
+            contracts.DiamondCutAccessControlFacetFactory
+        DiamondLoupeFacetFactory = contracts.DiamondLoupeFacetFactory
+        ERC20TestWrapperFactory = contracts.ERC20TestWrapperFactory
+        ISBEPauseFacetFactory = contracts.ISBEPauseFacetFactory
+        erc20Impl = contracts.erc20Impl
+        pauseFacet = contracts.pauseFacet
+        diamondCutFacet = contracts.diamondCutFacet
+        diamondLoupeFacet = contracts.diamondLoupeFacet
     })
 
     describe('Initialization', () => {

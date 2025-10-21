@@ -15,7 +15,7 @@
 
 - [Production Deployment Guide](Production-Deployment-Guide.md)
 - [Deployment Logging Improvements](DEPLOYMENT_LOGGING_IMPROVEMENTS.md) 🆕
-- [TypeScript Code Improvements](TypeScript-Code-Improvements.md) 🆕
+- [TypeScript Code Improvements](TypeScript-Code-Improvements.md) 🆕 (includes test performance optimizations)
 - [Configuration Migration Guide](Configuration-Migration-Guide.md) 🆕
 
 ## Secp256R1 Documentation

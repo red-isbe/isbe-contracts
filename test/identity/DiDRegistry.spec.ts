@@ -75,30 +75,49 @@ describe('DiDRegistry', function () {
         notAfter = notBefore + 1000000000000000000n
     }
 
-    async function deployInitial() {
-        ;[admin, other] = await ethers.getSigners()
-        otherAddress = await other.getAddress()
+    async function deployFixture() {
+        const [adminSigner, otherSigner] = await ethers.getSigners()
+        const otherAddress = await otherSigner.getAddress()
+
         const gov = await deployGovernance(
-            admin,
+            adminSigner,
             undefined,
             CONFIGURATION_ID_DID_REGISTRY
         )
-        didDocumentDetailedFacet = gov.didDocumentDetailedFacet
-        didControllerFacet = gov.didControllerFacet
-        didVerificationMethodFacet = gov.didVerificationMethodFacet
-        didVerificationRelationshipFacet = gov.didVerificationRelationshipFacet
-        didRegistry = gov.didRegistry
-        mockTimestap = gov.mockTimestamp
+
         expect(
-            await didDocumentDetailedFacet.businessIdIntrospection()
+            await gov.didDocumentDetailedFacet.businessIdIntrospection()
         ).to.be.equal(DID_DOCUMENT_DETAILED_RESOLVER_KEY)
         expect(
-            await didDocumentDetailedFacet.interfacesIntrospection()
+            await gov.didDocumentDetailedFacet.interfacesIntrospection()
         ).to.be.deep.equal(['0x40350ddb'])
+
+        return {
+            admin: adminSigner,
+            other: otherSigner,
+            otherAddress,
+            didDocumentDetailedFacet: gov.didDocumentDetailedFacet,
+            didControllerFacet: gov.didControllerFacet,
+            didVerificationMethodFacet: gov.didVerificationMethodFacet,
+            didVerificationRelationshipFacet:
+                gov.didVerificationRelationshipFacet,
+            didRegistry: gov.didRegistry,
+            mockTimestap: gov.mockTimestamp,
+        }
     }
 
     beforeEach(async () => {
-        await loadFixture(deployInitial)
+        const contracts = await loadFixture(deployFixture)
+        admin = contracts.admin
+        other = contracts.other
+        otherAddress = contracts.otherAddress
+        didDocumentDetailedFacet = contracts.didDocumentDetailedFacet
+        didControllerFacet = contracts.didControllerFacet
+        didVerificationMethodFacet = contracts.didVerificationMethodFacet
+        didVerificationRelationshipFacet =
+            contracts.didVerificationRelationshipFacet
+        didRegistry = contracts.didRegistry
+        mockTimestap = contracts.mockTimestap
     })
 
     function walletOfFirstSigner() {

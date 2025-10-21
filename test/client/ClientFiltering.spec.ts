@@ -21,7 +21,6 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { FilterType } from '../../scripts/client/interfaces'
 
 describe('ClientFiltering', function () {
-    let admin: Signer
     let adminAddress: string
     let other: Signer
     let otherAddress: string
@@ -83,10 +82,11 @@ describe('ClientFiltering', function () {
         return ethers.toBigInt(ethers.hexlify(randomBytes))
     }
 
-    async function deployInitial() {
-        ;[admin, other] = await ethers.getSigners()
-        adminAddress = await admin.getAddress()
-        otherAddress = await other.getAddress()
+    async function deployFixture() {
+        const [adminSigner, otherSigner] = await ethers.getSigners()
+        const adminAddress = await adminSigner.getAddress()
+        const otherAddress = await otherSigner.getAddress()
+
         const rbac = [
             {
                 role: PAUSER_ROLE,
@@ -97,26 +97,42 @@ describe('ClientFiltering', function () {
                 members: [adminAddress],
             },
         ]
+
         const gov = await deployGovernance(
-            admin,
+            adminSigner,
             rbac,
             CONFIGURATION_ID_CLIENT_FILTERING
         )
-        globalIsbePause = gov.globalIsbePause
-        clientFilteringFacet = gov.clientFilteringFacet
-        clientFiltering = gov.clientFiltering
-        pauseFacet = gov.pause
+
         expect(
-            await clientFilteringFacet.businessIdIntrospection()
+            await gov.clientFilteringFacet.businessIdIntrospection()
         ).to.be.equal(CLIENT_FILTERING_RESOLVER_KEY)
         expect(
-            await clientFilteringFacet.interfacesIntrospection()
+            await gov.clientFilteringFacet.interfacesIntrospection()
         ).to.be.deep.equal(['0x9ae60694'])
+
+        return {
+            admin: adminSigner,
+            other: otherSigner,
+            adminAddress,
+            otherAddress,
+            globalIsbePause: gov.globalIsbePause,
+            clientFilteringFacet: gov.clientFilteringFacet,
+            clientFiltering: gov.clientFiltering,
+            pauseFacet: gov.pause,
+        }
     }
 
     describe('ClientFiltering', () => {
         beforeEach(async () => {
-            await loadFixture(deployInitial)
+            const contracts = await loadFixture(deployFixture)
+            other = contracts.other
+            adminAddress = contracts.adminAddress
+            otherAddress = contracts.otherAddress
+            globalIsbePause = contracts.globalIsbePause
+            clientFilteringFacet = contracts.clientFilteringFacet
+            clientFiltering = contracts.clientFiltering
+            pauseFacet = contracts.pauseFacet
         })
 
         describe('registerFilter', () => {
@@ -337,18 +353,34 @@ describe('ClientFiltering', function () {
 
         describe('Getters', () => {
             const setupFiltersFixture = async () => {
-                await deployInitial()
-                MOCK_FILTERS = Array.from({ length: 5 }, (_, index) =>
+                const contracts = await deployFixture()
+                const clientFilteringInstance = contracts.clientFiltering
+
+                const mockFilters = Array.from({ length: 5 }, (_, index) =>
                     randomizeFilter(getRandomFilterType(), index)
                 )
+
                 // Register filters sequentially to maintain order
-                for (const filter of MOCK_FILTERS) {
-                    await clientFiltering.registerFilter(filter)
+                for (const filter of mockFilters) {
+                    await clientFilteringInstance.registerFilter(filter)
+                }
+
+                return {
+                    ...contracts,
+                    MOCK_FILTERS: mockFilters,
                 }
             }
 
             beforeEach(async () => {
-                await loadFixture(setupFiltersFixture)
+                const contracts = await loadFixture(setupFiltersFixture)
+                other = contracts.other
+                adminAddress = contracts.adminAddress
+                otherAddress = contracts.otherAddress
+                globalIsbePause = contracts.globalIsbePause
+                clientFilteringFacet = contracts.clientFilteringFacet
+                clientFiltering = contracts.clientFiltering
+                pauseFacet = contracts.pauseFacet
+                MOCK_FILTERS = contracts.MOCK_FILTERS
             })
 
             describe('getFiltersLength', () => {

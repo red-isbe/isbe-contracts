@@ -39,43 +39,66 @@ describe('ERC721', function () {
     let erc721Royalty: ERC721Royalty
     let erc721Consecutive: ERC721Consecutive
     let erc20Address: string
-    let owner: Signer
     let ownerAddress: string
     let other: Signer
     let otherAddress: string
-    let third: Signer
     let thirdAddress: string
     let accessControl: AccessControl
     let pause: ISBEPause
 
-    async function deployInitial() {
-        ;[owner, other, third] = await ethers.getSigners()
-        ownerAddress = await owner.getAddress()
-        otherAddress = await other.getAddress()
-        thirdAddress = await third.getAddress()
+    async function deployFixture() {
+        const [ownerSigner, otherSigner, thirdSigner] =
+            await ethers.getSigners()
+        const ownerAddress = await ownerSigner.getAddress()
+        const otherAddress = await otherSigner.getAddress()
+        const thirdAddress = await thirdSigner.getAddress()
 
         const result = await deployGovernance(
-            owner,
+            ownerSigner,
             undefined,
             CONFIGURATION_ID_ERC721
         )
 
-        erc721 = result.erc721
-        erc721TestWrapper = result.erc721TestWrapper
-        erc721Capped = result.erc721Capped
-        erc721Snapshot = result.erc721Snapshot
-        erc721Burn = result.erc721Burn
-        erc721Controller = result.erc721Controller
-        erc721Enumerable = result.erc721Enumerable
-        erc721Royalty = result.erc721Royalty
-        erc721Consecutive = result.erc721Consecutive
-        erc20Address = await result.erc721Facet.getAddress()
-        accessControl = result.accessControl
-        pause = result.pause
+        return {
+            owner: ownerSigner,
+            other: otherSigner,
+            third: thirdSigner,
+            ownerAddress,
+            otherAddress,
+            thirdAddress,
+            erc721: result.erc721,
+            erc721TestWrapper: result.erc721TestWrapper,
+            erc721Capped: result.erc721Capped,
+            erc721Snapshot: result.erc721Snapshot,
+            erc721Burn: result.erc721Burn,
+            erc721Controller: result.erc721Controller,
+            erc721Enumerable: result.erc721Enumerable,
+            erc721Royalty: result.erc721Royalty,
+            erc721Consecutive: result.erc721Consecutive,
+            erc20Address: await result.erc721Facet.getAddress(),
+            accessControl: result.accessControl,
+            pause: result.pause,
+        }
     }
 
     beforeEach(async () => {
-        await loadFixture(deployInitial)
+        const contracts = await loadFixture(deployFixture)
+        other = contracts.other
+        ownerAddress = contracts.ownerAddress
+        otherAddress = contracts.otherAddress
+        thirdAddress = contracts.thirdAddress
+        erc721 = contracts.erc721
+        erc721TestWrapper = contracts.erc721TestWrapper
+        erc721Capped = contracts.erc721Capped
+        erc721Snapshot = contracts.erc721Snapshot
+        erc721Burn = contracts.erc721Burn
+        erc721Controller = contracts.erc721Controller
+        erc721Enumerable = contracts.erc721Enumerable
+        erc721Royalty = contracts.erc721Royalty
+        erc721Consecutive = contracts.erc721Consecutive
+        erc20Address = contracts.erc20Address
+        accessControl = contracts.accessControl
+        pause = contracts.pause
     })
 
     describe('Deployment', () => {

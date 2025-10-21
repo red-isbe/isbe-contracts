@@ -1,5 +1,6 @@
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
+import { loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers'
 import {
     EIP2535AccessControl__factory,
     EIP2535AccessControl,
@@ -28,34 +29,52 @@ describe('BusinessLogicFactory', function () {
     let businessLogicFactoryFacet: BusinessLogicFactoryFacet
     let businessLogicFactory: BusinessLogicFactory
 
-    async function deployInitial() {
-        ;[admin, nonAdmin] = await ethers.getSigners()
-        // Despliegue AccessControl logic
-        BusinessLogicFactoryFactory = await ethers.getContractFactory(
+    async function deployFixture() {
+        const [adminSigner, nonAdminSigner] = await ethers.getSigners()
+
+        const businessLogicFactoryFactory = await ethers.getContractFactory(
             'BusinessLogicFactoryFacet'
         )
-        EIP2535AccessControlFactory = await ethers.getContractFactory(
+        const eip2535AccessControlFactory = await ethers.getContractFactory(
             'EIP2535AccessControl'
         )
-        CounterFacetFactory = await ethers.getContractFactory(
+        const counterFacetFactory = await ethers.getContractFactory(
             'CounterFacetTestWrapper'
         )
-        CounterV2FacetFactory = await ethers.getContractFactory(
+        const counterV2FacetFactory = await ethers.getContractFactory(
             'CounterV2FacetTestWrapper'
         )
-        businessLogicFactoryFacet = await BusinessLogicFactoryFactory.deploy()
-        await businessLogicFactoryFacet.waitForDeployment()
-        expect(
-            await businessLogicFactoryFacet.businessIdIntrospection()
-        ).to.be.equal(BUSINESS_LOGIC_FACTORY_RESOLVER_KEY)
-    }
 
-    before(async () => {
-        await deployInitial()
-    })
+        const businessLogicFactoryFacetInstance =
+            await businessLogicFactoryFactory.deploy()
+        await businessLogicFactoryFacetInstance.waitForDeployment()
+
+        expect(
+            await businessLogicFactoryFacetInstance.businessIdIntrospection()
+        ).to.be.equal(BUSINESS_LOGIC_FACTORY_RESOLVER_KEY)
+
+        return {
+            admin: adminSigner,
+            nonAdmin: nonAdminSigner,
+            BusinessLogicFactoryFactory: businessLogicFactoryFactory,
+            EIP2535AccessControlFactory: eip2535AccessControlFactory,
+            CounterFacetFactory: counterFacetFactory,
+            CounterV2FacetFactory: counterV2FacetFactory,
+            businessLogicFactoryFacet: businessLogicFactoryFacetInstance,
+        }
+    }
 
     describe('deploy', () => {
         beforeEach(async () => {
+            const contracts = await loadFixture(deployFixture)
+            admin = contracts.admin
+            nonAdmin = contracts.nonAdmin
+            BusinessLogicFactoryFactory = contracts.BusinessLogicFactoryFactory
+            EIP2535AccessControlFactory = contracts.EIP2535AccessControlFactory
+            CounterFacetFactory = contracts.CounterFacetFactory
+            CounterV2FacetFactory = contracts.CounterV2FacetFactory
+            businessLogicFactoryFacet = contracts.businessLogicFactoryFacet
+
             const facetAddresses = [
                 await businessLogicFactoryFacet.getAddress(),
             ]

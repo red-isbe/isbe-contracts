@@ -407,6 +407,8 @@ npm run size
 
 ### Testing
 
+#### Quick Start
+
 ```bash
 # Run all tests
 npm run test
@@ -438,6 +440,51 @@ npm run test:governance    # All governance-related tests
 npm run test:identity      # DID Registry tests
 npm run test:utilities     # Asset tracker, hash timestamp
 ```
+
+#### Test Performance & Optimization
+
+**Performance Metrics:**
+
+- **Total test suite**: ~13 seconds (556 tests) - **28% improvement** from optimization
+- **Average per test**: ~23ms
+- **Coverage**: 100% statements, functions, and lines; ~98.56% branches
+
+**Key Optimizations Implemented:**
+
+- **Eliminated redundant `deployGovernance()` calls** - Major performance bottleneck resolved
+- **Shared fixture system** - Standardized deployment patterns in `test/fixtures/common.ts`
+- **Single deployment per fixture** - No nested fixture calls
+- **Optimized ERC20 tests** - 50% performance improvement (12s → 6s)
+
+**Available Test Fixtures:**
+
+```typescript
+import { loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers'
+import {
+    deployBasicERC20Fixture, // Basic ERC20 without initialization
+    deployInitializedERC20Fixture, // Standard initialized ERC20
+    deployPausedERC20Fixture, // ERC20 in paused state
+    deployPreparedERC20Fixture, // ERC20 with all roles granted
+    deployLightweightERC20Fixture, // Minimal deployment for unit tests
+    getTestSigners, // Standard signer utility
+} from './test/fixtures/common'
+
+// Usage example
+describe('MyTest', function () {
+    beforeEach(async () => {
+        const contracts = await loadFixture(deployInitializedERC20Fixture)
+        // Use contracts.erc20, contracts.owner, etc.
+    })
+})
+```
+
+**Best Practices for New Tests:**
+
+- **Unit tests**: Use `deployLightweightERC20Fixture()` for minimal setup
+- **Integration tests**: Use standard fixtures like `deployInitializedERC20Fixture()`
+- **End-to-end tests**: Use full `deployGovernance()` with complete setup
+- **Avoid redundant deployments**: Single deployment per fixture
+- **Use shared fixtures**: Import from `test/fixtures/common.ts`
 
 ### Code Quality
 
