@@ -96,7 +96,7 @@ function improveFormatting(content: string): string {
 
     // Output Method Gas Usage
     out += `## Method Gas Usage\n\n`
-    out += `| Contract | Method | Min | Max | Avg | Block usage (%)(20M) | Calls |\n`
+    out += `| Contract | Method | Min | Max | Avg | Block usage (%)(${blockGasLimit.toLocaleString()}) | Calls |\n`
     out += `|---|---|---|---|---|---|---|\n`
 
     const maxContractLen = Math.max(
@@ -115,7 +115,7 @@ function improveFormatting(content: string): string {
 
     // Output Deployment Costs
     out += `\n## Deployment Costs\n\n`
-    out += `| Contract | Deployment Cost | % of Block Limit (20M) |\n`
+    out += `| Contract | Deployment Cost | % of Block Limit (${blockGasLimit.toLocaleString()}) |\n`
     out += `|---|---|---|\n`
 
     const maxDeployContractLen = Math.max(
@@ -256,34 +256,6 @@ interface DeployRow {
     cost: number
     percent: string
 }
-//
-// function formatDeployRow(line: string): DeployRow | null {
-//     const parts = line
-//         .split('·')
-//         .map((p) => p.trim())
-//         .filter(Boolean)
-//
-//     if (parts.length < 3) return null
-//
-//     const contract = parts[0]
-//         .replace('TestWrapper', '(TW)')
-//         .replace('Facet', '(F)')
-//
-//     let cost = 0
-//     let percent = '0%'
-//
-//     for (const p of parts) {
-//         if (/^\d+$/.test(p)) cost = parseInt(p)
-//         if (p.includes('%'))
-//             percent = ((cost * 100) / NETWORK_BLOCK_GAS_LIMIT)
-//                 .toString()
-//                 .concat('%')
-//     }
-//
-//     if (!contract || cost === 0) return null
-//
-//     return { contract, cost, percent }
-// }
 
 // Format number with commas, left-aligned
 function fmtNum(n: number): string {

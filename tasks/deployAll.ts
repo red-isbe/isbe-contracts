@@ -9,6 +9,7 @@ import { NetworkConfigWithCurve } from '../types/hardhat'
 interface TaskArgs {
     precommit?: boolean
     info?: boolean
+    noDeployUseCases?: boolean
 }
 
 /**
@@ -22,7 +23,17 @@ task(
 )
     .addFlag('precommit', 'Testing all tasks during pre-commit')
     .addFlag('info', 'Show detailed network and curve information')
+    .addFlag(
+        'noDeployUseCases',
+        'Register configurations but skip actual use case deployment (cannot be used with --precommit)'
+    )
     .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
+        // Validate flags - precommit and noDeployUseCases cannot be used together
+        if (taskArgs.precommit && taskArgs.noDeployUseCases) {
+            throw new Error(
+                'The --precommit and --noDeployUseCases flags cannot be used together. Pre-commit validation requires use cases to be deployed.'
+            )
+        }
         console.log('🚀 Starting curve-aware system deployment...')
 
         // Display network and curve information
@@ -77,6 +88,11 @@ async function deployAllWithSecp256k1(
                       .then((signers) => signers[0].address)
                 : config.governance.accountAddress
 
+        // Apply the noDeployUseCases flag if set
+        const deploymentOptions = {
+            skipUseCases: taskArgs.noDeployUseCases === true,
+        }
+
         // Display configuration summary
         console.log('\n📋 CONFIGURATION SUMMARY:')
         console.log(
@@ -88,8 +104,8 @@ async function deployAllWithSecp256k1(
 
         const orchestrator = new DeploymentOrchestrator(hre, config)
 
-        // Run the orchestrated deployment without options (all enabled)
-        const deploymentResult = await orchestrator.deploy()
+        // Run the orchestrated deployment with our options
+        const deploymentResult = await orchestrator.deploy(deploymentOptions)
 
         if (taskArgs.precommit) {
             console.log('\n🔍 STARTING PRE-COMMIT VALIDATIONS...')
@@ -189,6 +205,11 @@ async function deployAllWithSecp256r1(
         const secp256r1Accounts = networkConfig.secp256r1Accounts
         config.governance.accountAddress = secp256r1Accounts[0].address
 
+        // Apply the noDeployUseCases flag if set
+        const deploymentOptions = {
+            skipUseCases: taskArgs.noDeployUseCases === true,
+        }
+
         console.log('\n📋 SECP256R1 CONFIGURATION SUMMARY:')
         console.log(
             `   • Business logics to deploy: ${config.businessLogics.length}`
@@ -214,8 +235,8 @@ async function deployAllWithSecp256r1(
 
         const orchestrator = new DeploymentOrchestrator(hre, config)
 
-        // Run the orchestrated deployment
-        const deploymentResult = await orchestrator.deploy()
+        // Run the orchestrated deployment with our options
+        const deploymentResult = await orchestrator.deploy(deploymentOptions)
 
         if (taskArgs.precommit) {
             console.log('\n🔍 STARTING SECP256R1 PRE-COMMIT VALIDATIONS...')

@@ -3,6 +3,7 @@ import { DID_DEFINITIONS, DID_USE_CASE_CONFIGS } from './did'
 import { ENS_DEFINITIONS, ENS_USE_CASE_CONFIGS } from './ens'
 import { UTILITY_DEFINITIONS, UTILITY_USE_CASE_CONFIGS } from './utility'
 import { CLIENT_DEFINITIONS, CLIENT_USE_CASE_CONFIGS } from './client'
+import { TSR_DEFINITIONS, TSR_USE_CASE_CONFIGS } from './tsr'
 import { ERC20_DEFINITIONS } from './token/erc20'
 import { ERC721_DEFINITIONS } from './token/erc721'
 // Import token use case configurations
@@ -24,6 +25,7 @@ export * from './erc721'
 export * from './did'
 export * from './ens'
 export * from './utility'
+export * from './tsr'
 
 // Export utility functions
 export { buildConfigurationId } from '../utils/configurationUtils'
@@ -52,6 +54,9 @@ export const DEFAULT_USE_CASE_CONFIGURATIONS = [
 
     // Client use cases
     CLIENT_USE_CASE_CONFIGS.FILTERING,
+
+    // TimeStampingRegistry use cases
+    TSR_USE_CASE_CONFIGS.TIMESTAMPING_REGISTRY,
 
     // ERC20 use cases - Base and Single Extensions
     ERC20_USE_CASE_CONFIGS.BASE,
@@ -274,6 +279,8 @@ export const DEFAULT_USE_CASE_CONFIGURATIONS = [
         ENS: 2 (Registry & Public Resolver)
         Utility: 1 (Hash Timestamp Service)
         Client: 1 (Client Filtering)
+        TSA: 1 (TimeStamping Authority)
+        TSR: 1 (TimeStamping Registry)
         ERC20: 16 variations
         ERC721: Total 60 variations:
           + 1 Base
@@ -284,7 +291,7 @@ export const DEFAULT_USE_CASE_CONFIGURATIONS = [
           + 16 Five Extensions
           + 6 Six Extensions
           + 0 Complete (All 7 Extensions)
-        Total Deployed Use Cases = 81 */
+        Total Deployed Use Cases = 83 */
 ]
 
 // Combine all business logic definitions
@@ -293,6 +300,7 @@ export const BUSINESS_LOGIC_DEFINITIONS = [
     ...DID_DEFINITIONS,
     ...ENS_DEFINITIONS,
     ...CLIENT_DEFINITIONS,
+    ...TSR_DEFINITIONS,
     ...ERC20_DEFINITIONS,
     ...ERC721_DEFINITIONS,
 ]

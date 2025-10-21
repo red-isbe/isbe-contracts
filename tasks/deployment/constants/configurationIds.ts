@@ -16,6 +16,8 @@ export const CONFIGURATION_IDS = {
         '0x000000000000000000000000000000000000000000456E735265676973747279',
     ENS_PUBLIC_RESOLVER:
         '0x0000000000000000000000000000000000000000456e735075626c6963526573',
+    TIMESTAMPING_REGISTRY:
+        '0x00000000000000000000000054696d655374616d70696e675265676973747279',
 }
 
 export const ARTIFACT_PATHS = {
@@ -76,6 +78,8 @@ export const ARTIFACT_PATHS = {
         'contracts/identity/ens/publicresolver/profiles/text/TextResolverFacet.sol',
     ENS_PUBKEY_RESOLVER:
         'contracts/identity/ens/publicresolver/profiles/pubkey/PubkeyResolverFacet.sol',
+    // TimeStampingRegistry facets
+    TIMESTAMPING_REGISTRY: 'contracts/client/tsr/TimeStampingRegistryFacet.sol',
 } as const
 
 export const CONTRACT_NAMES = {
@@ -119,4 +123,6 @@ export const CONTRACT_NAMES = {
     ENS_NAME_RESOLVER: 'NameResolverFacet',
     ENS_TEXT_RESOLVER: 'TextResolverFacet',
     ENS_PUBKEY_RESOLVER: 'PubkeyResolverFacet',
+    // TimeStampingRegistry facets
+    TIMESTAMPING_REGISTRY: 'TimeStampingRegistryFacet',
 } as const

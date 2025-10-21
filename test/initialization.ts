@@ -45,6 +45,7 @@ import {
     EnsRegistryFacet,
     IPublicResolver__factory,
     IPublicResolver,
+    TimeStampingRegistry,
 } from '../typechain-types'
 import {
     DEFAULT_ADMIN_ROLE,
@@ -86,6 +87,7 @@ import {
     ENS_NAME_RESOLVER_RESOLVER_KEY,
     ENS_TEXT_RESOLVER_RESOLVER_KEY,
     ENS_PUBKEY_RESOLVER_RESOLVER_KEY,
+    TIMESTAMPING_REGISTRY_RESOLVER_KEY,
 } from './constants'
 import { getEvent } from '../scripts/utils/getEvent'
 import { getIsbeFactory } from '../scripts/utils/getIsbeFactory'
@@ -102,6 +104,8 @@ export const CONFIGURATION_ID_ENS_REGISTRY =
     '0x000000000000000000000000000000000000000000456E735265676973747279'
 export const CONFIGURATION_ID_ENS_PUBLIC_RESOLVER =
     '0x0000000000000000000000000000000000000000456e735075626c6963526573'
+export const CONFIGURATION_ID_TIMESTAMPING_REGISTRY =
+    '0x0000000000000000000000000054696d655374616d696e675265676973747279'
 
 // New configuration IDs for optimized testing
 export const CONFIGURATION_ID_PROXY_TESTS =
@@ -319,8 +323,16 @@ export async function deployGovernance(
                     init_BusinessId_UseCase,
                     init_CallData_UseCase
                 )
+            case CONFIGURATION_ID_TIMESTAMPING_REGISTRY:
+                return await deployTimeStampingRegistryUseCaseFacets(
+                    owner,
+                    rbacsUseCase,
+                    init_pause,
+                    init_BusinessId_UseCase,
+                    init_CallData_UseCase
+                )
             default:
-                throw new Error(`Unknown configuration id ${configId}`)
+                throw new Error(`Unknown configuration id ${configurationId}`)
         }
     }
 
@@ -401,6 +413,8 @@ export async function deployGovernance(
         clientFiltering: useCaseDeployment.clientFiltering,
         ensRegistryFacet: useCaseDeployment.ensRegistryFacet,
         ensRegistry: useCaseDeployment.ensRegistry,
+        timeStampingRegistryFacet: useCaseDeployment.timeStampingRegistryFacet,
+        timeStampingRegistry: useCaseDeployment.timeStampingRegistry,
         diamondCutAccessControlFacet,
         diamondLoupeFacet,
         accessControlGovernanceFacet,
@@ -1393,5 +1407,103 @@ export async function deployProxyTestsUseCaseFacets(
         isbeCutFacet,
         isbeLoupeFacet,
         proxy,
+    }
+}
+
+export async function deployTimeStampingRegistryUseCaseFacets(
+    owner: Signer,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    rbacs: any[],
+    init_pause: boolean,
+    init_BusinessIds: string[],
+    init_CallData: string[]
+) {
+    const IsbeCutFacetFactory = await ethers.getContractFactory('IsbeCutFacet')
+    const IsbeLoupeFacetFactory =
+        await ethers.getContractFactory('IsbeLoupeFacet')
+    const AccessControlFacetFactory =
+        await ethers.getContractFactory('AccessControlFacet')
+    const TimeStampingRegistryTestWrapperFactory =
+        await ethers.getContractFactory('TimeStampingRegistryTestWrapper')
+    const MockTimestampFacetFactory =
+        await ethers.getContractFactory('MockTimestampFacet')
+
+    const isbeCutFacet = await deployBusinessLogicFromFactory(
+        ISBE_CUT_RESOLVER_KEY,
+        IsbeCutFacetFactory
+    )
+    const isbeLoupeFacet = await deployBusinessLogicFromFactory(
+        ISBE_LOUPE_RESOLVER_KEY,
+        IsbeLoupeFacetFactory
+    )
+
+    const accessControlFacet = await deployBusinessLogicFromFactory(
+        ACCESS_CONTROL_RESOLVER_KEY,
+        AccessControlFacetFactory
+    )
+    const pauseFacet = await deployBusinessLogicFromFactory(
+        PAUSE_RESOLVER_KEY,
+        ISBEPauseFacetFactory
+    )
+
+    const timeStampingRegistryFacet = await deployBusinessLogicFromFactory(
+        TIMESTAMPING_REGISTRY_RESOLVER_KEY,
+        TimeStampingRegistryTestWrapperFactory
+    )
+
+    const mockTimestampFacet = await deployBusinessLogicFromFactory(
+        MOCK_TIMESTAMP_RESOLVER_KEY,
+        MockTimestampFacetFactory
+    )
+
+    await isbeFactory.setConfiguration(CONFIGURATION_ID_TIMESTAMPING_REGISTRY, [
+        {
+            businessId: TIMESTAMPING_REGISTRY_RESOLVER_KEY,
+            version: 1,
+        },
+        {
+            businessId: MOCK_TIMESTAMP_RESOLVER_KEY,
+            version: 1,
+        },
+    ])
+
+    const tx = await isbeFactory.deployUseCase(
+        CONFIGURATION_ID_TIMESTAMPING_REGISTRY,
+        1,
+        rbacs,
+        init_pause,
+        init_BusinessIds,
+        init_CallData
+    )
+
+    const deployedEvent = await getEvent('UseCaseDeployed', tx, isbeFactory)
+    const { proxy } = deployedEvent.args
+
+    const pause = ISBEPauseFacetFactory.attach(proxy) as ISBEPauseFacet
+
+    const accessControl = AccessControlFacetFactory.attach(
+        proxy
+    ) as AccessControlFacet
+
+    const timeStampingRegistry = TimeStampingRegistryTestWrapperFactory.attach(
+        proxy
+    ) as TimeStampingRegistry
+
+    const mockTimestamp = MockTimestampFacetFactory.attach(
+        proxy
+    ) as MockTimestampFacet
+
+    return {
+        pause,
+        accessControl,
+        pauseFacet,
+        accessControlFacet,
+        isbeCutFacet,
+        isbeLoupeFacet,
+        proxy,
+        timeStampingRegistryFacet,
+        timeStampingRegistry,
+        mockTimestampFacet,
+        mockTimestamp,
     }
 }

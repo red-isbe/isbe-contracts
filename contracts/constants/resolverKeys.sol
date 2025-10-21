@@ -127,4 +127,7 @@ bytes32 constant _ENS_PUBKEY_RESOLVER_RESOLVER_KEY = 0x1c46b1cdbebdf5f3d15aae4a8
 // keccak256('isbe.contracts.ens.public.resolver.resolver.key');
 bytes32 constant _ENS_PUBLIC_RESOLVER_RESOLVER_KEY = 0x01286e867987641a8805e8007327a88f6ebe0d80426ec755c0f86f57d5913c61;
 
+// keccak256('isbe.contracts.timestamping.registry.resolver.key');
+bytes32 constant _TIMESTAMPING_REGISTRY_RESOLVER_KEY = 0xc96c356b7532d6eba398b97f362b68829d7392627c879e8ba5909c4810ca7ad5;
+
 // solhint-enable max-line-length

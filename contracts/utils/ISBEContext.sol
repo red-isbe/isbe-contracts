@@ -80,6 +80,10 @@ abstract contract ISBEContext is Context {
         return msg.sig;
     }
 
+    function _blockChainId() internal view virtual returns (uint256) {
+        return block.chainid;
+    }
+
     /**
      * @notice Checks that a given address is not the zero address.
      * @dev Reverts with `AddressZero` error if the condition is not met.

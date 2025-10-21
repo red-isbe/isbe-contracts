@@ -62,7 +62,7 @@
         "slither": "npm run slither:summary && npm run slither:storageLayout && npm run slither:inheritance && npm run slither:analysis",
         "slither:analysis:local": "slither . -solc-remaps @=node_modules/@ | tee slither-output.txt && node scripts/check-slither.js",
         "docgen": "npx hardhat docgen && npx ts-node scripts/post-docgen.ts",
-        "deployAll": "npx hardhat deployAll"
+        "deployAll": "npx hardhat deployAllClean --nodeployusecases"
     },
     "repository": {
         "type": "git",

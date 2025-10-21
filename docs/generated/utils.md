@@ -128,6 +128,12 @@ overridden in child contracts for testing purposes._
 | ---- | ------ | ------------------------------------------------ |
 | [0]  | bytes4 | bytes4 The function selector from the call data. |
 
+### \_blockChainId
+
+```solidity
+function _blockChainId() internal view virtual returns (uint256)
+```
+
 ### \_checkAddressIsNotZero
 
 ```solidity

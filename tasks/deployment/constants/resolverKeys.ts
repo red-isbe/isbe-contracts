@@ -1,5 +1,11 @@
 import { ResolverKeys } from './types'
 
+// TimeStampingRegistry facets
+export const TSR_RESOLVER_KEYS: ResolverKeys = {
+    TIMESTAMPING_REGISTRY:
+        '0xc96c356b7532d6eba398b97f362b68829d7392627c879e8ba5909c4810ca7ad5',
+}
+
 // ISBE system base facets
 export const BASE_RESOLVER_KEYS: ResolverKeys = {
     ISBE_CUT:

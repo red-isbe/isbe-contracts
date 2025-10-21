@@ -17,6 +17,7 @@ interface TaskArgs {
     info?: boolean
     legacy?: boolean
     logLevel?: string
+    noDeployUseCases?: boolean
 }
 
 /**
@@ -43,7 +44,17 @@ task(
         'Set logging verbosity: minimal, normal, verbose, debug',
         'normal'
     )
+    .addFlag(
+        'noDeployUseCases',
+        'Register configurations with setConfig but skip actual deployUseCase deployment (cannot be used with --precommit)'
+    )
     .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
+        // Validate flags - precommit and noDeployUseCases cannot be used together
+        if (taskArgs.precommit && taskArgs.noDeployUseCases) {
+            throw new Error(
+                'The --precommit and --noDeployUseCases flags cannot be used together. Pre-commit validation requires use cases to be deployed.'
+            )
+        }
         // Configure logging level
         const logLevel = parseLogLevel(taskArgs.logLevel)
         LogConfig.setLevel(logLevel)
@@ -97,11 +108,21 @@ async function deployWithCleanOrchestrator(
         // Create clean orchestrator (automatically detects and uses appropriate provider)
         const orchestrator = new CleanDeploymentOrchestrator(hre, config)
 
+        // Set deployment options
+        const deploymentOptions = {
+            skipUseCases: taskArgs.noDeployUseCases === true,
+        }
+
         console.log('\\n📋 CLEAN DEPLOYMENT CONFIGURATION:')
         console.log(
             `   • Business logics to deploy: ${config.businessLogics.length}`
         )
         console.log(`   • Configured use cases: ${config.useCases.length}`)
+        if (taskArgs.noDeployUseCases) {
+            console.log(
+                `   ⚠️  Use cases will be registered but NOT deployed (noDeployUseCases flag active)`
+            )
+        }
         console.log(`   • Network: ${hre.network.name}`)
 
         const providerInfo = orchestrator.getProviderInfo()
@@ -109,7 +130,7 @@ async function deployWithCleanOrchestrator(
         console.log('')
 
         // Run the clean orchestrated deployment
-        const deploymentResult = await orchestrator.deploy()
+        const deploymentResult = await orchestrator.deploy(deploymentOptions)
 
         // Run pre-commit validations if requested
         if (taskArgs.precommit) {
@@ -123,7 +144,20 @@ async function deployWithCleanOrchestrator(
 
         // Show final summary
         console.log('\\n✅ Clean deployment completed successfully!')
-        displayFinalSummary(deploymentResult, providerInfo.curve)
+        displayFinalSummary(
+            deploymentResult,
+            providerInfo.curve,
+            taskArgs.noDeployUseCases
+        )
+
+        if (taskArgs.noDeployUseCases) {
+            console.log(
+                '\n🔧 Note: Use cases were configured but not deployed (--no-deploy-use-cases flag was active)'
+            )
+            console.log(
+                '   ℹ️ setConfig was called to register configurations, but deployUseCase was skipped'
+            )
+        }
 
         return deploymentResult
     } catch (error) {
@@ -154,12 +188,23 @@ async function deployWithLegacyOrchestrator(
             `   • Business logics to deploy: ${config.businessLogics.length}`
         )
         console.log(`   • Configured use cases: ${config.useCases.length}`)
+        if (taskArgs.noDeployUseCases) {
+            console.log(
+                `   ⚠️  Use cases will be registered but NOT deployed (noDeployUseCases flag active)`
+            )
+        }
         console.log(`   • Network: ${hre.network.name}`)
         console.log('')
 
         // Use legacy orchestrator
         const orchestrator = new DeploymentOrchestrator(hre, config)
-        const deploymentResult = await orchestrator.deploy()
+
+        // Set deployment options
+        const deploymentOptions = {
+            skipUseCases: taskArgs.noDeployUseCases === true,
+        }
+
+        const deploymentResult = await orchestrator.deploy(deploymentOptions)
 
         // Run pre-commit validations if requested
         if (taskArgs.precommit) {
@@ -173,7 +218,20 @@ async function deployWithLegacyOrchestrator(
 
         // Show final summary
         console.log('\\n✅ Legacy deployment completed successfully!')
-        displayFinalSummary(deploymentResult, 'legacy')
+        displayFinalSummary(
+            deploymentResult,
+            'legacy',
+            taskArgs.noDeployUseCases
+        )
+
+        if (taskArgs.noDeployUseCases) {
+            console.log(
+                '\n🔧 Note: Use cases were configured but not deployed (--no-deploy-use-cases flag was active)'
+            )
+            console.log(
+                '   ℹ️ setConfig was called to register configurations, but deployUseCase was skipped'
+            )
+        }
 
         return deploymentResult
     } catch (error) {
@@ -261,7 +319,8 @@ async function runPreCommitValidations(
  */
 function displayFinalSummary(
     deploymentResult: DeploymentResult,
-    curve: string
+    curve: string,
+    noDeployUseCases: boolean = false
 ): void {
     console.log('📋 FINAL SUMMARY:')
     const duration =
@@ -275,9 +334,15 @@ function displayFinalSummary(
     console.log(
         `   • Deployed logics: ${deploymentResult.businessLogics.filter((bl) => bl.success).length}/${deploymentResult.businessLogics.length}`
     )
-    console.log(
-        `   • Deployed use cases: ${deploymentResult.useCases.filter((uc) => uc.success).length}/${deploymentResult.useCases.length}`
-    )
+    if (noDeployUseCases) {
+        console.log(
+            `   • Use cases: Skipped deployment (noDeployUseCases flag active)`
+        )
+    } else {
+        console.log(
+            `   • Deployed use cases: ${deploymentResult.useCases.filter((uc) => uc.success).length}/${deploymentResult.useCases.length}`
+        )
+    }
     console.log(
         `   • Network: ${deploymentResult.summary.networkName || 'unknown'}`
     )

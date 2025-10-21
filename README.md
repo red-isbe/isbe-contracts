@@ -69,9 +69,24 @@ npx hardhat deployAll --network mvp
 # Deploy to Hyperledger Besu with secp256r1
 npx hardhat deployAll --network customR1Network
 
+# Configure without deploying use cases (registers configurations with setConfig but skips deployUseCase)
+npx hardhat deployAll --network hardhat --no-deploy-use-cases
+npx hardhat deployAllClean --network hardhat --no-deploy-use-cases
+
 # Test deployment (comprehensive)
 npx hardhat deployTest
 ```
+
+#### Deployment Options
+
+| Option                  | Description                                                     |
+| ----------------------- | --------------------------------------------------------------- |
+| `--network <name>`      | Specifies the network to deploy to                              |
+| `--precommit`           | Runs pre-commit validations after deployment                    |
+| `--info`                | Shows detailed network and signature provider information       |
+| `--no-deploy-use-cases` | Registers configurations with setConfig but skips deployUseCase |
+| `--log-level <level>`   | Sets logging verbosity (minimal, normal, verbose, debug)        |
+| `--legacy`              | (deployAllClean only) Uses legacy DeploymentOrchestrator        |
 
 ## 🔐 Account Management
 
@@ -650,6 +665,24 @@ npx hardhat deployUseCaseTo --config-id <id> --salt <salt> --network <network>
 # Get configuration by proxy
 npx hardhat getConfigurationByProxy --proxy <address> --network <network>
 ```
+
+#### Configuration-Only Approach
+
+In some scenarios, you might want to register configurations without deploying use cases. This is useful for:
+
+- Preparing configurations for future deployments
+- Testing configuration settings without full deployment
+- Migration scenarios where existing proxies will be reused
+
+```bash
+# Register configurations without deploying use cases
+npx hardhat deployAll --network <network> --no-deploy-use-cases
+
+# Using clean deployment orchestrator
+npx hardhat deployAllClean --network <network> --no-deploy-use-cases
+```
+
+This runs the setConfig step to register all configurations but skips the deployUseCase calls.
 
 ## 🔍 Verification and Monitoring
 

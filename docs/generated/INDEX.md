@@ -4,6 +4,7 @@
 - [access/ownable](access/ownable.md)
 - [assetevent](assetevent.md)
 - [client/filtering](client/filtering.md)
+- [client/tsr](client/tsr.md)
 - [core](core.md)
 - [factory](factory.md)
 - [factory/accessControl](factory/accessControl.md)

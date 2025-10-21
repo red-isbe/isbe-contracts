@@ -175,8 +175,6 @@ export class CleanDeploymentOrchestrator {
         result: DeploymentResult,
         options: DeploymentOptions
     ): Promise<void> {
-        if (options.skipUseCases) return
-
         EnhancedLogger.logSection('Step 3: Use Case Deployment')
         this.timer.startStep('Use Case Deployment')
 
@@ -185,17 +183,31 @@ export class CleanDeploymentOrchestrator {
             this.config.useCases.length
         )
 
-        // Use clean use case deployer with progress tracking
-        // Validate use case configurations before deployment
+        if (options.skipUseCases) {
+            // Only register configurations but don't deploy use cases
+            console.log(
+                '\n🔧 Registering configurations without deploying use cases'
+            )
+            console.log('   ℹ️  Will call setConfig but skip deployUseCase')
 
-        result.useCases = await this.useCaseDeployer.deployAll(
-            this.config.useCases,
-            result.governance!.address,
-            result.businessLogics,
-            progressTracker
-        )
+            // Configure use cases but don't deploy them
+            result.useCases = await this.useCaseDeployer.configureAll(
+                this.config.useCases,
+                result.governance!.address,
+                result.businessLogics,
+                progressTracker
+            )
+        } else {
+            // Do full deployment including configuration and proxy creation
+            result.useCases = await this.useCaseDeployer.deployAll(
+                this.config.useCases,
+                result.governance!.address,
+                result.businessLogics,
+                progressTracker
+            )
+        }
+
         result.summary.completedSteps++
-
         this.timer.endStep()
         progressTracker.printSummary()
     }
