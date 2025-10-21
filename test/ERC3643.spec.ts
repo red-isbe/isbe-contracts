@@ -1002,33 +1002,17 @@ describe('ERC3643 Token', function () {
             })
 
             it('GIVEN arrays length mismatch WHEN batchFreezePartialTokens THEN reverts', async () => {
-                // Debug: Let's see what happens when we call this
-                try {
-                    const tx = await erc3643
+                await expect(
+                    erc3643
                         .connect(owner)
                         .batchFreezePartialTokens(
                             [aliceAddress, bobAddress],
                             ['100']
                         )
-                    await tx.wait()
-                    console.log('❌ Transaction succeeded when it should have reverted')
-                } catch (error: any) {
-                    console.log('✅ Transaction reverted as expected')
-                    console.log('Error name:', error.name)
-                    console.log('Error message:', error.message)
-                    console.log('Error data:', error.data)
-                    console.log('Full error:', JSON.stringify(error, null, 2))
-                }
-                
-                // Original test (commented for now)
-                // await expect(
-                //     erc3643
-                //         .connect(owner)
-                //         .batchFreezePartialTokens(
-                //             [aliceAddress, bobAddress],
-                //             ['100']
-                //         )
-                // ).to.be.revertedWithCustomError(erc3643, 'NotSameLengthArray')
+                ).to.be.revertedWithCustomError(
+                    erc20Facet,
+                    'NotSameLengthArray'
+                )
             })
 
             it('GIVEN empty arrays WHEN batchFreezePartialTokens THEN succeeds without operations', async () => {
@@ -1220,7 +1204,10 @@ describe('ERC3643 Token', function () {
                             [aliceAddress, bobAddress],
                             ['100']
                         )
-                ).to.be.revertedWithCustomError(erc3643, 'NotSameLengthArray')
+                ).to.be.revertedWithCustomError(
+                    erc20Facet,
+                    'NotSameLengthArray'
+                )
             })
 
             it('GIVEN empty arrays WHEN batchUnfreezePartialTokens THEN succeeds without operations', async () => {
