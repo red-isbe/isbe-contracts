@@ -96,17 +96,8 @@ abstract contract ERC20 is IERC20Isbe, ERC203643InternalCommon {
 
         address from = _msgSender();
 
-        // Calculate total amount for balance validation
-        uint256 totalAmount = 0;
-        for (uint256 i = 0; i < _amounts.length; ++i) {
-            totalAmount += _amounts[i];
-        }
-
-        // Check sender has sufficient balance for entire batch
-        require(
-            _balanceOf(from) >= totalAmount,
-            IERC20Isbe.TransferAmountExceedsBalance()
-        );
+        // Validate total amount and sender balance
+        _checkTotalAmount(from, _amounts);
 
         // Perform individual transfers
         for (uint256 i = 0; i < _toList.length; ++i) {

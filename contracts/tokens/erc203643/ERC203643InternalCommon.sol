@@ -17,6 +17,7 @@ import {IERC3643Regulatory} from '../erc3643/token/erc3643regulatory/IERC3643Reg
 
 /// @title ERC203643InternalCommon
 /// @notice Aggregates the internal functions of ERC20, ERC3643
+/// @dev Provides unified token transfer logic for both ERC20 and ERC3643 standards
 
 // solhint-disable-next-line no-empty-blocks
 abstract contract ERC203643InternalCommon is
@@ -26,136 +27,250 @@ abstract contract ERC203643InternalCommon is
     ERC3643FreezeInternal,
     ERC3643RegulatoryInternal
 {
+    /**
+     * @dev Hook that is called before any token transfer
+     * @param _from Address tokens are transferred from (0x0 for minting)
+     * @param _to Address tokens are transferred to (0x0 for burning)
+     * @param _amount Amount of tokens to transfer
+     */
     function _beforeTokenTransfer(
         address _from,
         address _to,
         uint256 _amount
     ) internal virtual override {
-        // === VARIABLES COMUNES ===
-        uint256 balanceOfFrom;
-        uint256 frozen;
-        uint256 freeBalance;
-        bool hasIdentityRegistry = _identityRegistry() != address(0);
-        bool hasControllerRole = _hasRole(_CONTROLLER_ROLE, msg.sender);
-        bool hasRecoveryRole = _hasRole(_RECOVERY_ROLE, msg.sender);
-
-        // ==========================================================================
-        // MINT OPERATIONS (_from == address(0))
-        // ==========================================================================
+        // Determine the type of operation
         if (_from == address(0)) {
-            // Snapshot logic
-            _updateAccountSnapshot(_to);
-            _updateTotalSupplySnapshot();
-
-            // mint() - Mint validation
-            // In ERC20 mode: no additional validation needed
-            // In ERC3643 mode: recipient must be verified in IdentityRegistry
-            if (hasIdentityRegistry) {
-                require(
-                    IIdentityRegistry(_identityRegistry()).isVerified(_to),
-                    IERC3643Regulatory.RecipientNotVerified(_to)
-                );
-            }
+            _handleMintOperation(_to);
+        } else if (_to == address(0)) {
+            _handleBurnOperation(_from, _amount);
+        } else {
+            _handleTransferOperation(_from, _to, _amount);
         }
-        // ==========================================================================
-        // BURN OPERATIONS (_to == address(0))
-        // ==========================================================================
-        else if (_to == address(0)) {
-            // Snapshot logic
-            _updateAccountSnapshot(_from);
-            _updateTotalSupplySnapshot();
+    }
 
-            // Calculate balance once for burn operations
-            balanceOfFrom = _balanceOf(_from);
+    /**
+     * @dev Handles mint operations (when _from is address(0))
+     * @param _to Recipient address
+     */
+    function _handleMintOperation(address _to) internal {
+        // Update snapshots
+        _updateAccountSnapshot(_to);
+        _updateTotalSupplySnapshot();
+
+        // Validate recipient in ERC3643 mode
+        _validateRecipientIdentity(_to);
+    }
+
+    /**
+     * @dev Handles burn operations (when _to is address(0))
+     * @param _from Address to burn tokens from
+     * @param _amount Amount to burn
+     */
+    function _handleBurnOperation(address _from, uint256 _amount) internal {
+        // Update snapshots
+        _updateAccountSnapshot(_from);
+        _updateTotalSupplySnapshot();
+
+        // Validate sufficient balance for burn
+        _validateSufficientBalanceForBurn(_from, _amount);
+
+        // Handle force burn with auto-unfreeze if caller is controller
+        if (_isControllerOrRecovery()) {
+            _handleForceBurnWithUnfreeze(_from, _amount);
+        }
+    }
+
+    /**
+     * @dev Handles transfer operations (when both _from and _to are non-zero)
+     * @param _from Address to transfer from
+     * @param _to Address to transfer to
+     * @param _amount Amount to transfer
+     */
+    function _handleTransferOperation(
+        address _from,
+        address _to,
+        uint256 _amount
+    ) internal {
+        // Update snapshots
+        _updateAccountSnapshot(_from);
+        _updateAccountSnapshot(_to);
+
+        // Validate sufficient balance
+        _validateSufficientBalance(_from, _amount);
+
+        // Apply ERC3643 validations if identity registry is configured
+        if (_hasIdentityRegistry()) {
+            _validateERC3643Transfer(_from, _to, _amount);
+        }
+    }
+
+    /**
+     * @dev Validates ERC3643 transfer requirements
+     * @param _from Address to transfer from
+     * @param _to Address to transfer to
+     * @param _amount Amount to transfer
+     */
+    function _validateERC3643Transfer(
+        address _from,
+        address _to,
+        uint256 _amount
+    ) internal {
+        // Recipient must be verified
+        _validateRecipientIdentity(_to);
+
+        // Check if this is a forced transfer by controller/recovery
+        if (_isControllerOrRecovery()) {
+            _handleForceTransferWithUnfreeze(_from, _amount);
+        } else {
+            _handleNormalTransferValidation(_from, _to, _amount);
+        }
+    }
+
+    /**
+     * @dev Handles normal transfer validation (non-forced)
+     * @param _from Address to transfer from
+     * @param _to Address to transfer to
+     * @param _amount Amount to transfer
+     */
+    function _handleNormalTransferValidation(
+        address _from,
+        address _to,
+        uint256 _amount
+    ) internal view {
+        // Both sender and recipient must not be frozen
+        require(!_isFrozen(_from), IERC3643Freeze.SenderIsFrozen(_from));
+        require(!_isFrozen(_to), IERC3643Freeze.RecipientIsFrozen(_to));
+
+        // Sender must have sufficient free (unfrozen) balance
+        uint256 freeBalance = _calculateFreeBalance(_from);
+        require(
+            freeBalance >= _amount,
+            IERC3643Freeze.InsufficientFreeBalance(_from, _amount, freeBalance)
+        );
+    }
+
+    /**
+     * @dev Handles force burn with auto-unfreeze capability
+     * @param _from Address to burn from
+     * @param _amount Amount to burn
+     */
+    function _handleForceBurnWithUnfreeze(
+        address _from,
+        uint256 _amount
+    ) internal {
+        uint256 freeBalance = _calculateFreeBalance(_from);
+
+        if (freeBalance < _amount) {
+            _unfreezeTokensForOperation(_from, _amount, freeBalance);
+        }
+    }
+
+    /**
+     * @dev Handles force transfer with auto-unfreeze capability
+     * @param _from Address to transfer from
+     * @param _amount Amount to transfer
+     */
+    function _handleForceTransferWithUnfreeze(
+        address _from,
+        uint256 _amount
+    ) internal {
+        uint256 freeBalance = _calculateFreeBalance(_from);
+
+        if (freeBalance < _amount) {
+            _unfreezeTokensForOperation(_from, _amount, freeBalance);
+        }
+    }
+
+    /**
+     * @dev Unfreezes tokens to complete an operation
+     * @param _from Address to unfreeze tokens for
+     * @param _amount Total amount needed
+     * @param _freeBalance Current free balance
+     */
+    function _unfreezeTokensForOperation(
+        address _from,
+        uint256 _amount,
+        uint256 _freeBalance
+    ) internal {
+        uint256 tokensToUnfreeze = _amount - _freeBalance;
+        _unfreezePartialTokens(_from, tokensToUnfreeze);
+        emit IERC3643Freeze.TokensUnfrozen(_from, tokensToUnfreeze);
+    }
+
+    /**
+     * @dev Validates that recipient is verified in identity registry
+     * @param _to Recipient address to validate
+     */
+    function _validateRecipientIdentity(address _to) internal view {
+        if (_hasIdentityRegistry()) {
             require(
-                balanceOfFrom >= _amount,
-                IERC20Isbe.BurnAmountExceedsBalance()
+                IIdentityRegistry(_identityRegistry()).isVerified(_to),
+                IERC3643Regulatory.RecipientNotVerified(_to)
             );
-
-            // Burn validation with freeze management
-            // In ERC20 mode: burn() / burnFrom() no additional validations | forceBurn() no additional validations
-            // In ERC3643 mode: burn() / burnFrom() don't exist (not exposed) | forceBurn() auto-unfreeze if needed
-            if (hasControllerRole) {
-                // forceBurn() - Controller burn with auto-unfreeze capability
-                // In ERC20 mode: frozen = 0, so freeBalance = balanceOfFrom (no unfreeze needed)
-                // In ERC3643 mode: auto-unfreeze frozen tokens if needed to complete the burn
-                frozen = _getFrozenTokens(_from);
-                freeBalance = balanceOfFrom > frozen
-                    ? (balanceOfFrom - frozen)
-                    : 0;
-
-                if (freeBalance < _amount) {
-                    uint256 tokensToUnfreeze = _amount - freeBalance;
-                    _unfreezePartialTokens(_from, tokensToUnfreeze);
-                    emit IERC3643Freeze.TokensUnfrozen(_from, tokensToUnfreeze);
-                }
-            }
-            // else: burn() / burnFrom() - Normal burn operations
-            // (No additional logic needed here)
         }
-        // ==========================================================================
-        // TRANSFER OPERATIONS (_from != address(0) && _to != address(0))
-        // ==========================================================================
-        else {
-            // Snapshot logic
-            _updateAccountSnapshot(_from);
-            _updateAccountSnapshot(_to);
+    }
 
-            // Calculate balance once for transfer operations
-            balanceOfFrom = _balanceOf(_from);
-            require(
-                balanceOfFrom >= _amount,
-                IERC20Isbe.TransferAmountExceedsBalance()
-            );
+    /**
+     * @dev Validates that account has sufficient balance for transfer
+     * @param _account Account to check
+     * @param _amount Amount required
+     */
+    function _validateSufficientBalance(
+        address _account,
+        uint256 _amount
+    ) internal view {
+        uint256 balance = _balanceOf(_account);
+        require(balance >= _amount, IERC20Isbe.TransferAmountExceedsBalance());
+    }
 
-            // ERC3643 mode validations - Transfer validation with regulatory compliance and freeze management
-            // In ERC20 mode: transfer() and forceTransfer() behave identically here (no additional validations)
-            if (hasIdentityRegistry) {
-                // Verify recipient identity (required for both normal and force transfers)
-                require(
-                    IIdentityRegistry(_identityRegistry()).isVerified(_to),
-                    IERC3643Regulatory.RecipientNotVerified(_to)
-                );
+    /**
+     * @dev Validates that account has sufficient balance for burn
+     * @param _account Account to check
+     * @param _amount Amount required
+     */
+    function _validateSufficientBalanceForBurn(
+        address _account,
+        uint256 _amount
+    ) internal view {
+        uint256 balance = _balanceOf(_account);
+        require(balance >= _amount, IERC20Isbe.BurnAmountExceedsBalance());
+    }
 
-                // Calculate freeze info once
-                frozen = _getFrozenTokens(_from);
-                freeBalance = balanceOfFrom > frozen
-                    ? (balanceOfFrom - frozen)
-                    : 0;
+    /**
+     * @dev Checks if identity registry is configured
+     * @return True if identity registry exists
+     */
+    function _hasIdentityRegistry() internal view returns (bool) {
+        return _identityRegistry() != address(0);
+    }
 
-                if (hasControllerRole || hasRecoveryRole) {
-                    // forceTransfer() - Forced transfer with auto-unfreeze capability
-                    // Auto-unfreeze if needed to complete the transfer
-                    if (freeBalance < _amount) {
-                        uint256 tokensToUnfreeze = _amount - freeBalance;
-                        _unfreezePartialTokens(_from, tokensToUnfreeze);
-                        emit IERC3643Freeze.TokensUnfrozen(
-                            _from,
-                            tokensToUnfreeze
-                        );
-                    }
-                } else {
-                    // transfer() / transferFrom() - Normal transfer operations
-                    // Strict validation: both accounts not frozen + sufficient free balance
-                    require(
-                        !_isFrozen(_from),
-                        IERC3643Freeze.SenderIsFrozen(_from)
-                    );
-                    require(
-                        !_isFrozen(_to),
-                        IERC3643Freeze.RecipientIsFrozen(_to)
-                    );
-                    require(
-                        freeBalance >= _amount,
-                        IERC3643Freeze.InsufficientFreeBalance(
-                            _from,
-                            _amount,
-                            freeBalance
-                        )
-                    );
-                }
-            }
-            // else: ERC20 mode - no additional validations needed for any transfer type
+    /**
+     * @dev Checks if caller has controller or recovery role
+     * @return True if caller is controller or recovery
+     */
+    function _isControllerOrRecovery() internal view returns (bool) {
+        return
+            _hasRole(_CONTROLLER_ROLE, msg.sender) ||
+            _hasRole(_RECOVERY_ROLE, msg.sender);
+    }
+
+    /**
+     * @dev Calculates the free (unfrozen) balance for an account
+     * @param _account The address to check
+     * @return The amount of unfrozen tokens available for transfer
+     */
+    function _calculateFreeBalance(
+        address _account
+    ) internal view returns (uint256) {
+        uint256 totalBalance = _balanceOf(_account);
+        uint256 frozenTokens = _getFrozenTokens(_account);
+
+        // If frozen tokens exceed total balance, free balance is zero
+        if (frozenTokens >= totalBalance) {
+            return 0;
         }
+
+        // Otherwise, free balance is the difference
+        return totalBalance - frozenTokens;
     }
 }

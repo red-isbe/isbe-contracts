@@ -260,6 +260,37 @@ abstract contract ERC20Internal is Common {
         return _erc20Storage().allowances[owner][spender];
     }
 
+    /**
+     * @dev Calculates the total amount from an array and validates that the sender has sufficient balance
+     * @param _from The address to check the balance of
+     * @param _amounts Array of amounts to sum
+     * @return totalAmount The total sum of all amounts in the array
+     *
+     * Requirements:
+     * - The sender must have a balance greater than or equal to the total amount
+     *
+     * Reverts:
+     * - {TransferAmountExceedsBalance} if sender has insufficient balance
+     */
+    function _checkTotalAmount(
+        address _from,
+        uint256[] calldata _amounts
+    ) internal view returns (uint256 totalAmount) {
+        // Calculate total amount for balance validation
+        uint256 amountsLength = _amounts.length;
+        for (uint256 i = 0; i < amountsLength; ++i) {
+            unchecked {
+                totalAmount += _amounts[i];
+            }
+        }
+
+        // Check sender has sufficient balance for entire batch
+        require(
+            _balanceOf(_from) >= totalAmount,
+            IERC20Isbe.TransferAmountExceedsBalance()
+        );
+    }
+
     function _erc20Storage()
         private
         pure
