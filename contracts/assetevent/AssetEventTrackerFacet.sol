@@ -8,10 +8,13 @@ import {IEIP2535Introspection} from '../proxies/eip2535/interfaces/IEIP2535Intro
 /// @title AssetEventTrackerFacet
 /// @notice Implements generic state tracking for an asset using events
 /// @dev Inherits from AssetEventTracker, providing asset event tracker functions
+/// @author ISBE Development Team
 abstract contract AssetEventTrackerFacet is
     AssetEventTracker,
     IEIP2535Introspection
 {
+    /// @notice Get the list of interfaces implemented by this facet
+    /// @return interfaces_ Array of interface IDs
     function interfacesIntrospection()
         external
         pure
@@ -20,6 +23,8 @@ abstract contract AssetEventTrackerFacet is
         return _implementedInterfaces();
     }
 
+    /// @notice Get the business ID associated with this facet
+    /// @return businessId_ Business ID for this facet
     function businessIdIntrospection()
         external
         pure
@@ -29,6 +34,8 @@ abstract contract AssetEventTrackerFacet is
         businessId_ = _ASSET_EVENT_TRACKER_RESOLVER_KEY;
     }
 
+    /// @notice Get the list of function selectors for this facet
+    /// @return selectors_ Array of function selectors
     function selectorsIntrospection()
         external
         pure

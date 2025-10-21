@@ -186,6 +186,8 @@ export class CleanDeploymentOrchestrator {
         )
 
         // Use clean use case deployer with progress tracking
+        // Validate use case configurations before deployment
+
         result.useCases = await this.useCaseDeployer.deployAll(
             this.config.useCases,
             result.governance!.address,
@@ -322,10 +324,12 @@ export class CleanDeploymentOrchestrator {
         if (failedUseCases.length > 0) {
             console.log('\\n❌ FAILED USE CASES:')
             failedUseCases.forEach((useCase, index) => {
-                console.log(`   ${index + 1}. ${useCase.config.description}`)
+                console.log(
+                    `   ${index + 1}. ${useCase.config?.description || 'Unknown Use Case'} (ID: ${useCase.config?.configurationId || 'N/A'})`
+                )
                 console.log(`      🚨 Error: ${useCase.error}`)
                 console.log(
-                    `      🔗 Config ID: ${useCase.config.configurationId}`
+                    `      🔗 Config ID: ${useCase.config?.configurationId || 'N/A'}`
                 )
             })
         }

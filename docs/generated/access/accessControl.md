@@ -24,13 +24,13 @@ Constructor that disables the initializer
 function initializeAccessControl(struct IAccessControl.Rbac[] _rbacs) external
 ```
 
-Initializes the Access Control contrl grating roles
+Initializes the access control contract
 
 #### Parameters
 
-| Name    | Type                         | Description                       |
-| ------- | ---------------------------- | --------------------------------- |
-| \_rbacs | struct IAccessControl.Rbac[] | Addresses and roles to be granted |
+| Name    | Type                         | Description                                                          |
+| ------- | ---------------------------- | -------------------------------------------------------------------- |
+| \_rbacs | struct IAccessControl.Rbac[] | Array of role-based access control configurations to initialize with |
 
 ### grantRole
 
@@ -222,17 +222,47 @@ Returns a paginated list of roles assigned to a specific account
 function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
 ```
 
+Returns the interfaces implemented by this contract
+
+#### Return Values
+
+| Name         | Type     | Description            |
+| ------------ | -------- | ---------------------- |
+| interfaces\_ | bytes4[] | Array of interface IDs |
+
 ### \_protectISBERole
 
 ```solidity
 function _protectISBERole(bytes32 _role) internal pure virtual
 ```
 
+Checks if a role is an ISBE role and protects it from modifications
+
+#### Parameters
+
+| Name   | Type    | Description       |
+| ------ | ------- | ----------------- |
+| \_role | bytes32 | The role to check |
+
 ### \_isISBERole
 
 ```solidity
 function _isISBERole(bytes32 _role) internal pure returns (bool)
 ```
+
+Checks if a role is an ISBE role
+
+#### Parameters
+
+| Name   | Type    | Description       |
+| ------ | ------- | ----------------- |
+| \_role | bytes32 | The role to check |
+
+#### Return Values
+
+| Name | Type | Description                                       |
+| ---- | ---- | ------------------------------------------------- |
+| [0]  | bool | True if the role is an ISBE role, false otherwise |
 
 ---
 

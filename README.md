@@ -536,6 +536,9 @@ npx hardhat getBusinessLogicVersions --business-id <id> --network <network>
 ### Configuration Management
 
 ```bash
+# Build Configuration ID
+npx hardhat build-configuration-id --seed <seed> --resolver-keys <key1,key2> [--position-divisor <divisor>] [--log-level <level>]
+
 # Set configuration
 npx hardhat setConfig --business-data <data> --network <network>
 
@@ -545,6 +548,48 @@ npx hardhat getConfig --config-id <id> --network <network>
 # Get facets from configuration
 npx hardhat facets --config-id <id> --network <network>
 ```
+
+#### Building Custom Configuration IDs
+
+The `build-configuration-id` task allows you to generate deterministic Configuration IDs for custom facet combinations:
+
+```bash
+# Basic usage
+npx hardhat build-configuration-id \
+  --seed "0x000000000000000000000000000000000000000000000000000000000000002" \
+  --resolver-keys "0x2428f215905ecd05cc26794e218b9fad455e6ae2ca828b2f1c1903e8770265ad"
+
+# Multiple resolver keys
+npx hardhat build-configuration-id \
+  --seed "0x000000000000000000000000000000000000000000000000000000000000002" \
+  --resolver-keys "0x2428f215905ecd05cc26794e218b9fad455e6ae2ca828b2f1c1903e8770265ad,0x81c694c8d5a595cfca0b2b486a8e2aff0a72d8063c636a02c1ca1cc12e55d471"
+
+# With custom position divisor
+npx hardhat build-configuration-id \
+  --seed "0x000000000000000000000000000000000000000000000000000000000000002" \
+  --resolver-keys "0x2428f215905ecd05cc26794e218b9fad455e6ae2ca828b2f1c1903e8770265ad" \
+  --position-divisor 16
+
+# With verbose logging
+npx hardhat build-configuration-id \
+  --seed "0x000000000000000000000000000000000000000000000000000000000000002" \
+  --resolver-keys "0x2428f215905ecd05cc26794e218b9fad455e6ae2ca828b2f1c1903e8770265ad" \
+  --log-level verbose
+```
+
+**Parameters**:
+
+- `seed`: Initial 32-byte hex string (with or without 0x prefix)
+- `resolver-keys`: Comma-separated list of 32-byte resolver key hex strings
+- `position-divisor`: (Optional) Number to use for position calculation (default: 32)
+- `log-level`: (Optional) Logging level: 'info' or 'verbose' (default: 'info')
+
+**Features**:
+
+- Deterministic output - same inputs always produce same Configuration ID
+- Type-safe implementation with comprehensive error handling
+- Verbose logging mode for debugging
+- Support for multiple resolver keys
 
 ### Use Case Deployment
 
@@ -814,6 +859,133 @@ This repository has two types of users:
 - **TypeScript compilation passes** (`npx tsc --noEmit --skipLibCheck`)
 - **Custom error handling** (use structured error classes from `utils/errors.ts`)
 
+### Configuration ID Algorithm
+
+The project includes a robust Configuration ID generation algorithm:
+
+```typescript
+// Core algorithm steps
+function buildConfigurationId(
+    seed: string, // Initial state (32-byte hex)
+    resolverKeys: string[], // Array of resolver keys
+    options?: {
+        positionDivisor?: number // For position calculation
+        logLevel?: 'info' | 'verbose'
+    }
+): string {
+    // 1. Input validation
+    // 2. For each resolver key:
+    //    a. Calculate position using modulo
+    //    b. Extract byte at position
+    //    c. Create mask with byte
+    //    d. Apply XOR operation
+    // 3. Return final Configuration ID
+}
+```
+
+For detailed implementation and usage, see the [Custom Configuration IDs ADR](docs/adrs/ADR_003-CustomConfigurationIDs.md).
+
+#### Algorithm Flow
+
+```mermaid
+graph TD
+    A[Input: Seed + Resolver Keys] --> B[Validate Inputs]
+    B --> C{For Each Key}
+    C --> D[Calculate Position]
+    D --> E[Extract Byte]
+    E --> F[Create Mask]
+    F --> G[Apply XOR]
+    G --> C
+    C --> H[Format Result]
+    H --> I[Return Config ID]
+```
+
+#### Example: Complete Deployment Flow
+
+```typescript
+// 1. Import resolver key constants
+import {
+    ERC20_RESOLVER_KEY,
+    ERC20_BURNABLE_RESOLVER_KEY,
+    ERC20_MINTABLE_RESOLVER_KEY,
+    CONFIGURATION_ID_ERC20,
+} from '../utils/constants'
+
+// 2. Build Configuration ID for ERC20 with Burnable and Mintable
+const configId = await hre.run('build-configuration-id', {
+    seed: CONFIGURATION_ID_ERC20,
+    resolverKeys: [
+        ERC20_RESOLVER_KEY,
+        ERC20_BURNABLE_RESOLVER_KEY,
+        ERC20_MINTABLE_RESOLVER_KEY,
+    ].join(','),
+    logLevel: 'verbose',
+})
+
+// 3. Register configuration
+await hre.run('setConfig', {
+    configurationId: configId,
+    businessData: [
+        // Business logic facet addresses
+        { businessId: ERC20_RESOLVER_KEY, address: erc20Address },
+        { businessId: ERC20_BURNABLE_RESOLVER_KEY, address: burnableAddress },
+        { businessId: ERC20_MINTABLE_RESOLVER_KEY, address: mintableAddress },
+    ],
+})
+
+// 4. Deploy token with custom configuration
+const proxyAddress = await hre.run('deployUseCase', {
+    configurationId: configId,
+})
+
+// 5. Initialize token
+const token = await ethers.getContractAt('IERC20Metadata', proxyAddress)
+await token.initialize('My Token', 'MTK', 18)
+```
+
+#### Available Resolver Keys
+
+Pre-defined resolver keys for common facets:
+
+```typescript
+// ERC20 Resolver Keys
+ERC20_RESOLVER_KEY = '0x2428f215...' // Base ERC20
+ERC20_BURNABLE_RESOLVER_KEY = '0x81c694c8...' // Burnable extension
+ERC20_MINTABLE_RESOLVER_KEY = '0x3f28d71e...' // Mintable extension
+ERC20_CAPPED_RESOLVER_KEY = '0x9a43de51...' // Capped extension
+
+// ERC721 Resolver Keys
+ERC721_RESOLVER_KEY = '0x90e014db...' // Base ERC721
+ERC721_BURNABLE_RESOLVER_KEY = '0x71e9f4b7...' // Burnable extension
+ERC721_ENUMERABLE_RESOLVER_KEY = '0x4b2a0982...' // Enumerable extension
+
+// Configuration Seeds
+CONFIGURATION_ID_ERC20 = '0x...0020' // ERC20 base seed
+CONFIGURATION_ID_ERC721 = '0x...0721' // ERC721 base seed
+```
+
+#### Common Use Cases
+
+1. **Basic ERC20 Token**:
+
+    ```bash
+    npx hardhat build-configuration-id --seed $CONFIGURATION_ID_ERC20 --resolver-keys $ERC20_RESOLVER_KEY
+    ```
+
+2. **Mintable & Burnable ERC20**:
+
+    ```bash
+    npx hardhat build-configuration-id --seed $CONFIGURATION_ID_ERC20 \
+        --resolver-keys "$ERC20_RESOLVER_KEY,$ERC20_BURNABLE_RESOLVER_KEY,$ERC20_MINTABLE_RESOLVER_KEY"
+    ```
+
+3. **Complete ERC721 with Extensions**:
+    ```bash
+    npx hardhat build-configuration-id --seed $CONFIGURATION_ID_ERC721 \
+        --resolver-keys "$ERC721_RESOLVER_KEY,$ERC721_BURNABLE_RESOLVER_KEY,$ERC721_ENUMERABLE_RESOLVER_KEY" \
+        --log-level verbose
+    ```
+
 ### Pre-commit Validation
 
 The project uses Husky hooks that automatically run:
@@ -857,7 +1029,34 @@ For detailed installation and usage instructions, visit the [package documentati
 
 ## 🔧 Troubleshooting
 
-### Common Issues
+### Common Issues with Configuration IDs
+
+1. **Invalid Configuration ID Format**:
+
+    ```bash
+    # Error: "Invalid hex format"
+    # Fix: Ensure 32-byte hex with 0x prefix
+    npx hardhat build-configuration-id --seed "0x$(printf '%064d' 0)"
+    ```
+
+2. **Resolver Key Order**:
+    - The order of resolver keys affects the final Configuration ID
+    - Keep consistent ordering in your deployment scripts
+    - Document the order used for each configuration
+
+3. **Missing Business Logic**:
+
+    ```bash
+    # First: Deploy business logic facets
+    npx hardhat deployBusinessLogic --resolver ERC20_RESOLVER_KEY
+    npx hardhat deployBusinessLogic --resolver ERC20_BURNABLE_RESOLVER_KEY
+
+    # Then: Build and register configuration
+    npx hardhat build-configuration-id ...
+    npx hardhat setConfig ...
+    ```
+
+### Other Common Issues
 
 1. **Account Validation Fails**:
 

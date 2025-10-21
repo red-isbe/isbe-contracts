@@ -4,7 +4,7 @@ pragma solidity ^0.8.28;
 
 // solhint-disable max-line-length
 
-bytes32 constant _DEFAULT_ADMIN_ROLE = 0x00;
+bytes32 constant _DEFAULT_ADMIN_ROLE = 0x0000000000000000000000000000000000000000000000000000000000000000;
 
 // keccak256('isbe.contracts.role.pauser');
 bytes32 constant _PAUSER_ROLE = 0x8c911f4537972e7549dbbd37a96b929a4b480f4fb156fc6344524bdf2ca50aa1;

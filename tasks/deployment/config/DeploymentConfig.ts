@@ -77,10 +77,28 @@ export class DeploymentConfig {
     }
 
     static getDefaultConfig(): DeploymentConfig {
+        // Create a copy and filter out any undefined or invalid configurations
+        const useCases = DEFAULT_USE_CASE_CONFIGURATIONS.slice().filter(
+            (cfg) => cfg && cfg.description && cfg.configurationId
+        )
+
+        // Validate use cases
+        const invalidConfigs = useCases.filter(
+            (cfg) => !cfg || !cfg.description
+        )
+        if (invalidConfigs.length > 0) {
+            throw new Error(
+                `Invalid use case configuration(s) detected: ${invalidConfigs.length} use case(s) are missing required properties.`
+            )
+        }
+
+        // Log the number of configured use cases
+        console.log(`   📋 Configured use cases: ${useCases.length}`)
+
         return new DeploymentConfig(
             DEFAULT_GOVERNANCE_CONFIG,
             BUSINESS_LOGIC_DEFINITIONS.slice(), // Create a copy to avoid mutations
-            DEFAULT_USE_CASE_CONFIGURATIONS.slice() // Create a copy to avoid mutations
+            useCases
         )
     }
 }

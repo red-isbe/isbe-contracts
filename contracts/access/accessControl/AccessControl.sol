@@ -7,6 +7,7 @@ import {_ACCESS_CONTROL_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
 import {_ISBE_ROLE} from '../../constants/roles.sol';
 
 /// @title AccessControl
+/// @author ISBE team
 /// @notice Implements role-based access control mechanisms
 /// @dev Inherits from IAccessControl and Common, providing external role management functions
 abstract contract AccessControl is IAccessControl, Common {
@@ -19,6 +20,8 @@ abstract contract AccessControl is IAccessControl, Common {
         _disableInitializers(_ACCESS_CONTROL_RESOLVER_KEY);
     }
 
+    /// @notice Initializes the access control contract
+    /// @param _rbacs Array of role-based access control configurations to initialize with
     function initializeAccessControl(
         IAccessControl.Rbac[] memory _rbacs
     ) external initializer(_ACCESS_CONTROL_RESOLVER_KEY) {
@@ -108,6 +111,8 @@ abstract contract AccessControl is IAccessControl, Common {
         return _getRolesByAccount(_account, _pageIndex, _pageLength);
     }
 
+    /// @notice Returns the interfaces implemented by this contract
+    /// @return interfaces_ Array of interface IDs
     function _implementedInterfaces()
         internal
         pure
@@ -120,10 +125,15 @@ abstract contract AccessControl is IAccessControl, Common {
         interfaces_[--interfacesLength] = type(IAccessControl).interfaceId;
     }
 
+    /// @notice Checks if a role is an ISBE role and protects it from modifications
+    /// @param _role The role to check
     function _protectISBERole(bytes32 _role) internal pure virtual {
         if (_isISBERole(_role)) revert RoleIsImmutable(_role);
     }
 
+    /// @notice Checks if a role is an ISBE role
+    /// @param _role The role to check
+    /// @return True if the role is an ISBE role, false otherwise
     function _isISBERole(bytes32 _role) internal pure returns (bool) {
         return _role == _ISBE_ROLE;
     }
