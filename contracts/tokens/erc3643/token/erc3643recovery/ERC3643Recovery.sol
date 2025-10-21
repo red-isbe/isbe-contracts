@@ -31,7 +31,62 @@ abstract contract ERC3643Recovery is IERC3643Recovery, ERC203643InternalCommon {
         address _newWallet,
         address _investorOnchainID
     ) external override whenNotPaused onlyRole(_RECOVERY_ROLE) returns (bool) {
-        // Validate input addresses
+        // 1. Validate all input parameters
+        _validateRecoveryInputs(_lostWallet, _newWallet, _investorOnchainID);
+
+        // 2. Check balance availability
+        uint256 lostWalletBalance = _checkRecoverableBalance(_lostWallet);
+
+        // 3. Validate wallet ownership (optional, currently commented)
+        IIdentity onchainID = IIdentity(_investorOnchainID);
+        // _validateWalletOwnership(_newWallet, onchainID);
+
+        // 4. Capture frozen state before transfer
+        FrozenState memory frozenState = _captureFrozenState(_lostWallet);
+
+        // 5. Register new wallet in Identity Registry
+        _registerNewWallet(_lostWallet, _newWallet, onchainID);
+
+        // 6. Transfer all tokens
+        _transfer(_lostWallet, _newWallet, lostWalletBalance);
+
+        // 7. Restore frozen state
+        _restoreFrozenState(_newWallet, frozenState);
+
+        // 8. Clean up lost wallet
+        _removeFromIdentityRegistry(_lostWallet);
+
+        // 9. Emit success event
+        emit RecoverySuccess(_lostWallet, _newWallet, _investorOnchainID);
+
+        return true;
+    }
+
+    /**
+     * @dev Struct to hold frozen state information
+     */
+    struct FrozenState {
+        uint256 frozenTokens;
+        bool wasAddressFrozen;
+    }
+
+    /**
+     * @dev Validates all recovery input parameters
+     * @param _lostWallet The lost wallet address to validate
+     * @param _newWallet The new wallet address to validate
+     * @param _investorOnchainID The investor's onchain ID to validate
+     *
+     * Reverts:
+     * - {InvalidLostWallet} if lost wallet is zero address
+     * - {InvalidNewWallet} if new wallet is zero address
+     * - {InvalidInvestorOnchainID} if onchain ID is zero address
+     * - {SameWalletAddress} if lost and new wallets are the same
+     */
+    function _validateRecoveryInputs(
+        address _lostWallet,
+        address _newWallet,
+        address _investorOnchainID
+    ) internal pure {
         if (_lostWallet == address(0)) {
             revert IERC3643Recovery.InvalidLostWallet();
         }
@@ -44,56 +99,106 @@ abstract contract ERC3643Recovery is IERC3643Recovery, ERC203643InternalCommon {
         if (_lostWallet == _newWallet) {
             revert IERC3643Recovery.SameWalletAddress();
         }
+    }
 
-        // Check if lost wallet has any balance to recover
-        uint256 lostWalletBalance = _balanceOf(_lostWallet);
-        if (lostWalletBalance == 0) {
+    /**
+     * @dev Checks if the lost wallet has tokens to recover
+     * @param _lostWallet The wallet to check
+     * @return balance The balance of the lost wallet
+     *
+     * Reverts:
+     * - {NoTokensToRecover} if the wallet has zero balance
+     */
+    function _checkRecoverableBalance(
+        address _lostWallet
+    ) internal view returns (uint256 balance) {
+        balance = _balanceOf(_lostWallet);
+        if (balance == 0) {
             revert IERC3643Recovery.NoTokensToRecover();
         }
+    }
 
-        // Validate that the new wallet belongs to the investor (key validation)
-        IIdentity onchainID = IIdentity(_investorOnchainID);
+    /**
+     * @dev Validates that the new wallet belongs to the investor
+     * @param _newWallet The wallet to validate
+     * @param _onchainID The investor's onchain ID
+     *
+     * NOTE: Currently commented out - pending final IIdentity interface implementation
+     *       Once IIdentity.keyHasPurpose is available, uncomment the implementation below
+     *
+     * Reverts or emits RecoveryFails if validation fails
+     */
+    function _validateWalletOwnership(
+        address _newWallet,
+        IIdentity _onchainID
+    ) internal view {
+        // TODO: Uncomment when IIdentity interface is complete
+        // bytes32 walletKey = keccak256(abi.encode(_newWallet));
+        // require(_onchainID.keyHasPurpose(walletKey, 1), "Invalid wallet key");
+        
+        // Placeholder to avoid unused parameter warnings
+        _newWallet;
+        _onchainID;
+    }
 
-        /* esto ver como queda al final
-        bytes32 walletKey = keccak256(abi.encode(_newWallet));
-        if (!onchainID.keyHasPurpose(walletKey, 1)) {
-            emit RecoveryFails(_lostWallet, _newWallet, _investorOnchainID);
-            return false;
-        }
-        */
+    /**
+     * @dev Captures the current frozen state of a wallet
+     * @param _wallet The wallet to capture state from
+     * @return frozenState Struct containing frozen tokens count and freeze status
+     */
+    function _captureFrozenState(
+        address _wallet
+    ) internal view returns (FrozenState memory frozenState) {
+        frozenState.frozenTokens = _getFrozenTokens(_wallet);
+        frozenState.wasAddressFrozen = _isFrozen(_wallet);
+    }
 
-        // Store frozen state and tokens before transfer
-        uint256 frozenTokens = _getFrozenTokens(_lostWallet);
-        bool wasAddressFrozen = _isFrozen(_lostWallet);
-
-        // Get country information and register new wallet in Identity Registry
+    /**
+     * @dev Registers a new wallet in the Identity Registry with investor's information
+     * @param _lostWallet The lost wallet (used to get investor country)
+     * @param _newWallet The new wallet to register
+     * @param _onchainID The investor's onchain ID
+     */
+    function _registerNewWallet(
+        address _lostWallet,
+        address _newWallet,
+        IIdentity _onchainID
+    ) internal {
         address identityRegistry = _identityRegistry();
         uint16 investorCountry = IIdentityRegistry(identityRegistry)
             .investorCountry(_lostWallet);
+        
         IIdentityRegistry(identityRegistry).registerIdentity(
             _newWallet,
-            onchainID,
+            _onchainID,
             investorCountry
         );
+    }
 
-        // Transfer all tokens from lost wallet to new wallet
-        _transfer(_lostWallet, _newWallet, lostWalletBalance);
-
-        // Restore frozen state on new wallet
-        if (frozenTokens > 0) {
-            _freezePartialTokens(_newWallet, frozenTokens);
+    /**
+     * @dev Restores frozen state to the new wallet
+     * @param _newWallet The wallet to restore frozen state to
+     * @param _frozenState The frozen state to restore
+     */
+    function _restoreFrozenState(
+        address _newWallet,
+        FrozenState memory _frozenState
+    ) internal {
+        if (_frozenState.frozenTokens > 0) {
+            _freezePartialTokens(_newWallet, _frozenState.frozenTokens);
         }
-        if (wasAddressFrozen) {
+        if (_frozenState.wasAddressFrozen) {
             _setAddressFrozen(_newWallet, true);
         }
+    }
 
-        // Remove lost wallet from Identity Registry
+    /**
+     * @dev Removes the lost wallet from the Identity Registry
+     * @param _lostWallet The wallet to remove
+     */
+    function _removeFromIdentityRegistry(address _lostWallet) internal {
+        address identityRegistry = _identityRegistry();
         IIdentityRegistry(identityRegistry).deleteIdentity(_lostWallet);
-
-        // Emit success event
-        emit RecoverySuccess(_lostWallet, _newWallet, _investorOnchainID);
-
-        return true;
     }
 
     /**
