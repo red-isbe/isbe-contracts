@@ -932,6 +932,387 @@ describe('ERC3643 Token', function () {
             })
         })
 
+        describe('batchFreezePartialTokens', () => {
+            let erc3643Capped: IERC203643Capped
+            let bob: Signer
+            let charlie: Signer
+            let bobAddress: string
+            let charlieAddress: string
+
+            beforeEach(async () => {
+                const fixture = async () => {
+                    const signers = await ethers.getSigners()
+                    bob = signers[2] as unknown as Signer
+                    charlie = signers[3] as unknown as Signer
+                    bobAddress = await bob.getAddress()
+                    charlieAddress = await charlie.getAddress()
+
+                    // Get Capped interface
+                    erc3643Capped = (await ethers.getContractAt(
+                        'IERC203643Capped',
+                        proxyAddress
+                    )) as unknown as IERC203643Capped
+
+                    // Grant necessary roles
+                    await accessControlFacet
+                        .connect(owner)
+                        .grantRole(MINTER_ROLE, ownerAddress)
+                    await accessControlFacet
+                        .connect(owner)
+                        .grantRole(CAP_ROLE, ownerAddress)
+
+                    // Initialize cap before minting
+                    await erc3643Capped.connect(owner).initializeCap('10000')
+
+                    // Mint tokens to alice, bob, and charlie
+                    await erc3643Capped
+                        .connect(owner)
+                        .mint(aliceAddress, '1000')
+                    await erc3643Capped.connect(owner).mint(bobAddress, '1000')
+                    await erc3643Capped
+                        .connect(owner)
+                        .mint(charlieAddress, '1000')
+                }
+                await loadFixture(fixture)
+            })
+
+            it('GIVEN no FREEZE_ROLE WHEN batchFreezePartialTokens THEN reverts', async () => {
+                await accessControlFacet
+                    .connect(owner)
+                    .revokeRole(FREEZE_ROLE, ownerAddress)
+
+                await expect(
+                    erc3643
+                        .connect(owner)
+                        .batchFreezePartialTokens([aliceAddress], ['100'])
+                ).to.be.reverted
+            })
+
+            it('GIVEN contract paused WHEN batchFreezePartialTokens THEN reverts', async () => {
+                await accessControlFacet
+                    .connect(owner)
+                    .grantRole(PAUSER_ROLE, ownerAddress)
+                await pauseFacet.connect(owner).pause()
+
+                await expect(
+                    erc3643
+                        .connect(owner)
+                        .batchFreezePartialTokens([aliceAddress], ['100'])
+                ).to.be.reverted
+            })
+
+            it('GIVEN arrays length mismatch WHEN batchFreezePartialTokens THEN reverts', async () => {
+                await expect(
+                    erc3643
+                        .connect(owner)
+                        .batchFreezePartialTokens(
+                            [aliceAddress, bobAddress],
+                            ['100']
+                        )
+                ).to.be.revertedWithCustomError(erc3643, 'ArrayLengthMismatch')
+            })
+
+            it('GIVEN empty arrays WHEN batchFreezePartialTokens THEN succeeds without operations', async () => {
+                const initialFrozen =
+                    await erc3643.getFrozenTokens(aliceAddress)
+
+                await erc3643.connect(owner).batchFreezePartialTokens([], [])
+
+                expect(await erc3643.getFrozenTokens(aliceAddress)).to.equal(
+                    initialFrozen
+                )
+            })
+
+            it('GIVEN valid batch WHEN batchFreezePartialTokens THEN succeeds and emits multiple TokensFrozen events', async () => {
+                const freezeAmount1 = '200'
+                const freezeAmount2 = '150'
+
+                const tx = await erc3643
+                    .connect(owner)
+                    .batchFreezePartialTokens(
+                        [aliceAddress, bobAddress],
+                        [freezeAmount1, freezeAmount2]
+                    )
+
+                // Check TokensFrozen events
+                await expect(tx)
+                    .to.emit(erc3643, 'TokensFrozen')
+                    .withArgs(aliceAddress, freezeAmount1)
+
+                await expect(tx)
+                    .to.emit(erc3643, 'TokensFrozen')
+                    .withArgs(bobAddress, freezeAmount2)
+
+                // Verify frozen tokens increased
+                expect(await erc3643.getFrozenTokens(aliceAddress)).to.equal(
+                    '200'
+                )
+                expect(await erc3643.getFrozenTokens(bobAddress)).to.equal(
+                    '150'
+                )
+            })
+
+            // Note: freezePartialTokens does NOT validate against balance
+            // It only increments frozen amount. Validation happens on transfer.
+
+            it('GIVEN large batch WHEN batchFreezePartialTokens THEN succeeds', async () => {
+                // Create 5 accounts with tokens
+                const signers = await ethers.getSigners()
+                const batchSize = 5
+                const addresses: string[] = []
+                const amounts: string[] = []
+
+                for (let i = 0; i < batchSize; i++) {
+                    const signer = signers[4 + i] as unknown as Signer
+                    const address = await signer.getAddress()
+                    addresses.push(address)
+                    amounts.push('50')
+
+                    await erc3643Capped.connect(owner).mint(address, '200')
+                }
+
+                await erc3643
+                    .connect(owner)
+                    .batchFreezePartialTokens(addresses, amounts)
+
+                // Verify each freeze
+                for (let i = 0; i < batchSize; i++) {
+                    expect(
+                        await erc3643.getFrozenTokens(addresses[i])
+                    ).to.equal('50')
+                }
+            })
+
+            it('GIVEN same address multiple times WHEN batchFreezePartialTokens THEN processes each independently', async () => {
+                const amount1 = '100'
+                const amount2 = '150'
+
+                await erc3643.connect(owner).batchFreezePartialTokens(
+                    [aliceAddress, aliceAddress], // Same address twice
+                    [amount1, amount2]
+                )
+
+                // Alice should have both amounts frozen: 100 + 150 = 250
+                expect(await erc3643.getFrozenTokens(aliceAddress)).to.equal(
+                    '250'
+                )
+            })
+
+            it('GIVEN zero amount WHEN batchFreezePartialTokens THEN succeeds and emits event', async () => {
+                const tx = await erc3643
+                    .connect(owner)
+                    .batchFreezePartialTokens([aliceAddress], ['0'])
+
+                await expect(tx)
+                    .to.emit(erc3643, 'TokensFrozen')
+                    .withArgs(aliceAddress, '0')
+
+                expect(await erc3643.getFrozenTokens(aliceAddress)).to.equal(
+                    '0'
+                )
+            })
+        })
+
+        describe('batchUnfreezePartialTokens', () => {
+            let erc3643Capped: IERC203643Capped
+            let bob: Signer
+            let charlie: Signer
+            let bobAddress: string
+            let charlieAddress: string
+
+            beforeEach(async () => {
+                const fixture = async () => {
+                    const signers = await ethers.getSigners()
+                    bob = signers[2] as unknown as Signer
+                    charlie = signers[3] as unknown as Signer
+                    bobAddress = await bob.getAddress()
+                    charlieAddress = await charlie.getAddress()
+
+                    // Get Capped interface
+                    erc3643Capped = (await ethers.getContractAt(
+                        'IERC203643Capped',
+                        proxyAddress
+                    )) as unknown as IERC203643Capped
+
+                    // Grant necessary roles
+                    await accessControlFacet
+                        .connect(owner)
+                        .grantRole(MINTER_ROLE, ownerAddress)
+                    await accessControlFacet
+                        .connect(owner)
+                        .grantRole(CAP_ROLE, ownerAddress)
+
+                    // Initialize cap before minting
+                    await erc3643Capped.connect(owner).initializeCap('10000')
+
+                    // Mint tokens to alice, bob, and charlie
+                    await erc3643Capped
+                        .connect(owner)
+                        .mint(aliceAddress, '1000')
+                    await erc3643Capped.connect(owner).mint(bobAddress, '1000')
+                    await erc3643Capped
+                        .connect(owner)
+                        .mint(charlieAddress, '1000')
+
+                    // Freeze some tokens for testing
+                    await erc3643
+                        .connect(owner)
+                        .freezePartialTokens(aliceAddress, '500')
+                    await erc3643
+                        .connect(owner)
+                        .freezePartialTokens(bobAddress, '300')
+                    await erc3643
+                        .connect(owner)
+                        .freezePartialTokens(charlieAddress, '400')
+                }
+                await loadFixture(fixture)
+            })
+
+            it('GIVEN no FREEZE_ROLE WHEN batchUnfreezePartialTokens THEN reverts', async () => {
+                await accessControlFacet
+                    .connect(owner)
+                    .revokeRole(FREEZE_ROLE, ownerAddress)
+
+                await expect(
+                    erc3643
+                        .connect(owner)
+                        .batchUnfreezePartialTokens([aliceAddress], ['100'])
+                ).to.be.reverted
+            })
+
+            it('GIVEN contract paused WHEN batchUnfreezePartialTokens THEN reverts', async () => {
+                await accessControlFacet
+                    .connect(owner)
+                    .grantRole(PAUSER_ROLE, ownerAddress)
+                await pauseFacet.connect(owner).pause()
+
+                await expect(
+                    erc3643
+                        .connect(owner)
+                        .batchUnfreezePartialTokens([aliceAddress], ['100'])
+                ).to.be.reverted
+            })
+
+            it('GIVEN arrays length mismatch WHEN batchUnfreezePartialTokens THEN reverts', async () => {
+                await expect(
+                    erc3643
+                        .connect(owner)
+                        .batchUnfreezePartialTokens(
+                            [aliceAddress, bobAddress],
+                            ['100']
+                        )
+                ).to.be.revertedWithCustomError(erc3643, 'ArrayLengthMismatch')
+            })
+
+            it('GIVEN empty arrays WHEN batchUnfreezePartialTokens THEN succeeds without operations', async () => {
+                const initialFrozen =
+                    await erc3643.getFrozenTokens(aliceAddress)
+
+                await erc3643.connect(owner).batchUnfreezePartialTokens([], [])
+
+                expect(await erc3643.getFrozenTokens(aliceAddress)).to.equal(
+                    initialFrozen
+                )
+            })
+
+            it('GIVEN valid batch WHEN batchUnfreezePartialTokens THEN succeeds and emits multiple TokensUnfrozen events', async () => {
+                const unfreezeAmount1 = '200'
+                const unfreezeAmount2 = '150'
+
+                const tx = await erc3643
+                    .connect(owner)
+                    .batchUnfreezePartialTokens(
+                        [aliceAddress, bobAddress],
+                        [unfreezeAmount1, unfreezeAmount2]
+                    )
+
+                // Check TokensUnfrozen events
+                await expect(tx)
+                    .to.emit(erc3643, 'TokensUnfrozen')
+                    .withArgs(aliceAddress, unfreezeAmount1)
+
+                await expect(tx)
+                    .to.emit(erc3643, 'TokensUnfrozen')
+                    .withArgs(bobAddress, unfreezeAmount2)
+
+                // Verify frozen tokens decreased
+                expect(await erc3643.getFrozenTokens(aliceAddress)).to.equal(
+                    '300'
+                ) // 500 - 200
+                expect(await erc3643.getFrozenTokens(bobAddress)).to.equal(
+                    '150'
+                ) // 300 - 150
+            })
+
+            it('GIVEN unfreeze amount exceeds frozen WHEN batchUnfreezePartialTokens THEN reverts entire batch', async () => {
+                const validAmount = '100'
+                const excessiveAmount = '600' // Bob only has 300 frozen
+
+                await expect(
+                    erc3643
+                        .connect(owner)
+                        .batchUnfreezePartialTokens(
+                            [aliceAddress, bobAddress],
+                            [validAmount, excessiveAmount]
+                        )
+                ).to.be.reverted
+
+                // Verify no tokens were unfrozen (atomic operation)
+                expect(await erc3643.getFrozenTokens(aliceAddress)).to.equal(
+                    '500'
+                )
+                expect(await erc3643.getFrozenTokens(bobAddress)).to.equal(
+                    '300'
+                )
+            })
+
+            it('GIVEN large batch WHEN batchUnfreezePartialTokens THEN succeeds', async () => {
+                // Create 5 accounts with frozen tokens
+                const signers = await ethers.getSigners()
+                const batchSize = 5
+                const addresses: string[] = []
+                const amounts: string[] = []
+
+                for (let i = 0; i < batchSize; i++) {
+                    const signer = signers[4 + i] as unknown as Signer
+                    const address = await signer.getAddress()
+                    addresses.push(address)
+                    amounts.push('50')
+
+                    await erc3643Capped.connect(owner).mint(address, '200')
+                    await erc3643
+                        .connect(owner)
+                        .freezePartialTokens(address, '100')
+                }
+
+                await erc3643
+                    .connect(owner)
+                    .batchUnfreezePartialTokens(addresses, amounts)
+
+                // Verify each unfreeze
+                for (let i = 0; i < batchSize; i++) {
+                    expect(
+                        await erc3643.getFrozenTokens(addresses[i])
+                    ).to.equal('50') // 100 - 50
+                }
+            })
+
+            it('GIVEN same address multiple times WHEN batchUnfreezePartialTokens THEN processes each independently', async () => {
+                const amount1 = '100'
+                const amount2 = '150'
+
+                await erc3643.connect(owner).batchUnfreezePartialTokens(
+                    [aliceAddress, aliceAddress], // Same address twice
+                    [amount1, amount2]
+                )
+
+                // Alice should have both amounts unfrozen: 500 - 100 - 150 = 250
+                expect(await erc3643.getFrozenTokens(aliceAddress)).to.equal(
+                    '250'
+                )
+            })
+        })
+
         describe('getters', () => {
             it('GIVEN never frozen WHEN call getters THEN return defaults', async () => {
                 expect(await erc3643.isFrozen(aliceAddress)).to.equal(false)
