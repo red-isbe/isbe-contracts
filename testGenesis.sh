@@ -43,7 +43,7 @@ echo ""
 # Step 1: Genesis generation
 if [ "$SKIP_GEN" = false ]; then
   echo "🔧 Generating genesis..."
-  npx hardhat genesis:generate --isbeadmin 0x6A1862912D904110DBC4AeF9096F8A8883807bD6 # PK: 0x4ac8ab5147f0b280ce96bd1b90a9b3e840804f7e696c16871d2a1f33f93ec063 (For testing only)
+  npx hardhat genesis:generate
 else
   echo "⏩ Skipping genesis generation (--skip-gen)"
 fi

@@ -59,3 +59,22 @@ export async function buildGenesisWithAlloc(
 
   console.log(`✅ Genesis generated at: ${outputFile}`);
 }
+
+export async function extractISBEAdminAddress( genesisTemplateFile: string ): Promise<string> {
+    const raw = await fs.readFile(genesisTemplateFile, "utf8");
+    if (!raw) {
+      throw new Error(`Genesis template file is empty or not found: ${genesisTemplateFile}`);
+    }
+    const data: JSONGenesis = JSON.parse(raw);
+  
+    const genesisAlloc = data.genesis.alloc;
+
+    if (!genesisAlloc || Object.keys(genesisAlloc).length === 0) {
+      throw new Error("❌ Wrong genesis template format: 'alloc' section is missing or empty.");
+    }
+
+    const isbeAdminAddress: string = Object.keys(genesisAlloc)[0]; // Firs entry address us considered ISBE Admin
+
+    
+    return isbeAdminAddress;
+}

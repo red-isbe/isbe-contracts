@@ -1,5 +1,5 @@
 export { retrieveSlotStructure, type GenesisAlloc } from './slotExtractor'
-export { matchContractNames,singleContractMatcher } from './contractMatcher'
-export { buildGenesisWithAlloc } from './genesisBuilder'
+export { matchContractNames } from './contractMatcher'
+export { buildGenesisWithAlloc,extractISBEAdminAddress } from './genesisBuilder'
 export { validateGenesis } from './genesisValidator'
 export { ContractRegistry } from './contractRegistry'

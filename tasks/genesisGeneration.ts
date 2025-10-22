@@ -6,6 +6,7 @@ import {
     retrieveSlotStructure,
     validateGenesis,
     ContractRegistry,
+    extractISBEAdminAddress
 } from '../scripts/genesisGenerator'
 import { HttpNetworkConfig } from 'hardhat/types'
 
@@ -50,9 +51,6 @@ task('genesis:generate','Generate genesis by extracting storage slots from deplo
         'template',
         'Template JSON file to use',
         'qbftConfigFile.json'
-    ).addParam(
-        "isbeadmin",
-        "ISBE Admin Address"
     ).setAction(async (taskArgs, hre) => {
         try {
             const contractRegistry = new ContractRegistry()
@@ -64,9 +62,7 @@ task('genesis:generate','Generate genesis by extracting storage slots from deplo
                 '---------------------------------------------------------------------'
             )
             hre.network.name = 'hardhat'
-            const isbeAdmin = taskArgs.isbeadmin;
-            console.log(`📄 Using ISBE Admin Address: ${isbeAdmin}` )
-
+           
             let templateDir = (
                 hre.config as unknown as {
                     genesisGenerator: { templateDir: string }
@@ -90,6 +86,9 @@ task('genesis:generate','Generate genesis by extracting storage slots from deplo
                 (outputDir.endsWith('/') ? outputDir : outputDir + '/') +
                 REGISTRY_FILENAME
             console.log(`📄 Using template file: ${genesisTemplateFile}`)
+
+            const isbeAdmin = await extractISBEAdminAddress(genesisTemplateFile);
+            console.log(`📄 ISBE Admin address extracted from first genesis entry: ${isbeAdmin}`)
 
             console.log('🚀 DeployAll...')
             const result = await hre.run('deployAllClean',{isbeadmin:isbeAdmin})
