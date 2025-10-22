@@ -43,6 +43,7 @@ import {
     ERC3643MetadataFacet,
     ERC3643RegulatoryFacet,
     ERC3643FreezeFacet,
+    ERC3643RecoveryFacet,
 } from '../typechain-types'
 import {
     DEFAULT_ADMIN_ROLE,
@@ -81,6 +82,7 @@ import {
     ERC3643_METADATA_RESOLVER_KEY,
     ERC3643_REGULATORY_RESOLVER_KEY,
     ERC3643_FREEZE_RESOLVER_KEY,
+    ERC3643_RECOVERY_RESOLVER_KEY,
 } from './constants'
 import { getEvent } from '../scripts/utils/getEvent'
 import { getIsbeFactory } from '../scripts/utils/getIsbeFactory'
@@ -952,6 +954,10 @@ export async function deployERC3643UseCasesFacets(
     const ERC3643FreezeFacetFactory =
         await ethers.getContractFactory('ERC3643FreezeFacet')
 
+    const ERC3643RecoveryFacetFactory = await ethers.getContractFactory(
+        'ERC3643RecoveryFacet'
+    )
+
     const ERC203643CappedFacetFactory = await ethers.getContractFactory(
         'ERC203643CappedFacet'
     )
@@ -993,6 +999,10 @@ export async function deployERC3643UseCasesFacets(
         ERC3643_FREEZE_RESOLVER_KEY,
         ERC3643FreezeFacetFactory
     )
+    const erc3643RecoveryFacet = await deployBusinessLogicFromFactory(
+        ERC3643_RECOVERY_RESOLVER_KEY,
+        ERC3643RecoveryFacetFactory
+    )
     const erc203643CappedFacet = await deployBusinessLogicFromFactory(
         ERC203643_CAPPED_RESOLVER_KEY,
         ERC203643CappedFacetFactory
@@ -1019,6 +1029,10 @@ export async function deployERC3643UseCasesFacets(
         },
         {
             businessId: ERC3643_FREEZE_RESOLVER_KEY,
+            version: 1,
+        },
+        {
+            businessId: ERC3643_RECOVERY_RESOLVER_KEY,
             version: 1,
         },
         {
@@ -1057,6 +1071,9 @@ export async function deployERC3643UseCasesFacets(
     const erc3643Freeze = ERC3643FreezeFacetFactory.attach(
         proxy
     ) as ERC3643FreezeFacet
+    const erc3643Recovery = ERC3643RecoveryFacetFactory.attach(
+        proxy
+    ) as ERC3643RecoveryFacet
     const erc203643Capped = ERC203643CappedFacetFactory.attach(
         proxy
     ) as ERC203643CappedFacet
@@ -1071,6 +1088,7 @@ export async function deployERC3643UseCasesFacets(
         erc3643Metadata,
         erc3643Regulatory,
         erc3643Freeze,
+        erc3643Recovery,
         erc203643Capped,
         erc203643Controller,
         isbeCutFacet,

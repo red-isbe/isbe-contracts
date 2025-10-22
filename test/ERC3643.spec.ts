@@ -3532,51 +3532,63 @@ describe('ERC3643 Token', function () {
             })
 
             describe('when initialized', () => {
-                beforeEach(async () => {
-                    const fixture = async () => {
-                        // Grant necessary roles
-                        await accessControlFacet
-                            .connect(owner)
-                            .grantRole(METADATA_ROLE, ownerAddress)
-                        await accessControlFacet
-                            .connect(owner)
-                            .grantRole(REGULATORY_ROLE, ownerAddress)
-                        await accessControlFacet
-                            .connect(owner)
-                            .grantRole(RECOVERY_ROLE, ownerAddress)
-                        await accessControlFacet
-                            .connect(owner)
-                            .grantRole(MINTER_ROLE, ownerAddress)
+                    beforeEach(async () => {
+                        const fixture = async () => {
+                            // Grant necessary roles
+                            await accessControlFacet
+                                .connect(owner)
+                                .grantRole(METADATA_ROLE, ownerAddress)
+                            await accessControlFacet
+                                .connect(owner)
+                                .grantRole(REGULATORY_ROLE, ownerAddress)
+                            await accessControlFacet
+                                .connect(owner)
+                                .grantRole(RECOVERY_ROLE, ownerAddress)
+                            await accessControlFacet
+                                .connect(owner)
+                                .grantRole(MINTER_ROLE, ownerAddress)
+                            await accessControlFacet
+                                .connect(owner)
+                                .grantRole(CAP_ROLE, ownerAddress)
 
-                        // Initialize ERC20
-                        await erc20Facet
-                            .connect(owner)
-                            .initializeERC20(tokenName, tokenSymbol, tokenDecimals)
+                            // Initialize ERC20
+                            await erc20Facet
+                                .connect(owner)
+                                .initializeErc20(tokenName, tokenSymbol, tokenDecimals)
 
-                        // Initialize ERC3643 Metadata
-                        await erc3643
-                            .connect(owner)
-                            .initializeERC3643Metadata(
-                                tokenOnchainIDAddress,
-                                version
-                            )
+                            // Initialize ERC3643 Metadata
+                            await erc3643
+                                .connect(owner)
+                                .initializeERC3643Metadata(
+                                    tokenOnchainIDAddress,
+                                    version
+                                )
 
-                        // Initialize Identity Registry
-                        await erc3643
-                            .connect(owner)
-                            .initializeERC3643IdentityRegistry(
-                                identityRegistryAddress,
-                                complianceAddress
-                            )
+                            // Initialize ERC3643 Regulatory (this enables ERC3643 mode)
+                            await erc3643
+                                .connect(owner)
+                                .initializeERC3643Regulatory(
+                                    identityRegistryAddress,
+                                    complianceAddress
+                                )
 
-                        // Set alice as verified investor
-                        await identityRegistryMock.setIsVerified(aliceAddress, true)
-                        
-                        // Mint tokens to alice
-                        await erc3643.connect(owner).mint(aliceAddress, 1000n)
-                    }
-                    await loadFixture(fixture)
-                })
+                            // Get capped interface and initialize cap
+                            const erc3643Capped = (await ethers.getContractAt(
+                                'IERC203643Capped',
+                                proxyAddress
+                            )) as IERC203643Capped
+
+                            await erc3643Capped.connect(owner).initializeCap(10000n)
+
+                            // Set alice as verified investor with country code
+                            await identityRegistryMock.setIsVerified(aliceAddress, true)
+                            await identityRegistryMock.setInvestorCountry(aliceAddress, 1) // Country code 1 (e.g., USA)
+                            
+                            // Mint tokens to alice using the capped interface
+                            await erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
+                        }
+                        await loadFixture(fixture)
+                    })
 
                 describe('Access Control', () => {
                     it('GIVEN no RECOVERY_ROLE WHEN recoveryAddress THEN reverts', async () => {
