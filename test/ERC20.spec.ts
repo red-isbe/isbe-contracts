@@ -36,6 +36,8 @@ describe('ERC20', function () {
     let ownerAddress: string
     let otherAccount: Signer
     let otherAccountAddress: string
+    let alice: Signer
+    let aliceAddress: string
 
     async function deploy(
         initialize: boolean = false,
@@ -778,4 +780,62 @@ describe('ERC20', function () {
             expect(await erc20.balanceOf(ownerAddress)).to.be.equal(MINTED)
         })
     })
+
+     describe('batchTransfer', () => {
+             const prepare = async (init_pause: boolean = false) => {
+                    await deploy(true, init_pause)
+
+                    if (init_pause) return
+
+                    await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+                    await erc203643Capped.mint(ownerAddress, 100)
+                    return { erc20, owner, alice }
+                }
+
+                it('GIVEN ERC20 mode WHEN arrays length mismatch THEN reverts with NotSameLengthArray', async () => {
+                    await prepare()
+                    ;[alice] = await ethers.getSigners()
+                    aliceAddress = await alice.getAddress()
+                    const bobAddress = otherAccountAddress
+                    await expect(
+                        erc20
+                            .connect(alice)
+                            .batchTransfer([bobAddress], [100n, 200n])
+                    ).to.be.revertedWithCustomError(
+                        erc20,
+                        'NotSameLengthArray'
+                    )
+                })
+
+                it('GIVEN ERC20 mode WHEN empty arrays THEN succeeds without operations', async () => {
+                    await prepare()
+                    ;[alice] = await ethers.getSigners()
+                    aliceAddress = await alice.getAddress()
+                    const initialBalance =
+                        await erc20.balanceOf(aliceAddress)
+
+                    await erc20.connect(alice).batchTransfer([], [])
+
+                    expect(await erc20.balanceOf(aliceAddress)).to.equal(
+                        initialBalance
+                    )
+                })
+
+
+                it('GIVEN ERC20 mode WHEN batchTransfer exceeds total balance THEN reverts', async () => {
+                    await prepare()
+                    ;[alice] = await ethers.getSigners()
+                    aliceAddress = await alice.getAddress()
+                    const bobAddress = otherAccountAddress
+                    const totalBalance =
+                        await erc20Facet.balanceOf(aliceAddress)
+                    const excessAmount = totalBalance + 1n
+                    
+                    await expect(
+                        erc20Facet
+                            .connect(alice)
+                            .batchTransfer([bobAddress], [excessAmount])
+                    ).to.be.reverted
+                })
+            })
 })

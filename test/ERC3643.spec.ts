@@ -3298,7 +3298,6 @@ describe('ERC3643 Token', function () {
                 })
             })
 
-            // batchTransfer
             describe('batchTransfer', () => {
                 it('GIVEN ERC3643 mode WHEN arrays length mismatch THEN reverts with NotSameLengthArray', async () => {
                     await expect(
