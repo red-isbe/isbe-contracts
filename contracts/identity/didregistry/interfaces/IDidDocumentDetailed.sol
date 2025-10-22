@@ -44,7 +44,7 @@ interface IDidDocumentDetailed {
      */
     struct VRelationship {
         string name;
-        string vMethodId;
+        bytes32 vMethodId;
         uint256 notBefore;
         uint256 notAfter;
         uint256 indexDid;
@@ -67,9 +67,9 @@ interface IDidDocumentDetailed {
      * @param notAfter The timestamp after which the verification method expires
      */
     event DidDocumentInserted(
-        string did,
+        bytes32 did,
         string baseDocument,
-        string vMethodId,
+        bytes32 vMethodId,
         bytes publicKey,
         EllipticType ellipticType,
         uint256 notBefore,
@@ -81,7 +81,7 @@ interface IDidDocumentDetailed {
      * @param did The decentralised identifier whose base document was modified
      * @param baseDocument The new base JSON-LD document content
      */
-    event BaseDocumentUpdated(string did, string baseDocument);
+    event BaseDocumentUpdated(bytes32 did, string baseDocument);
 
     /**
      * @notice Raised when an invalid or unsupported elliptic curve type is specified
@@ -103,14 +103,14 @@ interface IDidDocumentDetailed {
      * @dev This error prevents duplicate DID registration and maintains registry integrity
      * @param did The decentralised identifier string that already exists
      */
-    error DidAlreadyExists(string did);
+    error DidAlreadyExists(bytes32 did);
 
     /**
      * @notice Raised when attempting to use a DID that does not exist in the registry
      * @dev This error ensures operations target valid DIDs and prevents unauthorised access
      * @param did The decentralised identifier string that does not exist
      */
-    error DidNotExists(string did);
+    error DidNotExists(bytes32 did);
 
     /**
      * @notice Raised when provided control bytes are malformed or invalid
@@ -130,9 +130,9 @@ interface IDidDocumentDetailed {
      * @notice Raised when attempting to operate with an invalid verification method
      * @dev This error prevents operations on malformed or non-existent verification
      *      methods to maintain document integrity and security
-     * @param method The verification method identifier that is invalid
+     * @param methodName The verification method identifier that is invalid
      */
-    error InvalidVerificationMethod(string method);
+    error InvalidVerificationMethodName(string methodName);
 
     /**
      * @notice Raised when attempting to create a verification relationship that already exists
@@ -143,9 +143,9 @@ interface IDidDocumentDetailed {
      * @param vMethodId The verification method identifier that already has this relationship
      */
     error VerificationRelationshipExists(
-        string did,
+        bytes32 did,
         string name,
-        string vMethodId
+        bytes32 vMethodId
     );
 
     /**
@@ -170,9 +170,9 @@ interface IDidDocumentDetailed {
      * @return success Boolean indicating whether the insertion completed successfully
      */
     function insertDidDocument(
-        string memory did,
+        bytes32 did,
         string memory baseDocument,
-        string memory vMethodId,
+        bytes32 vMethodId,
         bytes memory publicKey,
         EllipticType ellipticType,
         uint256 notBefore,
@@ -188,7 +188,7 @@ interface IDidDocumentDetailed {
      * @return success Boolean indicating whether the update completed successfully
      */
     function updateBaseDocument(
-        string memory did,
+        bytes32 did,
         string memory baseDocument
     ) external returns (bool success);
 
@@ -211,7 +211,7 @@ interface IDidDocumentDetailed {
         external
         view
         returns (
-            string[] memory items,
+            bytes32[] memory items,
             uint256 total,
             uint256 howMany,
             uint256 prev,
@@ -230,14 +230,14 @@ interface IDidDocumentDetailed {
      * @return vRelationships Array of verification relationships with temporal validity
      */
     function getDidDocument(
-        string memory did
+        bytes32 did
     )
         external
         view
         returns (
             string memory baseDocument,
-            string[] memory controllers,
-            string[] memory vMethodIds,
+            bytes32[] memory controllers,
+            bytes32[] memory vMethodIds,
             VMethod[] memory vMethods,
             VRelationship[] memory vRelationships
         );
@@ -255,15 +255,15 @@ interface IDidDocumentDetailed {
      * @return vRelationships Array of relationships that were valid at timestamp
      */
     function getDidDocumentByTimestamp(
-        string memory did,
+        bytes32 did,
         uint256 timestamp
     )
         external
         view
         returns (
             string memory baseDocument,
-            string[] memory controllers,
-            string[] memory vMethodIds,
+            bytes32[] memory controllers,
+            bytes32[] memory vMethodIds,
             VMethod[] memory vMethods,
             VRelationship[] memory vRelationships
         );

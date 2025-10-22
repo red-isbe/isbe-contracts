@@ -67,7 +67,7 @@ export class DidDocumentVerifier {
             vMethods:
                 result[3]?.map((vm: ContractVMethodTuple) => ({
                     publicKey: vm[0],
-                    ellipticType: vm[1],
+                    ellipticType: Number(vm[1]),
                     revoked: vm[2],
                 })) || [],
             vRelationships:

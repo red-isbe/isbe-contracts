@@ -127,7 +127,7 @@ export class TestConstants {
      * @returns A random DID identifier
      */
     static randomDid(): string {
-        return randomString(16)
+        return randomBytes32()
     }
 
     /**

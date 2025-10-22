@@ -14,35 +14,35 @@ interface IDidController {
      * @param did The decentralised identifier receiving the new controller
      * @param controller The controller identifier being added
      */
-    event ControllerAdded(string did, string controller);
+    event ControllerAdded(bytes32 did, bytes32 controller);
 
     /**
      * @notice Emitted when a controller is revoked from a DID
      * @param did The decentralised identifier losing the controller
      * @param controller The controller identifier being revoked
      */
-    event ControllerRevoked(string did, string controller);
+    event ControllerRevoked(bytes32 did, bytes32 controller);
 
     /**
      * @notice Raised when a controller is not authorized
      * @param did The decentralised identifier losing the controller
      * @param controller The controller identifier being revoked
      */
-    error ControllerNotAuthorized(string did, address controller);
+    error ControllerNotAuthorized(bytes32 did, address controller);
 
     /**
      * @notice Raised when a DID is not controlled by
      * @param did The decentralised identifier
      * @param controller The controller identifier
      */
-    error DidIsNotControlledBy(string did, string controller);
+    error DidIsNotControlledBy(bytes32 did, bytes32 controller);
 
     /**
      * @notice Raised when a DID is controlled by
      * @param did The decentralised identifier
      * @param controller The controller identifier
      */
-    error DidIsControlledBy(string did, string controller);
+    error DidIsControlledBy(bytes32 did, bytes32 controller);
 
     /**
      * @notice Adds a new controller to the specified DID
@@ -52,8 +52,8 @@ interface IDidController {
      * @return success Boolean indicating whether the operation completed successfully
      */
     function addController(
-        string memory did,
-        string memory controller
+        bytes32 did,
+        bytes32 controller
     ) external returns (bool success);
 
     /**
@@ -64,8 +64,8 @@ interface IDidController {
      * @return success Boolean indicating whether the operation completed successfully
      */
     function revokeController(
-        string memory did,
-        string memory controller
+        bytes32 did,
+        bytes32 controller
     ) external returns (bool success);
 
     /**
@@ -81,14 +81,14 @@ interface IDidController {
      * @return next Next page number (zero if no next page)
      */
     function getDidsByController(
-        string memory controller,
+        bytes32 controller,
         uint256 page,
         uint256 pageSize
     )
         external
         view
         returns (
-            string[] memory items,
+            bytes32[] memory items,
             uint256 total,
             uint256 howMany,
             uint256 prev,
@@ -97,13 +97,13 @@ interface IDidController {
 
     /**
      * @notice Checks if an address is authorised as a controller for the specified DID
-     * @dev Validates controller permissions using string DID format
+     * @dev Validates controller permissions using bytes32 did format
      * @param did The decentralised identifier to check against
      * @param controller The address to verify as a controller
      * @return isController Boolean indicating if the address is an authorised controller
      */
     function checkController(
-        string memory did,
+        bytes32 did,
         address controller
     ) external view returns (bool isController);
 

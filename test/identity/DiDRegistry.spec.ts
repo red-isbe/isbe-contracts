@@ -5,10 +5,11 @@ import {
     DidDocumentDetailedFacet,
     DidVerificationMethodFacet,
     DidVerificationRelationshipFacet,
+    IDidVerificationMethod,
     IDidRegistry,
     MockTimestampFacet,
 } from '../../typechain-types'
-import { HDNodeWallet, Signer, Typed } from 'ethers'
+import { HDNodeWallet, Signer, ZeroHash } from 'ethers'
 import {
     ASSERTION_RELATIONSHIP,
     AUTHENTICATION_RELATIONSHIP,
@@ -28,15 +29,25 @@ import {
     DidsResultValidator,
     ContractGetDidsResult,
     VerificationRelationshipResultValidator,
-} from './utils'
-import { RollArgsStruct } from '../../typechain-types/contracts/identity/didregistry/IDidRegistry'
+} from '../utils/identity'
 import { randomHex, randomInt, TestConstants, EMPTY_VALUES } from '../testUtils'
+import { EllipticType, ContractDidDocumentResult } from '../types/identity'
+// Optional: Use shared fixtures instead of local deployFixture
+// import { deployDidRegistryFixture, DidTestHelpers } from '../fixtures/identity'
 
-enum EllipticType {
-    NONE = 0,
-    SECP_256_K1 = 1,
-    SECP_256_R1 = 2,
-}
+// EllipticType enum values for testing
+const EllipticTypeTest = {
+    NONE: 0,
+    SECP_256_K1: EllipticType.SECP_256_K1,
+    SECP_256_R1: EllipticType.SECP_256_R1,
+} as const
+
+const CHECK_CONTROLLER_BYTES32_ADDRESS = 'checkController(bytes32,address)'
+const CHECK_CONTROLLER_BYTES_ADDRESS = 'checkController(bytes,address)'
+
+// Test constants
+const TEST_VALIDITY_DURATION = 1000000000000000000n
+const MAX_ROLL_DURATION = 356n * 12n * 60n * 60n // ~1 year in hours
 
 describe('DiDRegistry', function () {
     let admin: Signer
@@ -47,7 +58,7 @@ describe('DiDRegistry', function () {
     let didVerificationMethodFacet: DidVerificationMethodFacet
     let didVerificationRelationshipFacet: DidVerificationRelationshipFacet
     let didRegistry: IDidRegistry
-    let mockTimestap: MockTimestampFacet
+    let mockTimestamp: MockTimestampFacet
     const emptyString = EMPTY_VALUES.string
     const emptyBytes = EMPTY_VALUES.bytes
     let did: string
@@ -66,13 +77,13 @@ describe('DiDRegistry', function () {
 
     const randomizeDidDocument = (wallet: HDNodeWallet) => {
         baseDocument = TestConstants.randomBaseDocument()
-        vMethodId = TestConstants.randomVerificationMethodId()
+        vMethodId = randomHex(32)
         publicKeyInvalindLength = randomHex()
         publicKey65Incorrect = randomHex(65)
         publicKey65 = walletToPublicKey(wallet)
         publicKey64 = '0x'.concat(publicKey65.slice(4))
         notBefore = randomInt()
-        notAfter = notBefore + 1000000000000000000n
+        notAfter = notBefore + TEST_VALIDITY_DURATION
     }
 
     async function deployFixture() {
@@ -90,7 +101,7 @@ describe('DiDRegistry', function () {
         ).to.be.equal(DID_DOCUMENT_DETAILED_RESOLVER_KEY)
         expect(
             await gov.didDocumentDetailedFacet.interfacesIntrospection()
-        ).to.be.deep.equal(['0x40350ddb'])
+        ).to.be.deep.equal(['0x67803adc'])
 
         return {
             admin: adminSigner,
@@ -102,7 +113,7 @@ describe('DiDRegistry', function () {
             didVerificationRelationshipFacet:
                 gov.didVerificationRelationshipFacet,
             didRegistry: gov.didRegistry,
-            mockTimestap: gov.mockTimestamp,
+            mockTimestamp: gov.mockTimestamp,
         }
     }
 
@@ -117,10 +128,10 @@ describe('DiDRegistry', function () {
         didVerificationRelationshipFacet =
             contracts.didVerificationRelationshipFacet
         didRegistry = contracts.didRegistry
-        mockTimestap = contracts.mockTimestap
+        mockTimestamp = contracts.mockTimestamp
     })
 
-    function walletOfFirstSigner() {
+    function walletOfFirstSigner(): HDNodeWallet {
         const mnemonic = (
             config.networks.hardhat.accounts as {
                 mnemonic: string
@@ -134,11 +145,156 @@ describe('DiDRegistry', function () {
         return wallet.derivePath(path)
     }
 
+    /**
+     * Helper function to create a standard test fixture:
+     * - Creates and randomizes wallet
+     * - Initializes the DID registry
+     * - Inserts a DID document
+     * - Sets the mock timestamp to notBefore + 1
+     * - Returns wallet for tests that need it
+     */
+    async function createStandardFixture() {
+        const wallet = walletOfFirstSigner()
+        randomizeDidDocument(wallet)
+
+        await didRegistry.initializeDiDRegistry(EllipticType.SECP_256_K1)
+        await didRegistry.insertDidDocument(
+            did,
+            baseDocument,
+            vMethodId,
+            publicKey65,
+            EllipticType.SECP_256_K1,
+            notBefore,
+            notAfter
+        )
+        await mockTimestamp.setMockedTimestamp(notBefore + 1n)
+
+        return { wallet }
+    }
+
+    /**
+     * Helper function to insert a controller DID document with random data
+     */
+    async function insertControllerDocument(
+        controllerId: string
+    ): Promise<void> {
+        await didRegistry.insertDidDocument(
+            controllerId,
+            TestConstants.randomDid(),
+            TestConstants.randomDid(),
+            publicKey64,
+            EllipticType.SECP_256_K1,
+            notBefore,
+            notAfter
+        )
+    }
+
+    /**
+     * Helper function to build and verify a basic DID document with single vMethod and relationships
+     */
+    function buildAndVerifyBasicDidDocument(
+        didDocument: ContractDidDocumentResult,
+        baseDoc: string,
+        controller: string,
+        methodId: string,
+        publicKey: string,
+        elliptic: EllipticType,
+        revoked: boolean,
+        notBeforeVal: bigint,
+        notAfterVal: bigint
+    ): void {
+        const expectedComplete = new DidDocumentBuilder(baseDoc, [controller])
+            .addVMethod(methodId, publicKey, elliptic, revoked)
+            .addVRelationship(
+                AUTHENTICATION_RELATIONSHIP,
+                methodId,
+                notBeforeVal,
+                notAfterVal,
+                0
+            )
+            .addVRelationship(
+                CAPABILITY_INVOCATION_RELATIONSHIP,
+                methodId,
+                notBeforeVal,
+                notAfterVal,
+                0
+            )
+            .build()
+        DidDocumentVerifier.verifyDidDocument(didDocument, expectedComplete)
+    }
+
+    /**
+     * Helper function to check controller status
+     */
+    async function expectControllerStatus(
+        did: string,
+        address: string,
+        expectedStatus: boolean
+    ): Promise<void> {
+        expect(
+            await didRegistry[CHECK_CONTROLLER_BYTES32_ADDRESS](did, address)
+        ).to.equal(expectedStatus)
+    }
+
+    /**
+     * Helper function to verify rolled verification method document
+     */
+    async function verifyRolledDocument(
+        rollArgs: IDidVerificationMethod.RollArgsStruct,
+        oldVMethodElliptic: EllipticType,
+        newVMethodElliptic: EllipticType
+    ): Promise<void> {
+        await mockTimestamp.setMockedTimestamp(BigInt(rollArgs.notBefore) + 1n)
+        const didDocument = await didRegistry.getDidDocument(did)
+        const newNotAfter =
+            BigInt(rollArgs.notBefore) + BigInt(rollArgs.duration)
+
+        const expectedComplete = new DidDocumentBuilder(baseDocument, [did])
+            .addVMethod(vMethodId, publicKey65, oldVMethodElliptic, false)
+            .addVMethod(
+                ethers.hexlify(rollArgs.vMethodId),
+                ethers.hexlify(rollArgs.publicKey),
+                newVMethodElliptic,
+                false
+            )
+            .addVRelationship(
+                AUTHENTICATION_RELATIONSHIP,
+                vMethodId,
+                notBefore,
+                newNotAfter,
+                0
+            )
+            .addVRelationship(
+                AUTHENTICATION_RELATIONSHIP,
+                ethers.hexlify(rollArgs.vMethodId),
+                BigInt(rollArgs.notBefore),
+                BigInt(rollArgs.notAfter),
+                0
+            )
+            .addVRelationship(
+                CAPABILITY_INVOCATION_RELATIONSHIP,
+                vMethodId,
+                notBefore,
+                newNotAfter,
+                0
+            )
+            .addVRelationship(
+                CAPABILITY_INVOCATION_RELATIONSHIP,
+                ethers.hexlify(rollArgs.vMethodId),
+                BigInt(rollArgs.notBefore),
+                BigInt(rollArgs.notAfter),
+                0
+            )
+            .build()
+
+        DidDocumentVerifier.verifyDidDocument(didDocument, expectedComplete)
+    }
+
     describe('DiDRegistry', () => {
         describe('initializeDidRegistry', () => {
             it('GIVEN deployed didRegistry WHEN try to initialize with non elliptic type THEN it fails', async () => {
                 await expect(
-                    didRegistry.initializeDiDRegistry(EllipticType.NONE)
+                    didRegistry.initializeDiDRegistry(EllipticTypeTest.NONE)
                 ).to.be.revertedWithCustomError(
                     didDocumentDetailedFacet,
                     'InvalidEllipticCurve'
@@ -182,7 +338,7 @@ describe('DiDRegistry', function () {
             it('GIVEN initialized didRegistry WHEN try to insert did document with empty did THEN it fails', async () => {
                 await expect(
                     didRegistry.insertDidDocument(
-                        emptyString,
+                        ZeroHash,
                         baseDocument,
                         vMethodId,
                         publicKey65Incorrect,
@@ -192,7 +348,7 @@ describe('DiDRegistry', function () {
                     )
                 ).to.be.revertedWithCustomError(
                     didDocumentDetailedFacet,
-                    'EmptyString'
+                    'EmptyBytes32'
                 )
             })
             it('GIVEN initialized didRegistry WHEN try to insert did document with empty baseDocument THEN it fails', async () => {
@@ -216,7 +372,7 @@ describe('DiDRegistry', function () {
                     didRegistry.insertDidDocument(
                         did,
                         baseDocument,
-                        emptyString,
+                        ZeroHash,
                         publicKey65Incorrect,
                         EllipticType.SECP_256_K1,
                         notBefore,
@@ -224,7 +380,7 @@ describe('DiDRegistry', function () {
                     )
                 ).to.be.revertedWithCustomError(
                     didDocumentDetailedFacet,
-                    'EmptyString'
+                    'EmptyBytes32'
                 )
             })
             it('GIVEN initialized didRegistry WHEN try to insert did document with empty publicKey65Incorrect THEN it fails', async () => {
@@ -250,7 +406,7 @@ describe('DiDRegistry', function () {
                         baseDocument,
                         vMethodId,
                         publicKey65Incorrect,
-                        EllipticType.NONE,
+                        EllipticTypeTest.NONE,
                         notBefore,
                         notAfter
                     )
@@ -421,38 +577,19 @@ describe('DiDRegistry', function () {
         })
 
         describe('updateDidDocument', () => {
-            let wallet: HDNodeWallet
-            before(async () => {
-                wallet = walletOfFirstSigner()
-                randomizeDidDocument(wallet)
-            })
             beforeEach(async () => {
-                const fixture = async () => {
-                    await didRegistry.initializeDiDRegistry(
-                        EllipticType.SECP_256_K1
-                    )
-                    await didRegistry.insertDidDocument(
-                        did,
-                        baseDocument,
-                        vMethodId,
-                        publicKey65,
-                        EllipticType.SECP_256_K1,
-                        notBefore,
-                        notAfter
-                    )
-                }
-                await loadFixture(fixture)
+                await loadFixture(createStandardFixture)
             })
 
             it('GIVEN an inserted document WHEN try to update with empty did THEN it fails', async () => {
                 await expect(
                     didRegistry.updateBaseDocument(
-                        '',
+                        ZeroHash,
                         TestConstants.randomDid()
                     )
                 ).to.be.revertedWithCustomError(
                     didDocumentDetailedFacet,
-                    'EmptyString'
+                    'EmptyBytes32'
                 )
             })
 
@@ -469,10 +606,10 @@ describe('DiDRegistry', function () {
             })
 
             it('GIVEN an inserted document WHEN try to update an not inserted did THEN it fails', async () => {
-                const neewDid = TestConstants.randomDid()
+                const newDid = TestConstants.randomDid()
                 await expect(
                     didRegistry.updateBaseDocument(
-                        neewDid,
+                        newDid,
                         TestConstants.randomDid()
                     )
                 )
@@ -480,26 +617,24 @@ describe('DiDRegistry', function () {
                         didDocumentDetailedFacet,
                         'DidNotExists'
                     )
-                    .withArgs(neewDid)
+                    .withArgs(newDid)
             })
 
             it('GIVEN an inserted document WHEN try to update without rights THEN it fails', async () => {
                 await expect(
-                    didRegistry.updateBaseDocument(
-                        did,
-                        TestConstants.randomDid()
-                    )
+                    didRegistry
+                        .connect(other)
+                        .updateBaseDocument(did, TestConstants.randomDid())
                 )
                     .to.be.revertedWithCustomError(
                         didDocumentDetailedFacet,
                         'ControllerNotAuthorized'
                     )
-                    .withArgs(did, await admin.getAddress())
+                    .withArgs(did, otherAddress)
             })
 
-            it('GIVEN initialized didRegistry WHEN try to insert did document in current time THEN it success', async () => {
+            it('GIVEN initialized didRegistry WHEN try to update base document THEN it success', async () => {
                 const newBaseDocument = TestConstants.randomDid()
-                await mockTimestap.setMockedTimestamp(notBefore + 1n)
                 await expect(
                     didRegistry.updateBaseDocument(did, newBaseDocument)
                 )
@@ -510,53 +645,36 @@ describe('DiDRegistry', function () {
 
         describe('addVerificationMethod', () => {
             let wallet: HDNodeWallet
-            before(async () => {
-                wallet = walletOfFirstSigner()
-                randomizeDidDocument(wallet)
-            })
+
             beforeEach(async () => {
-                const fixture = async () => {
-                    await didRegistry.initializeDiDRegistry(
-                        EllipticType.SECP_256_K1
-                    )
-                    await didRegistry.insertDidDocument(
-                        did,
-                        baseDocument,
-                        vMethodId,
-                        publicKey65,
-                        EllipticType.SECP_256_K1,
-                        notBefore,
-                        notAfter
-                    )
-                    await mockTimestap.setMockedTimestamp(notBefore + 1n)
-                }
-                await loadFixture(fixture)
+                const fixtures = await loadFixture(createStandardFixture)
+                wallet = fixtures.wallet
             })
 
             it('GIVEN an inserted document WHEN try to add V.M. with empty did THEN it fails', async () => {
                 await expect(
                     didRegistry.addVerificationMethod(
-                        emptyString,
+                        ZeroHash,
                         TestConstants.randomDid(),
                         publicKey64,
                         EllipticType.SECP_256_K1
                     )
                 ).to.be.revertedWithCustomError(
                     didVerificationMethodFacet,
-                    'EmptyString'
+                    'EmptyBytes32'
                 )
             })
             it('GIVEN an inserted document WHEN try to add V.M. with empty vMethod THEN it fails', async () => {
                 await expect(
                     didRegistry.addVerificationMethod(
                         TestConstants.randomDid(),
-                        emptyString,
+                        ZeroHash,
                         publicKey64,
                         EllipticType.SECP_256_K1
                     )
                 ).to.be.revertedWithCustomError(
                     didVerificationMethodFacet,
-                    'EmptyString'
+                    'EmptyBytes32'
                 )
             })
             it('GIVEN an inserted document WHEN try to add V.M. with empty PK THEN it fails', async () => {
@@ -578,7 +696,7 @@ describe('DiDRegistry', function () {
                         TestConstants.randomDid(),
                         TestConstants.randomDid(),
                         publicKey64,
-                        EllipticType.NONE
+                        EllipticTypeTest.NONE
                     )
                 ).to.be.revertedWithCustomError(
                     didVerificationMethodFacet,
@@ -676,84 +794,47 @@ describe('DiDRegistry', function () {
                     )
 
                 const didDocument = await didRegistry.getDidDocument(did)
-                const expectedComplete = new DidDocumentBuilder(baseDocument, [
-                    did,
-                ])
-                    .addVMethod(
-                        vMethodId,
-                        publicKey65,
-                        EllipticType.SECP_256_K1,
-                        false
-                    )
-                    .addVRelationship(
-                        AUTHENTICATION_RELATIONSHIP,
-                        vMethodId,
-                        notBefore,
-                        notAfter,
-                        0
-                    )
-                    .addVRelationship(
-                        CAPABILITY_INVOCATION_RELATIONSHIP,
-                        vMethodId,
-                        notBefore,
-                        notAfter,
-                        0
-                    )
-                    .build()
-                DidDocumentVerifier.verifyDidDocument(
+                buildAndVerifyBasicDidDocument(
                     didDocument,
-                    expectedComplete
+                    baseDocument,
+                    did,
+                    vMethodId,
+                    publicKey65,
+                    EllipticType.SECP_256_K1,
+                    false,
+                    notBefore,
+                    notAfter
                 )
             })
         })
 
         describe('revokeVerificationMethod', () => {
-            let wallet: HDNodeWallet
-            before(async () => {
-                wallet = walletOfFirstSigner()
-                randomizeDidDocument(wallet)
-            })
             beforeEach(async () => {
-                const fixture = async () => {
-                    await didRegistry.initializeDiDRegistry(
-                        EllipticType.SECP_256_K1
-                    )
-                    await didRegistry.insertDidDocument(
-                        did,
-                        baseDocument,
-                        vMethodId,
-                        publicKey65,
-                        EllipticType.SECP_256_K1,
-                        notBefore,
-                        notAfter
-                    )
-                    await mockTimestap.setMockedTimestamp(notBefore + 1n)
-                }
-                await loadFixture(fixture)
+                await loadFixture(createStandardFixture)
             })
 
             it('GIVEN an inserted document WHEN try to revoke V.M. with empty did THEN it fails', async () => {
                 await expect(
                     didRegistry.revokeVerificationMethod(
-                        emptyString,
+                        ZeroHash,
                         TestConstants.randomDid(),
                         randomInt()
                     )
                 ).to.be.revertedWithCustomError(
                     didVerificationMethodFacet,
-                    'EmptyString'
+                    'EmptyBytes32'
                 )
             })
             it('GIVEN an inserted document WHEN try to revoke V.M. with empty vMethod THEN it fails', async () => {
                 await expect(
                     didRegistry.revokeVerificationMethod(
                         TestConstants.randomDid(),
-                        emptyString,
+                        ZeroHash,
                         randomInt()
                     )
                 ).to.be.revertedWithCustomError(
                     didVerificationMethodFacet,
-                    'EmptyString'
+                    'EmptyBytes32'
                 )
             })
             it('GIVEN an inserted document WHEN try to revoke V.M. with not inserted did THEN it fails', async () => {
@@ -821,90 +902,55 @@ describe('DiDRegistry', function () {
                     .withArgs(did, vMethodId, notBefore)
 
                 const didDocument = await didRegistry.getDidDocument(did)
-                const expectedComplete = new DidDocumentBuilder(baseDocument, [
-                    did,
-                ])
-                    .addVMethod(
-                        vMethodId,
-                        publicKey65,
-                        EllipticType.SECP_256_K1,
-                        true
-                    )
-                    .addVRelationship(
-                        AUTHENTICATION_RELATIONSHIP,
-                        vMethodId,
-                        notBefore,
-                        notAfter,
-                        0
-                    )
-                    .addVRelationship(
-                        CAPABILITY_INVOCATION_RELATIONSHIP,
-                        vMethodId,
-                        notBefore,
-                        notAfter,
-                        0
-                    )
-                    .build()
-                DidDocumentVerifier.verifyDidDocument(
+                buildAndVerifyBasicDidDocument(
                     didDocument,
-                    expectedComplete
+                    baseDocument,
+                    did,
+                    vMethodId,
+                    publicKey65,
+                    EllipticType.SECP_256_K1,
+                    true,
+                    notBefore,
+                    notAfter
                 )
-                expect(
-                    await didRegistry['checkController(string,address)'](
-                        did,
-                        await admin.getAddress()
-                    )
-                ).to.be.false
+                await expectControllerStatus(
+                    did,
+                    await admin.getAddress(),
+                    false
+                )
             })
         })
 
         describe('expireVerificationMethod', () => {
             let wallet: HDNodeWallet
-            before(async () => {
-                wallet = walletOfFirstSigner()
-                randomizeDidDocument(wallet)
-            })
+
             beforeEach(async () => {
-                const fixture = async () => {
-                    await didRegistry.initializeDiDRegistry(
-                        EllipticType.SECP_256_K1
-                    )
-                    await didRegistry.insertDidDocument(
-                        did,
-                        baseDocument,
-                        vMethodId,
-                        publicKey65,
-                        EllipticType.SECP_256_K1,
-                        notBefore,
-                        notAfter
-                    )
-                    await mockTimestap.setMockedTimestamp(notBefore + 1n)
-                }
-                await loadFixture(fixture)
+                const fixtures = await loadFixture(createStandardFixture)
+                wallet = fixtures.wallet
             })
 
             it('GIVEN an inserted document WHEN try to expire V.M. with empty did THEN it fails', async () => {
                 await expect(
                     didRegistry.expireVerificationMethod(
-                        emptyString,
+                        ZeroHash,
                         TestConstants.randomDid(),
                         randomInt()
                     )
                 ).to.be.revertedWithCustomError(
                     didVerificationMethodFacet,
-                    'EmptyString'
+                    'EmptyBytes32'
                 )
             })
             it('GIVEN an inserted document WHEN try to expire V.M. with empty vMethod THEN it fails', async () => {
                 await expect(
                     didRegistry.expireVerificationMethod(
                         TestConstants.randomDid(),
-                        emptyString,
+                        ZeroHash,
                         randomInt()
                     )
                 ).to.be.revertedWithCustomError(
                     didVerificationMethodFacet,
-                    'EmptyString'
+                    'EmptyBytes32'
                 )
             })
             it('GIVEN an inserted document WHEN try to expire V.M. with not inserted did THEN it fails', async () => {
@@ -972,40 +1018,22 @@ describe('DiDRegistry', function () {
                     .withArgs(did, vMethodId, notBefore)
 
                 const didDocument = await didRegistry.getDidDocument(did)
-                const expectedComplete = new DidDocumentBuilder(baseDocument, [
-                    did,
-                ])
-                    .addVMethod(
-                        vMethodId,
-                        publicKey65,
-                        EllipticType.SECP_256_K1,
-                        false
-                    )
-                    .addVRelationship(
-                        AUTHENTICATION_RELATIONSHIP,
-                        vMethodId,
-                        notBefore,
-                        notAfter,
-                        0
-                    )
-                    .addVRelationship(
-                        CAPABILITY_INVOCATION_RELATIONSHIP,
-                        vMethodId,
-                        notBefore,
-                        notAfter,
-                        0
-                    )
-                    .build()
-                DidDocumentVerifier.verifyDidDocument(
+                buildAndVerifyBasicDidDocument(
                     didDocument,
-                    expectedComplete
+                    baseDocument,
+                    did,
+                    vMethodId,
+                    publicKey65,
+                    EllipticType.SECP_256_K1,
+                    false,
+                    notBefore,
+                    notAfter
                 )
-                expect(
-                    await didRegistry['checkController(string,address)'](
-                        did,
-                        await admin.getAddress()
-                    )
-                ).to.be.false
+                await expectControllerStatus(
+                    did,
+                    await admin.getAddress(),
+                    false
+                )
             })
             it('GIVEN an inserted document WHEN try to expire V.M. of added NW THEN it success', async () => {
                 const newVMethodId = TestConstants.randomDid()
@@ -1029,47 +1057,29 @@ describe('DiDRegistry', function () {
                     .withArgs(did, newVMethodId, notBefore)
 
                 const didDocument = await didRegistry.getDidDocument(did)
-                const expectedComplete = new DidDocumentBuilder(baseDocument, [
-                    did,
-                ])
-                    .addVMethod(
-                        vMethodId,
-                        publicKey65,
-                        EllipticType.SECP_256_K1,
-                        false
-                    )
-                    .addVRelationship(
-                        AUTHENTICATION_RELATIONSHIP,
-                        vMethodId,
-                        notBefore,
-                        notAfter,
-                        0
-                    )
-                    .addVRelationship(
-                        CAPABILITY_INVOCATION_RELATIONSHIP,
-                        vMethodId,
-                        notBefore,
-                        notAfter,
-                        0
-                    )
-                    .build()
-                DidDocumentVerifier.verifyDidDocument(
+                buildAndVerifyBasicDidDocument(
                     didDocument,
-                    expectedComplete
+                    baseDocument,
+                    did,
+                    vMethodId,
+                    publicKey65,
+                    EllipticType.SECP_256_K1,
+                    false,
+                    notBefore,
+                    notAfter
                 )
-                expect(
-                    await didRegistry['checkController(string,address)'](
-                        did,
-                        await admin.getAddress()
-                    )
-                ).to.be.true
+                await expectControllerStatus(
+                    did,
+                    await admin.getAddress(),
+                    true
+                )
             })
         })
 
         describe('rollVerificationMethod', () => {
             let wallet: HDNodeWallet
             let rolledWallet: HDNodeWallet
-            const rollArgsTemplate: RollArgsStruct = {
+            const rollArgsTemplate: IDidVerificationMethod.RollArgsStruct = {
                 did: did,
                 vMethodId: TestConstants.randomDid(),
                 publicKey: publicKey65,
@@ -1077,64 +1087,49 @@ describe('DiDRegistry', function () {
                 notBefore: 0n,
                 notAfter: 0n,
                 oldVMethodId: vMethodId,
-                duration: randomInt() % (356n * 12n * 60n * 60n),
+                duration: randomInt() % MAX_ROLL_DURATION,
             }
-            let rollArgs: Typed | RollArgsStruct
-            before(async () => {
-                wallet = walletOfFirstSigner()
-                randomizeDidDocument(wallet)
-            })
+            let rollArgs: IDidVerificationMethod.RollArgsStruct
+
             beforeEach(async () => {
-                const fixture = async () => {
-                    await didRegistry.initializeDiDRegistry(
-                        EllipticType.SECP_256_K1
-                    )
-                    await didRegistry.insertDidDocument(
-                        did,
-                        baseDocument,
-                        vMethodId,
-                        publicKey65,
-                        EllipticType.SECP_256_K1,
-                        notBefore,
-                        notAfter
-                    )
-                    await mockTimestap.setMockedTimestamp(notBefore + 1n)
-                    rolledWallet = deriveWallet(wallet, '1')
-                    const newNotBefore = notAfter + (randomInt() % 1_000_000n)
-                    rollArgs = {
-                        did: did,
-                        vMethodId: rollArgsTemplate.vMethodId,
-                        publicKey: rolledWallet.signingKey.publicKey,
-                        ellipticType: EllipticType.SECP_256_K1,
-                        notBefore: newNotBefore,
-                        notAfter: newNotBefore + (randomInt() % 100_000_000n),
-                        oldVMethodId: vMethodId,
-                        duration: rollArgsTemplate.duration,
-                    }
+                const fixtures = await loadFixture(createStandardFixture)
+                wallet = fixtures.wallet
+
+                // Additional setup specific to roll tests
+                rolledWallet = deriveWallet(wallet, '1')
+                const newNotBefore = notAfter + (randomInt() % 1_000_000n)
+                rollArgs = {
+                    did: did,
+                    vMethodId: rollArgsTemplate.vMethodId,
+                    publicKey: rolledWallet.signingKey.publicKey,
+                    ellipticType: EllipticType.SECP_256_K1,
+                    notBefore: newNotBefore,
+                    notAfter: newNotBefore + (randomInt() % 100_000_000n),
+                    oldVMethodId: vMethodId,
+                    duration: rollArgsTemplate.duration,
                 }
-                await loadFixture(fixture)
             })
 
             it('GIVEN an inserted document WHEN try to roll V.M. with empty did THEN it fails', async () => {
-                rollArgs.did = emptyString
+                rollArgs.did = ZeroHash
                 await expect(
                     didRegistry.rollVerificationMethod(rollArgs)
                 ).to.be.revertedWithCustomError(
                     didVerificationMethodFacet,
-                    'EmptyString'
+                    'EmptyBytes32'
                 )
             })
             it('GIVEN an inserted document WHEN try to roll V.M. with empty vMethod THEN it fails', async () => {
-                rollArgs.vMethodId = emptyString
+                rollArgs.vMethodId = ZeroHash
                 await expect(
                     didRegistry.rollVerificationMethod(rollArgs)
                 ).to.be.revertedWithCustomError(
                     didVerificationMethodFacet,
-                    'EmptyString'
+                    'EmptyBytes32'
                 )
             })
             it('GIVEN an inserted document WHEN try to roll V.M. with empty ellipticType THEN it fails', async () => {
-                rollArgs.ellipticType = EllipticType.NONE
+                rollArgs.ellipticType = EllipticTypeTest.NONE
                 await expect(
                     didRegistry.rollVerificationMethod(rollArgs)
                 ).to.be.revertedWithCustomError(
@@ -1179,21 +1174,12 @@ describe('DiDRegistry', function () {
                     .withArgs(rollArgs.notBefore, rollArgs.notAfter)
             })
             it('GIVEN an inserted document WHEN try to roll V.M. with empty oldVMethodId THEN it fails', async () => {
-                rollArgs.oldVMethodId = emptyString
+                rollArgs.oldVMethodId = ZeroHash
                 await expect(
                     didRegistry.rollVerificationMethod(rollArgs)
                 ).to.be.revertedWithCustomError(
                     didVerificationMethodFacet,
-                    'EmptyString'
-                )
-            })
-            it('GIVEN an inserted document WHEN try to roll V.M. with empty duration THEN it fails', async () => {
-                rollArgs.duration = 0n
-                await expect(
-                    didRegistry.rollVerificationMethod(rollArgs)
-                ).to.be.revertedWithCustomError(
-                    didVerificationMethodFacet,
-                    'EmptyUint'
+                    'EmptyBytes32'
                 )
             })
             it('GIVEN an inserted document WHEN try to roll V.M. with empty duration THEN it fails', async () => {
@@ -1240,82 +1226,36 @@ describe('DiDRegistry', function () {
                     )
                     .withArgs(Object.values(rollArgs))
 
-                expect(
-                    await didRegistry['checkController(string,address)'](
-                        did,
-                        await wallet.getAddress()
-                    )
-                ).to.be.false
-                expect(
-                    await didRegistry['checkController(string,address)'](
-                        did,
-                        await rolledWallet.getAddress()
-                    )
-                ).to.be.false
-
-                await mockTimestap.setMockedTimestamp(rollArgs.notBefore + 1n)
-                const didDocument = await didRegistry.getDidDocument(did)
-                const newNotAfter = rollArgs.notBefore + rollArgs.duration
-                const expectedComplete = new DidDocumentBuilder(baseDocument, [
+                // Before roll activation: neither wallet is controller yet
+                await expectControllerStatus(
                     did,
-                ])
-                    .addVMethod(
-                        vMethodId,
-                        publicKey65,
-                        EllipticType.SECP_256_K1,
-                        false
-                    )
-                    .addVMethod(
-                        rollArgs.vMethodId,
-                        rollArgs.publicKey,
-                        EllipticType.SECP_256_K1,
-                        false
-                    )
-                    .addVRelationship(
-                        AUTHENTICATION_RELATIONSHIP,
-                        vMethodId,
-                        notBefore,
-                        newNotAfter,
-                        0
-                    )
-                    .addVRelationship(
-                        AUTHENTICATION_RELATIONSHIP,
-                        rollArgs.vMethodId,
-                        rollArgs.notBefore,
-                        rollArgs.notAfter,
-                        0
-                    )
-                    .addVRelationship(
-                        CAPABILITY_INVOCATION_RELATIONSHIP,
-                        vMethodId,
-                        notBefore,
-                        newNotAfter,
-                        0
-                    )
-                    .addVRelationship(
-                        CAPABILITY_INVOCATION_RELATIONSHIP,
-                        rollArgs.vMethodId,
-                        rollArgs.notBefore,
-                        rollArgs.notAfter,
-                        0
-                    )
-                    .build()
-                DidDocumentVerifier.verifyDidDocument(
-                    didDocument,
-                    expectedComplete
+                    await wallet.getAddress(),
+                    false
                 )
-                expect(
-                    await didRegistry['checkController(string,address)'](
-                        did,
-                        await wallet.getAddress()
-                    )
-                ).to.be.false
-                expect(
-                    await didRegistry['checkController(string,address)'](
-                        did,
-                        await rolledWallet.getAddress()
-                    )
-                ).to.be.true
+                await expectControllerStatus(
+                    did,
+                    await rolledWallet.getAddress(),
+                    false
+                )
+
+                // Verify rolled document structure
+                await verifyRolledDocument(
+                    rollArgs,
+                    EllipticType.SECP_256_K1,
+                    EllipticType.SECP_256_K1
+                )
+
+                // After roll activation: old wallet inactive, new wallet is controller
+                await expectControllerStatus(
+                    did,
+                    await wallet.getAddress(),
+                    false
+                )
+                await expectControllerStatus(
+                    did,
+                    await rolledWallet.getAddress(),
+                    true
+                )
             })
             it('GIVEN an inserted document WHEN try to roll V.M. of different elliptic type than NW THEN it success', async () => {
                 rollArgs.ellipticType = EllipticType.SECP_256_R1
@@ -1326,82 +1266,36 @@ describe('DiDRegistry', function () {
                     )
                     .withArgs(Object.values(rollArgs))
 
-                expect(
-                    await didRegistry['checkController(string,address)'](
-                        did,
-                        await wallet.getAddress()
-                    )
-                ).to.be.false
-                expect(
-                    await didRegistry['checkController(string,address)'](
-                        did,
-                        await rolledWallet.getAddress()
-                    )
-                ).to.be.false
-
-                await mockTimestap.setMockedTimestamp(rollArgs.notBefore + 1n)
-                const didDocument = await didRegistry.getDidDocument(did)
-                const newNotAfter = rollArgs.notBefore + rollArgs.duration
-                const expectedComplete = new DidDocumentBuilder(baseDocument, [
+                // Before roll activation: neither wallet is controller yet
+                await expectControllerStatus(
                     did,
-                ])
-                    .addVMethod(
-                        vMethodId,
-                        publicKey65,
-                        EllipticType.SECP_256_K1,
-                        false
-                    )
-                    .addVMethod(
-                        rollArgs.vMethodId,
-                        rollArgs.publicKey,
-                        EllipticType.SECP_256_R1,
-                        false
-                    )
-                    .addVRelationship(
-                        AUTHENTICATION_RELATIONSHIP,
-                        vMethodId,
-                        notBefore,
-                        newNotAfter,
-                        0
-                    )
-                    .addVRelationship(
-                        AUTHENTICATION_RELATIONSHIP,
-                        rollArgs.vMethodId,
-                        rollArgs.notBefore,
-                        rollArgs.notAfter,
-                        0
-                    )
-                    .addVRelationship(
-                        CAPABILITY_INVOCATION_RELATIONSHIP,
-                        vMethodId,
-                        notBefore,
-                        newNotAfter,
-                        0
-                    )
-                    .addVRelationship(
-                        CAPABILITY_INVOCATION_RELATIONSHIP,
-                        rollArgs.vMethodId,
-                        rollArgs.notBefore,
-                        rollArgs.notAfter,
-                        0
-                    )
-                    .build()
-                DidDocumentVerifier.verifyDidDocument(
-                    didDocument,
-                    expectedComplete
+                    await wallet.getAddress(),
+                    false
                 )
-                expect(
-                    await didRegistry['checkController(string,address)'](
-                        did,
-                        await wallet.getAddress()
-                    )
-                ).to.be.false
-                expect(
-                    await didRegistry['checkController(string,address)'](
-                        did,
-                        await rolledWallet.getAddress()
-                    )
-                ).to.be.false
+                await expectControllerStatus(
+                    did,
+                    await rolledWallet.getAddress(),
+                    false
+                )
+
+                // Verify rolled document structure with different elliptic type
+                await verifyRolledDocument(
+                    rollArgs,
+                    EllipticType.SECP_256_K1,
+                    EllipticType.SECP_256_R1
+                )
+
+                // After roll activation with different elliptic: neither is controller
+                await expectControllerStatus(
+                    did,
+                    await wallet.getAddress(),
+                    false
+                )
+                await expectControllerStatus(
+                    did,
+                    await rolledWallet.getAddress(),
+                    false
+                )
             })
             it('GIVEN an inserted document WHEN try to roll V.M. recently added THEN it success', async () => {
                 const newVMethodId = TestConstants.randomDid()
@@ -1421,95 +1315,53 @@ describe('DiDRegistry', function () {
                     )
                     .withArgs(Object.values(rollArgs))
 
-                expect(
-                    await didRegistry['checkController(string,address)'](
-                        did,
-                        await wallet.getAddress()
-                    )
-                ).to.be.true
-                expect(
-                    await didRegistry['checkController(string,address)'](
-                        did,
-                        await rolledWallet.getAddress()
-                    )
-                ).to.be.false
+                await expectControllerStatus(
+                    did,
+                    await wallet.getAddress(),
+                    true
+                )
+                await expectControllerStatus(
+                    did,
+                    await rolledWallet.getAddress(),
+                    false
+                )
 
-                //await mockTimestap.setMockedTimestamp(rollArgs.notBefore + 1n)
                 const didDocument = await didRegistry.getDidDocument(
                     rollArgs.did
                 )
-                const expectedComplete = new DidDocumentBuilder(baseDocument, [
-                    did,
-                ])
-                    .addVMethod(
-                        vMethodId,
-                        publicKey65,
-                        EllipticType.SECP_256_K1,
-                        false
-                    )
-                    .addVRelationship(
-                        AUTHENTICATION_RELATIONSHIP,
-                        vMethodId,
-                        notBefore,
-                        notAfter,
-                        0
-                    )
-                    .addVRelationship(
-                        CAPABILITY_INVOCATION_RELATIONSHIP,
-                        vMethodId,
-                        notBefore,
-                        notAfter,
-                        0
-                    )
-                    .build()
-                DidDocumentVerifier.verifyDidDocument(
+                buildAndVerifyBasicDidDocument(
                     didDocument,
-                    expectedComplete
+                    baseDocument,
+                    did,
+                    vMethodId,
+                    publicKey65,
+                    EllipticType.SECP_256_K1,
+                    false,
+                    notBefore,
+                    notAfter
                 )
-                expect(
-                    await didRegistry['checkController(string,address)'](
-                        did,
-                        await wallet.getAddress()
-                    )
-                ).to.be.true
-                expect(
-                    await didRegistry['checkController(string,address)'](
-                        did,
-                        await rolledWallet.getAddress()
-                    )
-                ).to.be.false
+                await expectControllerStatus(
+                    did,
+                    await wallet.getAddress(),
+                    true
+                )
+                await expectControllerStatus(
+                    did,
+                    await rolledWallet.getAddress(),
+                    false
+                )
             })
         })
 
         describe('addVerificationRelationship', () => {
-            let wallet: HDNodeWallet
-            before(async () => {
-                wallet = walletOfFirstSigner()
-                randomizeDidDocument(wallet)
-            })
             beforeEach(async () => {
-                const fixture = async () => {
-                    await didRegistry.initializeDiDRegistry(
-                        EllipticType.SECP_256_K1
-                    )
-                    await didRegistry.insertDidDocument(
-                        did,
-                        baseDocument,
-                        vMethodId,
-                        publicKey65,
-                        EllipticType.SECP_256_K1,
-                        notBefore,
-                        notAfter
-                    )
-                    await mockTimestap.setMockedTimestamp(notBefore + 1n)
-                }
-                await loadFixture(fixture)
+                await loadFixture(createStandardFixture)
             })
 
             it('GIVEN an inserted document WHEN try to add V.R. with empty did THEN it fails', async () => {
                 await expect(
                     didRegistry.addVerificationRelationship(
-                        emptyString,
+                        ZeroHash,
                         TestConstants.randomDid(),
                         TestConstants.randomDid(),
                         notBefore,
@@ -1517,7 +1369,7 @@ describe('DiDRegistry', function () {
                     )
                 ).to.be.revertedWithCustomError(
                     didVerificationMethodFacet,
-                    'EmptyString'
+                    'EmptyBytes32'
                 )
             })
 
@@ -1541,13 +1393,13 @@ describe('DiDRegistry', function () {
                     didRegistry.addVerificationRelationship(
                         TestConstants.randomDid(),
                         TestConstants.randomDid(),
-                        emptyString,
+                        ZeroHash,
                         notBefore,
                         notAfter
                     )
                 ).to.be.revertedWithCustomError(
                     didVerificationMethodFacet,
-                    'EmptyString'
+                    'EmptyBytes32'
                 )
             })
 
@@ -1649,7 +1501,7 @@ describe('DiDRegistry', function () {
                 )
                     .to.be.revertedWithCustomError(
                         didVerificationRelationshipFacet,
-                        'InvalidVerificationMethod'
+                        'InvalidVerificationMethodName'
                     )
                     .withArgs(wrongName)
             })
@@ -1779,55 +1631,30 @@ describe('DiDRegistry', function () {
         })
 
         describe('addController', () => {
-            let wallet: HDNodeWallet
-            before(async () => {
-                const mnemonic = (
-                    config.networks.hardhat.accounts as {
-                        mnemonic: string
-                        path: string
-                    }
-                ).mnemonic
-                wallet = ethers.Wallet.fromPhrase(mnemonic)
-                randomizeDidDocument(wallet)
-            })
             beforeEach(async () => {
-                const fixture = async () => {
-                    await didRegistry.initializeDiDRegistry(
-                        EllipticType.SECP_256_K1
-                    )
-                    await didRegistry.insertDidDocument(
-                        did,
-                        baseDocument,
-                        vMethodId,
-                        publicKey65,
-                        EllipticType.SECP_256_K1,
-                        notBefore,
-                        notAfter
-                    )
-                }
-                await loadFixture(fixture)
+                await loadFixture(createStandardFixture)
             })
 
             it('GIVEN deployed DiDRegistry WHEN try to add empty did THEN it fails', async () => {
                 await expect(
                     didRegistry.addController(
-                        emptyString,
+                        ZeroHash,
                         TestConstants.randomDid()
                     )
                 ).to.be.revertedWithCustomError(
                     didControllerFacet,
-                    'EmptyString'
+                    'EmptyBytes32'
                 )
             })
             it('GIVEN deployed DiDRegistry WHEN try to add empty controller THEN it fails', async () => {
                 await expect(
                     didRegistry.addController(
                         TestConstants.randomDid(),
-                        emptyString
+                        ZeroHash
                     )
                 ).to.be.revertedWithCustomError(
                     didControllerFacet,
-                    'EmptyString'
+                    'EmptyBytes32'
                 )
             })
             it('GIVEN deployed DiDRegistry WHEN try to add non existent did THEN it fails', async () => {
@@ -1864,16 +1691,8 @@ describe('DiDRegistry', function () {
             it('GIVEN two inserted documents WHEN try to add controller THEN it success', async () => {
                 // GIVEN
                 const controller = TestConstants.randomDid()
-                await didRegistry.insertDidDocument(
-                    controller,
-                    TestConstants.randomDid(),
-                    TestConstants.randomDid(),
-                    publicKey64,
-                    EllipticType.SECP_256_K1,
-                    notBefore,
-                    notAfter
-                )
-                await mockTimestap.setMockedTimestamp(notBefore + 1n)
+                await insertControllerDocument(controller)
+                await mockTimestamp.setMockedTimestamp(notBefore + 1n)
 
                 // WHEN
                 expect(await didRegistry.addController(did, controller))
@@ -1883,69 +1702,37 @@ describe('DiDRegistry', function () {
         })
 
         describe('revokeController', () => {
-            let wallet: HDNodeWallet
             async function addNewController() {
                 const controller = TestConstants.randomDid()
-                await didRegistry.insertDidDocument(
-                    controller,
-                    TestConstants.randomDid(),
-                    TestConstants.randomDid(),
-                    publicKey64,
-                    EllipticType.SECP_256_K1,
-                    notBefore,
-                    notAfter
-                )
+                await insertControllerDocument(controller)
                 await didRegistry.addController(did, controller)
                 return controller
             }
-            before(async () => {
-                const mnemonic = (
-                    config.networks.hardhat.accounts as {
-                        mnemonic: string
-                        path: string
-                    }
-                ).mnemonic
-                wallet = ethers.Wallet.fromPhrase(mnemonic)
-                randomizeDidDocument(wallet)
-            })
+
             beforeEach(async () => {
-                const fixture = async () => {
-                    await didRegistry.initializeDiDRegistry(
-                        EllipticType.SECP_256_K1
-                    )
-                    await didRegistry.insertDidDocument(
-                        did,
-                        baseDocument,
-                        vMethodId,
-                        publicKey65,
-                        EllipticType.SECP_256_K1,
-                        notBefore,
-                        notAfter
-                    )
-                }
-                await loadFixture(fixture)
+                await loadFixture(createStandardFixture)
             })
 
             it('GIVEN deployed DiDRegistry WHEN try to revoke empty did THEN it fails', async () => {
                 await expect(
                     didRegistry.revokeController(
-                        emptyString,
+                        ZeroHash,
                         TestConstants.randomDid()
                     )
                 ).to.be.revertedWithCustomError(
                     didControllerFacet,
-                    'EmptyString'
+                    'EmptyBytes32'
                 )
             })
             it('GIVEN deployed DiDRegistry WHEN try to revoke empty controller THEN it fails', async () => {
                 await expect(
                     didRegistry.revokeController(
                         TestConstants.randomDid(),
-                        emptyString
+                        ZeroHash
                     )
                 ).to.be.revertedWithCustomError(
                     didControllerFacet,
-                    'EmptyString'
+                    'EmptyBytes32'
                 )
             })
             it('GIVEN deployed DiDRegistry WHEN try to revoke non existent did THEN it fails', async () => {
@@ -1974,15 +1761,7 @@ describe('DiDRegistry', function () {
             it('GIVEN deployed DiDRegistry WHEN try to revoke not linked controller THEN it fails', async () => {
                 // GIVEN
                 const controller = TestConstants.randomDid()
-                await didRegistry.insertDidDocument(
-                    controller,
-                    TestConstants.randomDid(),
-                    TestConstants.randomDid(),
-                    publicKey64,
-                    EllipticType.SECP_256_K1,
-                    notBefore,
-                    notAfter
-                )
+                await insertControllerDocument(controller)
 
                 // WHEN
                 await expect(didRegistry.revokeController(did, controller))
@@ -1994,7 +1773,7 @@ describe('DiDRegistry', function () {
             })
             it('GIVEN two inserted documents WHEN try to revoke controller THEN it success', async () => {
                 // GIVEN
-                await mockTimestap.setMockedTimestamp(notBefore + 1n)
+                await mockTimestamp.setMockedTimestamp(notBefore + 1n)
                 const controller = await addNewController()
                 await addNewController()
                 // WHEN
@@ -2101,7 +1880,7 @@ describe('DiDRegistry', function () {
                             notAfter
                         )
                     }
-                    await mockTimestap.setMockedTimestamp(notBefore + 1n)
+                    await mockTimestamp.setMockedTimestamp(notBefore + 1n)
                 }
                 await loadFixture(fixture)
             })
@@ -2216,7 +1995,7 @@ describe('DiDRegistry', function () {
                     await didRegistry.initializeDiDRegistry(
                         EllipticType.SECP_256_K1
                     )
-                    await mockTimestap.setMockedTimestamp(notBefore + 1n)
+                    await mockTimestamp.setMockedTimestamp(notBefore + 1n)
                     await didRegistry.insertDidDocument(
                         controller,
                         baseDocument,
@@ -2315,7 +2094,7 @@ describe('DiDRegistry', function () {
                 await loadFixture(fixture)
             })
             it('GIVEN inserted document WHEN try to get it to the future THEN cant recover vMethods', async () => {
-                await mockTimestap.setMockedTimestamp(notBefore - 1n)
+                await mockTimestamp.setMockedTimestamp(notBefore - 1n)
                 const didDocument = await didRegistry.getDidDocument(did)
                 const expectedEmpty = DidDocumentBuilder.empty(baseDocument, [
                     did,
@@ -2326,40 +2105,22 @@ describe('DiDRegistry', function () {
                 )
             })
             it('GIVEN inserted document WHEN try to get it in present THEN can recover vMethods', async () => {
-                await mockTimestap.setMockedTimestamp(notBefore + 1n)
+                await mockTimestamp.setMockedTimestamp(notBefore + 1n)
                 const didDocument = await didRegistry.getDidDocument(did)
-                const expectedComplete = new DidDocumentBuilder(baseDocument, [
-                    did,
-                ])
-                    .addVMethod(
-                        vMethodId,
-                        publicKey64,
-                        EllipticType.SECP_256_K1,
-                        false
-                    )
-                    .addVRelationship(
-                        AUTHENTICATION_RELATIONSHIP,
-                        vMethodId,
-                        notBefore,
-                        notAfter,
-                        0
-                    )
-                    .addVRelationship(
-                        CAPABILITY_INVOCATION_RELATIONSHIP,
-                        vMethodId,
-                        notBefore,
-                        notAfter,
-                        0
-                    )
-                    .build()
-
-                DidDocumentVerifier.verifyDidDocument(
+                buildAndVerifyBasicDidDocument(
                     didDocument,
-                    expectedComplete
+                    baseDocument,
+                    did,
+                    vMethodId,
+                    publicKey64,
+                    EllipticType.SECP_256_K1,
+                    false,
+                    notBefore,
+                    notAfter
                 )
             })
             it('GIVEN inserted document WHEN try to get it in past THEN cant recover vMethodsIds', async () => {
-                await mockTimestap.setMockedTimestamp(notAfter + 1n)
+                await mockTimestamp.setMockedTimestamp(notAfter + 1n)
                 DidDocumentVerifier.verifyDidDocument(
                     await didRegistry.getDidDocument(did),
                     DidDocumentBuilder.empty(baseDocument, [did])
@@ -2400,37 +2161,20 @@ describe('DiDRegistry', function () {
                 )
             })
             it('GIVEN inserted document WHEN try to get it in present THEN can recover vMethods', async () => {
-                const expectedComplete = new DidDocumentBuilder(baseDocument, [
+                const didDocument = await didRegistry.getDidDocumentByTimestamp(
                     did,
-                ])
-                    .addVMethod(
-                        vMethodId,
-                        publicKey64,
-                        EllipticType.SECP_256_K1,
-                        false
-                    )
-                    .addVRelationship(
-                        AUTHENTICATION_RELATIONSHIP,
-                        vMethodId,
-                        notBefore,
-                        notAfter,
-                        0
-                    )
-                    .addVRelationship(
-                        CAPABILITY_INVOCATION_RELATIONSHIP,
-                        vMethodId,
-                        notBefore,
-                        notAfter,
-                        0
-                    )
-                    .build()
-
-                DidDocumentVerifier.verifyDidDocument(
-                    await didRegistry.getDidDocumentByTimestamp(
-                        did,
-                        notBefore + 1n
-                    ),
-                    expectedComplete
+                    notBefore + 1n
+                )
+                buildAndVerifyBasicDidDocument(
+                    didDocument,
+                    baseDocument,
+                    did,
+                    vMethodId,
+                    publicKey64,
+                    EllipticType.SECP_256_K1,
+                    false,
+                    notBefore,
+                    notAfter
                 )
             })
             it('GIVEN inserted document WHEN try to get it in past THEN cant recover vMethodsIds', async () => {
@@ -2446,7 +2190,6 @@ describe('DiDRegistry', function () {
 
         describe('checkController', () => {
             let wallet: HDNodeWallet
-            let hexDid: string
             beforeEach(async () => {
                 wallet = walletOfFirstSigner()
                 randomizeDidDocument(wallet)
@@ -2465,33 +2208,30 @@ describe('DiDRegistry', function () {
                     )
                 }
                 await loadFixture(fixture)
-                hexDid = ethers.hexlify(ethers.toUtf8Bytes(did))
             })
             it('GIVEN inserted document WHEN check controller with a non linked did THEN fails', async () => {
+                await expectControllerStatus(
+                    did,
+                    await wallet.getAddress(),
+                    false
+                )
                 expect(
-                    await didRegistry['checkController(string,address)'](
+                    await didRegistry[CHECK_CONTROLLER_BYTES_ADDRESS](
                         did,
-                        await wallet.getAddress()
-                    )
-                ).to.be.false
-                expect(
-                    await didRegistry['checkController(bytes,address)'](
-                        hexDid,
                         await wallet.getAddress()
                     )
                 ).to.be.false
             })
             it('GIVEN inserted document WHEN check controller with a linked did THEN success', async () => {
-                await mockTimestap.setMockedTimestamp(notBefore + 1n)
+                await mockTimestamp.setMockedTimestamp(notBefore + 1n)
+                await expectControllerStatus(
+                    did,
+                    await wallet.getAddress(),
+                    true
+                )
                 expect(
-                    await didRegistry['checkController(string,address)'](
+                    await didRegistry[CHECK_CONTROLLER_BYTES_ADDRESS](
                         did,
-                        await wallet.getAddress()
-                    )
-                ).to.be.true
-                expect(
-                    await didRegistry['checkController(bytes,address)'](
-                        hexDid,
                         await wallet.getAddress()
                     )
                 ).to.be.true

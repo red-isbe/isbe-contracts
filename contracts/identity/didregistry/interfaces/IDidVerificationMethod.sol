@@ -26,13 +26,13 @@ interface IDidVerificationMethod {
      * @param duration The validity duration in seconds for the new verification method
      */
     struct RollArgs {
-        string did;
-        string vMethodId;
+        bytes32 did;
+        bytes32 vMethodId;
         bytes publicKey;
         IDidDocumentDetailed.EllipticType ellipticType;
         uint256 notBefore;
         uint256 notAfter;
-        string oldVMethodId;
+        bytes32 oldVMethodId;
         uint256 duration;
     }
 
@@ -44,8 +44,8 @@ interface IDidVerificationMethod {
      * @param ellipticType Cryptographic algorithm specification for signature verification
      */
     event VerificationMethodAdded(
-        string did,
-        string vMethodId,
+        bytes32 did,
+        bytes32 vMethodId,
         bytes publicKey,
         IDidDocumentDetailed.EllipticType ellipticType
     );
@@ -57,8 +57,8 @@ interface IDidVerificationMethod {
      * @param notAfter Unix timestamp when the revocation becomes effective
      */
     event VerificationMethodRevoked(
-        string did,
-        string vMethodId,
+        bytes32 did,
+        bytes32 vMethodId,
         uint256 notAfter
     );
 
@@ -69,8 +69,8 @@ interface IDidVerificationMethod {
      * @param notAfter Unix timestamp when the method expires and becomes invalid
      */
     event VerificationMethodExpired(
-        string did,
-        string vMethodId,
+        bytes32 did,
+        bytes32 vMethodId,
         uint256 notAfter
     );
 
@@ -86,13 +86,13 @@ interface IDidVerificationMethod {
      * @param duration The validity period in seconds for the new verification method
      */
     event VerificationMethodRolled(
-        string did,
-        string vMethodId,
+        bytes32 did,
+        bytes32 vMethodId,
         bytes publicKey,
         IDidDocumentDetailed.EllipticType ellipticType,
         uint256 notBefore,
         uint256 notAfter,
-        string oldVMethodId,
+        bytes32 oldVMethodId,
         uint256 duration
     );
 
@@ -103,7 +103,7 @@ interface IDidVerificationMethod {
      * @param did The decentralised identifier containing the existing verification method
      * @param vMethodId The verification method identifier that already exists
      */
-    error VerificationMethodExists(string did, string vMethodId);
+    error VerificationMethodExists(bytes32 did, bytes32 vMethodId);
 
     /**
      * @notice Raised when attempting to operate on a non-existent verification method
@@ -112,7 +112,7 @@ interface IDidVerificationMethod {
      * @param did The decentralised identifier that should contain the verification method
      * @param vMethodId The verification method identifier that does not exist
      */
-    error VerificationMethodNotExists(string did, string vMethodId);
+    error VerificationMethodNotExists(bytes32 did, bytes32 vMethodId);
 
     /**
      * @notice Raised when attempting to register a public key that is already in use
@@ -140,8 +140,8 @@ interface IDidVerificationMethod {
      * @return success Boolean indicating whether the operation completed successfully
      */
     function addVerificationMethod(
-        string memory did,
-        string memory vMethodId,
+        bytes32 did,
+        bytes32 vMethodId,
         bytes memory publicKey,
         IDidDocumentDetailed.EllipticType ellipticType
     ) external returns (bool success);
@@ -156,8 +156,8 @@ interface IDidVerificationMethod {
      * @return success Boolean indicating whether the operation completed successfully
      */
     function revokeVerificationMethod(
-        string memory did,
-        string memory vMethodId,
+        bytes32 did,
+        bytes32 vMethodId,
         uint256 notAfter
     ) external returns (bool success);
 
@@ -171,8 +171,8 @@ interface IDidVerificationMethod {
      * @return success Boolean indicating whether the operation completed successfully
      */
     function expireVerificationMethod(
-        string memory did,
-        string memory vMethodId,
+        bytes32 did,
+        bytes32 vMethodId,
         uint256 notAfter
     ) external returns (bool success);
 

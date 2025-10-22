@@ -16,7 +16,7 @@ interface IDidVerificationRelationship {
      * @param notAfter Unix timestamp when the DID expires
      */
     struct DidWithPeriod {
-        string did;
+        bytes32 did;
         uint256 notBefore;
         uint256 notAfter;
     }
@@ -30,9 +30,9 @@ interface IDidVerificationRelationship {
      * @param notAfter Unix timestamp when the relationship expires
      */
     event VerificationRelationshipAdded(
-        string did,
+        bytes32 did,
         string name,
-        string vMethodId,
+        bytes32 vMethodId,
         uint256 notBefore,
         uint256 notAfter
     );
@@ -48,9 +48,9 @@ interface IDidVerificationRelationship {
      * @return success Boolean indicating whether the operation completed successfully
      */
     function addVerificationRelationship(
-        string memory did,
+        bytes32 did,
         string memory name,
-        string memory vMethodId,
+        bytes32 vMethodId,
         uint256 notBefore,
         uint256 notAfter
     ) external returns (bool success);
@@ -69,7 +69,7 @@ interface IDidVerificationRelationship {
      * @return next Next page number (zero if no next page)
      */
     function getDidsByVerificationRelationship(
-        string memory vMethodId,
+        bytes32 vMethodId,
         string memory name,
         uint256 page,
         uint256 pageSize

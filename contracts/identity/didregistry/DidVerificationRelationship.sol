@@ -19,17 +19,17 @@ abstract contract DidVerificationRelationship is
     IDidVerificationRelationship
 {
     function addVerificationRelationship(
-        string memory _did,
+        bytes32 _did,
         string memory _name,
-        string memory _vMethodId,
+        bytes32 _vMethodId,
         uint256 _notBefore,
         uint256 _notAfter
     )
         external
         override
-        emptyString(_did)
+        bytes32IsNotZero(_did)
         emptyString(_name)
-        emptyString(_vMethodId)
+        bytes32IsNotZero(_vMethodId)
         emptyUint(_notBefore)
         emptyUint(_notAfter)
         onlyDidExists(_did)
@@ -60,7 +60,7 @@ abstract contract DidVerificationRelationship is
     }
 
     function getDidsByVerificationRelationship(
-        string memory _vMethodId,
+        bytes32 _vMethodId,
         string memory _name,
         uint256 _page,
         uint256 _pageSize

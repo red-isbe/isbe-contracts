@@ -18,15 +18,15 @@ abstract contract DidVerificationMethod is
     IDidVerificationMethod
 {
     function addVerificationMethod(
-        string memory _did,
-        string memory _vMethodId,
+        bytes32 _did,
+        bytes32 _vMethodId,
         bytes memory _publicKey,
         IDidDocumentDetailed.EllipticType _ellipticType
     )
         external
         override
-        emptyString(_did)
-        emptyString(_vMethodId)
+        bytes32IsNotZero(_did)
+        bytes32IsNotZero(_vMethodId)
         emptyBytes(_publicKey)
         validateEllipticType(_ellipticType)
         onlyDidExists(_did)
@@ -50,14 +50,14 @@ abstract contract DidVerificationMethod is
     }
 
     function revokeVerificationMethod(
-        string memory _did,
-        string memory _vMethodId,
+        bytes32 _did,
+        bytes32 _vMethodId,
         uint256 _notAfter
     )
         external
         override
-        emptyString(_did)
-        emptyString(_vMethodId)
+        bytes32IsNotZero(_did)
+        bytes32IsNotZero(_vMethodId)
         onlyDidExists(_did)
         onlyVMethodIdExists(_did, _vMethodId)
         returns (bool success)
@@ -71,14 +71,14 @@ abstract contract DidVerificationMethod is
     }
 
     function expireVerificationMethod(
-        string memory _did,
-        string memory _vMethodId,
+        bytes32 _did,
+        bytes32 _vMethodId,
         uint256 _notAfter
     )
         external
         override
-        emptyString(_did)
-        emptyString(_vMethodId)
+        bytes32IsNotZero(_did)
+        bytes32IsNotZero(_vMethodId)
         onlyDidExists(_did)
         onlyVMethodIdExists(_did, _vMethodId)
         returns (bool success)

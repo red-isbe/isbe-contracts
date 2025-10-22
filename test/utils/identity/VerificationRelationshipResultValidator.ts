@@ -181,7 +181,7 @@ export class VerificationRelationshipResultValidator {
     expectDidsOnlyAndDates(
         expectedDids: string[],
         expectedNotBefores: bigint[],
-        expectedNotAfters: bigint
+        expectedNotAfters: bigint[]
     ): VerificationRelationshipResultValidator {
         const actualItems = this.result[0]
         const actualDids = actualItems.map((item) => item.did)

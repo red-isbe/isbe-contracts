@@ -30,9 +30,9 @@ abstract contract DidDocumentDetailed is
     }
 
     function insertDidDocument(
-        string memory _did,
+        bytes32 _did,
         string memory _baseDocument,
-        string memory _vMethodId,
+        bytes32 _vMethodId,
         bytes memory _publicKey,
         EllipticType _ellipticType,
         uint256 _notBefore,
@@ -47,9 +47,9 @@ abstract contract DidDocumentDetailed is
         returns (bool)
     {
         {
-            _checkEmptyString(_did);
+            _checkBytes32IsNotZero(_did);
             _checkEmptyString(_baseDocument);
-            _checkEmptyString(_vMethodId);
+            _checkBytes32IsNotZero(_vMethodId);
             _checkUintIsNotZero(_notBefore);
             _checkUintIsNotZero(_notAfter);
             _checkValidDates(_notBefore, _notAfter);
@@ -76,12 +76,12 @@ abstract contract DidDocumentDetailed is
     }
 
     function updateBaseDocument(
-        string memory did,
+        bytes32 did,
         string memory baseDocument
     )
         external
         override
-        emptyString(did)
+        bytes32IsNotZero(did)
         emptyString(baseDocument)
         onlyDidExists(did)
         onlyControllerOrAuth(did)
@@ -99,7 +99,7 @@ abstract contract DidDocumentDetailed is
         view
         override
         returns (
-            string[] memory items_,
+            bytes32[] memory items_,
             uint256 total_,
             uint256 howMany_,
             uint256 prev_,
@@ -110,15 +110,15 @@ abstract contract DidDocumentDetailed is
     }
 
     function getDidDocument(
-        string memory _did
+        bytes32 _did
     )
         external
         view
         override
         returns (
             string memory baseDocument_,
-            string[] memory controllers_,
-            string[] memory vMethodIds_,
+            bytes32[] memory controllers_,
+            bytes32[] memory vMethodIds_,
             VMethod[] memory vMethods_,
             VRelationship[] memory vRelationships_
         )
@@ -127,7 +127,7 @@ abstract contract DidDocumentDetailed is
     }
 
     function getDidDocumentByTimestamp(
-        string memory _did,
+        bytes32 _did,
         uint256 _timestamp
     )
         external
@@ -135,8 +135,8 @@ abstract contract DidDocumentDetailed is
         override
         returns (
             string memory baseDocument_,
-            string[] memory controllers_,
-            string[] memory vMethodIds_,
+            bytes32[] memory controllers_,
+            bytes32[] memory vMethodIds_,
             VMethod[] memory vMethods_,
             VRelationship[] memory vRelationships_
         )
