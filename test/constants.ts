@@ -54,6 +54,9 @@ export const ROLE_2 =
 export const FREEZE_ROLE =
     '0xa4e18dbe5b5a07c8c736c28f272d9ef8b1c38dc1fc3a3e57f4a79d5ebd8dc8f4'
 
+export const RECOVERY_ROLE =
+    '0xf2297f89cf57d1a505c0563f0b3b7b36b043d2de6e2d0e5e75ee83cf3278e30f'
+
 export const REGULATORY_ROLE =
     '0x14eb35b88f6ef5e40610e3f30b90e8c0c32d045865e637f6c5bdb10d60afbf11'
 
