@@ -19,6 +19,7 @@
         "test:pause": "npx hardhat test test/Pause.spec.ts",
         "test:ownable": "npx hardhat test test/Ownable.spec.ts",
         "test:erc20": "npx hardhat test test/ERC20.spec.ts",
+        "test:erc3643": "npx hardhat test test/ERC3643.spec.ts",
         "test:erc165": "npx hardhat test test/ERC165.spec.ts",
         "test:assetEventTracker": "npx hardhat test test/AssetEventTracker.spec.ts",
         "test:hashTimestamp": "npx hardhat test test/HashTimestamp.spec.ts",
