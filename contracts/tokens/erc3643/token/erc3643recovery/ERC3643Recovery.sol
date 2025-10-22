@@ -178,6 +178,7 @@ abstract contract ERC3643Recovery is IERC3643Recovery, ERC203643InternalCommon {
      *
      * Reverts or emits RecoveryFails if validation fails
      */
+    // solhint-disable-next-line no-unused-vars
     function _validateWalletOwnership(
         address _newWallet,
         IIdentity _onchainID
@@ -185,10 +186,6 @@ abstract contract ERC3643Recovery is IERC3643Recovery, ERC203643InternalCommon {
         // TODO: Uncomment when IIdentity interface is complete
         // bytes32 walletKey = keccak256(abi.encode(_newWallet));
         // require(_onchainID.keyHasPurpose(walletKey, 1), "Invalid wallet key");
-        
-        // Placeholder to avoid unused parameter warnings
-        _newWallet;
-        _onchainID;
     }
 
     /**
