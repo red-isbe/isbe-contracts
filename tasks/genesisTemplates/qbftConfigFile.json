@@ -35,8 +35,9 @@
       "ellipticCurve": "secp256k1"
     },
     "alloc": {
-      "0xbebd29124435700f87a3821dc95eea8ab95fcb1b": {
-        "balance": "1000000000000000000000000000"
+      "0x6A1862912D904110DBC4AeF9096F8A8883807bD6": {
+        "balance": "1000000000000000000000000000",
+        "comment":"This is the ISBE Account"
       },
       "0xcbac250151088ae5137039d4b0b10f0a8d55ea42": {
         "balance": "1000000000000000000000000000"

@@ -45,91 +45,98 @@ async function jsonRpcCall(urlStr: string): Promise<boolean> {
     }
 }
 
-task(
-    'genesis:generate',
-    'Generate genesis by extracting storage slots from deployment transactions in Hardhat network'
-)
+task('genesis:generate','Generate genesis by extracting storage slots from deployment transactions in Hardhat network')
     .addOptionalParam(
         'template',
         'Template JSON file to use',
         'qbftConfigFile.json'
-    )
-    .setAction(async (taskArgs, hre) => {
-        const contractRegistry = new ContractRegistry()
-        console.info(
-            '---------------------------------------------------------------------'
-        )
-        console.info('🚀    ISBE Genesis generation started...')
-        console.info(
-            '---------------------------------------------------------------------'
-        )
-        hre.network.name = 'hardhat'
+    ).addParam(
+        "isbeadmin",
+        "ISBE Admin Address"
+    ).setAction(async (taskArgs, hre) => {
+        try {
+            const contractRegistry = new ContractRegistry()
+            console.info(
+                '---------------------------------------------------------------------'
+            )
+            console.info('🚀    ISBE Genesis generation started...')
+            console.info(
+                '---------------------------------------------------------------------'
+            )
+            hre.network.name = 'hardhat'
+            const isbeAdmin = taskArgs.isbeadmin;
+            console.log(`📄 Using ISBE Admin Address: ${isbeAdmin}` )
 
-        let templateDir = (
-            hre.config as unknown as {
-                genesisGenerator: { templateDir: string }
+            let templateDir = (
+                hre.config as unknown as {
+                    genesisGenerator: { templateDir: string }
+                }
+            ).genesisGenerator.templateDir
+            if (templateDir.slice(-1) !== '/') {
+                templateDir += '/'
             }
-        ).genesisGenerator.templateDir
-        if (templateDir.slice(-1) !== '/') {
-            templateDir += '/'
+            let outputDir = (
+                hre.config as unknown as { genesisGenerator: { outputDir: string } }
+            ).genesisGenerator.outputDir
+            if (outputDir.slice(-1) !== '/') {
+                outputDir += '/'
+            }
+
+            const templateFile = taskArgs.template
+            const genesisTemplateFile = templateDir + templateFile
+            const outputFile = outputDir + templateFile
+
+            const registryFile =
+                (outputDir.endsWith('/') ? outputDir : outputDir + '/') +
+                REGISTRY_FILENAME
+            console.log(`📄 Using template file: ${genesisTemplateFile}`)
+
+            console.log('🚀 DeployAll...')
+            const result = await hre.run('deployAllClean',{isbeadmin:isbeAdmin})
+            console.log('✅ Deploy all (Done).')
+
+            console.log('🚀 Genesis generation...')
+            let slotStructure: GenesisAlloc = await retrieveSlotStructure(hre)
+            slotStructure = await matchContractNames(hre, slotStructure)
+            console.log(
+                '✅ Slot structure retrieved.----------------------------------------------------------'
+            )
+            await buildGenesisWithAlloc(
+                genesisTemplateFile,
+                slotStructure,
+                outputFile
+            )
+            console.log(
+                '✅ Genesis file generated successfully.-----------------------------------------------'
+            )
+
+            contractRegistry.dumpRegistry(slotStructure, registryFile)
+
+            console.log(
+                '✅ Contract registry generated----------------------------------------------------------'
+            )
+
+            const tableData = Array.from(slotStructure.entries()).map(
+                ([address, entry]) => ({
+                    Address: address,
+                    Contract: entry.contractName ?? '<unknown>',
+                    StorageSize: Object.keys(entry.storage ?? {}).length,
+                })
+            )
+
+            console.log('📘 GENESIS REPORT\n')
+            console.table(tableData)
+
+            console.log(
+                '✅ Genesis generation (Done).----------------------------------------------------------'
+            )
+
+            return result // propagate deployAll result if neeeded
+        } catch (error: unknown) {
+            const msg = error instanceof Error ? error.message : String(error)
+            console.error('❌ Error during genesis generation:', msg)
+            process.exit(1)
         }
-        let outputDir = (
-            hre.config as unknown as { genesisGenerator: { outputDir: string } }
-        ).genesisGenerator.outputDir
-        if (outputDir.slice(-1) !== '/') {
-            outputDir += '/'
-        }
-
-        const templateFile = taskArgs.template
-        const genesisTemplateFile = templateDir + templateFile
-        const outputFile = outputDir + templateFile
-
-        const registryFile =
-            (outputDir.endsWith('/') ? outputDir : outputDir + '/') +
-            REGISTRY_FILENAME
-        console.log(`📄 Using template file: ${genesisTemplateFile}`)
-
-        console.log('🚀 DeployAll...')
-        const result = await hre.run('deployAllClean')
-        console.log('✅ Deploy all (Done).')
-
-        console.log('🚀 Genesis generation...')
-        let slotStructure: GenesisAlloc = await retrieveSlotStructure(hre)
-        slotStructure = await matchContractNames(hre, slotStructure)
-        console.log(
-            '✅ Slot structure retrieved.----------------------------------------------------------'
-        )
-        await buildGenesisWithAlloc(
-            genesisTemplateFile,
-            slotStructure,
-            outputFile
-        )
-        console.log(
-            '✅ Genesis file generated successfully.-----------------------------------------------'
-        )
-
-        contractRegistry.dumpRegistry(slotStructure, registryFile)
-
-        console.log(
-            '✅ Contract registry generated----------------------------------------------------------'
-        )
-
-        const tableData = Array.from(slotStructure.entries()).map(
-            ([address, entry]) => ({
-                Address: address,
-                Contract: entry.contractName ?? '<unknown>',
-                StorageSize: Object.keys(entry.storage ?? {}).length,
-            })
-        )
-
-        console.log('📘 GENESIS REPORT\n')
-        console.table(tableData)
-
-        console.log(
-            '✅ Genesis generation (Done).----------------------------------------------------------'
-        )
-
-        return result // propagate deployAll result if neeeded
     })
 
 task(

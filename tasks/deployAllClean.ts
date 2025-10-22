@@ -11,6 +11,7 @@ import {
     LogLevel,
     EnhancedLogger,
 } from './deployment/utils/LoggingEnhancements'
+import { validateAddress } from '@scripts/utils/validation'
 
 interface TaskArgs {
     precommit?: boolean
@@ -42,6 +43,10 @@ task(
         'logLevel',
         'Set logging verbosity: minimal, normal, verbose, debug',
         'normal'
+    )
+    .addParam(
+        'isbeadmin',
+        'ISBE admin address for deployment'
     )
     .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
         // Configure logging level
@@ -91,13 +96,18 @@ async function deployWithCleanOrchestrator(
     hre: HardhatRuntimeEnvironment
 ) {
     try {
+        console.log('\\n📋 CLEAN DEPLOYMENT CONFIGURATION:')
+        const isbeAdmin = validateChecksumAddress(hre, (taskArgs as { isbeadmin: string }).isbeadmin);
+        console.log(`   • ISBE admin: ${isbeAdmin}`)
+        console.log('')
+
         // Create configuration
         const config = DeploymentConfig.getDefaultConfig()
+        config.setIsbeAdmin(isbeAdmin);
 
         // Create clean orchestrator (automatically detects and uses appropriate provider)
         const orchestrator = new CleanDeploymentOrchestrator(hre, config)
 
-        console.log('\\n📋 CLEAN DEPLOYMENT CONFIGURATION:')
         console.log(
             `   • Business logics to deploy: ${config.businessLogics.length}`
         )
@@ -304,4 +314,15 @@ function parseLogLevel(logLevelStr?: string): LogLevel {
             )
             return LogLevel.NORMAL
     }
+}
+function validateChecksumAddress(hre: HardhatRuntimeEnvironment, isbeadmin: string) {
+    if (!hre.ethers.isAddress(isbeadmin)) {
+        throw new Error(`❌ Not valid address: ${isbeadmin}`);
+    }
+    
+    const checksummed = hre.ethers.getAddress(isbeadmin);
+    if (isbeadmin !== checksummed) {
+        throw new Error(`❌ Not valid checksum for address: ${isbeadmin} it should be: ${checksummed}`);
+    }
+    return checksummed;
 }

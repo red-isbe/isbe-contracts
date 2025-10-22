@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e  # Exit immediately if a command exits with a non-zero status
 
 # Default values
 BESU_DIR="../isbe-besu-local-deployer"
@@ -7,6 +8,7 @@ EXEC_BESU="bash install.sh -b"
 # Flags
 SKIP_GEN=false
 SKIP_BESU_STARTUP=false
+SKIP_VALIDATION=false
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -17,6 +19,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --skip-besu-startup)
       SKIP_BESU_STARTUP=true
+      shift
+      ;;
+    --skip-validation)
+      SKIP_VALIDATION=true
       shift
       ;;
     --besu-dir)
@@ -37,7 +43,7 @@ echo ""
 # Step 1: Genesis generation
 if [ "$SKIP_GEN" = false ]; then
   echo "🔧 Generating genesis..."
-  npx hardhat genesis:generate
+  npx hardhat genesis:generate --isbeadmin 0x6A1862912D904110DBC4AeF9096F8A8883807bD6 # PK: 0x4ac8ab5147f0b280ce96bd1b90a9b3e840804f7e696c16871d2a1f33f93ec063 (For testing only)
 else
   echo "⏩ Skipping genesis generation (--skip-gen)"
 fi
@@ -55,7 +61,8 @@ else
 fi
 
 # Step 3: Validate genesis
-echo "🔍 Validating genesis..."
-npx hardhat genesis:validate --network genesis_validation_network \
-  --gobernanceaddress 0x2279b7a0a67db372996a5fab50d91eaa73d2ebe6
-echo "✅ Genesis validation completed."
+if [ "$SKIP_VALIDATION" = false ]; then
+  npx hardhat genesis:validate --network genesis_validation_network \
+    --gobernanceaddress 0x2279b7a0a67db372996a5fab50d91eaa73d2ebe6
+  echo "✅ Genesis validation completed."
+fi
