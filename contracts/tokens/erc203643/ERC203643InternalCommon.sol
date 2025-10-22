@@ -127,29 +127,6 @@ abstract contract ERC203643InternalCommon is
     }
 
     /**
-     * @dev Handles normal transfer validation (non-forced)
-     * @param _from Address to transfer from
-     * @param _to Address to transfer to
-     * @param _amount Amount to transfer
-     */
-    function _handleNormalTransferValidation(
-        address _from,
-        address _to,
-        uint256 _amount
-    ) internal view {
-        // Both sender and recipient must not be frozen
-        require(!_isFrozen(_from), IERC3643Freeze.SenderIsFrozen(_from));
-        require(!_isFrozen(_to), IERC3643Freeze.RecipientIsFrozen(_to));
-
-        // Sender must have sufficient free (unfrozen) balance
-        uint256 freeBalance = _calculateFreeBalance(_from);
-        require(
-            freeBalance >= _amount,
-            IERC3643Freeze.InsufficientFreeBalance(_from, _amount, freeBalance)
-        );
-    }
-
-    /**
      * @dev Handles force burn with auto-unfreeze capability
      * @param _from Address to burn from
      * @param _amount Amount to burn
@@ -198,6 +175,67 @@ abstract contract ERC203643InternalCommon is
     }
 
     /**
+     * @dev Checks if identity registry is configured
+     * @return True if identity registry exists
+     */
+    function _hasIdentityRegistry() internal view returns (bool) {
+        return _identityRegistry() != address(0);
+    }
+
+    /**
+     * @dev Checks if caller has controller or recovery role
+     * @return True if caller is controller or recovery
+     */
+    function _isControllerOrRecovery() internal view returns (bool) {
+        return
+            _hasRole(_CONTROLLER_ROLE, msg.sender) ||
+            _hasRole(_RECOVERY_ROLE, msg.sender);
+    }
+
+    /**
+     * @dev Calculates the free (unfrozen) balance for an account
+     * @param _account The address to check
+     * @return The amount of unfrozen tokens available for transfer
+     */
+    function _calculateFreeBalance(
+        address _account
+    ) internal view returns (uint256) {
+        uint256 totalBalance = _balanceOf(_account);
+        uint256 frozenTokens = _getFrozenTokens(_account);
+
+        // If frozen tokens exceed total balance, free balance is zero
+        if (frozenTokens >= totalBalance) {
+            return 0;
+        }
+
+        // Otherwise, free balance is the difference
+        return totalBalance - frozenTokens;
+    }
+
+    /**
+     * @dev Handles normal transfer validation (non-forced)
+     * @param _from Address to transfer from
+     * @param _to Address to transfer to
+     * @param _amount Amount to transfer
+     */
+    function _handleNormalTransferValidation(
+        address _from,
+        address _to,
+        uint256 _amount
+    ) internal view {
+        // Both sender and recipient must not be frozen
+        require(!_isFrozen(_from), IERC3643Freeze.SenderIsFrozen(_from));
+        require(!_isFrozen(_to), IERC3643Freeze.RecipientIsFrozen(_to));
+
+        // Sender must have sufficient free (unfrozen) balance
+        uint256 freeBalance = _calculateFreeBalance(_from);
+        require(
+            freeBalance >= _amount,
+            IERC3643Freeze.InsufficientFreeBalance(_from, _amount, freeBalance)
+        );
+    }
+
+    /**
      * @dev Validates that recipient is verified in identity registry
      * @param _to Recipient address to validate
      */
@@ -234,43 +272,5 @@ abstract contract ERC203643InternalCommon is
     ) internal view {
         uint256 balance = _balanceOf(_account);
         require(balance >= _amount, IERC20Isbe.BurnAmountExceedsBalance());
-    }
-
-    /**
-     * @dev Checks if identity registry is configured
-     * @return True if identity registry exists
-     */
-    function _hasIdentityRegistry() internal view returns (bool) {
-        return _identityRegistry() != address(0);
-    }
-
-    /**
-     * @dev Checks if caller has controller or recovery role
-     * @return True if caller is controller or recovery
-     */
-    function _isControllerOrRecovery() internal view returns (bool) {
-        return
-            _hasRole(_CONTROLLER_ROLE, msg.sender) ||
-            _hasRole(_RECOVERY_ROLE, msg.sender);
-    }
-
-    /**
-     * @dev Calculates the free (unfrozen) balance for an account
-     * @param _account The address to check
-     * @return The amount of unfrozen tokens available for transfer
-     */
-    function _calculateFreeBalance(
-        address _account
-    ) internal view returns (uint256) {
-        uint256 totalBalance = _balanceOf(_account);
-        uint256 frozenTokens = _getFrozenTokens(_account);
-
-        // If frozen tokens exceed total balance, free balance is zero
-        if (frozenTokens >= totalBalance) {
-            return 0;
-        }
-
-        // Otherwise, free balance is the difference
-        return totalBalance - frozenTokens;
     }
 }

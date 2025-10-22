@@ -13,23 +13,23 @@ import {IIdentityRegistry} from '../../identityregistry/IIdentityRegistry.sol';
  * @dev Allows authorized agents to recover tokens from lost wallets to new verified wallets.
  *      Extends ERC203643InternalCommon which aggregates all internal contracts,
  *      providing access to all necessary internal functions.
- * 
+ *
  * Architecture Note:
- * Unlike other ERC3643 modules (Freeze, Metadata, Regulatory), this contract does NOT have 
+ * Unlike other ERC3643 modules (Freeze, Metadata, Regulatory), this contract does NOT have
  * a separate ERC3643RecoveryInternal contract because:
- * 
+ *
  * 1. NO STORAGE: Recovery operations don't require dedicated storage. All state is managed
  *    through existing modules (balances in ERC20, frozen state in Freeze, identities in Registry).
- * 
- * 2. CROSS-MODULE DEPENDENCIES: All recovery helper functions need access to functions from 
- *    multiple modules (_balanceOf, _transfer, _getFrozenTokens, _isFrozen, _setAddressFrozen, 
- *    _freezePartialTokens, _identityRegistry). These are only available through 
+ *
+ * 2. CROSS-MODULE DEPENDENCIES: All recovery helper functions need access to functions from
+ *    multiple modules (_balanceOf, _transfer, _getFrozenTokens, _isFrozen, _setAddressFrozen,
+ *    _freezePartialTokens, _identityRegistry). These are only available through
  *    ERC203643InternalCommon, not from a standalone internal contract extending Common.
- * 
+ *
  * 3. ACCESSIBILITY: By placing internal helper functions directly in this external contract
  *    (which extends ERC203643InternalCommon), they have immediate access to all required
  *    cross-module functionality without violating the architectural pattern.
- * 
+ *
  * Internal contracts in the ERC3643 pattern (like ERC3643FreezeInternal) extend only Common
  * and manage their own isolated storage. Recovery has no storage of its own and orchestrates
  * operations across multiple existing modules, making it a special case where the internal
@@ -93,22 +93,6 @@ abstract contract ERC3643Recovery is IERC3643Recovery, ERC203643InternalCommon {
         return true;
     }
 
-    /**
-     * @dev Declares the interfaces implemented by this facet.
-     * @return interfaces_ Array of supported interface identifiers.
-     */
-    function _implementedInterfaces()
-        internal
-        pure
-        virtual
-        override
-        returns (bytes4[] memory interfaces_)
-    {
-        uint256 interfacesLength = 1;
-        interfaces_ = new bytes4[](interfacesLength);
-        interfaces_[--interfacesLength] = type(IERC3643Recovery).interfaceId;
-    }
-
     // ============================================================
     // INTERNAL HELPER FUNCTIONS
     // ============================================================
@@ -119,6 +103,102 @@ abstract contract ERC3643Recovery is IERC3643Recovery, ERC203643InternalCommon {
     // - All operations orchestrate existing module functionality (balances, freezes, registry)
     // - Direct placement here ensures accessibility to required internal functions
     // ============================================================
+    /**
+     * @dev Registers a new wallet in the Identity Registry with investor's information
+     * @param _lostWallet The lost wallet (used to get investor country)
+     * @param _newWallet The new wallet to register
+     * @param _onchainID The investor's onchain ID
+     */
+    function _registerNewWallet(
+        address _lostWallet,
+        address _newWallet,
+        IIdentity _onchainID
+    ) internal {
+        address identityRegistry = _identityRegistry();
+        uint16 investorCountry = IIdentityRegistry(identityRegistry)
+            .investorCountry(_lostWallet);
+
+        IIdentityRegistry(identityRegistry).registerIdentity(
+            _newWallet,
+            _onchainID,
+            investorCountry
+        );
+    }
+
+    /**
+     * @dev Restores frozen state to the new wallet
+     * @param _newWallet The wallet to restore frozen state to
+     * @param _frozenState The frozen state to restore
+     */
+    function _restoreFrozenState(
+        address _newWallet,
+        FrozenState memory _frozenState
+    ) internal {
+        if (_frozenState.frozenTokens > 0) {
+            _freezePartialTokens(_newWallet, _frozenState.frozenTokens);
+        }
+        if (_frozenState.wasAddressFrozen) {
+            _setAddressFrozen(_newWallet, true);
+        }
+    }
+
+    /**
+     * @dev Removes the lost wallet from the Identity Registry
+     * @param _lostWallet The wallet to remove
+     */
+    function _removeFromIdentityRegistry(address _lostWallet) internal {
+        address identityRegistry = _identityRegistry();
+        IIdentityRegistry(identityRegistry).deleteIdentity(_lostWallet);
+    }
+
+    /**
+     * @dev Checks if the lost wallet has tokens to recover
+     * @param _lostWallet The wallet to check
+     * @return balance The balance of the lost wallet
+     *
+     * Reverts:
+     * - {NoTokensToRecover} if the wallet has zero balance
+     */
+    function _checkRecoverableBalance(
+        address _lostWallet
+    ) internal view returns (uint256 balance) {
+        balance = _balanceOf(_lostWallet);
+        if (balance == 0) {
+            revert IERC3643Recovery.NoTokensToRecover();
+        }
+    }
+
+    /**
+     * @dev Validates that the new wallet belongs to the investor
+     * @param _newWallet The wallet to validate
+     * @param _onchainID The investor's onchain ID
+     *
+     * NOTE: Currently commented out - pending final IIdentity interface implementation
+     *       Once IIdentity.keyHasPurpose is available, uncomment the implementation below
+     *
+     * Reverts or emits RecoveryFails if validation fails
+     */
+    function _validateWalletOwnership(
+        address _newWallet,
+        IIdentity _onchainID
+        // solhint-disable-next-line no-unused-vars, no-empty-blocks
+    ) internal view {
+        // TODO: Uncomment when IIdentity interface is complete
+        // bytes32 walletKey = keccak256(abi.encode(_newWallet));
+        // require(_onchainID.keyHasPurpose(walletKey, 1), "Invalid wallet key");
+    }
+
+    /**
+     * @dev Captures the current frozen state of a wallet
+     * @param _wallet The wallet to capture state from
+     * @return frozenState Struct containing frozen tokens count and freeze status
+     */
+    function _captureFrozenState(
+        address _wallet
+    ) internal view returns (FrozenState memory frozenState) {
+        frozenState.frozenTokens = _getFrozenTokens(_wallet);
+        frozenState.wasAddressFrozen = _isFrozen(_wallet);
+    }
 
     /**
      * @dev Validates all recovery input parameters
@@ -152,99 +232,18 @@ abstract contract ERC3643Recovery is IERC3643Recovery, ERC203643InternalCommon {
     }
 
     /**
-     * @dev Checks if the lost wallet has tokens to recover
-     * @param _lostWallet The wallet to check
-     * @return balance The balance of the lost wallet
-     *
-     * Reverts:
-     * - {NoTokensToRecover} if the wallet has zero balance
+     * @dev Declares the interfaces implemented by this facet.
+     * @return interfaces_ Array of supported interface identifiers.
      */
-    function _checkRecoverableBalance(
-        address _lostWallet
-    ) internal view returns (uint256 balance) {
-        balance = _balanceOf(_lostWallet);
-        if (balance == 0) {
-            revert IERC3643Recovery.NoTokensToRecover();
-        }
-    }
-
-    /**
-     * @dev Validates that the new wallet belongs to the investor
-     * @param _newWallet The wallet to validate
-     * @param _onchainID The investor's onchain ID
-     *
-     * NOTE: Currently commented out - pending final IIdentity interface implementation
-     *       Once IIdentity.keyHasPurpose is available, uncomment the implementation below
-     *
-     * Reverts or emits RecoveryFails if validation fails
-     */
-    // solhint-disable-next-line no-unused-vars
-    function _validateWalletOwnership(
-        address _newWallet,
-        IIdentity _onchainID
-    ) internal view {
-        // TODO: Uncomment when IIdentity interface is complete
-        // bytes32 walletKey = keccak256(abi.encode(_newWallet));
-        // require(_onchainID.keyHasPurpose(walletKey, 1), "Invalid wallet key");
-    }
-
-    /**
-     * @dev Captures the current frozen state of a wallet
-     * @param _wallet The wallet to capture state from
-     * @return frozenState Struct containing frozen tokens count and freeze status
-     */
-    function _captureFrozenState(
-        address _wallet
-    ) internal view returns (FrozenState memory frozenState) {
-        frozenState.frozenTokens = _getFrozenTokens(_wallet);
-        frozenState.wasAddressFrozen = _isFrozen(_wallet);
-    }
-
-    /**
-     * @dev Registers a new wallet in the Identity Registry with investor's information
-     * @param _lostWallet The lost wallet (used to get investor country)
-     * @param _newWallet The new wallet to register
-     * @param _onchainID The investor's onchain ID
-     */
-    function _registerNewWallet(
-        address _lostWallet,
-        address _newWallet,
-        IIdentity _onchainID
-    ) internal {
-        address identityRegistry = _identityRegistry();
-        uint16 investorCountry = IIdentityRegistry(identityRegistry)
-            .investorCountry(_lostWallet);
-        
-        IIdentityRegistry(identityRegistry).registerIdentity(
-            _newWallet,
-            _onchainID,
-            investorCountry
-        );
-    }
-
-    /**
-     * @dev Restores frozen state to the new wallet
-     * @param _newWallet The wallet to restore frozen state to
-     * @param _frozenState The frozen state to restore
-     */
-    function _restoreFrozenState(
-        address _newWallet,
-        FrozenState memory _frozenState
-    ) internal {
-        if (_frozenState.frozenTokens > 0) {
-            _freezePartialTokens(_newWallet, _frozenState.frozenTokens);
-        }
-        if (_frozenState.wasAddressFrozen) {
-            _setAddressFrozen(_newWallet, true);
-        }
-    }
-
-    /**
-     * @dev Removes the lost wallet from the Identity Registry
-     * @param _lostWallet The wallet to remove
-     */
-    function _removeFromIdentityRegistry(address _lostWallet) internal {
-        address identityRegistry = _identityRegistry();
-        IIdentityRegistry(identityRegistry).deleteIdentity(_lostWallet);
+    function _implementedInterfaces()
+        internal
+        pure
+        virtual
+        override
+        returns (bytes4[] memory interfaces_)
+    {
+        uint256 interfacesLength = 1;
+        interfaces_ = new bytes4[](interfacesLength);
+        interfaces_[--interfacesLength] = type(IERC3643Recovery).interfaceId;
     }
 }

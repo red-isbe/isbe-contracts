@@ -1102,5 +1102,6 @@ export async function deployERC3643UseCasesFacets(
         erc3643FreezeFacet,
         erc203643CappedFacet,
         erc203643ControllerFacet,
+        erc3643RecoveryFacet,
     }
 }

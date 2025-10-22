@@ -456,6 +456,27 @@ function _balanceOf(address account) internal view returns (uint256)
 function _allowance(address owner, address spender) internal view returns (uint256)
 ```
 
+### \_checkTotalAmount
+
+```solidity
+function _checkTotalAmount(address _from, uint256[] _amounts) internal view returns (uint256 totalAmount)
+```
+
+_Calculates the total amount from an array and validates that the sender has sufficient balance_
+
+#### Parameters
+
+| Name      | Type      | Description                         |
+| --------- | --------- | ----------------------------------- |
+| \_from    | address   | The address to check the balance of |
+| \_amounts | uint256[] | Array of amounts to sum             |
+
+#### Return Values
+
+| Name        | Type    | Description                                                                                                                                                                                                     |
+| ----------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| totalAmount | uint256 | The total sum of all amounts in the array Requirements: - The sender must have a balance greater than or equal to the total amount Reverts: - {TransferAmountExceedsBalance} if sender has insufficient balance |
+
 ---
 
 ## IERC20Isbe
