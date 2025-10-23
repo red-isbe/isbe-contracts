@@ -27,12 +27,18 @@ abstract contract ERC203643InternalCommon is
     ERC3643FreezeInternal,
     ERC3643RegulatoryInternal
 {
+    /**
+     * @dev Overrides the internal token transfer hook to handle mint, burn, and transfer operations
+     *      with appropriate validations and snapshot updates.
+     * @param _from The address from which tokens are being transferred (address(0) for mint)
+     * @param _to The address to which tokens are being transferred (address(0) for burn)
+     * @param _amount The amount of tokens being transferred
+     */
     function _beforeTokenTransfer(
         address _from,
         address _to,
         uint256 _amount
     ) internal virtual override {
-        
         // ==========================================================================
         // MINT OPERATIONS (_from == address(0))
         // ==========================================================================
@@ -53,7 +59,11 @@ abstract contract ERC203643InternalCommon is
         }
     }
 
-    function _handleMintOperation (address _to) internal {
+    /**
+     * @dev Handles mint operations with snapshot updates and mint validation
+     * @param _to The address to which tokens are being minted
+     */
+    function _handleMintOperation(address _to) internal {
         // Snapshot logic
         _updateAccountSnapshot(_to);
         _updateTotalSupplySnapshot();
@@ -66,17 +76,19 @@ abstract contract ERC203643InternalCommon is
         }
     }
 
-    function _handleBurnOperation (address _from, uint256 _amount) internal {
+    /**
+     * @dev Handles burn operations with freeze management
+     * @param _from The address from which tokens are being burned
+     * @param _amount The amount of tokens being burned
+     */
+    function _handleBurnOperation(address _from, uint256 _amount) internal {
         // Snapshot logic
         _updateAccountSnapshot(_from);
         _updateTotalSupplySnapshot();
 
         // Calculate balance once for burn operations
         uint256 balance = _balanceOf(_from);
-        require(
-            balance >= _amount,
-            IERC20Isbe.BurnAmountExceedsBalance()
-        );
+        require(balance >= _amount, IERC20Isbe.BurnAmountExceedsBalance());
 
         // Burn validation with freeze management
         // In ERC20 mode: burn() / burnFrom() no additional validations | forceBurn() no additional validations
@@ -91,6 +103,12 @@ abstract contract ERC203643InternalCommon is
         // (No additional logic needed here)
     }
 
+    /**
+     * @dev Handles transfer operations with regulatory compliance and freeze management
+     * @param _from The address from which tokens are being transferred
+     * @param _to The address to which tokens are being transferred
+     * @param _amount The amount of tokens being transferred
+     */
     function _handleTransferOperation(
         address _from,
         address _to,
@@ -102,10 +120,7 @@ abstract contract ERC203643InternalCommon is
 
         // Calculate balance once for transfer operations
         uint256 balance = _balanceOf(_from);
-        require(
-            balance >= _amount,
-            IERC20Isbe.TransferAmountExceedsBalance()
-        );
+        require(balance >= _amount, IERC20Isbe.TransferAmountExceedsBalance());
 
         // ERC3643 mode validations - Transfer validation with regulatory compliance and freeze management
         // In ERC20 mode: transfer() and forceTransfer() behave identically here (no additional validations)
@@ -114,7 +129,10 @@ abstract contract ERC203643InternalCommon is
             _isRecipientVerified(_to);
 
             // Differentiate between normal transfers and forced transfers
-            if (_hasRole(_CONTROLLER_ROLE, msg.sender) || _hasRole(_RECOVERY_ROLE, msg.sender)) {
+            if (
+                _hasRole(_CONTROLLER_ROLE, msg.sender) ||
+                _hasRole(_RECOVERY_ROLE, msg.sender)
+            ) {
                 // forceTransfer() - Forced transfer with auto-unfreeze capability
                 // Auto-unfreeze if needed to complete the transfer
                 _unfreezeIf3643Mode(_from, _amount);
@@ -125,10 +143,7 @@ abstract contract ERC203643InternalCommon is
                     !_isFrozen(_from),
                     IERC3643Freeze.SenderIsFrozen(_from)
                 );
-                require(
-                    !_isFrozen(_to),
-                    IERC3643Freeze.RecipientIsFrozen(_to)
-                );
+                require(!_isFrozen(_to), IERC3643Freeze.RecipientIsFrozen(_to));
                 uint256 freeBalance = _calculateFreeBalance(_from);
                 require(
                     freeBalance >= _amount,
@@ -141,7 +156,21 @@ abstract contract ERC203643InternalCommon is
             }
         }
         // else: ERC20 mode - no additional validations needed for any transfer type
-        
+    }
+
+    /**
+     * @dev Unfreezes tokens if operating in ERC3643 mode and insufficient free balance
+     * @param _from The address from which tokens are being transferred or burned
+     * @param _amount The amount of tokens being transferred or burned
+     */
+    function _unfreezeIf3643Mode(address _from, uint256 _amount) internal {
+        // Calculate freeze info once
+        uint256 freeBalance = _calculateFreeBalance(_from);
+        if (freeBalance < _amount) {
+            uint256 tokensToUnfreeze = _amount - freeBalance;
+            _unfreezePartialTokens(_from, tokensToUnfreeze);
+            emit IERC3643Freeze.TokensUnfrozen(_from, tokensToUnfreeze);
+        }
     }
 
     /**
@@ -152,25 +181,23 @@ abstract contract ERC203643InternalCommon is
         return _identityRegistry() != address(0);
     }
 
-    function _unfreezeIf3643Mode(address _from, uint256 _amount) internal{
-        // Calculate freeze info once
-        uint256 freeBalance = _calculateFreeBalance(_from);
-        if (freeBalance < _amount) {
-            uint256 tokensToUnfreeze = _amount - freeBalance;
-            _unfreezePartialTokens(_from, tokensToUnfreeze);
-            emit IERC3643Freeze.TokensUnfrozen(
-                _from,
-                tokensToUnfreeze
-            );
-        }
-    }
-
-    function _calculateFreeBalance(address _account) internal view returns (uint256) {
+    /**
+     * @dev Calculates the free balance of an account (total balance - frozen tokens)
+     * @param _account The address of the account
+     * @return The free balance of the account
+     */
+    function _calculateFreeBalance(
+        address _account
+    ) internal view returns (uint256) {
         uint256 balance = _balanceOf(_account);
         uint256 frozen = _getFrozenTokens(_account);
         return balance > frozen ? (balance - frozen) : 0;
     }
 
+    /**
+     * @dev Verifies if the recipient is verified in the Identity Registry
+     * @param _to The address of the recipient
+     */
     function _isRecipientVerified(address _to) internal view {
         require(
             IIdentityRegistry(_identityRegistry()).isVerified(_to),
