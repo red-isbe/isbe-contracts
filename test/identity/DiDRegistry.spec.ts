@@ -47,42 +47,332 @@ const CHECK_CONTROLLER_BYTES_ADDRESS = 'checkController(bytes,address)'
 const TEST_VALIDITY_DURATION = 1000000000000000000n
 const MAX_ROLL_DURATION = 356n * 12n * 60n * 60n // ~1 year in hours
 
+// ============================================================================
+// Helper Functions
+// ============================================================================
+
+// --- Wallet Utilities ---
+function walletOfFirstSigner(): HDNodeWallet {
+    const mnemonic = (
+        config.networks.hardhat.accounts as {
+            mnemonic: string
+            path: string
+        }
+    ).mnemonic
+    return ethers.Wallet.fromPhrase(mnemonic)
+}
+
+function deriveWallet(wallet: HDNodeWallet, path: string): HDNodeWallet {
+    return wallet.derivePath(path)
+}
+
+const walletToPublicKey = (wallet: HDNodeWallet): string => {
+    return wallet.signingKey.publicKey
+}
+
+// --- Test Data Generation ---
+let baseDocument: string
+let vMethodId: string
+let publicKeyInvalindLength: string
+let publicKey65: string
+let publicKey64: string
+let publicKey65Incorrect: string
+let notBefore: bigint
+let notAfter: bigint
+
+const randomizeDidDocument = (wallet: HDNodeWallet) => {
+    baseDocument = TestConstants.randomBaseDocument()
+    vMethodId = randomHex(32)
+    publicKeyInvalindLength = randomHex()
+    publicKey65 = walletToPublicKey(wallet)
+    publicKey64 = '0x'.concat(publicKey65.slice(4))
+    // Create an incorrect public key with wrong control byte (0x03 instead of 0x04)
+    publicKey65Incorrect = '0x03' + publicKey65.slice(4)
+    notBefore = randomInt()
+    notAfter = notBefore + TEST_VALIDITY_DURATION
+}
+
+// --- Fixture Helpers ---
+let didRegistry: IDidRegistry
+let mockTimestamp: MockTimestampFacet
+let didDocumentDetailedFacet: DidDocumentDetailedFacet
+let didControllerFacet: DidControllerFacet
+let didVerificationMethodFacet: DidVerificationMethodFacet
+let didVerificationRelationshipFacet: DidVerificationRelationshipFacet
+
+/**
+ * Helper function to create a standard test fixture:
+ * - Creates and randomizes wallet
+ * - Initializes the DID registry
+ * - Inserts a DID document
+ * - Sets the mock timestamp to notBefore + 1
+ * - Returns wallet for tests that need it
+ */
+async function createStandardFixture(did: string) {
+    const wallet = walletOfFirstSigner()
+    randomizeDidDocument(wallet)
+
+    await didRegistry.initializeDiDRegistry(EllipticType.SECP_256_K1)
+    await didRegistry.insertDidDocument(
+        did,
+        baseDocument,
+        vMethodId,
+        publicKey65,
+        EllipticType.SECP_256_K1,
+        notBefore,
+        notAfter
+    )
+    await mockTimestamp.setMockedTimestamp(notBefore + 1n)
+
+    return { wallet }
+}
+
+/**
+ * Helper function to insert a controller DID document with random data
+ */
+async function insertControllerDocument(controllerId: string): Promise<void> {
+    await didRegistry.insertDidDocument(
+        controllerId,
+        TestConstants.randomDid(),
+        TestConstants.randomDid(),
+        publicKey64,
+        EllipticType.SECP_256_K1,
+        notBefore,
+        notAfter
+    )
+}
+
+// --- Assertion Helpers ---
+/**
+ * Helper function to test insert document with invalid parameters
+ */
+async function expectInsertDocumentToFail(
+    did: string | typeof ZeroHash,
+    baseDoc: string,
+    vMethodId: string,
+    publicKey: string | Uint8Array,
+    ellipticType: EllipticType,
+    notBefore: bigint | number,
+    notAfter: bigint | number,
+    expectedError: string
+): Promise<void> {
+    await expect(
+        didRegistry.insertDidDocument(
+            did,
+            baseDoc,
+            vMethodId,
+            publicKey,
+            ellipticType,
+            notBefore,
+            notAfter
+        )
+    ).to.be.revertedWithCustomError(didDocumentDetailedFacet, expectedError)
+}
+
+/**
+ * Helper function to test insert document with invalid parameters
+ */
+async function expectInsertDocumentToFail(
+    did: string | typeof ZeroHash,
+    baseDoc: string,
+    vMethodId: string,
+    publicKey: string | Uint8Array,
+    ellipticType: EllipticType,
+    notBefore: bigint | number,
+    notAfter: bigint | number,
+    expectedError: string
+): Promise<void> {
+    await expect(
+        didRegistry.insertDidDocument(
+            did,
+            baseDoc,
+            vMethodId,
+            publicKey,
+            ellipticType,
+            notBefore,
+            notAfter
+        )
+    ).to.be.revertedWithCustomError(didDocumentDetailedFacet, expectedError)
+}
+
+/**
+ * Helper function to build and verify a basic DID document with single vMethod and relationships
+ */
+function buildAndVerifyBasicDidDocument(
+    didDocument: ContractDidDocumentResult,
+    baseDoc: string,
+    controller: string,
+    methodId: string,
+    publicKey: string,
+    elliptic: EllipticType,
+    revoked: boolean,
+    notBeforeVal: bigint,
+    notAfterVal: bigint
+): void {
+    const expectedComplete = new DidDocumentBuilder(baseDoc, [controller])
+        .addVMethod(methodId, publicKey, elliptic, revoked)
+        .addVRelationship(
+            AUTHENTICATION_RELATIONSHIP,
+            methodId,
+            notBeforeVal,
+            notAfterVal,
+            0
+        )
+        .addVRelationship(
+            CAPABILITY_INVOCATION_RELATIONSHIP,
+            methodId,
+            notBeforeVal,
+            notAfterVal,
+            0
+        )
+        .build()
+    DidDocumentVerifier.verifyDidDocument(didDocument, expectedComplete)
+}
+
+/**
+ * Helper function to check controller status
+ */
+async function expectControllerStatus(
+    did: string,
+    address: string,
+    expectedStatus: boolean
+): Promise<void> {
+    expect(
+        await didRegistry[CHECK_CONTROLLER_BYTES32_ADDRESS](did, address)
+    ).to.equal(expectedStatus)
+}
+
+/**
+ * Helper function to verify rolled verification method document
+ */
+async function verifyRolledDocument(
+    did: string,
+    rollArgs: IDidVerificationMethod.RollArgsStruct,
+    oldVMethodElliptic: EllipticType,
+    newVMethodElliptic: EllipticType
+): Promise<void> {
+    await mockTimestamp.setMockedTimestamp(BigInt(rollArgs.notBefore) + 1n)
+    const didDocument = await didRegistry.getDidDocument(did)
+    const newNotAfter = BigInt(rollArgs.notBefore) + BigInt(rollArgs.duration)
+
+    const expectedComplete = new DidDocumentBuilder(baseDocument, [did])
+        .addVMethod(vMethodId, publicKey65, oldVMethodElliptic, false)
+        .addVMethod(
+            ethers.hexlify(rollArgs.vMethodId),
+            ethers.hexlify(rollArgs.publicKey),
+            newVMethodElliptic,
+            false
+        )
+        .addVRelationship(
+            AUTHENTICATION_RELATIONSHIP,
+            vMethodId,
+            notBefore,
+            newNotAfter,
+            0
+        )
+        .addVRelationship(
+            AUTHENTICATION_RELATIONSHIP,
+            ethers.hexlify(rollArgs.vMethodId),
+            BigInt(rollArgs.notBefore),
+            BigInt(rollArgs.notAfter),
+            0
+        )
+        .addVRelationship(
+            CAPABILITY_INVOCATION_RELATIONSHIP,
+            vMethodId,
+            notBefore,
+            newNotAfter,
+            0
+        )
+        .addVRelationship(
+            CAPABILITY_INVOCATION_RELATIONSHIP,
+            ethers.hexlify(rollArgs.vMethodId),
+            BigInt(rollArgs.notBefore),
+            BigInt(rollArgs.notAfter),
+            0
+        )
+        .build()
+
+    DidDocumentVerifier.verifyDidDocument(didDocument, expectedComplete)
+}
+
+// --- Controller Management Helpers ---
+/**
+ * Helper function to count active controllers for a DID
+ */
+async function getControllerCount(didId: string): Promise<number> {
+    const didDocument = await didRegistry.getDidDocument(didId)
+    return didDocument[1].length // controllers is the second return value
+}
+
+/**
+ * Helper function to check if a DID is a controller of another DID
+ */
+async function isDidController(
+    didId: string,
+    controllerDid: string
+): Promise<boolean> {
+    const didDocument = await didRegistry.getDidDocument(didId)
+    return didDocument[1].includes(controllerDid) // controllers is the second return value
+}
+
+/**
+ * Helper function to verify controller count and status
+ */
+async function expectControllerState(
+    didId: string,
+    expectedCount: number,
+    controllersToCheck: Array<{ controller: string; shouldExist: boolean }>
+): Promise<void> {
+    expect(await getControllerCount(didId)).to.equal(expectedCount)
+    for (const { controller, shouldExist } of controllersToCheck) {
+        expect(await isDidController(didId, controller)).to.equal(shouldExist)
+    }
+}
+
+/**
+ * Helper function to create and add multiple controllers
+ */
+async function addMultipleControllers(
+    didId: string,
+    count: number
+): Promise<string[]> {
+    const controllers: string[] = []
+    for (let i = 0; i < count; i++) {
+        const controller = TestConstants.randomDid()
+        await insertControllerDocument(controller)
+        await didRegistry.addController(didId, controller)
+        controllers.push(controller)
+    }
+    return controllers
+}
+
+/**
+ * Helper function to expect revocation failure
+ */
+async function expectRevocationToFail(
+    didId: string,
+    controllerToRevoke: string
+): Promise<void> {
+    await expect(didRegistry.revokeController(didId, controllerToRevoke))
+        .to.be.revertedWithCustomError(
+            didControllerFacet,
+            'CannotLeaveDidWithoutControllers'
+        )
+        .withArgs(didId, controllerToRevoke)
+}
+
+// ============================================================================
+// Tests
+// ============================================================================
+
 describe('DiDRegistry', function () {
     let admin: Signer
     let other: Signer
     let otherAddress: string
-    let didDocumentDetailedFacet: DidDocumentDetailedFacet
-    let didControllerFacet: DidControllerFacet
-    let didVerificationMethodFacet: DidVerificationMethodFacet
-    let didVerificationRelationshipFacet: DidVerificationRelationshipFacet
-    let didRegistry: IDidRegistry
-    let mockTimestamp: MockTimestampFacet
     const emptyString = EMPTY_VALUES.string
     const emptyBytes = EMPTY_VALUES.bytes
     let did: string
-    let baseDocument: string
-    let vMethodId: string
-    let publicKey65Incorrect: string
-    let notBefore: bigint
-    let notAfter: bigint
-    let publicKeyInvalindLength: string
-    let publicKey65: string
-    let publicKey64: string
-
-    const walletToPublicKey = (wallet: HDNodeWallet): string => {
-        return wallet.signingKey.publicKey
-    }
-
-    const randomizeDidDocument = (wallet: HDNodeWallet) => {
-        baseDocument = TestConstants.randomBaseDocument()
-        vMethodId = randomHex(32)
-        publicKeyInvalindLength = randomHex()
-        publicKey65Incorrect = randomHex(65)
-        publicKey65 = walletToPublicKey(wallet)
-        publicKey64 = '0x'.concat(publicKey65.slice(4))
-        notBefore = randomInt()
-        notAfter = notBefore + TEST_VALIDITY_DURATION
-    }
 
     async function deployFixture() {
         const [adminSigner, otherSigner] = await ethers.getSigners()
@@ -128,191 +418,6 @@ describe('DiDRegistry', function () {
         didRegistry = contracts.didRegistry
         mockTimestamp = contracts.mockTimestamp
     })
-
-    function walletOfFirstSigner(): HDNodeWallet {
-        const mnemonic = (
-            config.networks.hardhat.accounts as {
-                mnemonic: string
-                path: string
-            }
-        ).mnemonic
-        return ethers.Wallet.fromPhrase(mnemonic)
-    }
-
-    function deriveWallet(wallet: HDNodeWallet, path: string): HDNodeWallet {
-        return wallet.derivePath(path)
-    }
-
-    /**
-     * Helper function to create a standard test fixture:
-     * - Creates and randomizes wallet
-     * - Initializes the DID registry
-     * - Inserts a DID document
-     * - Sets the mock timestamp to notBefore + 1
-     * - Returns wallet for tests that need it
-     */
-    async function createStandardFixture() {
-        const wallet = walletOfFirstSigner()
-        randomizeDidDocument(wallet)
-
-        await didRegistry.initializeDiDRegistry(EllipticType.SECP_256_K1)
-        await didRegistry.insertDidDocument(
-            did,
-            baseDocument,
-            vMethodId,
-            publicKey65,
-            EllipticType.SECP_256_K1,
-            notBefore,
-            notAfter
-        )
-        await mockTimestamp.setMockedTimestamp(notBefore + 1n)
-
-        return { wallet }
-    }
-
-    /**
-     * Helper function to insert a controller DID document with random data
-     */
-    async function insertControllerDocument(
-        controllerId: string
-    ): Promise<void> {
-        await didRegistry.insertDidDocument(
-            controllerId,
-            TestConstants.randomDid(),
-            TestConstants.randomDid(),
-            publicKey64,
-            EllipticType.SECP_256_K1,
-            notBefore,
-            notAfter
-        )
-    }
-
-    /**
-     * Helper function to test insert document with invalid parameters
-     */
-    async function expectInsertDocumentToFail(
-        did: string | typeof ZeroHash,
-        baseDoc: string,
-        vMethodId: string,
-        publicKey: string | Uint8Array,
-        ellipticType: EllipticType,
-        notBefore: bigint | number,
-        notAfter: bigint | number,
-        expectedError: string
-    ): Promise<void> {
-        await expect(
-            didRegistry.insertDidDocument(
-                did,
-                baseDoc,
-                vMethodId,
-                publicKey,
-                ellipticType,
-                notBefore,
-                notAfter
-            )
-        ).to.be.revertedWithCustomError(didDocumentDetailedFacet, expectedError)
-    }
-
-    /**
-     * Helper function to build and verify a basic DID document with single vMethod and relationships
-     */
-    function buildAndVerifyBasicDidDocument(
-        didDocument: ContractDidDocumentResult,
-        baseDoc: string,
-        controller: string,
-        methodId: string,
-        publicKey: string,
-        elliptic: EllipticType,
-        revoked: boolean,
-        notBeforeVal: bigint,
-        notAfterVal: bigint
-    ): void {
-        const expectedComplete = new DidDocumentBuilder(baseDoc, [controller])
-            .addVMethod(methodId, publicKey, elliptic, revoked)
-            .addVRelationship(
-                AUTHENTICATION_RELATIONSHIP,
-                methodId,
-                notBeforeVal,
-                notAfterVal,
-                0
-            )
-            .addVRelationship(
-                CAPABILITY_INVOCATION_RELATIONSHIP,
-                methodId,
-                notBeforeVal,
-                notAfterVal,
-                0
-            )
-            .build()
-        DidDocumentVerifier.verifyDidDocument(didDocument, expectedComplete)
-    }
-
-    /**
-     * Helper function to check controller status
-     */
-    async function expectControllerStatus(
-        did: string,
-        address: string,
-        expectedStatus: boolean
-    ): Promise<void> {
-        expect(
-            await didRegistry[CHECK_CONTROLLER_BYTES32_ADDRESS](did, address)
-        ).to.equal(expectedStatus)
-    }
-
-    /**
-     * Helper function to verify rolled verification method document
-     */
-    async function verifyRolledDocument(
-        rollArgs: IDidVerificationMethod.RollArgsStruct,
-        oldVMethodElliptic: EllipticType,
-        newVMethodElliptic: EllipticType
-    ): Promise<void> {
-        await mockTimestamp.setMockedTimestamp(BigInt(rollArgs.notBefore) + 1n)
-        const didDocument = await didRegistry.getDidDocument(did)
-        const newNotAfter =
-            BigInt(rollArgs.notBefore) + BigInt(rollArgs.duration)
-
-        const expectedComplete = new DidDocumentBuilder(baseDocument, [did])
-            .addVMethod(vMethodId, publicKey65, oldVMethodElliptic, false)
-            .addVMethod(
-                ethers.hexlify(rollArgs.vMethodId),
-                ethers.hexlify(rollArgs.publicKey),
-                newVMethodElliptic,
-                false
-            )
-            .addVRelationship(
-                AUTHENTICATION_RELATIONSHIP,
-                vMethodId,
-                notBefore,
-                newNotAfter,
-                0
-            )
-            .addVRelationship(
-                AUTHENTICATION_RELATIONSHIP,
-                ethers.hexlify(rollArgs.vMethodId),
-                BigInt(rollArgs.notBefore),
-                BigInt(rollArgs.notAfter),
-                0
-            )
-            .addVRelationship(
-                CAPABILITY_INVOCATION_RELATIONSHIP,
-                vMethodId,
-                notBefore,
-                newNotAfter,
-                0
-            )
-            .addVRelationship(
-                CAPABILITY_INVOCATION_RELATIONSHIP,
-                ethers.hexlify(rollArgs.vMethodId),
-                BigInt(rollArgs.notBefore),
-                BigInt(rollArgs.notAfter),
-                0
-            )
-            .build()
-
-        DidDocumentVerifier.verifyDidDocument(didDocument, expectedComplete)
-    }
 
     describe('DiDRegistry', () => {
         describe('initializeDidRegistry', () => {
@@ -586,7 +691,8 @@ describe('DiDRegistry', function () {
 
         describe('updateDidDocument', () => {
             beforeEach(async () => {
-                await loadFixture(createStandardFixture)
+                did = TestConstants.randomDid()
+                await createStandardFixture(did)
             })
 
             it('GIVEN an inserted document WHEN try to update with empty did THEN it fails', async () => {
@@ -655,7 +761,8 @@ describe('DiDRegistry', function () {
             let wallet: HDNodeWallet
 
             beforeEach(async () => {
-                const fixtures = await loadFixture(createStandardFixture)
+                did = TestConstants.randomDid()
+                const fixtures = await createStandardFixture(did)
                 wallet = fixtures.wallet
             })
 
@@ -818,7 +925,8 @@ describe('DiDRegistry', function () {
 
         describe('revokeVerificationMethod', () => {
             beforeEach(async () => {
-                await loadFixture(createStandardFixture)
+                did = TestConstants.randomDid()
+                await createStandardFixture(did)
             })
 
             it('GIVEN an inserted document WHEN try to revoke V.M. with empty did THEN it fails', async () => {
@@ -933,7 +1041,8 @@ describe('DiDRegistry', function () {
             let wallet: HDNodeWallet
 
             beforeEach(async () => {
-                const fixtures = await loadFixture(createStandardFixture)
+                did = TestConstants.randomDid()
+                const fixtures = await createStandardFixture(did)
                 wallet = fixtures.wallet
             })
 
@@ -1087,20 +1196,11 @@ describe('DiDRegistry', function () {
         describe('rollVerificationMethod', () => {
             let wallet: HDNodeWallet
             let rolledWallet: HDNodeWallet
-            const rollArgsTemplate: IDidVerificationMethod.RollArgsStruct = {
-                did: did,
-                vMethodId: TestConstants.randomDid(),
-                publicKey: publicKey65,
-                ellipticType: EllipticType.SECP_256_K1,
-                notBefore: 0n,
-                notAfter: 0n,
-                oldVMethodId: vMethodId,
-                duration: randomInt() % MAX_ROLL_DURATION,
-            }
             let rollArgs: IDidVerificationMethod.RollArgsStruct
 
             beforeEach(async () => {
-                const fixtures = await loadFixture(createStandardFixture)
+                did = TestConstants.randomDid()
+                const fixtures = await createStandardFixture(did)
                 wallet = fixtures.wallet
 
                 // Additional setup specific to roll tests
@@ -1108,13 +1208,13 @@ describe('DiDRegistry', function () {
                 const newNotBefore = notAfter + (randomInt() % 1_000_000n)
                 rollArgs = {
                     did: did,
-                    vMethodId: rollArgsTemplate.vMethodId,
+                    vMethodId: TestConstants.randomDid(),
                     publicKey: rolledWallet.signingKey.publicKey,
                     ellipticType: EllipticType.SECP_256_K1,
                     notBefore: newNotBefore,
                     notAfter: newNotBefore + (randomInt() % 100_000_000n),
                     oldVMethodId: vMethodId,
-                    duration: rollArgsTemplate.duration,
+                    duration: randomInt() % MAX_ROLL_DURATION,
                 }
             })
 
@@ -1248,6 +1348,7 @@ describe('DiDRegistry', function () {
 
                 // Verify rolled document structure
                 await verifyRolledDocument(
+                    did,
                     rollArgs,
                     EllipticType.SECP_256_K1,
                     EllipticType.SECP_256_K1
@@ -1288,6 +1389,7 @@ describe('DiDRegistry', function () {
 
                 // Verify rolled document structure with different elliptic type
                 await verifyRolledDocument(
+                    did,
                     rollArgs,
                     EllipticType.SECP_256_K1,
                     EllipticType.SECP_256_R1
@@ -1359,11 +1461,45 @@ describe('DiDRegistry', function () {
                     false
                 )
             })
+
+            it('GIVEN a revoked verification method WHEN try to roll THEN it fails', async () => {
+                // GIVEN: Add a verification method and then revoke it
+                const revokedVMethodId = TestConstants.randomDid()
+                const revokedWallet = deriveWallet(wallet, '2')
+                await didRegistry.addVerificationMethod(
+                    did,
+                    revokedVMethodId,
+                    walletToPublicKey(revokedWallet),
+                    EllipticType.SECP_256_K1
+                )
+
+                // Revoke the verification method
+                await didRegistry.revokeVerificationMethod(
+                    did,
+                    revokedVMethodId,
+                    notBefore
+                )
+
+                // WHEN: Try to roll the revoked verification method
+                rollArgs.oldVMethodId = revokedVMethodId
+
+                // THEN: Should fail with VerificationMethodIsRevoked error
+                await expect(didRegistry.rollVerificationMethod(rollArgs))
+                    .to.be.revertedWithCustomError(
+                        didVerificationRelationshipFacet,
+                        'VerificationMethodIsRevoked'
+                    )
+                    .withArgs(did, revokedVMethodId)
+            })
         })
 
         describe('addVerificationRelationship', () => {
+            let wallet: HDNodeWallet
+
             beforeEach(async () => {
-                await loadFixture(createStandardFixture)
+                did = TestConstants.randomDid()
+                const fixtures = await createStandardFixture(did)
+                wallet = fixtures.wallet
             })
 
             it('GIVEN an inserted document WHEN try to add V.R. with empty did THEN it fails', async () => {
@@ -1636,11 +1772,53 @@ describe('DiDRegistry', function () {
                     expectedComplete
                 )
             })
+
+            it('GIVEN a revoked verification method WHEN try to add V.R. THEN it fails', async () => {
+                // GIVEN: A DID with a verification method that will be revoked
+                // Add a second verification method that we will revoke (not the original one)
+                // to avoid losing controller access
+                const revokedVMethodId = randomHex(32)
+                const revokedPublicKey = walletToPublicKey(
+                    deriveWallet(wallet, '1')
+                )
+                await didRegistry.addVerificationMethod(
+                    did,
+                    revokedVMethodId,
+                    revokedPublicKey,
+                    EllipticType.SECP_256_K1
+                )
+
+                // Revoke this newly added verification method
+                // This sets the revoked flag to true and expires all its relationships
+                await didRegistry.revokeVerificationMethod(
+                    did,
+                    revokedVMethodId,
+                    notBefore
+                )
+
+                // WHEN: Try to add a new verification relationship to the revoked vMethod
+                // THEN: This should fail with VerificationMethodIsRevoked error
+                await expect(
+                    didRegistry.addVerificationRelationship(
+                        did,
+                        ASSERTION_RELATIONSHIP,
+                        revokedVMethodId,
+                        notBefore,
+                        notAfter
+                    )
+                )
+                    .to.be.revertedWithCustomError(
+                        didVerificationRelationshipFacet,
+                        'VerificationMethodIsRevoked'
+                    )
+                    .withArgs(did, revokedVMethodId)
+            })
         })
 
         describe('addController', () => {
             beforeEach(async () => {
-                await loadFixture(createStandardFixture)
+                did = TestConstants.randomDid()
+                await createStandardFixture(did)
             })
 
             it('GIVEN deployed DiDRegistry WHEN try to add empty did THEN it fails', async () => {
@@ -1719,7 +1897,7 @@ describe('DiDRegistry', function () {
 
             beforeEach(async () => {
                 did = TestConstants.randomDid()
-                await loadFixture(createStandardFixture)
+                await createStandardFixture(did)
             })
 
             it('GIVEN deployed DiDRegistry WHEN try to revoke empty did THEN it fails', async () => {
@@ -2084,93 +2262,61 @@ describe('DiDRegistry', function () {
         })
 
         describe('Controller Management with Last Controller Protection', () => {
-            /**
-             * Helper function to count active controllers for a DID
-             */
-            async function getControllerCount(didId: string): Promise<number> {
-                const didDocument = await didRegistry.getDidDocument(didId)
-                return didDocument[1].length // controllers is the second return value
-            }
-
-            /**
-             * Helper function to check if a DID is a controller of another DID
-             */
-            async function isDidController(
-                didId: string,
-                controllerDid: string
-            ): Promise<boolean> {
-                const didDocument = await didRegistry.getDidDocument(didId)
-                return didDocument[1].includes(controllerDid) // controllers is the second return value
-            }
-
             beforeEach(async () => {
                 did = TestConstants.randomDid()
-                await loadFixture(createStandardFixture)
+                await createStandardFixture(did)
             })
 
             it('FIXED: Should fail when trying to revoke the only controller', async () => {
                 // GIVEN: The DID is its own controller (standard setup creates this)
-                expect(await getControllerCount(did)).to.equal(1)
-                expect(await isDidController(did, did)).to.be.true
+                await expectControllerState(did, 1, [
+                    { controller: did, shouldExist: true },
+                ])
 
-                // WHEN: Try to revoke the only controller (itself)
-                // THEN: Should fail with CannotLeaveDidWithoutControllers error
-                await expect(didRegistry.revokeController(did, did))
-                    .to.be.revertedWithCustomError(
-                        didControllerFacet,
-                        'CannotLeaveDidWithoutControllers'
-                    )
-                    .withArgs(did, did)
+                // WHEN/THEN: Try to revoke the only controller should fail
+                await expectRevocationToFail(did, did)
 
                 // THEN: Verify DID still have its controller
-                expect(await getControllerCount(did)).to.equal(1)
-                expect(await isDidController(did, did)).to.be.true
+                await expectControllerState(did, 1, [
+                    { controller: did, shouldExist: true },
+                ])
             })
 
             it('FIXED: Should fail when revoking the last remaining controller', async () => {
                 // GIVEN: Create additional controller and remove original
-                const controller = TestConstants.randomDid()
-                await insertControllerDocument(controller)
-                await didRegistry.addController(did, controller)
+                const [controller] = await addMultipleControllers(did, 1)
 
                 // Remove the original controller (DID as its own controller)
                 await didRegistry.revokeController(did, did)
 
                 // Verify we have only one controller left
-                expect(await getControllerCount(did)).to.equal(1)
-                expect(await isDidController(did, controller)).to.be.true
-                expect(await isDidController(did, did)).to.be.false
+                await expectControllerState(did, 1, [
+                    { controller, shouldExist: true },
+                    { controller: did, shouldExist: false },
+                ])
 
-                // WHEN: Try to revoke the last remaining controller
-                // THEN: Should fail with CannotLeaveDidWithoutControllers error
-                await expect(didRegistry.revokeController(did, controller))
-                    .to.be.revertedWithCustomError(
-                        didControllerFacet,
-                        'CannotLeaveDidWithoutControllers'
-                    )
-                    .withArgs(did, controller)
+                // WHEN/THEN: Try to revoke the last remaining controller should fail
+                await expectRevocationToFail(did, controller)
 
                 // THEN: Verify DID still have the controller
-                expect(await getControllerCount(did)).to.equal(1)
-                expect(await isDidController(did, controller)).to.be.true
+                await expectControllerState(did, 1, [
+                    { controller, shouldExist: true },
+                ])
             })
 
             it('EXPECTED BEHAVIOR: Should succeed when revoking a controller but leaving others', async () => {
                 // GIVEN: Create multiple controllers
-                const controller1 = TestConstants.randomDid()
-                const controller2 = TestConstants.randomDid()
-                await insertControllerDocument(controller1)
-                await insertControllerDocument(controller2)
-
-                // Add multiple controllers
-                await didRegistry.addController(did, controller1)
-                await didRegistry.addController(did, controller2)
+                const [controller1, controller2] = await addMultipleControllers(
+                    did,
+                    2
+                )
 
                 // Verify we have 3 controllers (including self)
-                expect(await getControllerCount(did)).to.equal(3)
-                expect(await isDidController(did, did)).to.be.true
-                expect(await isDidController(did, controller1)).to.be.true
-                expect(await isDidController(did, controller2)).to.be.true
+                await expectControllerState(did, 3, [
+                    { controller: did, shouldExist: true },
+                    { controller: controller1, shouldExist: true },
+                    { controller: controller2, shouldExist: true },
+                ])
 
                 // WHEN: Revoke one controller but leave others
                 await expect(didRegistry.revokeController(did, controller1))
@@ -2178,22 +2324,19 @@ describe('DiDRegistry', function () {
                     .withArgs(did, controller1)
 
                 // THEN: Should still have controllers remaining
-                expect(await getControllerCount(did)).to.equal(2)
-                expect(await isDidController(did, did)).to.be.true
-                expect(await isDidController(did, controller1)).to.be.false
-                expect(await isDidController(did, controller2)).to.be.true
+                await expectControllerState(did, 2, [
+                    { controller: did, shouldExist: true },
+                    { controller: controller1, shouldExist: false },
+                    { controller: controller2, shouldExist: true },
+                ])
             })
 
             it('FIXED: Should fail when trying to revoke all controllers sequentially', async () => {
                 // GIVEN: Create multiple controllers
-                const controller1 = TestConstants.randomDid()
-                const controller2 = TestConstants.randomDid()
-                await insertControllerDocument(controller1)
-                await insertControllerDocument(controller2)
-
-                // Add multiple controllers
-                await didRegistry.addController(did, controller1)
-                await didRegistry.addController(did, controller2)
+                const [controller1, controller2] = await addMultipleControllers(
+                    did,
+                    2
+                )
 
                 // Verify we have 3 controllers
                 expect(await getControllerCount(did)).to.equal(3)
@@ -2208,54 +2351,43 @@ describe('DiDRegistry', function () {
                 expect(await getControllerCount(did)).to.equal(1)
 
                 // Third revocation should fail - trying to remove the last controller
-                await expect(didRegistry.revokeController(did, did))
-                    .to.be.revertedWithCustomError(
-                        didControllerFacet,
-                        'CannotLeaveDidWithoutControllers'
-                    )
-                    .withArgs(did, did)
+                await expectRevocationToFail(did, did)
 
                 // THEN: Verify DID still have one controller
-                expect(await getControllerCount(did)).to.equal(1)
-                expect(await isDidController(did, did)).to.be.true
+                await expectControllerState(did, 1, [
+                    { controller: did, shouldExist: true },
+                ])
             })
 
             it('EDGE CASE: DIDs cannot be left without controllers anymore', async () => {
                 // GIVEN: A DID with a single controller (itself)
-                expect(await getControllerCount(did)).to.equal(1)
-                expect(await isDidController(did, did)).to.be.true
+                await expectControllerState(did, 1, [
+                    { controller: did, shouldExist: true },
+                ])
 
-                // WHEN: Try to remove the last controller
-                // THEN: Should fail and preserve the DID's manageability
-                await expect(didRegistry.revokeController(did, did))
-                    .to.be.revertedWithCustomError(
-                        didControllerFacet,
-                        'CannotLeaveDidWithoutControllers'
-                    )
-                    .withArgs(did, did)
+                // WHEN/THEN: Try to remove the last controller should fail
+                await expectRevocationToFail(did, did)
 
                 // THEN: Verify DID still have its controller and remains manageable
-                expect(await getControllerCount(did)).to.equal(1)
-                expect(await isDidController(did, did)).to.be.true
+                await expectControllerState(did, 1, [
+                    { controller: did, shouldExist: true },
+                ])
 
                 // WHEN: Add another controller first
-                const newController = TestConstants.randomDid()
-                await insertControllerDocument(newController)
-                await didRegistry.addController(did, newController)
+                const [newController] = await addMultipleControllers(did, 1)
                 expect(await getControllerCount(did)).to.equal(2)
 
                 // THEN: Now we can safely remove one controller, leaving the other
                 await didRegistry.revokeController(did, did)
-                expect(await getControllerCount(did)).to.equal(1)
-                expect(await isDidController(did, newController)).to.be.true
-                expect(await isDidController(did, did)).to.be.false
+                await expectControllerState(did, 1, [
+                    { controller: newController, shouldExist: true },
+                    { controller: did, shouldExist: false },
+                ])
             })
 
             it('Should handle revocation attempts with proper authorization checks', async () => {
                 // GIVEN: Create additional controller
-                const controller = TestConstants.randomDid()
-                await insertControllerDocument(controller)
-                await didRegistry.addController(did, controller)
+                const [controller] = await addMultipleControllers(did, 1)
 
                 // Verify initial state
                 expect(await getControllerCount(did)).to.equal(2)
@@ -2266,9 +2398,10 @@ describe('DiDRegistry', function () {
                     .withArgs(did, controller)
 
                 // THEN: Controller should be removed
-                expect(await getControllerCount(did)).to.equal(1)
-                expect(await isDidController(did, controller)).to.be.false
-                expect(await isDidController(did, did)).to.be.true
+                await expectControllerState(did, 1, [
+                    { controller, shouldExist: false },
+                    { controller: did, shouldExist: true },
+                ])
             })
         })
 

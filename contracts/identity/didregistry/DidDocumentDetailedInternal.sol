@@ -7,9 +7,9 @@ import {
 } from './constants.sol';
 import {IDidDocumentDetailed} from './interfaces/IDidDocumentDetailed.sol';
 import {IDidVerificationMethod} from './interfaces/IDidVerificationMethod.sol';
+import {IDidVerificationRelationship} from './interfaces/IDidVerificationRelationship.sol';
 import {LibCommon} from '../../core/LibCommon.sol';
 import {VRelationshipsInternal} from './VRelationshipsInternal.sol';
-import {_DID_DOCUMENT_DETAILED_STORAGE_POSITION} from '../../constants/storagePositions.sol';
 import {_DID_DOCUMENT_DETAILED_STORAGE_POSITION} from '../../constants/storagePositions.sol';
 
 /**
@@ -504,6 +504,19 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
         );
     }
 
+    function _checkVMethodNotRevoked(
+        bytes32 _did,
+        bytes32 _vMethodId
+    ) internal view {
+        require(
+            !_didDocumentsStorage().didList[_did].vMethods[_vMethodId].revoked,
+            IDidVerificationRelationship.VerificationMethodIsRevoked(
+                _did,
+                _vMethodId
+            )
+        );
+    }
+
     function _checkPublicKeyNotAssigned(
         bytes32 _did,
         bytes memory _publicKey,
@@ -743,6 +756,7 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
     ) private view {
         _checkEmptyVMethod(_args.did, _args.vMethodId);
         _checkVMethodExists(_args.did, _args.oldVMethodId);
+        _checkVMethodNotRevoked(_args.did, _args.oldVMethodId);
     }
 
     function _getMethodsAndRelations(

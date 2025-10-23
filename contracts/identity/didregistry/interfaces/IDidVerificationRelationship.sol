@@ -38,6 +38,15 @@ interface IDidVerificationRelationship {
     );
 
     /**
+     * @notice Raised when attempting to create a verification relationship with a revoked method
+     * @dev This error prevents operations on revoked verification methods to maintain
+     *      security and prevent use of compromised or invalidated cryptographic keys
+     * @param did The decentralised identifier containing the revoked verification method
+     * @param vMethodId The verification method identifier that has been revoked
+     */
+    error VerificationMethodIsRevoked(bytes32 did, bytes32 vMethodId);
+
+    /**
      * @notice Establishes a new verification relationship between a DID and verification method
      * @dev Creates a temporal link with specified validity period
      * @param did The decentralised identifier to establish the relationship for

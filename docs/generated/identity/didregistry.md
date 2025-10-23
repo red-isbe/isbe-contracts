@@ -611,6 +611,12 @@ function _checkEmptyVMethod(bytes32 _did, bytes32 _vMethodId) internal view
 function _checkVMethodExists(bytes32 _did, bytes32 _vMethodId) internal view
 ```
 
+### \_checkVMethodNotRevoked
+
+```solidity
+function _checkVMethodNotRevoked(bytes32 _did, bytes32 _vMethodId) internal view
+```
+
 ### \_checkPublicKeyNotAssigned
 
 ```solidity

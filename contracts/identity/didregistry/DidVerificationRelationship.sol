@@ -40,6 +40,7 @@ abstract contract DidVerificationRelationship is
         {
             _checkValidRelationshipName(_name);
             _checkEmptyVerificationRelationship(_did, _name, _vMethodId);
+            _checkVMethodNotRevoked(_did, _vMethodId);
             _checkValidDates(_notBefore, _notAfter);
         }
         emit VerificationRelationshipAdded(

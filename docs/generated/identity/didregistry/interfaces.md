@@ -911,6 +911,24 @@ Emitted when a new verification relationship is established
 | notBefore | uint256 | Unix timestamp when the relationship becomes valid        |
 | notAfter  | uint256 | Unix timestamp when the relationship expires              |
 
+### VerificationMethodIsRevoked
+
+```solidity
+error VerificationMethodIsRevoked(bytes32 did, bytes32 vMethodId)
+```
+
+Raised when attempting to create a verification relationship with a revoked method
+
+_This error prevents operations on revoked verification methods to maintain
+security and prevent use of compromised or invalidated cryptographic keys_
+
+#### Parameters
+
+| Name      | Type    | Description                                                             |
+| --------- | ------- | ----------------------------------------------------------------------- |
+| did       | bytes32 | The decentralised identifier containing the revoked verification method |
+| vMethodId | bytes32 | The verification method identifier that has been revoked                |
+
 ### addVerificationRelationship
 
 ```solidity
