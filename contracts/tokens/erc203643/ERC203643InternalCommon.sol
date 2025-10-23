@@ -6,6 +6,7 @@ import {ERC3643MetadataInternal} from '../erc3643/token/erc3643metadata/ERC3643M
 import {ERC3643FreezeInternal} from '../erc3643/token/erc3643freeze/ERC3643FreezeInternal.sol';
 import {ERC3643RegulatoryInternal} from '../erc3643/token/erc3643regulatory/ERC3643RegulatoryInternal.sol';
 import {ERC20SnapshotInternal} from '../erc20/extensions/snapshot/ERC20SnapshotInternal.sol';
+import {CountryRestrictionsInternal} from '../erc3643/compliance/CountryRestrictionsInternal.sol';
 
 import {_CONTROLLER_ROLE} from '../../constants/roles.sol';
 import {_RECOVERY_ROLE} from '../../constants/roles.sol';
@@ -25,7 +26,8 @@ abstract contract ERC203643InternalCommon is
     ERC203643CappedInternal,
     ERC3643MetadataInternal,
     ERC3643FreezeInternal,
-    ERC3643RegulatoryInternal
+    ERC3643RegulatoryInternal,
+    CountryRestrictionsInternal
 {
     /**
      * @dev Hook that is called before any token transfer
