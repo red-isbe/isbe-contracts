@@ -32,8 +32,6 @@ import {
 } from '../utils/identity'
 import { randomHex, randomInt, TestConstants, EMPTY_VALUES } from '../testUtils'
 import { EllipticType, ContractDidDocumentResult } from '../types/identity'
-// Optional: Use shared fixtures instead of local deployFixture
-// import { deployDidRegistryFixture, DidTestHelpers } from '../fixtures/identity'
 
 // EllipticType enum values for testing
 const EllipticTypeTest = {
@@ -190,6 +188,32 @@ describe('DiDRegistry', function () {
     }
 
     /**
+     * Helper function to test insert document with invalid parameters
+     */
+    async function expectInsertDocumentToFail(
+        did: string | typeof ZeroHash,
+        baseDoc: string,
+        vMethodId: string,
+        publicKey: string | Uint8Array,
+        ellipticType: EllipticType,
+        notBefore: bigint | number,
+        notAfter: bigint | number,
+        expectedError: string
+    ): Promise<void> {
+        await expect(
+            didRegistry.insertDidDocument(
+                did,
+                baseDoc,
+                vMethodId,
+                publicKey,
+                ellipticType,
+                notBefore,
+                notAfter
+            )
+        ).to.be.revertedWithCustomError(didDocumentDetailedFacet, expectedError)
+    }
+
+    /**
      * Helper function to build and verify a basic DID document with single vMethod and relationships
      */
     function buildAndVerifyBasicDidDocument(
@@ -336,66 +360,50 @@ describe('DiDRegistry', function () {
                 did = TestConstants.randomDid()
             })
             it('GIVEN initialized didRegistry WHEN try to insert did document with empty did THEN it fails', async () => {
-                await expect(
-                    didRegistry.insertDidDocument(
-                        ZeroHash,
-                        baseDocument,
-                        vMethodId,
-                        publicKey65Incorrect,
-                        EllipticType.SECP_256_K1,
-                        notBefore,
-                        notAfter
-                    )
-                ).to.be.revertedWithCustomError(
-                    didDocumentDetailedFacet,
+                await expectInsertDocumentToFail(
+                    ZeroHash,
+                    baseDocument,
+                    vMethodId,
+                    publicKey65Incorrect,
+                    EllipticType.SECP_256_K1,
+                    notBefore,
+                    notAfter,
                     'EmptyBytes32'
                 )
             })
             it('GIVEN initialized didRegistry WHEN try to insert did document with empty baseDocument THEN it fails', async () => {
-                await expect(
-                    didRegistry.insertDidDocument(
-                        did,
-                        emptyString,
-                        vMethodId,
-                        publicKey65Incorrect,
-                        EllipticType.SECP_256_K1,
-                        notBefore,
-                        notAfter
-                    )
-                ).to.be.revertedWithCustomError(
-                    didDocumentDetailedFacet,
+                await expectInsertDocumentToFail(
+                    did,
+                    emptyString,
+                    vMethodId,
+                    publicKey65Incorrect,
+                    EllipticType.SECP_256_K1,
+                    notBefore,
+                    notAfter,
                     'EmptyString'
                 )
             })
             it('GIVEN initialized didRegistry WHEN try to insert did document with empty vMethodId THEN it fails', async () => {
-                await expect(
-                    didRegistry.insertDidDocument(
-                        did,
-                        baseDocument,
-                        ZeroHash,
-                        publicKey65Incorrect,
-                        EllipticType.SECP_256_K1,
-                        notBefore,
-                        notAfter
-                    )
-                ).to.be.revertedWithCustomError(
-                    didDocumentDetailedFacet,
+                await expectInsertDocumentToFail(
+                    did,
+                    baseDocument,
+                    ZeroHash,
+                    publicKey65Incorrect,
+                    EllipticType.SECP_256_K1,
+                    notBefore,
+                    notAfter,
                     'EmptyBytes32'
                 )
             })
-            it('GIVEN initialized didRegistry WHEN try to insert did document with empty publicKey65Incorrect THEN it fails', async () => {
-                await expect(
-                    didRegistry.insertDidDocument(
-                        did,
-                        baseDocument,
-                        vMethodId,
-                        emptyBytes,
-                        EllipticType.SECP_256_K1,
-                        notBefore,
-                        notAfter
-                    )
-                ).to.be.revertedWithCustomError(
-                    didDocumentDetailedFacet,
+            it('GIVEN initialized didRegistry WHEN try to insert did document with empty publicKey THEN it fails', async () => {
+                await expectInsertDocumentToFail(
+                    did,
+                    baseDocument,
+                    vMethodId,
+                    emptyBytes,
+                    EllipticType.SECP_256_K1,
+                    notBefore,
+                    notAfter,
                     'EmptyBytes'
                 )
             })
@@ -1710,6 +1718,7 @@ describe('DiDRegistry', function () {
             }
 
             beforeEach(async () => {
+                did = TestConstants.randomDid()
                 await loadFixture(createStandardFixture)
             })
 
@@ -2071,6 +2080,195 @@ describe('DiDRegistry', function () {
                     .expectDidsArray([])
                     .expectCounts(insertedDids.length, 0)
                     .expectPaginationInfo(1n, 1n)
+            })
+        })
+
+        describe('Controller Management with Last Controller Protection', () => {
+            /**
+             * Helper function to count active controllers for a DID
+             */
+            async function getControllerCount(didId: string): Promise<number> {
+                const didDocument = await didRegistry.getDidDocument(didId)
+                return didDocument[1].length // controllers is the second return value
+            }
+
+            /**
+             * Helper function to check if a DID is a controller of another DID
+             */
+            async function isDidController(
+                didId: string,
+                controllerDid: string
+            ): Promise<boolean> {
+                const didDocument = await didRegistry.getDidDocument(didId)
+                return didDocument[1].includes(controllerDid) // controllers is the second return value
+            }
+
+            beforeEach(async () => {
+                did = TestConstants.randomDid()
+                await loadFixture(createStandardFixture)
+            })
+
+            it('FIXED: Should fail when trying to revoke the only controller', async () => {
+                // GIVEN: The DID is its own controller (standard setup creates this)
+                expect(await getControllerCount(did)).to.equal(1)
+                expect(await isDidController(did, did)).to.be.true
+
+                // WHEN: Try to revoke the only controller (itself)
+                // THEN: Should fail with CannotLeaveDidWithoutControllers error
+                await expect(didRegistry.revokeController(did, did))
+                    .to.be.revertedWithCustomError(
+                        didControllerFacet,
+                        'CannotLeaveDidWithoutControllers'
+                    )
+                    .withArgs(did, did)
+
+                // THEN: Verify DID still have its controller
+                expect(await getControllerCount(did)).to.equal(1)
+                expect(await isDidController(did, did)).to.be.true
+            })
+
+            it('FIXED: Should fail when revoking the last remaining controller', async () => {
+                // GIVEN: Create additional controller and remove original
+                const controller = TestConstants.randomDid()
+                await insertControllerDocument(controller)
+                await didRegistry.addController(did, controller)
+
+                // Remove the original controller (DID as its own controller)
+                await didRegistry.revokeController(did, did)
+
+                // Verify we have only one controller left
+                expect(await getControllerCount(did)).to.equal(1)
+                expect(await isDidController(did, controller)).to.be.true
+                expect(await isDidController(did, did)).to.be.false
+
+                // WHEN: Try to revoke the last remaining controller
+                // THEN: Should fail with CannotLeaveDidWithoutControllers error
+                await expect(didRegistry.revokeController(did, controller))
+                    .to.be.revertedWithCustomError(
+                        didControllerFacet,
+                        'CannotLeaveDidWithoutControllers'
+                    )
+                    .withArgs(did, controller)
+
+                // THEN: Verify DID still have the controller
+                expect(await getControllerCount(did)).to.equal(1)
+                expect(await isDidController(did, controller)).to.be.true
+            })
+
+            it('EXPECTED BEHAVIOR: Should succeed when revoking a controller but leaving others', async () => {
+                // GIVEN: Create multiple controllers
+                const controller1 = TestConstants.randomDid()
+                const controller2 = TestConstants.randomDid()
+                await insertControllerDocument(controller1)
+                await insertControllerDocument(controller2)
+
+                // Add multiple controllers
+                await didRegistry.addController(did, controller1)
+                await didRegistry.addController(did, controller2)
+
+                // Verify we have 3 controllers (including self)
+                expect(await getControllerCount(did)).to.equal(3)
+                expect(await isDidController(did, did)).to.be.true
+                expect(await isDidController(did, controller1)).to.be.true
+                expect(await isDidController(did, controller2)).to.be.true
+
+                // WHEN: Revoke one controller but leave others
+                await expect(didRegistry.revokeController(did, controller1))
+                    .to.emit(didRegistry, 'ControllerRevoked')
+                    .withArgs(did, controller1)
+
+                // THEN: Should still have controllers remaining
+                expect(await getControllerCount(did)).to.equal(2)
+                expect(await isDidController(did, did)).to.be.true
+                expect(await isDidController(did, controller1)).to.be.false
+                expect(await isDidController(did, controller2)).to.be.true
+            })
+
+            it('FIXED: Should fail when trying to revoke all controllers sequentially', async () => {
+                // GIVEN: Create multiple controllers
+                const controller1 = TestConstants.randomDid()
+                const controller2 = TestConstants.randomDid()
+                await insertControllerDocument(controller1)
+                await insertControllerDocument(controller2)
+
+                // Add multiple controllers
+                await didRegistry.addController(did, controller1)
+                await didRegistry.addController(did, controller2)
+
+                // Verify we have 3 controllers
+                expect(await getControllerCount(did)).to.equal(3)
+
+                // WHEN: Revoke controllers one by one
+                // First revocation should succeed
+                await didRegistry.revokeController(did, controller1)
+                expect(await getControllerCount(did)).to.equal(2)
+
+                // Second revocation should succeed
+                await didRegistry.revokeController(did, controller2)
+                expect(await getControllerCount(did)).to.equal(1)
+
+                // Third revocation should fail - trying to remove the last controller
+                await expect(didRegistry.revokeController(did, did))
+                    .to.be.revertedWithCustomError(
+                        didControllerFacet,
+                        'CannotLeaveDidWithoutControllers'
+                    )
+                    .withArgs(did, did)
+
+                // THEN: Verify DID still have one controller
+                expect(await getControllerCount(did)).to.equal(1)
+                expect(await isDidController(did, did)).to.be.true
+            })
+
+            it('EDGE CASE: DIDs cannot be left without controllers anymore', async () => {
+                // GIVEN: A DID with a single controller (itself)
+                expect(await getControllerCount(did)).to.equal(1)
+                expect(await isDidController(did, did)).to.be.true
+
+                // WHEN: Try to remove the last controller
+                // THEN: Should fail and preserve the DID's manageability
+                await expect(didRegistry.revokeController(did, did))
+                    .to.be.revertedWithCustomError(
+                        didControllerFacet,
+                        'CannotLeaveDidWithoutControllers'
+                    )
+                    .withArgs(did, did)
+
+                // THEN: Verify DID still have its controller and remains manageable
+                expect(await getControllerCount(did)).to.equal(1)
+                expect(await isDidController(did, did)).to.be.true
+
+                // WHEN: Add another controller first
+                const newController = TestConstants.randomDid()
+                await insertControllerDocument(newController)
+                await didRegistry.addController(did, newController)
+                expect(await getControllerCount(did)).to.equal(2)
+
+                // THEN: Now we can safely remove one controller, leaving the other
+                await didRegistry.revokeController(did, did)
+                expect(await getControllerCount(did)).to.equal(1)
+                expect(await isDidController(did, newController)).to.be.true
+                expect(await isDidController(did, did)).to.be.false
+            })
+
+            it('Should handle revocation attempts with proper authorization checks', async () => {
+                // GIVEN: Create additional controller
+                const controller = TestConstants.randomDid()
+                await insertControllerDocument(controller)
+                await didRegistry.addController(did, controller)
+
+                // Verify initial state
+                expect(await getControllerCount(did)).to.equal(2)
+
+                // WHEN: Authorized user (admin) can revoke controller
+                await expect(didRegistry.revokeController(did, controller))
+                    .to.emit(didRegistry, 'ControllerRevoked')
+                    .withArgs(did, controller)
+
+                // THEN: Controller should be removed
+                expect(await getControllerCount(did)).to.equal(1)
+                expect(await isDidController(did, controller)).to.be.false
+                expect(await isDidController(did, did)).to.be.true
             })
         })
 

@@ -40,6 +40,7 @@ abstract contract DidController is DidControllerInternal, IDidController {
         onlyDidExists(did)
         onlyDidExists(controller)
         onlyController(did, controller)
+        onlyNotLastController(did, controller)
         returns (bool success)
     {
         emit ControllerRevoked(did, controller);

@@ -578,6 +578,10 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
         return false;
     }
 
+    function _getControllerCount(bytes32 did) internal view returns (uint256) {
+        return _didDocumentsStorage().didList[did].controllers.length;
+    }
+
     function _isController(
         bytes32 _did,
         bytes32 _controller

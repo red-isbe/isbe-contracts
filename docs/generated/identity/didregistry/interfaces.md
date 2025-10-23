@@ -80,6 +80,23 @@ Raised when a DID is controlled by
 | did        | bytes32 | The decentralised identifier |
 | controller | bytes32 | The controller identifier    |
 
+### CannotLeaveDidWithoutControllers
+
+```solidity
+error CannotLeaveDidWithoutControllers(bytes32 did, bytes32 controller)
+```
+
+Raised when attempting to revoke the last controller from a DID
+
+_Prevents DIDs from becoming unmanageable by ensuring at least one controller remains_
+
+#### Parameters
+
+| Name       | Type    | Description                                                         |
+| ---------- | ------- | ------------------------------------------------------------------- |
+| did        | bytes32 | The decentralised identifier that would be left without controllers |
+| controller | bytes32 | The controller identifier being revoked                             |
+
 ### addController
 
 ```solidity

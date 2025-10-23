@@ -40,6 +40,11 @@ abstract contract DidControllerInternal is DidDocumentDetailedInternal {
         _;
     }
 
+    modifier onlyNotLastController(bytes32 did, bytes32 controller) {
+        _checkNotLastController(did, controller);
+        _;
+    }
+
     function _linkDidToController(
         bytes32 did,
         bytes32 controller
@@ -130,6 +135,16 @@ abstract contract DidControllerInternal is DidDocumentDetailedInternal {
         require(
             _isNotController(did, controller),
             IDidController.DidIsControlledBy(did, controller)
+        );
+    }
+
+    function _checkNotLastController(
+        bytes32 did,
+        bytes32 controller
+    ) private view {
+        require(
+            _getControllerCount(did) > 1,
+            IDidController.CannotLeaveDidWithoutControllers(did, controller)
         );
     }
 

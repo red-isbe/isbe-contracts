@@ -45,6 +45,14 @@ interface IDidController {
     error DidIsControlledBy(bytes32 did, bytes32 controller);
 
     /**
+     * @notice Raised when attempting to revoke the last controller from a DID
+     * @dev Prevents DIDs from becoming unmanageable by ensuring at least one controller remains
+     * @param did The decentralised identifier that would be left without controllers
+     * @param controller The controller identifier being revoked
+     */
+    error CannotLeaveDidWithoutControllers(bytes32 did, bytes32 controller);
+
+    /**
      * @notice Adds a new controller to the specified DID
      * @dev Requires appropriate authorisation to modify the DID
      * @param did The decentralised identifier to receive the new controller

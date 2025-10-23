@@ -234,6 +234,12 @@ modifier onlyNotController(bytes32 did, bytes32 controller)
 modifier onlyController(bytes32 did, bytes32 controller)
 ```
 
+### onlyNotLastController
+
+```solidity
+modifier onlyNotLastController(bytes32 did, bytes32 controller)
+```
+
 ### \_linkDidToController
 
 ```solidity
@@ -639,6 +645,12 @@ function _existsVMethod(bytes32 _did, bytes32 _vMethodId) internal view returns 
 
 ```solidity
 function _isController(bytes32 _did, address controller) internal view returns (bool)
+```
+
+### \_getControllerCount
+
+```solidity
+function _getControllerCount(bytes32 did) internal view returns (uint256)
 ```
 
 ### \_isController
