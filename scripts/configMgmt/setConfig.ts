@@ -34,9 +34,13 @@ export async function setConfig(
         })
     }
 
+    // Add explicit gas limit to prevent "Internal error" on non-validator nodes
     const tx = await configManagement.setConfiguration(
         configId,
-        businessDataInput
+        businessDataInput,
+        {
+            gasLimit: 25_000_000, // Set high gas limit to avoid estimation issues
+        }
     )
 
     const setConfigEvent = await getEvent(

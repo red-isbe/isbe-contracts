@@ -73,14 +73,19 @@ async function deployInitial(ethers: any) {
         'ConfigurationManagementFacet'
     )
 
-    businessLogicFactoryFacet = await BusinessLogicFactoryFactory.deploy()
-    proxyFactoryFacet = await ProxyFactoryFacetFactory.deploy()
-    globalIsbePauseFacet = await GlobalIsbePauseFacetFactory.deploy()
-    accessControlFacet = await AccessControlFacetFactory.deploy()
-    pauseFacet = await IsbePausableFacetFactory.deploy()
-    diamondCutFacet = await DiamondCutFacetFactory.deploy()
-    diamondLoupeFacet = await DiamondLoupeFacetFactory.deploy()
-    configMgmtFacet = await ConfigMgmtFacetFactory.deploy()
+    // Add explicit gas limit to fix Internal error with non-validator nodes
+    const deployOptions = { gasLimit: 25_000_000 }
+
+    businessLogicFactoryFacet =
+        await BusinessLogicFactoryFactory.deploy(deployOptions)
+    proxyFactoryFacet = await ProxyFactoryFacetFactory.deploy(deployOptions)
+    globalIsbePauseFacet =
+        await GlobalIsbePauseFacetFactory.deploy(deployOptions)
+    accessControlFacet = await AccessControlFacetFactory.deploy(deployOptions)
+    pauseFacet = await IsbePausableFacetFactory.deploy(deployOptions)
+    diamondCutFacet = await DiamondCutFacetFactory.deploy(deployOptions)
+    diamondLoupeFacet = await DiamondLoupeFacetFactory.deploy(deployOptions)
+    configMgmtFacet = await ConfigMgmtFacetFactory.deploy(deployOptions)
 
     await businessLogicFactoryFacet.waitForDeployment()
     await proxyFactoryFacet.waitForDeployment()
@@ -111,42 +116,45 @@ export async function deployIsbeFactory(
         await diamondLoupeFacet.getAddress(),
         await configMgmtFacet.getAddress(),
     ]
-    diamondProxy = await EIP2535AccessControlFactory.deploy(facetAddresses, {
-        rbacs: [
-            {
-                role: DEFAULT_ADMIN_ROLE,
-                members: [accountAddress],
-            },
-            {
-                role: ISBE_ROLE,
-                members: [accountAddress],
-            },
-            {
-                role: PROXY_DEPLOYER_ROLE,
-                members: [accountAddress],
-            },
-            {
-                role: GOVERNANCE_CONFIGURATION_MANAGER_ROLE,
-                members: [accountAddress],
-            },
-            {
-                role: BUSINESS_LOGIC_DEPLOYER_ROLE,
-                members: [accountAddress],
-            },
-            {
-                role: ISBE_PAUSER_ROLE,
-                members: [accountAddress],
-            },
-            {
-                role: GOVERNANCE_MANAGER_ROLE,
-                members: [accountAddress],
-            },
-        ],
-        init: ethers.ZeroAddress,
-        initCalldata: initCalldata,
-        gasLimit: 2000000,
-        gasPrice: 875000000,
-    })
+    diamondProxy = await EIP2535AccessControlFactory.deploy(
+        facetAddresses,
+        {
+            rbacs: [
+                {
+                    role: DEFAULT_ADMIN_ROLE,
+                    members: [accountAddress],
+                },
+                {
+                    role: ISBE_ROLE,
+                    members: [accountAddress],
+                },
+                {
+                    role: PROXY_DEPLOYER_ROLE,
+                    members: [accountAddress],
+                },
+                {
+                    role: GOVERNANCE_CONFIGURATION_MANAGER_ROLE,
+                    members: [accountAddress],
+                },
+                {
+                    role: BUSINESS_LOGIC_DEPLOYER_ROLE,
+                    members: [accountAddress],
+                },
+                {
+                    role: ISBE_PAUSER_ROLE,
+                    members: [accountAddress],
+                },
+                {
+                    role: GOVERNANCE_MANAGER_ROLE,
+                    members: [accountAddress],
+                },
+            ],
+            init: ethers.ZeroAddress,
+            initCalldata: initCalldata,
+        },
+        // Add explicit gas limit to fix Internal error with non-validator nodes
+        { gasLimit: 25_000_000 }
+    )
 
     await diamondProxy.waitForDeployment()
     return await diamondProxy.getAddress()
