@@ -978,7 +978,6 @@ describe('ERC3643 Token', function () {
             it('GIVEN arrays length mismatch WHEN batchSetAddressFrozen THEN reverts', async () => {
                 const addresses = [aliceAddress, bobAddress]
                 const freezeStates = [true]
-                //TODO Descubrir porque no alcanza el custom error a la interfaz de utilidad
                 await expect(
                     erc3643
                         .connect(owner)
@@ -1154,7 +1153,6 @@ describe('ERC3643 Token', function () {
             })
 
             it('GIVEN arrays length mismatch WHEN batchFreezePartialTokens THEN reverts', async () => {
-                //TODO Descubrir porque no alcanza el custom error a la interfaz de utilidad
                 await expect(
                     erc3643
                         .connect(owner)
@@ -1350,7 +1348,6 @@ describe('ERC3643 Token', function () {
             })
 
             it('GIVEN arrays length mismatch WHEN batchUnfreezePartialTokens THEN reverts', async () => {
-                //TODO Descubrir porque no alcanza el custom error a la interfaz de utilidad
                 await expect(
                     erc3643
                         .connect(owner)
@@ -1986,7 +1983,6 @@ describe('ERC3643 Token', function () {
                 })
 
                 it('GIVEN arrays length mismatch WHEN batchForceBurn THEN reverts', async () => {
-                    //TODO Descubrir porque no alcanza el custom error a la interfaz de utilidad
                     await expect(
                         erc3643Controller
                             .connect(owner)
@@ -2278,7 +2274,6 @@ describe('ERC3643 Token', function () {
                 })
 
                 it('GIVEN fromList and toList length mismatch WHEN batchForceTransfer THEN reverts', async () => {
-                    //TODO Descubrir porque no alcanza el custom error a la interfaz de utilidad
                     await expect(
                         erc3643Controller
                             .connect(owner)
@@ -2294,7 +2289,6 @@ describe('ERC3643 Token', function () {
                 })
 
                 it('GIVEN fromList and amounts length mismatch WHEN batchForceTransfer THEN reverts', async () => {
-                    //TODO Descubrir porque no alcanza el custom error a la interfaz de utilidad
                     await expect(
                         erc3643Controller
                             .connect(owner)
@@ -2951,7 +2945,6 @@ describe('ERC3643 Token', function () {
                 it('GIVEN arrays length mismatch WHEN batchMint THEN reverts', async () => {
                     const addresses = [aliceAddress, bobAddress]
                     const amounts = [100n]
-                    //TODO Descubrir porque no alcanza el custom error a la interfaz de utilidad
                     await expect(
                         erc3643Capped
                             .connect(owner)
@@ -3669,7 +3662,6 @@ describe('ERC3643 Token', function () {
 
             describe('batchTransfer', () => {
                 it('GIVEN ERC3643 mode WHEN arrays length mismatch THEN reverts with NotSameLengthArray', async () => {
-                    //TODO Descubrir porque no alcanza el custom error a la interfaz de utilidad
                     await expect(
                         erc20Facet
                             .connect(alice)
