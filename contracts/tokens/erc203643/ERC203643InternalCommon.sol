@@ -113,6 +113,7 @@ abstract contract ERC203643InternalCommon is
             // Verify recipient identity (required for both normal and force transfers)
             _isRecipientVerified(_to);
 
+            // Differentiate between normal transfers and forced transfers
             if (_hasRole(_CONTROLLER_ROLE, msg.sender) || _hasRole(_RECOVERY_ROLE, msg.sender)) {
                 // forceTransfer() - Forced transfer with auto-unfreeze capability
                 // Auto-unfreeze if needed to complete the transfer
