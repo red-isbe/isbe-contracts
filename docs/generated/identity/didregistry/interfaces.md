@@ -314,6 +314,42 @@ Emitted when a new DID document is successfully inserted into the registry
 | notBefore    | uint256                                | The timestamp before which the verification method is invalid |
 | notAfter     | uint256                                | The timestamp after which the verification method expires     |
 
+### FirstDidDocumentInserted
+
+```solidity
+event FirstDidDocumentInserted(bytes32 did, string baseDocument, bytes32 vMethodId, bytes publicKey, enum IDidDocumentDetailed.EllipticType ellipticType, uint256 notBefore, uint256 notAfter, string alsoKnownAs)
+```
+
+Emitted when the first DID document is successfully inserted by an ISBE authorised account
+
+#### Parameters
+
+| Name         | Type                                   | Description                                                   |
+| ------------ | -------------------------------------- | ------------------------------------------------------------- |
+| did          | bytes32                                | The decentralised identifier string that was registered       |
+| baseDocument | string                                 | The base JSON-LD document content for the DID                 |
+| vMethodId    | bytes32                                | The unique identifier for the initial verification method     |
+| publicKey    | bytes                                  | The public key material for the initial verification method   |
+| ellipticType | enum IDidDocumentDetailed.EllipticType | The elliptic curve algorithm used for the initial key         |
+| notBefore    | uint256                                | The timestamp before which the verification method is invalid |
+| notAfter     | uint256                                | The timestamp after which the verification method expires     |
+| alsoKnownAs  | string                                 | Alternative identifier for the entity (e.g., irn:orgs:inetum) |
+
+### AlsoKnownAsUpdated
+
+```solidity
+event AlsoKnownAsUpdated(bytes32 did, string alsoKnownAs)
+```
+
+Emitted when the alsoKnownAs field is updated by an ISBE authorised account
+
+#### Parameters
+
+| Name        | Type    | Description                                                |
+| ----------- | ------- | ---------------------------------------------------------- |
+| did         | bytes32 | The decentralised identifier whose alsoKnownAs was updated |
+| alsoKnownAs | string  | The new alsoKnownAs value                                  |
+
 ### BaseDocumentUpdated
 
 ```solidity
@@ -447,6 +483,66 @@ to maintain data consistency and prevent conflicting permissions_
 | name      | string  | The verification relationship name that already exists                |
 | vMethodId | bytes32 | The verification method identifier that already has this relationship |
 
+### UnauthorizedIsbeAccount
+
+```solidity
+error UnauthorizedIsbeAccount()
+```
+
+Raised when attempting to perform an operation requiring ISBE authorisation
+
+_This error ensures that sensitive operations are only performed by
+accounts with the appropriate ISBE role_
+
+### AddressNotKnown
+
+```solidity
+error AddressNotKnown(address addr)
+```
+
+Raised when an address is not known in the DID registry or has invalid/expired capability invocation
+
+_This covers: not registered, revoked, no capability invocation, or expired_
+
+#### Parameters
+
+| Name | Type    | Description                            |
+| ---- | ------- | -------------------------------------- |
+| addr | address | The Ethereum address that is not known |
+
+### UnauthorizedController
+
+```solidity
+error UnauthorizedController(address caller, bytes32 callerDid, bytes32 targetDid)
+```
+
+Raised when caller is not an authorized controller of the target DID
+
+#### Parameters
+
+| Name      | Type    | Description                                |
+| --------- | ------- | ------------------------------------------ |
+| caller    | address | The address attempting the operation       |
+| callerDid | bytes32 | The DID of the caller                      |
+| targetDid | bytes32 | The target DID that requires authorization |
+
+### FirstDocumentNotInserted
+
+```solidity
+error FirstDocumentNotInserted(bytes32 did)
+```
+
+Raised when attempting to insert a subsequent DID document without a first document
+
+_This error ensures that the first document must be inserted via insertFirstDidDocument
+before additional documents can be added_
+
+#### Parameters
+
+| Name | Type    | Description                                                 |
+| ---- | ------- | ----------------------------------------------------------- |
+| did  | bytes32 | The decentralised identifier that requires a first document |
+
 ### initializeDiDRegistry
 
 ```solidity
@@ -464,6 +560,38 @@ DID document operations. This function can only be called once per deployment_
 | ------------ | -------------------------------------- | ---------------------------------------------------------- |
 | ellipticType | enum IDidDocumentDetailed.EllipticType | The elliptic curve algorithm to use for the entire network |
 
+### insertFirstDidDocument
+
+```solidity
+function insertFirstDidDocument(bytes32 did, string baseDocument, bytes32 vMethodId, bytes proof, bytes publicKey, enum IDidDocumentDetailed.EllipticType ellipticType, uint256 notBefore, uint256 notAfter, string alsoKnownAs) external returns (bool success)
+```
+
+Inserts the first DID document with cryptographic proof validation
+
+_Creates the initial DID document with the DID itself as controller.
+Only callable by accounts with ISBE role. Validates cryptographic proof
+against the provided public key and DID for secure identity establishment_
+
+#### Parameters
+
+| Name         | Type                                   | Description                                                    |
+| ------------ | -------------------------------------- | -------------------------------------------------------------- |
+| did          | bytes32                                | The decentralised identifier string to register                |
+| baseDocument | string                                 | The base JSON-LD document content containing DID metadata      |
+| vMethodId    | bytes32                                | The unique identifier for the initial verification method      |
+| proof        | bytes                                  | The cryptographic proof to validate against public key and DID |
+| publicKey    | bytes                                  | The public key bytes for cryptographic verification            |
+| ellipticType | enum IDidDocumentDetailed.EllipticType | The elliptic curve algorithm for the verification method       |
+| notBefore    | uint256                                | Unix timestamp when the verification method becomes valid      |
+| notAfter     | uint256                                | Unix timestamp when the verification method expires            |
+| alsoKnownAs  | string                                 | Alternative identifier for the entity (e.g., irn:orgs:inetum)  |
+
+#### Return Values
+
+| Name    | Type | Description                                                     |
+| ------- | ---- | --------------------------------------------------------------- |
+| success | bool | Boolean indicating whether the insertion completed successfully |
+
 ### insertDidDocument
 
 ```solidity
@@ -473,7 +601,9 @@ function insertDidDocument(bytes32 did, string baseDocument, bytes32 vMethodId, 
 Inserts a new DID document with initial verification method into the registry
 
 _Creates a complete DID document with cryptographic verification capabilities
-and temporal validity constraints for secure identity management_
+and temporal validity constraints for secure identity management.
+Inherits alsoKnownAs from the first document. Can only be called by
+authorised controllers of the DID_
 
 #### Parameters
 
@@ -517,6 +647,30 @@ and relationships. Requires appropriate authorisation to prevent unauthorised ch
 | ------- | ---- | ------------------------------------------------------------ |
 | success | bool | Boolean indicating whether the update completed successfully |
 
+### updateAlsoKnownAs
+
+```solidity
+function updateAlsoKnownAs(bytes32 did, string alsoKnownAs) external returns (bool success)
+```
+
+Updates the alsoKnownAs field of an existing DID
+
+_Modifies the alternative identifier whilst preserving all other document data.
+Only callable by accounts with ISBE role for security and governance_
+
+#### Parameters
+
+| Name        | Type    | Description                                                      |
+| ----------- | ------- | ---------------------------------------------------------------- |
+| did         | bytes32 | The decentralised identifier whose alsoKnownAs should be updated |
+| alsoKnownAs | string  | The new alternative identifier value to set                      |
+
+#### Return Values
+
+| Name    | Type | Description                                                  |
+| ------- | ---- | ------------------------------------------------------------ |
+| success | bool | Boolean indicating whether the update completed successfully |
+
 ### getDids
 
 ```solidity
@@ -548,12 +702,12 @@ support for large datasets and optimised gas usage_
 ### getDidDocument
 
 ```solidity
-function getDidDocument(bytes32 did) external view returns (string baseDocument, bytes32[] controllers, bytes32[] vMethodIds, struct IDidDocumentDetailed.VMethod[] vMethods, struct IDidDocumentDetailed.VRelationship[] vRelationships)
+function getDidDocument(bytes32 did) external view returns (string baseDocument, string alsoKnownAs, bytes32[] controllers, bytes32[] vMethodIds, struct IDidDocumentDetailed.VMethod[] vMethods, struct IDidDocumentDetailed.VRelationship[] vRelationships)
 ```
 
 Retrieves the complete current DID document with all verification methods
 
-_Returns the full document structure including base content, controllers,
+_Returns the full document structure including base content, alsoKnownAs, controllers,
 verification methods, and relationships as they exist at the current timestamp_
 
 #### Parameters
@@ -567,6 +721,7 @@ verification methods, and relationships as they exist at the current timestamp_
 | Name           | Type                                        | Description                                                      |
 | -------------- | ------------------------------------------- | ---------------------------------------------------------------- |
 | baseDocument   | string                                      | The base JSON-LD document content                                |
+| alsoKnownAs    | string                                      | The alternative identifier for the entity                        |
 | controllers    | bytes32[]                                   | Array of DID strings authorised to control this document         |
 | vMethodIds     | bytes32[]                                   | Array of verification method identifiers                         |
 | vMethods       | struct IDidDocumentDetailed.VMethod[]       | Array of verification method structures with keys and algorithms |
@@ -575,7 +730,7 @@ verification methods, and relationships as they exist at the current timestamp_
 ### getDidDocumentByTimestamp
 
 ```solidity
-function getDidDocumentByTimestamp(bytes32 did, uint256 timestamp) external view returns (string baseDocument, bytes32[] controllers, bytes32[] vMethodIds, struct IDidDocumentDetailed.VMethod[] vMethods, struct IDidDocumentDetailed.VRelationship[] vRelationships)
+function getDidDocumentByTimestamp(bytes32 did, uint256 timestamp) external view returns (string baseDocument, string alsoKnownAs, bytes32[] controllers, bytes32[] vMethodIds, struct IDidDocumentDetailed.VMethod[] vMethods, struct IDidDocumentDetailed.VRelationship[] vRelationships)
 ```
 
 Retrieves the DID document as it existed at a specific historical timestamp
@@ -595,6 +750,7 @@ verification methods and relationships that were valid at the specified time_
 | Name           | Type                                        | Description                                                 |
 | -------------- | ------------------------------------------- | ----------------------------------------------------------- |
 | baseDocument   | string                                      | The base JSON-LD document content at the specified time     |
+| alsoKnownAs    | string                                      | The alternative identifier for the entity                   |
 | controllers    | bytes32[]                                   | Array of DID strings authorised to control this document    |
 | vMethodIds     | bytes32[]                                   | Array of verification method identifiers valid at timestamp |
 | vMethods       | struct IDidDocumentDetailed.VMethod[]       | Array of verification methods that were active at timestamp |

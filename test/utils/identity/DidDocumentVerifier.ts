@@ -56,22 +56,24 @@ export class DidDocumentVerifier {
 
     /**
      * Convierte el array del contrato a un objeto tipado
+     * Note: Contract returns: [baseDocument, alsoKnownAs, controllers, vMethodIds, vMethods, vRelationships]
      */
     static parseDidDocumentResult(
         result: ContractDidDocumentResult
     ): DidDocumentResult {
         return {
             baseDocument: result[0],
-            controllers: result[1],
-            vMethodIds: result[2],
+            // result[1] is alsoKnownAs (string) - we skip it for now
+            controllers: result[2],
+            vMethodIds: result[3],
             vMethods:
-                result[3]?.map((vm: ContractVMethodTuple) => ({
+                result[4]?.map((vm: ContractVMethodTuple) => ({
                     publicKey: vm[0],
                     ellipticType: Number(vm[1]),
                     revoked: vm[2],
                 })) || [],
             vRelationships:
-                result[4]?.map((vr: ContractVRelationshipTuple) => ({
+                result[5]?.map((vr: ContractVRelationshipTuple) => ({
                     relationshipType: vr[0],
                     vMethodId: vr[1],
                     notBefore: BigInt(vr[2]),

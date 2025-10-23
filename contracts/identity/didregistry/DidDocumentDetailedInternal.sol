@@ -11,6 +11,10 @@ import {IDidVerificationRelationship} from './interfaces/IDidVerificationRelatio
 import {LibCommon} from '../../core/LibCommon.sol';
 import {VRelationshipsInternal} from './VRelationshipsInternal.sol';
 import {_DID_DOCUMENT_DETAILED_STORAGE_POSITION} from '../../constants/storagePositions.sol';
+import {
+    _recoverSigner,
+    InvalidSignature
+} from '../../core/signatureVerification.sol';
 
 /**
  * @title Decentralised Identity Document Internal Implementation
@@ -25,6 +29,7 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
     /**
      * @notice Complete DID document structure with verification methods and relationships
      * @param baseDocument Base JSON document structure containing DID metadata
+     * @param alsoKnownAs Alternative identifier for the entity (e.g., irn:orgs:inetum)
      * @param controllers Array of DID identifiers authorised to control this document
      * @param controllerExist Mapping to efficiently verify controller existence
      * @param vMethods Mapping of verification method identifiers to method details
@@ -39,6 +44,7 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
      */
     struct DidDocument {
         string baseDocument;
+        string alsoKnownAs;
         bytes32[] controllers;
         mapping(bytes32 controller => bool exists) controllerExist;
         mapping(bytes32 vMethodId => IDidDocumentDetailed.VMethod vMethod) vMethods;
@@ -117,6 +123,15 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
         _;
     }
 
+    /**
+     * @notice Validates that an address is registered in the DID registry with active capability invocation
+     * @param _address The Ethereum address to validate
+     */
+    modifier onlyKnownDid(address _address) {
+        _checkKnownDid(_address);
+        _;
+    }
+
     function _setEllipticType(
         IDidDocumentDetailed.EllipticType _ellipticType
     ) internal {
@@ -130,13 +145,15 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
         bytes memory _publicKey,
         IDidDocumentDetailed.EllipticType _ellipticType,
         uint256 _notBefore,
-        uint256 _notAfter
+        uint256 _notAfter,
+        string memory _alsoKnownAs
     ) internal returns (bool) {
         DidDocumentsStorage storage $ = _didDocumentsStorage();
         DidDocument storage document = $.didList[_did];
 
         document.exists = true;
         document.baseDocument = _baseDocument;
+        document.alsoKnownAs = _alsoKnownAs;
         _addVerificationMethod(_did, _vMethodId, _publicKey, _ellipticType);
 
         _addVerificationRelationshipToDocument(
@@ -202,7 +219,9 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
         DidDocumentsStorage storage $ = _didDocumentsStorage();
         DidDocument storage document = $.didList[_did];
         if (_ellipticType == $.networkEllipticType) {
-            document.vMethodIdOfAddress[_getAddress(_publicKey)] = _vMethodId;
+            address addr = _getAddress(_publicKey);
+            document.vMethodIdOfAddress[addr] = _vMethodId;
+            $.invocationAddressToDid[addr] = _did;
         }
         document.vMethods[_vMethodId] = IDidDocumentDetailed.VMethod({
             publicKey: _publicKey,
@@ -402,6 +421,14 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
         return true;
     }
 
+    function _updateAlsoKnownAs(
+        bytes32 _did,
+        string memory _alsoKnownAs
+    ) internal returns (bool) {
+        _didDocumentsStorage().didList[_did].alsoKnownAs = _alsoKnownAs;
+        return true;
+    }
+
     function _getDids(
         uint256 _page,
         uint256 _pageSize
@@ -442,6 +469,7 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
         view
         returns (
             string memory baseDocument_,
+            string memory alsoKnownAs_,
             bytes32[] memory controllers_,
             bytes32[] memory vMethodIds_,
             IDidDocumentDetailed.VMethod[] memory vMethods_,
@@ -459,6 +487,7 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
         view
         returns (
             string memory baseDocument_,
+            string memory alsoKnownAs_,
             bytes32[] memory controllers_,
             bytes32[] memory vMethodIds_,
             IDidDocumentDetailed.VMethod[] memory vMethods_,
@@ -467,6 +496,7 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
     {
         DidDocument storage document = _didDocumentsStorage().didList[_did];
         baseDocument_ = document.baseDocument;
+        alsoKnownAs_ = document.alsoKnownAs;
         controllers_ = document.controllers;
         (vMethodIds_, vMethods_, vRelationships_) = _getMethodsAndRelations(
             _timestamp,
@@ -544,6 +574,17 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
             );
     }
 
+    /**
+     * @notice Validates that an address is known in the DID registry with active capability invocation
+     * @param _address The address to validate
+     */
+    function _checkKnownDid(address _address) internal view {
+        require(
+            _isKnownDid(_address),
+            IDidDocumentDetailed.AddressNotKnown(_address)
+        );
+    }
+
     function _notExistDid(bytes32 _did) internal view returns (bool) {
         return !_existsDid(_did);
     }
@@ -579,25 +620,18 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
 
         uint256 controllersLength = document.controllers.length;
         if (controllersLength == 0) return false;
-        uint256 blockTimestamp = _blockTimestamp();
+
         unchecked {
             bytes32[] memory controllers = document.controllers;
             for (uint256 i; i < controllersLength; ++i) {
-                DidDocument storage docController = $.didList[controllers[i]];
-                bytes32 vMethodId = docController.vMethodIdOfAddress[
-                    controller
-                ];
-                if (!docController.capabilityInvocationMethodIdExist[vMethodId])
-                    continue;
-
-                uint256 methodIndex = docController
-                    .capabilityInvocationMethodIdIndex[vMethodId];
-                IDidDocumentDetailed.VRelationship memory vRel = docController
-                    .capabilityInvocations[methodIndex];
                 if (
-                    blockTimestamp > vRel.notBefore &&
-                    vRel.notAfter > blockTimestamp
-                ) return true;
+                    _hasActiveCapabilityInvocation(
+                        $.didList[controllers[i]],
+                        controller
+                    )
+                ) {
+                    return true;
+                }
             }
         }
         return false;
@@ -622,6 +656,50 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
         return !_isController(_did, _controller);
     }
 
+    /**
+     * @notice Checks if an address is registered in the DID registry with active capability invocation
+     * @dev Performs O(1) lookup and validates:
+     *      - Address is mapped to a DID
+     *      - Verification method exists and is not revoked
+     *      - Capability invocation relationship exists and is temporally valid
+     * @param _address The Ethereum address to check
+     * @return bool True if address is known with active capability invocation, false otherwise
+     */
+    function _isKnownDid(address _address) internal view returns (bool) {
+        // 1. Check address is mapped to a DID
+        bytes32 did = _getDidFromAddress(_address);
+        if (!_isNotEmptyBytes32(did)) return false;
+
+        // 2. Get DID document and validate capability invocation
+        return
+            _hasActiveCapabilityInvocation(
+                _didDocumentsStorage().didList[did],
+                _address
+            );
+    }
+
+    /**
+     * @notice Gets the DID associated with an address
+     * @param _address The address to lookup
+     * @return bytes32 The DID associated with the address
+     */
+    function _getDidFromAddress(
+        address _address
+    ) internal view returns (bytes32) {
+        return _didDocumentsStorage().invocationAddressToDid[_address];
+    }
+
+    /**
+     * @notice Gets the alsoKnownAs field from a DID document
+     * @param _did The DID to lookup
+     * @return string memory The alsoKnownAs value
+     */
+    function _getAlsoKnownAs(
+        bytes32 _did
+    ) internal view returns (string memory) {
+        return _didDocumentsStorage().didList[_did].alsoKnownAs;
+    }
+
     function _checkEmptyVerificationRelationship(
         bytes32 _did,
         string memory _name,
@@ -638,6 +716,31 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
                 _name,
                 _vMethodId
             )
+        );
+    }
+
+    /**
+     * @notice Validates cryptographic proof of ownership for a DID
+     * @dev Validates that the signature (proof) was created by the private key corresponding
+     *      to the provided public key. Currently only supports secp256k1 (standard ECDSA).
+     *      Elliptic curve type validation is performed by modifiers before this function.
+     * @param _proof The signature proving ownership (65 bytes for ECDSA)
+     * @param _publicKey The public key to validate against
+     */
+    function _validateProof(
+        bytes memory _proof,
+        bytes memory _publicKey
+    ) internal pure {
+        // Recover signer address from signature
+        address recoveredSigner = _recoverSigner(
+            keccak256(abi.encodePacked(_publicKey)),
+            _proof
+        );
+
+        // Validate that recovered signer matches the public key owner
+        require(
+            recoveredSigner == _getAddress(_publicKey),
+            InvalidSignature(recoveredSigner)
         );
     }
 
@@ -746,8 +849,11 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
         IDidDocumentDetailed.VMethod storage vMethod = document.vMethods[
             _vMethodId
         ];
-        if (vMethod.ellipticType == _networkEllipticType)
-            delete document.vMethodIdOfAddress[_getAddress(vMethod.publicKey)];
+        if (vMethod.ellipticType == _networkEllipticType) {
+            address addr = _getAddress(vMethod.publicKey);
+            delete document.vMethodIdOfAddress[addr];
+            delete _didDocumentsStorage().invocationAddressToDid[addr];
+        }
     }
 
     function _isEmptyVerificationRelationship(
@@ -761,6 +867,40 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
                 : _document.vRelationshipsNameAndMethodIdTuple[
                     _buildAuthenticationKey(_name, _vMethodId)
                 ];
+    }
+
+    /**
+     * @notice Validates if an address has active and valid capability invocation on a DID document
+     * @dev Checks capability invocation existence and temporal validity
+     * @dev Note: Revocation check is not needed here because _cleanupAddressMappingIfNeeded
+     *      removes the vMethodIdOfAddress mapping when a vMethod is revoked, making the
+     *      first check (!_isNotEmptyBytes32) catch revoked vMethods automatically
+     * @param _document The DID document to check against
+     * @param _address The address to validate
+     * @return bool True if address has active capability invocation, false otherwise
+     */
+    function _hasActiveCapabilityInvocation(
+        DidDocument storage _document,
+        address _address
+    ) private view returns (bool) {
+        // 1. Get vMethodId from address
+        bytes32 vMethodId = _document.vMethodIdOfAddress[_address];
+        if (
+            !_isNotEmptyBytes32(vMethodId) ||
+            !_document.capabilityInvocationMethodIdExist[vMethodId]
+        ) return false;
+
+        // 2. Check temporal validity
+        uint256 capIndex = _document.capabilityInvocationMethodIdIndex[
+            vMethodId
+        ];
+        IDidDocumentDetailed.VRelationship memory capInvocation = _document
+            .capabilityInvocations[capIndex];
+        uint256 blockTimestamp = _blockTimestamp();
+
+        return
+            blockTimestamp >= capInvocation.notBefore &&
+            blockTimestamp < capInvocation.notAfter;
     }
 
     function _checkRollArgs(

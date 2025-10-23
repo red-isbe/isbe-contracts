@@ -275,6 +275,12 @@ elliptic curve types for enhanced cryptographic flexibility and interoperability
 function initializeDiDRegistry(enum IDidDocumentDetailed.EllipticType _ellipticType) external
 ```
 
+### insertFirstDidDocument
+
+```solidity
+function insertFirstDidDocument(bytes32 _did, string _baseDocument, bytes32 _vMethodId, bytes _proof, bytes _publicKey, enum IDidDocumentDetailed.EllipticType _ellipticType, uint256 _notBefore, uint256 _notAfter, string _alsoKnownAs) external returns (bool)
+```
+
 ### insertDidDocument
 
 ```solidity
@@ -305,6 +311,12 @@ and relationships. Requires appropriate authorisation to prevent unauthorised ch
 | ---- | ---- | ----------- |
 | [0]  | bool |             |
 
+### updateAlsoKnownAs
+
+```solidity
+function updateAlsoKnownAs(bytes32 _did, string _alsoKnownAs) external returns (bool)
+```
+
 ### getDids
 
 ```solidity
@@ -314,13 +326,13 @@ function getDids(uint256 _page, uint256 _pageSize) external view returns (bytes3
 ### getDidDocument
 
 ```solidity
-function getDidDocument(bytes32 _did) external view returns (string baseDocument_, bytes32[] controllers_, bytes32[] vMethodIds_, struct IDidDocumentDetailed.VMethod[] vMethods_, struct IDidDocumentDetailed.VRelationship[] vRelationships_)
+function getDidDocument(bytes32 _did) external view returns (string baseDocument_, string alsoKnownAs_, bytes32[] controllers_, bytes32[] vMethodIds_, struct IDidDocumentDetailed.VMethod[] vMethods_, struct IDidDocumentDetailed.VRelationship[] vRelationships_)
 ```
 
 ### getDidDocumentByTimestamp
 
 ```solidity
-function getDidDocumentByTimestamp(bytes32 _did, uint256 _timestamp) external view returns (string baseDocument_, bytes32[] controllers_, bytes32[] vMethodIds_, struct IDidDocumentDetailed.VMethod[] vMethods_, struct IDidDocumentDetailed.VRelationship[] vRelationships_)
+function getDidDocumentByTimestamp(bytes32 _did, uint256 _timestamp) external view returns (string baseDocument_, string alsoKnownAs_, bytes32[] controllers_, bytes32[] vMethodIds_, struct IDidDocumentDetailed.VMethod[] vMethods_, struct IDidDocumentDetailed.VRelationship[] vRelationships_)
 ```
 
 ---
@@ -411,6 +423,7 @@ Complete DID document structure with verification methods and relationships
 ```solidity
 struct DidDocument {
   string baseDocument;
+  string alsoKnownAs;
   bytes32[] controllers;
   mapping(bytes32 => bool) controllerExist;
   mapping(bytes32 => struct IDidDocumentDetailed.VMethod) vMethods;
@@ -491,6 +504,20 @@ modifier validateRollArgs(struct IDidVerificationMethod.RollArgs _args)
 modifier onlyGoodRollArgs(struct IDidVerificationMethod.RollArgs _args)
 ```
 
+### onlyKnownDid
+
+```solidity
+modifier onlyKnownDid(address _address)
+```
+
+Validates that an address is registered in the DID registry with active capability invocation
+
+#### Parameters
+
+| Name      | Type    | Description                      |
+| --------- | ------- | -------------------------------- |
+| \_address | address | The Ethereum address to validate |
+
 ### \_setEllipticType
 
 ```solidity
@@ -500,7 +527,7 @@ function _setEllipticType(enum IDidDocumentDetailed.EllipticType _ellipticType) 
 ### \_insertDidDocument
 
 ```solidity
-function _insertDidDocument(bytes32 _did, string _baseDocument, bytes32 _vMethodId, bytes _publicKey, enum IDidDocumentDetailed.EllipticType _ellipticType, uint256 _notBefore, uint256 _notAfter) internal returns (bool)
+function _insertDidDocument(bytes32 _did, string _baseDocument, bytes32 _vMethodId, bytes _publicKey, enum IDidDocumentDetailed.EllipticType _ellipticType, uint256 _notBefore, uint256 _notAfter, string _alsoKnownAs) internal returns (bool)
 ```
 
 ### \_addVerificationRelationshipToDocument
@@ -563,6 +590,12 @@ function _rollCapabilityInvocation(struct DidDocumentDetailedInternal.DidDocumen
 function _updateBaseDocument(bytes32 _did, string baseDocument) internal returns (bool)
 ```
 
+### \_updateAlsoKnownAs
+
+```solidity
+function _updateAlsoKnownAs(bytes32 _did, string _alsoKnownAs) internal returns (bool)
+```
+
 ### \_getDids
 
 ```solidity
@@ -572,13 +605,13 @@ function _getDids(uint256 _page, uint256 _pageSize) internal view returns (bytes
 ### \_getDidDocument
 
 ```solidity
-function _getDidDocument(bytes32 _did) internal view returns (string baseDocument_, bytes32[] controllers_, bytes32[] vMethodIds_, struct IDidDocumentDetailed.VMethod[] vMethods_, struct IDidDocumentDetailed.VRelationship[] vRelationships_)
+function _getDidDocument(bytes32 _did) internal view returns (string baseDocument_, string alsoKnownAs_, bytes32[] controllers_, bytes32[] vMethodIds_, struct IDidDocumentDetailed.VMethod[] vMethods_, struct IDidDocumentDetailed.VRelationship[] vRelationships_)
 ```
 
 ### \_getDidDocumentByTimestamp
 
 ```solidity
-function _getDidDocumentByTimestamp(bytes32 _did, uint256 _timestamp) internal view returns (string baseDocument_, bytes32[] controllers_, bytes32[] vMethodIds_, struct IDidDocumentDetailed.VMethod[] vMethods_, struct IDidDocumentDetailed.VRelationship[] vRelationships_)
+function _getDidDocumentByTimestamp(bytes32 _did, uint256 _timestamp) internal view returns (string baseDocument_, string alsoKnownAs_, bytes32[] controllers_, bytes32[] vMethodIds_, struct IDidDocumentDetailed.VMethod[] vMethods_, struct IDidDocumentDetailed.VRelationship[] vRelationships_)
 ```
 
 ### \_checkEllipticType
@@ -622,6 +655,20 @@ function _checkVMethodNotRevoked(bytes32 _did, bytes32 _vMethodId) internal view
 ```solidity
 function _checkPublicKeyNotAssigned(bytes32 _did, bytes _publicKey, enum IDidDocumentDetailed.EllipticType _ellipticType) internal view
 ```
+
+### \_checkKnownDid
+
+```solidity
+function _checkKnownDid(address _address) internal view
+```
+
+Validates that an address is known in the DID registry with active capability invocation
+
+#### Parameters
+
+| Name      | Type    | Description             |
+| --------- | ------- | ----------------------- |
+| \_address | address | The address to validate |
 
 ### \_notExistDid
 
@@ -671,11 +718,92 @@ function _isController(bytes32 _did, bytes32 _controller) internal view returns 
 function _isNotController(bytes32 _did, bytes32 _controller) internal view returns (bool)
 ```
 
+### \_isKnownDid
+
+```solidity
+function _isKnownDid(address _address) internal view returns (bool)
+```
+
+Checks if an address is registered in the DID registry with active capability invocation
+
+_Performs O(1) lookup and validates: - Address is mapped to a DID - Verification method exists and is not revoked - Capability invocation relationship exists and is temporally valid_
+
+#### Parameters
+
+| Name      | Type    | Description                   |
+| --------- | ------- | ----------------------------- |
+| \_address | address | The Ethereum address to check |
+
+#### Return Values
+
+| Name | Type | Description                                                                      |
+| ---- | ---- | -------------------------------------------------------------------------------- |
+| [0]  | bool | bool True if address is known with active capability invocation, false otherwise |
+
+### \_getDidFromAddress
+
+```solidity
+function _getDidFromAddress(address _address) internal view returns (bytes32)
+```
+
+Gets the DID associated with an address
+
+#### Parameters
+
+| Name      | Type    | Description           |
+| --------- | ------- | --------------------- |
+| \_address | address | The address to lookup |
+
+#### Return Values
+
+| Name | Type    | Description                                 |
+| ---- | ------- | ------------------------------------------- |
+| [0]  | bytes32 | bytes32 The DID associated with the address |
+
+### \_getAlsoKnownAs
+
+```solidity
+function _getAlsoKnownAs(bytes32 _did) internal view returns (string)
+```
+
+Gets the alsoKnownAs field from a DID document
+
+#### Parameters
+
+| Name  | Type    | Description       |
+| ----- | ------- | ----------------- |
+| \_did | bytes32 | The DID to lookup |
+
+#### Return Values
+
+| Name | Type   | Description                         |
+| ---- | ------ | ----------------------------------- |
+| [0]  | string | string memory The alsoKnownAs value |
+
 ### \_checkEmptyVerificationRelationship
 
 ```solidity
 function _checkEmptyVerificationRelationship(bytes32 _did, string _name, bytes32 _vMethodId) internal view
 ```
+
+### \_validateProof
+
+```solidity
+function _validateProof(bytes _proof, bytes _publicKey) internal pure
+```
+
+Validates cryptographic proof of ownership for a DID
+
+_Validates that the signature (proof) was created by the private key corresponding
+to the provided public key. Currently only supports secp256k1 (standard ECDSA).
+Elliptic curve type validation is performed by modifiers before this function._
+
+#### Parameters
+
+| Name        | Type  | Description                                          |
+| ----------- | ----- | ---------------------------------------------------- |
+| \_proof     | bytes | The signature proving ownership (65 bytes for ECDSA) |
+| \_publicKey | bytes | The public key to validate against                   |
 
 ---
 

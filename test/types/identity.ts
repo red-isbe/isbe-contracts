@@ -39,12 +39,14 @@ export interface ExpectedDidDocument {
 // Tipos para los resultados que devuelve el contrato
 export type ContractDidDocumentResult = [
     string, // baseDocument
+    string, // alsoKnownAs
     string[], // controllers
     string[], // vMethodIds
     IDidDocumentDetailed.VMethodStructOutput[], // vMethods
     IDidDocumentDetailed.VRelationshipStructOutput[], // vRelationships
 ] & {
     baseDocument: string
+    alsoKnownAs: string
     controllers: string[]
     vMethodIds: string[]
     vMethods: IDidDocumentDetailed.VMethodStructOutput[]

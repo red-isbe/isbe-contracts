@@ -241,101 +241,101 @@ struct TsrRecord {
   mapping(address => uint256) private \_nonces;
   TsrData[] private \_stampedList;
 
-                                                                      struct TsrRecord {
-                                                                          TsrData data;
-                                                                          address authority;  // msg.sender
-                                                                          address requester;  // msg.sender or SignedTsrData.sender
-                                                                          uint256 timestamp;
-                                                                      }
+                                                                                          struct TsrRecord {
+                                                                                              TsrData data;
+                                                                                              address authority;  // msg.sender
+                                                                                              address requester;  // msg.sender or SignedTsrData.sender
+                                                                                              uint256 timestamp;
+                                                                                          }
 
-                                                                      constructor() EIP712('TimeStampingRegistry', '1') {}
+                                                                                          constructor() EIP712('TimeStampingRegistry', '1') {}
 
-                                                                      /* ---------- mutators ---------- */
-                                                                      function stamp(bytes32 originalHash, bytes32 tsaHash, bytes32 externalRefId) external override {
-                                                                          _store(originalHash, tsaHash, externalRefId, msg.sender, msg.sender);
-                                                                      }
+                                                                                          /* ---------- mutators ---------- */
+                                                                                          function stamp(bytes32 originalHash, bytes32 tsaHash, bytes32 externalRefId) external override {
+                                                                                              _store(originalHash, tsaHash, externalRefId, msg.sender, msg.sender);
+                                                                                          }
 
-                                                                      function stampWithSignature(
-                                                                          SignedTsrData calldata tsd,
-                                                                          bytes calldata sig
-                                                                      ) external override {
-                                                                          address signer = _hashTypedDataV4(
-                                                                              keccak256(
-                                                                                  abi.encode(
-                                                                                      keccak256('SignedTsrData(TsrData tsrData,address sender,uint256 nonce,uint256 expirationTimestamp)'),
-                                                                                      keccak256(
-                                                                                              tsd.tsrData.originalHash,
-                                                                                              tsd.tsrData.tsaHash,
-                                                                                              tsd.tsrData.externalReferenceId
-                                                                                          )
-                                                                                      ),
-                                                                                      tsd.sender,
-                                                                                      tsd.nonce,
-                                                                                      tsd.expirationTimestamp
-                                                                                  )
-                                                                              )
-                                                                          ).recover(sig);
+                                                                                          function stampWithSignature(
+                                                                                              SignedTsrData calldata tsd,
+                                                                                              bytes calldata sig
+                                                                                          ) external override {
+                                                                                              address signer = _hashTypedDataV4(
+                                                                                                  keccak256(
+                                                                                                      abi.encode(
+                                                                                                          keccak256('SignedTsrData(TsrData tsrData,address sender,uint256 nonce,uint256 expirationTimestamp)'),
+                                                                                                          keccak256(
+                                                                                                                  tsd.tsrData.originalHash,
+                                                                                                                  tsd.tsrData.tsaHash,
+                                                                                                                  tsd.tsrData.externalReferenceId
+                                                                                                              )
+                                                                                                          ),
+                                                                                                          tsd.sender,
+                                                                                                          tsd.nonce,
+                                                                                                          tsd.expirationTimestamp
+                                                                                                      )
+                                                                                                  )
+                                                                                              ).recover(sig);
 
-                                                                          require(signer == tsd.sender, 'Invalid sig');
-                                                                          require(_nonces[tsd.sender] < tsd.nonce, 'Bad nonce');
-                                                                          require(block.timestamp <= tsd.expirationTimestamp, 'Expired');
+                                                                                              require(signer == tsd.sender, 'Invalid sig');
+                                                                                              require(_nonces[tsd.sender] < tsd.nonce, 'Bad nonce');
+                                                                                              require(block.timestamp <= tsd.expirationTimestamp, 'Expired');
 
-                                                                          _nonces[tsd.sender] = tsd.nonce;
-                                                                          _store(tsd.tsrData.originalHash, tsd.tsrData.tsaHash, tsd.tsrData.externalReferenceId, msg.sender, tsd.sender);
-                                                                      }
+                                                                                              _nonces[tsd.sender] = tsd.nonce;
+                                                                                              _store(tsd.tsrData.originalHash, tsd.tsrData.tsaHash, tsd.tsrData.externalReferenceId, msg.sender, tsd.sender);
+                                                                                          }
 
-                                                                      /* ---------- views ---------- */
-                                                                      function isOriginalHashRegistered(bytes32 originalHash) external view override returns (bool) {
-                                                                          return _exists[originalHash ^ ORIGINAL_HASH_MASK];
-                                                                      }
-                                                                      function isExternalReferenceIdRegistered(bytes32 externalReferenceId) external view override returns (bool) {
-                                                                          return _exists[externalReferenceId ^ EXTERNAL_REF_MASK];
-                                                                      }
-                                                                      function isTsaHashRegistered(bytes32 tsaHash) external view override returns (bool) {
-                                                                          return _exists[tsaHash ^ TSA_HASH_MASK];
-                                                                      }
-                                                                      function getTsrRecordFromOriginalHash(bytes32 originalHash)
-                                                                          external view override
-                                                                          returns (TsrData memory tsrData, address authority, address requester) {
-                                                                          TsrRecord memory record = _records[originalHash];
-                                                                          return (record.data, record.authority, record.requester);
-                                                                      }
-                                                                      function getTsrRecordFromExternalReferenceId(bytes32 externalReferenceId)
-                                                                          external view override
-                                                                          returns (TsrData memory tsrData, address authority, address requester) {
-                                                                          bytes32 originalHash = _refToOriginalHash[externalReferenceId];
-                                                                          return getTsrRecordFromOriginalHash(originalHash);
-                                                                      }
-                                                                      function getStampedSize() external view override returns (uint256) {
-                                                                          return _stampedList.length;
-                                                                      }
-                                                                      function getPaginatedStamped(uint256 pageSize, uint256 pageIndex)
-                                                                          external view override returns (TsrData[] memory datas) {
-                                                                          uint256 start = pageIndex * pageSize;
-                                                                          uint256 end = start + pageSize > _stampedList.length ? _stampedList.length : start + pageSize;
-                                                                          datas = new TsrData[](end - start);
-                                                                          for (uint256 i = start; i < end; ++i) {
-                                                                              datas[i - start] = _stampedList[i];
-                                                                          }
-                                                                      }
+                                                                                          /* ---------- views ---------- */
+                                                                                          function isOriginalHashRegistered(bytes32 originalHash) external view override returns (bool) {
+                                                                                              return _exists[originalHash ^ ORIGINAL_HASH_MASK];
+                                                                                          }
+                                                                                          function isExternalReferenceIdRegistered(bytes32 externalReferenceId) external view override returns (bool) {
+                                                                                              return _exists[externalReferenceId ^ EXTERNAL_REF_MASK];
+                                                                                          }
+                                                                                          function isTsaHashRegistered(bytes32 tsaHash) external view override returns (bool) {
+                                                                                              return _exists[tsaHash ^ TSA_HASH_MASK];
+                                                                                          }
+                                                                                          function getTsrRecordFromOriginalHash(bytes32 originalHash)
+                                                                                              external view override
+                                                                                              returns (TsrData memory tsrData, address authority, address requester) {
+                                                                                              TsrRecord memory record = _records[originalHash];
+                                                                                              return (record.data, record.authority, record.requester);
+                                                                                          }
+                                                                                          function getTsrRecordFromExternalReferenceId(bytes32 externalReferenceId)
+                                                                                              external view override
+                                                                                              returns (TsrData memory tsrData, address authority, address requester) {
+                                                                                              bytes32 originalHash = _refToOriginalHash[externalReferenceId];
+                                                                                              return getTsrRecordFromOriginalHash(originalHash);
+                                                                                          }
+                                                                                          function getStampedSize() external view override returns (uint256) {
+                                                                                              return _stampedList.length;
+                                                                                          }
+                                                                                          function getPaginatedStamped(uint256 pageSize, uint256 pageIndex)
+                                                                                              external view override returns (TsrData[] memory datas) {
+                                                                                              uint256 start = pageIndex * pageSize;
+                                                                                              uint256 end = start + pageSize > _stampedList.length ? _stampedList.length : start + pageSize;
+                                                                                              datas = new TsrData[](end - start);
+                                                                                              for (uint256 i = start; i < end; ++i) {
+                                                                                                  datas[i - start] = _stampedList[i];
+                                                                                              }
+                                                                                          }
 
-                                                                      /* ---------- internal ---------- */
-                                                                      function _store(bytes32 originalHash, bytes32 tsaHash, bytes32 externalRefId, address authority, address requester) internal {
-                                                                          require(!_exists[originalHash ^ ORIGINAL_HASH_MASK], 'Original hash exists');
-                                                                          require(!_exists[tsaHash ^ TSA_HASH_MASK], 'TSA hash exists');
-                                                                          require(!_exists[externalRefId ^ EXTERNAL_REF_MASK], 'External ref exists');
+                                                                                          /* ---------- internal ---------- */
+                                                                                          function _store(bytes32 originalHash, bytes32 tsaHash, bytes32 externalRefId, address authority, address requester) internal {
+                                                                                              require(!_exists[originalHash ^ ORIGINAL_HASH_MASK], 'Original hash exists');
+                                                                                              require(!_exists[tsaHash ^ TSA_HASH_MASK], 'TSA hash exists');
+                                                                                              require(!_exists[externalRefId ^ EXTERNAL_REF_MASK], 'External ref exists');
 
-                                                                          _exists[originalHash ^ ORIGINAL_HASH_MASK] = true;
-                                                                          _exists[tsaHash ^ TSA_HASH_MASK] = true;
-                                                                          _exists[externalRefId ^ EXTERNAL_REF_MASK] = true;
+                                                                                              _exists[originalHash ^ ORIGINAL_HASH_MASK] = true;
+                                                                                              _exists[tsaHash ^ TSA_HASH_MASK] = true;
+                                                                                              _exists[externalRefId ^ EXTERNAL_REF_MASK] = true;
 
-                                                                          TsrData memory data = TsrData(originalHash, tsaHash, externalRefId);
-                                                                          _records[originalHash] = TsrRecord(data, authority, requester, block.timestamp);
-                                                                          _refToOriginalHash[externalRefId] = originalHash;
-                                                                          _stampedList.push(data);
+                                                                                              TsrData memory data = TsrData(originalHash, tsaHash, externalRefId);
+                                                                                              _records[originalHash] = TsrRecord(data, authority, requester, block.timestamp);
+                                                                                              _refToOriginalHash[externalRefId] = originalHash;
+                                                                                              _stampedList.push(data);
 
-                                                                          emit Stamped(originalHash, tsaHash, externalRefId);
-                                                                      }
+                                                                                              emit Stamped(originalHash, tsaHash, externalRefId);
+                                                                                          }
 
     }
 
