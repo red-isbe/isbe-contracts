@@ -768,6 +768,24 @@ Raised when the notAfter timestamp is invalid for the requested operation
 _This error ensures temporal validity constraints are met for verification
 method lifecycle operations such as expiration, revocation, or rollover_
 
+### NewVMethodMustMatchNetworkEllipticType
+
+```solidity
+error NewVMethodMustMatchNetworkEllipticType(bytes32 vMethodId)
+```
+
+Raised when rolling a verification method with capabilityInvocation
+to a different elliptic type than the network
+
+_This error prevents incomplete key rotation where the capabilityInvocation
+relationship cannot be created due to elliptic type mismatch with network_
+
+#### Parameters
+
+| Name      | Type    | Description                                          |
+| --------- | ------- | ---------------------------------------------------- |
+| vMethodId | bytes32 | The new verification method identifier being created |
+
 ### addVerificationMethod
 
 ```solidity

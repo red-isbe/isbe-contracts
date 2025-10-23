@@ -195,6 +195,33 @@ async function expectInsertDocumentToFail(
     ).to.be.revertedWithCustomError(didDocumentDetailedFacet, expectedError)
 }
 
+// --- Assertion Helpers ---
+/**
+ * Helper function to test insert document with invalid parameters
+ */
+async function expectInsertDocumentToFail(
+    did: string | typeof ZeroHash,
+    baseDoc: string,
+    vMethodId: string,
+    publicKey: string | Uint8Array,
+    ellipticType: EllipticType,
+    notBefore: bigint | number,
+    notAfter: bigint | number,
+    expectedError: string
+): Promise<void> {
+    await expect(
+        didRegistry.insertDidDocument(
+            did,
+            baseDoc,
+            vMethodId,
+            publicKey,
+            ellipticType,
+            notBefore,
+            notAfter
+        )
+    ).to.be.revertedWithCustomError(didDocumentDetailedFacet, expectedError)
+}
+
 /**
  * Helper function to build and verify a basic DID document with single vMethod and relationships
  */
@@ -1366,46 +1393,16 @@ describe('DiDRegistry', function () {
                     true
                 )
             })
-            it('GIVEN an inserted document WHEN try to roll V.M. of different elliptic type than NW THEN it success', async () => {
+            it('GIVEN an inserted document WHEN try to roll V.M. of different elliptic type than NW THEN it fails', async () => {
+                // NOTE: This test now fails because the oldVMethodId has capabilityInvocation relationship
+                // and the new elliptic type doesn't match the network elliptic type
                 rollArgs.ellipticType = EllipticType.SECP_256_R1
-                expect(await didRegistry.rollVerificationMethod(rollArgs))
-                    .to.emit(
+                await expect(didRegistry.rollVerificationMethod(rollArgs))
+                    .to.be.revertedWithCustomError(
                         didVerificationMethodFacet,
-                        'VerificationMethodRolled'
+                        'NewVMethodMustMatchNetworkEllipticType'
                     )
-                    .withArgs(Object.values(rollArgs))
-
-                // Before roll activation: neither wallet is controller yet
-                await expectControllerStatus(
-                    did,
-                    await wallet.getAddress(),
-                    false
-                )
-                await expectControllerStatus(
-                    did,
-                    await rolledWallet.getAddress(),
-                    false
-                )
-
-                // Verify rolled document structure with different elliptic type
-                await verifyRolledDocument(
-                    did,
-                    rollArgs,
-                    EllipticType.SECP_256_K1,
-                    EllipticType.SECP_256_R1
-                )
-
-                // After roll activation with different elliptic: neither is controller
-                await expectControllerStatus(
-                    did,
-                    await wallet.getAddress(),
-                    false
-                )
-                await expectControllerStatus(
-                    did,
-                    await rolledWallet.getAddress(),
-                    false
-                )
+                    .withArgs(rollArgs.vMethodId)
             })
             it('GIVEN an inserted document WHEN try to roll V.M. recently added THEN it success', async () => {
                 const newVMethodId = TestConstants.randomDid()
@@ -1490,6 +1487,22 @@ describe('DiDRegistry', function () {
                         'VerificationMethodIsRevoked'
                     )
                     .withArgs(did, revokedVMethodId)
+            })
+
+            it('GIVEN a vMethod with capabilityInvocation WHEN try to roll with different elliptic type than network THEN it fails', async () => {
+                // GIVEN: The initial document has a vMethod with capabilityInvocation (created during insertDidDocument)
+                // The oldVMethodId has capabilityInvocation relationship and elliptic type SECP_256_K1 (same as network)
+
+                // WHEN: Try to roll to a different elliptic type (SECP_256_R1) than the network (SECP_256_K1)
+                rollArgs.ellipticType = EllipticType.SECP_256_R1
+
+                // THEN: Should fail because oldVMethodId has capabilityInvocation and new elliptic type doesn't match network
+                await expect(didRegistry.rollVerificationMethod(rollArgs))
+                    .to.be.revertedWithCustomError(
+                        didVerificationMethodFacet,
+                        'NewVMethodMustMatchNetworkEllipticType'
+                    )
+                    .withArgs(rollArgs.vMethodId)
             })
         })
 

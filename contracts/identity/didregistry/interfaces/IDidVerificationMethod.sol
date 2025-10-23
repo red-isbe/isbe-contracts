@@ -130,6 +130,15 @@ interface IDidVerificationMethod {
     error InvalidNotAfter();
 
     /**
+     * @notice Raised when rolling a verification method with capabilityInvocation
+     *         to a different elliptic type than the network
+     * @dev This error prevents incomplete key rotation where the capabilityInvocation
+     *      relationship cannot be created due to elliptic type mismatch with network
+     * @param vMethodId The new verification method identifier being created
+     */
+    error NewVMethodMustMatchNetworkEllipticType(bytes32 vMethodId);
+
+    /**
      * @notice Adds a new verification method to the specified decentralised identifier
      * @dev Creates a new cryptographic verification method with the provided key material
      *      and associates it with the DID document for authentication purposes

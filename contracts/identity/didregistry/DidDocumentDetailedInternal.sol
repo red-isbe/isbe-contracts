@@ -277,6 +277,18 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
     ) internal returns (bool) {
         DidDocumentsStorage storage $ = _didDocumentsStorage();
         DidDocument storage document = $.didList[_args.did];
+
+        // Check if oldVMethodId has capabilityInvocation relationship
+        // If so, new ellipticType must match network ellipticType
+        if (document.capabilityInvocationMethodIdExist[_args.oldVMethodId]) {
+            require(
+                _args.ellipticType == $.networkEllipticType,
+                IDidVerificationMethod.NewVMethodMustMatchNetworkEllipticType(
+                    _args.vMethodId
+                )
+            );
+        }
+
         _addVerificationMethod(
             _args.did,
             _args.vMethodId,
