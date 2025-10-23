@@ -163,9 +163,7 @@ abstract contract ERC3643Recovery is IERC3643Recovery, ERC203643InternalCommon {
         address _lostWallet
     ) internal view returns (uint256 balance) {
         balance = _balanceOf(_lostWallet);
-        if (balance == 0) {
-            revert IERC3643Recovery.NoTokensToRecover();
-        }
+        require(balance != 0, IERC3643Recovery.NoTokensToRecover());
     }
 
     /**
