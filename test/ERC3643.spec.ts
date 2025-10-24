@@ -933,6 +933,156 @@ describe('ERC3643 Token', function () {
             })
         })
 
+        describe('batchSetAddressFrozen', () => {
+            let bob: Signer
+            let charlie: Signer
+            let bobAddress: string
+            let charlieAddress: string
+
+            beforeEach(async () => {
+                const fixture = async () => {
+                    const signers = await ethers.getSigners()
+                    bob = signers[2] as unknown as Signer
+                    charlie = signers[3] as unknown as Signer
+                    bobAddress = await bob.getAddress()
+                    charlieAddress = await charlie.getAddress()
+                }
+                await loadFixture(fixture)
+            })
+
+            it('GIVEN no FREEZE_ROLE WHEN batchSetAddressFrozen THEN reverts', async () => {
+                await accessControlFacet
+                    .connect(owner)
+                    .revokeRole(FREEZE_ROLE, ownerAddress)
+
+                await expect(
+                    erc3643
+                        .connect(owner)
+                        .batchSetAddressFrozen([aliceAddress], [true])
+                ).to.be.reverted
+            })
+
+            it('GIVEN contract paused WHEN batchSetAddressFrozen THEN reverts', async () => {
+                await accessControlFacet
+                    .connect(owner)
+                    .grantRole(PAUSER_ROLE, ownerAddress)
+                await pauseFacet.connect(owner).pause()
+
+                await expect(
+                    erc3643
+                        .connect(owner)
+                        .batchSetAddressFrozen([aliceAddress], [true])
+                ).to.be.reverted
+            })
+
+            it('GIVEN arrays length mismatch WHEN batchSetAddressFrozen THEN reverts', async () => {
+                const addresses = [aliceAddress, bobAddress]
+                const freezeStates = [true]
+                await expect(
+                    erc3643
+                        .connect(owner)
+                        .batchSetAddressFrozen(addresses, freezeStates)
+                ).to.be.revertedWithCustomError(
+                    erc20Facet,
+                    'NotSameLengthArray'
+                )
+            })
+
+            it('GIVEN empty arrays WHEN batchSetAddressFrozen THEN succeeds without operations', async () => {
+                await expect(
+                    erc3643.connect(owner).batchSetAddressFrozen([], [])
+                ).to.not.be.reverted
+            })
+
+            it('GIVEN valid batch WHEN batchSetAddressFrozen THEN succeeds and emits multiple AddressFrozen events', async () => {
+                const addresses = [aliceAddress, bobAddress, charlieAddress]
+                const freezeStates = [true, false, true]
+
+                const tx = await erc3643
+                    .connect(owner)
+                    .batchSetAddressFrozen(addresses, freezeStates)
+
+                await expect(tx)
+                    .to.emit(erc3643, 'AddressFrozen')
+                    .withArgs(aliceAddress, true, ownerAddress)
+
+                await expect(tx)
+                    .to.emit(erc3643, 'AddressFrozen')
+                    .withArgs(bobAddress, false, ownerAddress)
+
+                await expect(tx)
+                    .to.emit(erc3643, 'AddressFrozen')
+                    .withArgs(charlieAddress, true, ownerAddress)
+
+                expect(await erc3643.isFrozen(aliceAddress)).to.equal(true)
+                expect(await erc3643.isFrozen(bobAddress)).to.equal(false)
+                expect(await erc3643.isFrozen(charlieAddress)).to.equal(true)
+            })
+
+            it('GIVEN large batch WHEN batchSetAddressFrozen THEN succeeds', async () => {
+                const batchSize = 50
+                const addresses = []
+                const freezeStates = []
+
+                for (let i = 0; i < batchSize; i++) {
+                    const wallet = ethers.Wallet.createRandom()
+                    addresses.push(wallet.address)
+                    freezeStates.push(i % 2 === 0) // Alternate true/false
+                }
+
+                await expect(
+                    erc3643
+                        .connect(owner)
+                        .batchSetAddressFrozen(addresses, freezeStates)
+                ).to.not.be.reverted
+            })
+
+            it('GIVEN already frozen addresses WHEN batchSetAddressFrozen with same state THEN succeeds and emits events', async () => {
+                // First freeze alice
+                await erc3643
+                    .connect(owner)
+                    .setAddressFrozen(aliceAddress, true)
+                expect(await erc3643.isFrozen(aliceAddress)).to.equal(true)
+
+                // Batch freeze alice again (already frozen)
+                const tx = await erc3643
+                    .connect(owner)
+                    .batchSetAddressFrozen([aliceAddress], [true])
+
+                await expect(tx)
+                    .to.emit(erc3643, 'AddressFrozen')
+                    .withArgs(aliceAddress, true, ownerAddress)
+
+                expect(await erc3643.isFrozen(aliceAddress)).to.equal(true)
+            })
+
+            it('GIVEN mixed frozen and unfrozen addresses WHEN batchSetAddressFrozen THEN updates all correctly', async () => {
+                // Setup: freeze alice, leave bob unfrozen
+                await erc3643
+                    .connect(owner)
+                    .setAddressFrozen(aliceAddress, true)
+
+                // Batch operation: unfreeze alice, freeze bob
+                const addresses = [aliceAddress, bobAddress]
+                const freezeStates = [false, true]
+
+                const tx = await erc3643
+                    .connect(owner)
+                    .batchSetAddressFrozen(addresses, freezeStates)
+
+                await expect(tx)
+                    .to.emit(erc3643, 'AddressFrozen')
+                    .withArgs(aliceAddress, false, ownerAddress)
+
+                await expect(tx)
+                    .to.emit(erc3643, 'AddressFrozen')
+                    .withArgs(bobAddress, true, ownerAddress)
+
+                expect(await erc3643.isFrozen(aliceAddress)).to.equal(false)
+                expect(await erc3643.isFrozen(bobAddress)).to.equal(true)
+            })
+        })
+
         describe('batchFreezePartialTokens', () => {
             let erc3643Capped: IERC203643Capped
             let bob: Signer
@@ -2731,6 +2881,217 @@ describe('ERC3643 Token', function () {
             })
 
             // ----------------------------------------------------------------
+            // batchMint
+            // ----------------------------------------------------------------
+            describe('batchMint', () => {
+                let bob: Signer
+                let charlie: Signer
+                let bobAddress: string
+                let charlieAddress: string
+
+                beforeEach(async () => {
+                    const fixture = async () => {
+                        const signers = await ethers.getSigners()
+                        bob = signers[2] as unknown as Signer
+                        charlie = signers[3] as unknown as Signer
+                        bobAddress = await bob.getAddress()
+                        charlieAddress = await charlie.getAddress()
+
+                        // Initialize cap
+                        await erc3643Capped
+                            .connect(owner)
+                            .initializeCap(initialCap)
+
+                        // Register bob and charlie as verified in ERC3643
+                        await identityRegistryMock.registerIdentity(
+                            bobAddress,
+                            tokenOnchainIDAddress,
+                            0
+                        )
+                        await identityRegistryMock.registerIdentity(
+                            charlieAddress,
+                            tokenOnchainIDAddress,
+                            0
+                        )
+                    }
+                    await loadFixture(fixture)
+                })
+
+                it('GIVEN no MINTER_ROLE WHEN batchMint THEN reverts', async () => {
+                    await accessControlFacet
+                        .connect(owner)
+                        .revokeRole(MINTER_ROLE, ownerAddress)
+
+                    await expect(
+                        erc3643Capped
+                            .connect(owner)
+                            .batchMint([aliceAddress], [100n])
+                    ).to.be.reverted
+                })
+
+                it('GIVEN contract paused WHEN batchMint THEN reverts', async () => {
+                    await accessControlFacet
+                        .connect(owner)
+                        .grantRole(PAUSER_ROLE, ownerAddress)
+                    await pauseFacet.connect(owner).pause()
+
+                    await expect(
+                        erc3643Capped
+                            .connect(owner)
+                            .batchMint([aliceAddress], [100n])
+                    ).to.be.reverted
+                })
+
+                it('GIVEN arrays length mismatch WHEN batchMint THEN reverts', async () => {
+                    const addresses = [aliceAddress, bobAddress]
+                    const amounts = [100n]
+                    await expect(
+                        erc3643Capped
+                            .connect(owner)
+                            .batchMint(addresses, amounts)
+                    ).to.be.revertedWithCustomError(
+                        erc20Facet,
+                        'NotSameLengthArray'
+                    )
+                })
+
+                it('GIVEN empty arrays WHEN batchMint THEN succeeds without operations', async () => {
+                    const initialSupply = await erc20Facet.totalSupply()
+
+                    await erc3643Capped.connect(owner).batchMint([], [])
+
+                    expect(await erc20Facet.totalSupply()).to.equal(
+                        initialSupply
+                    )
+                })
+
+                it('GIVEN valid batch WHEN batchMint THEN succeeds and emits multiple Transfer events', async () => {
+                    const addresses = [aliceAddress, bobAddress, charlieAddress]
+                    const amounts = [100n, 200n, 300n]
+
+                    const tx = await erc3643Capped
+                        .connect(owner)
+                        .batchMint(addresses, amounts)
+
+                    await expect(tx)
+                        .to.emit(erc20Facet, 'Transfer')
+                        .withArgs(ZeroAddress, aliceAddress, amounts[0])
+
+                    await expect(tx)
+                        .to.emit(erc20Facet, 'Transfer')
+                        .withArgs(ZeroAddress, bobAddress, amounts[1])
+
+                    await expect(tx)
+                        .to.emit(erc20Facet, 'Transfer')
+                        .withArgs(ZeroAddress, charlieAddress, amounts[2])
+
+                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                        amounts[0]
+                    )
+                    expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                        amounts[1]
+                    )
+                    expect(await erc20Facet.balanceOf(charlieAddress)).to.equal(
+                        amounts[2]
+                    )
+                    expect(await erc20Facet.totalSupply()).to.equal(600n)
+                })
+
+                it('GIVEN batch exceeds cap WHEN batchMint THEN reverts', async () => {
+                    const addresses = [aliceAddress, bobAddress]
+                    const amounts = [5000n, 6000n] // Total: 11000 > 10000 (cap)
+
+                    await expect(
+                        erc3643Capped
+                            .connect(owner)
+                            .batchMint(addresses, amounts)
+                    ).to.be.revertedWithCustomError(
+                        erc3643Capped,
+                        'CapExceeded'
+                    )
+                })
+
+                it('GIVEN large batch WHEN batchMint THEN succeeds', async () => {
+                    const batchSize = 50
+                    const addresses = []
+                    const amounts = []
+                    const amountPerAddress = 100n
+
+                    for (let i = 0; i < batchSize; i++) {
+                        const wallet = ethers.Wallet.createRandom()
+                        const walletAddress = wallet.address
+                        addresses.push(walletAddress)
+                        amounts.push(amountPerAddress)
+
+                        // Register each wallet in identity registry
+                        await identityRegistryMock.registerIdentity(
+                            walletAddress,
+                            tokenOnchainIDAddress,
+                            0
+                        )
+                    }
+
+                    await expect(
+                        erc3643Capped
+                            .connect(owner)
+                            .batchMint(addresses, amounts)
+                    ).to.not.be.reverted
+
+                    expect(await erc20Facet.totalSupply()).to.equal(
+                        amountPerAddress * BigInt(batchSize)
+                    )
+                })
+
+                it('GIVEN same address multiple times WHEN batchMint THEN mints to each independently', async () => {
+                    const amount1 = 100n
+                    const amount2 = 200n
+
+                    await erc3643Capped
+                        .connect(owner)
+                        .batchMint(
+                            [aliceAddress, aliceAddress],
+                            [amount1, amount2]
+                        )
+
+                    // Alice should receive both amounts: 100 + 200 = 300
+                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                        300n
+                    )
+                })
+
+                it('GIVEN zero amount WHEN batchMint THEN succeeds and emits Transfer', async () => {
+                    const tx = await erc3643Capped
+                        .connect(owner)
+                        .batchMint([aliceAddress], [0n])
+
+                    await expect(tx)
+                        .to.emit(erc20Facet, 'Transfer')
+                        .withArgs(ZeroAddress, aliceAddress, 0n)
+
+                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                        0n
+                    )
+                })
+
+                it('GIVEN partial batch within cap WHEN batchMint THEN succeeds', async () => {
+                    // First mint some tokens
+                    await erc3643Capped.connect(owner).mint(aliceAddress, 3000n)
+
+                    // Now batch mint more (total will be 3000 + 2000 + 3000 = 8000 < 10000)
+                    const addresses = [bobAddress, charlieAddress]
+                    const amounts = [2000n, 3000n]
+
+                    await expect(
+                        erc3643Capped
+                            .connect(owner)
+                            .batchMint(addresses, amounts)
+                    ).to.not.be.reverted
+
+                    expect(await erc20Facet.totalSupply()).to.equal(8000n)
+                })
+            })
+
+            // ----------------------------------------------------------------
             // setCap
             // ----------------------------------------------------------------
             describe('setCap', () => {
@@ -3505,461 +3866,584 @@ describe('ERC3643 Token', function () {
             })
         })
     })
-
     // ====================================================================
     // RECOVERY MODULE
-    // ====================================================================   
-    
-        // ====================================================================
-        // RECOVERY MODULE
-        // ====================================================================
-        describe('ERC3643 Recovery', () => {
-            describe('when not initialized', () => {
-                it('GIVEN ERC3643 not initialized WHEN recoveryAddress THEN reverts', async () => {
-                    const bobAddress = await (await ethers.getSigners())[2].getAddress()
-                    const charlieAddress = await (await ethers.getSigners())[3].getAddress()
-                    
+    // ====================================================================
+    describe('ERC3643 Recovery', () => {
+        describe('when not initialized', () => {
+            it('GIVEN ERC3643 not initialized WHEN recoveryAddress THEN reverts', async () => {
+                const bobAddress = await (
+                    await ethers.getSigners()
+                )[2].getAddress()
+                const charlieAddress = await (
+                    await ethers.getSigners()
+                )[3].getAddress()
+
+                await accessControlFacet
+                    .connect(owner)
+                    .grantRole(RECOVERY_ROLE, ownerAddress)
+
+                await expect(
+                    erc3643
+                        .connect(owner)
+                        .recoveryAddress(
+                            aliceAddress,
+                            bobAddress,
+                            charlieAddress
+                        )
+                ).to.be.reverted
+            })
+        })
+
+        describe('when initialized', () => {
+            beforeEach(async () => {
+                const fixture = async () => {
+                    // Grant necessary roles
+                    await accessControlFacet
+                        .connect(owner)
+                        .grantRole(METADATA_ROLE, ownerAddress)
+                    await accessControlFacet
+                        .connect(owner)
+                        .grantRole(REGULATORY_ROLE, ownerAddress)
                     await accessControlFacet
                         .connect(owner)
                         .grantRole(RECOVERY_ROLE, ownerAddress)
-                    
+                    await accessControlFacet
+                        .connect(owner)
+                        .grantRole(MINTER_ROLE, ownerAddress)
+                    await accessControlFacet
+                        .connect(owner)
+                        .grantRole(CAP_ROLE, ownerAddress)
+
+                    // Initialize ERC20
+                    await erc20Facet
+                        .connect(owner)
+                        .initializeErc20(tokenName, tokenSymbol, tokenDecimals)
+
+                    // Initialize ERC3643 Metadata
+                    await erc3643
+                        .connect(owner)
+                        .initializeERC3643Metadata(
+                            tokenOnchainIDAddress,
+                            version
+                        )
+
+                    // Initialize ERC3643 Regulatory (this enables ERC3643 mode)
+                    await erc3643
+                        .connect(owner)
+                        .initializeERC3643Regulatory(
+                            identityRegistryAddress,
+                            complianceAddress
+                        )
+
+                    // Get capped interface and initialize cap
+                    const erc3643Capped = (await ethers.getContractAt(
+                        'IERC203643Capped',
+                        proxyAddress
+                    )) as IERC203643Capped
+
+                    await erc3643Capped.connect(owner).initializeCap(10000n)
+
+                    // Set alice as verified investor with country code
+                    await identityRegistryMock.setIsVerified(aliceAddress, true)
+                    await identityRegistryMock.setInvestorCountry(
+                        aliceAddress,
+                        1
+                    ) // Country code 1 (e.g., USA)
+
+                    // Mint tokens to alice using the capped interface
+                    await erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
+                }
+                await loadFixture(fixture)
+            })
+
+            describe('Access Control', () => {
+                it('GIVEN no RECOVERY_ROLE WHEN recoveryAddress THEN reverts', async () => {
+                    const signers = await ethers.getSigners()
+                    const bob = signers[2]
+                    const charlie = signers[3]
+                    const bobAddress = await bob.getAddress()
+                    const charlieAddress = await charlie.getAddress()
+
+                    await expect(
+                        erc3643
+                            .connect(alice)
+                            .recoveryAddress(
+                                aliceAddress,
+                                bobAddress,
+                                charlieAddress
+                            )
+                    ).to.be.reverted
+                })
+
+                it('GIVEN RECOVERY_ROLE WHEN recoveryAddress THEN succeeds', async () => {
+                    const signers = await ethers.getSigners()
+                    const bob = signers[2]
+                    const charlie = signers[3]
+                    const bobAddress = await bob.getAddress()
+                    const charlieAddress = await charlie.getAddress()
+
+                    await identityRegistryMock.setIsVerified(bobAddress, true)
+
                     await expect(
                         erc3643
                             .connect(owner)
-                            .recoveryAddress(aliceAddress, bobAddress, charlieAddress)
+                            .recoveryAddress(
+                                aliceAddress,
+                                bobAddress,
+                                charlieAddress
+                            )
+                    )
+                        .to.emit(erc3643, 'RecoverySuccess')
+                        .withArgs(aliceAddress, bobAddress, charlieAddress)
+                })
+            })
+
+            describe('Input Validation', () => {
+                it('GIVEN zero lost wallet WHEN recoveryAddress THEN reverts with InvalidLostWallet', async () => {
+                    const signers = await ethers.getSigners()
+                    const bob = signers[2]
+                    const charlie = signers[3]
+                    const bobAddress = await bob.getAddress()
+                    const charlieAddress = await charlie.getAddress()
+
+                    await expect(
+                        erc3643
+                            .connect(owner)
+                            .recoveryAddress(
+                                ZeroAddress,
+                                bobAddress,
+                                charlieAddress
+                            )
+                    ).to.be.revertedWithCustomError(
+                        erc3643,
+                        'InvalidLostWallet'
+                    )
+                })
+
+                it('GIVEN zero new wallet WHEN recoveryAddress THEN reverts with InvalidNewWallet', async () => {
+                    const signers = await ethers.getSigners()
+                    const charlie = signers[3]
+                    const charlieAddress = await charlie.getAddress()
+
+                    await expect(
+                        erc3643
+                            .connect(owner)
+                            .recoveryAddress(
+                                aliceAddress,
+                                ZeroAddress,
+                                charlieAddress
+                            )
+                    ).to.be.revertedWithCustomError(erc3643, 'InvalidNewWallet')
+                })
+
+                it('GIVEN zero investor onchainID WHEN recoveryAddress THEN reverts with InvalidInvestorOnchainID', async () => {
+                    const signers = await ethers.getSigners()
+                    const bob = signers[2]
+                    const bobAddress = await bob.getAddress()
+
+                    await expect(
+                        erc3643
+                            .connect(owner)
+                            .recoveryAddress(
+                                aliceAddress,
+                                bobAddress,
+                                ZeroAddress
+                            )
+                    ).to.be.revertedWithCustomError(
+                        erc3643,
+                        'InvalidInvestorOnchainID'
+                    )
+                })
+
+                it('GIVEN same lost and new wallet WHEN recoveryAddress THEN reverts with SameWalletAddress', async () => {
+                    const signers = await ethers.getSigners()
+                    const charlie = signers[3]
+                    const charlieAddress = await charlie.getAddress()
+
+                    await expect(
+                        erc3643
+                            .connect(owner)
+                            .recoveryAddress(
+                                aliceAddress,
+                                aliceAddress,
+                                charlieAddress
+                            )
+                    ).to.be.revertedWithCustomError(
+                        erc3643,
+                        'SameWalletAddress'
+                    )
+                })
+
+                it('GIVEN lost wallet with zero balance WHEN recoveryAddress THEN reverts with NoTokensToRecover', async () => {
+                    const signers = await ethers.getSigners()
+                    const bob = signers[2]
+                    const charlie = signers[3]
+                    const dave = signers[4]
+                    const bobAddress = await bob.getAddress()
+                    const charlieAddress = await charlie.getAddress()
+                    const daveAddress = await dave.getAddress()
+
+                    await identityRegistryMock.setIsVerified(daveAddress, true)
+
+                    await expect(
+                        erc3643
+                            .connect(owner)
+                            .recoveryAddress(
+                                daveAddress,
+                                bobAddress,
+                                charlieAddress
+                            )
+                    ).to.be.revertedWithCustomError(
+                        erc3643,
+                        'NoTokensToRecover'
+                    )
+                })
+            })
+
+            describe('Token Transfer', () => {
+                it('GIVEN valid recovery WHEN recoveryAddress THEN transfers all tokens', async () => {
+                    const signers = await ethers.getSigners()
+                    const bob = signers[2]
+                    const charlie = signers[3]
+                    const bobAddress = await bob.getAddress()
+                    const charlieAddress = await charlie.getAddress()
+
+                    const aliceBalance =
+                        await erc20Facet.balanceOf(aliceAddress)
+
+                    await identityRegistryMock.setIsVerified(bobAddress, true)
+
+                    await erc3643
+                        .connect(owner)
+                        .recoveryAddress(
+                            aliceAddress,
+                            bobAddress,
+                            charlieAddress
+                        )
+
+                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                        0n
+                    )
+                    expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                        aliceBalance
+                    )
+                })
+
+                it('GIVEN recovery with tokens WHEN recoveryAddress THEN emits Transfer event', async () => {
+                    const signers = await ethers.getSigners()
+                    const bob = signers[2]
+                    const charlie = signers[3]
+                    const bobAddress = await bob.getAddress()
+                    const charlieAddress = await charlie.getAddress()
+
+                    const aliceBalance =
+                        await erc20Facet.balanceOf(aliceAddress)
+
+                    await identityRegistryMock.setIsVerified(bobAddress, true)
+
+                    await expect(
+                        erc3643
+                            .connect(owner)
+                            .recoveryAddress(
+                                aliceAddress,
+                                bobAddress,
+                                charlieAddress
+                            )
+                    )
+                        .to.emit(erc20Facet, 'Transfer')
+                        .withArgs(aliceAddress, bobAddress, aliceBalance)
+                })
+            })
+
+            describe('Frozen State Preservation', () => {
+                beforeEach(async () => {
+                    const fixture = async () => {
+                        await accessControlFacet
+                            .connect(owner)
+                            .grantRole(FREEZE_ROLE, ownerAddress)
+                    }
+                    await loadFixture(fixture)
+                })
+
+                it('GIVEN frozen tokens WHEN recoveryAddress THEN preserves frozen tokens on new wallet', async () => {
+                    const signers = await ethers.getSigners()
+                    const bob = signers[2]
+                    const charlie = signers[3]
+                    const bobAddress = await bob.getAddress()
+                    const charlieAddress = await charlie.getAddress()
+
+                    const frozenAmount = 300n
+                    await erc3643
+                        .connect(owner)
+                        .freezePartialTokens(aliceAddress, frozenAmount)
+
+                    await identityRegistryMock.setIsVerified(bobAddress, true)
+
+                    await erc3643
+                        .connect(owner)
+                        .recoveryAddress(
+                            aliceAddress,
+                            bobAddress,
+                            charlieAddress
+                        )
+
+                    expect(await erc3643.getFrozenTokens(bobAddress)).to.equal(
+                        frozenAmount
+                    )
+                })
+
+                it('GIVEN frozen address WHEN recoveryAddress THEN preserves freeze status on new wallet', async () => {
+                    const signers = await ethers.getSigners()
+                    const bob = signers[2]
+                    const charlie = signers[3]
+                    const bobAddress = await bob.getAddress()
+                    const charlieAddress = await charlie.getAddress()
+
+                    await erc3643
+                        .connect(owner)
+                        .setAddressFrozen(aliceAddress, true)
+
+                    await identityRegistryMock.setIsVerified(bobAddress, true)
+
+                    await erc3643
+                        .connect(owner)
+                        .recoveryAddress(
+                            aliceAddress,
+                            bobAddress,
+                            charlieAddress
+                        )
+
+                    expect(await erc3643.isFrozen(bobAddress)).to.be.true
+                })
+
+                it('GIVEN frozen tokens and frozen address WHEN recoveryAddress THEN preserves both states', async () => {
+                    const signers = await ethers.getSigners()
+                    const bob = signers[2]
+                    const charlie = signers[3]
+                    const bobAddress = await bob.getAddress()
+                    const charlieAddress = await charlie.getAddress()
+
+                    const frozenAmount = 400n
+                    await erc3643
+                        .connect(owner)
+                        .freezePartialTokens(aliceAddress, frozenAmount)
+                    await erc3643
+                        .connect(owner)
+                        .setAddressFrozen(aliceAddress, true)
+
+                    await identityRegistryMock.setIsVerified(bobAddress, true)
+
+                    await erc3643
+                        .connect(owner)
+                        .recoveryAddress(
+                            aliceAddress,
+                            bobAddress,
+                            charlieAddress
+                        )
+
+                    expect(await erc3643.getFrozenTokens(bobAddress)).to.equal(
+                        frozenAmount
+                    )
+                    expect(await erc3643.isFrozen(bobAddress)).to.be.true
+                })
+            })
+
+            describe('Identity Registry Integration', () => {
+                it('GIVEN recovery WHEN recoveryAddress THEN registers new wallet in identity registry', async () => {
+                    const signers = await ethers.getSigners()
+                    const bob = signers[2]
+                    const charlie = signers[3]
+                    const bobAddress = await bob.getAddress()
+                    const charlieAddress = await charlie.getAddress()
+
+                    await identityRegistryMock.setIsVerified(bobAddress, true)
+
+                    await erc3643
+                        .connect(owner)
+                        .recoveryAddress(
+                            aliceAddress,
+                            bobAddress,
+                            charlieAddress
+                        )
+
+                    // Verify bob is now verified in identity registry
+                    expect(await identityRegistryMock.isVerified(bobAddress)).to
+                        .be.true
+                })
+
+                it('GIVEN recovery WHEN recoveryAddress THEN removes lost wallet from identity registry', async () => {
+                    const signers = await ethers.getSigners()
+                    const bob = signers[2]
+                    const charlie = signers[3]
+                    const bobAddress = await bob.getAddress()
+                    const charlieAddress = await charlie.getAddress()
+
+                    expect(await identityRegistryMock.isVerified(aliceAddress))
+                        .to.be.true
+
+                    await identityRegistryMock.setIsVerified(bobAddress, true)
+
+                    await erc3643
+                        .connect(owner)
+                        .recoveryAddress(
+                            aliceAddress,
+                            bobAddress,
+                            charlieAddress
+                        )
+
+                    // Verify alice is removed from identity registry
+                    expect(await identityRegistryMock.isVerified(aliceAddress))
+                        .to.be.false
+                })
+            })
+
+            describe('Pause Integration', () => {
+                beforeEach(async () => {
+                    const fixture = async () => {
+                        await accessControlFacet
+                            .connect(owner)
+                            .grantRole(PAUSER_ROLE, ownerAddress)
+                    }
+                    await loadFixture(fixture)
+                })
+
+                it('GIVEN paused contract WHEN recoveryAddress THEN reverts', async () => {
+                    const signers = await ethers.getSigners()
+                    const bob = signers[2]
+                    const charlie = signers[3]
+                    const bobAddress = await bob.getAddress()
+                    const charlieAddress = await charlie.getAddress()
+
+                    await pauseFacet.connect(owner).pause()
+
+                    await expect(
+                        erc3643
+                            .connect(owner)
+                            .recoveryAddress(
+                                aliceAddress,
+                                bobAddress,
+                                charlieAddress
+                            )
                     ).to.be.reverted
                 })
             })
 
-            describe('when initialized', () => {
-                    beforeEach(async () => {
-                        const fixture = async () => {
-                            // Grant necessary roles
-                            await accessControlFacet
-                                .connect(owner)
-                                .grantRole(METADATA_ROLE, ownerAddress)
-                            await accessControlFacet
-                                .connect(owner)
-                                .grantRole(REGULATORY_ROLE, ownerAddress)
-                            await accessControlFacet
-                                .connect(owner)
-                                .grantRole(RECOVERY_ROLE, ownerAddress)
-                            await accessControlFacet
-                                .connect(owner)
-                                .grantRole(MINTER_ROLE, ownerAddress)
-                            await accessControlFacet
-                                .connect(owner)
-                                .grantRole(CAP_ROLE, ownerAddress)
+            describe('Events', () => {
+                it('GIVEN successful recovery WHEN recoveryAddress THEN emits RecoverySuccess', async () => {
+                    const signers = await ethers.getSigners()
+                    const bob = signers[2]
+                    const charlie = signers[3]
+                    const bobAddress = await bob.getAddress()
+                    const charlieAddress = await charlie.getAddress()
 
-                            // Initialize ERC20
-                            await erc20Facet
-                                .connect(owner)
-                                .initializeErc20(tokenName, tokenSymbol, tokenDecimals)
+                    await identityRegistryMock.setIsVerified(bobAddress, true)
 
-                            // Initialize ERC3643 Metadata
-                            await erc3643
-                                .connect(owner)
-                                .initializeERC3643Metadata(
-                                    tokenOnchainIDAddress,
-                                    version
-                                )
+                    await expect(
+                        erc3643
+                            .connect(owner)
+                            .recoveryAddress(
+                                aliceAddress,
+                                bobAddress,
+                                charlieAddress
+                            )
+                    )
+                        .to.emit(erc3643, 'RecoverySuccess')
+                        .withArgs(aliceAddress, bobAddress, charlieAddress)
+                })
+            })
 
-                            // Initialize ERC3643 Regulatory (this enables ERC3643 mode)
-                            await erc3643
-                                .connect(owner)
-                                .initializeERC3643Regulatory(
-                                    identityRegistryAddress,
-                                    complianceAddress
-                                )
+            describe('Complex Scenarios', () => {
+                beforeEach(async () => {
+                    const fixture = async () => {
+                        await accessControlFacet
+                            .connect(owner)
+                            .grantRole(FREEZE_ROLE, ownerAddress)
+                    }
+                    await loadFixture(fixture)
+                })
 
-                            // Get capped interface and initialize cap
-                            const erc3643Capped = (await ethers.getContractAt(
-                                'IERC203643Capped',
-                                proxyAddress
-                            )) as IERC203643Capped
+                it('GIVEN partial frozen tokens WHEN recoveryAddress THEN new wallet has correct free balance', async () => {
+                    const signers = await ethers.getSigners()
+                    const bob = signers[2]
+                    const charlie = signers[3]
+                    const bobAddress = await bob.getAddress()
+                    const charlieAddress = await charlie.getAddress()
 
-                            await erc3643Capped.connect(owner).initializeCap(10000n)
+                    const totalBalance = 1000n
+                    const frozenAmount = 600n
+                    const freeBalance = totalBalance - frozenAmount
 
-                            // Set alice as verified investor with country code
-                            await identityRegistryMock.setIsVerified(aliceAddress, true)
-                            await identityRegistryMock.setInvestorCountry(aliceAddress, 1) // Country code 1 (e.g., USA)
-                            
-                            // Mint tokens to alice using the capped interface
-                            await erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
-                        }
-                        await loadFixture(fixture)
-                    })
+                    await erc3643
+                        .connect(owner)
+                        .freezePartialTokens(aliceAddress, frozenAmount)
 
-                describe('Access Control', () => {
-                    it('GIVEN no RECOVERY_ROLE WHEN recoveryAddress THEN reverts', async () => {
-                        const signers = await ethers.getSigners()
-                        const bob = signers[2]
-                        const charlie = signers[3]
-                        const bobAddress = await bob.getAddress()
-                        const charlieAddress = await charlie.getAddress()
-                        
-                        await expect(
-                            erc3643
-                                .connect(alice)
-                                .recoveryAddress(aliceAddress, bobAddress, charlieAddress)
-                        ).to.be.reverted
-                    })
+                    await identityRegistryMock.setIsVerified(bobAddress, true)
 
-                    it('GIVEN RECOVERY_ROLE WHEN recoveryAddress THEN succeeds', async () => {
-                        const signers = await ethers.getSigners()
-                        const bob = signers[2]
-                        const charlie = signers[3]
-                        const bobAddress = await bob.getAddress()
-                        const charlieAddress = await charlie.getAddress()
-                        
-                        await identityRegistryMock.setIsVerified(bobAddress, true)
-                        
-                        await expect(
-                            erc3643
-                                .connect(owner)
-                                .recoveryAddress(aliceAddress, bobAddress, charlieAddress)
+                    await erc3643
+                        .connect(owner)
+                        .recoveryAddress(
+                            aliceAddress,
+                            bobAddress,
+                            charlieAddress
                         )
-                            .to.emit(erc3643, 'RecoverySuccess')
-                            .withArgs(aliceAddress, bobAddress, charlieAddress)
-                    })
+
+                    expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                        totalBalance
+                    )
+                    expect(await erc3643.getFrozenTokens(bobAddress)).to.equal(
+                        frozenAmount
+                    )
+
+                    // Verify free balance calculation
+                    const bobFreeBalance =
+                        (await erc20Facet.balanceOf(bobAddress)) -
+                        (await erc3643.getFrozenTokens(bobAddress))
+                    expect(bobFreeBalance).to.equal(freeBalance)
                 })
 
-                describe('Input Validation', () => {
-                    it('GIVEN zero lost wallet WHEN recoveryAddress THEN reverts with InvalidLostWallet', async () => {
-                        const signers = await ethers.getSigners()
-                        const bob = signers[2]
-                        const charlie = signers[3]
-                        const bobAddress = await bob.getAddress()
-                        const charlieAddress = await charlie.getAddress()
-                        
-                        await expect(
-                            erc3643
-                                .connect(owner)
-                                .recoveryAddress(ZeroAddress, bobAddress, charlieAddress)
-                        ).to.be.revertedWithCustomError(erc3643, 'InvalidLostWallet')
-                    })
+                it('GIVEN multiple recoveries WHEN recoveryAddress twice THEN both succeed', async () => {
+                    const signers = await ethers.getSigners()
+                    const bob = signers[2]
+                    const charlie = signers[3]
+                    const dave = signers[4]
+                    const eve = signers[5]
+                    const bobAddress = await bob.getAddress()
+                    const charlieAddress = await charlie.getAddress()
+                    const daveAddress = await dave.getAddress()
+                    const eveAddress = await eve.getAddress()
 
-                    it('GIVEN zero new wallet WHEN recoveryAddress THEN reverts with InvalidNewWallet', async () => {
-                        const signers = await ethers.getSigners()
-                        const charlie = signers[3]
-                        const charlieAddress = await charlie.getAddress()
-                        
-                        await expect(
-                            erc3643
-                                .connect(owner)
-                                .recoveryAddress(aliceAddress, ZeroAddress, charlieAddress)
-                        ).to.be.revertedWithCustomError(erc3643, 'InvalidNewWallet')
-                    })
+                    // First recovery: alice -> bob
+                    await identityRegistryMock.setIsVerified(bobAddress, true)
 
-                    it('GIVEN zero investor onchainID WHEN recoveryAddress THEN reverts with InvalidInvestorOnchainID', async () => {
-                        const signers = await ethers.getSigners()
-                        const bob = signers[2]
-                        const bobAddress = await bob.getAddress()
-                        
-                        await expect(
-                            erc3643
-                                .connect(owner)
-                                .recoveryAddress(aliceAddress, bobAddress, ZeroAddress)
-                        ).to.be.revertedWithCustomError(erc3643, 'InvalidInvestorOnchainID')
-                    })
+                    const aliceBalance =
+                        await erc20Facet.balanceOf(aliceAddress)
 
-                    it('GIVEN same lost and new wallet WHEN recoveryAddress THEN reverts with SameWalletAddress', async () => {
-                        const signers = await ethers.getSigners()
-                        const charlie = signers[3]
-                        const charlieAddress = await charlie.getAddress()
-                        
-                        await expect(
-                            erc3643
-                                .connect(owner)
-                                .recoveryAddress(aliceAddress, aliceAddress, charlieAddress)
-                        ).to.be.revertedWithCustomError(erc3643, 'SameWalletAddress')
-                    })
-
-                    it('GIVEN lost wallet with zero balance WHEN recoveryAddress THEN reverts with NoTokensToRecover', async () => {
-                        const signers = await ethers.getSigners()
-                        const bob = signers[2]
-                        const charlie = signers[3]
-                        const dave = signers[4]
-                        const bobAddress = await bob.getAddress()
-                        const charlieAddress = await charlie.getAddress()
-                        const daveAddress = await dave.getAddress()
-                        
-                        await identityRegistryMock.setIsVerified(daveAddress, true)
-                        
-                        await expect(
-                            erc3643
-                                .connect(owner)
-                                .recoveryAddress(daveAddress, bobAddress, charlieAddress)
-                        ).to.be.revertedWithCustomError(erc3643, 'NoTokensToRecover')
-                    })
-                })
-
-                describe('Token Transfer', () => {
-                    it('GIVEN valid recovery WHEN recoveryAddress THEN transfers all tokens', async () => {
-                        const signers = await ethers.getSigners()
-                        const bob = signers[2]
-                        const charlie = signers[3]
-                        const bobAddress = await bob.getAddress()
-                        const charlieAddress = await charlie.getAddress()
-                        
-                        const aliceBalance = await erc20Facet.balanceOf(aliceAddress)
-                        
-                        await identityRegistryMock.setIsVerified(bobAddress, true)
-                        
-                        await erc3643
-                            .connect(owner)
-                            .recoveryAddress(aliceAddress, bobAddress, charlieAddress)
-                        
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(0n)
-                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(aliceBalance)
-                    })
-
-                    it('GIVEN recovery with tokens WHEN recoveryAddress THEN emits Transfer event', async () => {
-                        const signers = await ethers.getSigners()
-                        const bob = signers[2]
-                        const charlie = signers[3]
-                        const bobAddress = await bob.getAddress()
-                        const charlieAddress = await charlie.getAddress()
-                        
-                        const aliceBalance = await erc20Facet.balanceOf(aliceAddress)
-                        
-                        await identityRegistryMock.setIsVerified(bobAddress, true)
-                        
-                        await expect(
-                            erc3643
-                                .connect(owner)
-                                .recoveryAddress(aliceAddress, bobAddress, charlieAddress)
+                    await erc3643
+                        .connect(owner)
+                        .recoveryAddress(
+                            aliceAddress,
+                            bobAddress,
+                            charlieAddress
                         )
-                            .to.emit(erc20Facet, 'Transfer')
-                            .withArgs(aliceAddress, bobAddress, aliceBalance)
-                    })
-                })
 
-                describe('Frozen State Preservation', () => {
-                    beforeEach(async () => {
-                        const fixture = async () => {
-                            await accessControlFacet
-                                .connect(owner)
-                                .grantRole(FREEZE_ROLE, ownerAddress)
-                        }
-                        await loadFixture(fixture)
-                    })
+                    expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                        aliceBalance
+                    )
 
-                    it('GIVEN frozen tokens WHEN recoveryAddress THEN preserves frozen tokens on new wallet', async () => {
-                        const signers = await ethers.getSigners()
-                        const bob = signers[2]
-                        const charlie = signers[3]
-                        const bobAddress = await bob.getAddress()
-                        const charlieAddress = await charlie.getAddress()
-                        
-                        const frozenAmount = 300n
-                        await erc3643.connect(owner).freezePartialTokens(aliceAddress, frozenAmount)
-                        
-                        await identityRegistryMock.setIsVerified(bobAddress, true)
-                        
-                        await erc3643
-                            .connect(owner)
-                            .recoveryAddress(aliceAddress, bobAddress, charlieAddress)
-                        
-                        expect(await erc3643.getFrozenTokens(bobAddress)).to.equal(frozenAmount)
-                    })
+                    // Second recovery: bob -> dave (bob lost wallet again)
+                    await identityRegistryMock.setIsVerified(daveAddress, true)
 
-                    it('GIVEN frozen address WHEN recoveryAddress THEN preserves freeze status on new wallet', async () => {
-                        const signers = await ethers.getSigners()
-                        const bob = signers[2]
-                        const charlie = signers[3]
-                        const bobAddress = await bob.getAddress()
-                        const charlieAddress = await charlie.getAddress()
-                        
-                        await erc3643.connect(owner).setAddressFrozen(aliceAddress, true)
-                        
-                        await identityRegistryMock.setIsVerified(bobAddress, true)
-                        
-                        await erc3643
-                            .connect(owner)
-                            .recoveryAddress(aliceAddress, bobAddress, charlieAddress)
-                        
-                        expect(await erc3643.isFrozen(bobAddress)).to.be.true
-                    })
+                    await erc3643
+                        .connect(owner)
+                        .recoveryAddress(bobAddress, daveAddress, eveAddress)
 
-                    it('GIVEN frozen tokens and frozen address WHEN recoveryAddress THEN preserves both states', async () => {
-                        const signers = await ethers.getSigners()
-                        const bob = signers[2]
-                        const charlie = signers[3]
-                        const bobAddress = await bob.getAddress()
-                        const charlieAddress = await charlie.getAddress()
-                        
-                        const frozenAmount = 400n
-                        await erc3643.connect(owner).freezePartialTokens(aliceAddress, frozenAmount)
-                        await erc3643.connect(owner).setAddressFrozen(aliceAddress, true)
-                        
-                        await identityRegistryMock.setIsVerified(bobAddress, true)
-                        
-                        await erc3643
-                            .connect(owner)
-                            .recoveryAddress(aliceAddress, bobAddress, charlieAddress)
-                        
-                        expect(await erc3643.getFrozenTokens(bobAddress)).to.equal(frozenAmount)
-                        expect(await erc3643.isFrozen(bobAddress)).to.be.true
-                    })
-                })
-
-                describe('Identity Registry Integration', () => {
-                    it('GIVEN recovery WHEN recoveryAddress THEN registers new wallet in identity registry', async () => {
-                        const signers = await ethers.getSigners()
-                        const bob = signers[2]
-                        const charlie = signers[3]
-                        const bobAddress = await bob.getAddress()
-                        const charlieAddress = await charlie.getAddress()
-                        
-                        await identityRegistryMock.setIsVerified(bobAddress, true)
-                        
-                        await erc3643
-                            .connect(owner)
-                            .recoveryAddress(aliceAddress, bobAddress, charlieAddress)
-                        
-                        // Verify bob is now verified in identity registry
-                        expect(await identityRegistryMock.isVerified(bobAddress)).to.be.true
-                    })
-
-                    it('GIVEN recovery WHEN recoveryAddress THEN removes lost wallet from identity registry', async () => {
-                        const signers = await ethers.getSigners()
-                        const bob = signers[2]
-                        const charlie = signers[3]
-                        const bobAddress = await bob.getAddress()
-                        const charlieAddress = await charlie.getAddress()
-                        
-                        expect(await identityRegistryMock.isVerified(aliceAddress)).to.be.true
-                        
-                        await identityRegistryMock.setIsVerified(bobAddress, true)
-                        
-                        await erc3643
-                            .connect(owner)
-                            .recoveryAddress(aliceAddress, bobAddress, charlieAddress)
-                        
-                        // Verify alice is removed from identity registry
-                        expect(await identityRegistryMock.isVerified(aliceAddress)).to.be.false
-                    })
-                })
-
-                describe('Pause Integration', () => {
-                    beforeEach(async () => {
-                        const fixture = async () => {
-                            await accessControlFacet
-                                .connect(owner)
-                                .grantRole(PAUSER_ROLE, ownerAddress)
-                        }
-                        await loadFixture(fixture)
-                    })
-
-                    it('GIVEN paused contract WHEN recoveryAddress THEN reverts', async () => {
-                        const signers = await ethers.getSigners()
-                        const bob = signers[2]
-                        const charlie = signers[3]
-                        const bobAddress = await bob.getAddress()
-                        const charlieAddress = await charlie.getAddress()
-                        
-                        await pauseFacet.connect(owner).pause()
-                        
-                        await expect(
-                            erc3643
-                                .connect(owner)
-                                .recoveryAddress(aliceAddress, bobAddress, charlieAddress)
-                        ).to.be.reverted
-                    })
-                })
-
-                describe('Events', () => {
-                    it('GIVEN successful recovery WHEN recoveryAddress THEN emits RecoverySuccess', async () => {
-                        const signers = await ethers.getSigners()
-                        const bob = signers[2]
-                        const charlie = signers[3]
-                        const bobAddress = await bob.getAddress()
-                        const charlieAddress = await charlie.getAddress()
-                        
-                        await identityRegistryMock.setIsVerified(bobAddress, true)
-                        
-                        await expect(
-                            erc3643
-                                .connect(owner)
-                                .recoveryAddress(aliceAddress, bobAddress, charlieAddress)
-                        )
-                            .to.emit(erc3643, 'RecoverySuccess')
-                            .withArgs(aliceAddress, bobAddress, charlieAddress)
-                    })
-                })
-
-                describe('Complex Scenarios', () => {
-                    beforeEach(async () => {
-                        const fixture = async () => {
-                            await accessControlFacet
-                                .connect(owner)
-                                .grantRole(FREEZE_ROLE, ownerAddress)
-                        }
-                        await loadFixture(fixture)
-                    })
-
-                    it('GIVEN partial frozen tokens WHEN recoveryAddress THEN new wallet has correct free balance', async () => {
-                        const signers = await ethers.getSigners()
-                        const bob = signers[2]
-                        const charlie = signers[3]
-                        const bobAddress = await bob.getAddress()
-                        const charlieAddress = await charlie.getAddress()
-                        
-                        const totalBalance = 1000n
-                        const frozenAmount = 600n
-                        const freeBalance = totalBalance - frozenAmount
-                        
-                        await erc3643.connect(owner).freezePartialTokens(aliceAddress, frozenAmount)
-                        
-                        await identityRegistryMock.setIsVerified(bobAddress, true)
-                        
-                        await erc3643
-                            .connect(owner)
-                            .recoveryAddress(aliceAddress, bobAddress, charlieAddress)
-                        
-                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(totalBalance)
-                        expect(await erc3643.getFrozenTokens(bobAddress)).to.equal(frozenAmount)
-                        
-                        // Verify free balance calculation
-                        const bobFreeBalance = await erc20Facet.balanceOf(bobAddress) - await erc3643.getFrozenTokens(bobAddress)
-                        expect(bobFreeBalance).to.equal(freeBalance)
-                    })
-
-                    it('GIVEN multiple recoveries WHEN recoveryAddress twice THEN both succeed', async () => {
-                        const signers = await ethers.getSigners()
-                        const bob = signers[2]
-                        const charlie = signers[3]
-                        const dave = signers[4]
-                        const eve = signers[5]
-                        const bobAddress = await bob.getAddress()
-                        const charlieAddress = await charlie.getAddress()
-                        const daveAddress = await dave.getAddress()
-                        const eveAddress = await eve.getAddress()
-                        
-                        // First recovery: alice -> bob
-                        await identityRegistryMock.setIsVerified(bobAddress, true)
-                        
-                        const aliceBalance = await erc20Facet.balanceOf(aliceAddress)
-                        
-                        await erc3643
-                            .connect(owner)
-                            .recoveryAddress(aliceAddress, bobAddress, charlieAddress)
-                        
-                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(aliceBalance)
-                        
-                        // Second recovery: bob -> dave (bob lost wallet again)
-                        await identityRegistryMock.setIsVerified(daveAddress, true)
-                        
-                        await erc3643
-                            .connect(owner)
-                            .recoveryAddress(bobAddress, daveAddress, eveAddress)
-                        
-                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(0n)
-                        expect(await erc20Facet.balanceOf(daveAddress)).to.equal(aliceBalance)
-                    })
+                    expect(await erc20Facet.balanceOf(bobAddress)).to.equal(0n)
+                    expect(await erc20Facet.balanceOf(daveAddress)).to.equal(
+                        aliceBalance
+                    )
                 })
             })
         })
-
+    })
 })

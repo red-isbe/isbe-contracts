@@ -10,7 +10,11 @@ contract MockIdentityRegistry {
     mapping(address => address) private _investorOnchainID;
 
     event SetIdentity(address identity);
-    event IdentityRegistered(address indexed investorAddress, address indexed onchainID, uint16 country);
+    event IdentityRegistered(
+        address indexed investorAddress,
+        address indexed onchainID,
+        uint16 country
+    );
     event IdentityDeleted(address indexed investorAddress);
 
     function setIdentity(address identity) external {
@@ -22,25 +26,15 @@ contract MockIdentityRegistry {
         _verified[account] = verified;
     }
 
-    function isVerified(address account) external view returns (bool) {
-        return _verified[account];
-    }
-
-    /**
-     * @dev Returns the country code for an investor
-     * @param _userAddress The address of the investor
-     * @return The country code (default 0 if not set)
-     */
-    function investorCountry(address _userAddress) external view returns (uint16) {
-        return _investorCountry[_userAddress];
-    }
-
     /**
      * @dev Sets the country code for an investor (for testing)
      * @param _userAddress The address of the investor
      * @param _country The country code
      */
-    function setInvestorCountry(address _userAddress, uint16 _country) external {
+    function setInvestorCountry(
+        address _userAddress,
+        uint16 _country
+    ) external {
         _investorCountry[_userAddress] = _country;
     }
 
@@ -79,5 +73,20 @@ contract MockIdentityRegistry {
      */
     function identity(address _userAddress) external view returns (address) {
         return _investorOnchainID[_userAddress];
+    }
+
+    function isVerified(address account) external view returns (bool) {
+        return _verified[account];
+    }
+
+    /**
+     * @dev Returns the country code for an investor
+     * @param _userAddress The address of the investor
+     * @return The country code (default 0 if not set)
+     */
+    function investorCountry(
+        address _userAddress
+    ) external view returns (uint16) {
+        return _investorCountry[_userAddress];
     }
 }

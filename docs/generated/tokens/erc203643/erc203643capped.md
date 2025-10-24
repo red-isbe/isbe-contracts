@@ -275,6 +275,26 @@ _Internal function to check that an amount doesn't exceed the cap when added to 
 | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | \_amount | uint256 | The amount to check against the cap Requirements: - Current supply + amount must be <= cap Reverts: - {CapExceeded} if the operation would exceed the supply cap |
 
+### \_checkTotalAmount
+
+```solidity
+function _checkTotalAmount(uint256[] _amounts) internal view returns (uint256 totalAmount)
+```
+
+_Calculates the total amount from an array and validates it against the cap_
+
+#### Parameters
+
+| Name      | Type      | Description             |
+| --------- | --------- | ----------------------- |
+| \_amounts | uint256[] | Array of amounts to sum |
+
+#### Return Values
+
+| Name        | Type    | Description                                                                                                                                                                                 |
+| ----------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| totalAmount | uint256 | The total sum of all amounts in the array Requirements: - The total supply + total amount must not exceed the cap Reverts: - {CapExceeded} if the batch minting would exceed the supply cap |
+
 ---
 
 ## IERC203643Capped
