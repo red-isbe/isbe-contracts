@@ -9,36 +9,35 @@ abstract contract CountryWhitelistingInternal is Common {
         mapping(uint16 => bool) whitelistedCountries;
     }
 
-    event WhitelistedCountry(uint16 country);
-    event UnWhitelistedCountry(uint16 country);
 
     function _whitelistCountry(uint16 country) internal {
         CountryWhitelistingStorage storage $ = _countryWhitelistingStorage();
-        require(!$.whitelistedCountries[country], "country already whitelisted");
+        require(!$.whitelistedCountries[country], 'country already whitelisted');
         $.whitelistedCountries[country] = true;
-        emit WhitelistedCountry(country);
     }
 
     function _unWhitelistCountry(uint16 country) internal {
         CountryWhitelistingStorage storage $ = _countryWhitelistingStorage();
-        require($.whitelistedCountries[country], "country not whitelisted");
+        require($.whitelistedCountries[country], 'country not whitelisted');
         $.whitelistedCountries[country] = false;
-        emit UnWhitelistedCountry(country);
     }
+    
+    // solhint-disable no-empty-blocks
+    function _transferred(address, address, uint256) internal virtual {}
+    // solhint-disable no-empty-blocks
+    function _created(address, uint256) internal virtual {}
+    // solhint-disable no-empty-blocks
+    function _destroyed(address, uint256) internal virtual {}
 
     function _isCountryWhitelisted(uint16 country) internal view returns (bool) {
         return _countryWhitelistingStorage().whitelistedCountries[country];
     }
 
-    function _canTransfer(address /*from*/, address to, uint256 /*amount*/) internal view returns (bool) {
+    function _canTransfer(address /*from*/, address /*to*/, uint256 /*amount*/) internal view returns (bool) {
         //uint16 receiverCountry = _getCountry(to);
         uint16 receiverCountry = 724; // Spain country code as example
         return _isCountryWhitelisted(receiverCountry);
     }
-
-    function _transferred(address, address, uint256) internal virtual {}
-    function _created(address, uint256) internal virtual {}
-    function _destroyed(address, uint256) internal virtual {}
 
     function _countryWhitelistingStorage()
         private

@@ -34,7 +34,7 @@ interface ICompliance{
      *  This function can be called ONLY by the owner of the compliance contract
      *  Emits a TokenBound event
      */
-    function bindToken(address _token) external;
+    //function bindToken(address _token) external;
 
     /**
      *  @dev unbinds a token from the compliance contract
@@ -42,7 +42,7 @@ interface ICompliance{
      *  This function can be called ONLY by the owner of the compliance contract
      *  Emits a TokenUnbound event
      */
-    function unbindToken(address _token) external;
+    //function unbindToken(address _token) external;
 
     /**
      *  @dev function called whenever tokens are transferred
@@ -95,7 +95,7 @@ interface ICompliance{
      *  @dev getter for the address of the token bound
      *  returns the address of the token
      */
-    function getTokenBound() external view returns (address);
+    //function getTokenBound() external view returns (address);
 
 
 }

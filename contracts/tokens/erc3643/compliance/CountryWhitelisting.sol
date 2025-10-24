@@ -18,19 +18,7 @@ abstract contract CountryWhitelisting is ICompliance, CountryWhitelistingInterna
         emit UnWhitelistedCountry(country);
     }
 
-    function isCountryWhitelisted(uint16 country) external view returns (bool) {
-        return _isCountryWhitelisted(country);
-    }
-
-    function canTransfer(address from, address to, uint256 amount)
-        external
-        view
-        override
-        returns (bool)
-    {
-        return _canTransfer(from, to, amount);
-    }
-
+    
     function transferred(address from, address to, uint256 amount)
         external
         override
@@ -52,10 +40,28 @@ abstract contract CountryWhitelisting is ICompliance, CountryWhitelistingInterna
         _destroyed(from, amount);
     }
 
+    function isCountryWhitelisted(uint16 country) external view returns (bool) {
+        return _isCountryWhitelisted(country);
+    }
+
+    function canTransfer(address from, address to, uint256 amount)
+        external
+        view
+        override
+        returns (bool)
+    {
+        return _canTransfer(from, to, amount);
+    }
+
+    /**
+     * @dev Declares the interfaces implemented by this facet.
+     * @return interfaces_ Array of supported interface identifiers.
+     */
     function _implementedInterfaces()
         internal
         pure
         virtual
+        override
         returns (bytes4[] memory interfaces_)
     {
         uint256 interfacesLength = 1;

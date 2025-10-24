@@ -3,20 +3,9 @@ pragma solidity ^0.8.28;
 
 import {CountryRestrictions} from './CountryRestrictions.sol';
 import {IEIP2535Introspection} from '../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {_ERC3643_COUNTRY_RESTRICTIONS_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
 
 contract CountryRestrictionsFacet is CountryRestrictions, IEIP2535Introspection {
-    function addCountryRestriction(uint16 country) external override {
-        super.addCountryRestriction(country);
-    }
-
-    function removeCountryRestriction(uint16 country) external override {
-        super.removeCountryRestriction(country);
-    }
-
-    function isCountryRestricted(uint16 country) external view override returns (bool) {
-        return super.isCountryRestricted(country);
-    }
-
     function interfacesIntrospection()
         external
         pure
@@ -31,7 +20,7 @@ contract CountryRestrictionsFacet is CountryRestrictions, IEIP2535Introspection 
         override
         returns (bytes32 businessId_)
     {
-        businessId_ = keccak256("CountryRestrictions");
+        businessId_ = _ERC3643_COUNTRY_RESTRICTIONS_RESOLVER_KEY;
     }
 
     function selectorsIntrospection()
