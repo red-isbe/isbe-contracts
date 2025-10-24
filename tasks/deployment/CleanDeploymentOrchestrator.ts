@@ -16,14 +16,14 @@ import {
     LogLevel,
 } from './utils/LoggingEnhancements'
 import { AccessControlGovernanceFacet__factory } from '../../typechain-types'
-import { 
-    BUSINESS_LOGIC_DEPLOYER_ROLE, 
-    GOVERNANCE_CONFIGURATION_MANAGER_ROLE, 
-    GOVERNANCE_MANAGER_ROLE, 
-    ISBE_PAUSER_ROLE, 
-    ISBE_ROLE, 
+import {
+    BUSINESS_LOGIC_DEPLOYER_ROLE,
+    GOVERNANCE_CONFIGURATION_MANAGER_ROLE,
+    GOVERNANCE_MANAGER_ROLE,
+    ISBE_PAUSER_ROLE,
+    ISBE_ROLE,
     PROXY_DEPLOYER_ROLE,
-    DEFAULT_ADMIN_ROLE
+    DEFAULT_ADMIN_ROLE,
 } from '../../test/constants'
 
 /**
@@ -110,30 +110,75 @@ export class CleanDeploymentOrchestrator {
             throw error
         }
     }
-    
+
     async revokeDeployerRoles(result: DeploymentResult) {
-        const deployer = (await this.hre.ethers.getSigners())[0];
-        const deployerAddress = await deployer.getAddress();
+        const deployer = (await this.hre.ethers.getSigners())[0]
+        const deployerAddress = await deployer.getAddress()
 
-        const accessControlGovernanceFacet = AccessControlGovernanceFacet__factory.connect(
-            result.governance!.address,
-            deployer
-        );
+        const accessControlGovernanceFacet =
+            AccessControlGovernanceFacet__factory.connect(
+                result.governance!.address,
+                deployer
+            )
         // This must be done in the correct order to avoid permission issues
-        console.log(`\n🔐 Revoking deployer roles from address: ${deployerAddress}`);
-        await(await accessControlGovernanceFacet.revokeRole(ISBE_PAUSER_ROLE,deployerAddress)).wait();
-        await(await accessControlGovernanceFacet.revokeRole(BUSINESS_LOGIC_DEPLOYER_ROLE,deployerAddress)).wait();
-        await(await accessControlGovernanceFacet.revokeRole(PROXY_DEPLOYER_ROLE,deployerAddress)).wait();
-        await(await accessControlGovernanceFacet.revokeRole(GOVERNANCE_CONFIGURATION_MANAGER_ROLE,deployerAddress)).wait();
-        await(await accessControlGovernanceFacet.revokeRole(GOVERNANCE_MANAGER_ROLE,deployerAddress)).wait();
-        await(await accessControlGovernanceFacet.revokeRole(ISBE_ROLE,deployerAddress)).wait();
-        await(await accessControlGovernanceFacet.revokeRole(DEFAULT_ADMIN_ROLE,deployerAddress)).wait();
+        console.log(
+            `\n🔐 Revoking deployer roles from address: ${deployerAddress}`
+        )
+        await (
+            await accessControlGovernanceFacet.revokeRole(
+                ISBE_PAUSER_ROLE,
+                deployerAddress
+            )
+        ).wait()
+        await (
+            await accessControlGovernanceFacet.revokeRole(
+                BUSINESS_LOGIC_DEPLOYER_ROLE,
+                deployerAddress
+            )
+        ).wait()
+        await (
+            await accessControlGovernanceFacet.revokeRole(
+                PROXY_DEPLOYER_ROLE,
+                deployerAddress
+            )
+        ).wait()
+        await (
+            await accessControlGovernanceFacet.revokeRole(
+                GOVERNANCE_CONFIGURATION_MANAGER_ROLE,
+                deployerAddress
+            )
+        ).wait()
+        await (
+            await accessControlGovernanceFacet.revokeRole(
+                GOVERNANCE_MANAGER_ROLE,
+                deployerAddress
+            )
+        ).wait()
+        await (
+            await accessControlGovernanceFacet.revokeRole(
+                ISBE_ROLE,
+                deployerAddress
+            )
+        ).wait()
+        await (
+            await accessControlGovernanceFacet.revokeRole(
+                DEFAULT_ADMIN_ROLE,
+                deployerAddress
+            )
+        ).wait()
 
-        const remainingRoles:bigint = await accessControlGovernanceFacet.getRolesByAccountCount(deployerAddress);
-        if(remainingRoles > 0n) {
-            throw new Error(`Deployer address ${deployerAddress} still has ${remainingRoles} roles assigned after revocation.`);
-        }else{
-            console.log(`✅ All deployer roles successfully revoked from address: ${deployerAddress}`);
+        const remainingRoles: bigint =
+            await accessControlGovernanceFacet.getRolesByAccountCount(
+                deployerAddress
+            )
+        if (remainingRoles > 0n) {
+            throw new Error(
+                `Deployer address ${deployerAddress} still has ${remainingRoles} roles assigned after revocation.`
+            )
+        } else {
+            console.log(
+                `✅ All deployer roles successfully revoked from address: ${deployerAddress}`
+            )
         }
     }
 
@@ -170,9 +215,11 @@ export class CleanDeploymentOrchestrator {
         EnhancedLogger.logSection('Step 1: Governance Deployment')
         this.timer.startStep('Governance Deployment')
 
-        const isbeAdmin = this.config.isbeAdmin;
-        if(!isbeAdmin) {
-            throw new Error('ISBE admin address is not set in the deployment configuration.');
+        const isbeAdmin = this.config.isbeAdmin
+        if (!isbeAdmin) {
+            throw new Error(
+                'ISBE admin address is not set in the deployment configuration.'
+            )
         }
 
         result.governance = await this.governanceDeployer.deploy(

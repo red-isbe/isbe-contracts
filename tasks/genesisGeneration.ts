@@ -6,9 +6,12 @@ import {
     retrieveSlotStructure,
     validateGenesis,
     ContractRegistry,
-    extractISBEAdminAddress
+    extractISBEAdminAddress,
 } from '../scripts/genesisGenerator'
 import { HttpNetworkConfig } from 'hardhat/types'
+import { GovernanceConfig } from '@tasks/deployment/types/DeploymentTypes'
+import { SignatureProviderFactory } from '@tasks/deployment/providers/SignatureProviderFactory'
+import { CleanGovernanceDeployer } from '@tasks/deployment/deployers/CleanGovernanceDeployer'
 
 const REGISTRY_FILENAME = 'isbe-contract-registry.json'
 
@@ -46,12 +49,16 @@ async function jsonRpcCall(urlStr: string): Promise<boolean> {
     }
 }
 
-task('genesis:generate','Generate genesis by extracting storage slots from deployment transactions in Hardhat network')
+task(
+    'genesis:generate',
+    'Generate genesis by extracting storage slots from deployment transactions in Hardhat network'
+)
     .addOptionalParam(
         'template',
         'Template JSON file to use',
         'qbftConfigFile.json'
-    ).setAction(async (taskArgs, hre) => {
+    )
+    .setAction(async (taskArgs, hre) => {
         try {
             const contractRegistry = new ContractRegistry()
             console.info(
@@ -62,7 +69,7 @@ task('genesis:generate','Generate genesis by extracting storage slots from deplo
                 '---------------------------------------------------------------------'
             )
             hre.network.name = 'hardhat'
-           
+
             let templateDir = (
                 hre.config as unknown as {
                     genesisGenerator: { templateDir: string }
@@ -72,7 +79,9 @@ task('genesis:generate','Generate genesis by extracting storage slots from deplo
                 templateDir += '/'
             }
             let outputDir = (
-                hre.config as unknown as { genesisGenerator: { outputDir: string } }
+                hre.config as unknown as {
+                    genesisGenerator: { outputDir: string }
+                }
             ).genesisGenerator.outputDir
             if (outputDir.slice(-1) !== '/') {
                 outputDir += '/'
@@ -87,12 +96,29 @@ task('genesis:generate','Generate genesis by extracting storage slots from deplo
                 REGISTRY_FILENAME
             console.log(`📄 Using template file: ${genesisTemplateFile}`)
 
-            const isbeAdmin = await extractISBEAdminAddress(genesisTemplateFile);
-            console.log(`📄 ISBE Admin address extracted from first genesis entry: ${isbeAdmin}`)
+            const isbeAdmin = await extractISBEAdminAddress(genesisTemplateFile)
+            console.log(
+                `📄 ISBE Admin address extracted from first genesis entry: ${isbeAdmin}`
+            )
 
-            console.log('🚀 DeployAll...')
-            const result = await hre.run('deployAllClean',{isbeadmin:isbeAdmin})
-            console.log('✅ Deploy all (Done).')
+            const governanceConfig: GovernanceConfig = {
+                accountAddress: isbeAdmin,
+                initData: '0x',
+            }
+            const signatureProvider = SignatureProviderFactory.create(hre)
+            const cleanGovernanceDeployer = new CleanGovernanceDeployer(
+                hre,
+                signatureProvider
+            )
+
+            console.log('🚀 Deploying governance factory...')
+            const governanceResult = await cleanGovernanceDeployer.deploy(
+                governanceConfig,
+                signatureProvider
+            )
+            console.log(
+                `✅ Governance factory deployed at: ${governanceResult.address}`
+            )
 
             console.log('🚀 Genesis generation...')
             let slotStructure: GenesisAlloc = await retrieveSlotStructure(hre)
@@ -129,8 +155,6 @@ task('genesis:generate','Generate genesis by extracting storage slots from deplo
             console.log(
                 '✅ Genesis generation (Done).----------------------------------------------------------'
             )
-
-            return result // propagate deployAll result if neeeded
         } catch (error: unknown) {
             const msg = error instanceof Error ? error.message : String(error)
             console.error('❌ Error during genesis generation:', msg)

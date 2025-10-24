@@ -44,10 +44,7 @@ task(
         'Set logging verbosity: minimal, normal, verbose, debug',
         'normal'
     )
-    .addParam(
-        'isbeadmin',
-        'ISBE admin address for deployment'
-    )
+    .addParam('isbeadmin', 'ISBE admin address for deployment')
     .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
         // Configure logging level
         const logLevel = parseLogLevel(taskArgs.logLevel)
@@ -97,13 +94,16 @@ async function deployWithCleanOrchestrator(
 ) {
     try {
         console.log('\\n📋 CLEAN DEPLOYMENT CONFIGURATION:')
-        const isbeAdmin = validateChecksumAddress(hre, (taskArgs as { isbeadmin: string }).isbeadmin);
+        const isbeAdmin = validateChecksumAddress(
+            hre,
+            (taskArgs as { isbeadmin: string }).isbeadmin
+        )
         console.log(`   • ISBE admin: ${isbeAdmin}`)
         console.log('')
 
         // Create configuration
         const config = DeploymentConfig.getDefaultConfig()
-        config.setIsbeAdmin(isbeAdmin);
+        config.setIsbeAdmin(isbeAdmin)
 
         // Create clean orchestrator (automatically detects and uses appropriate provider)
         const orchestrator = new CleanDeploymentOrchestrator(hre, config)
@@ -315,14 +315,19 @@ function parseLogLevel(logLevelStr?: string): LogLevel {
             return LogLevel.NORMAL
     }
 }
-function validateChecksumAddress(hre: HardhatRuntimeEnvironment, isbeadmin: string) {
+function validateChecksumAddress(
+    hre: HardhatRuntimeEnvironment,
+    isbeadmin: string
+) {
     if (!hre.ethers.isAddress(isbeadmin)) {
-        throw new Error(`❌ Not valid address: ${isbeadmin}`);
+        throw new Error(`❌ Not valid address: ${isbeadmin}`)
     }
-    
-    const checksummed = hre.ethers.getAddress(isbeadmin);
+
+    const checksummed = hre.ethers.getAddress(isbeadmin)
     if (isbeadmin !== checksummed) {
-        throw new Error(`❌ Not valid checksum for address: ${isbeadmin} it should be: ${checksummed}`);
+        throw new Error(
+            `❌ Not valid checksum for address: ${isbeadmin} it should be: ${checksummed}`
+        )
     }
-    return checksummed;
+    return checksummed
 }

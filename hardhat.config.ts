@@ -91,10 +91,10 @@ const config: HardhatUserConfig & {
         exclude: ['testwrapper'],
         collapseNewlines: true,
     },
-        genesisGenerator: {
+    genesisGenerator: {
         outputDir: '../isbe-besu-local-deployer/config/',
         templateDir: './tasks/genesisTemplates/',
-        },
+    },
     gasReporter: {
         enabled: process.env.REPORT_GAS === 'true',
         showMethodSig: true,
@@ -105,7 +105,7 @@ const config: HardhatUserConfig & {
         outputFile: 'docs/generated/gas-usage-summary.md',
         noColors: true,
         currency: 'EUR',
-    } as  Partial<EthGasReporterConfig>
+    } as Partial<EthGasReporterConfig>,
 }
 
 export default config

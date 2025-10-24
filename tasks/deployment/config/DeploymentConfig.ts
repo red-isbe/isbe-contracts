@@ -87,5 +87,5 @@ export class DeploymentConfig {
 
     public setIsbeAdmin(address: string) {
         this.isbeAdmin = address
-    }   
+    }
 }

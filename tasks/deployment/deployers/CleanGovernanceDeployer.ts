@@ -22,7 +22,11 @@ export class CleanGovernanceDeployer {
         private signatureProvider: ISignatureProvider
     ) {}
 
-    async deploy(config: GovernanceConfig, provider: ISignatureProvider, isbeAdmin: string) {
+    async deploy(
+        config: GovernanceConfig,
+        provider: ISignatureProvider,
+        isbeAdmin?: string
+    ) {
         console.log('🏛️ Deploying governance system...')
         console.log(`   🔐 Using ${provider.getCurveType()} signatures`)
 
@@ -125,31 +129,31 @@ export class CleanGovernanceDeployer {
             rbacs: [
                 {
                     role: DEFAULT_ADMIN_ROLE,
-                    members: [accountAddress,isbeAdmin],
+                    members: [accountAddress, isbeAdmin],
                 },
                 {
                     role: ISBE_ROLE,
-                    members: [accountAddress,isbeAdmin],
+                    members: [accountAddress, isbeAdmin],
                 },
                 {
                     role: PROXY_DEPLOYER_ROLE,
-                    members: [accountAddress,isbeAdmin],
+                    members: [accountAddress, isbeAdmin],
                 },
                 {
                     role: GOVERNANCE_CONFIGURATION_MANAGER_ROLE,
-                    members: [accountAddress,isbeAdmin],
+                    members: [accountAddress, isbeAdmin],
                 },
                 {
                     role: BUSINESS_LOGIC_DEPLOYER_ROLE,
-                    members: [accountAddress,isbeAdmin],
+                    members: [accountAddress, isbeAdmin],
                 },
                 {
                     role: ISBE_PAUSER_ROLE,
-                    members: [accountAddress,isbeAdmin],
+                    members: [accountAddress, isbeAdmin],
                 },
                 {
                     role: GOVERNANCE_MANAGER_ROLE,
-                    members: [accountAddress,isbeAdmin],
+                    members: [accountAddress, isbeAdmin],
                 },
             ],
             init: this.hre.ethers.ZeroAddress,
