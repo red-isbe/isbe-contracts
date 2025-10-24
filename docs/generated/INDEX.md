@@ -3,6 +3,7 @@
 - [access/accessControl](access/accessControl.md)
 - [access/ownable](access/ownable.md)
 - [assetevent](assetevent.md)
+- [client/besuNodeManager](client/besuNodeManager.md)
 - [client/filtering](client/filtering.md)
 - [client/tsr](client/tsr.md)
 - [core](core.md)
