@@ -7,6 +7,7 @@ import {ERC3643FreezeInternal} from '../erc3643/token/erc3643freeze/ERC3643Freez
 import {ERC3643RegulatoryInternal} from '../erc3643/token/erc3643regulatory/ERC3643RegulatoryInternal.sol';
 import {ERC20SnapshotInternal} from '../erc20/extensions/snapshot/ERC20SnapshotInternal.sol';
 import {CountryRestrictionsInternal} from '../erc3643/compliance/CountryRestrictionsInternal.sol';
+import {CountryWhitelistingInternal} from '../erc3643/compliance/CountryWhitelistingInternal.sol';
 
 import {_CONTROLLER_ROLE} from '../../constants/roles.sol';
 import {_RECOVERY_ROLE} from '../../constants/roles.sol';
@@ -27,7 +28,8 @@ abstract contract ERC203643InternalCommon is
     ERC3643MetadataInternal,
     ERC3643FreezeInternal,
     ERC3643RegulatoryInternal,
-    CountryRestrictionsInternal
+    CountryRestrictionsInternal,
+    CountryWhitelistingInternal
 {
     /**
      * @dev Overrides the internal token transfer hook to handle mint, burn, and transfer operations
@@ -155,6 +157,8 @@ abstract contract ERC203643InternalCommon is
                         freeBalance
                     )
                 );
+
+                _canTransfer(_from, _to, _amount);
             }
         }
         // else: ERC20 mode - no additional validations needed for any transfer type
@@ -173,6 +177,24 @@ abstract contract ERC203643InternalCommon is
             _unfreezePartialTokens(_from, tokensToUnfreeze);
             emit IERC3643Freeze.TokensUnfrozen(_from, tokensToUnfreeze);
         }
+    }
+
+    function _transferred(address from, address to, uint256 amount) internal 
+        override(CountryRestrictionsInternal, CountryWhitelistingInternal) {
+        CountryRestrictionsInternal._transferred(from, to, amount);
+        CountryWhitelistingInternal._transferred(from, to, amount);
+    }
+
+    function _created(address to, uint256 amount) internal 
+        override(CountryRestrictionsInternal, CountryWhitelistingInternal) {
+        CountryRestrictionsInternal._created(to, amount);
+        CountryWhitelistingInternal._created(to, amount);
+    }
+
+    function _destroyed(address from, uint256 amount) internal 
+        override(CountryRestrictionsInternal, CountryWhitelistingInternal) {
+        CountryRestrictionsInternal._destroyed(from, amount);
+        CountryWhitelistingInternal._destroyed(from, amount);
     }
 
     /**
@@ -206,4 +228,15 @@ abstract contract ERC203643InternalCommon is
             IERC3643Regulatory.RecipientNotVerified(_to)
         );
     }
+
+    //ICompliance validations hooks
+    function _canTransfer(address from, address to, uint256 amount) internal 
+        override(CountryRestrictionsInternal,CountryWhitelistingInternal) view returns (bool) {
+        // Si alguna regla falla, retorna false
+        if (!CountryRestrictionsInternal.canTransfer(from, to, amount)) return false;
+        if (!CountryWhitelistingInternal.canTransfer(from, to, amount)) return false;
+        return true;
+    }
+
+    
 }

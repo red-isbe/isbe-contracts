@@ -254,47 +254,76 @@ De esta forma, el compliance modular permite combinar varias reglas y módulos, 
 
 ## Decisión
 
-En el contexto de ISBE, donde se utiliza el patrón Diamond (EIP-2535), la arquitectura recomendada es:
+En la arquitectura ISBE basada en Diamond (EIP-2535), se ha optado por una **composición estática de reglas de compliance** mediante herencia múltiple de contratos internos, en lugar de módulos dinámicos o una faceta orquestadora separada.
 
-- **Un único Diamond** que integra tanto la lógica del token (IERC3643) como la de compliance (ICompliance) y cualquier otra funcionalidad relevante.
-- Al migrar desde los modelos legacy o modular, los conceptos de features (legacy) y módulos (modular) se traducen directamente a **facetas** en el Diamond.
-- Cada regla de compliance se implementa como una faceta independiente (por ejemplo, `CountryRestrictionsFacet`, `MaxBalanceFacet`, etc.).
-- Puede existir una faceta principal (`ComplianceOrchestratorFacet`) que coordine la ejecución de las reglas, similar al contrato principal de compliance en los modelos anteriores.
-- Tanto la lógica del token como la de compliance residen en el mismo Diamond, eliminando la necesidad de binding explícito.
-- Los métodos `canTransfer`, `transferred`, `created`, `destroyed` se implementan como funciones en las facetas correspondientes y pueden ser orquestados desde la faceta principal.
-- Añadir nuevas reglas solo requiere desplegar una nueva faceta y actualizar el Diamond, sin redeploy ni migraciones complejas.
+### Principios adoptados
 
-> **Nota sobre la exposición de métodos en facetas:**  
-> En la arquitectura Diamond, las facetas de compliance solo exponen externamente los métodos necesarios para la administración y actualización de las reglas (por ejemplo, añadir/quitar países, modificar límites, etc.).  
-> Los métodos de validación y hooks (`canTransfer`, `transferred`, `created`, `destroyed`) no son llamados directamente por usuarios externos, sino que son invocados internamente por la faceta principal del token (`IERC3643Facet`) durante la ejecución de operaciones relevantes (transfer, mint, burn, etc.).  
-> Así, el usuario o integrador solo interactúa con el Diamond a través de las funciones estándar del token, y la coordinación de compliance se realiza de forma interna y orquestada.
+- **Cada regla de compliance** (por ejemplo, CountryRestrictions, CountryWhitelisting) se implementa como un contrato interno independiente, con su propia lógica y hooks (`_canTransfer`, `_transferred`, `_created`, `_destroyed`).
+- El contrato principal (`ERC203643InternalCommon`) **hereda** de todos los contratos internos de reglas de compliance relevantes.
+- Los métodos internos de orquestación (`_canTransfer`, `_transferred`, etc.) se implementan en el contrato principal usando `override`, llamando explícitamente a los métodos de cada regla interna.
+- Si alguna regla falla en la validación (`_canTransfer`), la operación se rechaza.
+- Los hooks (`_transferred`, `_created`, `_destroyed`) se orquestan llamando a cada implementación interna, permitiendo que cada regla actualice su estado si lo requiere.
+- No se utiliza registro dinámico de módulos ni una faceta orquestadora externa; la composición y coordinación se realiza de forma estática y explícita en el contrato principal.
+- Las facetas externas solo exponen los métodos administrativos y de consulta necesarios, mientras que la lógica de compliance se ejecuta internamente durante las operaciones de transferencia, mint y burn.
+- **Ya no es necesario el binding explícito entre el token y el contrato de compliance** como en los modelos legacy o modular. Al estar todo integrado en el Diamond, la lógica de compliance y la del token comparten el mismo contexto y storage, eliminando la necesidad de métodos como `bindToken` y `unbindToken`.
 
-**Ejemplo de estructura:**
-- `IERC3643Facet` (lógica principal del token)
-- `ComplianceOrchestratorFacet` (coordina la ejecución de reglas de compliance)
-- `CountryRestrictionsFacet` (regla específica)
-- `MaxBalanceFacet` (regla específica)
-- ...
+### Ejemplo de implementación
 
-### Mapeo funcional detallado
+```solidity
+abstract contract ERC203643InternalCommon is
+    CountryRestrictionsInternal,
+    CountryWhitelistingInternal
+{
+    function _canTransfer(address from, address to, uint256 amount)
+        internal
+        override(CountryRestrictionsInternal, CountryWhitelistingInternal)
+        view
+        returns (bool)
+    {
+        if (!CountryRestrictionsInternal._canTransfer(from, to, amount)) return false;
+        if (!CountryWhitelistingInternal._canTransfer(from, to, amount)) return false;
+        return true;
+    }
 
-| Feature/Módulo Legacy/Modular      | Faceta Diamond equivalente         | Función principal                |
-|------------------------------------|------------------------------------|----------------------------------|
-| ApproveTransfer                    | ApproveTransferFacet               | Validación de transferencias     |
-| CountryRestrictions                | CountryRestrictionsFacet           | Restricción por país (blacklist) |
-| CountryWhitelisting                | CountryWhitelistingFacet           | Whitelist de países              |
-| DayMonthLimits                     | DayMonthLimitsFacet                | Límites diarios/mensuales        |
-| ExchangeMonthlyLimits              | ExchangeMonthlyLimitsFacet         | Límites en exchanges             |
-| MaxBalance                         | MaxBalanceFacet                    | Límite de balance                |
-| SupplyLimit                        | SupplyLimitFacet                   | Límite de supply                 |
+    function _transferred(address from, address to, uint256 amount)
+        internal
+        override(CountryRestrictionsInternal, CountryWhitelistingInternal)
+    {
+        CountryRestrictionsInternal._transferred(from, to, amount);
+        CountryWhitelistingInternal._transferred(from, to, amount);
+    }
 
-**Ventajas de la aproximación Diamond:**
-1. **Despliegue simplificado**: Un solo contrato Diamond integra token y compliance, sin necesidad de binding ni contratos externos.
-2. **Upgradeabilidad granular**: Se pueden actualizar o añadir reglas de compliance sin redeploy del sistema completo.
-3. **Coordinación eficiente**: Todas las facetas comparten storage y contexto, permitiendo lógica compleja y eficiente entre token y compliance.
-4. **Extensibilidad**: Añadir nuevas reglas es tan sencillo como desplegar una nueva faceta y actualizar el Diamond.
-5. **Reducción de riesgos**: Menos contratos y menos dependencias externas reducen la superficie de ataque y los errores de integración.
-6. **Gestión centralizada de roles y permisos**: El control de acceso y upgrades se gestiona desde el Diamond, simplificando la administración.
+    // Igual para _created y _destroyed
+}
+```
+
+### Ventajas
+
+- **Simplicidad y claridad:** La coordinación de reglas es explícita y fácil de seguir en el contrato principal.
+- **Extensibilidad:** Añadir una nueva regla solo requiere heredar el contrato interno correspondiente y actualizar los métodos de orquestación.
+- **Sin ambigüedad:** El uso de `override` resuelve los posibles conflictos de herencia múltiple.
+- **Integración directa:** La lógica de compliance se ejecuta automáticamente en las operaciones relevantes del token, sin necesidad de interacción externa.
+- **Eliminación del binding:** Al estar todo en el Diamond, no es necesario vincular el token a un contrato de compliance externo, simplificando la arquitectura y reduciendo dependencias.
+
+### Punto a plantear: Activación y comportamiento por defecto de las reglas de compliance
+
+Actualmente, existen diferencias en el comportamiento por defecto de las reglas de compliance:
+
+- **CountryRestrictions:** Si no se añaden restricciones (es decir, no se agregan países restringidos), la regla no tiene efecto y no bloquea ninguna operación. La restricción solo se aplica si se actualiza explícitamente la configuración mediante la faceta.
+- **CountryWhitelisting:** Por el contrario, si no se añaden países permitidos, la regla bloquea todas las operaciones por defecto. Es decir, la whitelist está vacía y nadie puede transferir hasta que se añadan países permitidos.
+
+**Idealmente**, todas las reglas de compliance deberían comportarse como `CountryRestrictions`:  
+- Si no se añaden restricciones mediante la faceta correspondiente, la regla no debería tener efecto y no debería bloquear operaciones.
+
+Esto facilitaría la gestión y despliegue, permitiendo que las reglas solo se activen cuando se configuran explícitamente, y evitando bloqueos inesperados por falta de configuración.
+
+**Punto de diseño a revisar:**  
+- Analizar si todas las reglas de compliance pueden rediseñarse para que, por defecto, no tengan efecto hasta que se añadan restricciones mediante la faceta correspondiente.
+- Evaluar si es necesario un mecanismo de activación explícita (por ejemplo, un flag `enabled`) en todas las reglas, para garantizar un comportamiento consistente y predecible en el Diamond.
+
+---
+
+---
 ## Beneficios
 
 *(Por completar)*
