@@ -16,7 +16,7 @@ import {
     COUNTER_RESOLVER_KEY,
     DEFAULT_ADMIN_ROLE,
     BUSINESS_LOGIC_DEPLOYER_ROLE,
-} from '../constants'
+} from '../../utils/constants'
 
 describe('BusinessLogicFactory', function () {
     let admin: Signer

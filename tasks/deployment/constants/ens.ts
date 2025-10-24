@@ -4,14 +4,6 @@ import { ARTIFACT_PATHS, CONTRACT_NAMES } from './configurationIds'
 import { createTokenConfig } from './configHelpers'
 import { CONFIGURATION_IDS } from './configurationIds'
 
-// ENS Registry configurations
-export const ENS_REGISTRY_CONFIGURATIONS = {
-    BASE: {
-        resolver_keys: [ENS_RESOLVER_KEYS.REGISTRY],
-        id: CONFIGURATION_IDS.ENS_REGISTRY,
-    },
-}
-
 // ENS Public Resolver configurations
 export const ENS_PUBLIC_RESOLVER_CONFIGURATIONS = {
     BASE: {
@@ -27,11 +19,6 @@ export const ENS_PUBLIC_RESOLVER_CONFIGURATIONS = {
 
 // Use case configurations
 export const ENS_USE_CASE_CONFIGS = {
-    REGISTRY: createTokenConfig(
-        ENS_REGISTRY_CONFIGURATIONS.BASE,
-        'ens',
-        'ENS Registry'
-    ),
     PUBLIC_RESOLVER: createTokenConfig(
         ENS_PUBLIC_RESOLVER_CONFIGURATIONS.BASE,
         'ens',
@@ -41,12 +28,6 @@ export const ENS_USE_CASE_CONFIGS = {
 
 // Business logic definitions
 export const ENS_DEFINITIONS = [
-    {
-        description: CONTRACT_NAMES.ENS_REGISTRY,
-        key: ENS_RESOLVER_KEYS.REGISTRY,
-        contractName: CONTRACT_NAMES.ENS_REGISTRY,
-        artifactPath: ARTIFACT_PATHS.ENS_REGISTRY,
-    },
     {
         description: CONTRACT_NAMES.ENS_RESOLVER,
         key: ENS_RESOLVER_KEYS.RESOLVER,

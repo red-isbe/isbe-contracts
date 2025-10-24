@@ -12,8 +12,8 @@ import {
     ISBE_AUTHORIZATION_LEVEL,
     PAUSER_AUTHORIZATION_LEVEL,
     DEFAULT_ADMIN_ROLE,
-} from './constants'
-import { deployGovernance } from './initialization'
+} from '../utils/constants'
+import { deployGovernance } from './fixtures/governance'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 
 describe('Pause', function () {

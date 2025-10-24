@@ -12,13 +12,13 @@ import {
     AccessControlTestWrapper,
     IAccessControl__factory,
 } from '../typechain-types'
-import { deployGovernance } from './initialization'
-import { FORBIDDEN_ERC165_INTERFACE_ID } from './constants'
+import { deployGovernance } from './fixtures/governance'
+import { FORBIDDEN_ERC165_INTERFACE_ID } from '../utils/constants'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
-import { TestConstants } from './testUtils'
+import { randomBytes32 } from './support'
 
 const ERC165_INTERFACE_ID = '0x01ffc9a7'
-const NON_EXISTING_INTERFACE_ID = TestConstants.randomBytes32().slice(0, 10) // Use first 10 chars for interface ID
+const NON_EXISTING_INTERFACE_ID = randomBytes32().slice(0, 10) // Use first 10 chars for interface ID
 
 describe('ERC165', function () {
     let diamondLoupe: DiamondLoupeFacet

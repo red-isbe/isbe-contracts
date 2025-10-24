@@ -24,7 +24,7 @@ import {
     GOVERNANCE_MANAGER_ROLE,
     ISBE_ROLE,
     PAUSER_ROLE,
-} from './constants'
+} from '../utils/constants'
 
 const NAME = 'My Token'
 const SYMBOL = 'MTK'

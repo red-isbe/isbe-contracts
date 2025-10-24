@@ -2,12 +2,18 @@ import { expect } from 'chai'
 import { config, ethers } from 'hardhat'
 import { HDNodeWallet } from 'ethers'
 import { IDidRegistry } from '../../typechain-types'
-import { DID_DOCUMENT_DETAILED_RESOLVER_KEY } from '../constants'
 import {
+    DID_DOCUMENT_DETAILED_RESOLVER_KEY,
     CONFIGURATION_ID_DID_REGISTRY,
-    deployGovernance,
-} from '../initialization'
-import { randomHex, randomInt, TestConstants } from '../testUtils'
+} from '../../utils/constants'
+import { deployGovernance } from './governance'
+import {
+    randomHex,
+    randomInt,
+    randomDid,
+    randomVerificationMethodId,
+    randomBaseDocument,
+} from '../support'
 import { EllipticType } from '../types/identity'
 
 // Test constants
@@ -87,8 +93,8 @@ export class DidTestHelpers {
      */
     static randomizeDidDocument(wallet: HDNodeWallet) {
         return {
-            baseDocument: TestConstants.randomBaseDocument(),
-            vMethodId: TestConstants.randomVerificationMethodId(),
+            baseDocument: randomBaseDocument(),
+            vMethodId: randomVerificationMethodId(),
             publicKeyInvalidLength: randomHex(),
             publicKey65Incorrect: randomHex(65),
             publicKey65: this.walletToPublicKey(wallet),
@@ -133,8 +139,8 @@ export async function insertControllerDocument(
 ): Promise<void> {
     await didRegistry.insertDidDocument(
         controllerId,
-        TestConstants.randomDid(),
-        TestConstants.randomDid(),
+        randomDid(),
+        randomDid(),
         publicKey64,
         EllipticType.SECP_256_K1,
         notBefore,
@@ -153,7 +159,7 @@ export async function deployStandardDidFixture() {
     const wallet = DidTestHelpers.walletOfFirstSigner()
     const didData = DidTestHelpers.randomizeDidDocument(wallet)
 
-    const did = TestConstants.randomDid()
+    const did = randomDid()
 
     await baseFixture.didRegistry.insertDidDocument(
         did,

@@ -3,7 +3,6 @@ import { ethers } from 'hardhat'
 import {
     ClientFiltering,
     ClientFilteringFacet,
-    GlobalIsbePause,
     IClientFiltering,
     ISBEPauseFacet,
 } from '../../typechain-types'
@@ -11,12 +10,11 @@ import { Signer, ZeroAddress, ZeroHash } from 'ethers'
 import {
     CLIENT_FILTERING_RESOLVER_KEY,
     CLIENT_FILTERING_ROLE,
-    PAUSER_ROLE,
-} from '../constants'
+} from '../../utils/constants'
 import {
     CONFIGURATION_ID_CLIENT_FILTERING,
     deployGovernance,
-} from '../initialization'
+} from '../fixtures/governance'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { FilterType } from '../../scripts/client/interfaces'
 
@@ -26,7 +24,6 @@ describe('ClientFiltering', function () {
     let otherAddress: string
     let clientFilteringFacet: ClientFilteringFacet
     let clientFiltering: ClientFiltering
-    let globalIsbePause: GlobalIsbePause
     let pauseFacet: ISBEPauseFacet
     let filter: IClientFiltering.FilterStruct
     let MOCK_FILTERS: IClientFiltering.FilterStruct[]
@@ -87,16 +84,7 @@ describe('ClientFiltering', function () {
         const adminAddress = await adminSigner.getAddress()
         const otherAddress = await otherSigner.getAddress()
 
-        const rbac = [
-            {
-                role: PAUSER_ROLE,
-                members: [adminAddress],
-            },
-            {
-                role: CLIENT_FILTERING_ROLE,
-                members: [adminAddress],
-            },
-        ]
+        const rbac = []
 
         const gov = await deployGovernance(
             adminSigner,
@@ -116,10 +104,9 @@ describe('ClientFiltering', function () {
             other: otherSigner,
             adminAddress,
             otherAddress,
-            globalIsbePause: gov.globalIsbePause,
             clientFilteringFacet: gov.clientFilteringFacet,
             clientFiltering: gov.clientFiltering,
-            pauseFacet: gov.pause,
+            pauseFacet: gov.pauseGovernance,
         }
     }
 
@@ -129,7 +116,6 @@ describe('ClientFiltering', function () {
             other = contracts.other
             adminAddress = contracts.adminAddress
             otherAddress = contracts.otherAddress
-            globalIsbePause = contracts.globalIsbePause
             clientFilteringFacet = contracts.clientFilteringFacet
             clientFiltering = contracts.clientFiltering
             pauseFacet = contracts.pauseFacet
@@ -310,14 +296,6 @@ describe('ClientFiltering', function () {
                         )
                         .withArgs(filter.filterId)
                 })
-                it('GIVEN deployed ClientFiltering WHEN try to insert when it is paused from governance THEN it fails', async () => {
-                    await globalIsbePause.pauseIsbe(
-                        await clientFiltering.getAddress()
-                    )
-                    await expect(
-                        clientFiltering.registerFilter(filter)
-                    ).to.be.revertedWithCustomError(clientFiltering, 'IsPaused')
-                })
                 it('GIVEN deployed ClientFiltering WHEN try to insert when it is paused THEN it fails', async () => {
                     await pauseFacet.pause()
                     await expect(
@@ -376,7 +354,6 @@ describe('ClientFiltering', function () {
                 other = contracts.other
                 adminAddress = contracts.adminAddress
                 otherAddress = contracts.otherAddress
-                globalIsbePause = contracts.globalIsbePause
                 clientFilteringFacet = contracts.clientFilteringFacet
                 clientFiltering = contracts.clientFiltering
                 pauseFacet = contracts.pauseFacet

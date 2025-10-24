@@ -2,12 +2,14 @@ import { expect } from 'chai'
 import { ethers } from 'hardhat'
 import { ReentrancyGuardTestWrapper } from '../typechain-types'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
-import { TestConstants } from './testUtils'
+// No random generators needed - removed TestConstants import
+
+const randomBytes32 = () => ethers.hexlify(ethers.randomBytes(32))
 
 describe('ReentrancyGuard', function () {
     let reentrancyGuard: ReentrancyGuardTestWrapper
 
-    const REENTRANT_KEY = TestConstants.randomBytes32()
+    const REENTRANT_KEY = randomBytes32()
 
     async function deployFixture() {
         const reentrancyGuardFactory = await ethers.getContractFactory(

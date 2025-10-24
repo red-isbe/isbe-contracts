@@ -8,17 +8,14 @@ import {
     ISBEPauseFacet,
 } from '../../typechain-types'
 import {
-    ENS_ROLE,
     ENS_MANAGER_ROLE,
     ENS_REGISTRY_RESOLVER_KEY,
     PAUSER_ROLE,
-} from '../constants'
-import {
-    deployGovernance,
     CONFIGURATION_ID_ENS_REGISTRY,
-} from '../initialization'
+} from '../../utils/constants'
+import { deployGovernance } from '../fixtures/governance'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
-import { TestConstants, randomAddress, randomInt } from '../testUtils'
+import { randomAddress, randomInt, randomEnsName } from '../support'
 
 describe('ENS Registry', () => {
     let account_2: Signer
@@ -59,7 +56,7 @@ describe('ENS Registry', () => {
         const account3Address = await account3Signer.getAddress()
 
         // Initialize randomized test data
-        const testString = TestConstants.randomEnsName().replace('.eth', '')
+        const testString = randomEnsName().replace('.eth', '')
         const testLabel = ethers.keccak256(ethers.toUtf8Bytes(testString))
         const subNode = ethers.solidityPackedKeccak256(
             ['bytes32', 'bytes32'],
@@ -84,13 +81,16 @@ describe('ENS Registry', () => {
 
         // Grant ENS roles to admin
         await result.accessControlGovernance!.grantRole(
-            ENS_ROLE,
-            adminAccountAddress
-        )
-        await result.accessControlGovernance!.grantRole(
             ENS_MANAGER_ROLE,
             adminAccountAddress
         )
+
+        expect(
+            await result.ensRegistryFacet.businessIdIntrospection()
+        ).to.be.equal(ENS_REGISTRY_RESOLVER_KEY)
+        expect(
+            await result.ensRegistryFacet.interfacesIntrospection()
+        ).to.be.deep.equal(['0x026f5135'])
 
         return {
             adminAccount: adminAccountSigner,
@@ -101,8 +101,8 @@ describe('ENS Registry', () => {
             account_3Address: account3Address,
             ensRegistry: result.ensRegistry!,
             ensRegistryFacet: result.ensRegistryFacet!,
-            pause: result.pause!,
-            accessControl: result.accessControl!,
+            pause: result.pauseGovernance!,
+            accessControl: result.accessControlGovernance!,
             TEST_LABEL: testLabel,
             SUB_NODE: subNode,
             TEST_RESOLVER: testResolver,
@@ -112,12 +112,15 @@ describe('ENS Registry', () => {
 
     beforeEach(async () => {
         const contracts = await loadFixture(deployFixture)
+        const adminAccount = contracts.adminAccount
         account_2 = contracts.account_2
         account_3 = contracts.account_3
         adminAccountAddress = contracts.adminAccountAddress
         account_2Address = contracts.account_2Address
         account_3Address = contracts.account_3Address
-        ensRegistry = contracts.ensRegistry
+        ensRegistry = contracts.ensRegistry.connect(
+            adminAccount
+        ) as typeof contracts.ensRegistry
         ensRegistryFacet = contracts.ensRegistryFacet
         pause = contracts.pause
         accessControl = contracts.accessControl
@@ -200,7 +203,7 @@ describe('ENS Registry', () => {
                     TEST_RESOLVER,
                     TEST_TTL
                 )
-            ).to.be.revertedWithCustomError(ensRegistry, 'AddressZero')
+            ).to.be.revertedWithCustomError(ensRegistryFacet, 'AddressZero')
         })
         it('GIVEN a deployed WHEN try to setRecord with resolver to zero THEN it fails', async () => {
             await expect(
@@ -210,7 +213,7 @@ describe('ENS Registry', () => {
                     ZeroAddress,
                     TEST_TTL
                 )
-            ).to.be.revertedWithCustomError(ensRegistry, 'AddressZero')
+            ).to.be.revertedWithCustomError(ensRegistryFacet, 'AddressZero')
         })
         it('GIVEN a deployed WHEN try to setSubnodeRecord with owner to zero THEN it fails', async () => {
             await expect(
@@ -221,7 +224,7 @@ describe('ENS Registry', () => {
                     TEST_RESOLVER,
                     TEST_TTL
                 )
-            ).to.be.revertedWithCustomError(ensRegistry, 'AddressZero')
+            ).to.be.revertedWithCustomError(ensRegistryFacet, 'AddressZero')
         })
         it('GIVEN a deployed WHEN try to setSubnodeRecord with resolver to zero THEN it fails', async () => {
             await expect(
@@ -232,27 +235,27 @@ describe('ENS Registry', () => {
                     ZeroAddress,
                     TEST_TTL
                 )
-            ).to.be.revertedWithCustomError(ensRegistry, 'AddressZero')
+            ).to.be.revertedWithCustomError(ensRegistryFacet, 'AddressZero')
         })
         it('GIVEN a deployed WHEN try to setSubnodeOwner with resolver to zero THEN it fails', async () => {
             await expect(
                 ensRegistry.setSubnodeOwner(ZeroHash, TEST_LABEL, ZeroAddress)
-            ).to.be.revertedWithCustomError(ensRegistry, 'AddressZero')
+            ).to.be.revertedWithCustomError(ensRegistryFacet, 'AddressZero')
         })
         it('GIVEN a deployed WHEN try to setResolver with resolver to zero THEN it fails', async () => {
             await expect(
                 ensRegistry.setResolver(TEST_LABEL, ZeroAddress)
-            ).to.be.revertedWithCustomError(ensRegistry, 'AddressZero')
+            ).to.be.revertedWithCustomError(ensRegistryFacet, 'AddressZero')
         })
         it('GIVEN a deployed WHEN try to setOwner with owner to zero THEN it fails', async () => {
             await expect(
                 ensRegistry.setOwner(TEST_LABEL, ZeroAddress)
-            ).to.be.revertedWithCustomError(ensRegistry, 'AddressZero')
+            ).to.be.revertedWithCustomError(ensRegistryFacet, 'AddressZero')
         })
         it('GIVEN a deployed WHEN try to setApprovalForAll with operator to zero THEN it fails', async () => {
             await expect(
                 ensRegistry.setApprovalForAll(ZeroAddress, true)
-            ).to.be.revertedWithCustomError(ensRegistry, 'AddressZero')
+            ).to.be.revertedWithCustomError(ensRegistryFacet, 'AddressZero')
         })
     })
 
@@ -266,7 +269,7 @@ describe('ENS Registry', () => {
                     TEST_RESOLVER,
                     TEST_TTL
                 )
-            ).to.be.revertedWithCustomError(ensRegistry, 'EmptyBytes32')
+            ).to.be.revertedWithCustomError(ensRegistryFacet, 'EmptyBytes32')
         })
         it('GIVEN a deployed WHEN try to setSubnodeOwner with label to zero THEN it fails', async () => {
             await expect(
@@ -275,7 +278,7 @@ describe('ENS Registry', () => {
                     ZeroHash,
                     adminAccountAddress
                 )
-            ).to.be.revertedWithCustomError(ensRegistry, 'EmptyBytes32')
+            ).to.be.revertedWithCustomError(ensRegistryFacet, 'EmptyBytes32')
         })
     })
 

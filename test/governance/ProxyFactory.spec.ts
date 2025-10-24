@@ -2,13 +2,11 @@ import { expect } from 'chai'
 import { ethers } from 'hardhat'
 import { IIsbeFactory, AccessControl } from '../../typechain-types'
 import { Signer } from 'ethers'
-import {
-    CONFIGURATION_ID_PROXY_TESTS,
-    deployGovernance,
-} from '../initialization'
+import { deployGovernance } from '../fixtures/governance'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import {
     ASSET_EVENT_TRACKER_RESOLVER_KEY,
+    CONFIGURATION_ID_PROXY_TESTS,
     CONFIGURATION_MANAGER_ROLE,
     DEFAULT_ADMIN_ROLE,
     ERC20_RESOLVER_KEY,
@@ -17,7 +15,7 @@ import {
     PROXY_DEPLOYER_ROLE,
     PROXY_FACTORY_RESOLVER_KEY,
     RANDOM_HASH_FOR_CONFIGURATION_ID,
-} from '../constants'
+} from '../../utils/constants'
 import { EventLog } from 'ethers'
 
 describe('ProxyFactory', function () {
@@ -119,7 +117,7 @@ describe('ProxyFactory', function () {
                             [
                                 {
                                     role: ROLE,
-                                    members: [admin],
+                                    members: [adminAddress],
                                 },
                             ],
                             false,

@@ -12,18 +12,15 @@ import {
     ENS,
 } from '../../typechain-types'
 import {
-    ENS_ROLE,
     ENS_MANAGER_ROLE,
     ENS_RESOLVER_RESOLVER_KEY,
     PAUSER_ROLE,
-} from '../constants'
-import {
-    deployGovernance,
-    deployEnsPublicResolverUseCaseFacets,
     CONFIGURATION_ID_ENS_REGISTRY,
-} from '../initialization'
+} from '../../utils/constants'
+import { deployGovernance } from '../fixtures/governance'
+import { deployEnsPublicResolverUseCaseFacets } from '../fixtures/ens'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
-import { TestConstants } from '../testUtils'
+import { randomEnsName, randomTextRecord, randomPubkeyPair } from '../support'
 
 describe('ENS Public Resolver', () => {
     let account_2: Signer
@@ -74,11 +71,11 @@ describe('ENS Public Resolver', () => {
         const account3Address = await account3Signer.getAddress()
 
         // Initialize randomized test data
-        const testName = TestConstants.randomEnsName()
-        const textRecord = TestConstants.randomTextRecord()
+        const testName = randomEnsName()
+        const textRecord = randomTextRecord()
         const testTextKey = textRecord.key
         const testTextValue = textRecord.value
-        const pubkeyPair = TestConstants.randomPubkeyPair()
+        const pubkeyPair = randomPubkeyPair()
         const testPubkeyX = pubkeyPair.x
         const testPubkeyY = pubkeyPair.y
 
@@ -99,21 +96,27 @@ describe('ENS Public Resolver', () => {
 
         // Grant ENS roles to admin for registry
         await registryResult.accessControlGovernance!.grantRole(
-            ENS_ROLE,
-            adminAccountAddress
-        )
-        await registryResult.accessControlGovernance!.grantRole(
             ENS_MANAGER_ROLE,
             adminAccountAddress
         )
 
-        // Initialize ENS Registry
-        await registryResult.ensRegistry!.initialiseEnsRegistry(
-            adminAccountAddress
+        // Initialize ENS Registry (connect with signer first)
+        const ensRegistryWithSigner =
+            registryResult.ensRegistry!.connect(adminAccountSigner)
+        await ensRegistryWithSigner.initialiseEnsRegistry(adminAccountAddress)
+
+        // Get isbeFactory and ISBEPauseFacetFactory for ENS Public Resolver deployment
+        const isbeFactory = await ethers.getContractAt(
+            'IIsbeFactory',
+            await registryResult.governanceContract.getAddress()
         )
+        const ISBEPauseFacetFactory =
+            await ethers.getContractFactory('ISBEPauseFacet')
 
         // Deploy Public Resolver using the dedicated function
         const result = await deployEnsPublicResolverUseCaseFacets(
+            isbeFactory,
+            ISBEPauseFacetFactory,
             adminAccountSigner,
             updatedRbacs,
             init_pause,
@@ -135,7 +138,9 @@ describe('ENS Public Resolver', () => {
             pubkeyResolver: result.pubkeyResolverFacet!,
             pause: result.pause!,
             accessControl: result.accessControl!,
-            ensRegistry: registryResult.ensRegistry!,
+            ensRegistry: registryResult.ensRegistry!.connect(
+                adminAccountSigner
+            ) as typeof registryResult.ensRegistry,
             TEST_NAME: testName,
             TEST_TEXT_KEY: testTextKey,
             TEST_TEXT_VALUE: testTextValue,
@@ -146,6 +151,7 @@ describe('ENS Public Resolver', () => {
 
     beforeEach(async () => {
         const contracts = await loadFixture(deployFixture)
+        const adminAccount = contracts.adminAccount
         account_2 = contracts.account_2
         account_3 = contracts.account_3
         adminAccountAddress = contracts.adminAccountAddress
@@ -158,7 +164,9 @@ describe('ENS Public Resolver', () => {
         pubkeyResolver = contracts.pubkeyResolver
         pause = contracts.pause
         accessControl = contracts.accessControl
-        ensRegistry = contracts.ensRegistry
+        ensRegistry = contracts.ensRegistry.connect(
+            adminAccount
+        ) as typeof contracts.ensRegistry
         TEST_NAME = contracts.TEST_NAME
         TEST_TEXT_KEY = contracts.TEST_TEXT_KEY
         TEST_TEXT_VALUE = contracts.TEST_TEXT_VALUE
@@ -509,7 +517,7 @@ describe('ENS Public Resolver', () => {
                     TEST_TEXT_KEY,
                     TEST_TEXT_VALUE
                 )
-                const newValue = TestConstants.randomTextRecord().value
+                const newValue = randomTextRecord().value
 
                 expect(
                     await publicResolver.setText(
@@ -547,9 +555,9 @@ describe('ENS Public Resolver', () => {
             it('GIVEN resolver initialized WHEN set multiple text records THEN success', async () => {
                 // Generate multiple random text records
                 const records = [
-                    TestConstants.randomTextRecord(),
-                    TestConstants.randomTextRecord(),
-                    TestConstants.randomTextRecord(),
+                    randomTextRecord(),
+                    randomTextRecord(),
+                    randomTextRecord(),
                 ]
                 const keys = records.map((r) => r.key)
                 const values = records.map((r) => r.value)
@@ -597,7 +605,7 @@ describe('ENS Public Resolver', () => {
                     TEST_PUBKEY_X,
                     TEST_PUBKEY_Y
                 )
-                const newPubkeyPair = TestConstants.randomPubkeyPair()
+                const newPubkeyPair = randomPubkeyPair()
                 const newX = newPubkeyPair.x
                 const newY = newPubkeyPair.y
 
@@ -754,7 +762,7 @@ describe('ENS Public Resolver', () => {
             await expect(
                 publicResolver
                     .connect(account_2)
-                    .setName(ROOT_NODE, TestConstants.randomEnsName())
+                    .setName(ROOT_NODE, randomEnsName())
             )
                 .to.be.revertedWithCustomError(
                     publicResolver,
@@ -784,8 +792,8 @@ describe('ENS Public Resolver', () => {
 
         it('GIVEN node owner in ENS WHEN perform resolver operations THEN success', async () => {
             // account_2 owns SUB_NODE, should be able to set resolver data
-            const testName = TestConstants.randomEnsName()
-            const testTextRecord = TestConstants.randomTextRecord()
+            const testName = randomEnsName()
+            const testTextRecord = randomTextRecord()
 
             await publicResolver.connect(account_2).setName(SUB_NODE, testName)
             await publicResolver
@@ -803,7 +811,7 @@ describe('ENS Public Resolver', () => {
             await expect(
                 publicResolver
                     .connect(account_3)
-                    .setName(SUB_NODE, TestConstants.randomEnsName())
+                    .setName(SUB_NODE, randomEnsName())
             )
                 .to.be.revertedWithCustomError(
                     publicResolver,

@@ -2,12 +2,16 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { Secp256r1Wallet } from '../../utils/Secp256r1Wallet'
 import {
     BUSINESS_LOGIC_DEPLOYER_ROLE,
+    CLIENT_FILTERING_ROLE,
     DEFAULT_ADMIN_ROLE,
+    DID_REGISTRY_ROLE,
+    ENS_MANAGER_ROLE,
     GOVERNANCE_CONFIGURATION_MANAGER_ROLE,
     GOVERNANCE_MANAGER_ROLE,
     ISBE_PAUSER_ROLE,
     ISBE_ROLE,
     PROXY_DEPLOYER_ROLE,
+    TIMESTAMPING_REGISTRY_ROLE,
 } from '../../test/constants'
 
 /**
@@ -51,6 +55,13 @@ export async function deployIsbeFactorySecp256r1(
         'DiamondCutAccessControlFacet',
         'DiamondLoupeFacet',
         'ConfigurationManagementFacet',
+        'DidDocumentDetailedFacet',
+        'DidControllerFacet',
+        'DidVerificationMethodFacet',
+        'DidVerificationRelationshipFacet',
+        'EnsRegistryFacet',
+        'TimeStampingRegistryFacet',
+        'ClientFilteringFacet',
     ]
 
     const facetAddresses: string[] = []
@@ -154,6 +165,22 @@ export async function deployIsbeFactorySecp256r1(
             },
             {
                 role: GOVERNANCE_MANAGER_ROLE,
+                members: [accountAddress],
+            },
+            {
+                role: DID_REGISTRY_ROLE,
+                members: [accountAddress],
+            },
+            {
+                role: ENS_MANAGER_ROLE,
+                members: [accountAddress],
+            },
+            {
+                role: CLIENT_FILTERING_ROLE,
+                members: [accountAddress],
+            },
+            {
+                role: TIMESTAMPING_REGISTRY_ROLE,
                 members: [accountAddress],
             },
         ],

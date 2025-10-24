@@ -28,7 +28,7 @@ import {
     DIAMOND_LOUPE_RESOLVER_KEY,
     PAUSER_ROLE,
     DEFAULT_ADMIN_ROLE,
-} from './constants'
+} from '../utils/constants'
 
 const NAME = 'My Token'
 const SYMBOL = 'MTK'

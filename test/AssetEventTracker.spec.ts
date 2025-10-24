@@ -7,8 +7,8 @@ import {
     ISBEPause,
     MockTimestamp,
 } from '../typechain-types'
-import { ASSET_EVENT_TRACKER_ROLE, PAUSER_ROLE } from './constants'
-import { deployGovernance } from './initialization'
+import { ASSET_EVENT_TRACKER_ROLE, PAUSER_ROLE } from '../utils/constants'
+import { deployGovernance } from './fixtures/governance'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 
 describe('Asset Event Tracker', function () {

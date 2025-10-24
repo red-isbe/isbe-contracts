@@ -6,13 +6,13 @@ import {
     ISBEPause,
     HashTimestampTestWrapper,
 } from '../typechain-types'
-import { HASH_TIMESTAMP_ROLE, PAUSER_ROLE } from './constants'
-import { deployGovernance } from './initialization'
+import { HASH_TIMESTAMP_ROLE, PAUSER_ROLE } from '../utils/constants'
+import { deployGovernance } from './fixtures/governance'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
-import { TestConstants } from './testUtils'
+import { randomBytes32 } from './support'
 
 describe('Hash Timestamp', function () {
-    const HASH = TestConstants.randomBytes32()
+    const HASH = randomBytes32()
     const BLOCK_TIMESTAMP = 1234567890
 
     let adminAccount: Signer

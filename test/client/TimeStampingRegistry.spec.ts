@@ -6,11 +6,13 @@ import {
     ISBEPauseFacet,
     TimeStampingRegistry,
 } from '../../typechain-types'
-import { TIMESTAMPING_REGISTRY_ROLE, PAUSER_ROLE } from '../constants'
 import {
-    deployGovernance,
+    TIMESTAMPING_REGISTRY_ROLE,
+    PAUSER_ROLE,
     CONFIGURATION_ID_TIMESTAMPING_REGISTRY,
-} from '../initialization'
+    TIMESTAMPING_REGISTRY_RESOLVER_KEY,
+} from '../../utils/constants'
+import { deployGovernance } from '../fixtures/governance'
 import { Signer } from 'ethers'
 
 describe('TimeStampingRegistry', function () {
@@ -47,26 +49,34 @@ describe('TimeStampingRegistry', function () {
     })
 
     async function deployFixture() {
-        const rbac = [
-            {
-                role: PAUSER_ROLE,
-                members: [adminAddress],
-            },
-            {
-                role: TIMESTAMPING_REGISTRY_ROLE,
-                members: [adminAddress, agentAddress],
-            },
-        ]
-
         const gov = await deployGovernance(
             owner,
-            rbac,
+            [],
             CONFIGURATION_ID_TIMESTAMPING_REGISTRY
         )
 
+        await Promise.all([
+            gov.accessControlGovernance.grantRole(PAUSER_ROLE, adminAddress),
+            gov.accessControlGovernance.grantRole(
+                TIMESTAMPING_REGISTRY_ROLE,
+                adminAddress
+            ),
+            gov.accessControlGovernance.grantRole(
+                TIMESTAMPING_REGISTRY_ROLE,
+                agentAddress
+            ),
+        ])
+
         timeStampingRegistry = gov.timeStampingRegistry as TimeStampingRegistry
         mockTimestamp = gov.mockTimestamp
-        pauseFacet = gov.pause
+        pauseFacet = gov.pauseGovernance
+
+        expect(
+            await gov.timeStampingRegistryFacet.businessIdIntrospection()
+        ).to.be.equal(TIMESTAMPING_REGISTRY_RESOLVER_KEY)
+        expect(
+            await gov.timeStampingRegistryFacet.interfacesIntrospection()
+        ).to.be.deep.equal(['0x6cf6673f'])
 
         BLOCK_TIMESTAMP = 1234567890
         await mockTimestamp.setMockedTimestamp(BLOCK_TIMESTAMP)
@@ -788,7 +798,8 @@ describe('TimeStampingRegistry', function () {
                     ethers.toUtf8Bytes('success-ext')
                 )
 
-                const mockTimestamp1000 = 1000
+                const mockTimestamp1000 = BLOCK_TIMESTAMP
+                // Set mock timestamp BEFORE creating signature to avoid ExpiredDeadline
                 await mockTimestamp.setMockedTimestamp(mockTimestamp1000)
 
                 const tsrData = {

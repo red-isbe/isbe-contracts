@@ -5,9 +5,9 @@ import {
     ERC20TestWrapperTransparent__factory,
     IsbeUpgradeableBeacon,
 } from '../typechain-types'
-import { DEFAULT_ADMIN_ROLE, MINTER_ROLE } from './constants'
+import { DEFAULT_ADMIN_ROLE, MINTER_ROLE } from '../utils/constants'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
-import { randomString } from './testUtils'
+import { randomString } from './support'
 
 const NAME = randomString(8) + ' Token'
 const SYMBOL = randomString(3).toUpperCase()

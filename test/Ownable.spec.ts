@@ -8,8 +8,8 @@ import {
     OwnableBase,
     AccessControl,
 } from '../typechain-types'
-import { deployGovernance } from './initialization'
-import { OWNABLE_RESOLVER_KEY, PAUSER_ROLE } from './constants'
+import { deployGovernance } from './fixtures/governance'
+import { OWNABLE_RESOLVER_KEY, PAUSER_ROLE } from '../utils/constants'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 
 describe('Ownable & Ownable2Step', function () {

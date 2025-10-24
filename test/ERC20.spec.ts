@@ -9,8 +9,8 @@ import {
     CONTROLLER_ROLE,
     ERC20_RESOLVER_KEY,
     ERC20_CAPPED_RESOLVER_KEY,
-} from './constants'
-import { deployGovernance } from './initialization'
+} from '../utils/constants'
+import { deployGovernance } from './fixtures/governance'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 describe('ERC20', function () {
     const decimals = 2

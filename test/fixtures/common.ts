@@ -1,5 +1,5 @@
 import { ethers } from 'hardhat'
-import { deployGovernance, CONFIGURATION_ID_ERC20 } from '../initialization'
+import { deployGovernance } from './governance'
 import {
     ERC20_RESOLVER_KEY,
     ERC20_CAPPED_RESOLVER_KEY,
@@ -7,7 +7,8 @@ import {
     MINTER_ROLE,
     SNAPSHOT_ROLE,
     CONTROLLER_ROLE,
-} from '../constants'
+    CONFIGURATION_ID_ERC20,
+} from '../../utils/constants'
 
 /**
  * Common fixture for basic ERC20 deployment without initialization

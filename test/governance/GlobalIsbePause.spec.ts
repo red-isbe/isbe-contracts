@@ -10,8 +10,8 @@ import { Signer } from 'ethers'
 import {
     GLOBAL_ISBE_PAUSABLE_RESOLVER_KEY,
     ISBE_PAUSER_ROLE,
-} from '../constants'
-import { deployGovernance } from '../initialization'
+} from '../../utils/constants'
+import { deployGovernance } from '../fixtures/governance'
 
 describe('GlobalIsbePause', function () {
     let admin: Signer

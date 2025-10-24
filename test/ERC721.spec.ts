@@ -14,7 +14,7 @@ import {
     ERC721Royalty,
     ERC721Consecutive,
 } from '../typechain-types'
-import { CONFIGURATION_ID_ERC721, deployGovernance } from './initialization'
+import { deployGovernance } from './fixtures/governance'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import {
     CAP_ROLE,
@@ -23,7 +23,8 @@ import {
     SNAPSHOT_ROLE,
     CONTROLLER_ROLE,
     ROYALTY_ROLE,
-} from './constants'
+    CONFIGURATION_ID_ERC721,
+} from '../utils/constants'
 
 describe('ERC721', function () {
     const name = 'ISBE NFT'
@@ -55,9 +56,15 @@ describe('ERC721', function () {
 
         const result = await deployGovernance(
             ownerSigner,
-            undefined,
+            [],
             CONFIGURATION_ID_ERC721
         )
+
+        if (!result.erc721) {
+            throw new Error(
+                'ERC721 deployment failed - result.erc721 is undefined'
+            )
+        }
 
         return {
             owner: ownerSigner,
@@ -75,7 +82,7 @@ describe('ERC721', function () {
             erc721Enumerable: result.erc721Enumerable,
             erc721Royalty: result.erc721Royalty,
             erc721Consecutive: result.erc721Consecutive,
-            erc20Address: await result.erc721Facet.getAddress(),
+            erc20Address: await result.erc721.getAddress(),
             accessControl: result.accessControl,
             pause: result.pause,
         }

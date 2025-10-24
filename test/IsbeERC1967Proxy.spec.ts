@@ -5,7 +5,7 @@ import {
     ERC20TestWrapperUUPS__factory,
     ERC20TestWrapperUUPS,
 } from '../typechain-types'
-import { DEFAULT_ADMIN_ROLE, MINTER_ROLE } from './constants'
+import { DEFAULT_ADMIN_ROLE, MINTER_ROLE } from '../utils/constants'
 
 const NAME = 'My Token'
 const SYMBOL = 'MTK'

@@ -7,8 +7,13 @@ import {
     IsbeTransparentProxy,
     IsbeTransparentProxy__factory,
 } from '../typechain-types'
-import { DEFAULT_ADMIN_ROLE, ROLE_1, ROLE_2, ISBE_ROLE } from './constants'
-import { deployGovernance } from './initialization'
+import {
+    DEFAULT_ADMIN_ROLE,
+    ROLE_1,
+    ROLE_2,
+    ISBE_ROLE,
+} from '../utils/constants'
+import { deployGovernance } from './fixtures/governance'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 
 describe('Access Control', function () {

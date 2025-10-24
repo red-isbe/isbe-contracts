@@ -19,8 +19,8 @@ import {
     ISBE_CUT_RESOLVER_KEY,
     ISBE_LOUPE_RESOLVER_KEY,
     CONFIGURATION_MANAGEMENT_RESOLVER_KEY,
-} from '../constants'
-import { deployGovernance } from '../initialization'
+} from '../../utils/constants'
+import { deployGovernance } from '../fixtures/governance'
 
 describe('ConfigurationManagement', function () {
     let admin: Signer
