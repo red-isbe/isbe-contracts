@@ -20,8 +20,7 @@ export class DeploymentConfig {
     constructor(
         public governance: GovernanceConfig,
         public businessLogics: BusinessLogicConfig[],
-        public useCases: UseCaseConfig[],
-        public isbeAdmin?: string
+        public useCases: UseCaseConfig[]
     ) {}
 
     validation: ValidationConstants = {
@@ -83,9 +82,5 @@ export class DeploymentConfig {
             BUSINESS_LOGIC_DEFINITIONS.slice(), // Create a copy to avoid mutations
             DEFAULT_USE_CASE_CONFIGURATIONS.slice() // Create a copy to avoid mutations
         )
-    }
-
-    public setIsbeAdmin(address: string) {
-        this.isbeAdmin = address
     }
 }

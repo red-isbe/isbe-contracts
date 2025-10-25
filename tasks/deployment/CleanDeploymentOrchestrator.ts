@@ -215,17 +215,9 @@ export class CleanDeploymentOrchestrator {
         EnhancedLogger.logSection('Step 1: Governance Deployment')
         this.timer.startStep('Governance Deployment')
 
-        const isbeAdmin = this.config.isbeAdmin
-        if (!isbeAdmin) {
-            throw new Error(
-                'ISBE admin address is not set in the deployment configuration.'
-            )
-        }
-
         result.governance = await this.governanceDeployer.deploy(
             this.config.governance,
-            this.signatureProvider,
-            isbeAdmin
+            this.signatureProvider
         )
         result.summary.completedSteps++
 

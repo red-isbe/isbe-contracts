@@ -25,7 +25,6 @@ export class CleanGovernanceDeployer {
     async deploy(
         config: GovernanceConfig,
         provider: ISignatureProvider,
-        isbeAdmin?: string
     ) {
         console.log('🏛️ Deploying governance system...')
         console.log(`   🔐 Using ${provider.getCurveType()} signatures`)
@@ -41,7 +40,6 @@ export class CleanGovernanceDeployer {
                 accountAddress,
                 config,
                 provider,
-                isbeAdmin
             )
             console.log(`   📍 Factory address: ${factoryAddress}`)
 
@@ -76,7 +74,6 @@ export class CleanGovernanceDeployer {
         accountAddress: string,
         config: GovernanceConfig,
         provider: ISignatureProvider,
-        isbeAdmin: string
     ): Promise<string> {
         console.log(
             `   🔧 Deploying ISBE factory with ${provider.getCurveType()}...`
@@ -112,7 +109,6 @@ export class CleanGovernanceDeployer {
         }
 
         console.log('   💎 Deploying diamond proxy...')
-        console.log(`      Using ISBE admin address: ${isbeAdmin}`)
 
         // Now deploy the diamond proxy with facets
         const proxyArtifact = await this.hre.artifacts.readArtifact(
@@ -129,31 +125,31 @@ export class CleanGovernanceDeployer {
             rbacs: [
                 {
                     role: DEFAULT_ADMIN_ROLE,
-                    members: [accountAddress, isbeAdmin],
+                    members: [accountAddress],
                 },
                 {
                     role: ISBE_ROLE,
-                    members: [accountAddress, isbeAdmin],
+                    members: [accountAddress],
                 },
                 {
                     role: PROXY_DEPLOYER_ROLE,
-                    members: [accountAddress, isbeAdmin],
+                    members: [accountAddress],
                 },
                 {
                     role: GOVERNANCE_CONFIGURATION_MANAGER_ROLE,
-                    members: [accountAddress, isbeAdmin],
+                    members: [accountAddress],
                 },
                 {
                     role: BUSINESS_LOGIC_DEPLOYER_ROLE,
-                    members: [accountAddress, isbeAdmin],
+                    members: [accountAddress],
                 },
                 {
                     role: ISBE_PAUSER_ROLE,
-                    members: [accountAddress, isbeAdmin],
+                    members: [accountAddress],
                 },
                 {
                     role: GOVERNANCE_MANAGER_ROLE,
-                    members: [accountAddress, isbeAdmin],
+                    members: [accountAddress],
                 },
             ],
             init: this.hre.ethers.ZeroAddress,

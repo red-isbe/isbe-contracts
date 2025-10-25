@@ -9,9 +9,9 @@ import {
     extractISBEAdminAddress,
 } from '../scripts/genesisGenerator'
 import { HttpNetworkConfig } from 'hardhat/types'
-import { GovernanceConfig } from '@tasks/deployment/types/DeploymentTypes'
-import { SignatureProviderFactory } from '@tasks/deployment/providers/SignatureProviderFactory'
-import { CleanGovernanceDeployer } from '@tasks/deployment/deployers/CleanGovernanceDeployer'
+import { GovernanceConfig } from './deployment/types/DeploymentTypes'
+import { SignatureProviderFactory } from './deployment/providers/SignatureProviderFactory';
+import { CleanGovernanceDeployer } from './deployment/deployers/CleanGovernanceDeployer'
 
 const REGISTRY_FILENAME = 'isbe-contract-registry.json'
 
