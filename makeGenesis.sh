@@ -1,14 +1,17 @@
 #!/bin/bash
 set -e  # Exit immediately if a command exits with a non-zero status
 
+# Timer start
+start=$(date +%s)
+
 # Default values
 BESU_DIR="../isbe-besu-local-deployer"
 EXEC_BESU="bash install.sh -b"
 
 # Flags
 SKIP_GEN=false
-SKIP_BESU_STARTUP=false
-SKIP_VALIDATION=false
+SKIP_BESU_STARTUP=true
+SKIP_VALIDATION=true
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -17,12 +20,12 @@ while [[ $# -gt 0 ]]; do
       SKIP_GEN=true
       shift
       ;;
-    --skip-besu-startup)
-      SKIP_BESU_STARTUP=true
+    --do-besu-startup)
+      SKIP_BESU_STARTUP=false
       shift
       ;;
-    --skip-validation)
-      SKIP_VALIDATION=true
+    --do-validation)
+      SKIP_VALIDATION=false
       shift
       ;;
     --besu-dir)
@@ -31,7 +34,20 @@ while [[ $# -gt 0 ]]; do
       ;;
     *)
       echo "⚠️  Unknown argument: $1"
+      echo ""
+      echo "Usage:"
+      echo "  --skip-gen              Skip the genesis generation process."
+      echo "  --do-besu-startup       Run the Besu startup procedure."
+      echo "  --do-validation          Execute post-start validation steps."
+      echo "  --besu-dir <path>       Specify the directory containing the Besu build."
+      echo ""
+      echo "Example:"
+      echo "  ./script.sh --skip-gen --do-besu-startup --besu-dir ./besu/"
+      echo ""
+      echo "Description:"
+      echo "  This script orchestrates the Besu genesis setup. "
       shift
+      exit 1
       ;;
   esac
 done
@@ -66,3 +82,8 @@ if [ "$SKIP_VALIDATION" = false ]; then
     --gobernanceaddress 0x2279b7a0a67db372996a5fab50d91eaa73d2ebe6
   echo "✅ Genesis validation completed."
 fi
+
+end=$(date +%s)
+elapsed=$(( end - start ))
+
+echo "⏱️ Execution time: ${elapsed} seconds"

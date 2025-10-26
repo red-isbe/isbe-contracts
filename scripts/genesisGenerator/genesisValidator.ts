@@ -262,54 +262,6 @@ async function validateBusinesLogic(
     )
 }
 
-// async function validateGlobalPause(
-//     hre: HardhatRuntimeEnvironment,
-//     businessAddress: string
-// ) {
-//     console.log(
-//         `\n\n--- GLOBAL PAUSE/UNPAUSE TEST ---------------------------------------\n`
-//     )
-//     const provider = hre.ethers.provider
-//     const signer: AbstractSigner = new hre.ethers.Wallet(
-//         PRIVATE_ISBE_PROXY_ADDRESS,
-//         provider
-//     )
-//     console.log(`Using signer address: ${await signer.getAddress()}`)
-//     const artifact = await import(
-//         '../../artifacts/contracts/factory/globalisbepause/GlobalIsbePause.sol/GlobalIsbePause.json'
-//     )
-//     const globalPauseIsbeContract = new hre.ethers.Contract(
-//         businessAddress,
-//         artifact.abi,
-//         signer
-//     )
-
-//     const artifactPausable = await import(
-//         '../../artifacts/contracts/pause/ISBEPauseFacet.sol/ISBEPauseFacet.json'
-//     )
-//     const pausableContract = new hre.ethers.Contract(
-//         ISBE_PROXY_ADDRESS,
-//         artifactPausable.abi,
-//         signer
-//     )
-
-//     let paused = await pausableContract.paused()
-//     console.log(`CURRENT paused state: ${paused}`)
-
-//     await processTX(
-//         'Global Pause',
-//         globalPauseIsbeContract.pauseIsbe(ISBE_PROXY_ADDRESS)
-//     )
-
-//     paused = await pausableContract.paused()
-//     console.log(`NEW paused state: ${paused}`)
-
-//     await processTX(
-//         'Global UnPause',
-//         globalPauseIsbeContract.unpauseIsbe(ISBE_PROXY_ADDRESS)
-//     )
-// }
-
 async function validateProxyFactory(
     hre: HardhatRuntimeEnvironment,
     businessAddress: string
@@ -345,7 +297,6 @@ export async function validateGenesis(
     await validateBusinesLogic(hre, businessAddress)
     await validatePausable(hre, businessAddress)
     await validateRoles(hre, businessAddress)
-    //await validateGlobalPause(hre, businessAddress)
     console.log(
         `\n\n=== GENESIS VALIDATION COMPLETED ===================================`
     )
