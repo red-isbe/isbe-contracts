@@ -33,7 +33,9 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     *)
-      echo "⚠️  Unknown argument: $1"
+      if [ $1 != --help ]; then
+        echo "⚠️  Unknown argument: $1"
+      fi
       echo ""
       echo "Usage:"
       echo "  --skip-gen              Skip the genesis generation process."
