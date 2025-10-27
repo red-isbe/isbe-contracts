@@ -7,10 +7,11 @@ import {
     validateGenesis,
     ContractRegistry,
     extractISBEAdminAddress,
+    extractCurve,
 } from '../scripts/genesisGenerator'
 import { HttpNetworkConfig } from 'hardhat/types'
 import { GovernanceConfig } from './deployment/types/DeploymentTypes'
-import { SignatureProviderFactory } from './deployment/providers/SignatureProviderFactory';
+import { SignatureProviderFactory } from './deployment/providers/SignatureProviderFactory'
 import { CleanGovernanceDeployer } from './deployment/deployers/CleanGovernanceDeployer'
 
 const REGISTRY_FILENAME = 'isbe-contract-registry.json'
@@ -171,6 +172,11 @@ task(
         'Gobernance Address',
         '0x2279b7a0a67db372996a5fab50d91eaa73d2ebe6'
     )
+    .addOptionalParam(
+        'template',
+        'Template JSON file to use',
+        'qbftConfigFile.json'
+    )
     .setAction(async (taskArgs, hre) => {
         console.info(
             '---------------------------------------------------------------------'
@@ -189,6 +195,18 @@ task(
             console.error('Invalid Gobernance Proxy Address')
             return
         }
+
+        const templateDir = (
+            hre.config as unknown as {
+                genesisGenerator: { templateDir: string }
+            }
+        ).genesisGenerator.templateDir
+
+        const templateFile = taskArgs.template
+        const genesisTemplateFile = templateDir + templateFile
+        const curve: string = await extractCurve(genesisTemplateFile)
+        console.log(`📄 Using curve: ${curve}`)
+
         console.log(`Current network: ${hre.network.name}`)
         const networkConfig: HttpNetworkConfig = hre.config.networks[
             hre.network.name

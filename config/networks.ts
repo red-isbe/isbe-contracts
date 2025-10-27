@@ -128,18 +128,11 @@ export function getNetworkConfigs(): NetworksConfig {
             curve: 'secp256k1',
         } as NetworkConfigWithCurve,
 
-        genesis_validation_network: {
+        genesis_validation_network_k1: {
             url: 'http://127.0.0.1:8545',
             gasPrice: 0,
-            accounts: {
-                mnemonic:
-                    'test test test test test test test test test test test junk', // Same as hardhat default
-            },
+            accounts,
             curve: 'secp256k1', // Adding the required curve property
-            // @ts-ignore: Custom property for genesis validation network
-            ISBE_GENESIS_VALIDATION_NETWORK: true, // Indicates that this is a genesis validation network and contract must not be deployed
-        } as HardhatNetworkConfig & {
-            ISBE_GENESIS_VALIDATION_NETWORK: boolean
         },
     }
 }

@@ -2,6 +2,8 @@ import { promises as fs } from 'fs'
 import * as path from 'path'
 import type { GenesisAlloc } from '.' // wherever you have your types
 
+// @ts-expect-error Using `any` intentionally for flexible JSON schema
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type JSONGenesis = any
 
 // type GenesisJson = {
@@ -87,4 +89,27 @@ export async function extractISBEAdminAddress(
     const isbeAdminAddress: string = Object.keys(genesisAlloc)[0] // Firs entry address us considered ISBE Admin
 
     return isbeAdminAddress
+}
+
+export async function extractCurve(
+    genesisTemplateFile: string
+): Promise<string> {
+    const raw = await fs.readFile(genesisTemplateFile, 'utf8')
+    if (!raw) {
+        throw new Error(
+            `Genesis template file is empty or not found: ${genesisTemplateFile}`
+        )
+    }
+    const data: JSONGenesis = JSON.parse(raw)
+
+    const ecCurve = data.genesis?.config?.ecCurve
+    const ellipticCurve = data.genesis?.config?.ellipticCurve
+
+    if (!ecCurve || !ellipticCurve || ecCurve !== ellipticCurve) {
+        throw new Error(
+            "❌ Wrong genesis template format: 'ecCurve' and 'ellipticCurve' sections are missing or not matching."
+        )
+    }
+
+    return ecCurve
 }

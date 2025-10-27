@@ -1,11 +1,10 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { ContractMatcher } from './contractMatcher'
-import { CONFIGURATION_ID_DID_REGISTRY } from '../../test/initialization'
 import { AbstractSigner, TransactionResponse } from 'ethers'
-import { Signer } from 'ethers/lib.esm'
+import { ISignatureProvider, SignatureProviderFactory } from '../../tasks/index'
 
 // Tipo de dato de la estructura base devuelta por facets()
-type RawFacetEntry = [string, string[]]
+// type RawFacetEntry = [string, string[]]
 
 // Tipo del objeto transformado más legible
 interface Facet {
@@ -14,10 +13,6 @@ interface Facet {
     numSelectors: number
     facetName?: string
 }
-
-const ISBE_PROXY_ADDRESS = '0x301dc252d2e09eac1a34f017bdc240d2d72037c2' // An address of the proxy contracts to test global pause/unpause
-const PRIVATE_ISBE_PROXY_ADDRESS =
-    '0x4ac8ab5147f0b280ce96bd1b90a9b3e840804f7e696c16871d2a1f33f93ec063' // A PK for testing only
 
 async function processTX(
     message: string,
@@ -105,11 +100,16 @@ async function validatePausable(
     hre: HardhatRuntimeEnvironment,
     businessAddress: string
 ) {
-    const provider = hre.ethers.provider
-    const signer: AbstractSigner = new hre.ethers.Wallet(
-        PRIVATE_ISBE_PROXY_ADDRESS,
-        provider
-    )
+    //const provider = hre.ethers.provider
+    // const signer: AbstractSigner = new hre.ethers.Wallet(
+    //     PRIVATE_ISBE_PROXY_ADDRESS,
+    //     provider
+    // )
+    const signatureProvider: ISignatureProvider =
+        SignatureProviderFactory.create(hre)
+    const signer: AbstractSigner = await signatureProvider.getSigner()
+
+    //const signer = (await hre.ethers.getSigners())[0];
     const signerAddress = await signer.getAddress()
     console.log(`Using signer address: ${signerAddress}`)
     console.log(
@@ -160,13 +160,19 @@ async function validateRoles(
     console.log(
         `\n\n--- VALIDATING ROLES ---------------------------------------\n`
     )
-    const provider = hre.ethers.provider
-    const signer: AbstractSigner = new hre.ethers.Wallet(
-        PRIVATE_ISBE_PROXY_ADDRESS,
-        provider
-    )
+
+    //const provider = hre.ethers.provider
+    // const signer: AbstractSigner = new hre.ethers.Wallet(
+    //     PRIVATE_ISBE_PROXY_ADDRESS,
+    //     provider
+    // )
+    //const signer = (await hre.ethers.getSigners())[0];
+    const signatureProvider: ISignatureProvider =
+        SignatureProviderFactory.create(hre)
+    const signer: AbstractSigner = await signatureProvider.getSigner()
     const signerAddress = await signer.getAddress()
     console.log(`Using signer address: ${signerAddress}`)
+
     const artifact = await import(
         '../../artifacts/contracts/factory/accessControl/AccessControlGovernanceFacet.sol/AccessControlGovernanceFacet.json'
     )
@@ -175,7 +181,7 @@ async function validateRoles(
         artifact.abi,
         signer
     )
-    let roleNumber: number = Number(
+    const roleNumber: number = Number(
         await accessControlContract.getRolesByAccountCount(signerAddress)
     )
     console.log(`Roles count for business address: ${roleNumber}`)
@@ -189,7 +195,7 @@ async function validateRoles(
         console.log(`  Role ${i}: ${r}`)
     })
 
-    let role: string = '' + Array.from(roles)[roleNumber - 1]
+    const role: string = '' + Array.from(roles)[roleNumber - 1]
     console.log(`\nTesting last role: ${role} \n`)
 
     await processTX(
@@ -262,29 +268,6 @@ async function validateBusinesLogic(
     )
 }
 
-async function validateProxyFactory(
-    hre: HardhatRuntimeEnvironment,
-    businessAddress: string
-) {
-    console.log(
-        `\n\n--- VALIDATING PROXY FACTORY ---------------------------------------\n`
-    )
-    const provider = hre.ethers.provider
-    const artifact = await import(
-        '../../artifacts/contracts/factory/proxyfactory/ProxyFactoryFacet.sol/ProxyFactoryFacet.json'
-    )
-    const proxyFactory = new hre.ethers.Contract(
-        businessAddress,
-        artifact.abi,
-        provider
-    )
-    const configurations =
-        await proxyFactory.getConfigurationByProxy(ISBE_PROXY_ADDRESS)
-    console.log(`Configuration for ISBE Proxy (${ISBE_PROXY_ADDRESS}):`)
-    console.log(`  - Configuration ID: \t${configurations[0]}`)
-    console.log(`  - Version: \t\t${configurations[1]}`)
-}
-
 export async function validateGenesis(
     hre: HardhatRuntimeEnvironment,
     businessAddress: string
@@ -293,7 +276,7 @@ export async function validateGenesis(
         `\n\n=== VALIDATING GENESIS DEPLOYMENT ===================================\n`
     )
     await validateFacests(hre, businessAddress)
-    await validateProxyFactory(hre, businessAddress)
+    // await validateProxyFactory(hre, businessAddress)
     await validateBusinesLogic(hre, businessAddress)
     await validatePausable(hre, businessAddress)
     await validateRoles(hre, businessAddress)
