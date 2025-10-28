@@ -230,12 +230,8 @@ abstract contract ERC203643InternalCommon is
     }
 
     //ICompliance validations hooks
-    function _canTransfer(address from, address to, uint256 amount) internal 
-        override(CountryRestrictionsInternal,CountryWhitelistingInternal) view returns (bool) {
-        // Si alguna regla falla, retorna false
-        if (!CountryRestrictionsInternal.canTransfer(from, to, amount)) return false;
-        if (!CountryWhitelistingInternal.canTransfer(from, to, amount)) return false;
-        return true;
+    function _canTransfer(address from, address to, uint256 amount) internal  view returns (bool) {
+        return ComplianceInternal._canTransfer(from, to, amount);
     }
 
     

@@ -251,77 +251,64 @@ De esta forma, el compliance modular permite combinar varias reglas y módulos, 
 
 *(Por completar)*
 
-
 ## Decisión
 
-En la arquitectura ISBE basada en Diamond (EIP-2535), se ha optado por una **composición estática de reglas de compliance** mediante herencia múltiple de contratos internos, en lugar de módulos dinámicos o una faceta orquestadora separada.
+En la arquitectura ISBE basada en Diamond (EIP-2535) para ERC-3643, el modelo de compliance se estructura de forma estricta y clara en dos niveles principales:
 
-### Principios adoptados
+### 1. Contrato Core de Compliance
 
-- **Cada regla de compliance** (por ejemplo, CountryRestrictions, CountryWhitelisting) se implementa como un contrato interno independiente, con su propia lógica y hooks (`_canTransfer`, `_transferred`, `_created`, `_destroyed`).
-- El contrato principal (`ERC203643InternalCommon`) **hereda** de todos los contratos internos de reglas de compliance relevantes.
-- Los métodos internos de orquestación (`_canTransfer`, `_transferred`, etc.) se implementan en el contrato principal usando `override`, llamando explícitamente a los métodos de cada regla interna.
-- Si alguna regla falla en la validación (`_canTransfer`), la operación se rechaza.
-- Los hooks (`_transferred`, `_created`, `_destroyed`) se orquestan llamando a cada implementación interna, permitiendo que cada regla actualice su estado si lo requiere.
-- No se utiliza registro dinámico de módulos ni una faceta orquestadora externa; la composición y coordinación se realiza de forma estática y explícita en el contrato principal.
-- Las facetas externas solo exponen los métodos administrativos y de consulta necesarios, mientras que la lógica de compliance se ejecuta internamente durante las operaciones de transferencia, mint y burn.
-- **Ya no es necesario el binding explícito entre el token y el contrato de compliance** como en los modelos legacy o modular. Al estar todo integrado en el Diamond, la lógica de compliance y la del token comparten el mismo contexto y storage, eliminando la necesidad de métodos como `bindToken` y `unbindToken`.
+- El **contrato core** es el único que implementa la interfaz estándar `ICompliance`.
+- Expone únicamente los métodos de la interfaz (`canTransfer`, `transferred`, `created`, `destroyed`).
+- No contiene lógica de reglas; su única responsabilidad es orquestar y delegar las llamadas a los contratos de features correspondientes.
 
-### Ejemplo de implementación
+### 2. Contratos de Features de Compliance
 
-```solidity
-abstract contract ERC203643InternalCommon is
-    CountryRestrictionsInternal,
-    CountryWhitelistingInternal
-{
-    function _canTransfer(address from, address to, uint256 amount)
-        internal
-        override(CountryRestrictionsInternal, CountryWhitelistingInternal)
-        view
-        returns (bool)
-    {
-        if (!CountryRestrictionsInternal._canTransfer(from, to, amount)) return false;
-        if (!CountryWhitelistingInternal._canTransfer(from, to, amount)) return false;
-        return true;
-    }
+- Cada **feature** de compliance (ejemplo: CountryRestrictions, CountryWhitelisting, MaxBalance, etc.) se implementa como un contrato independiente.
+- Cada feature define:
+  - Su propia interfaz administrativa y de consulta (por ejemplo, `ICountryRestrictionsAdmin`, `ICountryWhitelistingAdmin`).
+  - Un contrato interno con la lógica de la regla y su propio diamond storage.
+  - Un contrato externo para exponer los métodos administrativos y de consulta.
+- Las features **no implementan `ICompliance`** ni exponen métodos de la interfaz estándar.
+- Las features pueden ser habilitadas/deshabilitadas dinámicamente mediante flags o configuración administrativa.
 
-    function _transferred(address from, address to, uint256 amount)
-        internal
-        override(CountryRestrictionsInternal, CountryWhitelistingInternal)
-    {
-        CountryRestrictionsInternal._transferred(from, to, amount);
-        CountryWhitelistingInternal._transferred(from, to, amount);
-    }
+### 3. Orquestación
 
-    // Igual para _created y _destroyed
-}
-```
+- El contrato core delega la ejecución de los métodos de `ICompliance` a los features activos.
+- La coordinación entre features se realiza de forma explícita:
+  - Si alguna feature activa rechaza la operación (`_canTransfer` devuelve `false`), la operación se bloquea.
+  - Los hooks (`_transferred`, `_created`, `_destroyed`) se ejecutan en todas las features activas.
 
-### Ventajas
+### 4. Interfaces
 
-- **Simplicidad y claridad:** La coordinación de reglas es explícita y fácil de seguir en el contrato principal.
-- **Extensibilidad:** Añadir una nueva regla solo requiere heredar el contrato interno correspondiente y actualizar los métodos de orquestación.
-- **Sin ambigüedad:** El uso de `override` resuelve los posibles conflictos de herencia múltiple.
-- **Integración directa:** La lógica de compliance se ejecuta automáticamente en las operaciones relevantes del token, sin necesidad de interacción externa.
-- **Eliminación del binding:** Al estar todo en el Diamond, no es necesario vincular el token a un contrato de compliance externo, simplificando la arquitectura y reduciendo dependencias.
+- **Solo el contrato core implementa `ICompliance`.**
+- **Cada feature implementa únicamente su propia interfaz administrativa y de consulta.**
+- No existe mezcla de interfaces ni lógica entre el core y las features.
 
-### Punto a plantear: Activación y comportamiento por defecto de las reglas de compliance
+### 5. Compatibilidad con ERC-3643 clásico (binding)
 
-Actualmente, existen diferencias en el comportamiento por defecto de las reglas de compliance:
+En este modelo, el token y el compliance están co-alojados dentro del mismo contrato, por lo que **no es necesario el binding on-chain** tradicional (`bindToken`, `unbindToken`, `getTokenBound`). La lógica de compliance accede directamente al estado del token y viceversa.
 
-- **CountryRestrictions:** Si no se añaden restricciones (es decir, no se agregan países restringidos), la regla no tiene efecto y no bloquea ninguna operación. La restricción solo se aplica si se actualiza explícitamente la configuración mediante la faceta.
-- **CountryWhitelisting:** Por el contrario, si no se añaden países permitidos, la regla bloquea todas las operaciones por defecto. Es decir, la whitelist está vacía y nadie puede transferir hasta que se añadan países permitidos.
+Si se requiere compatibilidad binaria con herramientas, SDKs o UIs que esperan la interfaz `ICompliance` clásica de Tokeny, se puede incluir una **feature adaptadora opcional** que exponga estos métodos:
 
-**Idealmente**, todas las reglas de compliance deberían comportarse como `CountryRestrictions`:  
-- Si no se añaden restricciones mediante la faceta correspondiente, la regla no debería tener efecto y no debería bloquear operaciones.
+- `getTokenBound()` devuelve `address(this)` o una constante simbólica.
+- `bindToken` y `unbindToken` son no-op (no hacen nada relevante), pero pueden emitir los eventos estándar (`TokenBound`, `TokenUnbound`) para no romper integraciones que los escuchen.
+- Opcionalmente, pueden escribir un flag interno para trazabilidad.
 
-Esto facilitaría la gestión y despliegue, permitiendo que las reglas solo se activen cuando se configuran explícitamente, y evitando bloqueos inesperados por falta de configuración.
+Si no se requiere compatibilidad binaria, se recomienda **documentar este desvío** en el ADR, explicando que el binding no es necesario en el modelo Diamond y que la integración se realiza de forma nativa y directa.
 
-**Punto de diseño a revisar:**  
-- Analizar si todas las reglas de compliance pueden rediseñarse para que, por defecto, no tengan efecto hasta que se añadan restricciones mediante la faceta correspondiente.
-- Evaluar si es necesario un mecanismo de activación explícita (por ejemplo, un flag `enabled`) en todas las reglas, para garantizar un comportamiento consistente y predecible en el Diamond.
+### 6. Ventajas
 
----
+- **Separación estricta de responsabilidades:** El core solo expone la interfaz estándar y orquesta; las features solo gestionan su propia lógica y administración.
+- **Sin colisión de selectors:** Solo el core implementa la interfaz estándar.
+- **Extensible y mantenible:** Añadir una nueva regla solo requiere crear una nueva feature y su interfaz administrativa.
+- **Sin binding ni contratos externos:** Todo el estado y lógica viven dentro del Diamond.
+
+### 7. Consideraciones sobre activación y comportamiento por defecto
+
+- Las features pueden estar habilitadas/deshabilitadas dinámicamente mediante flags.
+- Por defecto, las features no bloquean operaciones si no están configuradas o habilitadas.
+- Se recomienda que todas las features sigan el patrón de inercia por defecto (no bloquear si no hay configuración), para evitar bloqueos inesperados y facilitar la gestión.
+
 
 ---
 ## Beneficios
@@ -333,3 +320,4 @@ Esto facilitaría la gestión y despliegue, permitiendo que las reglas solo se a
 *(Por completar)*
 
 ---
+

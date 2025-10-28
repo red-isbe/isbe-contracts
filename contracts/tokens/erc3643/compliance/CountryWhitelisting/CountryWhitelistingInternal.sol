@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {Common} from '../../../core/Common.sol';
-import {_COUNTRY_WHITELISTING_STORAGE_POSITION} from '../../../constants/storagePositions.sol';
+import {Common} from '../../../../core/Common.sol';
+import {_COUNTRY_WHITELISTING_STORAGE_POSITION} from '../../../../constants/storagePositions.sol';
 
 abstract contract CountryWhitelistingInternal is Common {
     struct CountryWhitelistingStorage {
