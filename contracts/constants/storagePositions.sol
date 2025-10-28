@@ -69,10 +69,11 @@ bytes32 constant _ERC3643_CONTROL_STORAGE_POSITION = 0x72d835f60ed84d9e97792d54a
 bytes32 constant _ERC203643_CAPPED_STORAGE_POSITION = 0x1f4e8e2a5e3c4b6f8e2d3c4b5a6f7e8d9c0b1a2b3c4d5e6f7e8d9c0b1a2b3c4b;
 
 //ERC3643 ICompliance storage position
-// keccak256('isbe.contracts.erc3643.compliance.countryrestrictions.storage');
-bytes32 constant _COUNTRY_RESTRICTIONS_STORAGE_POSITION = 0x5e4f3c2d1b0a9f8e7d6c5b4a392817161514131211100f0e0d0c0b0a09080706;
-// keccak256('isbe.contracts.erc3643.compliance.countrywhitelisting.storage');
-bytes32 constant _COUNTRY_WHITELISTING_STORAGE_POSITION = 0x6f5e4d3c2b1a0f9e8d7c6b5a493827161514131211100f0e0d0c0b0a09080705;
+// keccak256('isbe.contracts.erc3643.compliance.storage');
+bytes32 constant _ERC3643_COMPLIANCE_STORAGE_POSITION = 0x0839ed7eb71d13e707e8b2ad0e7cb916fbc4ab86c8b8e577ec9429a0d2550a8f;
+
+// keccak256('isbe.contracts.erc3643.compliance.maxbalance.storage');
+bytes32 constant _ERC3643_COMPLIANCE_MAXBALANCE_STORAGE_POSITION = 0x6239b4c1aece1ee0151d1119cd69e25c484bcdbaae2b77a42d15f153a347f8ee;
 
 //ERC721 storage position
 // keccak256('isbe.contracts.erc721.storage');

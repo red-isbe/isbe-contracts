@@ -6,15 +6,13 @@ import {ERC3643MetadataInternal} from '../erc3643/token/erc3643metadata/ERC3643M
 import {ERC3643FreezeInternal} from '../erc3643/token/erc3643freeze/ERC3643FreezeInternal.sol';
 import {ERC3643RegulatoryInternal} from '../erc3643/token/erc3643regulatory/ERC3643RegulatoryInternal.sol';
 import {ERC20SnapshotInternal} from '../erc20/extensions/snapshot/ERC20SnapshotInternal.sol';
-import {CountryRestrictionsInternal} from '../erc3643/compliance/CountryRestrictionsInternal.sol';
-import {CountryWhitelistingInternal} from '../erc3643/compliance/CountryWhitelistingInternal.sol';
+import {ERC3643ComplianceInternal} from '../erc3643/compliance/ERC3643ComplianceInternal.sol';
 
 import {_CONTROLLER_ROLE} from '../../constants/roles.sol';
 import {_RECOVERY_ROLE} from '../../constants/roles.sol';
 
 import {IERC20Isbe} from '../erc20/IERC20Isbe.sol';
 import {IERC3643Freeze} from '../erc3643/token/erc3643freeze/IERC3643Freeze.sol';
-import {IIdentityRegistry} from '../erc3643/identityregistry/IIdentityRegistry.sol';
 import {IERC3643Regulatory} from '../erc3643/token/erc3643regulatory/IERC3643Regulatory.sol';
 
 /// @title ERC203643InternalCommon
@@ -28,8 +26,7 @@ abstract contract ERC203643InternalCommon is
     ERC3643MetadataInternal,
     ERC3643FreezeInternal,
     ERC3643RegulatoryInternal,
-    CountryRestrictionsInternal,
-    CountryWhitelistingInternal
+    ERC3643ComplianceInternal
 {
     /**
      * @dev Overrides the internal token transfer hook to handle mint, burn, and transfer operations
@@ -47,13 +44,13 @@ abstract contract ERC203643InternalCommon is
         // MINT OPERATIONS (_from == address(0))
         // ==========================================================================
         if (_from == address(0)) {
-            _handleMintOperation(_to);
+            _handleMintOperation(_from, _to, _amount);
         }
         // ==========================================================================
         // BURN OPERATIONS (_to == address(0))
         // ==========================================================================
         else if (_to == address(0)) {
-            _handleBurnOperation(_from, _amount);
+            _handleBurnOperation(_from, _to, _amount);
         }
         // ==========================================================================
         // TRANSFER OPERATIONS (_from != address(0) && _to != address(0))
@@ -67,16 +64,18 @@ abstract contract ERC203643InternalCommon is
      * @dev Handles mint operations with snapshot updates and mint validation
      * @param _to The address to which tokens are being minted
      */
-    function _handleMintOperation(address _to) internal {
+    function _handleMintOperation(address _from, address _to, uint256 _amount) internal {
         // Snapshot logic
         _updateAccountSnapshot(_to);
         _updateTotalSupplySnapshot();
 
         // mint() - Mint validation
         // In ERC20 mode: no additional validation needed
-        // In ERC3643 mode: recipient must be verified in IdentityRegistry
+        // In ERC3643 mode: recipient must be verified in IdentityRegistry, and transfer allowed, and created hook called
         if (_hasIdentityRegistry()) {
             _isRecipientVerified(_to);
+            _canTransfer(_from, _to, _amount);
+            _created(_to, _amount);
         }
     }
 
@@ -99,9 +98,13 @@ abstract contract ERC203643InternalCommon is
         // In ERC3643 mode: burn() / burnFrom() don't exist (not exposed) | forceBurn() auto-unfreeze if needed
         if (_hasRole(_CONTROLLER_ROLE, msg.sender)) {
             // forceBurn() - Controller burn with auto-unfreeze capability
-            // In ERC20 mode: frozen = 0, so freeBalance = balance (no unfreeze needed)
-            // In ERC3643 mode: auto-unfreeze frozen tokens if needed to complete the burn
-            _unfreezeIf3643Mode(_from, _amount);
+            // In ERC20 mode: no additional logic needed
+            // In ERC3643 mode: auto-unfreeze frozen tokens if needed to complete the burn and destroyed hook
+            
+            if (_hasIdentityRegistry()) {
+                _unfreezeIf3643Mode(_from, _amount);
+                _destroyed(_from, _amount);
+            }
         }
         // else: burn() / burnFrom() - Normal burn operations
         // (No additional logic needed here)
@@ -129,8 +132,10 @@ abstract contract ERC203643InternalCommon is
         // ERC3643 mode validations - Transfer validation with regulatory compliance and freeze management
         // In ERC20 mode: transfer() and forceTransfer() behave identically here (no additional validations)
         if (_hasIdentityRegistry()) {
-            // Verify recipient identity (required for both normal and force transfers)
+            // Verify recipient identity (required for both normal and force transfers), and transfer allowed, and transferred hook called
             _isRecipientVerified(_to);
+            _canTransfer(_from, _to, _amount);
+            _transferred(_from, _to, _amount);
 
             // Differentiate between normal transfers and forced transfers
             if (
@@ -157,8 +162,6 @@ abstract contract ERC203643InternalCommon is
                         freeBalance
                     )
                 );
-
-                _canTransfer(_from, _to, _amount);
             }
         }
         // else: ERC20 mode - no additional validations needed for any transfer type
@@ -177,24 +180,6 @@ abstract contract ERC203643InternalCommon is
             _unfreezePartialTokens(_from, tokensToUnfreeze);
             emit IERC3643Freeze.TokensUnfrozen(_from, tokensToUnfreeze);
         }
-    }
-
-    function _transferred(address from, address to, uint256 amount) internal 
-        override(CountryRestrictionsInternal, CountryWhitelistingInternal) {
-        CountryRestrictionsInternal._transferred(from, to, amount);
-        CountryWhitelistingInternal._transferred(from, to, amount);
-    }
-
-    function _created(address to, uint256 amount) internal 
-        override(CountryRestrictionsInternal, CountryWhitelistingInternal) {
-        CountryRestrictionsInternal._created(to, amount);
-        CountryWhitelistingInternal._created(to, amount);
-    }
-
-    function _destroyed(address from, uint256 amount) internal 
-        override(CountryRestrictionsInternal, CountryWhitelistingInternal) {
-        CountryRestrictionsInternal._destroyed(from, amount);
-        CountryWhitelistingInternal._destroyed(from, amount);
     }
 
     /**
@@ -223,16 +208,10 @@ abstract contract ERC203643InternalCommon is
      * @param _to The address of the recipient
      */
     function _isRecipientVerified(address _to) internal view {
-        require(
+        /*require(
             IIdentityRegistry(_identityRegistry()).isVerified(_to),
             IERC3643Regulatory.RecipientNotVerified(_to)
-        );
+        );*/
     }
-
-    //ICompliance validations hooks
-    function _canTransfer(address from, address to, uint256 amount) internal  view returns (bool) {
-        return ComplianceInternal._canTransfer(from, to, amount);
-    }
-
     
 }

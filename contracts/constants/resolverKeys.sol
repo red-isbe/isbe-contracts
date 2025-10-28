@@ -81,10 +81,11 @@ bytes32 constant _ERC203643_CONTROLLER_RESOLVER_KEY = 0x9b1f4e8c6d7a5b4c3e2f1a0b
 bytes32 constant _ERC203643_CAPPED_RESOLVER_KEY = 0x1f3e5d6c7b8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f60718293a4b5c6d7e8;
 
 //ERC3643 ICompliance ResolverKeys
-// keccak256('isbe.contracts.erc3643.compliance.countryrestrictions.resolver.key');
-bytes32 constant _ERC3643_COUNTRY_RESTRICTIONS_RESOLVER_KEY = 0x4b6e5d3c2a1f0e9d8c7b6a5b4c3d2e1f0e9d8c7b6a5b4c3d2e1f0e9d8c7b6a5b;    
-// keccak256('isbe.contracts.erc3643.compliance.countrywhitelisting.resolver.key');
-bytes32 constant _ERC3643_COUNTRY_WHITELISTING_RESOLVER_KEY = 0x5c7d6e4f3b2a1f0e9d8c7b6a5b4c3d2e1f0e9d8c7b6a5b4c3d2e1f0e9d8c7b6a;
+// keccak256('isbe.contracts.erc3643.compliance.resolver.key');
+bytes32 constant _ERC3643_COMPLIANCE_RESOLVER_KEY = 0x8a5420a9e83a88b62e9b707d311e9dbf53149c09464f3c1c33d0b8d85f7ca10b;
+
+// keccak256('isbe.contracts.erc3643.compliance.maxbalance.resolver.key');
+bytes32 constant _ERC3643_COMPLIANCE_MAXBALANCE_RESOLVER_KEY = 0x439f087ef8d9d8d02c3b2d39c55c55a73b329d5b0d78ab0e81eb0e55343cdd9d;
 
 //ERC721 ResolverKeys
 // keccak256('isbe.contracts.erc721.burnable.resolver.key');

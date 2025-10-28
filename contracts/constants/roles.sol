@@ -63,4 +63,7 @@ bytes32 constant _REGULATORY_ROLE = 0x14eb35b88f6ef5e40610e3f30b90e8c0c32d045865
 // keccak256("isbe.contracts.role.recovery")
 bytes32 constant _RECOVERY_ROLE = 0xf2297f89cf57d1a505c0563f0b3b7b36b043d2de6e2d0e5e75ee83cf3278e30f;
 
+// keccak256("isbe.contracts.role.compliance")
+bytes32 constant _COMPLIANCE_ROLE = 0x9d43bbd4f3a613173d2ad8b3212cc0e8a4435b57f0c28a38a40097c7b7d35d79;
+
 // solhint-enable max-line-length
