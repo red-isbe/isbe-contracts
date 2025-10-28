@@ -37,7 +37,7 @@
         "alloc": {
             "0xC8A8522d5bfef1C4a4F8d539631dBB57341FC665": {
                 "balance": "1000000000000000000000000000",
-                "comment": "This is the ISBE Account (PK: 0x4ac8ab5147f0b280ce96bd1b90a9b3e840804f7e696c16871d2a1f33f93ec063 for testing only)"
+                "comment": "This is the ISBE Account (PK: ;   Private Key:        0x2b319d9880085781ae3b1451a402c346c8ec30f3c27f5f1de2a07e8d64d35114 for testing only)"
             },
             "0xcbac250151088ae5137039d4b0b10f0a8d55ea42": {
                 "balance": "1000000000000000000000000000"

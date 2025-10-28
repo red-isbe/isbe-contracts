@@ -134,6 +134,21 @@ export function getNetworkConfigs(): NetworksConfig {
             accounts,
             curve: 'secp256k1', // Adding the required curve property
         },
+
+         genesis_validation_network_r1: {
+            url: 'http://127.0.0.1:8545',
+            gasPrice: 0,
+            accounts: secp256r1PrivateKeys,
+            secp256r1Accounts,
+            curve: 'secp256r1', // Adding the required curve property
+        },
+
+        NO_NETWORK: {
+            url: 'http://127.0.0.1:8545',
+            gasPrice: 0,
+            accounts,
+            curve: 'secp256k1', // Adding the required curve property
+        },
     }
 }
 
