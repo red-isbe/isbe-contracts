@@ -31,10 +31,11 @@ contract ERC3643ComplianceFacet is ERC3643Compliance, IEIP2535Introspection {
     {
         uint256 selectorsLength = 4;
         selectors_ = new bytes4[](selectorsLength);
-        selectors_[--selectorsLength] = this.initializeERC3643Compliance.selector;
+        selectors_[--selectorsLength] = this
+            .initializeERC3643Compliance
+            .selector;
         selectors_[--selectorsLength] = this.setMaxBalanceEnabled.selector;
         selectors_[--selectorsLength] = this.isMaxBalanceEnabled.selector;
         selectors_[--selectorsLength] = this.canTransfer.selector;
-       
     }
 }

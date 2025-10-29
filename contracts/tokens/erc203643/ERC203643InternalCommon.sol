@@ -27,7 +27,6 @@ abstract contract ERC203643InternalCommon is
     ERC3643FreezeInternal,
     ERC3643ComplianceInternal
 {
-
     // =======================
     // Transfer Hooks
     // =======================
@@ -71,7 +70,11 @@ abstract contract ERC203643InternalCommon is
      * In ERC-3643 mode, compliance hooks may restrict minting.
      * In ERC-20 mode, these hooks are inert and always pass.
      */
-    function _handleMintOperation(address _from, address _to, uint256 _amount) internal {
+    function _handleMintOperation(
+        address _from,
+        address _to,
+        uint256 _amount
+    ) internal {
         _updateAccountSnapshot(_to);
         _updateTotalSupplySnapshot();
 

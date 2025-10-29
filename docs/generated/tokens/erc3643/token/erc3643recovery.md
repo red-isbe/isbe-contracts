@@ -2,7 +2,7 @@
 
 External contract implementing ERC-3643 recovery functionality.
 
-\_Allows authorized agents to recover tokens from lost wallets to new verified wallets.
+\_Allows authorized agents to recover tokens from lost wallets to new wallets.
 Extends ERC203643InternalCommon which aggregates all internal contracts,
 providing access to all necessary internal functions.
 
@@ -11,11 +11,11 @@ Unlike other ERC3643 modules (Freeze, Metadata, Regulatory), this contract does 
 a separate ERC3643RecoveryInternal contract because:
 
 1. NO STORAGE: Recovery operations don't require dedicated storage. All state is managed
-   through existing modules (balances in ERC20, frozen state in Freeze, identities in Registry).
+   through existing modules (balances in ERC20, frozen state in Freeze).
 
 2. CROSS-MODULE DEPENDENCIES: All recovery helper functions need access to functions from
    multiple modules (\_balanceOf, \_transfer, \_getFrozenTokens, \_isFrozen, \_setAddressFrozen,
-   \_freezePartialTokens, \_identityRegistry). These are only available through
+   \_freezePartialTokens). These are only available through
    ERC203643InternalCommon, not from a standalone internal contract extending Common.
 
 3. ACCESSIBILITY: By placing internal helper functions directly in this external contract
@@ -41,24 +41,35 @@ struct FrozenState {
 ### recoveryAddress
 
 ```solidity
-function recoveryAddress(address _lostWallet, address _newWallet, address _investorOnchainID) external returns (bool)
+function recoveryAddress(address _lostWallet, address _newWallet) external returns (bool)
 ```
 
-Recovers tokens from a lost wallet to a new wallet for an investor
+Recovers tokens from a lost wallet to a new wallet.
 
 \_This function should only be callable by an authorized recovery agent.
 Performs comprehensive validation and transfers all tokens from lost to new wallet.
 
      If the lost wallet has frozen tokens, they will be automatically unfrozen
-     before the transfer to ensure complete recovery._
+     before the transfer to ensure complete recovery.
+
+Requirements:
+
+- Caller must have RECOVERY_ROLE
+- Contract must not be paused
+- \_lostWallet must not be zero address
+- \_newWallet must not be zero address
+- \_lostWallet and \_newWallet must not be the same
+
+Emits:
+
+- {RecoverySuccess} event with lost and new wallet addresses\_
 
 #### Parameters
 
-| Name                | Type    | Description                                                      |
-| ------------------- | ------- | ---------------------------------------------------------------- |
-| \_lostWallet        | address | The wallet that the investor lost                                |
-| \_newWallet         | address | The newly provided wallet on which tokens have to be transferred |
-| \_investorOnchainID | address | The onchainID of the investor asking for a recovery              |
+| Name         | Type    | Description                                        |
+| ------------ | ------- | -------------------------------------------------- |
+| \_lostWallet | address | The wallet that was lost                           |
+| \_newWallet  | address | The new wallet to which tokens will be transferred |
 
 #### Return Values
 
@@ -66,50 +77,20 @@ Performs comprehensive validation and transfers all tokens from lost to new wall
 | ---- | ---- | -------------------------------------------------------- |
 | [0]  | bool | success True if recovery was successful, false otherwise |
 
-### \_registerNewWallet
-
-```solidity
-function _registerNewWallet(address _lostWallet, address _newWallet, contract IIdentity _onchainID) internal
-```
-
-_Registers a new wallet in the Identity Registry with investor's information_
-
-#### Parameters
-
-| Name         | Type               | Description                                    |
-| ------------ | ------------------ | ---------------------------------------------- |
-| \_lostWallet | address            | The lost wallet (used to get investor country) |
-| \_newWallet  | address            | The new wallet to register                     |
-| \_onchainID  | contract IIdentity | The investor's onchain ID                      |
-
 ### \_restoreFrozenState
 
 ```solidity
 function _restoreFrozenState(address _newWallet, struct ERC3643Recovery.FrozenState _frozenState) internal
 ```
 
-_Restores frozen state to the new wallet_
+_Restores frozen state to the new wallet._
 
 #### Parameters
 
-| Name          | Type                               | Description                           |
-| ------------- | ---------------------------------- | ------------------------------------- |
-| \_newWallet   | address                            | The wallet to restore frozen state to |
-| \_frozenState | struct ERC3643Recovery.FrozenState | The frozen state to restore           |
-
-### \_removeFromIdentityRegistry
-
-```solidity
-function _removeFromIdentityRegistry(address _lostWallet) internal
-```
-
-_Removes the lost wallet from the Identity Registry_
-
-#### Parameters
-
-| Name         | Type    | Description          |
-| ------------ | ------- | -------------------- |
-| \_lostWallet | address | The wallet to remove |
+| Name          | Type                               | Description                            |
+| ------------- | ---------------------------------- | -------------------------------------- |
+| \_newWallet   | address                            | The wallet to restore frozen state to. |
+| \_frozenState | struct ERC3643Recovery.FrozenState | The frozen state to restore.           |
 
 ### \_checkRecoverableBalance
 
@@ -117,34 +98,19 @@ _Removes the lost wallet from the Identity Registry_
 function _checkRecoverableBalance(address _lostWallet) internal view returns (uint256 balance)
 ```
 
-_Checks if the lost wallet has tokens to recover_
+_Checks if the lost wallet has tokens to recover._
 
 #### Parameters
 
-| Name         | Type    | Description         |
-| ------------ | ------- | ------------------- |
-| \_lostWallet | address | The wallet to check |
+| Name         | Type    | Description          |
+| ------------ | ------- | -------------------- |
+| \_lostWallet | address | The wallet to check. |
 
 #### Return Values
 
-| Name    | Type    | Description                                                                                  |
-| ------- | ------- | -------------------------------------------------------------------------------------------- |
-| balance | uint256 | The balance of the lost wallet Reverts: - {NoTokensToRecover} if the wallet has zero balance |
-
-### \_validateWalletOwnership
-
-```solidity
-function _validateWalletOwnership(address _newWallet, contract IIdentity _onchainID) internal view
-```
-
-_Validates that the new wallet belongs to the investor_
-
-#### Parameters
-
-| Name        | Type               | Description                                                                                                                                                                                                                                 |
-| ----------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| \_newWallet | address            | The wallet to validate                                                                                                                                                                                                                      |
-| \_onchainID | contract IIdentity | The investor's onchain ID NOTE: Currently commented out - pending final IIdentity interface implementation Once IIdentity.keyHasPurpose is available, uncomment the implementation below Reverts or emits RecoveryFails if validation fails |
+| Name    | Type    | Description                                                                                    |
+| ------- | ------- | ---------------------------------------------------------------------------------------------- |
+| balance | uint256 | The balance of the lost wallet. Reverts: - {NoTokensToRecover} if the wallet has zero balance. |
 
 ### \_captureFrozenState
 
@@ -152,35 +118,34 @@ _Validates that the new wallet belongs to the investor_
 function _captureFrozenState(address _wallet) internal view returns (struct ERC3643Recovery.FrozenState frozenState)
 ```
 
-_Captures the current frozen state of a wallet_
+_Captures the current frozen state of a wallet._
 
 #### Parameters
 
-| Name     | Type    | Description                      |
-| -------- | ------- | -------------------------------- |
-| \_wallet | address | The wallet to capture state from |
+| Name     | Type    | Description                       |
+| -------- | ------- | --------------------------------- |
+| \_wallet | address | The wallet to capture state from. |
 
 #### Return Values
 
-| Name        | Type                               | Description                                             |
-| ----------- | ---------------------------------- | ------------------------------------------------------- |
-| frozenState | struct ERC3643Recovery.FrozenState | Struct containing frozen tokens count and freeze status |
+| Name        | Type                               | Description                                              |
+| ----------- | ---------------------------------- | -------------------------------------------------------- |
+| frozenState | struct ERC3643Recovery.FrozenState | Struct containing frozen tokens count and freeze status. |
 
 ### \_validateRecoveryInputs
 
 ```solidity
-function _validateRecoveryInputs(address _lostWallet, address _newWallet, address _investorOnchainID) internal pure
+function _validateRecoveryInputs(address _lostWallet, address _newWallet) internal pure
 ```
 
-_Validates all recovery input parameters_
+_Validates all recovery input parameters._
 
 #### Parameters
 
-| Name                | Type    | Description                                                                                                                                                                                                                                                                  |
-| ------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| \_lostWallet        | address | The lost wallet address to validate                                                                                                                                                                                                                                          |
-| \_newWallet         | address | The new wallet address to validate                                                                                                                                                                                                                                           |
-| \_investorOnchainID | address | The investor's onchain ID to validate Reverts: - {InvalidLostWallet} if lost wallet is zero address - {InvalidNewWallet} if new wallet is zero address - {InvalidInvestorOnchainID} if onchain ID is zero address - {SameWalletAddress} if lost and new wallets are the same |
+| Name         | Type    | Description                                                                                                                                                                                                        |
+| ------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| \_lostWallet | address | The lost wallet address to validate.                                                                                                                                                                               |
+| \_newWallet  | address | The new wallet address to validate. Reverts: - {InvalidLostWallet} if lost wallet is zero address. - {InvalidNewWallet} if new wallet is zero address. - {SameWalletAddress} if lost and new wallets are the same. |
 
 ### \_implementedInterfaces
 
@@ -259,29 +224,19 @@ allowing authorized agents to transfer tokens from lost wallets to new ones._
 ### RecoverySuccess
 
 ```solidity
-event RecoverySuccess(address _lostWallet, address _newWallet, address _investorOnchainID)
+event RecoverySuccess(address _lostWallet, address _newWallet)
 ```
 
-this event is emitted when an investor successfully recovers his tokens
-the event is emitted by the recoveryAddress function
-`_lostWallet` is the address of the wallet that the investor
-lost access to
-`_newWallet` is the address of the wallet that the investor
-provided for the recovery
-`_investorOnchainID` is the address of the onchainID
-of the investor who asked for a recovery
+Emitted when an investor successfully recovers their tokens.
 
-### RecoveryFails
+_Emitted by the recoveryAddress function._
 
-```solidity
-event RecoveryFails(address _lostWallet, address _newWallet, address _investorOnchainID)
-```
+#### Parameters
 
-this event is emitted when the recovery process fails
-the event is emitted by the recoveryAddress function
-`_lostWallet` is the address of the wallet that the investor lost access to
-`_newWallet` is the address of the wallet that the investor provided for the recovery
-`_investorOnchainID` is the address of the onchainID of the investor who asked for a recovery
+| Name         | Type    | Description                                      |
+| ------------ | ------- | ------------------------------------------------ |
+| \_lostWallet | address | The address of the wallet that was lost.         |
+| \_newWallet  | address | The address of the wallet provided for recovery. |
 
 ### InvalidLostWallet
 
@@ -298,14 +253,6 @@ error InvalidNewWallet()
 ```
 
 Thrown when the new wallet address is zero.
-
-### InvalidInvestorOnchainID
-
-```solidity
-error InvalidInvestorOnchainID()
-```
-
-Thrown when the investor onchain ID address is zero.
 
 ### SameWalletAddress
 
@@ -326,16 +273,23 @@ Thrown when the lost wallet has no tokens to recover.
 ### recoveryAddress
 
 ```solidity
-function recoveryAddress(address _lostWallet, address _newWallet, address _investorOnchainID) external returns (bool)
+function recoveryAddress(address _lostWallet, address _newWallet) external returns (bool)
 ```
 
-@dev recovery function used to force transfer tokens from a
-lost wallet to a new wallet for an investor.
-@param \_lostWallet the wallet that the investor lost
-@param \_newWallet the newly provided wallet on which tokens have to be transferred
-@param \_investorOnchainID the onchainID of the investor asking for a recovery
-This function can only be called by a wallet set as agent of the token
-emits a `TokensUnfrozen` event if there is some frozen tokens on the lost wallet if the recov process success
-emits a `Transfer` event if the recovery process is successful
-emits a `RecoverySuccess` event if the recovery process is successful
-emits a `RecoveryFails` event if the recovery process fails
+Recovers tokens from a lost wallet to a new wallet.
+
+_Can only be called by an authorized recovery agent.
+Emits RecoverySuccess on success, RecoveryFails on failure._
+
+#### Parameters
+
+| Name         | Type    | Description                                         |
+| ------------ | ------- | --------------------------------------------------- |
+| \_lostWallet | address | The wallet that was lost.                           |
+| \_newWallet  | address | The new wallet to which tokens will be transferred. |
+
+#### Return Values
+
+| Name | Type | Description                                               |
+| ---- | ---- | --------------------------------------------------------- |
+| [0]  | bool | success True if recovery was successful, false otherwise. |

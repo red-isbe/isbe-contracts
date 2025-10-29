@@ -13,7 +13,6 @@ import {ERC203643InternalCommon} from '../../erc203643/ERC203643InternalCommon.s
  *      Uses COMPLIANCE_ROLE for granular permission control.
  */
 abstract contract ERC3643Compliance is ICompliance, ERC203643InternalCommon {
-
     /**
      * @dev Disables further initializations for this facet using its resolver key.
      */
@@ -30,11 +29,7 @@ abstract contract ERC3643Compliance is ICompliance, ERC203643InternalCommon {
      */
     function initializeERC3643Compliance(
         bool maxBalanceEnabled
-    )
-        external
-        override
-        initializer(_ERC3643_COMPLIANCE_RESOLVER_KEY)
-    {
+    ) external override initializer(_ERC3643_COMPLIANCE_RESOLVER_KEY) {
         _initialize(maxBalanceEnabled);
         emit ComplianceFeatureToggled('MaxBalance', maxBalanceEnabled);
     }
@@ -49,12 +44,11 @@ abstract contract ERC3643Compliance is ICompliance, ERC203643InternalCommon {
      * Requirements:
      * - Caller must have COMPLIANCE_ROLE
      */
-    function setMaxBalanceEnabled(bool enabled)
-        external
-        onlyRole(_COMPLIANCE_ROLE)
-    {
+    function setMaxBalanceEnabled(
+        bool enabled
+    ) external onlyRole(_COMPLIANCE_ROLE) {
         _setMaxBalanceEnabled(enabled);
-        emit ComplianceFeatureToggled("MaxBalance", enabled);
+        emit ComplianceFeatureToggled('MaxBalance', enabled);
     }
 
     // --- Get MaxBalance Activation ---
@@ -77,12 +71,11 @@ abstract contract ERC3643Compliance is ICompliance, ERC203643InternalCommon {
      * @param _amount The amount of tokens to transfer.
      * @return True if the transfer is compliant, false otherwise.
      */
-    function canTransfer(address _from, address _to, uint256 _amount)
-        external
-        view
-        override
-        returns (bool)
-    {
+    function canTransfer(
+        address _from,
+        address _to,
+        uint256 _amount
+    ) external view override returns (bool) {
         return _canTransfer(_from, _to, _amount);
     }
 
@@ -93,11 +86,11 @@ abstract contract ERC3643Compliance is ICompliance, ERC203643InternalCommon {
      * @param _to The address of the receiver.
      * @param _amount The amount of tokens transferred.
      */
-    function transferred(address _from, address _to, uint256 _amount)
-        external
-        override
-        onlyRole(_COMPLIANCE_ROLE)
-    {
+    function transferred(
+        address _from,
+        address _to,
+        uint256 _amount
+    ) external override onlyRole(_COMPLIANCE_ROLE) {
         _transferred(_from, _to, _amount);
     }
 
@@ -107,11 +100,10 @@ abstract contract ERC3643Compliance is ICompliance, ERC203643InternalCommon {
      * @param _to The address receiving the minted tokens.
      * @param _amount The amount of tokens minted.
      */
-    function created(address _to, uint256 _amount)
-        external
-        override
-        onlyRole(_COMPLIANCE_ROLE)
-    {
+    function created(
+        address _to,
+        uint256 _amount
+    ) external override onlyRole(_COMPLIANCE_ROLE) {
         _created(_to, _amount);
     }
 
@@ -121,11 +113,10 @@ abstract contract ERC3643Compliance is ICompliance, ERC203643InternalCommon {
      * @param _from The address from which tokens are burned.
      * @param _amount The amount of tokens burned.
      */
-    function destroyed(address _from, uint256 _amount)
-        external
-        override
-        onlyRole(_COMPLIANCE_ROLE)
-    {
+    function destroyed(
+        address _from,
+        uint256 _amount
+    ) external override onlyRole(_COMPLIANCE_ROLE) {
         _destroyed(_from, _amount);
     }
 

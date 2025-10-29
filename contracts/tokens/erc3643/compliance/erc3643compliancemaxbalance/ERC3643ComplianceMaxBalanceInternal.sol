@@ -13,7 +13,6 @@ import {_ERC3643_COMPLIANCE_MAXBALANCE_STORAGE_POSITION} from '../../../../const
  *      It is intended to be used by external contracts that handle authorization and event emission.
  */
 abstract contract ERC3643ComplianceMaxBalanceInternal is ERC20Internal {
-
     /// @dev Storage structure for ERC-3643 MaxBalance restriction.
     struct ERC3643ComplianceMaxBalanceStorage {
         uint256 maxBalance;
@@ -33,9 +32,45 @@ abstract contract ERC3643ComplianceMaxBalanceInternal is ERC20Internal {
      * @param _maxBalance The new max balance value to assign.
      */
     function _setMaxBalance(uint256 _maxBalance) internal {
-        ERC3643ComplianceMaxBalanceStorage storage $ = _erc3643ComplianceMaxBalanceStorage();
+        ERC3643ComplianceMaxBalanceStorage
+            storage $ = _erc3643ComplianceMaxBalanceStorage();
         $.maxBalance = _maxBalance;
     }
+
+    /**
+     * @dev Internal hook for post-transfer operations for MaxBalance feature.
+     *      Intentionally left empty for feature mapping.
+     * @param from The address of the sender.
+     * @param to The address of the receiver.
+     * @param amount The amount of tokens transferred.
+     */
+    // solhint-disable no-empty-blocks
+    function _transferActionOnMaxBalance(
+        address from,
+        address to,
+        uint256 amount
+    ) internal {}
+
+    /**
+     * @dev Internal hook for post-mint operations for MaxBalance feature.
+     *      Intentionally left empty for feature mapping.
+     * @param to The address receiving minted tokens.
+     * @param amount The amount of tokens minted.
+     */
+    // solhint-disable no-empty-blocks
+    function _creationActionOnMaxBalance(address to, uint256 amount) internal {}
+
+    /**
+     * @dev Internal hook for post-burn operations for MaxBalance feature.
+     *      Intentionally left empty for feature mapping.
+     * @param from The address from which tokens are burned.
+     * @param amount The amount of tokens burned.
+     */
+    // solhint-disable no-empty-blocks
+    function _destructionActionOnMaxBalance(
+        address from,
+        uint256 amount
+    ) internal {}
 
     /**
      * @dev Internal view function to retrieve the current max balance value from storage.
@@ -52,40 +87,12 @@ abstract contract ERC3643ComplianceMaxBalanceInternal is ERC20Internal {
      * @param amount The amount of tokens to transfer.
      * @return True if compliant, false otherwise.
      */
-    function _complianceCheckOnMaxBalance(address to, uint256 amount) internal view returns (bool) {
+    function _complianceCheckOnMaxBalance(
+        address to,
+        uint256 amount
+    ) internal view returns (bool) {
         uint256 _maxBalance = _getMaxBalance();
         return (_balanceOf(to) + amount) <= _maxBalance;
-    }
-
-    /**
-     * @dev Internal hook for post-transfer operations for MaxBalance feature.
-     *      Intentionally left empty for feature mapping.
-     * @param from The address of the sender.
-     * @param to The address of the receiver.
-     * @param amount The amount of tokens transferred.
-     */
-    // solhint-disable no-empty-blocks
-    function _transferActionOnMaxBalance(address from, address to, uint256 amount) internal {
-    }
-
-    /**
-     * @dev Internal hook for post-mint operations for MaxBalance feature.
-     *      Intentionally left empty for feature mapping.
-     * @param to The address receiving minted tokens.
-     * @param amount The amount of tokens minted.
-     */
-    // solhint-disable no-empty-blocks
-    function _creationActionOnMaxBalance(address to, uint256 amount) internal {
-    }
-
-    /**
-     * @dev Internal hook for post-burn operations for MaxBalance feature.
-     *      Intentionally left empty for feature mapping.
-     * @param from The address from which tokens are burned.
-     * @param amount The amount of tokens burned.
-     */
-    // solhint-disable no-empty-blocks
-    function _destructionActionOnMaxBalance(address from, uint256 amount) internal {
     }
 
     /**

@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {ERC3643ComplianceMaxBalance} from './erc3643compliancemaxbalance/ERC3643ComplianceMaxBalance.sol';
+//import {ERC3643ComplianceMaxBalance} from './erc3643compliancemaxbalance/ERC3643ComplianceMaxBalance.sol';
 import {_ERC3643_COMPLIANCE_STORAGE_POSITION} from '../../../constants/storagePositions.sol';
-
 
 /**
  * @title ERC3643ComplianceInternal
@@ -12,8 +11,7 @@ import {_ERC3643_COMPLIANCE_STORAGE_POSITION} from '../../../constants/storagePo
  *      This contract does not emit events or apply access control.
  *      It is intended to be used by external contracts that handle authorization and event emission.
  */
-abstract contract ERC3643ComplianceInternal{ 
-
+abstract contract ERC3643ComplianceInternal {
     /// @dev Storage structure for ERC-3643 MaxBalance feature activation.
     struct ERC3643ComplianceStorage {
         bool maxBalanceEnabled;
@@ -62,7 +60,11 @@ abstract contract ERC3643ComplianceInternal{
      * @param amount The amount of tokens to transfer.
      * @return True if the transfer is compliant, false otherwise.
      */
-    function _canTransfer(address from, address to, uint256 amount) internal view returns (bool) {
+    function _canTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal view returns (bool) {
         /*if (_isMaxBalanceEnabled()) {
             return _complianceCheckOnMaxBalance(to, amount);
         }*/
@@ -76,7 +78,11 @@ abstract contract ERC3643ComplianceInternal{
      * @param amount The amount of tokens transferred.
      * @return Always returns true for MaxBalance feature.
      */
-    function _transferred(address from, address to, uint256 amount) internal view returns (bool) {
+    function _transferred(
+        address from,
+        address to,
+        uint256 amount
+    ) internal view returns (bool) {
         return true;
     }
 
@@ -96,7 +102,10 @@ abstract contract ERC3643ComplianceInternal{
      * @param amount The amount of tokens burned.
      * @return Always returns true for MaxBalance feature.
      */
-    function _destroyed(address from, uint256 amount) internal view returns (bool) {
+    function _destroyed(
+        address from,
+        uint256 amount
+    ) internal view returns (bool) {
         return true;
     }
 

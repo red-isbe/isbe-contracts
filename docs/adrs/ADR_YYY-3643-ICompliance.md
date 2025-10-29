@@ -280,7 +280,7 @@ De esta forma, el compliance modular permite combinar varias reglas y módulos, 
 
 ### 3. Comparación de arquitecturas
 
-*(Por completar)*
+_(Por completar)_
 
 ## Decisión
 
@@ -296,9 +296,9 @@ En la arquitectura ISBE basada en Diamond (EIP-2535) para ERC-3643, el modelo de
 
 - Cada **feature** de compliance (ejemplo: CountryRestrictions, CountryWhitelisting, MaxBalance, etc.) se implementa como un contrato independiente.
 - Cada feature define:
-  - Su propia interfaz administrativa y de consulta (por ejemplo, `ICountryRestrictionsAdmin`, `ICountryWhitelistingAdmin`).
-  - Un contrato interno con la lógica de la regla y su propio diamond storage.
-  - Un contrato externo para exponer los métodos administrativos y de consulta.
+    - Su propia interfaz administrativa y de consulta (por ejemplo, `ICountryRestrictionsAdmin`, `ICountryWhitelistingAdmin`).
+    - Un contrato interno con la lógica de la regla y su propio diamond storage.
+    - Un contrato externo para exponer los métodos administrativos y de consulta.
 - Las features **no implementan `ICompliance`** ni exponen métodos de la interfaz estándar.
 - Las features pueden ser habilitadas/deshabilitadas dinámicamente mediante flags o configuración administrativa.
 
@@ -306,8 +306,8 @@ En la arquitectura ISBE basada en Diamond (EIP-2535) para ERC-3643, el modelo de
 
 - El contrato core delega la ejecución de los métodos de `ICompliance` a los features activos.
 - La coordinación entre features se realiza de forma explícita:
-  - Si alguna feature activa rechaza la operación (`_canTransfer` devuelve `false`), la operación se bloquea.
-  - Los hooks (`_transferred`, `_created`, `_destroyed`) se ejecutan en todas las features activas.
+    - Si alguna feature activa rechaza la operación (`_canTransfer` devuelve `false`), la operación se bloquea.
+    - Los hooks (`_transferred`, `_created`, `_destroyed`) se ejecutan en todas las features activas.
 
 ### 4. Interfaces
 
@@ -339,7 +339,6 @@ Si no se requiere compatibilidad binaria, se recomienda **documentar este desví
 - Las features pueden estar habilitadas/deshabilitadas dinámicamente mediante flags.
 - Por defecto, las features no bloquean operaciones si no están configuradas o habilitadas.
 - Se recomienda que todas las features sigan el patrón de inercia por defecto (no bloquear si no hay configuración), para evitar bloqueos inesperados y facilitar la gestión.
-
 
 ---
 
@@ -779,6 +778,7 @@ Para añadir una nueva regla (por ejemplo, `TimeLocksInternal`):
     ```
 
 4. Añadir llamadas en los métodos de orquestación:
+
     ```solidity
     function _canTransferCompliance(...) internal view returns (bool) {
         // ... reglas existentes
@@ -792,6 +792,7 @@ Para añadir una nueva regla (por ejemplo, `TimeLocksInternal`):
         return true;
     }
     ```
+
 5. Crear `ComplianceTimeLocksFacet.sol` para exposición externa
 
 **No es necesario modificar `ERC203643InternalCommon`** ✅

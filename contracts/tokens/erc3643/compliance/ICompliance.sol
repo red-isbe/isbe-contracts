@@ -9,7 +9,6 @@ pragma solidity ^0.8.28;
  * @author ISBE
  */
 interface ICompliance {
-
     /**
      * @notice Emitted when a compliance feature is enabled or disabled.
      * @param feature The name of the feature (e.g., "MaxBalance").
@@ -50,9 +49,7 @@ interface ICompliance {
      * @dev Should be called once during contract setup.
      * @param _maxBalanceEnabled Enable/disable MaxBalance feature.
      */
-    function initializeERC3643Compliance(
-        bool _maxBalanceEnabled
-    ) external;
+    function initializeERC3643Compliance(bool _maxBalanceEnabled) external;
 
     /**
      * @notice Checks if a transfer is compliant.
