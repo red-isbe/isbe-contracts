@@ -9,32 +9,14 @@ pragma solidity ^0.8.28;
  */
 interface IERC3643Recovery {
     /**
-     *  this event is emitted when an investor successfully recovers his tokens
-     *  the event is emitted by the recoveryAddress function
-     *  `_lostWallet` is the address of the wallet that the investor
-     *  lost access to
-     *  `_newWallet` is the address of the wallet that the investor
-     *  provided for the recovery
-     *  `_investorOnchainID` is the address of the onchainID
-     *  of the investor who asked for a recovery
+     * @notice Emitted when an investor successfully recovers their tokens.
+     * @dev Emitted by the recoveryAddress function.
+     * @param _lostWallet The address of the wallet that was lost.
+     * @param _newWallet The address of the wallet provided for recovery.
      */
     event RecoverySuccess(
         address indexed _lostWallet,
-        address indexed _newWallet,
-        address indexed _investorOnchainID
-    );
-
-    /**
-     *  this event is emitted when the recovery process fails
-     *  the event is emitted by the recoveryAddress function
-     *  `_lostWallet` is the address of the wallet that the investor lost access to
-     *  `_newWallet` is the address of the wallet that the investor provided for the recovery
-     *  `_investorOnchainID` is the address of the onchainID of the investor who asked for a recovery
-     */
-    event RecoveryFails(
-        address indexed _lostWallet,
-        address indexed _newWallet,
-        address indexed _investorOnchainID
+        address indexed _newWallet
     );
 
     /**
@@ -48,11 +30,6 @@ interface IERC3643Recovery {
     error InvalidNewWallet();
 
     /**
-     * @notice Thrown when the investor onchain ID address is zero.
-     */
-    error InvalidInvestorOnchainID();
-
-    /**
      * @notice Thrown when the lost wallet and new wallet are the same address.
      */
     error SameWalletAddress();
@@ -63,20 +40,15 @@ interface IERC3643Recovery {
     error NoTokensToRecover();
 
     /**
-     *  @dev recovery function used to force transfer tokens from a
-     *  lost wallet to a new wallet for an investor.
-     *  @param _lostWallet the wallet that the investor lost
-     *  @param _newWallet the newly provided wallet on which tokens have to be transferred
-     *  @param _investorOnchainID the onchainID of the investor asking for a recovery
-     *  This function can only be called by a wallet set as agent of the token
-     *  emits a `TokensUnfrozen` event if there is some frozen tokens on the lost wallet if the recov process success
-     *  emits a `Transfer` event if the recovery process is successful
-     *  emits a `RecoverySuccess` event if the recovery process is successful
-     *  emits a `RecoveryFails` event if the recovery process fails
+     * @notice Recovers tokens from a lost wallet to a new wallet.
+     * @dev Can only be called by an authorized recovery agent.
+     * Emits RecoverySuccess on success, RecoveryFails on failure.
+     * @param _lostWallet The wallet that was lost.
+     * @param _newWallet The new wallet to which tokens will be transferred.
+     * @return success True if recovery was successful, false otherwise.
      */
     function recoveryAddress(
         address _lostWallet,
-        address _newWallet,
-        address _investorOnchainID
+        address _newWallet
     ) external returns (bool);
 }

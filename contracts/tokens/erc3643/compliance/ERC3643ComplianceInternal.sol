@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 import {ERC3643ComplianceMaxBalance} from './erc3643compliancemaxbalance/ERC3643ComplianceMaxBalance.sol';
 import {_ERC3643_COMPLIANCE_STORAGE_POSITION} from '../../../constants/storagePositions.sol';
 
+
 /**
  * @title ERC3643ComplianceInternal
  * @notice Internal contract for managing ERC-3643 MaxBalance compliance feature.
@@ -11,7 +12,7 @@ import {_ERC3643_COMPLIANCE_STORAGE_POSITION} from '../../../constants/storagePo
  *      This contract does not emit events or apply access control.
  *      It is intended to be used by external contracts that handle authorization and event emission.
  */
-abstract contract ERC3643ComplianceInternal is ERC3643ComplianceMaxBalance {
+abstract contract ERC3643ComplianceInternal{ 
 
     /// @dev Storage structure for ERC-3643 MaxBalance feature activation.
     struct ERC3643ComplianceStorage {
@@ -62,9 +63,9 @@ abstract contract ERC3643ComplianceInternal is ERC3643ComplianceMaxBalance {
      * @return True if the transfer is compliant, false otherwise.
      */
     function _canTransfer(address from, address to, uint256 amount) internal view returns (bool) {
-        if (_isMaxBalanceEnabled()) {
+        /*if (_isMaxBalanceEnabled()) {
             return _complianceCheckOnMaxBalance(to, amount);
-        }
+        }*/
         return true;
     }
 

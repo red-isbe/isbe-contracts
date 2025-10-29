@@ -3,7 +3,6 @@ pragma solidity ^0.8.28;
 
 import {IERC20Isbe} from '../../erc20/IERC20Isbe.sol';
 import {IERC3643Metadata} from './erc3643metadata/IERC3643Metadata.sol';
-import {IERC3643Regulatory} from './erc3643regulatory/IERC3643Regulatory.sol';
 import {IERC3643Freeze} from './erc3643freeze/IERC3643Freeze.sol';
 import {IERC203643Controller} from '../../erc203643/erc203643controller/IERC203643Controller.sol';
 import {IERC203643Capped} from '../../erc203643/erc203643capped/IERC203643Capped.sol';
@@ -26,7 +25,6 @@ import {IERC3643Recovery} from './erc3643recovery/IERC3643Recovery.sol';
 interface IERC3643 is
     IERC20Isbe,
     IERC3643Metadata,
-    IERC3643Regulatory,
     IERC3643Freeze,
     IERC203643Controller,
     IERC203643Capped,
