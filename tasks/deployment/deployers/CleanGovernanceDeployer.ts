@@ -4,13 +4,17 @@ import { ISignatureProvider } from '../providers/ISignatureProvider'
 import { getIsbeFactory } from '../../../scripts/utils/getIsbeFactory'
 import {
     BUSINESS_LOGIC_DEPLOYER_ROLE,
+    CLIENT_FILTERING_ROLE,
     DEFAULT_ADMIN_ROLE,
+    DID_REGISTRY_ROLE,
+    ENS_MANAGER_ROLE,
     GOVERNANCE_CONFIGURATION_MANAGER_ROLE,
     GOVERNANCE_MANAGER_ROLE,
     ISBE_PAUSER_ROLE,
     ISBE_ROLE,
     PROXY_DEPLOYER_ROLE,
-} from '../../../test/constants'
+    TIMESTAMPING_REGISTRY_ROLE,
+} from '../../../utils/constants'
 
 /**
  * Clean governance deployer that uses signature provider abstraction
@@ -89,6 +93,13 @@ export class CleanGovernanceDeployer {
             'DiamondCutAccessControlFacet',
             'DiamondLoupeFacet',
             'ConfigurationManagementFacet',
+            'DidDocumentDetailedFacet',
+            'DidControllerFacet',
+            'DidVerificationMethodFacet',
+            'DidVerificationRelationshipFacet',
+            'EnsRegistryFacet',
+            'TimeStampingRegistryFacet',
+            'ClientFilteringFacet',
         ]
 
         const facetAddresses: string[] = []
@@ -149,6 +160,22 @@ export class CleanGovernanceDeployer {
                 },
                 {
                     role: GOVERNANCE_MANAGER_ROLE,
+                    members: [accountAddress],
+                },
+                {
+                    role: DID_REGISTRY_ROLE,
+                    members: [accountAddress],
+                },
+                {
+                    role: ENS_MANAGER_ROLE,
+                    members: [accountAddress],
+                },
+                {
+                    role: CLIENT_FILTERING_ROLE,
+                    members: [accountAddress],
+                },
+                {
+                    role: TIMESTAMPING_REGISTRY_ROLE,
                     members: [accountAddress],
                 },
             ],

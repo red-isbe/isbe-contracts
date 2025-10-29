@@ -16,6 +16,10 @@ interface BusinessLogicConfig {
     version: number
 }
 
+interface ProgressTracker {
+    increment: (success: boolean) => void
+}
+
 /**
  * Clean use case deployer using signature provider abstraction
  * No longer needs to know about curve-specific deployment details
@@ -26,6 +30,102 @@ export class CleanUseCaseDeployer {
         private signatureProvider: ISignatureProvider
     ) {}
 
+    /**
+     * Configure all use cases without deploying them
+     * This only registers the configurations using setConfig but doesn't deploy proxies
+     */
+    async configureAll(
+        configs: UseCaseConfig[],
+        factoryAddress: string,
+        businessLogics: DeployedBusinessLogic[],
+        progressTracker?: ProgressTracker
+    ): Promise<DeployedUseCase[]> {
+        console.log(
+            `🔧 Configuring ${configs.length} use cases with ${this.signatureProvider.getCurveType()}...`
+        )
+
+        const results: DeployedUseCase[] = []
+        let successCount = 0
+        let failCount = 0
+
+        for (const config of configs) {
+            try {
+                console.log(
+                    `\n   📝 Configuring use case: ${config.description}`
+                )
+                console.log(
+                    `      📝 Configuration ID: ${config.configurationId}`
+                )
+
+                // Validate business logics
+                await this.validateRequiredBusinessLogics(
+                    config,
+                    businessLogics,
+                    factoryAddress
+                )
+
+                const businessLogicConfigs =
+                    this.createBusinessLogicConfigs(config)
+                console.log(
+                    `      📋 Configuring ${businessLogicConfigs.length} business logics...`
+                )
+
+                // Set up configuration only
+                const configVersion = await this.setupConfiguration(
+                    config,
+                    factoryAddress
+                )
+                await this.validateBusinessLogicConfiguration(
+                    config,
+                    businessLogicConfigs,
+                    businessLogics,
+                    factoryAddress,
+                    configVersion
+                )
+
+                console.log(`      ✅ Configuration successful`)
+
+                // Create a successful result without proxy address
+                const result: DeployedUseCase = {
+                    config,
+                    proxyAddress: null, // No proxy since we're only configuring
+                    success: true,
+                    error: null,
+                }
+
+                results.push(result)
+                successCount++
+
+                if (progressTracker?.increment) {
+                    progressTracker.increment(true)
+                }
+            } catch (error) {
+                failCount++
+                const deploymentResult = this.createFailedDeployment(
+                    config,
+                    error
+                )
+                results.push(deploymentResult)
+                console.error(
+                    `      ❌ Error configuring ${config?.description || 'Unknown Use Case'}:`,
+                    deploymentResult.error
+                )
+
+                if (progressTracker?.increment) {
+                    progressTracker.increment(false)
+                }
+            }
+        }
+
+        console.log(
+            `\n   📊 Configuration summary: ${successCount} successful, ${failCount} failed`
+        )
+        return results
+    }
+
+    /**
+     * Deploy all use cases including configuration and proxy deployment
+     */
     async deployAll(
         configs: UseCaseConfig[],
         factoryAddress: string,
@@ -42,6 +142,9 @@ export class CleanUseCaseDeployer {
         for (const config of configs) {
             try {
                 console.log(`\n   🏗️ Deploying use case: ${config.description}`)
+                console.log(
+                    `      📝 Configuration ID: ${config.configurationId}`
+                )
                 const result = await this.deploySingle(
                     config,
                     factoryAddress,
@@ -64,7 +167,7 @@ export class CleanUseCaseDeployer {
                 )
                 results.push(deploymentResult)
                 console.error(
-                    `      ❌ Error deploying ${config.description}:`,
+                    `      ❌ Error deploying ${config?.description || 'Unknown Use Case'}:`,
                     deploymentResult.error
                 )
             }

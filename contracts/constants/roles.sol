@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
-
 pragma solidity ^0.8.28;
 
 // solhint-disable max-line-length
 
-bytes32 constant _DEFAULT_ADMIN_ROLE = 0x00;
+bytes32 constant _DEFAULT_ADMIN_ROLE = 0x0000000000000000000000000000000000000000000000000000000000000000;
 
 // keccak256('isbe.contracts.role.pauser');
 bytes32 constant _PAUSER_ROLE = 0x8c911f4537972e7549dbbd37a96b929a4b480f4fb156fc6344524bdf2ca50aa1;
@@ -48,6 +47,9 @@ bytes32 constant _SNAPSHOT_ROLE = 0x0ca5e23bde0d5e6112f10b9752afc92df6901f9218a4
 // keccak256('isbe.contracts.role.minter');
 bytes32 constant _MINTER_ROLE = 0xd8e8f9f9638a19d632dbb79025022db564483265e96ba99b2dd89df138e9cace;
 
+// keccak256('isbe.contracts.role.did.registry');
+bytes32 constant _DID_REGISTRY_ROLE = 0xaf2da20f2930ba6162489e7dc51c672f0482cbdc3b62d16063683f2d23f0a973;
+
 // keccak256('isbe.contracts.role.ens.manager');
 bytes32 constant _ENS_MANAGER_ROLE = 0x6e23e5e4b53b45e5b32b8b2e8e9a8c48b8a7c3b9c2b8a9a7b9a8c4b8b9a8c9b9;
 
@@ -56,5 +58,8 @@ bytes32 constant _ROYALTY_ROLE = 0xe87ed15151829ed3753553fc34d39b49f60370ac439fd
 
 // keccak256('isbe.contracts.role.client.filtering');
 bytes32 constant _CLIENT_FILTERING_ROLE = 0xcbb09df20dd6e5dbe10d3957a6ca4269c2c926a5334d2cbcd9ea39ab0593f79a;
+
+// keccak256('isbe.contracts.role.timestamping.registry');
+bytes32 constant _TIMESTAMPING_REGISTRY_ROLE = 0xde626b2d09629d2f22e508eb4635d61e0f8ab77b4ad08e0823135c887724bac8;
 
 // solhint-enable max-line-length

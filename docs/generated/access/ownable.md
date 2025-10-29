@@ -192,13 +192,13 @@ _Inherits from IOwnable2Step, Ownable and Ownable2StepInternal_
 function transferOwnership(address _newOwner) external
 ```
 
-Transfers ownership of the contract to a new account
+Initiates ownership transfer to a new address
 
 #### Parameters
 
-| Name       | Type    | Description                  |
-| ---------- | ------- | ---------------------------- |
-| \_newOwner | address | The address of the new owner |
+| Name       | Type    | Description                      |
+| ---------- | ------- | -------------------------------- |
+| \_newOwner | address | Address to transfer ownership to |
 
 ### acceptOwnership
 
@@ -206,9 +206,7 @@ Transfers ownership of the contract to a new account
 function acceptOwnership() external
 ```
 
-Accepts ownership of the contract
-
-_Callable only by the pending owner. Completes the two-step ownership transfer process._
+Completes the ownership transfer to the pending owner
 
 ### pendingOwner
 
@@ -216,19 +214,27 @@ _Callable only by the pending owner. Completes the two-step ownership transfer p
 function pendingOwner() external view returns (address)
 ```
 
-Returns the address of the pending owner
+Returns the pending owner address
 
 #### Return Values
 
-| Name | Type    | Description                                                |
-| ---- | ------- | ---------------------------------------------------------- |
-| [0]  | address | The address that has been proposed to become the new owner |
+| Name | Type    | Description                      |
+| ---- | ------- | -------------------------------- |
+| [0]  | address | The address of the pending owner |
 
 ### \_implementedInterfaces
 
 ```solidity
 function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
 ```
+
+Returns the interfaces implemented by this contract
+
+#### Return Values
+
+| Name         | Type     | Description            |
+| ------------ | -------- | ---------------------- |
+| interfaces\_ | bytes4[] | Array of interface IDs |
 
 ---
 
@@ -364,15 +370,21 @@ Constructor that disables the initializer
 function initializeOwnable(address _admin) external
 ```
 
+Initializes the ownership contract
+
+#### Parameters
+
+| Name    | Type    | Description               |
+| ------- | ------- | ------------------------- |
+| \_admin | address | The initial owner address |
+
 ### renounceOwnership
 
 ```solidity
 function renounceOwnership() external
 ```
 
-Renounces ownership of the contract
-
-_Leaves the contract without an owner. Functions restricted to the owner will be disabled._
+Allows the owner to renounce their ownership
 
 ### owner
 
@@ -380,7 +392,7 @@ _Leaves the contract without an owner. Functions restricted to the owner will be
 function owner() external view returns (address)
 ```
 
-Returns the current owner of the contract
+Returns the current owner address
 
 #### Return Values
 
@@ -393,6 +405,14 @@ Returns the current owner of the contract
 ```solidity
 function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
 ```
+
+Returns the interfaces implemented by this contract
+
+#### Return Values
+
+| Name         | Type     | Description            |
+| ------------ | -------- | ---------------------- |
+| interfaces\_ | bytes4[] | Array of interface IDs |
 
 ---
 

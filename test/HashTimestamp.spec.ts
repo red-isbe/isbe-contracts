@@ -6,13 +6,13 @@ import {
     ISBEPause,
     HashTimestampTestWrapper,
 } from '../typechain-types'
-import { HASH_TIMESTAMP_ROLE, PAUSER_ROLE } from './constants'
-import { deployGovernance } from './initialization'
+import { HASH_TIMESTAMP_ROLE, PAUSER_ROLE } from '../utils/constants'
+import { deployGovernance } from './fixtures/governance'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
+import { randomBytes32 } from './support'
 
 describe('Hash Timestamp', function () {
-    const HASH =
-        '0x0000000000000000000000000000000000000000000000000000000000000001'
-
+    const HASH = randomBytes32()
     const BLOCK_TIMESTAMP = 1234567890
 
     let adminAccount: Signer
@@ -20,28 +20,40 @@ describe('Hash Timestamp', function () {
     let pause: ISBEPause
     let accessControl: AccessControl
 
-    async function deploy() {
-        ;[adminAccount] = await ethers.getSigners()
-        const adminAccountAddress = await adminAccount.getAddress()
+    async function deployFixture() {
+        const [adminSigner] = await ethers.getSigners()
+        const adminAccountAddress = await adminSigner.getAddress()
 
-        const result = await deployGovernance(adminAccount)
+        const result = await deployGovernance(adminSigner)
 
-        hashTimestamp = result.hashTimestamp
-        pause = result.pause
-        accessControl = result.accessControl
+        await result.accessControl.grantRole(PAUSER_ROLE, adminAccountAddress)
+        await result.accessControl.grantRole(
+            HASH_TIMESTAMP_ROLE,
+            adminAccountAddress
+        )
 
-        await accessControl.grantRole(PAUSER_ROLE, adminAccountAddress)
-        await accessControl.grantRole(HASH_TIMESTAMP_ROLE, adminAccountAddress)
+        return {
+            adminAccount: adminSigner,
+            hashTimestamp: result.hashTimestamp,
+            pause: result.pause,
+            accessControl: result.accessControl,
+        }
     }
+
+    beforeEach(async function () {
+        const contracts = await loadFixture(deployFixture)
+        adminAccount = contracts.adminAccount
+        hashTimestamp = contracts.hashTimestamp
+        pause = contracts.pause
+        accessControl = contracts.accessControl
+    })
 
     describe('Timestamping hashes', function () {
         it('GIVEN a Hash Timestamp WHEN timestamp hash THEN succeeds', async function () {
-            await deploy()
+            const connectedHashTimestamp = hashTimestamp.connect(adminAccount)
+            await connectedHashTimestamp.setMockedTimestamp(BLOCK_TIMESTAMP)
 
-            hashTimestamp = hashTimestamp.connect(adminAccount)
-            await hashTimestamp.setMockedTimestamp(BLOCK_TIMESTAMP)
-
-            await expect(hashTimestamp.timestampHash(HASH))
+            await expect(connectedHashTimestamp.timestampHash(HASH))
                 .to.emit(hashTimestamp, 'HashTimestamped')
                 .withArgs(
                     HASH,
@@ -56,42 +68,36 @@ describe('Hash Timestamp', function () {
         })
 
         it('GIVEN a Hash Timestamp WHEN hash is already timestamped THEN fails', async function () {
-            await deploy()
+            const connectedHashTimestamp = hashTimestamp.connect(adminAccount)
 
-            hashTimestamp = hashTimestamp.connect(adminAccount)
-
-            await hashTimestamp.timestampHash(HASH)
+            await connectedHashTimestamp.timestampHash(HASH)
 
             expect(await hashTimestamp.exists(HASH)).to.equal(true)
 
             await expect(
-                hashTimestamp.timestampHash(HASH)
+                connectedHashTimestamp.timestampHash(HASH)
             ).to.be.revertedWithCustomError(hashTimestamp, 'HashAlreadyExists')
         })
 
         it('GIVEN a Hash Timestamp WHEN contract is paused THEN fails', async function () {
-            await deploy()
-
-            hashTimestamp = hashTimestamp.connect(adminAccount)
+            const connectedHashTimestamp = hashTimestamp.connect(adminAccount)
             await pause.pause()
 
             await expect(
-                hashTimestamp.timestampHash(HASH)
+                connectedHashTimestamp.timestampHash(HASH)
             ).to.be.revertedWithCustomError(hashTimestamp, 'IsPaused')
         })
 
         it('GIVEN a Hash Timestamp WHEN account has no roles THEN fails', async function () {
-            await deploy()
-
-            hashTimestamp = hashTimestamp.connect(adminAccount)
+            const connectedHashTimestamp = hashTimestamp.connect(adminAccount)
 
             await accessControl.revokeRole(
                 HASH_TIMESTAMP_ROLE,
-                adminAccount.getAddress()
+                await adminAccount.getAddress()
             )
 
             await expect(
-                hashTimestamp.timestampHash(HASH)
+                connectedHashTimestamp.timestampHash(HASH)
             ).to.be.revertedWithCustomError(hashTimestamp, 'AccountHasNoRole')
         })
     })

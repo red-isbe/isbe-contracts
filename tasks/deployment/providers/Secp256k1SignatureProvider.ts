@@ -52,9 +52,10 @@ export class Secp256k1SignatureProvider implements ISignatureProvider {
             deployData = bytecode + encodedArgs.slice(2)
         }
 
-        // Deploy using ContractFactory
+        // Deploy using ContractFactory with explicit gas limit to prevent "Internal error" on non-validator nodes
+        const deployOptions = { gasLimit: 25_000_000 }
         const factory = new ethers.ContractFactory([], deployData, signer)
-        const contract = await factory.deploy()
+        const contract = await factory.deploy(deployOptions)
         await contract.waitForDeployment()
 
         const address = await contract.getAddress()
@@ -67,6 +68,10 @@ export class Secp256k1SignatureProvider implements ISignatureProvider {
         transaction: TransactionRequest
     ): Promise<TransactionResponse> {
         const signer = await this.getSigner()
+        // Add explicit gas limit if not already set to prevent "Internal error" on non-validator nodes
+        if (!transaction.gasLimit) {
+            transaction.gasLimit = 25_000_000
+        }
         return await signer.sendTransaction(transaction)
     }
 

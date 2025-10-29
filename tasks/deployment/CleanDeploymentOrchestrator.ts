@@ -257,8 +257,6 @@ export class CleanDeploymentOrchestrator {
         result: DeploymentResult,
         options: DeploymentOptions
     ): Promise<void> {
-        if (options.skipUseCases) return
-
         EnhancedLogger.logSection('Step 3: Use Case Deployment')
         this.timer.startStep('Use Case Deployment')
 
@@ -267,15 +265,31 @@ export class CleanDeploymentOrchestrator {
             this.config.useCases.length
         )
 
-        // Use clean use case deployer with progress tracking
-        result.useCases = await this.useCaseDeployer.deployAll(
-            this.config.useCases,
-            result.governance!.address,
-            result.businessLogics,
-            progressTracker
-        )
-        result.summary.completedSteps++
+        if (options.skipUseCases) {
+            // Only register configurations but don't deploy use cases
+            console.log(
+                '\n🔧 Registering configurations without deploying use cases'
+            )
+            console.log('   ℹ️  Will call setConfig but skip deployUseCase')
 
+            // Configure use cases but don't deploy them
+            result.useCases = await this.useCaseDeployer.configureAll(
+                this.config.useCases,
+                result.governance!.address,
+                result.businessLogics,
+                progressTracker
+            )
+        } else {
+            // Do full deployment including configuration and proxy creation
+            result.useCases = await this.useCaseDeployer.deployAll(
+                this.config.useCases,
+                result.governance!.address,
+                result.businessLogics,
+                progressTracker
+            )
+        }
+
+        result.summary.completedSteps++
         this.timer.endStep()
         progressTracker.printSummary()
     }
@@ -404,10 +418,12 @@ export class CleanDeploymentOrchestrator {
         if (failedUseCases.length > 0) {
             console.log('\\n❌ FAILED USE CASES:')
             failedUseCases.forEach((useCase, index) => {
-                console.log(`   ${index + 1}. ${useCase.config.description}`)
+                console.log(
+                    `   ${index + 1}. ${useCase.config?.description || 'Unknown Use Case'} (ID: ${useCase.config?.configurationId || 'N/A'})`
+                )
                 console.log(`      🚨 Error: ${useCase.error}`)
                 console.log(
-                    `      🔗 Config ID: ${useCase.config.configurationId}`
+                    `      🔗 Config ID: ${useCase.config?.configurationId || 'N/A'}`
                 )
             })
         }

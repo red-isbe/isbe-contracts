@@ -8,13 +8,13 @@ Implements generic state tracking for an asset using events
 function recordState(uint256 _newState) external
 ```
 
-Register new asset event
+Record a new state for the asset
 
 #### Parameters
 
-| Name       | Type    | Description                    |
-| ---------- | ------- | ------------------------------ |
-| \_newState | uint256 | New asset state for this event |
+| Name       | Type    | Description             |
+| ---------- | ------- | ----------------------- |
+| \_newState | uint256 | The new state to record |
 
 ### getAssetEvents
 
@@ -22,20 +22,20 @@ Register new asset event
 function getAssetEvents(uint256 _pageNumber, uint256 _resultsPerPage) external view returns (struct IAssetEventTracker.AssetEvent[] assetEvents_)
 ```
 
-Return paginated events based on page number and results per page
+Get paginated list of asset events
 
 #### Parameters
 
-| Name             | Type    | Description                   |
-| ---------------- | ------- | ----------------------------- |
-| \_pageNumber     | uint256 | Page number (starting with 0) |
-| \_resultsPerPage | uint256 | Number of results per page    |
+| Name             | Type    | Description                        |
+| ---------------- | ------- | ---------------------------------- |
+| \_pageNumber     | uint256 | The page number to fetch (0-based) |
+| \_resultsPerPage | uint256 | Number of results per page         |
 
 #### Return Values
 
-| Name          | Type                                   | Description        |
-| ------------- | -------------------------------------- | ------------------ |
-| assetEvents\_ | struct IAssetEventTracker.AssetEvent[] | Asset events array |
+| Name          | Type                                   | Description                                  |
+| ------------- | -------------------------------------- | -------------------------------------------- |
+| assetEvents\_ | struct IAssetEventTracker.AssetEvent[] | Array of asset events for the requested page |
 
 ### getLatestAssetEvent
 
@@ -43,13 +43,13 @@ Return paginated events based on page number and results per page
 function getLatestAssetEvent() external view returns (struct IAssetEventTracker.AssetEvent)
 ```
 
-Return latest asset event
+Get the most recent asset event
 
 #### Return Values
 
-| Name | Type                                 | Description                   |
-| ---- | ------------------------------------ | ----------------------------- |
-| [0]  | struct IAssetEventTracker.AssetEvent | Latest asset event registered |
+| Name | Type                                 | Description                 |
+| ---- | ------------------------------------ | --------------------------- |
+| [0]  | struct IAssetEventTracker.AssetEvent | Latest recorded asset event |
 
 ### getCurrentState
 
@@ -57,13 +57,13 @@ Return latest asset event
 function getCurrentState() external view returns (uint256)
 ```
 
-Return current state
+Get the current state of the asset
 
 #### Return Values
 
-| Name | Type    | Description             |
-| ---- | ------- | ----------------------- |
-| [0]  | uint256 | Latest state registered |
+| Name | Type    | Description         |
+| ---- | ------- | ------------------- |
+| [0]  | uint256 | Current state value |
 
 ### isStateChangeAllowed
 
@@ -71,25 +71,33 @@ Return current state
 function isStateChangeAllowed(uint256 _newState) external view returns (bool)
 ```
 
-Return if state change is allowed
+Check if transitioning to a new state is allowed
 
 #### Parameters
 
-| Name       | Type    | Description               |
-| ---------- | ------- | ------------------------- |
-| \_newState | uint256 | New asset state to change |
+| Name       | Type    | Description        |
+| ---------- | ------- | ------------------ |
+| \_newState | uint256 | The state to check |
 
 #### Return Values
 
-| Name | Type | Description                 |
-| ---- | ---- | --------------------------- |
-| [0]  | bool | True or false if is allowed |
+| Name | Type | Description                         |
+| ---- | ---- | ----------------------------------- |
+| [0]  | bool | Whether the state change is allowed |
 
 ### \_implementedInterfaces
 
 ```solidity
 function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
 ```
+
+Get the list of implemented interfaces
+
+#### Return Values
+
+| Name         | Type     | Description            |
+| ------------ | -------- | ---------------------- |
+| interfaces\_ | bytes4[] | Array of interface IDs |
 
 ---
 
@@ -105,15 +113,13 @@ _Inherits from AssetEventTracker, providing asset event tracker functions_
 function interfacesIntrospection() external pure returns (bytes4[] interfaces_)
 ```
 
-Gets the list of ERC-165 interface IDs the facet supports.
-
-_A pure function that returns an array of supported `bytes4` IDs._
+Get the list of interfaces implemented by this facet
 
 #### Return Values
 
-| Name         | Type     | Description                                  |
-| ------------ | -------- | -------------------------------------------- |
-| interfaces\_ | bytes4[] | An array of supported interface identifiers. |
+| Name         | Type     | Description            |
+| ------------ | -------- | ---------------------- |
+| interfaces\_ | bytes4[] | Array of interface IDs |
 
 ### businessIdIntrospection
 
@@ -121,15 +127,13 @@ _A pure function that returns an array of supported `bytes4` IDs._
 function businessIdIntrospection() external pure returns (bytes32 businessId_)
 ```
 
-Retrieves the unique business identifier for this facet.
-
-_Returns a `bytes32` key identifying the facet's purpose._
+Get the business ID associated with this facet
 
 #### Return Values
 
-| Name         | Type    | Description                              |
-| ------------ | ------- | ---------------------------------------- |
-| businessId\_ | bytes32 | The `bytes32` ID for the business logic. |
+| Name         | Type    | Description                |
+| ------------ | ------- | -------------------------- |
+| businessId\_ | bytes32 | Business ID for this facet |
 
 ### selectorsIntrospection
 
@@ -137,15 +141,13 @@ _Returns a `bytes32` key identifying the facet's purpose._
 function selectorsIntrospection() external pure returns (bytes4[] selectors_)
 ```
 
-Gets all function selectors implemented by this facet.
-
-_A pure function that returns a `bytes4[]` array of selectors._
+Get the list of function selectors for this facet
 
 #### Return Values
 
-| Name        | Type     | Description                              |
-| ----------- | -------- | ---------------------------------------- |
-| selectors\_ | bytes4[] | An array of `bytes4` function selectors. |
+| Name        | Type     | Description                 |
+| ----------- | -------- | --------------------------- |
+| selectors\_ | bytes4[] | Array of function selectors |
 
 ---
 
@@ -183,11 +185,34 @@ Modifier to validate state change is allowed
 function _recordState(uint256 _newState) internal virtual
 ```
 
+Record a new state in storage and emit an event
+
+#### Parameters
+
+| Name       | Type    | Description                  |
+| ---------- | ------- | ---------------------------- |
+| \_newState | uint256 | The new state to be recorded |
+
 ### \_getAssetEvents
 
 ```solidity
 function _getAssetEvents(uint256 _pageNumber, uint256 _resultsPerPage) internal view virtual returns (struct IAssetEventTracker.AssetEvent[] assetEvents_)
 ```
+
+Get a paginated slice of asset events
+
+#### Parameters
+
+| Name             | Type    | Description                |
+| ---------------- | ------- | -------------------------- |
+| \_pageNumber     | uint256 | Page number (0-based)      |
+| \_resultsPerPage | uint256 | Number of results per page |
+
+#### Return Values
+
+| Name          | Type                                   | Description                            |
+| ------------- | -------------------------------------- | -------------------------------------- |
+| assetEvents\_ | struct IAssetEventTracker.AssetEvent[] | Slice of events for the requested page |
 
 ### \_getLatestAssetEvent
 
@@ -195,11 +220,27 @@ function _getAssetEvents(uint256 _pageNumber, uint256 _resultsPerPage) internal 
 function _getLatestAssetEvent() internal view virtual returns (struct IAssetEventTracker.AssetEvent assetEvent_)
 ```
 
+Get the latest stored asset event
+
+#### Return Values
+
+| Name         | Type                                 | Description                     |
+| ------------ | ------------------------------------ | ------------------------------- |
+| assetEvent\_ | struct IAssetEventTracker.AssetEvent | Latest event or default if none |
+
 ### \_getCurrentState
 
 ```solidity
 function _getCurrentState() internal view virtual returns (uint256)
 ```
+
+Get the current state from the latest event
+
+#### Return Values
+
+| Name | Type    | Description         |
+| ---- | ------- | ------------------- |
+| [0]  | uint256 | Current state value |
 
 ### \_getAssetEventByIndex
 
@@ -240,6 +281,21 @@ Check if state change is allowed
 ```solidity
 function _isStateChangeAllowed(uint256 _currentState, uint256 _newState) internal pure virtual returns (bool)
 ```
+
+Check if a state transition is allowed
+
+#### Parameters
+
+| Name           | Type    | Description           |
+| -------------- | ------- | --------------------- |
+| \_currentState | uint256 | Current state         |
+| \_newState     | uint256 | New state to validate |
+
+#### Return Values
+
+| Name | Type | Description                             |
+| ---- | ---- | --------------------------------------- |
+| [0]  | bool | Whether the state transition is allowed |
 
 ### \_assetEventTrackerStorage
 

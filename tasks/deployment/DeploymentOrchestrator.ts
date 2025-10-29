@@ -158,24 +158,53 @@ export class DeploymentOrchestrator {
         result: DeploymentResult,
         options: DeploymentOptions
     ): Promise<void> {
-        if (options.skipUseCases) return
-
-        this.logStepStart(3, 'Deploying use cases')
-
-        result.useCases = await this.useCaseDeployer.deployAll(
-            this.config.useCases,
-            result.governance!.address,
-            this.signer!,
-            result.businessLogics
+        this.logStepStart(
+            3,
+            options.skipUseCases
+                ? 'Configuring use cases'
+                : 'Deploying use cases'
         )
+
+        if (options.skipUseCases) {
+            console.log(
+                '\n🔧 Registering configurations without deploying use cases'
+            )
+            console.log('   ℹ️  Will call setConfig but skip deployUseCase')
+
+            // We need to add a configureAll method to UseCaseDeployer
+            // For now, call the regular deployAll with a flag
+            result.useCases = await this.useCaseDeployer.deployAll(
+                this.config.useCases,
+                result.governance!.address,
+                this.signer!,
+                result.businessLogics,
+                true // skipProxyDeployment flag
+            )
+        } else {
+            // Full deployment
+            result.useCases = await this.useCaseDeployer.deployAll(
+                this.config.useCases,
+                result.governance!.address,
+                this.signer!,
+                result.businessLogics
+            )
+        }
+
         result.summary.completedSteps++
 
         const successfulUseCases = result.useCases.filter(
             (uc) => uc.success
         ).length
-        console.log(
-            `   ✅ ${successfulUseCases}/${result.useCases.length} use cases deployed`
-        )
+
+        if (options.skipUseCases) {
+            console.log(
+                `   ✅ ${successfulUseCases}/${result.useCases.length} use cases configured`
+            )
+        } else {
+            console.log(
+                `   ✅ ${successfulUseCases}/${result.useCases.length} use cases deployed`
+            )
+        }
     }
 
     private async runValidations(

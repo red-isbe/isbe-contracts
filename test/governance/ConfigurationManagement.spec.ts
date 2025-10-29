@@ -1,5 +1,6 @@
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
+import { loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers'
 import {
     IIsbeFactory,
     IEIP2535Introspection,
@@ -18,8 +19,8 @@ import {
     ISBE_CUT_RESOLVER_KEY,
     ISBE_LOUPE_RESOLVER_KEY,
     CONFIGURATION_MANAGEMENT_RESOLVER_KEY,
-} from '../constants'
-import { deployGovernance } from '../initialization'
+} from '../../utils/constants'
+import { deployGovernance } from '../fixtures/governance'
 
 describe('ConfigurationManagement', function () {
     let admin: Signer
@@ -30,33 +31,48 @@ describe('ConfigurationManagement', function () {
     let configurationManagementFacet: ConfigurationManagementFacet
     let isbeFactory: IIsbeFactory
 
-    async function deployInitial() {
-        ;[admin, isbe, nonAdmin] = await ethers.getSigners()
-        isbeAddress = await isbe.getAddress()
-        nonAdminAddress = await nonAdmin.getAddress()
+    async function deployFixture() {
+        const [adminSigner, isbeSigner, nonAdminSigner] =
+            await ethers.getSigners()
+        const isbeAddress = await isbeSigner.getAddress()
+        const nonAdminAddress = await nonAdminSigner.getAddress()
 
-        await deployIsbeFactory()
-    }
+        const result = await deployGovernance(adminSigner)
 
-    async function deployIsbeFactory() {
-        const result = await deployGovernance(admin)
-
-        isbeFactory = await ethers.getContractAt(
+        const isbeFactoryInstance = await ethers.getContractAt(
             'IIsbeFactory',
             await result.governanceContract.getAddress()
         )
 
-        configurationManagementFacet = await ethers.getContractAt(
+        const configurationManagementFacetInstance = await ethers.getContractAt(
             'ConfigurationManagementFacet',
             await result.governanceContract.getAddress()
         )
+
         expect(
             await result.configMgmtFacet.businessIdIntrospection()
         ).to.be.equal(CONFIGURATION_MANAGEMENT_RESOLVER_KEY)
+
+        return {
+            admin: adminSigner,
+            isbe: isbeSigner,
+            nonAdmin: nonAdminSigner,
+            isbeAddress,
+            nonAdminAddress,
+            isbeFactory: isbeFactoryInstance,
+            configurationManagementFacet: configurationManagementFacetInstance,
+        }
     }
 
     beforeEach(async () => {
-        await deployInitial()
+        const contracts = await loadFixture(deployFixture)
+        admin = contracts.admin
+        isbe = contracts.isbe
+        nonAdmin = contracts.nonAdmin
+        isbeAddress = contracts.isbeAddress
+        nonAdminAddress = contracts.nonAdminAddress
+        isbeFactory = contracts.isbeFactory
+        configurationManagementFacet = contracts.configurationManagementFacet
     })
 
     describe('ConfigurationManagement', () => {

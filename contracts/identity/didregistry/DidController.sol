@@ -13,13 +13,13 @@ import {DidControllerInternal} from './DidControllerInternal.sol';
  */
 abstract contract DidController is DidControllerInternal, IDidController {
     function addController(
-        string memory did,
-        string memory controller
+        bytes32 did,
+        bytes32 controller
     )
         external
         override
-        emptyString(did)
-        emptyString(controller)
+        bytes32IsNotZero(did)
+        bytes32IsNotZero(controller)
         onlyDidExists(did)
         onlyDidExists(controller)
         onlyNotController(did, controller)
@@ -30,16 +30,17 @@ abstract contract DidController is DidControllerInternal, IDidController {
     }
 
     function revokeController(
-        string memory did,
-        string memory controller
+        bytes32 did,
+        bytes32 controller
     )
         external
         override
-        emptyString(did)
-        emptyString(controller)
+        bytes32IsNotZero(did)
+        bytes32IsNotZero(controller)
         onlyDidExists(did)
         onlyDidExists(controller)
         onlyController(did, controller)
+        onlyNotLastController(did, controller)
         returns (bool success)
     {
         emit ControllerRevoked(did, controller);
@@ -47,7 +48,7 @@ abstract contract DidController is DidControllerInternal, IDidController {
     }
 
     function getDidsByController(
-        string memory controller,
+        bytes32 controller,
         uint256 page,
         uint256 pageSize
     )
@@ -55,7 +56,7 @@ abstract contract DidController is DidControllerInternal, IDidController {
         view
         override
         returns (
-            string[] memory items,
+            bytes32[] memory items,
             uint256 total,
             uint256 howMany,
             uint256 prev,
@@ -66,7 +67,7 @@ abstract contract DidController is DidControllerInternal, IDidController {
     }
 
     function checkController(
-        string memory did,
+        bytes32 did,
         address controller
     ) external view override returns (bool isController) {
         return _isController(did, controller);
@@ -76,6 +77,6 @@ abstract contract DidController is DidControllerInternal, IDidController {
         bytes memory did,
         address controller
     ) external view override returns (bool isController) {
-        return _isController(string(did), controller);
+        return _isController(bytes32(did), controller);
     }
 }

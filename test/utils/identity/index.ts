@@ -7,7 +7,7 @@ export { DidsResultValidator } from './DidResultValidator'
 export { VerificationRelationshipResultValidator } from './VerificationRelationshipResultValidator'
 
 // Exportar tipos
-export * from '../types/didDocument.types'
+export * from '../../types/identity'
 
 // Exportar interfaces de verifier
 export type { VerificationOptions } from './DidDocumentVerifier'

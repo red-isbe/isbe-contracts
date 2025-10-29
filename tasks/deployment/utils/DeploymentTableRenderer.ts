@@ -13,29 +13,42 @@ export class DeploymentTableRenderer {
             return
         }
 
+        // Group use cases by type
+        const groupedUseCases = this.groupUseCasesByType(useCases)
+
         // Calculate column widths
-        const headers = ['#', 'Use Case', 'Type', 'Status', 'Proxy Address']
+        const headers = ['#', 'Use Case', 'Status', 'Proxy']
         const columnWidths = this.calculateColumnWidths(useCases, headers)
 
-        // Render header
-        this.renderTableHeader(headers, columnWidths)
+        // Initialize counter for overall numbering
+        let overallIndex = 1
 
-        // Render separator
-        this.renderTableSeparator(columnWidths)
+        // Render each group
+        Object.entries(groupedUseCases).forEach(([type, cases], groupIndex) => {
+            // Add group header
+            if (groupIndex > 0) console.log('')
+            console.log(`   📦 ${this.formatGroupHeader(type)}`)
 
-        // Render rows
-        useCases.forEach((useCase, index) => {
-            this.renderUseCaseRow(useCase, index + 1, columnWidths)
+            // Render header for this group
+            this.renderTableHeader(headers, columnWidths)
+            this.renderTableSeparator(columnWidths)
+
+            // Render rows for this group
+            cases.forEach((useCase) => {
+                this.renderUseCaseRow(useCase, overallIndex++, columnWidths)
+            })
         })
 
         // Render final separator
         this.renderTableSeparator(columnWidths)
 
-        // Show summary
+        // Show final summary with progress bar
         const successful = useCases.filter((uc) => uc.success).length
         const failed = useCases.filter((uc) => !uc.success).length
+        const progress = this.getProgressBar(successful, useCases.length)
+        console.log(`\n   📊 Deployment Progress: ${progress}`)
         console.log(
-            `   📊 Total: ${useCases.length} | ✅ Successful: ${successful} | ❌ Failed: ${failed}`
+            `   ✨ Total: ${useCases.length} | ✅ Success: ${successful} | ❌ Failed: ${failed}`
         )
     }
 
@@ -52,10 +65,9 @@ export class DeploymentTableRenderer {
         useCases.forEach((useCase, index) => {
             const rowData = [
                 (index + 1).toString(),
-                this.truncateString(useCase.config.description, 25),
-                this.capitalizeFirst(useCase.config.type),
-                useCase.success ? 'Successful' : 'Failed',
-                useCase.proxyAddress || 'N/A',
+                useCase.config?.description || 'Unknown Use Case', // full description for width calc
+                useCase.success ? '✅' : '❌', // compact status
+                useCase.proxyAddress || 'N/A', // full proxy address
             ]
 
             rowData.forEach((cell, colIndex) => {
@@ -72,8 +84,118 @@ export class DeploymentTableRenderer {
     }
 
     private getMaxColumnWidth(columnIndex: number): number {
-        const maxWidths = [3, 30, 15, 10, 42] // Maximum per column
+        // Increase Use Case and Proxy columns; shrink Status
+        const maxWidths = [3, 50, 5, 46] // [#, Use Case, Status, Proxy]
         return maxWidths[columnIndex] || 20
+    }
+
+    private groupUseCasesByType(
+        useCases: DeployedUseCase[]
+    ): Record<string, DeployedUseCase[]> {
+        const groups: Record<string, DeployedUseCase[]> = {}
+
+        useCases.forEach((useCase) => {
+            const type = useCase.config?.type || 'Unknown'
+            if (type === 'erc721') {
+                // Count extensions in the description
+                const extensionCount =
+                    (useCase.config?.description.match(/&/g) || []).length + 1
+                if (useCase.config?.description === 'ERC721 Base') {
+                    groups['erc721_base'] = [useCase]
+                } else if (useCase.config?.description === 'ERC721 Complete') {
+                    groups['erc721_complete'] = [useCase]
+                } else {
+                    const groupKey = `erc721_${extensionCount}`
+                    if (!groups[groupKey]) {
+                        groups[groupKey] = []
+                    }
+                    groups[groupKey].push(useCase)
+                }
+            } else {
+                if (!groups[type]) {
+                    groups[type] = []
+                }
+                groups[type].push(useCase)
+            }
+        })
+
+        // Sort the ERC721 groups by extension count
+        const sortedGroups: Record<string, DeployedUseCase[]> = {}
+        Object.keys(groups).filter((k) => k.startsWith('erc721'))
+        const nonErc721Types = Object.keys(groups).filter(
+            (k) => !k.startsWith('erc721')
+        )
+
+        // First add base
+        if (groups['erc721_base']) {
+            sortedGroups['erc721_base'] = groups['erc721_base']
+        }
+
+        // Get all groups and sort them by extension count
+        const erc721GroupKeys = Object.keys(groups)
+            .filter((key) => key.startsWith('erc721_'))
+            .sort((a, b) => {
+                const aNum = parseInt(a.split('_')[1]) || 0
+                const bNum = parseInt(b.split('_')[1]) || 0
+                return aNum - bNum
+            })
+
+        // Add all groups in order
+        erc721GroupKeys.forEach((key) => {
+            if (key !== 'erc721_base' && groups[key]) {
+                sortedGroups[key] = groups[key].sort((a, b) =>
+                    (a.config?.description || '').localeCompare(
+                        b.config?.description || ''
+                    )
+                )
+            }
+        })
+
+        // Add non-ERC721 groups
+        nonErc721Types.forEach((key) => {
+            sortedGroups[key] = groups[key]
+        })
+
+        return sortedGroups
+    }
+
+    private formatGroupHeader(type: string): string {
+        let formatted: string
+        if (type.startsWith('erc721_')) {
+            const parts = type.split('_')
+            if (parts[1] === 'base') {
+                formatted = 'ERC721 BASE'
+            } else if (parts[1] === '1') {
+                formatted = 'ERC721 WITH 1 EXTENSION'
+            } else if (parts[1] === '2') {
+                formatted = 'ERC721 WITH 2 EXTENSIONS'
+            } else if (parts[1] === '3') {
+                formatted = 'ERC721 WITH 3 EXTENSIONS'
+            } else if (parts[1] === '4') {
+                formatted = 'ERC721 WITH 4 EXTENSIONS'
+            } else if (parts[1] === '5') {
+                formatted = 'ERC721 WITH 5 EXTENSIONS'
+            } else if (parts[1] === '6') {
+                formatted = 'ERC721 WITH 6 EXTENSIONS'
+            } else if (parts[1] === 'complete') {
+                formatted = 'ERC721 COMPLETE'
+            } else {
+                formatted = 'ERC721'
+            }
+        } else {
+            formatted = type.toUpperCase().replace('_', ' ')
+        }
+        const count = this.getProgressBar()
+        return `${formatted} DEPLOYMENTS ${count}`
+    }
+
+    private getProgressBar(current: number = 0, total: number = 0): string {
+        const width = 20
+        const progress =
+            total > 0 ? Math.floor((current / total) * width) : width
+        const filled = '█'.repeat(progress)
+        const empty = '░'.repeat(width - progress)
+        return `[${filled}${empty}]`
     }
 
     private renderTableHeader(headers: string[], widths: number[]): void {
@@ -97,21 +219,18 @@ export class DeploymentTableRenderer {
         widths: number[]
     ): void {
         const statusIcon = useCase.success ? '✅' : '❌'
-        const statusText = useCase.success ? 'Success' : 'Failed'
 
         const cells = [
-            this.padString(index.toString(), widths[0], 'center'),
+            this.padString(index.toString(), widths[0], 'right'),
             this.padString(
-                this.truncateString(useCase.config.description, widths[1]),
+                this.truncateString(
+                    useCase.config?.description || 'Unknown Use Case',
+                    widths[1]
+                ),
                 widths[1]
             ),
-            this.padString(
-                this.capitalizeFirst(useCase.config.type),
-                widths[2],
-                'center'
-            ),
-            this.padString(`${statusIcon} ${statusText}`, widths[3], 'center'),
-            this.padString(useCase.proxyAddress || 'N/A', widths[4]),
+            this.padString(`${statusIcon}`, widths[2], 'center'),
+            this.padString(useCase.proxyAddress || 'N/A', widths[3], 'left'),
         ]
 
         const row = cells.join(' | ')

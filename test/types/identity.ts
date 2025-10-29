@@ -1,4 +1,6 @@
 // types/didDocument.types.ts
+import type { IDidDocumentDetailed } from '../../../typechain-types'
+
 export enum EllipticType {
     SECP_256_K1 = 1,
     SECP_256_R1 = 2,
@@ -37,25 +39,34 @@ export interface ExpectedDidDocument {
 // Tipos para los resultados que devuelve el contrato
 export type ContractDidDocumentResult = [
     string, // baseDocument
+    string, // alsoKnownAs
     string[], // controllers
     string[], // vMethodIds
-    Array<[string, number, boolean]>, // vMethods: [publicKey, ellipticType, revoked]
-    Array<[string, string, bigint, bigint, number]>, // vRelationships: [relationshipType, vMethodId, notBefore, notAfter, status]
-]
+    IDidDocumentDetailed.VMethodStructOutput[], // vMethods
+    IDidDocumentDetailed.VRelationshipStructOutput[], // vRelationships
+] & {
+    baseDocument: string
+    alsoKnownAs: string
+    controllers: string[]
+    vMethodIds: string[]
+    vMethods: IDidDocumentDetailed.VMethodStructOutput[]
+    vRelationships: IDidDocumentDetailed.VRelationshipStructOutput[]
+}
 
 export type ContractGetDidsResult = [
     string[], // dids
-    number, // totalCount
-    number, // filteredCount
+    bigint, // totalCount
+    bigint, // filteredCount
     bigint, // pageNumber
     bigint, // totalPages
-]
+] & {
+    items: string[]
+    total: bigint
+    howMany: bigint
+    prev: bigint
+    next: bigint
+}
 
-export type ContractVMethodTuple = [string, number, boolean]
-export type ContractVRelationshipTuple = [
-    string,
-    string,
-    bigint,
-    bigint,
-    number,
-]
+export type ContractVMethodTuple = IDidDocumentDetailed.VMethodStructOutput
+export type ContractVRelationshipTuple =
+    IDidDocumentDetailed.VRelationshipStructOutput

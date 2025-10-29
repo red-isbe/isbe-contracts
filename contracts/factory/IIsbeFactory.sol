@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {IGlobalIsbePause} from './globalisbepause/IGlobalIsbePause.sol';
 import {IBusinessLogicFactory} from './businesslogic/IBusinessLogicFactory.sol';
-import {IProxyFactory} from './proxyfactory/IProxyFactory.sol';
 import {IConfigurationManagement} from './configurationmanagement/IConfigurationManagement.sol';
 import {IDidRegistry} from '../identity/didregistry/IDidRegistry.sol';
+import {IEnsResolver} from '../identity/ens/publicresolver/ensresolver/IEnsResolver.sol';
+import {IGlobalIsbePause} from './globalisbepause/IGlobalIsbePause.sol';
+import {IProxyFactory} from './proxyfactory/IProxyFactory.sol';
+import {ITimeStampingRegistry} from '../client/tsr/ITimeStampingRegistry.sol';
+import {IClientFiltering} from '../client/filtering/IClientFiltering.sol';
 
 /**
  * @title ISBE Factory Interface
@@ -21,5 +24,8 @@ interface IIsbeFactory is
     IConfigurationManagement,
     IProxyFactory,
     IGlobalIsbePause,
-    IDidRegistry
+    IDidRegistry,
+    IEnsResolver,
+    IClientFiltering,
+    ITimeStampingRegistry
 {}

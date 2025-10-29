@@ -1,5 +1,5 @@
 // utils/didDocumentBuilder.ts
-import { ExpectedDidDocument, EllipticType } from '../types/didDocument.types'
+import { ExpectedDidDocument, EllipticType } from '../../types/identity'
 
 export class DidDocumentBuilder {
     private document: ExpectedDidDocument

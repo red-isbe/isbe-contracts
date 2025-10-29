@@ -6,9 +6,11 @@ import {
     ProxyFactoryFacet,
 } from '../../typechain-types'
 import { Signer } from 'ethers'
-import { CONFIGURATION_ID_ERC20, deployGovernance } from '../initialization'
+import { deployGovernance } from '../fixtures/governance'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import {
     ASSET_EVENT_TRACKER_RESOLVER_KEY,
+    CONFIGURATION_ID_PROXY_TESTS,
     CONFIGURATION_MANAGER_ROLE,
     DEFAULT_ADMIN_ROLE,
     ERC20_RESOLVER_KEY,
@@ -17,7 +19,7 @@ import {
     PROXY_DEPLOYER_ROLE,
     PROXY_FACTORY_RESOLVER_KEY,
     RANDOM_HASH_FOR_CONFIGURATION_ID,
-} from '../constants'
+} from '../../utils/constants'
 import { EventLog } from 'ethers'
 import { ContractRegistry } from '../../scripts/genesisGenerator'
 
@@ -36,82 +38,50 @@ describe('ProxyFactory', function () {
     let isbeFactory: IIsbeFactory
     let accessControl: AccessControl
 
-    async function deployInitial() {
-        ;[admin, nonAdmin] = await ethers.getSigners()
-
+    async function deployFixture() {
+        const [adminSigner, nonAdminSigner] = await ethers.getSigners()
+        admin = adminSigner
+        nonAdmin = nonAdminSigner
         adminAddress = await admin.getAddress()
         nonAdminAddress = await nonAdmin.getAddress()
 
-        await deployIsbeFactory()
-    }
+        const result = await deployGovernance(
+            admin,
+            [],
+            CONFIGURATION_ID_PROXY_TESTS
+        )
 
-    async function deployIsbeFactory() {
-        if (!registryFile) {
-            const result = await deployGovernance(admin)
-            isbeFactory = await ethers.getContractAt(
+        const contracts = {
+            admin,
+            nonAdmin,
+            adminAddress,
+            nonAdminAddress,
+            isbeFactory: await ethers.getContractAt(
                 'IIsbeFactory',
                 await result.governanceContract.getAddress()
-            )
-
-            accessControl = await ethers.getContractAt(
+            ),
+            accessControl: await ethers.getContractAt(
                 'AccessControl',
                 await result.governanceContract.getAddress()
-            )
-
-            expect(
-                await result.proxyFactoryFacet.businessIdIntrospection()
-            ).to.be.equal(PROXY_FACTORY_RESOLVER_KEY)
-        } else {
-            const contractRegistry = new ContractRegistry()
-            contractRegistry.retrieveContractRegistry(registryFile)
-
-            const EIP2535AccessControlAddress = contractRegistry.getAddress(
-                'EIP2535AccessControl'
-            )
-            const proxyFactoryFacetAddress =
-                contractRegistry.getAddress('ProxyFactoryFacet')
-            console.log(
-                '************************************************************************************************1'
-            )
-            console.log(
-                `EIP2535AccessControlAddress: ${EIP2535AccessControlAddress}`
-            )
-            console.log(`proxyFactoryFacetAddress: ${proxyFactoryFacetAddress}`)
-
-            isbeFactory = await ethers.getContractAt(
-                'IIsbeFactory',
-                EIP2535AccessControlAddress
-            )
-
-            accessControl = await ethers.getContractAt(
-                'AccessControl',
-                EIP2535AccessControlAddress
-            )
-
-            const ProxyFactoryFacetFactory =
-                await ethers.getContractFactory('ProxyFactoryFacet')
-            const proxyFactoryFacet: ProxyFactoryFacet =
-                ProxyFactoryFacetFactory.attach(
-                    proxyFactoryFacetAddress
-                ) as ProxyFactoryFacet
-            const selector: string = proxyFactoryFacet.interface.getFunction(
-                'businessIdIntrospection'
-            ).selector
-            console.log(`selector: ${selector}`)
-            console.log(
-                '************************************************************************************************1.1'
-            )
-            expect(
-                await proxyFactoryFacet.businessIdIntrospection()
-            ).to.be.equal(PROXY_FACTORY_RESOLVER_KEY)
-            console.log(
-                '************************************************************************************************2'
-            )
+            ),
+            proxyFactoryFacet: result.proxyFactoryFacet,
         }
+
+        expect(
+            await result.proxyFactoryFacet.businessIdIntrospection()
+        ).to.be.equal(PROXY_FACTORY_RESOLVER_KEY)
+
+        return contracts
     }
 
     beforeEach(async () => {
-        await deployInitial()
+        const contracts = await loadFixture(deployFixture)
+        admin = contracts.admin
+        nonAdmin = contracts.nonAdmin
+        adminAddress = contracts.adminAddress
+        nonAdminAddress = contracts.nonAdminAddress
+        isbeFactory = contracts.isbeFactory
+        accessControl = contracts.accessControl
     })
 
     describe('ProxyFactory', () => {
@@ -154,12 +124,12 @@ describe('ProxyFactory', function () {
 
                     await expect(
                         isbeFactory.connect(admin).deployUseCase(
-                            CONFIGURATION_ID_ERC20,
+                            CONFIGURATION_ID_PROXY_TESTS,
                             1,
                             [
                                 {
                                     role: ROLE,
-                                    members: [admin],
+                                    members: [adminAddress],
                                 },
                             ],
                             false,

@@ -8,12 +8,12 @@ import {
     OwnableBase,
     AccessControl,
 } from '../typechain-types'
-import { deployGovernance } from './initialization'
-import { OWNABLE_RESOLVER_KEY, PAUSER_ROLE } from './constants'
+import { deployGovernance } from './fixtures/governance'
+import { OWNABLE_RESOLVER_KEY, PAUSER_ROLE } from '../utils/constants'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 
 describe('Ownable & Ownable2Step', function () {
     let adminAccount: Signer
-    let adminAccountAddress: string
     let account_2: Signer
     //let ownable2Step: Ownable2Step
     let ownable2StepFacet: Ownable2Step
@@ -21,57 +21,181 @@ describe('Ownable & Ownable2Step', function () {
     let pause: ISBEPause
     let accessControl: AccessControl
 
-    before(async () => {
-        ;[adminAccount, account_2] = await ethers.getSigners()
-        adminAccountAddress = await adminAccount.getAddress()
-    })
+    // Fixture functions
+    async function deployOwnableFixture() {
+        const [owner, account2] = await ethers.getSigners()
+        const ownerAddress = await owner.getAddress()
 
-    async function deployOwnable(
-        initialize: boolean = true,
-        isOwnable: boolean = false,
-        init_pause: boolean = false
-    ) {
-        //const result = await deployAll(true)
-        const [owner] = await ethers.getSigners()
-
-        const businessIds = []
-        const data = []
-
-        if (initialize) {
-            const OwnableFactory =
-                await ethers.getContractFactory('OwnableFacet')
-
-            data.push(
-                OwnableFactory.interface.encodeFunctionData(
-                    'initializeOwnable',
-                    [adminAccountAddress]
-                )
-            )
-
-            businessIds.push(OWNABLE_RESOLVER_KEY)
-        }
+        const businessIds = [OWNABLE_RESOLVER_KEY]
+        const OwnableFactory = await ethers.getContractFactory('OwnableFacet')
+        const data = [
+            OwnableFactory.interface.encodeFunctionData('initializeOwnable', [
+                ownerAddress,
+            ]),
+        ]
 
         const result = await deployGovernance(
             owner,
             [],
             undefined,
-            init_pause,
+            false, // init_pause
             '0x',
             businessIds,
             data,
-            isOwnable
+            false // isOwnable (2-step)
         )
 
-        ownable = result.ownable
-        pause = result.pause
-        ownable2StepFacet = result.ownableFacet
-        accessControl = result.accessControl
+        return {
+            adminAccount: owner,
+            account_2: account2,
+            adminAccountAddress: ownerAddress,
+            ownable: result.ownable,
+            pause: result.pause,
+            ownable2StepFacet: result.ownableFacet,
+            accessControl: result.accessControl,
+        }
     }
+
+    async function deployOwnable1StepFixture() {
+        const [owner, account2] = await ethers.getSigners()
+        const ownerAddress = await owner.getAddress()
+
+        const businessIds = [OWNABLE_RESOLVER_KEY]
+        const OwnableFactory = await ethers.getContractFactory('OwnableFacet')
+        const data = [
+            OwnableFactory.interface.encodeFunctionData('initializeOwnable', [
+                ownerAddress,
+            ]),
+        ]
+
+        const result = await deployGovernance(
+            owner,
+            [],
+            undefined,
+            false, // init_pause
+            '0x',
+            businessIds,
+            data,
+            true // isOwnable (1-step)
+        )
+
+        return {
+            adminAccount: owner,
+            account_2: account2,
+            adminAccountAddress: ownerAddress,
+            ownable: result.ownable,
+            pause: result.pause,
+            ownable2StepFacet: result.ownableFacet,
+            accessControl: result.accessControl,
+        }
+    }
+
+    async function deployOwnablePausedFixture() {
+        const [owner, account2] = await ethers.getSigners()
+        const ownerAddress = await owner.getAddress()
+
+        const businessIds = [OWNABLE_RESOLVER_KEY]
+        const OwnableFactory = await ethers.getContractFactory('OwnableFacet')
+        const data = [
+            OwnableFactory.interface.encodeFunctionData('initializeOwnable', [
+                ownerAddress,
+            ]),
+        ]
+
+        const result = await deployGovernance(
+            owner,
+            [],
+            undefined,
+            true, // init_pause
+            '0x',
+            businessIds,
+            data,
+            false // isOwnable (2-step)
+        )
+
+        return {
+            adminAccount: owner,
+            account_2: account2,
+            adminAccountAddress: ownerAddress,
+            ownable: result.ownable,
+            pause: result.pause,
+            ownable2StepFacet: result.ownableFacet,
+            accessControl: result.accessControl,
+        }
+    }
+
+    async function deployOwnable1StepPausedFixture() {
+        const [owner, account2] = await ethers.getSigners()
+        const ownerAddress = await owner.getAddress()
+
+        const businessIds = [OWNABLE_RESOLVER_KEY]
+        const OwnableFactory = await ethers.getContractFactory('OwnableFacet')
+        const data = [
+            OwnableFactory.interface.encodeFunctionData('initializeOwnable', [
+                ownerAddress,
+            ]),
+        ]
+
+        const result = await deployGovernance(
+            owner,
+            [],
+            undefined,
+            true, // init_pause
+            '0x',
+            businessIds,
+            data,
+            true // isOwnable (1-step)
+        )
+
+        return {
+            adminAccount: owner,
+            account_2: account2,
+            adminAccountAddress: ownerAddress,
+            ownable: result.ownable,
+            pause: result.pause,
+            ownable2StepFacet: result.ownableFacet,
+            accessControl: result.accessControl,
+        }
+    }
+
+    async function deployOwnableUninitializedFixture() {
+        const [owner, account2] = await ethers.getSigners()
+        const ownerAddress = await owner.getAddress()
+
+        const result = await deployGovernance(
+            owner,
+            [],
+            undefined,
+            false, // init_pause
+            '0x',
+            [], // no business IDs
+            [], // no data
+            false // isOwnable (2-step)
+        )
+
+        return {
+            adminAccount: owner,
+            account_2: account2,
+            adminAccountAddress: ownerAddress,
+            ownable: result.ownable,
+            pause: result.pause,
+            ownable2StepFacet: result.ownableFacet,
+            accessControl: result.accessControl,
+        }
+    }
+
+    beforeEach(async function () {
+        const contracts = await loadFixture(deployOwnableFixture)
+        adminAccount = contracts.adminAccount
+        account_2 = contracts.account_2
+        ownable = contracts.ownable
+        pause = contracts.pause
+        ownable2StepFacet = contracts.ownable2StepFacet
+        accessControl = contracts.accessControl
+    })
 
     describe('Testing initialization and constructor', function () {
         it('GIVEN an Ownable2Step WHEN initializing it THEN fails', async function () {
-            await deployOwnable()
-
             await expect(
                 ownable2StepFacet.initializeOwnable(account_2)
             ).to.be.revertedWithCustomError(
@@ -81,8 +205,6 @@ describe('Ownable & Ownable2Step', function () {
         })
 
         it('GIVEN a Proxy pointing to an Ownable2Step WHEN initializing it THEN fails', async function () {
-            await deployOwnable()
-
             await expect(
                 ownable.initializeOwnable(account_2)
             ).to.be.revertedWithCustomError(
@@ -92,80 +214,92 @@ describe('Ownable & Ownable2Step', function () {
         })
 
         it('GIVEN a new Proxy pointing to an Ownable2Step WHEN initializing it to address 0 THEN fails', async function () {
-            await deployOwnable(false)
+            const { ownable: uninitializedOwnable } = await loadFixture(
+                deployOwnableUninitializedFixture
+            )
 
             await expect(
-                ownable.initializeOwnable(ethers.ZeroAddress)
-            ).to.be.revertedWithCustomError(ownable, 'AddressZero')
+                uninitializedOwnable.initializeOwnable(ethers.ZeroAddress)
+            ).to.be.revertedWithCustomError(uninitializedOwnable, 'AddressZero')
         })
     })
 
     describe('Transfer, Renounce ownership', function () {
         it('GIVEN an Ownable WHEN using non-owner account to transfer ownership THEN fails', async function () {
-            await deployOwnable(true, true)
+            const { ownable: ownable1Step } = await loadFixture(
+                deployOwnable1StepFixture
+            )
 
-            await TransferNonOwnerAccountTest(ownable)
+            await TransferNonOwnerAccountTest(ownable1Step)
         })
 
         it('GIVEN an Ownable WHEN using non-owner account to renounce ownership THEN fails', async function () {
-            await deployOwnable(true, true)
+            const { ownable: ownable1Step } = await loadFixture(
+                deployOwnable1StepFixture
+            )
 
-            await RenounceNonOwnerAccountTest(ownable)
+            await RenounceNonOwnerAccountTest(ownable1Step)
         })
 
         it('GIVEN an Ownable WHEN using owner account to transfer ownership to address 0 THEN fails', async function () {
-            await deployOwnable(true, true)
+            const { ownable: ownable1Step } = await loadFixture(
+                deployOwnable1StepFixture
+            )
 
-            await TransferOwnerAccountToZeroTest(ownable)
+            await TransferOwnerAccountToZeroTest(ownable1Step)
         })
 
         it('GIVEN an Ownable WHEN using owner account to transfer ownership while token is paused THEN fails', async function () {
-            await deployOwnable(true, true, true)
+            const { ownable: ownable1StepPaused } = await loadFixture(
+                deployOwnable1StepPausedFixture
+            )
 
-            await TransferOwnerAccountWhenPausedTest(ownable)
+            await TransferOwnerAccountWhenPausedTest(ownable1StepPaused)
         })
 
         it('GIVEN an Ownable WHEN using owner account to renounce ownership while token is paused THEN fails', async function () {
-            await deployOwnable(true, true, true)
+            const { ownable: ownable1StepPaused } = await loadFixture(
+                deployOwnable1StepPausedFixture
+            )
 
-            await RenounceOwnerAccountWhenPausedTest(ownable)
+            await RenounceOwnerAccountWhenPausedTest(ownable1StepPaused)
         })
 
         it('GIVEN an Ownable WHEN using owner account to transfer ownership THEN succeeds', async function () {
-            await deployOwnable(true, true)
+            const {
+                ownable: ownable1Step,
+                adminAccount: admin,
+                account_2: account2,
+            } = await loadFixture(deployOwnable1StepFixture)
 
-            ownable = ownable.connect(adminAccount)
+            const ownableConnected = ownable1Step.connect(admin)
 
-            await expect(ownable.transferOwnership(account_2))
-                .to.emit(ownable, 'OwnershipTransferred')
-                .withArgs(adminAccount, account_2)
+            await expect(ownableConnected.transferOwnership(account2))
+                .to.emit(ownableConnected, 'OwnershipTransferred')
+                .withArgs(admin, account2)
 
-            expect(await ownable.owner()).to.equal(account_2)
+            expect(await ownableConnected.owner()).to.equal(account2)
         })
 
         it('GIVEN an Ownable WHEN using owner account to renounce ownership THEN succeeds', async function () {
-            await deployOwnable(true, true)
+            const { ownable: ownable1Step } = await loadFixture(
+                deployOwnable1StepFixture
+            )
 
-            await RenounceSuccessTest(ownable)
+            await RenounceSuccessTest(ownable1Step)
         })
     })
 
     describe('Transfer, Renounce, Accept ownership 2 step', function () {
         it('GIVEN an Ownable2Step WHEN using non-owner account to transfer ownership THEN fails', async function () {
-            await deployOwnable()
-
             await TransferNonOwnerAccountTest(ownable)
         })
 
         it('GIVEN an Ownable2Step WHEN using non-owner account to renounce ownership THEN fails', async function () {
-            await deployOwnable()
-
             await RenounceNonOwnerAccountTest(ownable)
         })
 
         it('GIVEN an Ownable2Step WHEN using non-pending owner account to accept ownership THEN fails', async function () {
-            await deployOwnable()
-
             const ownable2Step = ownable.connect(account_2) as Ownable2Step
 
             await expect(ownable2Step.acceptOwnership())
@@ -177,26 +311,30 @@ describe('Ownable & Ownable2Step', function () {
         })
 
         it('GIVEN an Ownable2Step WHEN using owner account to transfer ownership to address 0 THEN fails', async function () {
-            await deployOwnable()
-
             await TransferOwnerAccountToZeroTest(ownable as Ownable2Step)
         })
 
         it('GIVEN an Ownable2Step WHEN using owner account to transfer ownership while token is paused THEN fails', async function () {
-            await deployOwnable(true, false, true)
+            const { ownable: ownablePaused } = await loadFixture(
+                deployOwnablePausedFixture
+            )
 
-            await TransferOwnerAccountWhenPausedTest(ownable as Ownable2Step)
+            await TransferOwnerAccountWhenPausedTest(
+                ownablePaused as Ownable2Step
+            )
         })
 
         it('GIVEN an Ownable2Step WHEN using owner account to renounce ownership while token is paused THEN fails', async function () {
-            await deployOwnable(true, false, true)
+            const { ownable: ownablePaused } = await loadFixture(
+                deployOwnablePausedFixture
+            )
 
-            await RenounceOwnerAccountWhenPausedTest(ownable as Ownable2Step)
+            await RenounceOwnerAccountWhenPausedTest(
+                ownablePaused as Ownable2Step
+            )
         })
 
         it('GIVEN an Ownable2Step WHEN using pending owner account to accept ownership while token is paused THEN fails', async function () {
-            await deployOwnable()
-
             let ownable2Step = ownable.connect(adminAccount) as Ownable2Step
 
             await ownable2Step.transferOwnership(account_2)
@@ -213,8 +351,6 @@ describe('Ownable & Ownable2Step', function () {
         })
 
         it('GIVEN an Ownable2Step WHEN using owner account to transfer ownership THEN succeeds', async function () {
-            await deployOwnable()
-
             const ownable2Step = ownable.connect(adminAccount) as Ownable2Step
 
             await expect(ownable2Step.transferOwnership(account_2))
@@ -226,14 +362,10 @@ describe('Ownable & Ownable2Step', function () {
         })
 
         it('GIVEN an Ownable2Step WHEN using owner account to renounce ownership THEN succeeds', async function () {
-            await deployOwnable()
-
             await RenounceSuccessTest(ownable as Ownable2Step)
         })
 
         it('GIVEN an Ownable2Step WHEN using owner account to accept ownership THEN succeeds', async function () {
-            await deployOwnable()
-
             let ownable2Step = ownable.connect(adminAccount) as Ownable2Step
 
             await ownable2Step.transferOwnership(account_2)

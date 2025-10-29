@@ -27,9 +27,12 @@ export class UseCaseDeployer {
         configs: UseCaseConfig[],
         factoryAddress: string,
         signer: Signer,
-        businessLogics: DeployedBusinessLogic[]
+        businessLogics: DeployedBusinessLogic[],
+        skipProxyDeployment: boolean = false
     ): Promise<DeployedUseCase[]> {
-        console.log(`🎯 Desplegando ${configs.length} casos de uso...`)
+        console.log(
+            `🎯 ${skipProxyDeployment ? 'Configurando' : 'Desplegando'} ${configs.length} casos de uso...`
+        )
 
         const results: DeployedUseCase[] = []
         let successCount = 0
@@ -38,13 +41,14 @@ export class UseCaseDeployer {
         for (const config of configs) {
             try {
                 console.log(
-                    `\n   🏗️ Desplegando caso de uso: ${config.description}`
+                    `\n   🏗️ ${skipProxyDeployment ? 'Configurando' : 'Desplegando'} caso de uso: ${config.description}`
                 )
                 const result = await this.deploySingle(
                     config,
                     factoryAddress,
                     signer,
-                    businessLogics
+                    businessLogics,
+                    skipProxyDeployment
                 )
 
                 results.push(result)
@@ -70,7 +74,7 @@ export class UseCaseDeployer {
         }
 
         console.log(
-            `\n   📊 Resumen de casos de uso: ${successCount} exitosos, ${failCount} fallidos`
+            `\n   📊 Resumen de ${skipProxyDeployment ? 'configuraciones' : 'casos de uso'}: ${successCount} exitosos, ${failCount} fallidos`
         )
         return results
     }
@@ -79,7 +83,8 @@ export class UseCaseDeployer {
         config: UseCaseConfig,
         factoryAddress: string,
         signer: Signer,
-        businessLogics: DeployedBusinessLogic[]
+        businessLogics: DeployedBusinessLogic[],
+        skipProxyDeployment: boolean = false
     ): Promise<DeployedUseCase> {
         try {
             await this.validateRequiredBusinessLogics(
@@ -109,6 +114,18 @@ export class UseCaseDeployer {
             )
 
             console.log(`      ⚙️ Configuración establecida`)
+
+            if (skipProxyDeployment) {
+                console.log(
+                    `      ℹ️ Skipping proxy deployment (configuration only)`
+                )
+                return {
+                    config,
+                    proxyAddress: null, // No proxy address in configuration-only mode
+                    success: true,
+                    error: null,
+                }
+            }
 
             const proxyAddress = await this.deployProxy(
                 config,

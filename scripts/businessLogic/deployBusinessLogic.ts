@@ -42,7 +42,10 @@ export async function deployBusinessLogic(
     const businessLogicFactory = await getIsbeFactory(factory, signer)
 
     console.log('📡 Sending deployBusinessLogic transaction...')
-    const tx = await businessLogicFactory.deploy(businessId, bytecode)
+    // Add explicit gas limit to prevent "Internal error" on non-validator nodes
+    const tx = await businessLogicFactory.deploy(businessId, bytecode, {
+        gasLimit: 25_000_000, // Set high gas limit for contract deployment
+    })
 
     console.log('⏳ Waiting for transaction to be mined...')
     const deployedEvent = await getEvent('Deployed', tx, businessLogicFactory)
@@ -175,7 +178,10 @@ export async function deployBusinessLogicLegacy(
         throw new Error('Invalid byte code format : ' + bytecode)
 
     const businessLogicFactory = await getIsbeFactory(factory, signer)
-    const tx = await businessLogicFactory.deploy(businessId, bytecode)
+    // Add explicit gas limit to prevent "Internal error" on non-validator nodes
+    const tx = await businessLogicFactory.deploy(businessId, bytecode, {
+        gasLimit: 25_000_000, // Set high gas limit for contract deployment
+    })
     const deployedEvent = await getEvent('Deployed', tx, businessLogicFactory)
 
     const {

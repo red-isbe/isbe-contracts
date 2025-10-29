@@ -16,7 +16,7 @@ interface IDidVerificationRelationship {
      * @param notAfter Unix timestamp when the DID expires
      */
     struct DidWithPeriod {
-        string did;
+        bytes32 did;
         uint256 notBefore;
         uint256 notAfter;
     }
@@ -30,12 +30,21 @@ interface IDidVerificationRelationship {
      * @param notAfter Unix timestamp when the relationship expires
      */
     event VerificationRelationshipAdded(
-        string did,
+        bytes32 did,
         string name,
-        string vMethodId,
+        bytes32 vMethodId,
         uint256 notBefore,
         uint256 notAfter
     );
+
+    /**
+     * @notice Raised when attempting to create a verification relationship with a revoked method
+     * @dev This error prevents operations on revoked verification methods to maintain
+     *      security and prevent use of compromised or invalidated cryptographic keys
+     * @param did The decentralised identifier containing the revoked verification method
+     * @param vMethodId The verification method identifier that has been revoked
+     */
+    error VerificationMethodIsRevoked(bytes32 did, bytes32 vMethodId);
 
     /**
      * @notice Establishes a new verification relationship between a DID and verification method
@@ -48,9 +57,9 @@ interface IDidVerificationRelationship {
      * @return success Boolean indicating whether the operation completed successfully
      */
     function addVerificationRelationship(
-        string memory did,
+        bytes32 did,
         string memory name,
-        string memory vMethodId,
+        bytes32 vMethodId,
         uint256 notBefore,
         uint256 notAfter
     ) external returns (bool success);
@@ -69,7 +78,7 @@ interface IDidVerificationRelationship {
      * @return next Next page number (zero if no next page)
      */
     function getDidsByVerificationRelationship(
-        string memory vMethodId,
+        bytes32 vMethodId,
         string memory name,
         uint256 page,
         uint256 pageSize

@@ -99,4 +99,7 @@ bytes32 constant _ENS_PUBLIC_RESOLVER_STORAGE_POSITION = 0x967893912e0fbee483c21
 // keccak256('isbe.contracts.client.filtering.storage');
 bytes32 constant _CLIENT_FILTERING_STORAGE_POSITION = 0x2b5ee3d658648477f5de5bda80985048daa085b962feb1da017ffe621f5fb82e;
 
+// keccak256('isbe.contracts.client.timestamping.registry.storage');
+bytes32 constant _TIMESTAMPING_REGISTRY_STORAGE_POSITION = 0x7bea5e2e127c51f0457ca47f4b1697de117ab9d5dbb6d8653dd490ff43b32fb6;
+
 // solhint-enable max-line-length

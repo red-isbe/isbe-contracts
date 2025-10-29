@@ -1,5 +1,6 @@
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
+import { loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers'
 import {
     GlobalIsbePauseFacet,
     ISBEPause,
@@ -9,8 +10,8 @@ import { Signer } from 'ethers'
 import {
     GLOBAL_ISBE_PAUSABLE_RESOLVER_KEY,
     ISBE_PAUSER_ROLE,
-} from '../constants'
-import { deployGovernance } from '../initialization'
+} from '../../utils/constants'
+import { deployGovernance } from '../fixtures/governance'
 
 describe('GlobalIsbePause', function () {
     let admin: Signer
@@ -22,38 +23,58 @@ describe('GlobalIsbePause', function () {
     let deployedProxyAddress: string
     let pause: ISBEPause
 
-    async function deployInitial(init_pause: boolean = false) {
-        ;[admin, nonAdmin] = await ethers.getSigners()
-        adminAddress = await admin.getAddress()
-        nonAdminAddress = await nonAdmin.getAddress()
-        // Despliegue AccessControl logic
+    async function deployFixture(init_pause: boolean = false) {
+        const [adminSigner, nonAdminSigner] = await ethers.getSigners()
+        const adminAddress = await adminSigner.getAddress()
+        const nonAdminAddress = await nonAdminSigner.getAddress()
 
-        await deployIsbeFactory(init_pause)
-    }
+        const result = await deployGovernance(
+            adminSigner,
+            [],
+            undefined,
+            init_pause
+        )
 
-    async function deployIsbeFactory(init_pause: boolean = false) {
-        const result = await deployGovernance(admin, [], undefined, init_pause)
-
-        isbeFactory = await ethers.getContractAt(
+        const isbeFactoryInstance = await ethers.getContractAt(
             'IIsbeFactory',
             await result.governanceContract.getAddress()
         )
 
-        globalIsbePauseFacet = await ethers.getContractAt(
+        const globalIsbePauseFacetInstance = await ethers.getContractAt(
             'GlobalIsbePauseFacet',
             await result.governanceContract.getAddress()
         )
+
         expect(
             await result.globalIsbePauseFacet.businessIdIntrospection()
         ).to.be.equal(GLOBAL_ISBE_PAUSABLE_RESOLVER_KEY)
 
-        deployedProxyAddress = result.useCaseProxy
+        return {
+            admin: adminSigner,
+            nonAdmin: nonAdminSigner,
+            adminAddress,
+            nonAdminAddress,
+            isbeFactory: isbeFactoryInstance,
+            globalIsbePauseFacet: globalIsbePauseFacetInstance,
+            deployedProxyAddress: result.useCaseProxy,
+            pause: result.pause,
+        }
+    }
 
-        pause = result.pause
+    async function deployPausedFixture() {
+        return deployFixture(true)
     }
 
     beforeEach(async () => {
-        await deployInitial()
+        const contracts = await loadFixture(deployFixture)
+        admin = contracts.admin
+        nonAdmin = contracts.nonAdmin
+        adminAddress = contracts.adminAddress
+        nonAdminAddress = contracts.nonAdminAddress
+        isbeFactory = contracts.isbeFactory
+        globalIsbePauseFacet = contracts.globalIsbePauseFacet
+        deployedProxyAddress = contracts.deployedProxyAddress
+        pause = contracts.pause
     })
 
     describe('GlboalIsbePauable', () => {
@@ -135,14 +156,22 @@ describe('GlobalIsbePause', function () {
             })
 
             it('GIVEN governance proxy WHEN try to unpause a deployed proxy THEN it is unpaused', async () => {
-                await deployInitial(true)
+                const contracts = await loadFixture(deployPausedFixture)
+                const pausedIsbeFactory = contracts.isbeFactory
+                const pausedDeployedProxyAddress =
+                    contracts.deployedProxyAddress
+                const pausedAdminAddress = contracts.adminAddress
+                const pausedPause = contracts.pause
+                const pausedAdmin = contracts.admin
 
                 await expect(
-                    isbeFactory.connect(admin).unpauseIsbe(deployedProxyAddress)
+                    pausedIsbeFactory
+                        .connect(pausedAdmin)
+                        .unpauseIsbe(pausedDeployedProxyAddress)
                 )
-                    .to.emit(isbeFactory, 'IsbeUnpaused')
-                    .withArgs(deployedProxyAddress, adminAddress)
-                expect(await pause.paused()).to.be.false
+                    .to.emit(pausedIsbeFactory, 'IsbeUnpaused')
+                    .withArgs(pausedDeployedProxyAddress, pausedAdminAddress)
+                expect(await pausedPause.paused()).to.be.false
             })
         })
     })

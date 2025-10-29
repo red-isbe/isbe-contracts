@@ -163,13 +163,7 @@ export class Secp256r1DeploymentUtils {
         const receipt = await this.waitForTransaction(txHash)
 
         // Parse event data from receipt
-        const eventArgs = this.parseEventFromReceipt(
-            receipt,
-            factoryClass,
-            eventName
-        )
-
-        return eventArgs
+        return this.parseEventFromReceipt(receipt, factoryClass, eventName)
     }
 
     /**

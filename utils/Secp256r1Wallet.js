@@ -189,11 +189,44 @@ class Secp256r1Wallet extends ethers.AbstractSigner {
     }
 
     /**
-     * @description Signs typed data (not implemented for production security)
-     * @throws {Error} Always throws - not implemented for security reasons
+     * @description Signs typed data according to EIP-712 using secp256r1
+     * @param {object} domain - EIP-712 domain separator
+     * @param {object} types - EIP-712 type definitions
+     * @param {object} value - Value to sign
+     * @returns {Promise<string>} Signature in compact format (r+s+v)
      */
     async signTypedData(domain, types, value) {
-        throw new Error('signTypedData not implemented for production security')
+        // Use ethers.js TypedDataEncoder to compute the EIP-712 hash
+        const digest = ethers.TypedDataEncoder.hash(domain, types, value)
+
+        // Sign the digest with secp256r1
+        const signature = this.keyPair.sign(ethers.getBytes(digest), {
+            canonical: true,
+        })
+
+        // Find correct recovery parameter
+        const recoveryParam = this._findRecoveryParam(digest, signature)
+        if (recoveryParam === null) {
+            throw new Error(
+                'Could not determine recovery parameter for EIP-712 signature'
+            )
+        }
+
+        // Canonicalize signature
+        const { r, s, actualRecoveryParam } = this._canonicalizeSignature(
+            signature,
+            recoveryParam
+        )
+
+        // EIP-712 signatures use v = 27 + recoveryParam (no chain ID)
+        const v = 27 + actualRecoveryParam
+
+        // Return signature in compact format (r+s+v)
+        return ethers.Signature.from({
+            r: r,
+            s: s,
+            v: v,
+        }).serialized
     }
 
     /**

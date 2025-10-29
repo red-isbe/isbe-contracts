@@ -1,24 +1,31 @@
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
-import {
-    ReentrancyGuardTestWrapper,
-    ReentrancyGuardTestWrapper__factory,
-} from '../typechain-types'
+import { ReentrancyGuardTestWrapper } from '../typechain-types'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
+// No random generators needed - removed TestConstants import
+
+const randomBytes32 = () => ethers.hexlify(ethers.randomBytes(32))
 
 describe('ReentrancyGuard', function () {
     let reentrancyGuard: ReentrancyGuardTestWrapper
-    let reentrancyGuardFactory: ReentrancyGuardTestWrapper__factory
 
-    const REENTRANT_KEY = ethers.keccak256(
-        ethers.toUtf8Bytes('function.reentrant')
-    )
+    const REENTRANT_KEY = randomBytes32()
 
-    beforeEach(async () => {
-        reentrancyGuardFactory = await ethers.getContractFactory(
+    async function deployFixture() {
+        const reentrancyGuardFactory = await ethers.getContractFactory(
             'ReentrancyGuardTestWrapper'
         )
-        reentrancyGuard = await reentrancyGuardFactory.deploy()
-        await reentrancyGuard.waitForDeployment()
+        const reentrancyGuardInstance = await reentrancyGuardFactory.deploy()
+        await reentrancyGuardInstance.waitForDeployment()
+
+        return {
+            reentrancyGuard: reentrancyGuardInstance,
+        }
+    }
+
+    beforeEach(async () => {
+        const contracts = await loadFixture(deployFixture)
+        reentrancyGuard = contracts.reentrancyGuard
     })
 
     it('GIVEN a normal call WHEN no reentrancy THEN call succeeds', async () => {
