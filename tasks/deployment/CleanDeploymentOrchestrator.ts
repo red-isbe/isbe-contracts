@@ -24,7 +24,7 @@ import {
     ISBE_ROLE,
     PROXY_DEPLOYER_ROLE,
     DEFAULT_ADMIN_ROLE,
-} from '../../test/constants'
+} from '../../utils/constants'
 
 /**
  * Clean deployment orchestrator that uses signature provider abstraction

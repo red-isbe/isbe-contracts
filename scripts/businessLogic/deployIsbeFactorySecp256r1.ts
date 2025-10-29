@@ -12,7 +12,7 @@ import {
     ISBE_ROLE,
     PROXY_DEPLOYER_ROLE,
     TIMESTAMPING_REGISTRY_ROLE,
-} from '../../test/constants'
+} from '../../utils/constants'
 
 /**
  * secp256r1-compatible deployment function that uses raw transactions
