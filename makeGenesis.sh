@@ -61,7 +61,7 @@ echo ""
 # Step 1: Genesis generation
 if [ "$SKIP_GEN" = false ]; then
   echo "🔧 Generating genesis..."
-  npx hardhat genesis:generate
+  NODE_OPTIONS="--max-old-space-size=24576" npx hardhat genesis:generate
 else
   echo "⏩ Skipping genesis generation (--skip-gen)"
 fi
@@ -81,7 +81,7 @@ fi
 # Step 3: Validate genesis
 if [ "$SKIP_VALIDATION" = false ]; then
   npx hardhat genesis:validate --network NO_NETWORK \
-    --gobernanceaddress 0x2279b7a0a67db372996a5fab50d91eaa73d2ebe6
+    --gobernanceaddress 0x0B306BF915C4d645ff596e518fAf3F9669b97016
   echo "✅ Genesis validation completed."
 fi
 
