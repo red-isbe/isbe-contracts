@@ -1,0 +1,38 @@
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.28;
+
+/**
+ * @title IERC3643ComplianceMaxBalance
+ * @notice Interface for ERC-3643 compliance feature: MaxBalance restriction.
+ * @dev Allows setting and getting the max balance, and checking compliance for transfers.
+ */
+interface IERC3643ComplianceMaxBal {
+    /**
+     * @notice Emitted when the max balance is updated.
+     * @param maxBalance The new max balance value.
+     */
+    event MaxBalanceSet(uint256 maxBalance);
+
+    /**
+     * @notice Sets the maximum balance allowed per address.
+     * @param maxBalance The maximum amount of tokens an address can hold.
+     */
+    function setMaxBalance(uint256 maxBalance) external;
+
+    /**
+     * @notice Returns the current maximum balance allowed per address.
+     * @return _maxBalance The maximum balance value.
+     */
+    function maxBalance() external view returns (uint256 _maxBalance);
+
+    /**
+     * @notice Checks if a transfer respects the max balance restriction.
+     * @param to The address of the receiver.
+     * @param amount The amount of tokens to transfer.
+     * @return isCompliant True if compliant, false otherwise.
+     */
+    function complianceCheckOnMaxBalance(
+        address to,
+        uint256 amount
+    ) external view returns (bool isCompliant);
+}

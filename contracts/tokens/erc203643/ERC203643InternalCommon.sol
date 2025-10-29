@@ -19,7 +19,7 @@ import {IERC3643Freeze} from '../erc3643/token/erc3643freeze/IERC3643Freeze.sol'
 
 /// @title ERC203643InternalCommon
 /// @notice Aggregates the internal functions of ERC20 and ERC3643 standards.
-/// @dev Provides unified token transfer logic for both ERC20 and ERC3643 standards, including compliance, freeze, cap, and snapshot features.
+/// @dev Provides unified token transfer logic for both ERC20 and ERC3643 standards
 abstract contract ERC203643InternalCommon is
     ERC20SnapshotInternal,
     ERC203643CappedInternal,

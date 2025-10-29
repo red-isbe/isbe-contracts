@@ -64,22 +64,6 @@ abstract contract ERC3643Compliance is ICompliance, ERC203643InternalCommon {
     // --- ICompliance Hooks ---
 
     /**
-     * @notice Checks if a transfer is compliant.
-     * @dev Implements ICompliance. Delegates to internal logic.
-     * @param _from The address of the sender.
-     * @param _to The address of the receiver.
-     * @param _amount The amount of tokens to transfer.
-     * @return True if the transfer is compliant, false otherwise.
-     */
-    function canTransfer(
-        address _from,
-        address _to,
-        uint256 _amount
-    ) external view override returns (bool) {
-        return _canTransfer(_from, _to, _amount);
-    }
-
-    /**
      * @notice Called after tokens are transferred.
      * @dev Implements ICompliance. Delegates to internal logic.
      * @param _from The address of the sender.
@@ -118,6 +102,22 @@ abstract contract ERC3643Compliance is ICompliance, ERC203643InternalCommon {
         uint256 _amount
     ) external override onlyRole(_COMPLIANCE_ROLE) {
         _destroyed(_from, _amount);
+    }
+
+    /**
+     * @notice Checks if a transfer is compliant.
+     * @dev Implements ICompliance. Delegates to internal logic.
+     * @param _from The address of the sender.
+     * @param _to The address of the receiver.
+     * @param _amount The amount of tokens to transfer.
+     * @return True if the transfer is compliant, false otherwise.
+     */
+    function canTransfer(
+        address _from,
+        address _to,
+        uint256 _amount
+    ) external view override returns (bool) {
+        return _canTransfer(_from, _to, _amount);
     }
 
     // --- Interfaces ---

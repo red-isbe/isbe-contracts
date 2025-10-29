@@ -59,30 +59,6 @@ Returns true if MaxBalance feature is enabled.
 | ---- | ---- | --------------------------------- |
 | [0]  | bool | True if enabled, false otherwise. |
 
-### canTransfer
-
-```solidity
-function canTransfer(address _from, address _to, uint256 _amount) external view returns (bool)
-```
-
-Checks if a transfer is compliant.
-
-_Implements ICompliance. Delegates to internal logic._
-
-#### Parameters
-
-| Name     | Type    | Description                       |
-| -------- | ------- | --------------------------------- |
-| \_from   | address | The address of the sender.        |
-| \_to     | address | The address of the receiver.      |
-| \_amount | uint256 | The amount of tokens to transfer. |
-
-#### Return Values
-
-| Name | Type | Description                                         |
-| ---- | ---- | --------------------------------------------------- |
-| [0]  | bool | True if the transfer is compliant, false otherwise. |
-
 ### transferred
 
 ```solidity
@@ -134,6 +110,30 @@ _Implements ICompliance. Delegates to internal logic._
 | -------- | ------- | ----------------------------------------- |
 | \_from   | address | The address from which tokens are burned. |
 | \_amount | uint256 | The amount of tokens burned.              |
+
+### canTransfer
+
+```solidity
+function canTransfer(address _from, address _to, uint256 _amount) external view returns (bool)
+```
+
+Checks if a transfer is compliant.
+
+_Implements ICompliance. Delegates to internal logic._
+
+#### Parameters
+
+| Name     | Type    | Description                       |
+| -------- | ------- | --------------------------------- |
+| \_from   | address | The address of the sender.        |
+| \_to     | address | The address of the receiver.      |
+| \_amount | uint256 | The amount of tokens to transfer. |
+
+#### Return Values
+
+| Name | Type | Description                                         |
+| ---- | ---- | --------------------------------------------------- |
+| [0]  | bool | True if the transfer is compliant, false otherwise. |
 
 ### \_implementedInterfaces
 
@@ -289,7 +289,7 @@ Delegates to MaxBalance feature if enabled._
 ### \_transferred
 
 ```solidity
-function _transferred(address from, address to, uint256 amount) internal view returns (bool)
+function _transferred(address from, address to, uint256 amount) internal pure returns (bool)
 ```
 
 _Internal hook called after tokens are transferred._
@@ -311,7 +311,7 @@ _Internal hook called after tokens are transferred._
 ### \_created
 
 ```solidity
-function _created(address to, uint256 amount) internal view returns (bool)
+function _created(address to, uint256 amount) internal pure returns (bool)
 ```
 
 _Internal hook called after tokens are minted._

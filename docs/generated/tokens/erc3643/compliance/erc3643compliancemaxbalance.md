@@ -1,4 +1,104 @@
-## ERC3643ComplianceMaxBalanceInternal
+## ERC3643ComplianceMaxBal
+
+External contract implementing ERC-3643 MaxBalance compliance feature.
+
+_Provides public methods to update and retrieve the max balance restriction.
+Uses COMPLIANCE_ROLE for granular permission control._
+
+### constructor
+
+```solidity
+constructor() internal
+```
+
+_Disables further initializations for this facet using its resolver key._
+
+### initializeERC3643ComplianceMaxBalance
+
+```solidity
+function initializeERC3643ComplianceMaxBalance(uint256 _maxBalance) external
+```
+
+Initializes the max balance restriction.
+
+_Can only be called once via the initializer modifier._
+
+#### Parameters
+
+| Name         | Type    | Description                    |
+| ------------ | ------- | ------------------------------ |
+| \_maxBalance | uint256 | The initial max balance value. |
+
+### setMaxBalance
+
+```solidity
+function setMaxBalance(uint256 _maxBalance) external
+```
+
+Updates the max balance restriction.
+
+_Restricted to compliance role._
+
+#### Parameters
+
+| Name         | Type    | Description                                                                                                                               |
+| ------------ | ------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| \_maxBalance | uint256 | The new max balance value. Requirements: - Caller must have COMPLIANCE_ROLE Emits: - {MaxBalanceSet} event with the new max balance value |
+
+### maxBalance
+
+```solidity
+function maxBalance() external view returns (uint256 _maxBalance)
+```
+
+Returns the current max balance restriction.
+
+#### Return Values
+
+| Name         | Type    | Description                    |
+| ------------ | ------- | ------------------------------ |
+| \_maxBalance | uint256 | The current max balance value. |
+
+### complianceCheckOnMaxBalance
+
+```solidity
+function complianceCheckOnMaxBalance(address to, uint256 amount) external view returns (bool isCompliant)
+```
+
+Checks if a transfer respects the max balance restriction.
+
+_Uses ERC20Internal balance primitive for the receiver._
+
+#### Parameters
+
+| Name   | Type    | Description                       |
+| ------ | ------- | --------------------------------- |
+| to     | address | The address of the receiver.      |
+| amount | uint256 | The amount of tokens to transfer. |
+
+#### Return Values
+
+| Name        | Type | Description                         |
+| ----------- | ---- | ----------------------------------- |
+| isCompliant | bool | True if compliant, false otherwise. |
+
+### \_implementedInterfaces
+
+```solidity
+function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
+```
+
+_Declares the interfaces implemented by this facet._
+
+#### Return Values
+
+| Name         | Type     | Description                               |
+| ------------ | -------- | ----------------------------------------- |
+| interfaces\_ | bytes4[] | Array of supported interface identifiers. |
+
+---
+
+## ERC3643ComplianceMaxBalInternal
 
 Internal contract for managing ERC-3643 MaxBalance restriction.
 
@@ -130,3 +230,74 @@ Uses ERC20Internal balance primitive for the receiver._
 | Name | Type | Description                         |
 | ---- | ---- | ----------------------------------- |
 | [0]  | bool | True if compliant, false otherwise. |
+
+---
+
+## IERC3643ComplianceMaxBal
+
+Interface for ERC-3643 compliance feature: MaxBalance restriction.
+
+_Allows setting and getting the max balance, and checking compliance for transfers._
+
+### MaxBalanceSet
+
+```solidity
+event MaxBalanceSet(uint256 maxBalance)
+```
+
+Emitted when the max balance is updated.
+
+#### Parameters
+
+| Name       | Type    | Description                |
+| ---------- | ------- | -------------------------- |
+| maxBalance | uint256 | The new max balance value. |
+
+### setMaxBalance
+
+```solidity
+function setMaxBalance(uint256 maxBalance) external
+```
+
+Sets the maximum balance allowed per address.
+
+#### Parameters
+
+| Name       | Type    | Description                                       |
+| ---------- | ------- | ------------------------------------------------- |
+| maxBalance | uint256 | The maximum amount of tokens an address can hold. |
+
+### maxBalance
+
+```solidity
+function maxBalance() external view returns (uint256 _maxBalance)
+```
+
+Returns the current maximum balance allowed per address.
+
+#### Return Values
+
+| Name         | Type    | Description                |
+| ------------ | ------- | -------------------------- |
+| \_maxBalance | uint256 | The maximum balance value. |
+
+### complianceCheckOnMaxBalance
+
+```solidity
+function complianceCheckOnMaxBalance(address to, uint256 amount) external view returns (bool isCompliant)
+```
+
+Checks if a transfer respects the max balance restriction.
+
+#### Parameters
+
+| Name   | Type    | Description                       |
+| ------ | ------- | --------------------------------- |
+| to     | address | The address of the receiver.      |
+| amount | uint256 | The amount of tokens to transfer. |
+
+#### Return Values
+
+| Name        | Type | Description                         |
+| ----------- | ---- | ----------------------------------- |
+| isCompliant | bool | True if compliant, false otherwise. |

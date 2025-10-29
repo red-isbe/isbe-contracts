@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-//import {ERC3643ComplianceMaxBalance} from './erc3643compliancemaxbalance/ERC3643ComplianceMaxBalance.sol';
+import {ERC3643ComplianceMaxBalInternal} from './erc3643compliancemaxbalance/ERC3643ComplianceMaxBalInternal.sol';
 import {_ERC3643_COMPLIANCE_STORAGE_POSITION} from '../../../constants/storagePositions.sol';
 
 /**
@@ -11,7 +11,7 @@ import {_ERC3643_COMPLIANCE_STORAGE_POSITION} from '../../../constants/storagePo
  *      This contract does not emit events or apply access control.
  *      It is intended to be used by external contracts that handle authorization and event emission.
  */
-abstract contract ERC3643ComplianceInternal {
+abstract contract ERC3643ComplianceInternal is ERC3643ComplianceMaxBalInternal {
     /// @dev Storage structure for ERC-3643 MaxBalance feature activation.
     struct ERC3643ComplianceStorage {
         bool maxBalanceEnabled;
@@ -65,9 +65,9 @@ abstract contract ERC3643ComplianceInternal {
         address to,
         uint256 amount
     ) internal view returns (bool) {
-        /*if (_isMaxBalanceEnabled()) {
+        if (_isMaxBalanceEnabled()) {
             return _complianceCheckOnMaxBalance(to, amount);
-        }*/
+        }
         return true;
     }
 
@@ -82,7 +82,7 @@ abstract contract ERC3643ComplianceInternal {
         address from,
         address to,
         uint256 amount
-    ) internal view returns (bool) {
+    ) internal pure returns (bool) {
         return true;
     }
 
@@ -92,7 +92,7 @@ abstract contract ERC3643ComplianceInternal {
      * @param amount The amount of tokens minted.
      * @return Always returns true for MaxBalance feature.
      */
-    function _created(address to, uint256 amount) internal view returns (bool) {
+    function _created(address to, uint256 amount) internal pure returns (bool) {
         return true;
     }
 

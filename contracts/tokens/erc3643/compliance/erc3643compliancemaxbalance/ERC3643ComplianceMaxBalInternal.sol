@@ -12,7 +12,7 @@ import {_ERC3643_COMPLIANCE_MAXBALANCE_STORAGE_POSITION} from '../../../../const
  *      Balances are read directly from ERC20Internal primitives.
  *      It is intended to be used by external contracts that handle authorization and event emission.
  */
-abstract contract ERC3643ComplianceMaxBalanceInternal is ERC20Internal {
+abstract contract ERC3643ComplianceMaxBalInternal is ERC20Internal {
     /// @dev Storage structure for ERC-3643 MaxBalance restriction.
     struct ERC3643ComplianceMaxBalanceStorage {
         uint256 maxBalance;

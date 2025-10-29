@@ -129,7 +129,7 @@ package "ERC20 and ERC3643" {
     
     ERC3643ComplianceMaxBalanceFacet --|> ERC3643ComplianceMaxBalance
     ERC3643ComplianceMaxBalance --|> IERC3643ComplianceMaxBalance 
-    ERC3643ComplianceMaxBalanceInternal --|> Common
+    ERC3643ComplianceMaxBalanceInternal --|> ERC20Internal
 
     ERC3643ComplianceInternal --|> ERC3643ComplianceMaxBalanceInternal 
     
