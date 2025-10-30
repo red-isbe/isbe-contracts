@@ -5,7 +5,6 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { deployGovernance, CONFIGURATION_ID_ERC3643 } from './initialization'
 import {
     METADATA_ROLE,
-    REGULATORY_ROLE,
     FREEZE_ROLE,
     PAUSER_ROLE,
     CONTROLLER_ROLE,
@@ -21,7 +20,7 @@ import {
     IERC203643Controller,
     IERC203643Capped,
 } from '../typechain-types'
- '../typechain-types'
+;('../typechain-types')
 
 describe('ERC3643 Token', function () {
     // ====================================================================
@@ -1820,7 +1819,6 @@ describe('ERC3643 Token', function () {
                     await erc3643Capped
                         .connect(owner)
                         .mint(charlieAddress, BigInt(totalBalanceStr))
-
                 })
 
                 it('GIVEN no CONTROLLER_ROLE WHEN batchForceTransfer THEN reverts', async () => {
@@ -2256,9 +2254,6 @@ describe('ERC3643 Token', function () {
                     await accessControlFacet
                         .connect(owner)
                         .grantRole(CAP_ROLE, ownerAddress)
-                    await accessControlFacet
-                        .connect(owner)
-                        .grantRole(REGULATORY_ROLE, ownerAddress)
 
                     // Initialize ERC20
                     await erc20Facet
@@ -2268,11 +2263,8 @@ describe('ERC3643 Token', function () {
                     // Initialize ERC3643 modules
                     await erc3643
                         .connect(owner)
-                        .initializeERC3643Metadata(
-                            version
-                        )
-                    await erc3643
-                        .connect(owner)
+                        .initializeERC3643Metadata(version)
+                    await erc3643.connect(owner)
                     // Get capped and controller interfaces
                     erc3643Capped = (await ethers.getContractAt(
                         'IERC203643Capped',
@@ -2537,7 +2529,6 @@ describe('ERC3643 Token', function () {
                         const walletAddress = wallet.address
                         addresses.push(walletAddress)
                         amounts.push(amountPerAddress)
-
                     }
 
                     await expect(
@@ -2733,9 +2724,6 @@ describe('ERC3643 Token', function () {
                     await accessControlFacet
                         .connect(owner)
                         .grantRole(MINTER_ROLE, ownerAddress)
-                    await accessControlFacet
-                        .connect(owner)
-                        .grantRole(REGULATORY_ROLE, ownerAddress)
 
                     // Initialize ERC20
                     await erc20Facet
@@ -2745,11 +2733,8 @@ describe('ERC3643 Token', function () {
                     // Initialize ERC3643 modules (this puts us in ERC3643 mode)
                     await erc3643
                         .connect(owner)
-                        .initializeERC3643Metadata(
-                            version
-                        )
-                    await erc3643
-                        .connect(owner)
+                        .initializeERC3643Metadata(version)
+                    await erc3643.connect(owner)
 
                     // Get capped interface and initialize cap
                     const erc3643Capped = (await ethers.getContractAt(
@@ -2802,7 +2787,6 @@ describe('ERC3643 Token', function () {
                     ).to.be.reverted
                 }
             })
-
         })
 
         // --------------------------------------------------------------------
@@ -2817,9 +2801,6 @@ describe('ERC3643 Token', function () {
                     await accessControlFacet
                         .connect(owner)
                         .grantRole(MINTER_ROLE, ownerAddress)
-                    await accessControlFacet
-                        .connect(owner)
-                        .grantRole(REGULATORY_ROLE, ownerAddress)
 
                     // Initialize ERC20
                     await erc20Facet
@@ -2829,11 +2810,8 @@ describe('ERC3643 Token', function () {
                     // Initialize ERC3643 modules (this puts us in ERC3643 mode)
                     await erc3643
                         .connect(owner)
-                        .initializeERC3643Metadata(
-                            version
-                        )
-                    await erc3643
-                        .connect(owner)
+                        .initializeERC3643Metadata(version)
+                    await erc3643.connect(owner)
 
                     // Get capped interface and initialize cap
                     erc3643Capped = (await ethers.getContractAt(
@@ -2873,9 +2851,6 @@ describe('ERC3643 Token', function () {
                         .grantRole(MINTER_ROLE, ownerAddress)
                     await accessControlFacet
                         .connect(owner)
-                        .grantRole(REGULATORY_ROLE, ownerAddress)
-                    await accessControlFacet
-                        .connect(owner)
                         .grantRole(FREEZE_ROLE, ownerAddress)
 
                     // Initialize ERC20
@@ -2886,12 +2861,8 @@ describe('ERC3643 Token', function () {
                     // Initialize ERC3643 modules
                     await erc3643
                         .connect(owner)
-                        .initializeERC3643Metadata(
-                            version
-                        )
-                    await erc3643
-                        .connect(owner)
-
+                        .initializeERC3643Metadata(version)
+                    await erc3643.connect(owner)
 
                     // Get capped interface and initialize cap
                     erc3643Capped = (await ethers.getContractAt(
@@ -2908,8 +2879,6 @@ describe('ERC3643 Token', function () {
             })
 
             describe('transfer', () => {
-              
-
                 it('GIVEN ERC3643 mode WHEN sender is frozen THEN reverts', async () => {
                     // Freeze alice
                     await erc3643
@@ -3294,9 +3263,6 @@ describe('ERC3643 Token', function () {
                 const bobAddress = await (
                     await ethers.getSigners()
                 )[2].getAddress()
-                const charlieAddress = await (
-                    await ethers.getSigners()
-                )[3].getAddress()
 
                 await accessControlFacet
                     .connect(owner)
@@ -3305,10 +3271,7 @@ describe('ERC3643 Token', function () {
                 await expect(
                     erc3643
                         .connect(owner)
-                        .recoveryAddress(
-                            aliceAddress,
-                            bobAddress
-                        )
+                        .recoveryAddress(aliceAddress, bobAddress)
                 ).to.be.reverted
             })
         })
@@ -3320,9 +3283,6 @@ describe('ERC3643 Token', function () {
                     await accessControlFacet
                         .connect(owner)
                         .grantRole(METADATA_ROLE, ownerAddress)
-                    await accessControlFacet
-                        .connect(owner)
-                        .grantRole(REGULATORY_ROLE, ownerAddress)
                     await accessControlFacet
                         .connect(owner)
                         .grantRole(RECOVERY_ROLE, ownerAddress)
@@ -3341,13 +3301,8 @@ describe('ERC3643 Token', function () {
                     // Initialize ERC3643 Metadata
                     await erc3643
                         .connect(owner)
-                        .initializeERC3643Metadata(
-                            version
-                        )
-
-                    // Initialize ERC3643 Regulatory (this enables ERC3643 mode)
-                    await erc3643
-                        .connect(owner)
+                        .initializeERC3643Metadata(version)
+                    await erc3643.connect(owner)
 
                     // Get capped interface and initialize cap
                     const erc3643Capped = (await ethers.getContractAt(
@@ -3367,38 +3322,27 @@ describe('ERC3643 Token', function () {
                 it('GIVEN no RECOVERY_ROLE WHEN recoveryAddress THEN reverts', async () => {
                     const signers = await ethers.getSigners()
                     const bob = signers[2]
-                    const charlie = signers[3]
                     const bobAddress = await bob.getAddress()
-                    const charlieAddress = await charlie.getAddress()
 
                     await expect(
                         erc3643
                             .connect(alice)
-                            .recoveryAddress(
-                                aliceAddress,
-                                bobAddress
-                            )
+                            .recoveryAddress(aliceAddress, bobAddress)
                     ).to.be.reverted
                 })
 
                 it('GIVEN RECOVERY_ROLE WHEN recoveryAddress THEN succeeds', async () => {
                     const signers = await ethers.getSigners()
                     const bob = signers[2]
-                    const charlie = signers[3]
                     const bobAddress = await bob.getAddress()
-                    const charlieAddress = await charlie.getAddress()
-
 
                     await expect(
                         erc3643
                             .connect(owner)
-                            .recoveryAddress(
-                                aliceAddress,
-                                bobAddress
-                            )
+                            .recoveryAddress(aliceAddress, bobAddress)
                     )
                         .to.emit(erc3643, 'RecoverySuccess')
-                        .withArgs(aliceAddress, bobAddress, charlieAddress)
+                        .withArgs(aliceAddress, bobAddress)
                 })
             })
 
@@ -3406,17 +3350,12 @@ describe('ERC3643 Token', function () {
                 it('GIVEN zero lost wallet WHEN recoveryAddress THEN reverts with InvalidLostWallet', async () => {
                     const signers = await ethers.getSigners()
                     const bob = signers[2]
-                    const charlie = signers[3]
                     const bobAddress = await bob.getAddress()
-                    const charlieAddress = await charlie.getAddress()
 
                     await expect(
                         erc3643
                             .connect(owner)
-                            .recoveryAddress(
-                                ZeroAddress,
-                                bobAddress
-                            )
+                            .recoveryAddress(ZeroAddress, bobAddress)
                     ).to.be.revertedWithCustomError(
                         erc3643,
                         'InvalidLostWallet'
@@ -3424,50 +3363,18 @@ describe('ERC3643 Token', function () {
                 })
 
                 it('GIVEN zero new wallet WHEN recoveryAddress THEN reverts with InvalidNewWallet', async () => {
-                    const signers = await ethers.getSigners()
-                    const charlie = signers[3]
-                    const charlieAddress = await charlie.getAddress()
-
                     await expect(
                         erc3643
                             .connect(owner)
-                            .recoveryAddress(
-                                aliceAddress,
-                                ZeroAddress
-                            )
+                            .recoveryAddress(aliceAddress, ZeroAddress)
                     ).to.be.revertedWithCustomError(erc3643, 'InvalidNewWallet')
                 })
 
-                it('GIVEN zero investor onchainID WHEN recoveryAddress THEN reverts with InvalidInvestorOnchainID', async () => {
-                    const signers = await ethers.getSigners()
-                    const bob = signers[2]
-                    const bobAddress = await bob.getAddress()
-
-                    await expect(
-                        erc3643
-                            .connect(owner)
-                            .recoveryAddress(
-                                aliceAddress,
-                                bobAddress
-                            )
-                    ).to.be.revertedWithCustomError(
-                        erc3643,
-                        'InvalidInvestorOnchainID'
-                    )
-                })
-
                 it('GIVEN same lost and new wallet WHEN recoveryAddress THEN reverts with SameWalletAddress', async () => {
-                    const signers = await ethers.getSigners()
-                    const charlie = signers[3]
-                    const charlieAddress = await charlie.getAddress()
-
                     await expect(
                         erc3643
                             .connect(owner)
-                            .recoveryAddress(
-                                aliceAddress,
-                                aliceAddress
-                            )
+                            .recoveryAddress(aliceAddress, aliceAddress)
                     ).to.be.revertedWithCustomError(
                         erc3643,
                         'SameWalletAddress'
@@ -3477,19 +3384,14 @@ describe('ERC3643 Token', function () {
                 it('GIVEN lost wallet with zero balance WHEN recoveryAddress THEN reverts with NoTokensToRecover', async () => {
                     const signers = await ethers.getSigners()
                     const bob = signers[2]
-                    const charlie = signers[3]
                     const dave = signers[4]
                     const bobAddress = await bob.getAddress()
-                    const charlieAddress = await charlie.getAddress()
                     const daveAddress = await dave.getAddress()
 
                     await expect(
                         erc3643
                             .connect(owner)
-                            .recoveryAddress(
-                                daveAddress,
-                                bobAddress
-                            )
+                            .recoveryAddress(daveAddress, bobAddress)
                     ).to.be.revertedWithCustomError(
                         erc3643,
                         'NoTokensToRecover'
@@ -3501,19 +3403,14 @@ describe('ERC3643 Token', function () {
                 it('GIVEN valid recovery WHEN recoveryAddress THEN transfers all tokens', async () => {
                     const signers = await ethers.getSigners()
                     const bob = signers[2]
-                    const charlie = signers[3]
                     const bobAddress = await bob.getAddress()
-                    const charlieAddress = await charlie.getAddress()
 
                     const aliceBalance =
                         await erc20Facet.balanceOf(aliceAddress)
 
                     await erc3643
                         .connect(owner)
-                        .recoveryAddress(
-                            aliceAddress,
-                            bobAddress
-                        )
+                        .recoveryAddress(aliceAddress, bobAddress)
 
                     expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
                         0n
@@ -3526,22 +3423,14 @@ describe('ERC3643 Token', function () {
                 it('GIVEN recovery with tokens WHEN recoveryAddress THEN emits Transfer event', async () => {
                     const signers = await ethers.getSigners()
                     const bob = signers[2]
-                    const charlie = signers[3]
                     const bobAddress = await bob.getAddress()
-                    const charlieAddress = await charlie.getAddress()
-
                     const aliceBalance =
                         await erc20Facet.balanceOf(aliceAddress)
-
-
 
                     await expect(
                         erc3643
                             .connect(owner)
-                            .recoveryAddress(
-                                aliceAddress,
-                                bobAddress
-                            )
+                            .recoveryAddress(aliceAddress, bobAddress)
                     )
                         .to.emit(erc20Facet, 'Transfer')
                         .withArgs(aliceAddress, bobAddress, aliceBalance)
@@ -3564,7 +3453,6 @@ describe('ERC3643 Token', function () {
                     const charlie = signers[3]
                     const bobAddress = await bob.getAddress()
 
-
                     const frozenAmount = 300n
                     await erc3643
                         .connect(owner)
@@ -3572,10 +3460,7 @@ describe('ERC3643 Token', function () {
 
                     await erc3643
                         .connect(owner)
-                        .recoveryAddress(
-                            aliceAddress,
-                            bobAddress
-                        )
+                        .recoveryAddress(aliceAddress, bobAddress)
 
                     expect(await erc3643.getFrozenTokens(bobAddress)).to.equal(
                         frozenAmount
@@ -3588,17 +3473,13 @@ describe('ERC3643 Token', function () {
                     const charlie = signers[3]
                     const bobAddress = await bob.getAddress()
 
-
                     await erc3643
                         .connect(owner)
                         .setAddressFrozen(aliceAddress, true)
 
                     await erc3643
                         .connect(owner)
-                        .recoveryAddress(
-                            aliceAddress,
-                            bobAddress
-                        )
+                        .recoveryAddress(aliceAddress, bobAddress)
 
                     expect(await erc3643.isFrozen(bobAddress)).to.be.true
                 })
@@ -3609,7 +3490,6 @@ describe('ERC3643 Token', function () {
                     const charlie = signers[3]
                     const bobAddress = await bob.getAddress()
 
-
                     const frozenAmount = 400n
                     await erc3643
                         .connect(owner)
@@ -3618,13 +3498,9 @@ describe('ERC3643 Token', function () {
                         .connect(owner)
                         .setAddressFrozen(aliceAddress, true)
 
-
                     await erc3643
                         .connect(owner)
-                        .recoveryAddress(
-                            aliceAddress,
-                            bobAddress
-                        )
+                        .recoveryAddress(aliceAddress, bobAddress)
 
                     expect(await erc3643.getFrozenTokens(bobAddress)).to.equal(
                         frozenAmount
@@ -3653,10 +3529,7 @@ describe('ERC3643 Token', function () {
                     await expect(
                         erc3643
                             .connect(owner)
-                            .recoveryAddress(
-                                aliceAddress,
-                                bobAddress
-                            )
+                            .recoveryAddress(aliceAddress, bobAddress)
                     ).to.be.reverted
                 })
             })
@@ -3666,14 +3539,11 @@ describe('ERC3643 Token', function () {
                     const signers = await ethers.getSigners()
                     const bob = signers[2]
                     const bobAddress = await bob.getAddress()
-    
+
                     await expect(
                         erc3643
                             .connect(owner)
-                            .recoveryAddress(
-                                aliceAddress,
-                                bobAddress
-                            )
+                            .recoveryAddress(aliceAddress, bobAddress)
                     )
                         .to.emit(erc3643, 'RecoverySuccess')
                         .withArgs(aliceAddress, bobAddress)
@@ -3704,10 +3574,7 @@ describe('ERC3643 Token', function () {
 
                     await erc3643
                         .connect(owner)
-                        .recoveryAddress(
-                            aliceAddress,
-                            bobAddress
-                        )
+                        .recoveryAddress(aliceAddress, bobAddress)
 
                     expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
                         totalBalance
@@ -3730,16 +3597,12 @@ describe('ERC3643 Token', function () {
                     const bobAddress = await bob.getAddress()
                     const daveAddress = await dave.getAddress()
 
-
                     const aliceBalance =
                         await erc20Facet.balanceOf(aliceAddress)
 
                     await erc3643
                         .connect(owner)
-                        .recoveryAddress(
-                            aliceAddress,
-                            bobAddress
-                        )
+                        .recoveryAddress(aliceAddress, bobAddress)
 
                     expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
                         aliceBalance

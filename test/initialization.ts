@@ -41,7 +41,6 @@ import {
     ERC721ConsecutiveFacet,
     IDidRegistry__factory,
     ERC3643MetadataFacet,
-    ERC3643RegulatoryFacet,
     ERC3643FreezeFacet,
     ERC3643RecoveryFacet,
 } from '../typechain-types'
@@ -80,7 +79,6 @@ import {
     DID_VERIFICATION_METHOD_RESOLVER_KEY,
     DID_VERIFICATION_RELATIONSHIP_RESOLVER_KEY,
     ERC3643_METADATA_RESOLVER_KEY,
-    ERC3643_REGULATORY_RESOLVER_KEY,
     ERC3643_FREEZE_RESOLVER_KEY,
     ERC3643_RECOVERY_RESOLVER_KEY,
 } from './constants'
@@ -368,7 +366,6 @@ export async function deployGovernance(
         accessControlGovernanceFacet,
         useCaseProxy: useCaseDeployment.proxy,
         erc3643Metadata: useCaseDeployment.erc3643Metadata,
-        erc3643Regulatory: useCaseDeployment.erc3643Regulatory,
         erc3643Freeze: useCaseDeployment.erc3643Freeze,
     }
 }
@@ -947,10 +944,6 @@ export async function deployERC3643UseCasesFacets(
     const ERC3643MetadataFacetFactory = await ethers.getContractFactory(
         'ERC3643MetadataFacet'
     )
-    const ERC3643RegulatoryFacetFactory = await ethers.getContractFactory(
-        'ERC3643RegulatoryFacet'
-    )
-
     const ERC3643FreezeFacetFactory =
         await ethers.getContractFactory('ERC3643FreezeFacet')
 
@@ -991,10 +984,6 @@ export async function deployERC3643UseCasesFacets(
         ERC3643_METADATA_RESOLVER_KEY,
         ERC3643MetadataFacetFactory
     )
-    const erc3643RegulatoryFacet = await deployBusinessLogicFromFactory(
-        ERC3643_REGULATORY_RESOLVER_KEY,
-        ERC3643RegulatoryFacetFactory
-    )
     const erc3643FreezeFacet = await deployBusinessLogicFromFactory(
         ERC3643_FREEZE_RESOLVER_KEY,
         ERC3643FreezeFacetFactory
@@ -1021,10 +1010,6 @@ export async function deployERC3643UseCasesFacets(
         },
         {
             businessId: ERC3643_METADATA_RESOLVER_KEY,
-            version: 1,
-        },
-        {
-            businessId: ERC3643_REGULATORY_RESOLVER_KEY,
             version: 1,
         },
         {
@@ -1065,9 +1050,6 @@ export async function deployERC3643UseCasesFacets(
     const erc3643Metadata = ERC3643MetadataFacetFactory.attach(
         proxy
     ) as ERC3643MetadataFacet
-    const erc3643Regulatory = ERC3643RegulatoryFacetFactory.attach(
-        proxy
-    ) as ERC3643RegulatoryFacet
     const erc3643Freeze = ERC3643FreezeFacetFactory.attach(
         proxy
     ) as ERC3643FreezeFacet
@@ -1086,7 +1068,6 @@ export async function deployERC3643UseCasesFacets(
         accessControl,
         erc20,
         erc3643Metadata,
-        erc3643Regulatory,
         erc3643Freeze,
         erc3643Recovery,
         erc203643Capped,
@@ -1098,7 +1079,6 @@ export async function deployERC3643UseCasesFacets(
         pauseFacet,
         erc20Facet,
         erc3643MetadataFacet,
-        erc3643RegulatoryFacet,
         erc3643FreezeFacet,
         erc203643CappedFacet,
         erc203643ControllerFacet,

@@ -36,8 +36,7 @@ export const ERC203643_CONTROLLER_RESOLVER_KEY =
 // ERC3643 facets
 export const ERC3643_METADATA_RESOLVER_KEY =
     '0x8bffaf1ebc4070155b40757cd1d588dd59fcab63cd7007ebf7755f7f60a0c1e1'
-export const ERC3643_REGULATORY_RESOLVER_KEY =
-    '0xd611e027d42ed421b59243a309bc0a2854443d4eb7af090fc234b04d3f7f6b65'
+
 export const ERC3643_FREEZE_RESOLVER_KEY =
     '0xb4f0898a6b06b69baf87b46c4c2932dc9b05f07368e9b14ceee64d5d44e8f273'
 
@@ -112,8 +111,6 @@ export const ARTIFACT_PATHS = {
     // ERC3643 facets
     ERC3643_METADATA:
         'contracts/tokens/erc3643/token/erc3643metadata/ERC3643MetadataFacet.sol',
-    ERC3643_REGULATORY:
-        'contracts/tokens/erc3643/token/erc3643regulatory/ERC3643RegulatoryFacet.sol',
     ERC3643_FREEZE:
         'contracts/tokens/erc3643/token/erc3643freeze/ERC3643FreezeFacet.sol',
 
@@ -167,7 +164,6 @@ export const CONTRACT_NAMES = {
 
     // ERC3643 facets
     ERC3643_METADATA: 'ERC3643MetadataFacet',
-    ERC3643_REGULATORY: 'ERC3643RegulatoryFacet',
     ERC3643_FREEZE: 'ERC3643FreezeFacet',
 
     // ERC721 facets
@@ -259,12 +255,6 @@ export const BUSINESS_LOGIC_DEFINITIONS = [
         key: ERC3643_METADATA_RESOLVER_KEY,
         contractName: CONTRACT_NAMES.ERC3643_METADATA,
         artifactPath: ARTIFACT_PATHS.ERC3643_METADATA,
-    },
-    {
-        description: 'ERC3643RegulatoryFacet',
-        key: ERC3643_REGULATORY_RESOLVER_KEY,
-        contractName: CONTRACT_NAMES.ERC3643_REGULATORY,
-        artifactPath: ARTIFACT_PATHS.ERC3643_REGULATORY,
     },
     {
         description: 'ERC3643FreezeFacet',
@@ -399,7 +389,6 @@ export const ERC3643_USE_CASE_CONFIG = {
         ERC203643_CONTROLLER_RESOLVER_KEY,
         ERC20_RESOLVER_KEY,
         ERC3643_METADATA_RESOLVER_KEY,
-        ERC3643_REGULATORY_RESOLVER_KEY,
         ERC3643_FREEZE_RESOLVER_KEY,
     ],
     versions: Array(8).fill(DEFAULT_VERSION),
