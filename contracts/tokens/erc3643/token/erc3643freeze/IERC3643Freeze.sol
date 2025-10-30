@@ -39,6 +39,34 @@ interface IERC3643Freeze {
      */
     event TokensUnfrozen(address indexed _userAddress, uint256 _amount);
 
+    /// @notice Error indicating that an attempt was made to unfreeze more tokens than are frozen
+    /// @param account The address attempting to unfreeze tokens
+    /// @param requested The amount requested to unfreeze
+    /// @param available The amount actually frozen
+    error UnfreezeAmountExceedsFrozen(
+        address account,
+        uint256 requested,
+        uint256 available
+    );
+
+    /// @notice Error when attempting to transfer more tokens than available free balance
+    /// @param account The address attempting the transfer
+    /// @param requested The amount requested to transfer
+    /// @param freeBalance The actual free (unfrozen) balance available
+    error InsufficientFreeBalance(
+        address account,
+        uint256 requested,
+        uint256 freeBalance
+    );
+
+    /// @notice Error when sender account is completely frozen
+    /// @param sender The frozen sender address
+    error SenderIsFrozen(address sender);
+
+    /// @notice Error when recipient account is completely frozen
+    /// @param recipient The frozen recipient address
+    error RecipientIsFrozen(address recipient);
+
     /**
      *  @dev sets an address frozen status for this token.
      *  @param _userAddress The address for which to update frozen status
@@ -70,6 +98,48 @@ interface IERC3643Freeze {
     function unfreezePartialTokens(
         address _userAddress,
         uint256 _amount
+    ) external;
+
+    /**
+     *  @dev function allowing to set frozen addresses in batch
+     *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_userAddresses.length` IS TOO HIGH,
+     *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
+     *  @param _userAddresses The addresses for which to update frozen status
+     *  @param _freeze Frozen status of the corresponding address
+     *  This function can only be called by a wallet set as agent of the token
+     *  emits _userAddresses.length `AddressFrozen` events
+     */
+    function batchSetAddressFrozen(
+        address[] calldata _userAddresses,
+        bool[] calldata _freeze
+    ) external;
+
+    /**
+     *  @dev function allowing to freeze tokens partially in batch
+     *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_userAddresses.length` IS TOO HIGH,
+     *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
+     *  @param _userAddresses The addresses on which tokens need to be frozen
+     *  @param _amounts the amount of tokens to freeze on the corresponding address
+     *  This function can only be called by a wallet set as agent of the token
+     *  emits _userAddresses.length `TokensFrozen` events
+     */
+    function batchFreezePartialTokens(
+        address[] calldata _userAddresses,
+        uint256[] calldata _amounts
+    ) external;
+
+    /**
+     *  @dev function allowing to unfreeze tokens partially in batch
+     *  IMPORTANT : THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_userAddresses.length` IS TOO HIGH,
+     *  USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
+     *  @param _userAddresses The addresses on which tokens need to be unfrozen
+     *  @param _amounts the amount of tokens to unfreeze on the corresponding address
+     *  This function can only be called by a wallet set as agent of the token
+     *  emits _userAddresses.length `TokensUnfrozen` events
+     */
+    function batchUnfreezePartialTokens(
+        address[] calldata _userAddresses,
+        uint256[] calldata _amounts
     ) external;
 
     /**

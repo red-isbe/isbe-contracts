@@ -2,6 +2,7 @@
 pragma solidity ^0.8.28;
 
 import {Common} from '../../../../core/Common.sol';
+import {IERC3643Freeze} from './IERC3643Freeze.sol';
 import {_ERC3643_FREEZE_STORAGE_POSITION} from '../../../../constants/storagePositions.sol';
 
 /**
@@ -48,6 +49,17 @@ abstract contract ERC3643FreezeInternal is Common {
         address _userAddress,
         uint256 _amount
     ) internal {
+        uint256 frozen = _erc3643FreezeStorage().frozenTokens[_userAddress];
+
+        require(
+            frozen >= _amount,
+            IERC3643Freeze.UnfreezeAmountExceedsFrozen(
+                _userAddress,
+                _amount,
+                frozen
+            )
+        );
+
         _erc3643FreezeStorage().frozenTokens[_userAddress] -= _amount;
     }
 

@@ -76,10 +76,6 @@ abstract contract ERC20Internal is Common {
         _beforeTokenTransfer(_from, _to, _amount);
         ERC20Storage storage $ = _erc20Storage();
         uint256 fromBalance = $.balances[_from];
-        require(
-            fromBalance >= _amount,
-            IERC20Isbe.TransferAmountExceedsBalance()
-        );
         unchecked {
             $.balances[_from] = fromBalance - _amount;
             // Overflow not possible: the sum of all balances is capped by totalSupply, and the sum is preserved by
@@ -137,10 +133,7 @@ abstract contract ERC20Internal is Common {
 
         ERC20Storage storage $ = _erc20Storage();
         uint256 accountBalance = $.balances[_account];
-        require(
-            accountBalance >= _amount,
-            IERC20Isbe.BurnAmountExceedsBalance()
-        );
+
         unchecked {
             $.balances[_account] = accountBalance - _amount;
             // Overflow not possible: amount <= accountBalance <= totalSupply.
@@ -265,6 +258,38 @@ abstract contract ERC20Internal is Common {
         address spender
     ) internal view returns (uint256) {
         return _erc20Storage().allowances[owner][spender];
+    }
+
+    /**
+     * @dev Calculates the total amount from an array and validates that the sender has sufficient balance
+     * @param _from The address to check the balance of
+     * @param _amounts Array of amounts to sum
+     * @return totalAmount The total sum of all amounts in the array
+     *
+     * Requirements:
+     * - The sender must have a balance greater than or equal to the total amount
+     *
+     * Reverts:
+     * - {TransferAmountExceedsBalance} if sender has insufficient balance
+     */
+    function _checkTotalAmount(
+        address _from,
+        uint256[] calldata _amounts
+    ) internal view returns (uint256 totalAmount) {
+        // Calculate total amount for balance validation
+        uint256 amountsLength = _amounts.length;
+        for (uint256 i; i < amountsLength; ) {
+            unchecked {
+                totalAmount += _amounts[i];
+                ++i;
+            }
+        }
+
+        // Check sender has sufficient balance for entire batch
+        require(
+            _balanceOf(_from) >= totalAmount,
+            IERC20Isbe.TransferAmountExceedsBalance()
+        );
     }
 
     function _erc20Storage()

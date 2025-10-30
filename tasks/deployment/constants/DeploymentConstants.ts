@@ -26,10 +26,12 @@ export const ERC20_SNAPSHOT_RESOLVER_KEY =
     '0xc4968fe952eba32a52cb112176a56b4e86a0fbaff835dc8336fa0e804a0af398'
 export const ERC20_BURNABLE_RESOLVER_KEY =
     '0x81c694c8d5a595cfca0b2b486a8e2aff0a72d8063c636a02c1ca1cc12e55d471'
-export const ERC20_CAPPED_RESOLVER_KEY =
-    '0x94ece6781e9aebbdab29d2bbc0301c80b7bcb1194c5c3efc08e3d35c7f6d741b'
-export const ERC20_CONTROLLER_RESOLVER_KEY =
-    '0xed76d446b6029b8a177fda4fc38162d9dc0dc29ab636541fd6e75ae60fe17151'
+
+// ERC203643 facets
+export const ERC203643_CAPPED_RESOLVER_KEY =
+    '0x1f3e5d6c7b8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f60718293a4b5c6d7e8'
+export const ERC203643_CONTROLLER_RESOLVER_KEY =
+    '0x9b1f4e8c6d7a5b4c3e2f1a0b9c8d7e6f5a4b3c2d1e0f9e8d7c6b5a4b3c2d1e0f'
 
 // ERC3643 facets
 export const ERC3643_METADATA_RESOLVER_KEY =
@@ -103,9 +105,10 @@ export const ARTIFACT_PATHS = {
         'contracts/tokens/erc20/extensions/snapshot/ERC20SnapshotFacet.sol',
     ERC20_BURNABLE:
         'contracts/tokens/erc20/extensions/burn/ERC20BurnableFacet.sol',
-    ERC20_CAPPED: 'contracts/tokens/erc20/extensions/cap/ERC20CappedFacet.sol',
-    ERC20_CONTROLLER:
-        'contracts/tokens/erc20/extensions/controller/ERC20ControllerFacet.sol',
+    ERC203643_CAPPED:
+        'contracts/tokens/erc203643/erc3643capped/ERC203643CappedFacet.sol',
+    ERC203643_CONTROLLER:
+        'contracts/tokens/erc203642/erc203643controller/ERC203643ControllerFacet.sol',
     // ERC3643 facets
     ERC3643_METADATA:
         'contracts/tokens/erc3643/token/erc3643metadata/ERC3643MetadataFacet.sol',
@@ -159,8 +162,8 @@ export const CONTRACT_NAMES = {
     ERC20: 'ERC20Facet',
     ERC20_SNAPSHOT: 'ERC20SnapshotFacet',
     ERC20_BURNABLE: 'ERC20BurnableFacet',
-    ERC20_CAPPED: 'ERC20CappedFacet',
-    ERC20_CONTROLLER: 'ERC20ControllerFacet',
+    ERC203643_CAPPED: 'ERC203643CappedFacet',
+    ERC203643_CONTROLLER: 'ERC203643ControllerFacet',
 
     // ERC3643 facets
     ERC3643_METADATA: 'ERC3643MetadataFacet',
@@ -238,16 +241,16 @@ export const BUSINESS_LOGIC_DEFINITIONS = [
         artifactPath: ARTIFACT_PATHS.ERC20_BURNABLE,
     },
     {
-        description: 'ERC20CappedFacet',
-        key: ERC20_CAPPED_RESOLVER_KEY,
-        contractName: CONTRACT_NAMES.ERC20_CAPPED,
-        artifactPath: ARTIFACT_PATHS.ERC20_CAPPED,
+        description: 'ERC203643CappedFacet',
+        key: ERC203643_CAPPED_RESOLVER_KEY,
+        contractName: CONTRACT_NAMES.ERC203643_CAPPED,
+        artifactPath: ARTIFACT_PATHS.ERC203643_CAPPED,
     },
     {
-        description: 'ERC20ControllerFacet',
-        key: ERC20_CONTROLLER_RESOLVER_KEY,
-        contractName: CONTRACT_NAMES.ERC20_CONTROLLER,
-        artifactPath: ARTIFACT_PATHS.ERC20_CONTROLLER,
+        description: 'ERC203643ControllerFacet',
+        key: ERC203643_CONTROLLER_RESOLVER_KEY,
+        contractName: CONTRACT_NAMES.ERC203643_CONTROLLER,
+        artifactPath: ARTIFACT_PATHS.ERC203643_CONTROLLER,
     },
 
     // ERC3643 facets
@@ -373,8 +376,8 @@ export const ERC20_USE_CASE_CONFIG = {
     businessLogicKeys: [
         ERC20_SNAPSHOT_RESOLVER_KEY,
         ERC20_BURNABLE_RESOLVER_KEY,
-        ERC20_CAPPED_RESOLVER_KEY,
-        ERC20_CONTROLLER_RESOLVER_KEY,
+        ERC203643_CAPPED_RESOLVER_KEY,
+        ERC203643_CONTROLLER_RESOLVER_KEY,
         ERC20_RESOLVER_KEY,
     ],
     versions: Array(5).fill(DEFAULT_VERSION),
@@ -392,9 +395,8 @@ export const ERC3643_USE_CASE_CONFIG = {
     type: 'erc3643',
     businessLogicKeys: [
         ERC20_SNAPSHOT_RESOLVER_KEY,
-        ERC20_BURNABLE_RESOLVER_KEY,
-        ERC20_CAPPED_RESOLVER_KEY,
-        ERC20_CONTROLLER_RESOLVER_KEY,
+        ERC203643_CAPPED_RESOLVER_KEY,
+        ERC203643_CONTROLLER_RESOLVER_KEY,
         ERC20_RESOLVER_KEY,
         ERC3643_METADATA_RESOLVER_KEY,
         ERC3643_REGULATORY_RESOLVER_KEY,

@@ -18,14 +18,12 @@ interface IERC3643Metadata {
      *  `_newSymbol` is the symbol of the token
      *  `_newDecimals` is the decimals of the token
      *  `_newVersion` is the version of the token, current version is 3.0
-     *  `_newOnchainID` is the address of the onchainID of the token
      */
     event UpdatedTokenInformation(
         string indexed _newName,
         string indexed _newSymbol,
         uint8 _newDecimals,
-        string _newVersion,
-        address indexed _newOnchainID
+        string _newVersion
     );
 
     /**
@@ -45,31 +43,12 @@ interface IERC3643Metadata {
     function setSymbol(string calldata _symbol) external;
 
     /**
-     *  @dev sets the onchain ID of the token
-     *  @param _onchainID the address of the onchain ID to set
-     *  Only the owner of the token smart contract can call this function
-     *  emits a `UpdatedTokenInformation` event
-     */
-    function setOnchainID(address _onchainID) external;
-
-    /**
      * @notice Initializes the ERC-3643 metadata fields of the token.
      * @dev Sets the initial onchain identity and version string.
      *      Emits a {UpdatedTokenInformation} event.
-     * @param _newOnchainID The initial onchain identity address. Can be the zero address if not set.
      * @param _newVersion The initial version string of the token. Must be non-empty.
      */
-    function initializeERC3643Metadata(
-        address _newOnchainID,
-        string memory _newVersion
-    ) external;
-
-    /**
-     * @dev Returns the address of the onchainID of the token.
-     * the onchainID of the token gives all the information available
-     * about the token and is managed by the token issuer or his agent.
-     */
-    function onchainID() external view returns (address);
+    function initializeERC3643Metadata(string memory _newVersion) external;
 
     /**
      * @dev Returns the TREX version of the token.
