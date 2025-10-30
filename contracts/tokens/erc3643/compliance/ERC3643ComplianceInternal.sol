@@ -3,6 +3,7 @@ pragma solidity ^0.8.28;
 
 import {ERC3643ComplianceMaxBalInternal} from './erc3643compliancemaxbalance/ERC3643ComplianceMaxBalInternal.sol';
 import {_ERC3643_COMPLIANCE_STORAGE_POSITION} from '../../../constants/storagePositions.sol';
+import {ICompliance} from './ICompliance.sol'; // Importa la interfaz con los eventos
 
 /**
  * @title ERC3643ComplianceInternal
@@ -53,6 +54,44 @@ abstract contract ERC3643ComplianceInternal is ERC3643ComplianceMaxBalInternal {
     // --- Compliance Hooks ---
 
     /**
+     * @dev Internal hook called after tokens are transferred.
+     * @param from The address of the sender.
+     * @param to The address of the receiver.
+     * @param amount The amount of tokens transferred.
+     * @return Always returns true for MaxBalance feature.
+     */
+    function _transferred(
+        address from,
+        address to,
+        uint256 amount
+    ) internal returns (bool) {
+        emit ICompliance.ComplianceTransfer(from, to, amount);
+        return true;
+    }
+
+    /**
+     * @dev Internal hook called after tokens are minted.
+     * @param to The address receiving the minted tokens.
+     * @param amount The amount of tokens minted.
+     * @return Always returns true for MaxBalance feature.
+     */
+    function _created(address to, uint256 amount) internal returns (bool) {
+        emit ICompliance.ComplianceCreated(to, amount);
+        return true;
+    }
+
+    /**
+     * @dev Internal hook called after tokens are burned.
+     * @param from The address from which tokens are burned.
+     * @param amount The amount of tokens burned.
+     * @return Always returns true for MaxBalance feature.
+     */
+    function _destroyed(address from, uint256 amount) internal returns (bool) {
+        emit ICompliance.ComplianceDestroyed(from, amount);
+        return true;
+    }
+
+    /**
      * @dev Internal view function to check compliance before a transfer.
      * Delegates to MaxBalance feature if enabled.
      * @param from The address of the sender.
@@ -68,44 +107,6 @@ abstract contract ERC3643ComplianceInternal is ERC3643ComplianceMaxBalInternal {
         if (_isMaxBalanceEnabled()) {
             return _complianceCheckOnMaxBalance(to, amount);
         }
-        return true;
-    }
-
-    /**
-     * @dev Internal hook called after tokens are transferred.
-     * @param from The address of the sender.
-     * @param to The address of the receiver.
-     * @param amount The amount of tokens transferred.
-     * @return Always returns true for MaxBalance feature.
-     */
-    function _transferred(
-        address from,
-        address to,
-        uint256 amount
-    ) internal pure returns (bool) {
-        return true;
-    }
-
-    /**
-     * @dev Internal hook called after tokens are minted.
-     * @param to The address receiving the minted tokens.
-     * @param amount The amount of tokens minted.
-     * @return Always returns true for MaxBalance feature.
-     */
-    function _created(address to, uint256 amount) internal pure returns (bool) {
-        return true;
-    }
-
-    /**
-     * @dev Internal hook called after tokens are burned.
-     * @param from The address from which tokens are burned.
-     * @param amount The amount of tokens burned.
-     * @return Always returns true for MaxBalance feature.
-     */
-    function _destroyed(
-        address from,
-        uint256 amount
-    ) internal view returns (bool) {
         return true;
     }
 

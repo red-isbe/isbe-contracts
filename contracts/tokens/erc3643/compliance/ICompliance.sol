@@ -17,6 +17,32 @@ interface ICompliance {
     event ComplianceFeatureToggled(string feature, bool enabled);
 
     /**
+     * @notice Emitted when tokens are transferred between wallets.
+     * @param from The address of the sender.
+     * @param to The address of the receiver.
+     * @param amount The amount of tokens transferred.
+     */
+    event ComplianceTransfer(
+        address indexed from,
+        address indexed to,
+        uint256 amount
+    );
+
+    /**
+     * @notice Emitted when tokens are minted to a wallet.
+     * @param to The address receiving the minted tokens.
+     * @param amount The amount of tokens minted.
+     */
+    event ComplianceCreated(address indexed to, uint256 amount);
+
+    /**
+     * @notice Emitted when tokens are burned from a wallet.
+     * @param from The address from which tokens are burned.
+     * @param amount The amount of tokens burned.
+     */
+    event ComplianceDestroyed(address indexed from, uint256 amount);
+
+    /**
      * @notice Called whenever tokens are transferred between wallets.
      * @dev Can be used to update state variables of the compliance contract.
      *      Should only be called by the token contract.

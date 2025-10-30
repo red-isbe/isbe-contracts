@@ -51,16 +51,6 @@ abstract contract ERC3643Compliance is ICompliance, ERC203643InternalCommon {
         emit ComplianceFeatureToggled('MaxBalance', enabled);
     }
 
-    // --- Get MaxBalance Activation ---
-
-    /**
-     * @notice Returns true if MaxBalance feature is enabled.
-     * @return True if enabled, false otherwise.
-     */
-    function isMaxBalanceEnabled() external view returns (bool) {
-        return _isMaxBalanceEnabled();
-    }
-
     // --- ICompliance Hooks ---
 
     /**
@@ -118,6 +108,16 @@ abstract contract ERC3643Compliance is ICompliance, ERC203643InternalCommon {
         uint256 _amount
     ) external view override returns (bool) {
         return _canTransfer(_from, _to, _amount);
+    }
+
+    // --- Get MaxBalance Activation ---
+
+    /**
+     * @notice Returns true if MaxBalance feature is enabled.
+     * @return True if enabled, false otherwise.
+     */
+    function isMaxBalanceEnabled() external view returns (bool) {
+        return _isMaxBalanceEnabled();
     }
 
     // --- Interfaces ---

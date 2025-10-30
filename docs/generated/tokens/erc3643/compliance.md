@@ -45,20 +45,6 @@ _Restricted to compliance role._
 | ------- | ---- | ---------------------------------------------------------------------------------- |
 | enabled | bool | True to enable, false to disable. Requirements: - Caller must have COMPLIANCE_ROLE |
 
-### isMaxBalanceEnabled
-
-```solidity
-function isMaxBalanceEnabled() external view returns (bool)
-```
-
-Returns true if MaxBalance feature is enabled.
-
-#### Return Values
-
-| Name | Type | Description                       |
-| ---- | ---- | --------------------------------- |
-| [0]  | bool | True if enabled, false otherwise. |
-
 ### transferred
 
 ```solidity
@@ -134,6 +120,20 @@ _Implements ICompliance. Delegates to internal logic._
 | Name | Type | Description                                         |
 | ---- | ---- | --------------------------------------------------- |
 | [0]  | bool | True if the transfer is compliant, false otherwise. |
+
+### isMaxBalanceEnabled
+
+```solidity
+function isMaxBalanceEnabled() external view returns (bool)
+```
+
+Returns true if MaxBalance feature is enabled.
+
+#### Return Values
+
+| Name | Type | Description                       |
+| ---- | ---- | --------------------------------- |
+| [0]  | bool | True if enabled, false otherwise. |
 
 ### \_implementedInterfaces
 
@@ -263,6 +263,70 @@ _Internal view function to check if MaxBalance feature is enabled._
 | ---- | ---- | ----------------------------------------------- |
 | [0]  | bool | True if MaxBalance is enabled, false otherwise. |
 
+### \_transferred
+
+```solidity
+function _transferred(address from, address to, uint256 amount) internal returns (bool)
+```
+
+_Internal hook called after tokens are transferred._
+
+#### Parameters
+
+| Name   | Type    | Description                       |
+| ------ | ------- | --------------------------------- |
+| from   | address | The address of the sender.        |
+| to     | address | The address of the receiver.      |
+| amount | uint256 | The amount of tokens transferred. |
+
+#### Return Values
+
+| Name | Type | Description                                 |
+| ---- | ---- | ------------------------------------------- |
+| [0]  | bool | Always returns true for MaxBalance feature. |
+
+### \_created
+
+```solidity
+function _created(address to, uint256 amount) internal returns (bool)
+```
+
+_Internal hook called after tokens are minted._
+
+#### Parameters
+
+| Name   | Type    | Description                              |
+| ------ | ------- | ---------------------------------------- |
+| to     | address | The address receiving the minted tokens. |
+| amount | uint256 | The amount of tokens minted.             |
+
+#### Return Values
+
+| Name | Type | Description                                 |
+| ---- | ---- | ------------------------------------------- |
+| [0]  | bool | Always returns true for MaxBalance feature. |
+
+### \_destroyed
+
+```solidity
+function _destroyed(address from, uint256 amount) internal returns (bool)
+```
+
+_Internal hook called after tokens are burned._
+
+#### Parameters
+
+| Name   | Type    | Description                               |
+| ------ | ------- | ----------------------------------------- |
+| from   | address | The address from which tokens are burned. |
+| amount | uint256 | The amount of tokens burned.              |
+
+#### Return Values
+
+| Name | Type | Description                                 |
+| ---- | ---- | ------------------------------------------- |
+| [0]  | bool | Always returns true for MaxBalance feature. |
+
 ### \_canTransfer
 
 ```solidity
@@ -285,70 +349,6 @@ Delegates to MaxBalance feature if enabled._
 | Name | Type | Description                                         |
 | ---- | ---- | --------------------------------------------------- |
 | [0]  | bool | True if the transfer is compliant, false otherwise. |
-
-### \_transferred
-
-```solidity
-function _transferred(address from, address to, uint256 amount) internal pure returns (bool)
-```
-
-_Internal hook called after tokens are transferred._
-
-#### Parameters
-
-| Name   | Type    | Description                       |
-| ------ | ------- | --------------------------------- |
-| from   | address | The address of the sender.        |
-| to     | address | The address of the receiver.      |
-| amount | uint256 | The amount of tokens transferred. |
-
-#### Return Values
-
-| Name | Type | Description                                 |
-| ---- | ---- | ------------------------------------------- |
-| [0]  | bool | Always returns true for MaxBalance feature. |
-
-### \_created
-
-```solidity
-function _created(address to, uint256 amount) internal pure returns (bool)
-```
-
-_Internal hook called after tokens are minted._
-
-#### Parameters
-
-| Name   | Type    | Description                              |
-| ------ | ------- | ---------------------------------------- |
-| to     | address | The address receiving the minted tokens. |
-| amount | uint256 | The amount of tokens minted.             |
-
-#### Return Values
-
-| Name | Type | Description                                 |
-| ---- | ---- | ------------------------------------------- |
-| [0]  | bool | Always returns true for MaxBalance feature. |
-
-### \_destroyed
-
-```solidity
-function _destroyed(address from, uint256 amount) internal view returns (bool)
-```
-
-_Internal hook called after tokens are burned._
-
-#### Parameters
-
-| Name   | Type    | Description                               |
-| ------ | ------- | ----------------------------------------- |
-| from   | address | The address from which tokens are burned. |
-| amount | uint256 | The amount of tokens burned.              |
-
-#### Return Values
-
-| Name | Type | Description                                 |
-| ---- | ---- | ------------------------------------------- |
-| [0]  | bool | Always returns true for MaxBalance feature. |
 
 ---
 
@@ -373,6 +373,52 @@ Emitted when a compliance feature is enabled or disabled.
 | ------- | ------ | --------------------------------------------- |
 | feature | string | The name of the feature (e.g., "MaxBalance"). |
 | enabled | bool   | True if enabled, false if disabled.           |
+
+### ComplianceTransfer
+
+```solidity
+event ComplianceTransfer(address from, address to, uint256 amount)
+```
+
+Emitted when tokens are transferred between wallets.
+
+#### Parameters
+
+| Name   | Type    | Description                       |
+| ------ | ------- | --------------------------------- |
+| from   | address | The address of the sender.        |
+| to     | address | The address of the receiver.      |
+| amount | uint256 | The amount of tokens transferred. |
+
+### ComplianceCreated
+
+```solidity
+event ComplianceCreated(address to, uint256 amount)
+```
+
+Emitted when tokens are minted to a wallet.
+
+#### Parameters
+
+| Name   | Type    | Description                              |
+| ------ | ------- | ---------------------------------------- |
+| to     | address | The address receiving the minted tokens. |
+| amount | uint256 | The amount of tokens minted.             |
+
+### ComplianceDestroyed
+
+```solidity
+event ComplianceDestroyed(address from, uint256 amount)
+```
+
+Emitted when tokens are burned from a wallet.
+
+#### Parameters
+
+| Name   | Type    | Description                               |
+| ------ | ------- | ----------------------------------------- |
+| from   | address | The address from which tokens are burned. |
+| amount | uint256 | The amount of tokens burned.              |
 
 ### transferred
 
