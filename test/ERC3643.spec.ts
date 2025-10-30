@@ -21,11 +21,7 @@ import {
     IERC203643Controller,
     IERC203643Capped,
 } from '../typechain-types'
-import {
-    MockCompliance,
-    MockIdentityRegistry,
-    MockOnchainID,
-} from '../typechain-types'
+ '../typechain-types'
 
 describe('ERC3643 Token', function () {
     // ====================================================================
@@ -1177,10 +1173,7 @@ describe('ERC3643 Token', function () {
                     // Initialize ERC3643 modules
                     await erc3643
                         .connect(owner)
-                        .initializeERC3643Metadata(
-                        
-                            version
-                        )
+                        .initializeERC3643Metadata(version)
 
                     // Get controller and capped interfaces
                     erc3643Controller = (await ethers.getContractAt(
@@ -1224,16 +1217,6 @@ describe('ERC3643 Token', function () {
                         .connect(owner)
                         .grantRole(PAUSER_ROLE, ownerAddress)
                     await pauseFacet.connect(owner).pause()
-
-                    await expect(
-                        erc3643Controller
-                            .connect(owner)
-                            .forceTransfer(aliceAddress, bobAddress, 100n)
-                    ).to.be.reverted
-                })
-
-                it('GIVEN unverified recipient WHEN forceTransfer THEN reverts', async () => {
-                    await identityRegistryMock.setIsVerified(bobAddress, false)
 
                     await expect(
                         erc3643Controller
@@ -1561,11 +1544,6 @@ describe('ERC3643 Token', function () {
                     charlie = signers[3] as unknown as Signer
                     charlieAddress = await charlie.getAddress()
 
-                    // Setup charlie with tokens
-                    await identityRegistryMock.setIsVerified(
-                        charlieAddress,
-                        true
-                    )
                     await erc3643Capped
                         .connect(owner)
                         .mint(charlieAddress, BigInt(totalBalanceStr))
@@ -1799,8 +1777,6 @@ describe('ERC3643 Token', function () {
                         const address = await signer.getAddress()
                         addresses.push(address)
                         amounts.push(50n)
-
-                        await identityRegistryMock.setIsVerified(address, true)
                         await erc3643Capped.connect(owner).mint(address, 200n)
                     }
 
@@ -1841,17 +1817,10 @@ describe('ERC3643 Token', function () {
                     david = signers[4] as unknown as Signer
                     davidAddress = await david.getAddress()
 
-                    // Setup charlie with tokens
-                    await identityRegistryMock.setIsVerified(
-                        charlieAddress,
-                        true
-                    )
                     await erc3643Capped
                         .connect(owner)
                         .mint(charlieAddress, BigInt(totalBalanceStr))
 
-                    // Setup david as verified recipient
-                    await identityRegistryMock.setIsVerified(davidAddress, true)
                 })
 
                 it('GIVEN no CONTROLLER_ROLE WHEN batchForceTransfer THEN reverts', async () => {
@@ -1914,32 +1883,6 @@ describe('ERC3643 Token', function () {
                     ).to.be.revertedWithCustomError(
                         erc20Facet,
                         'NotSameLengthArray'
-                    )
-                })
-
-                it('GIVEN unverified recipient WHEN batchForceTransfer THEN reverts entire batch', async () => {
-                    await identityRegistryMock.setIsVerified(bobAddress, false)
-
-                    await expect(
-                        erc3643Controller
-                            .connect(owner)
-                            .batchForceTransfer(
-                                [aliceAddress, charlieAddress],
-                                [bobAddress, davidAddress],
-                                [100n, 200n]
-                            )
-                    ).to.be.reverted
-
-                    // Verify no transfers occurred
-                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                        BigInt(totalBalanceStr)
-                    )
-                    expect(await erc20Facet.balanceOf(charlieAddress)).to.equal(
-                        BigInt(totalBalanceStr)
-                    )
-                    expect(await erc20Facet.balanceOf(bobAddress)).to.equal(0n)
-                    expect(await erc20Facet.balanceOf(davidAddress)).to.equal(
-                        0n
                     )
                 })
 
@@ -2213,15 +2156,6 @@ describe('ERC3643 Token', function () {
                         fromAddresses.push(fromAddress)
                         toAddresses.push(toAddress)
                         amounts.push(50n)
-
-                        await identityRegistryMock.setIsVerified(
-                            fromAddress,
-                            true
-                        )
-                        await identityRegistryMock.setIsVerified(
-                            toAddress,
-                            true
-                        )
                         await erc3643Capped
                             .connect(owner)
                             .mint(fromAddress, 200n)
@@ -2335,25 +2269,15 @@ describe('ERC3643 Token', function () {
                     await erc3643
                         .connect(owner)
                         .initializeERC3643Metadata(
-                            tokenOnchainIDAddress,
                             version
                         )
                     await erc3643
                         .connect(owner)
-                        .initializeERC3643Regulatory(
-                            identityRegistryAddress,
-                            complianceAddress
-                        )
-
                     // Get capped and controller interfaces
                     erc3643Capped = (await ethers.getContractAt(
                         'IERC203643Capped',
                         proxyAddress
                     )) as IERC203643Capped
-
-                    // Setup identity registry to allow alice and bob
-                    await identityRegistryMock.setIsVerified(aliceAddress, true)
-                    await identityRegistryMock.setIsVerified(bobAddress, true)
                 }
                 await loadFixture(fixture)
             })
@@ -2421,18 +2345,7 @@ describe('ERC3643 Token', function () {
                     ).to.be.reverted
                 })
 
-                it('GIVEN unverified recipient WHEN mint THEN reverts (ERC3643 mode)', async () => {
-                    await identityRegistryMock.setIsVerified(
-                        aliceAddress,
-                        false
-                    )
-
-                    await expect(
-                        erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
-                    ).to.be.reverted
-                })
-
-                it('GIVEN verified recipient WHEN mint within cap THEN succeeds and emits Transfer', async () => {
+                it('GIVEN recipient WHEN mint within cap THEN succeeds and emits Transfer', async () => {
                     const mintAmount = 5000n
 
                     await expect(
@@ -2515,18 +2428,6 @@ describe('ERC3643 Token', function () {
                         await erc3643Capped
                             .connect(owner)
                             .initializeCap(initialCap)
-
-                        // Register bob and charlie as verified in ERC3643
-                        await identityRegistryMock.registerIdentity(
-                            bobAddress,
-                            tokenOnchainIDAddress,
-                            0
-                        )
-                        await identityRegistryMock.registerIdentity(
-                            charlieAddress,
-                            tokenOnchainIDAddress,
-                            0
-                        )
                     }
                     await loadFixture(fixture)
                 })
@@ -2637,12 +2538,6 @@ describe('ERC3643 Token', function () {
                         addresses.push(walletAddress)
                         amounts.push(amountPerAddress)
 
-                        // Register each wallet in identity registry
-                        await identityRegistryMock.registerIdentity(
-                            walletAddress,
-                            tokenOnchainIDAddress,
-                            0
-                        )
                     }
 
                     await expect(
@@ -2851,18 +2746,10 @@ describe('ERC3643 Token', function () {
                     await erc3643
                         .connect(owner)
                         .initializeERC3643Metadata(
-                            tokenOnchainIDAddress,
                             version
                         )
                     await erc3643
                         .connect(owner)
-                        .initializeERC3643Regulatory(
-                            identityRegistryAddress,
-                            complianceAddress
-                        )
-
-                    // Setup identity registry
-                    await identityRegistryMock.setIsVerified(aliceAddress, true)
 
                     // Get capped interface and initialize cap
                     const erc3643Capped = (await ethers.getContractAt(
@@ -2916,18 +2803,6 @@ describe('ERC3643 Token', function () {
                 }
             })
 
-            it('GIVEN ERC3643 mode WHEN trying to access burn functions THEN ERC20BurnableFacet is not exposed', async () => {
-                // Verify that the standard ERC20Burnable interface is not available
-                // In ERC3643 mode, only forceBurn (from Controller) should be available
-                const hasIdentityRegistry =
-                    (await erc3643.identityRegistry()) !== ZeroAddress
-
-                expect(hasIdentityRegistry).to.be.true
-
-                // In ERC3643 mode, burn/burnFrom should not be accessible
-                // Only forceBurn from the Controller facet should work
-                // This is verified by the regulatory compliance requirements
-            })
         })
 
         // --------------------------------------------------------------------
@@ -2955,15 +2830,10 @@ describe('ERC3643 Token', function () {
                     await erc3643
                         .connect(owner)
                         .initializeERC3643Metadata(
-                            tokenOnchainIDAddress,
                             version
                         )
                     await erc3643
                         .connect(owner)
-                        .initializeERC3643Regulatory(
-                            identityRegistryAddress,
-                            complianceAddress
-                        )
 
                     // Get capped interface and initialize cap
                     erc3643Capped = (await ethers.getContractAt(
@@ -2974,28 +2844,6 @@ describe('ERC3643 Token', function () {
                     await erc3643Capped.connect(owner).initializeCap(10000n)
                 }
                 await loadFixture(fixture)
-            })
-
-            it('GIVEN ERC3643 mode WHEN mint to unverified recipient THEN reverts', async () => {
-                // Alice is NOT verified in identity registry
-                await identityRegistryMock.setIsVerified(aliceAddress, false)
-
-                await expect(
-                    erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
-                ).to.be.reverted
-            })
-
-            it('GIVEN ERC3643 mode WHEN mint to verified recipient THEN succeeds', async () => {
-                // Alice IS verified in identity registry
-                await identityRegistryMock.setIsVerified(aliceAddress, true)
-
-                await expect(
-                    erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
-                )
-                    .to.emit(erc20Facet, 'Transfer')
-                    .withArgs(ZeroAddress, aliceAddress, 1000n)
-
-                expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(1000n)
             })
 
             it('GIVEN ERC3643 mode WHEN mint to zero address THEN reverts', async () => {
@@ -3039,19 +2887,11 @@ describe('ERC3643 Token', function () {
                     await erc3643
                         .connect(owner)
                         .initializeERC3643Metadata(
-                            tokenOnchainIDAddress,
                             version
                         )
                     await erc3643
                         .connect(owner)
-                        .initializeERC3643Regulatory(
-                            identityRegistryAddress,
-                            complianceAddress
-                        )
 
-                    // Setup identity registry - verify alice and bob
-                    await identityRegistryMock.setIsVerified(aliceAddress, true)
-                    await identityRegistryMock.setIsVerified(bobAddress, true)
 
                     // Get capped interface and initialize cap
                     erc3643Capped = (await ethers.getContractAt(
@@ -3068,14 +2908,7 @@ describe('ERC3643 Token', function () {
             })
 
             describe('transfer', () => {
-                it('GIVEN ERC3643 mode WHEN transfer to unverified recipient THEN reverts', async () => {
-                    // Bob is NOT verified
-                    await identityRegistryMock.setIsVerified(bobAddress, false)
-
-                    await expect(
-                        erc20Facet.connect(alice).transfer(bobAddress, 100n)
-                    ).to.be.reverted
-                })
+              
 
                 it('GIVEN ERC3643 mode WHEN sender is frozen THEN reverts', async () => {
                     // Freeze alice
@@ -3163,17 +2996,6 @@ describe('ERC3643 Token', function () {
                             .approve(ownerAddress, 2000n)
                     }
                     await loadFixture(fixture)
-                })
-
-                it('GIVEN ERC3643 mode WHEN transferFrom to unverified recipient THEN reverts', async () => {
-                    // Bob is NOT verified
-                    await identityRegistryMock.setIsVerified(bobAddress, false)
-
-                    await expect(
-                        erc20Facet
-                            .connect(owner)
-                            .transferFrom(aliceAddress, bobAddress, 100n)
-                    ).to.be.reverted
                 })
 
                 it('GIVEN ERC3643 mode WHEN sender is frozen THEN reverts', async () => {
@@ -3297,16 +3119,6 @@ describe('ERC3643 Token', function () {
                     )
                 })
 
-                it('GIVEN ERC3643 mode WHEN batchTransfer to unverified recipient THEN reverts', async () => {
-                    await identityRegistryMock.setIsVerified(bobAddress, false)
-
-                    await expect(
-                        erc20Facet
-                            .connect(alice)
-                            .batchTransfer([bobAddress], [100n])
-                    ).to.be.reverted
-                })
-
                 it('GIVEN ERC3643 mode WHEN sender is frozen THEN reverts', async () => {
                     await erc3643
                         .connect(owner)
@@ -3359,11 +3171,6 @@ describe('ERC3643 Token', function () {
                     const signers = await ethers.getSigners()
                     const charlie = signers[3] as unknown as Signer
                     const charlieAddress = await charlie.getAddress()
-
-                    await identityRegistryMock.setIsVerified(
-                        charlieAddress,
-                        true
-                    )
 
                     const aliceInitialBalance =
                         await erc20Facet.balanceOf(aliceAddress)
@@ -3451,8 +3258,6 @@ describe('ERC3643 Token', function () {
                         const address = await signer.getAddress()
                         addresses.push(address)
                         amounts.push(50n)
-
-                        await identityRegistryMock.setIsVerified(address, true)
                     }
 
                     const aliceInitialBalance =
@@ -3502,8 +3307,7 @@ describe('ERC3643 Token', function () {
                         .connect(owner)
                         .recoveryAddress(
                             aliceAddress,
-                            bobAddress,
-                            charlieAddress
+                            bobAddress
                         )
                 ).to.be.reverted
             })
@@ -3538,17 +3342,12 @@ describe('ERC3643 Token', function () {
                     await erc3643
                         .connect(owner)
                         .initializeERC3643Metadata(
-                            tokenOnchainIDAddress,
                             version
                         )
 
                     // Initialize ERC3643 Regulatory (this enables ERC3643 mode)
                     await erc3643
                         .connect(owner)
-                        .initializeERC3643Regulatory(
-                            identityRegistryAddress,
-                            complianceAddress
-                        )
 
                     // Get capped interface and initialize cap
                     const erc3643Capped = (await ethers.getContractAt(
@@ -3557,13 +3356,6 @@ describe('ERC3643 Token', function () {
                     )) as IERC203643Capped
 
                     await erc3643Capped.connect(owner).initializeCap(10000n)
-
-                    // Set alice as verified investor with country code
-                    await identityRegistryMock.setIsVerified(aliceAddress, true)
-                    await identityRegistryMock.setInvestorCountry(
-                        aliceAddress,
-                        1
-                    ) // Country code 1 (e.g., USA)
 
                     // Mint tokens to alice using the capped interface
                     await erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
@@ -3584,8 +3376,7 @@ describe('ERC3643 Token', function () {
                             .connect(alice)
                             .recoveryAddress(
                                 aliceAddress,
-                                bobAddress,
-                                charlieAddress
+                                bobAddress
                             )
                     ).to.be.reverted
                 })
@@ -3597,15 +3388,13 @@ describe('ERC3643 Token', function () {
                     const bobAddress = await bob.getAddress()
                     const charlieAddress = await charlie.getAddress()
 
-                    await identityRegistryMock.setIsVerified(bobAddress, true)
 
                     await expect(
                         erc3643
                             .connect(owner)
                             .recoveryAddress(
                                 aliceAddress,
-                                bobAddress,
-                                charlieAddress
+                                bobAddress
                             )
                     )
                         .to.emit(erc3643, 'RecoverySuccess')
@@ -3626,8 +3415,7 @@ describe('ERC3643 Token', function () {
                             .connect(owner)
                             .recoveryAddress(
                                 ZeroAddress,
-                                bobAddress,
-                                charlieAddress
+                                bobAddress
                             )
                     ).to.be.revertedWithCustomError(
                         erc3643,
@@ -3645,8 +3433,7 @@ describe('ERC3643 Token', function () {
                             .connect(owner)
                             .recoveryAddress(
                                 aliceAddress,
-                                ZeroAddress,
-                                charlieAddress
+                                ZeroAddress
                             )
                     ).to.be.revertedWithCustomError(erc3643, 'InvalidNewWallet')
                 })
@@ -3661,8 +3448,7 @@ describe('ERC3643 Token', function () {
                             .connect(owner)
                             .recoveryAddress(
                                 aliceAddress,
-                                bobAddress,
-                                ZeroAddress
+                                bobAddress
                             )
                     ).to.be.revertedWithCustomError(
                         erc3643,
@@ -3680,8 +3466,7 @@ describe('ERC3643 Token', function () {
                             .connect(owner)
                             .recoveryAddress(
                                 aliceAddress,
-                                aliceAddress,
-                                charlieAddress
+                                aliceAddress
                             )
                     ).to.be.revertedWithCustomError(
                         erc3643,
@@ -3698,15 +3483,12 @@ describe('ERC3643 Token', function () {
                     const charlieAddress = await charlie.getAddress()
                     const daveAddress = await dave.getAddress()
 
-                    await identityRegistryMock.setIsVerified(daveAddress, true)
-
                     await expect(
                         erc3643
                             .connect(owner)
                             .recoveryAddress(
                                 daveAddress,
-                                bobAddress,
-                                charlieAddress
+                                bobAddress
                             )
                     ).to.be.revertedWithCustomError(
                         erc3643,
@@ -3726,14 +3508,11 @@ describe('ERC3643 Token', function () {
                     const aliceBalance =
                         await erc20Facet.balanceOf(aliceAddress)
 
-                    await identityRegistryMock.setIsVerified(bobAddress, true)
-
                     await erc3643
                         .connect(owner)
                         .recoveryAddress(
                             aliceAddress,
-                            bobAddress,
-                            charlieAddress
+                            bobAddress
                         )
 
                     expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
@@ -3754,15 +3533,14 @@ describe('ERC3643 Token', function () {
                     const aliceBalance =
                         await erc20Facet.balanceOf(aliceAddress)
 
-                    await identityRegistryMock.setIsVerified(bobAddress, true)
+
 
                     await expect(
                         erc3643
                             .connect(owner)
                             .recoveryAddress(
                                 aliceAddress,
-                                bobAddress,
-                                charlieAddress
+                                bobAddress
                             )
                     )
                         .to.emit(erc20Facet, 'Transfer')
@@ -3785,21 +3563,18 @@ describe('ERC3643 Token', function () {
                     const bob = signers[2]
                     const charlie = signers[3]
                     const bobAddress = await bob.getAddress()
-                    const charlieAddress = await charlie.getAddress()
+
 
                     const frozenAmount = 300n
                     await erc3643
                         .connect(owner)
                         .freezePartialTokens(aliceAddress, frozenAmount)
 
-                    await identityRegistryMock.setIsVerified(bobAddress, true)
-
                     await erc3643
                         .connect(owner)
                         .recoveryAddress(
                             aliceAddress,
-                            bobAddress,
-                            charlieAddress
+                            bobAddress
                         )
 
                     expect(await erc3643.getFrozenTokens(bobAddress)).to.equal(
@@ -3812,20 +3587,17 @@ describe('ERC3643 Token', function () {
                     const bob = signers[2]
                     const charlie = signers[3]
                     const bobAddress = await bob.getAddress()
-                    const charlieAddress = await charlie.getAddress()
+
 
                     await erc3643
                         .connect(owner)
                         .setAddressFrozen(aliceAddress, true)
 
-                    await identityRegistryMock.setIsVerified(bobAddress, true)
-
                     await erc3643
                         .connect(owner)
                         .recoveryAddress(
                             aliceAddress,
-                            bobAddress,
-                            charlieAddress
+                            bobAddress
                         )
 
                     expect(await erc3643.isFrozen(bobAddress)).to.be.true
@@ -3836,7 +3608,7 @@ describe('ERC3643 Token', function () {
                     const bob = signers[2]
                     const charlie = signers[3]
                     const bobAddress = await bob.getAddress()
-                    const charlieAddress = await charlie.getAddress()
+
 
                     const frozenAmount = 400n
                     await erc3643
@@ -3846,69 +3618,18 @@ describe('ERC3643 Token', function () {
                         .connect(owner)
                         .setAddressFrozen(aliceAddress, true)
 
-                    await identityRegistryMock.setIsVerified(bobAddress, true)
 
                     await erc3643
                         .connect(owner)
                         .recoveryAddress(
                             aliceAddress,
-                            bobAddress,
-                            charlieAddress
+                            bobAddress
                         )
 
                     expect(await erc3643.getFrozenTokens(bobAddress)).to.equal(
                         frozenAmount
                     )
                     expect(await erc3643.isFrozen(bobAddress)).to.be.true
-                })
-            })
-
-            describe('Identity Registry Integration', () => {
-                it('GIVEN recovery WHEN recoveryAddress THEN registers new wallet in identity registry', async () => {
-                    const signers = await ethers.getSigners()
-                    const bob = signers[2]
-                    const charlie = signers[3]
-                    const bobAddress = await bob.getAddress()
-                    const charlieAddress = await charlie.getAddress()
-
-                    await identityRegistryMock.setIsVerified(bobAddress, true)
-
-                    await erc3643
-                        .connect(owner)
-                        .recoveryAddress(
-                            aliceAddress,
-                            bobAddress,
-                            charlieAddress
-                        )
-
-                    // Verify bob is now verified in identity registry
-                    expect(await identityRegistryMock.isVerified(bobAddress)).to
-                        .be.true
-                })
-
-                it('GIVEN recovery WHEN recoveryAddress THEN removes lost wallet from identity registry', async () => {
-                    const signers = await ethers.getSigners()
-                    const bob = signers[2]
-                    const charlie = signers[3]
-                    const bobAddress = await bob.getAddress()
-                    const charlieAddress = await charlie.getAddress()
-
-                    expect(await identityRegistryMock.isVerified(aliceAddress))
-                        .to.be.true
-
-                    await identityRegistryMock.setIsVerified(bobAddress, true)
-
-                    await erc3643
-                        .connect(owner)
-                        .recoveryAddress(
-                            aliceAddress,
-                            bobAddress,
-                            charlieAddress
-                        )
-
-                    // Verify alice is removed from identity registry
-                    expect(await identityRegistryMock.isVerified(aliceAddress))
-                        .to.be.false
                 })
             })
 
@@ -3925,9 +3646,7 @@ describe('ERC3643 Token', function () {
                 it('GIVEN paused contract WHEN recoveryAddress THEN reverts', async () => {
                     const signers = await ethers.getSigners()
                     const bob = signers[2]
-                    const charlie = signers[3]
                     const bobAddress = await bob.getAddress()
-                    const charlieAddress = await charlie.getAddress()
 
                     await pauseFacet.connect(owner).pause()
 
@@ -3936,8 +3655,7 @@ describe('ERC3643 Token', function () {
                             .connect(owner)
                             .recoveryAddress(
                                 aliceAddress,
-                                bobAddress,
-                                charlieAddress
+                                bobAddress
                             )
                     ).to.be.reverted
                 })
@@ -3947,23 +3665,18 @@ describe('ERC3643 Token', function () {
                 it('GIVEN successful recovery WHEN recoveryAddress THEN emits RecoverySuccess', async () => {
                     const signers = await ethers.getSigners()
                     const bob = signers[2]
-                    const charlie = signers[3]
                     const bobAddress = await bob.getAddress()
-                    const charlieAddress = await charlie.getAddress()
-
-                    await identityRegistryMock.setIsVerified(bobAddress, true)
-
+    
                     await expect(
                         erc3643
                             .connect(owner)
                             .recoveryAddress(
                                 aliceAddress,
-                                bobAddress,
-                                charlieAddress
+                                bobAddress
                             )
                     )
                         .to.emit(erc3643, 'RecoverySuccess')
-                        .withArgs(aliceAddress, bobAddress, charlieAddress)
+                        .withArgs(aliceAddress, bobAddress)
                 })
             })
 
@@ -3980,10 +3693,7 @@ describe('ERC3643 Token', function () {
                 it('GIVEN partial frozen tokens WHEN recoveryAddress THEN new wallet has correct free balance', async () => {
                     const signers = await ethers.getSigners()
                     const bob = signers[2]
-                    const charlie = signers[3]
                     const bobAddress = await bob.getAddress()
-                    const charlieAddress = await charlie.getAddress()
-
                     const totalBalance = 1000n
                     const frozenAmount = 600n
                     const freeBalance = totalBalance - frozenAmount
@@ -3992,14 +3702,11 @@ describe('ERC3643 Token', function () {
                         .connect(owner)
                         .freezePartialTokens(aliceAddress, frozenAmount)
 
-                    await identityRegistryMock.setIsVerified(bobAddress, true)
-
                     await erc3643
                         .connect(owner)
                         .recoveryAddress(
                             aliceAddress,
-                            bobAddress,
-                            charlieAddress
+                            bobAddress
                         )
 
                     expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
@@ -4019,16 +3726,10 @@ describe('ERC3643 Token', function () {
                 it('GIVEN multiple recoveries WHEN recoveryAddress twice THEN both succeed', async () => {
                     const signers = await ethers.getSigners()
                     const bob = signers[2]
-                    const charlie = signers[3]
                     const dave = signers[4]
-                    const eve = signers[5]
                     const bobAddress = await bob.getAddress()
-                    const charlieAddress = await charlie.getAddress()
                     const daveAddress = await dave.getAddress()
-                    const eveAddress = await eve.getAddress()
 
-                    // First recovery: alice -> bob
-                    await identityRegistryMock.setIsVerified(bobAddress, true)
 
                     const aliceBalance =
                         await erc20Facet.balanceOf(aliceAddress)
@@ -4037,20 +3738,16 @@ describe('ERC3643 Token', function () {
                         .connect(owner)
                         .recoveryAddress(
                             aliceAddress,
-                            bobAddress,
-                            charlieAddress
+                            bobAddress
                         )
 
                     expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
                         aliceBalance
                     )
 
-                    // Second recovery: bob -> dave (bob lost wallet again)
-                    await identityRegistryMock.setIsVerified(daveAddress, true)
-
                     await erc3643
                         .connect(owner)
-                        .recoveryAddress(bobAddress, daveAddress, eveAddress)
+                        .recoveryAddress(bobAddress, daveAddress)
 
                     expect(await erc20Facet.balanceOf(bobAddress)).to.equal(0n)
                     expect(await erc20Facet.balanceOf(daveAddress)).to.equal(
@@ -4072,5 +3769,4 @@ describe('ERC3643 Token', function () {
     // ====================================================================
     // COMPLIANCE DAY MONTH LIMIT FEATURE
     // ====================================================================
-
 })
