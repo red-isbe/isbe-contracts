@@ -28,6 +28,7 @@ abstract contract ERC3643ComplianceInternal is
     /**
      * @dev Internal function to initialize MaxBalance feature activation in storage.
      * @param _maxBalanceEnabled Initial value for MaxBalance feature activation.
+     * @param _dailyMonthLimitsEnabled Initial value for Daily/Month Limits feature activation.
      */
     function _initialize(
         bool _maxBalanceEnabled,
@@ -42,87 +43,91 @@ abstract contract ERC3643ComplianceInternal is
 
     /**
      * @dev Internal function to activate or deactivate MaxBalance feature.
-     * @param enabled True to activate, false to deactivate.
+     * @param _enabled True to activate, false to deactivate.
      */
-    function _setMaxBalanceEnabled(bool enabled) internal {
+    function _setMaxBalanceEnabled(bool _enabled) internal {
         ERC3643ComplianceStorage storage $ = _erc3643complianceStorage();
-        $.maxBalanceEnabled = enabled;
+        $.maxBalanceEnabled = _enabled;
     }
 
     /**
      * @dev Internal function to activate or deactivate Daily/Monthly Limits feature.
-     * @param enabled True to activate, false to deactivate.
+     * @param _enabled True to activate, false to deactivate.
      */
-    function _setDailyMonthLimitsEnabled(bool enabled) internal {
+    function _setDailyMonthLimitsEnabled(bool _enabled) internal {
         ERC3643ComplianceStorage storage $ = _erc3643complianceStorage();
-        $.dailyMonthLimitsEnabled = enabled;
+        $.dailyMonthLimitsEnabled = _enabled;
     }
 
     // --- Compliance Hooks ---
 
     /**
      * @dev Internal hook called after tokens are transferred.
-     * @param from The address of the sender.
-     * @param to The address of the receiver.
-     * @param amount The amount of tokens transferred.
+     * @param _from The address of the sender.
+     * @param _to The address of the receiver.
+     * @param _amount The amount of tokens transferred.
      * @return Always returns true for MaxBalance feature.
      */
     function _transferred(
-        address from,
-        address to,
-        uint256 amount
+        address _from,
+        address _to,
+        uint256 _amount
     ) internal returns (bool) {
         if (_isDailyMonthLimitsEnabled()) {
-            _transferActionOnDayMonthLimits(from, amount);
+            _transferActionOnDayMonthLimits(_from, _amount);
         }
 
-        emit ICompliance.ComplianceTransfer(from, to, amount);
+        emit ICompliance.ComplianceTransfer(_from, _to, _amount);
         return true;
     }
 
     /**
      * @dev Internal hook called after tokens are minted.
-     * @param to The address receiving the minted tokens.
-     * @param amount The amount of tokens minted.
+     * @param _to The address receiving the minted tokens.
+     * @param _amount The amount of tokens minted.
      * @return Always returns true for MaxBalance feature.
      */
-    function _created(address to, uint256 amount) internal returns (bool) {
-        emit ICompliance.ComplianceCreated(to, amount);
+    function _created(address _to, uint256 _amount) internal returns (bool) {
+        emit ICompliance.ComplianceCreated(_to, _amount);
         return true;
     }
 
     /**
      * @dev Internal hook called after tokens are burned.
-     * @param from The address from which tokens are burned.
-     * @param amount The amount of tokens burned.
+     * @param _from The address from which tokens are burned.
+     * @param _amount The amount of tokens burned.
      * @return Always returns true for MaxBalance feature.
      */
-    function _destroyed(address from, uint256 amount) internal returns (bool) {
-        emit ICompliance.ComplianceDestroyed(from, amount);
+    function _destroyed(
+        address _from,
+        uint256 _amount
+    ) internal returns (bool) {
+        emit ICompliance.ComplianceDestroyed(_from, _amount);
         return true;
     }
 
     /**
      * @dev Internal view function to check compliance before a transfer.
      * Delegates to MaxBalance feature if enabled.
-     * @param from The address of the sender.
-     * @param to The address of the receiver.
-     * @param amount The amount of tokens to transfer.
+     * @param _from The address of the sender.
+     * @param _to The address of the receiver.
+     * @param _amount The amount of tokens to transfer.
      * @return True if the transfer is compliant, false otherwise.
      */
     function _canTransfer(
-        address from,
-        address to,
-        uint256 amount
+        address _from,
+        address _to,
+        uint256 _amount
     ) internal view returns (bool) {
         if (
-            _isMaxBalanceEnabled() && !_complianceCheckOnMaxBalance(to, amount)
+            _isMaxBalanceEnabled() &&
+            !_complianceCheckOnMaxBalance(_to, _amount)
         ) {
             return false;
         }
         if (
             _isDailyMonthLimitsEnabled() &&
-            !_complianceCheckOnDayMonthLimits(from, amount)
+            !_complianceCheckOnDayMonthLimits(_from, _amount)
         ) {
             return false;
         }

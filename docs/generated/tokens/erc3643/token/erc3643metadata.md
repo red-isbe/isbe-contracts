@@ -16,7 +16,7 @@ _Disables further initializations for this facet using its resolver key._
 ### initializeERC3643Metadata
 
 ```solidity
-function initializeERC3643Metadata(address _newOnchainID, string _newVersion) external
+function initializeERC3643Metadata(string _newVersion) external
 ```
 
 Initializes the metadata fields of the token.
@@ -26,10 +26,9 @@ Emits a {UpdatedTokenInformation} event._
 
 #### Parameters
 
-| Name           | Type    | Description                                                   |
-| -------------- | ------- | ------------------------------------------------------------- |
-| \_newOnchainID | address | The initial onchain identity address. Can be zero if not set. |
-| \_newVersion   | string  | The initial version string. Must be non-empty.                |
+| Name         | Type   | Description                                    |
+| ------------ | ------ | ---------------------------------------------- |
+| \_newVersion | string | The initial version string. Must be non-empty. |
 
 ### setName
 
@@ -64,37 +63,6 @@ Updates the ERC20 symbol storage and emits regulatory compliance event._
 | Name        | Type   | Description                                                                                                                                                                                                                  |
 | ----------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | \_newSymbol | string | The new symbol to assign to the token. Requirements: - Caller must have METADATA_ROLE - Contract must not be paused - \_newSymbol must not be empty Emits: - {UpdatedTokenInformation} event with all current token metadata |
-
-### setOnchainID
-
-```solidity
-function setOnchainID(address _newOnchainID) external
-```
-
-Updates the onchain identity address.
-
-_Restricted to metadata role. Requires unpaused state.
-Updates ERC3643-specific storage and emits regulatory compliance event._
-
-#### Parameters
-
-| Name           | Type    | Description                                                                                                                                                                                                                                                                                                                                                                              |
-| -------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| \_newOnchainID | address | The new onchain identity address to assign. Requirements: - Caller must have METADATA_ROLE - Contract must not be paused - \_newOnchainID must not be zero address Emits: - {UpdatedTokenInformation} event with all current token metadata Note: The onchainID provides additional regulatory and compliance information about the token, managed by the issuer for ERC3643 compliance. |
-
-### onchainID
-
-```solidity
-function onchainID() external view returns (address)
-```
-
-Returns the current onchain identity address.
-
-#### Return Values
-
-| Name | Type    | Description                                                                                                                                                                                     |
-| ---- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [0]  | address | address The address of the token's onchain identity contract. Note: The onchain identity contains additional information about the token and is used for regulatory compliance in ERC3643 mode. |
 
 ### version
 
@@ -192,7 +160,6 @@ _Storage structure for ERC-3643 metadata._
 
 ```solidity
 struct ERC3643MetadataStorage {
-    address onchainid;
     string version;
 }
 ```
@@ -200,7 +167,7 @@ struct ERC3643MetadataStorage {
 ### \_initialize
 
 ```solidity
-function _initialize(address _newOnchainID, string _newVersion) internal
+function _initialize(string _newVersion) internal
 ```
 
 _Internal function to initialize the onchain identity and version metadata in storage.
@@ -208,25 +175,9 @@ Sets the initial values for the token's onchain ID and version._
 
 #### Parameters
 
-| Name           | Type    | Description                                              |
-| -------------- | ------- | -------------------------------------------------------- |
-| \_newOnchainID | address | The initial onchain identity address to assign.          |
-| \_newVersion   | string  | The initial version string of the token (e.g., "3.0.0"). |
-
-### \_setOnchainID
-
-```solidity
-function _setOnchainID(address _newOnchainID) internal
-```
-
-_Internal function to update the onchain identity address in storage.
-Setting the address to zero indicates that no onchain identity is currently bound to the token._
-
-#### Parameters
-
-| Name           | Type    | Description                                 |
-| -------------- | ------- | ------------------------------------------- |
-| \_newOnchainID | address | The new onchain identity address to assign. |
+| Name         | Type   | Description                                              |
+| ------------ | ------ | -------------------------------------------------------- |
+| \_newVersion | string | The initial version string of the token (e.g., "3.0.0"). |
 
 ### \_setVersion
 
@@ -242,20 +193,6 @@ The version should follow semantic versioning (e.g., "3.0.0")._
 | Name         | Type   | Description                       |
 | ------------ | ------ | --------------------------------- |
 | \_newVersion | string | The new version string to assign. |
-
-### \_onchainID
-
-```solidity
-function _onchainID() internal view returns (address)
-```
-
-_Internal view function to retrieve the current onchain identity address from storage._
-
-#### Return Values
-
-| Name | Type    | Description                                  |
-| ---- | ------- | -------------------------------------------- |
-| [0]  | address | The address of the token's onchain identity. |
 
 ### \_version
 
@@ -285,7 +222,7 @@ to be available via the base ERC-20 interface._
 ### UpdatedTokenInformation
 
 ```solidity
-event UpdatedTokenInformation(string _newName, string _newSymbol, uint8 _newDecimals, string _newVersion, address _newOnchainID)
+event UpdatedTokenInformation(string _newName, string _newSymbol, uint8 _newDecimals, string _newVersion)
 ```
 
 this event is emitted when the token information is updated.
@@ -294,7 +231,6 @@ the event is emitted by the token init function and by the setTokenInformation f
 `_newSymbol` is the symbol of the token
 `_newDecimals` is the decimals of the token
 `_newVersion` is the version of the token, current version is 3.0
-`_newOnchainID` is the address of the onchainID of the token
 
 ### setName
 
@@ -318,21 +254,10 @@ function setSymbol(string _symbol) external
 Only the owner of the token smart contract can call this function
 emits a `UpdatedTokenInformation` event
 
-### setOnchainID
-
-```solidity
-function setOnchainID(address _onchainID) external
-```
-
-@dev sets the onchain ID of the token
-@param \_onchainID the address of the onchain ID to set
-Only the owner of the token smart contract can call this function
-emits a `UpdatedTokenInformation` event
-
 ### initializeERC3643Metadata
 
 ```solidity
-function initializeERC3643Metadata(address _newOnchainID, string _newVersion) external
+function initializeERC3643Metadata(string _newVersion) external
 ```
 
 Initializes the ERC-3643 metadata fields of the token.
@@ -342,20 +267,9 @@ Emits a {UpdatedTokenInformation} event._
 
 #### Parameters
 
-| Name           | Type    | Description                                                               |
-| -------------- | ------- | ------------------------------------------------------------------------- |
-| \_newOnchainID | address | The initial onchain identity address. Can be the zero address if not set. |
-| \_newVersion   | string  | The initial version string of the token. Must be non-empty.               |
-
-### onchainID
-
-```solidity
-function onchainID() external view returns (address)
-```
-
-_Returns the address of the onchainID of the token.
-the onchainID of the token gives all the information available
-about the token and is managed by the token issuer or his agent._
+| Name         | Type   | Description                                                 |
+| ------------ | ------ | ----------------------------------------------------------- |
+| \_newVersion | string | The initial version string of the token. Must be non-empty. |
 
 ### version
 

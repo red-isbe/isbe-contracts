@@ -26,21 +26,21 @@ abstract contract ERC3643ComplianceDMLim is
     /**
      * @notice Initializes the daily/monthly limits.
      * @dev Can only be called once via the initializer modifier.
-     * @param dailyLimit_ The initial daily transfer limit.
-     * @param monthlyLimit_ The initial monthly transfer limit.
+     * @param _dailyLimit The initial daily transfer limit.
+     * @param _monthlyLimit The initial monthly transfer limit.
      */
     function initializeERC3643ComplianceDMLim(
-        uint256 dailyLimit_,
-        uint256 monthlyLimit_
-    ) external initializer(_ERC3643_COMPLIANCE_DMLIM_RESOLVER_KEY) {
-        _initializeDMLim(dailyLimit_, monthlyLimit_);
-        emit DayMonthLimitsSet(dailyLimit_, monthlyLimit_);
+        uint256 _dailyLimit,
+        uint256 _monthlyLimit
+    ) external override initializer(_ERC3643_COMPLIANCE_DMLIM_RESOLVER_KEY) {
+        _initializeDMLim(_dailyLimit, _monthlyLimit);
+        emit DayMonthLimitsSet(_dailyLimit, _monthlyLimit);
     }
 
     /**
      * @notice Sets the daily transfer limit.
      * @dev Restricted to compliance role.
-     * @param dailyLimit_ The new daily transfer limit.
+     * @param _dailyLimit The new daily transfer limit.
      *
      * Requirements:
      * - Caller must have COMPLIANCE_ROLE
@@ -49,16 +49,16 @@ abstract contract ERC3643ComplianceDMLim is
      * - {DayMonthLimitsSet} event with the new limits
      */
     function setDailyLimit(
-        uint256 dailyLimit_
+        uint256 _dailyLimit
     ) external override onlyRole(_COMPLIANCE_ROLE) {
-        _setDailyLimit(dailyLimit_);
+        _setDailyLimit(_dailyLimit);
         emit DayMonthLimitsSet(_getDailyLimit(), _getMonthlyLimit());
     }
 
     /**
      * @notice Sets the monthly transfer limit.
      * @dev Restricted to compliance role.
-     * @param monthlyLimit_ The new monthly transfer limit.
+     * @param _monthlyLimit The new monthly transfer limit.
      *
      * Requirements:
      * - Caller must have COMPLIANCE_ROLE
@@ -67,44 +67,44 @@ abstract contract ERC3643ComplianceDMLim is
      * - {DayMonthLimitsSet} event with the new limits
      */
     function setMonthlyLimit(
-        uint256 monthlyLimit_
+        uint256 _monthlyLimit
     ) external override onlyRole(_COMPLIANCE_ROLE) {
-        _setMonthlyLimit(monthlyLimit_);
+        _setMonthlyLimit(_monthlyLimit);
         emit DayMonthLimitsSet(_getDailyLimit(), _getMonthlyLimit());
     }
 
     /**
      * @notice Returns the current daily transfer limit.
-     * @return dailyLimit_ The daily transfer limit.
+     * @return _dailyLimit The daily transfer limit.
      */
-    function dailyLimit() external view override returns (uint256 dailyLimit_) {
+    function dailyLimit() external view override returns (uint256 _dailyLimit) {
         return _getDailyLimit();
     }
 
     /**
      * @notice Returns the current monthly transfer limit.
-     * @return monthlyLimit_ The monthly transfer limit.
+     * @return _monthlyLimit The monthly transfer limit.
      */
     function monthlyLimit()
         external
         view
         override
-        returns (uint256 monthlyLimit_)
+        returns (uint256 _monthlyLimit)
     {
         return _getMonthlyLimit();
     }
 
     /**
      * @notice Checks if a transfer respects the daily/monthly limits.
-     * @param from The address of the sender.
-     * @param amount The amount of tokens to transfer.
-     * @return isCompliant True if compliant, false otherwise.
+     * @param _from The address of the sender.
+     * @param _amount The amount of tokens to transfer.
+     * @return _isCompliant True if compliant, false otherwise.
      */
     function complianceCheckOnDayMonthLimits(
-        address from,
-        uint256 amount
-    ) external view override returns (bool isCompliant) {
-        return _complianceCheckOnDayMonthLimits(from, amount);
+        address _from,
+        uint256 _amount
+    ) external view override returns (bool _isCompliant) {
+        return _complianceCheckOnDayMonthLimits(_from, _amount);
     }
 
     /**

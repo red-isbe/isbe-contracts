@@ -16,7 +16,7 @@ _Disables further initializations for this facet using its resolver key._
 ### initializeERC3643Compliance
 
 ```solidity
-function initializeERC3643Compliance(bool maxBalanceEnabled, bool dailyMonthLimitsEnabled) external
+function initializeERC3643Compliance(bool _maxBalanceEnabled, bool _dailyMonthLimitsEnabled) external
 ```
 
 Initializes the MaxBalance feature activation.
@@ -25,15 +25,15 @@ _Can only be called once via the initializer modifier._
 
 #### Parameters
 
-| Name                    | Type | Description                                      |
-| ----------------------- | ---- | ------------------------------------------------ |
-| maxBalanceEnabled       | bool | Initial value for MaxBalance feature activation. |
-| dailyMonthLimitsEnabled | bool |                                                  |
+| Name                      | Type | Description                                              |
+| ------------------------- | ---- | -------------------------------------------------------- |
+| \_maxBalanceEnabled       | bool | Initial value for MaxBalance feature activation.         |
+| \_dailyMonthLimitsEnabled | bool | Initial value for Daily/Month Limits feature activation. |
 
 ### setMaxBalanceEnabled
 
 ```solidity
-function setMaxBalanceEnabled(bool enabled) external
+function setMaxBalanceEnabled(bool _enabled) external
 ```
 
 Enables or disables the MaxBalance feature.
@@ -42,14 +42,14 @@ _Restricted to compliance role._
 
 #### Parameters
 
-| Name    | Type | Description                                                                        |
-| ------- | ---- | ---------------------------------------------------------------------------------- |
-| enabled | bool | True to enable, false to disable. Requirements: - Caller must have COMPLIANCE_ROLE |
+| Name      | Type | Description                                                                        |
+| --------- | ---- | ---------------------------------------------------------------------------------- |
+| \_enabled | bool | True to enable, false to disable. Requirements: - Caller must have COMPLIANCE_ROLE |
 
 ### setDailyMonthLimitsEnabled
 
 ```solidity
-function setDailyMonthLimitsEnabled(bool enabled) external
+function setDailyMonthLimitsEnabled(bool _enabled) external
 ```
 
 Enables or disables the Daily/Monthly Limits feature.
@@ -58,85 +58,9 @@ _Restricted to compliance role._
 
 #### Parameters
 
-| Name    | Type | Description                                                                        |
-| ------- | ---- | ---------------------------------------------------------------------------------- |
-| enabled | bool | True to enable, false to disable. Requirements: - Caller must have COMPLIANCE_ROLE |
-
-### transferred
-
-```solidity
-function transferred(address _from, address _to, uint256 _amount) external
-```
-
-Called after tokens are transferred.
-
-_Implements ICompliance. Delegates to internal logic._
-
-#### Parameters
-
-| Name     | Type    | Description                       |
-| -------- | ------- | --------------------------------- |
-| \_from   | address | The address of the sender.        |
-| \_to     | address | The address of the receiver.      |
-| \_amount | uint256 | The amount of tokens transferred. |
-
-### created
-
-```solidity
-function created(address _to, uint256 _amount) external
-```
-
-Called after tokens are minted.
-
-_Implements ICompliance. Delegates to internal logic._
-
-#### Parameters
-
-| Name     | Type    | Description                              |
-| -------- | ------- | ---------------------------------------- |
-| \_to     | address | The address receiving the minted tokens. |
-| \_amount | uint256 | The amount of tokens minted.             |
-
-### destroyed
-
-```solidity
-function destroyed(address _from, uint256 _amount) external
-```
-
-Called after tokens are burned.
-
-_Implements ICompliance. Delegates to internal logic._
-
-#### Parameters
-
-| Name     | Type    | Description                               |
-| -------- | ------- | ----------------------------------------- |
-| \_from   | address | The address from which tokens are burned. |
-| \_amount | uint256 | The amount of tokens burned.              |
-
-### canTransfer
-
-```solidity
-function canTransfer(address _from, address _to, uint256 _amount) external view returns (bool)
-```
-
-Checks if a transfer is compliant.
-
-_Implements ICompliance. Delegates to internal logic._
-
-#### Parameters
-
-| Name     | Type    | Description                       |
-| -------- | ------- | --------------------------------- |
-| \_from   | address | The address of the sender.        |
-| \_to     | address | The address of the receiver.      |
-| \_amount | uint256 | The amount of tokens to transfer. |
-
-#### Return Values
-
-| Name | Type | Description                                         |
-| ---- | ---- | --------------------------------------------------- |
-| [0]  | bool | True if the transfer is compliant, false otherwise. |
+| Name      | Type | Description                                                                        |
+| --------- | ---- | ---------------------------------------------------------------------------------- |
+| \_enabled | bool | True to enable, false to disable. Requirements: - Caller must have COMPLIANCE_ROLE |
 
 ### isMaxBalanceEnabled
 
@@ -166,6 +90,30 @@ Returns true if Daily/Monthly Limits feature is enabled.
 | ---- | ---- | --------------------------------- |
 | [0]  | bool | True if enabled, false otherwise. |
 
+### canTransfer
+
+```solidity
+function canTransfer(address _from, address _to, uint256 _amount) external view returns (bool)
+```
+
+Checks if a transfer is compliant.
+
+_Implements ICompliance. Delegates to internal logic._
+
+#### Parameters
+
+| Name     | Type    | Description                       |
+| -------- | ------- | --------------------------------- |
+| \_from   | address | The address of the sender.        |
+| \_to     | address | The address of the receiver.      |
+| \_amount | uint256 | The amount of tokens to transfer. |
+
+#### Return Values
+
+| Name | Type | Description                                         |
+| ---- | ---- | --------------------------------------------------- |
+| [0]  | bool | True if the transfer is compliant, false otherwise. |
+
 ### \_implementedInterfaces
 
 ```solidity
@@ -187,7 +135,7 @@ _Declares the interfaces implemented by this facet._
 ### interfacesIntrospection
 
 ```solidity
-function interfacesIntrospection() external pure returns (bytes4[] interfaces_)
+function interfacesIntrospection() external pure returns (bytes4[] _interfaces)
 ```
 
 Gets the list of ERC-165 interface IDs the facet supports.
@@ -196,14 +144,14 @@ _A pure function that returns an array of supported `bytes4` IDs._
 
 #### Return Values
 
-| Name         | Type     | Description                                  |
-| ------------ | -------- | -------------------------------------------- |
-| interfaces\_ | bytes4[] | An array of supported interface identifiers. |
+| Name         | Type     | Description |
+| ------------ | -------- | ----------- |
+| \_interfaces | bytes4[] |             |
 
 ### businessIdIntrospection
 
 ```solidity
-function businessIdIntrospection() external pure returns (bytes32 businessId_)
+function businessIdIntrospection() external pure returns (bytes32 _businessId)
 ```
 
 Retrieves the unique business identifier for this facet.
@@ -212,14 +160,14 @@ _Returns a `bytes32` key identifying the facet's purpose._
 
 #### Return Values
 
-| Name         | Type    | Description                              |
-| ------------ | ------- | ---------------------------------------- |
-| businessId\_ | bytes32 | The `bytes32` ID for the business logic. |
+| Name         | Type    | Description |
+| ------------ | ------- | ----------- |
+| \_businessId | bytes32 |             |
 
 ### selectorsIntrospection
 
 ```solidity
-function selectorsIntrospection() external pure returns (bytes4[] selectors_)
+function selectorsIntrospection() external pure returns (bytes4[] _selectors)
 ```
 
 Gets all function selectors implemented by this facet.
@@ -228,9 +176,9 @@ _A pure function that returns a `bytes4[]` array of selectors._
 
 #### Return Values
 
-| Name        | Type     | Description                              |
-| ----------- | -------- | ---------------------------------------- |
-| selectors\_ | bytes4[] | An array of `bytes4` function selectors. |
+| Name        | Type     | Description |
+| ----------- | -------- | ----------- |
+| \_selectors | bytes4[] |             |
 
 ---
 
@@ -263,54 +211,54 @@ _Internal function to initialize MaxBalance feature activation in storage._
 
 #### Parameters
 
-| Name                      | Type | Description                                      |
-| ------------------------- | ---- | ------------------------------------------------ |
-| \_maxBalanceEnabled       | bool | Initial value for MaxBalance feature activation. |
-| \_dailyMonthLimitsEnabled | bool |                                                  |
+| Name                      | Type | Description                                              |
+| ------------------------- | ---- | -------------------------------------------------------- |
+| \_maxBalanceEnabled       | bool | Initial value for MaxBalance feature activation.         |
+| \_dailyMonthLimitsEnabled | bool | Initial value for Daily/Month Limits feature activation. |
 
 ### \_setMaxBalanceEnabled
 
 ```solidity
-function _setMaxBalanceEnabled(bool enabled) internal
+function _setMaxBalanceEnabled(bool _enabled) internal
 ```
 
 _Internal function to activate or deactivate MaxBalance feature._
 
 #### Parameters
 
-| Name    | Type | Description                            |
-| ------- | ---- | -------------------------------------- |
-| enabled | bool | True to activate, false to deactivate. |
+| Name      | Type | Description                            |
+| --------- | ---- | -------------------------------------- |
+| \_enabled | bool | True to activate, false to deactivate. |
 
 ### \_setDailyMonthLimitsEnabled
 
 ```solidity
-function _setDailyMonthLimitsEnabled(bool enabled) internal
+function _setDailyMonthLimitsEnabled(bool _enabled) internal
 ```
 
 _Internal function to activate or deactivate Daily/Monthly Limits feature._
 
 #### Parameters
 
-| Name    | Type | Description                            |
-| ------- | ---- | -------------------------------------- |
-| enabled | bool | True to activate, false to deactivate. |
+| Name      | Type | Description                            |
+| --------- | ---- | -------------------------------------- |
+| \_enabled | bool | True to activate, false to deactivate. |
 
 ### \_transferred
 
 ```solidity
-function _transferred(address from, address to, uint256 amount) internal returns (bool)
+function _transferred(address _from, address _to, uint256 _amount) internal returns (bool)
 ```
 
 _Internal hook called after tokens are transferred._
 
 #### Parameters
 
-| Name   | Type    | Description                       |
-| ------ | ------- | --------------------------------- |
-| from   | address | The address of the sender.        |
-| to     | address | The address of the receiver.      |
-| amount | uint256 | The amount of tokens transferred. |
+| Name     | Type    | Description                       |
+| -------- | ------- | --------------------------------- |
+| \_from   | address | The address of the sender.        |
+| \_to     | address | The address of the receiver.      |
+| \_amount | uint256 | The amount of tokens transferred. |
 
 #### Return Values
 
@@ -321,17 +269,17 @@ _Internal hook called after tokens are transferred._
 ### \_created
 
 ```solidity
-function _created(address to, uint256 amount) internal returns (bool)
+function _created(address _to, uint256 _amount) internal returns (bool)
 ```
 
 _Internal hook called after tokens are minted._
 
 #### Parameters
 
-| Name   | Type    | Description                              |
-| ------ | ------- | ---------------------------------------- |
-| to     | address | The address receiving the minted tokens. |
-| amount | uint256 | The amount of tokens minted.             |
+| Name     | Type    | Description                              |
+| -------- | ------- | ---------------------------------------- |
+| \_to     | address | The address receiving the minted tokens. |
+| \_amount | uint256 | The amount of tokens minted.             |
 
 #### Return Values
 
@@ -342,17 +290,17 @@ _Internal hook called after tokens are minted._
 ### \_destroyed
 
 ```solidity
-function _destroyed(address from, uint256 amount) internal returns (bool)
+function _destroyed(address _from, uint256 _amount) internal returns (bool)
 ```
 
 _Internal hook called after tokens are burned._
 
 #### Parameters
 
-| Name   | Type    | Description                               |
-| ------ | ------- | ----------------------------------------- |
-| from   | address | The address from which tokens are burned. |
-| amount | uint256 | The amount of tokens burned.              |
+| Name     | Type    | Description                               |
+| -------- | ------- | ----------------------------------------- |
+| \_from   | address | The address from which tokens are burned. |
+| \_amount | uint256 | The amount of tokens burned.              |
 
 #### Return Values
 
@@ -363,7 +311,7 @@ _Internal hook called after tokens are burned._
 ### \_canTransfer
 
 ```solidity
-function _canTransfer(address from, address to, uint256 amount) internal view returns (bool)
+function _canTransfer(address _from, address _to, uint256 _amount) internal view returns (bool)
 ```
 
 _Internal view function to check compliance before a transfer.
@@ -371,11 +319,11 @@ Delegates to MaxBalance feature if enabled._
 
 #### Parameters
 
-| Name   | Type    | Description                       |
-| ------ | ------- | --------------------------------- |
-| from   | address | The address of the sender.        |
-| to     | address | The address of the receiver.      |
-| amount | uint256 | The amount of tokens to transfer. |
+| Name     | Type    | Description                       |
+| -------- | ------- | --------------------------------- |
+| \_from   | address | The address of the sender.        |
+| \_to     | address | The address of the receiver.      |
+| \_amount | uint256 | The amount of tokens to transfer. |
 
 #### Return Values
 
@@ -423,74 +371,25 @@ This interface does not handle token binding._
 ### ComplianceFeatureToggled
 
 ```solidity
-event ComplianceFeatureToggled(string feature, bool enabled)
+event ComplianceFeatureToggled(string _feature, bool _enabled)
 ```
 
 Emitted when a compliance feature is enabled or disabled.
 
 #### Parameters
 
-| Name    | Type   | Description                                   |
-| ------- | ------ | --------------------------------------------- |
-| feature | string | The name of the feature (e.g., "MaxBalance"). |
-| enabled | bool   | True if enabled, false if disabled.           |
+| Name      | Type   | Description                                   |
+| --------- | ------ | --------------------------------------------- |
+| \_feature | string | The name of the feature (e.g., "MaxBalance"). |
+| \_enabled | bool   | True if enabled, false if disabled.           |
 
 ### ComplianceTransfer
 
 ```solidity
-event ComplianceTransfer(address from, address to, uint256 amount)
+event ComplianceTransfer(address _from, address _to, uint256 _amount)
 ```
 
 Emitted when tokens are transferred between wallets.
-
-#### Parameters
-
-| Name   | Type    | Description                       |
-| ------ | ------- | --------------------------------- |
-| from   | address | The address of the sender.        |
-| to     | address | The address of the receiver.      |
-| amount | uint256 | The amount of tokens transferred. |
-
-### ComplianceCreated
-
-```solidity
-event ComplianceCreated(address to, uint256 amount)
-```
-
-Emitted when tokens are minted to a wallet.
-
-#### Parameters
-
-| Name   | Type    | Description                              |
-| ------ | ------- | ---------------------------------------- |
-| to     | address | The address receiving the minted tokens. |
-| amount | uint256 | The amount of tokens minted.             |
-
-### ComplianceDestroyed
-
-```solidity
-event ComplianceDestroyed(address from, uint256 amount)
-```
-
-Emitted when tokens are burned from a wallet.
-
-#### Parameters
-
-| Name   | Type    | Description                               |
-| ------ | ------- | ----------------------------------------- |
-| from   | address | The address from which tokens are burned. |
-| amount | uint256 | The amount of tokens burned.              |
-
-### transferred
-
-```solidity
-function transferred(address _from, address _to, uint256 _amount) external
-```
-
-Called whenever tokens are transferred between wallets.
-
-_Can be used to update state variables of the compliance contract.
-Should only be called by the token contract._
 
 #### Parameters
 
@@ -500,16 +399,13 @@ Should only be called by the token contract._
 | \_to     | address | The address of the receiver.      |
 | \_amount | uint256 | The amount of tokens transferred. |
 
-### created
+### ComplianceCreated
 
 ```solidity
-function created(address _to, uint256 _amount) external
+event ComplianceCreated(address _to, uint256 _amount)
 ```
 
-Called whenever tokens are minted to a wallet.
-
-_Can be used to update state variables of the compliance contract.
-Should only be called by the token contract._
+Emitted when tokens are minted to a wallet.
 
 #### Parameters
 
@@ -518,16 +414,13 @@ Should only be called by the token contract._
 | \_to     | address | The address receiving the minted tokens. |
 | \_amount | uint256 | The amount of tokens minted.             |
 
-### destroyed
+### ComplianceDestroyed
 
 ```solidity
-function destroyed(address _from, uint256 _amount) external
+event ComplianceDestroyed(address _from, uint256 _amount)
 ```
 
-Called whenever tokens are burned from a wallet.
-
-_Can be used to update state variables of the compliance contract.
-Should only be called by the token contract._
+Emitted when tokens are burned from a wallet.
 
 #### Parameters
 

@@ -40,36 +40,38 @@ abstract contract ERC3643ComplianceMaxBalInternal is ERC20Internal {
     /**
      * @dev Internal hook for post-transfer operations for MaxBalance feature.
      *      Intentionally left empty for feature mapping.
-     * @param from The address of the sender.
-     * @param to The address of the receiver.
-     * @param amount The amount of tokens transferred.
+     * @param _from The address of the sender.
+     * @param _to The address of the receiver.
+     * @param _amount The amount of tokens transferred.
      */
     // solhint-disable no-empty-blocks
     function _transferActionOnMaxBalance(
-        address from,
-        address to,
-        uint256 amount
+        address _from,
+        address _to,
+        uint256 _amount
     ) internal {}
 
     /**
      * @dev Internal hook for post-mint operations for MaxBalance feature.
      *      Intentionally left empty for feature mapping.
-     * @param to The address receiving minted tokens.
-     * @param amount The amount of tokens minted.
+     * @param _to The address receiving minted tokens.
+     * @param _amount The amount of tokens minted.
      */
     // solhint-disable no-empty-blocks
-    function _creationActionOnMaxBalance(address to, uint256 amount) internal {}
-
+    function _creationActionOnMaxBalance(
+        address _to,
+        uint256 _amount
+    ) internal {}
     /**
      * @dev Internal hook for post-burn operations for MaxBalance feature.
      *      Intentionally left empty for feature mapping.
-     * @param from The address from which tokens are burned.
-     * @param amount The amount of tokens burned.
+     * @param _from The address from which tokens are burned.
+     * @param _amount The amount of tokens burned.
      */
     // solhint-disable no-empty-blocks
     function _destructionActionOnMaxBalance(
-        address from,
-        uint256 amount
+        address _from,
+        uint256 _amount
     ) internal {}
 
     /**
@@ -83,16 +85,16 @@ abstract contract ERC3643ComplianceMaxBalInternal is ERC20Internal {
     /**
      * @dev Internal view function to check if a transfer respects the max balance restriction.
      * Uses ERC20Internal balance primitive for the receiver.
-     * @param to The address of the receiver.
-     * @param amount The amount of tokens to transfer.
+     * @param _to The address of the receiver.
+     * @param _amount The amount of tokens to transfer.
      * @return True if compliant, false otherwise.
      */
     function _complianceCheckOnMaxBalance(
-        address to,
-        uint256 amount
+        address _to,
+        uint256 _amount
     ) internal view returns (bool) {
         uint256 _maxBalance = _getMaxBalance();
-        return (_balanceOf(to) + amount) <= _maxBalance;
+        return (_balanceOf(_to) + _amount) <= _maxBalance;
     }
 
     /**

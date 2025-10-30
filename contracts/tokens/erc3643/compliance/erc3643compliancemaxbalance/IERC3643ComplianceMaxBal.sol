@@ -9,9 +9,9 @@ pragma solidity ^0.8.28;
 interface IERC3643ComplianceMaxBal {
     /**
      * @notice Emitted when the max balance is updated.
-     * @param maxBalance The new max balance value.
+     * @param _maxBalance The new max balance value.
      */
-    event MaxBalanceSet(uint256 maxBalance);
+    event MaxBalanceSet(uint256 _maxBalance);
 
     /**
      * @notice Initializes the max balance restriction.
@@ -24,9 +24,9 @@ interface IERC3643ComplianceMaxBal {
 
     /**
      * @notice Sets the maximum balance allowed per address.
-     * @param maxBalance The maximum amount of tokens an address can hold.
+     * @param _maxBalance The maximum amount of tokens an address can hold.
      */
-    function setMaxBalance(uint256 maxBalance) external;
+    function setMaxBalance(uint256 _maxBalance) external;
 
     /**
      * @notice Returns the current maximum balance allowed per address.
@@ -36,12 +36,12 @@ interface IERC3643ComplianceMaxBal {
 
     /**
      * @notice Checks if a transfer respects the max balance restriction.
-     * @param to The address of the receiver.
-     * @param amount The amount of tokens to transfer.
-     * @return isCompliant True if compliant, false otherwise.
+     * @param _to The address of the receiver.
+     * @param _amount The amount of tokens to transfer.
+     * @return _isCompliant True if compliant, false otherwise.
      */
     function complianceCheckOnMaxBalance(
-        address to,
-        uint256 amount
-    ) external view returns (bool isCompliant);
+        address _to,
+        uint256 _amount
+    ) external view returns (bool _isCompliant);
 }

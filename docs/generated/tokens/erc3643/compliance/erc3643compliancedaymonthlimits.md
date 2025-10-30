@@ -16,7 +16,7 @@ _Disables further initializations for this facet using its resolver key._
 ### initializeERC3643ComplianceDMLim
 
 ```solidity
-function initializeERC3643ComplianceDMLim(uint256 dailyLimit_, uint256 monthlyLimit_) external
+function initializeERC3643ComplianceDMLim(uint256 _dailyLimit, uint256 _monthlyLimit) external
 ```
 
 Initializes the daily/monthly limits.
@@ -27,13 +27,13 @@ _Can only be called once via the initializer modifier._
 
 | Name           | Type    | Description                         |
 | -------------- | ------- | ----------------------------------- |
-| dailyLimit\_   | uint256 | The initial daily transfer limit.   |
-| monthlyLimit\_ | uint256 | The initial monthly transfer limit. |
+| \_dailyLimit   | uint256 | The initial daily transfer limit.   |
+| \_monthlyLimit | uint256 | The initial monthly transfer limit. |
 
 ### setDailyLimit
 
 ```solidity
-function setDailyLimit(uint256 dailyLimit_) external
+function setDailyLimit(uint256 _dailyLimit) external
 ```
 
 Sets the daily transfer limit.
@@ -44,12 +44,12 @@ _Restricted to compliance role._
 
 | Name         | Type    | Description                                                                                                                           |
 | ------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| dailyLimit\_ | uint256 | The new daily transfer limit. Requirements: - Caller must have COMPLIANCE_ROLE Emits: - {DayMonthLimitsSet} event with the new limits |
+| \_dailyLimit | uint256 | The new daily transfer limit. Requirements: - Caller must have COMPLIANCE_ROLE Emits: - {DayMonthLimitsSet} event with the new limits |
 
 ### setMonthlyLimit
 
 ```solidity
-function setMonthlyLimit(uint256 monthlyLimit_) external
+function setMonthlyLimit(uint256 _monthlyLimit) external
 ```
 
 Sets the monthly transfer limit.
@@ -60,12 +60,12 @@ _Restricted to compliance role._
 
 | Name           | Type    | Description                                                                                                                             |
 | -------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| monthlyLimit\_ | uint256 | The new monthly transfer limit. Requirements: - Caller must have COMPLIANCE_ROLE Emits: - {DayMonthLimitsSet} event with the new limits |
+| \_monthlyLimit | uint256 | The new monthly transfer limit. Requirements: - Caller must have COMPLIANCE_ROLE Emits: - {DayMonthLimitsSet} event with the new limits |
 
 ### dailyLimit
 
 ```solidity
-function dailyLimit() external view returns (uint256 dailyLimit_)
+function dailyLimit() external view returns (uint256 _dailyLimit)
 ```
 
 Returns the current daily transfer limit.
@@ -74,12 +74,12 @@ Returns the current daily transfer limit.
 
 | Name         | Type    | Description               |
 | ------------ | ------- | ------------------------- |
-| dailyLimit\_ | uint256 | The daily transfer limit. |
+| \_dailyLimit | uint256 | The daily transfer limit. |
 
 ### monthlyLimit
 
 ```solidity
-function monthlyLimit() external view returns (uint256 monthlyLimit_)
+function monthlyLimit() external view returns (uint256 _monthlyLimit)
 ```
 
 Returns the current monthly transfer limit.
@@ -88,28 +88,28 @@ Returns the current monthly transfer limit.
 
 | Name           | Type    | Description                 |
 | -------------- | ------- | --------------------------- |
-| monthlyLimit\_ | uint256 | The monthly transfer limit. |
+| \_monthlyLimit | uint256 | The monthly transfer limit. |
 
 ### complianceCheckOnDayMonthLimits
 
 ```solidity
-function complianceCheckOnDayMonthLimits(address from, uint256 amount) external view returns (bool isCompliant)
+function complianceCheckOnDayMonthLimits(address _from, uint256 _amount) external view returns (bool _isCompliant)
 ```
 
 Checks if a transfer respects the daily/monthly limits.
 
 #### Parameters
 
-| Name   | Type    | Description                       |
-| ------ | ------- | --------------------------------- |
-| from   | address | The address of the sender.        |
-| amount | uint256 | The amount of tokens to transfer. |
+| Name     | Type    | Description                       |
+| -------- | ------- | --------------------------------- |
+| \_from   | address | The address of the sender.        |
+| \_amount | uint256 | The amount of tokens to transfer. |
 
 #### Return Values
 
-| Name        | Type | Description                         |
-| ----------- | ---- | ----------------------------------- |
-| isCompliant | bool | True if compliant, false otherwise. |
+| Name          | Type | Description                         |
+| ------------- | ---- | ----------------------------------- |
+| \_isCompliant | bool | True if compliant, false otherwise. |
 
 ### \_implementedInterfaces
 
@@ -263,7 +263,7 @@ _Internal function to update the monthly limit value in storage._
 ### \_transferActionOnDayMonthLimits
 
 ```solidity
-function _transferActionOnDayMonthLimits(address from, uint256 amount) internal
+function _transferActionOnDayMonthLimits(address _from, uint256 _amount) internal
 ```
 
 _Internal hook for post-transfer operations for DayMonthLimits feature.
@@ -271,15 +271,15 @@ Updates daily and monthly counters._
 
 #### Parameters
 
-| Name   | Type    | Description                       |
-| ------ | ------- | --------------------------------- |
-| from   | address | The address of the sender.        |
-| amount | uint256 | The amount of tokens transferred. |
+| Name     | Type    | Description                       |
+| -------- | ------- | --------------------------------- |
+| \_from   | address | The address of the sender.        |
+| \_amount | uint256 | The amount of tokens transferred. |
 
 ### \_creationActionOnDayMonthLimits
 
 ```solidity
-function _creationActionOnDayMonthLimits(address to, uint256 amount) internal
+function _creationActionOnDayMonthLimits(address _to, uint256 _amount) internal
 ```
 
 _Internal hook for post-mint operations for DayMonthLimits feature.
@@ -287,15 +287,15 @@ Intentionally left empty for feature mapping._
 
 #### Parameters
 
-| Name   | Type    | Description                          |
-| ------ | ------- | ------------------------------------ |
-| to     | address | The address receiving minted tokens. |
-| amount | uint256 | The amount of tokens minted.         |
+| Name     | Type    | Description                          |
+| -------- | ------- | ------------------------------------ |
+| \_to     | address | The address receiving minted tokens. |
+| \_amount | uint256 | The amount of tokens minted.         |
 
 ### \_destructionActionOnDayMonthLimits
 
 ```solidity
-function _destructionActionOnDayMonthLimits(address from, uint256 amount) internal
+function _destructionActionOnDayMonthLimits(address _from, uint256 _amount) internal
 ```
 
 _Internal hook for post-burn operations for DayMonthLimits feature.
@@ -303,10 +303,10 @@ Intentionally left empty for feature mapping._
 
 #### Parameters
 
-| Name   | Type    | Description                               |
-| ------ | ------- | ----------------------------------------- |
-| from   | address | The address from which tokens are burned. |
-| amount | uint256 | The amount of tokens burned.              |
+| Name     | Type    | Description                               |
+| -------- | ------- | ----------------------------------------- |
+| \_from   | address | The address from which tokens are burned. |
+| \_amount | uint256 | The amount of tokens burned.              |
 
 ### \_getDailyLimit
 
@@ -339,16 +339,16 @@ _Internal view function to retrieve the current monthly limit value from storage
 ### \_getTransferCounter
 
 ```solidity
-function _getTransferCounter(address account) internal view returns (struct ERC3643ComplianceDMLimInternal.TransferCounter counter)
+function _getTransferCounter(address _account) internal view returns (struct ERC3643ComplianceDMLimInternal.TransferCounter counter)
 ```
 
 _Internal view function to get the transfer counters for a given address._
 
 #### Parameters
 
-| Name    | Type    | Description           |
-| ------- | ------- | --------------------- |
-| account | address | The address to query. |
+| Name      | Type    | Description           |
+| --------- | ------- | --------------------- |
+| \_account | address | The address to query. |
 
 #### Return Values
 
@@ -359,17 +359,17 @@ _Internal view function to get the transfer counters for a given address._
 ### \_complianceCheckOnDayMonthLimits
 
 ```solidity
-function _complianceCheckOnDayMonthLimits(address from, uint256 value) internal view returns (bool)
+function _complianceCheckOnDayMonthLimits(address _from, uint256 _value) internal view returns (bool)
 ```
 
 _Internal view function to check if a transfer respects the daily/monthly limits._
 
 #### Parameters
 
-| Name  | Type    | Description                       |
-| ----- | ------- | --------------------------------- |
-| from  | address | The address of the sender.        |
-| value | uint256 | The amount of tokens to transfer. |
+| Name    | Type    | Description                       |
+| ------- | ------- | --------------------------------- |
+| \_from  | address | The address of the sender.        |
+| \_value | uint256 | The amount of tokens to transfer. |
 
 #### Return Values
 
@@ -380,16 +380,16 @@ _Internal view function to check if a transfer respects the daily/monthly limits
 ### \_isDayFinished
 
 ```solidity
-function _isDayFinished(address account) internal view returns (bool)
+function _isDayFinished(address _account) internal view returns (bool)
 ```
 
 _Internal view function to check if the day has finished for an address._
 
 #### Parameters
 
-| Name    | Type    | Description           |
-| ------- | ------- | --------------------- |
-| account | address | The address to check. |
+| Name      | Type    | Description           |
+| --------- | ------- | --------------------- |
+| \_account | address | The address to check. |
 
 #### Return Values
 
@@ -400,16 +400,16 @@ _Internal view function to check if the day has finished for an address._
 ### \_isMonthFinished
 
 ```solidity
-function _isMonthFinished(address account) internal view returns (bool)
+function _isMonthFinished(address _account) internal view returns (bool)
 ```
 
 _Internal view function to check if the month has finished for an address._
 
 #### Parameters
 
-| Name    | Type    | Description           |
-| ------- | ------- | --------------------- |
-| account | address | The address to check. |
+| Name      | Type    | Description           |
+| --------- | ------- | --------------------- |
+| \_account | address | The address to check. |
 
 #### Return Values
 
@@ -428,22 +428,22 @@ _Allows setting limits, checking compliance, and lifecycle hooks for transfers, 
 ### DayMonthLimitsSet
 
 ```solidity
-event DayMonthLimitsSet(uint256 dailyLimit, uint256 monthlyLimit)
+event DayMonthLimitsSet(uint256 _dailyLimit, uint256 _monthlyLimit)
 ```
 
 Emitted when daily or monthly limits are updated.
 
 #### Parameters
 
-| Name         | Type    | Description                     |
-| ------------ | ------- | ------------------------------- |
-| dailyLimit   | uint256 | The new daily transfer limit.   |
-| monthlyLimit | uint256 | The new monthly transfer limit. |
+| Name           | Type    | Description                     |
+| -------------- | ------- | ------------------------------- |
+| \_dailyLimit   | uint256 | The new daily transfer limit.   |
+| \_monthlyLimit | uint256 | The new monthly transfer limit. |
 
 ### initializeERC3643ComplianceDMLim
 
 ```solidity
-function initializeERC3643ComplianceDMLim(uint256 dailyLimit, uint256 monthlyLimit) external
+function initializeERC3643ComplianceDMLim(uint256 _dailyLimit, uint256 _monthlyLimit) external
 ```
 
 Initializes the daily/monthly limits.
@@ -452,84 +452,84 @@ _Should be called once during contract setup._
 
 #### Parameters
 
-| Name         | Type    | Description                         |
-| ------------ | ------- | ----------------------------------- |
-| dailyLimit   | uint256 | The initial daily transfer limit.   |
-| monthlyLimit | uint256 | The initial monthly transfer limit. |
+| Name           | Type    | Description                         |
+| -------------- | ------- | ----------------------------------- |
+| \_dailyLimit   | uint256 | The initial daily transfer limit.   |
+| \_monthlyLimit | uint256 | The initial monthly transfer limit. |
 
 ### setDailyLimit
 
 ```solidity
-function setDailyLimit(uint256 dailyLimit) external
+function setDailyLimit(uint256 _dailyLimit) external
 ```
 
 Sets the daily transfer limit.
 
 #### Parameters
 
-| Name       | Type    | Description                   |
-| ---------- | ------- | ----------------------------- |
-| dailyLimit | uint256 | The new daily transfer limit. |
+| Name         | Type    | Description                   |
+| ------------ | ------- | ----------------------------- |
+| \_dailyLimit | uint256 | The new daily transfer limit. |
 
 ### setMonthlyLimit
 
 ```solidity
-function setMonthlyLimit(uint256 monthlyLimit) external
+function setMonthlyLimit(uint256 _monthlyLimit) external
 ```
 
 Sets the monthly transfer limit.
 
 #### Parameters
 
-| Name         | Type    | Description                     |
-| ------------ | ------- | ------------------------------- |
-| monthlyLimit | uint256 | The new monthly transfer limit. |
+| Name           | Type    | Description                     |
+| -------------- | ------- | ------------------------------- |
+| \_monthlyLimit | uint256 | The new monthly transfer limit. |
 
 ### dailyLimit
 
 ```solidity
-function dailyLimit() external view returns (uint256 dailyLimit)
+function dailyLimit() external view returns (uint256 _dailyLimit)
 ```
 
 Returns the current daily transfer limit.
 
 #### Return Values
 
-| Name       | Type    | Description               |
-| ---------- | ------- | ------------------------- |
-| dailyLimit | uint256 | The daily transfer limit. |
+| Name         | Type    | Description               |
+| ------------ | ------- | ------------------------- |
+| \_dailyLimit | uint256 | The daily transfer limit. |
 
 ### monthlyLimit
 
 ```solidity
-function monthlyLimit() external view returns (uint256 monthlyLimit)
+function monthlyLimit() external view returns (uint256 _monthlyLimit)
 ```
 
 Returns the current monthly transfer limit.
 
 #### Return Values
 
-| Name         | Type    | Description                 |
-| ------------ | ------- | --------------------------- |
-| monthlyLimit | uint256 | The monthly transfer limit. |
+| Name           | Type    | Description                 |
+| -------------- | ------- | --------------------------- |
+| \_monthlyLimit | uint256 | The monthly transfer limit. |
 
 ### complianceCheckOnDayMonthLimits
 
 ```solidity
-function complianceCheckOnDayMonthLimits(address from, uint256 amount) external view returns (bool isCompliant)
+function complianceCheckOnDayMonthLimits(address _from, uint256 _amount) external view returns (bool _isCompliant)
 ```
 
 Checks if a transfer respects the daily/monthly limits.
 
 #### Parameters
 
-| Name   | Type    | Description                       |
-| ------ | ------- | --------------------------------- |
-| from   | address | The address of the sender.        |
-| amount | uint256 | The amount of tokens to transfer. |
+| Name     | Type    | Description                       |
+| -------- | ------- | --------------------------------- |
+| \_from   | address | The address of the sender.        |
+| \_amount | uint256 | The amount of tokens to transfer. |
 
 #### Return Values
 
-| Name        | Type | Description                         |
-| ----------- | ---- | ----------------------------------- |
-| isCompliant | bool | True if compliant, false otherwise. |
+| Name          | Type | Description                         |
+| ------------- | ---- | ----------------------------------- |
+| \_isCompliant | bool | True if compliant, false otherwise. |

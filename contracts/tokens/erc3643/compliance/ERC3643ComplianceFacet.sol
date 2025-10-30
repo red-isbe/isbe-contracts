@@ -9,7 +9,7 @@ contract ERC3643ComplianceFacet is ERC3643Compliance, IEIP2535Introspection {
     function interfacesIntrospection()
         external
         pure
-        returns (bytes4[] memory interfaces_)
+        returns (bytes4[] memory _interfaces)
     {
         return _implementedInterfaces();
     }
@@ -18,28 +18,28 @@ contract ERC3643ComplianceFacet is ERC3643Compliance, IEIP2535Introspection {
         external
         pure
         override
-        returns (bytes32 businessId_)
+        returns (bytes32 _businessId)
     {
-        businessId_ = _ERC3643_COMPLIANCE_RESOLVER_KEY;
+        _businessId = _ERC3643_COMPLIANCE_RESOLVER_KEY;
     }
 
     function selectorsIntrospection()
         external
         pure
         override
-        returns (bytes4[] memory selectors_)
+        returns (bytes4[] memory _selectors)
     {
-        uint256 selectorsLength = 4;
-        selectors_ = new bytes4[](selectorsLength);
-        selectors_[--selectorsLength] = this
+        uint256 selectorsLength = 6;
+        _selectors = new bytes4[](selectorsLength);
+        _selectors[--selectorsLength] = this
             .initializeERC3643Compliance
             .selector;
-        selectors_[--selectorsLength] = this.setMaxBalanceEnabled.selector;
-        selectors_[--selectorsLength] = this.isMaxBalanceEnabled.selector;
-        selectors_[--selectorsLength] = this
+        _selectors[--selectorsLength] = this.setMaxBalanceEnabled.selector;
+        _selectors[--selectorsLength] = this.isMaxBalanceEnabled.selector;
+        _selectors[--selectorsLength] = this
             .setDailyMonthLimitsEnabled
             .selector;
-        selectors_[--selectorsLength] = this.isDailyMonthLimitsEnabled.selector;
-        selectors_[--selectorsLength] = this.canTransfer.selector;
+        _selectors[--selectorsLength] = this.isDailyMonthLimitsEnabled.selector;
+        _selectors[--selectorsLength] = this.canTransfer.selector;
     }
 }

@@ -62,7 +62,7 @@ Returns the current max balance restriction.
 ### complianceCheckOnMaxBalance
 
 ```solidity
-function complianceCheckOnMaxBalance(address to, uint256 amount) external view returns (bool isCompliant)
+function complianceCheckOnMaxBalance(address _to, uint256 _amount) external view returns (bool _isCompliant)
 ```
 
 Checks if a transfer respects the max balance restriction.
@@ -71,16 +71,16 @@ _Uses ERC20Internal balance primitive for the receiver._
 
 #### Parameters
 
-| Name   | Type    | Description                       |
-| ------ | ------- | --------------------------------- |
-| to     | address | The address of the receiver.      |
-| amount | uint256 | The amount of tokens to transfer. |
+| Name     | Type    | Description                       |
+| -------- | ------- | --------------------------------- |
+| \_to     | address | The address of the receiver.      |
+| \_amount | uint256 | The amount of tokens to transfer. |
 
 #### Return Values
 
-| Name        | Type | Description                         |
-| ----------- | ---- | ----------------------------------- |
-| isCompliant | bool | True if compliant, false otherwise. |
+| Name          | Type | Description                         |
+| ------------- | ---- | ----------------------------------- |
+| \_isCompliant | bool | True if compliant, false otherwise. |
 
 ### \_implementedInterfaces
 
@@ -149,7 +149,7 @@ _Internal function to update the max balance value in storage._
 ### \_transferActionOnMaxBalance
 
 ```solidity
-function _transferActionOnMaxBalance(address from, address to, uint256 amount) internal
+function _transferActionOnMaxBalance(address _from, address _to, uint256 _amount) internal
 ```
 
 _Internal hook for post-transfer operations for MaxBalance feature.
@@ -157,16 +157,16 @@ Intentionally left empty for feature mapping._
 
 #### Parameters
 
-| Name   | Type    | Description                       |
-| ------ | ------- | --------------------------------- |
-| from   | address | The address of the sender.        |
-| to     | address | The address of the receiver.      |
-| amount | uint256 | The amount of tokens transferred. |
+| Name     | Type    | Description                       |
+| -------- | ------- | --------------------------------- |
+| \_from   | address | The address of the sender.        |
+| \_to     | address | The address of the receiver.      |
+| \_amount | uint256 | The amount of tokens transferred. |
 
 ### \_creationActionOnMaxBalance
 
 ```solidity
-function _creationActionOnMaxBalance(address to, uint256 amount) internal
+function _creationActionOnMaxBalance(address _to, uint256 _amount) internal
 ```
 
 _Internal hook for post-mint operations for MaxBalance feature.
@@ -174,15 +174,15 @@ Intentionally left empty for feature mapping._
 
 #### Parameters
 
-| Name   | Type    | Description                          |
-| ------ | ------- | ------------------------------------ |
-| to     | address | The address receiving minted tokens. |
-| amount | uint256 | The amount of tokens minted.         |
+| Name     | Type    | Description                          |
+| -------- | ------- | ------------------------------------ |
+| \_to     | address | The address receiving minted tokens. |
+| \_amount | uint256 | The amount of tokens minted.         |
 
 ### \_destructionActionOnMaxBalance
 
 ```solidity
-function _destructionActionOnMaxBalance(address from, uint256 amount) internal
+function _destructionActionOnMaxBalance(address _from, uint256 _amount) internal
 ```
 
 _Internal hook for post-burn operations for MaxBalance feature.
@@ -190,10 +190,10 @@ Intentionally left empty for feature mapping._
 
 #### Parameters
 
-| Name   | Type    | Description                               |
-| ------ | ------- | ----------------------------------------- |
-| from   | address | The address from which tokens are burned. |
-| amount | uint256 | The amount of tokens burned.              |
+| Name     | Type    | Description                               |
+| -------- | ------- | ----------------------------------------- |
+| \_from   | address | The address from which tokens are burned. |
+| \_amount | uint256 | The amount of tokens burned.              |
 
 ### \_getMaxBalance
 
@@ -212,7 +212,7 @@ _Internal view function to retrieve the current max balance value from storage._
 ### \_complianceCheckOnMaxBalance
 
 ```solidity
-function _complianceCheckOnMaxBalance(address to, uint256 amount) internal view returns (bool)
+function _complianceCheckOnMaxBalance(address _to, uint256 _amount) internal view returns (bool)
 ```
 
 _Internal view function to check if a transfer respects the max balance restriction.
@@ -220,10 +220,10 @@ Uses ERC20Internal balance primitive for the receiver._
 
 #### Parameters
 
-| Name   | Type    | Description                       |
-| ------ | ------- | --------------------------------- |
-| to     | address | The address of the receiver.      |
-| amount | uint256 | The amount of tokens to transfer. |
+| Name     | Type    | Description                       |
+| -------- | ------- | --------------------------------- |
+| \_to     | address | The address of the receiver.      |
+| \_amount | uint256 | The amount of tokens to transfer. |
 
 #### Return Values
 
@@ -242,16 +242,16 @@ _Allows setting and getting the max balance, and checking compliance for transfe
 ### MaxBalanceSet
 
 ```solidity
-event MaxBalanceSet(uint256 maxBalance)
+event MaxBalanceSet(uint256 _maxBalance)
 ```
 
 Emitted when the max balance is updated.
 
 #### Parameters
 
-| Name       | Type    | Description                |
-| ---------- | ------- | -------------------------- |
-| maxBalance | uint256 | The new max balance value. |
+| Name         | Type    | Description                |
+| ------------ | ------- | -------------------------- |
+| \_maxBalance | uint256 | The new max balance value. |
 
 ### initializeERC3643ComplianceMaxBalance
 
@@ -272,16 +272,16 @@ _Can only be called once via the initializer modifier._
 ### setMaxBalance
 
 ```solidity
-function setMaxBalance(uint256 maxBalance) external
+function setMaxBalance(uint256 _maxBalance) external
 ```
 
 Sets the maximum balance allowed per address.
 
 #### Parameters
 
-| Name       | Type    | Description                                       |
-| ---------- | ------- | ------------------------------------------------- |
-| maxBalance | uint256 | The maximum amount of tokens an address can hold. |
+| Name         | Type    | Description                                       |
+| ------------ | ------- | ------------------------------------------------- |
+| \_maxBalance | uint256 | The maximum amount of tokens an address can hold. |
 
 ### maxBalance
 
@@ -300,20 +300,20 @@ Returns the current maximum balance allowed per address.
 ### complianceCheckOnMaxBalance
 
 ```solidity
-function complianceCheckOnMaxBalance(address to, uint256 amount) external view returns (bool isCompliant)
+function complianceCheckOnMaxBalance(address _to, uint256 _amount) external view returns (bool _isCompliant)
 ```
 
 Checks if a transfer respects the max balance restriction.
 
 #### Parameters
 
-| Name   | Type    | Description                       |
-| ------ | ------- | --------------------------------- |
-| to     | address | The address of the receiver.      |
-| amount | uint256 | The amount of tokens to transfer. |
+| Name     | Type    | Description                       |
+| -------- | ------- | --------------------------------- |
+| \_to     | address | The address of the receiver.      |
+| \_amount | uint256 | The amount of tokens to transfer. |
 
 #### Return Values
 
-| Name        | Type | Description                         |
-| ----------- | ---- | ----------------------------------- |
-| isCompliant | bool | True if compliant, false otherwise. |
+| Name          | Type | Description                         |
+| ------------- | ---- | ----------------------------------- |
+| \_isCompliant | bool | True if compliant, false otherwise. |

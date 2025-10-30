@@ -11,64 +11,36 @@ pragma solidity ^0.8.28;
 interface ICompliance {
     /**
      * @notice Emitted when a compliance feature is enabled or disabled.
-     * @param feature The name of the feature (e.g., "MaxBalance").
-     * @param enabled True if enabled, false if disabled.
+     * @param _feature The name of the feature (e.g., "MaxBalance").
+     * @param _enabled True if enabled, false if disabled.
      */
-    event ComplianceFeatureToggled(string feature, bool enabled);
+    event ComplianceFeatureToggled(string indexed _feature, bool _enabled);
 
     /**
      * @notice Emitted when tokens are transferred between wallets.
-     * @param from The address of the sender.
-     * @param to The address of the receiver.
-     * @param amount The amount of tokens transferred.
-     */
-    event ComplianceTransfer(
-        address indexed from,
-        address indexed to,
-        uint256 amount
-    );
-
-    /**
-     * @notice Emitted when tokens are minted to a wallet.
-     * @param to The address receiving the minted tokens.
-     * @param amount The amount of tokens minted.
-     */
-    event ComplianceCreated(address indexed to, uint256 amount);
-
-    /**
-     * @notice Emitted when tokens are burned from a wallet.
-     * @param from The address from which tokens are burned.
-     * @param amount The amount of tokens burned.
-     */
-    event ComplianceDestroyed(address indexed from, uint256 amount);
-
-    /**
-     * @notice Called whenever tokens are transferred between wallets.
-     * @dev Can be used to update state variables of the compliance contract.
-     *      Should only be called by the token contract.
      * @param _from The address of the sender.
      * @param _to The address of the receiver.
      * @param _amount The amount of tokens transferred.
      */
-    function transferred(address _from, address _to, uint256 _amount) external;
+    event ComplianceTransfer(
+        address indexed _from,
+        address indexed _to,
+        uint256 _amount
+    );
 
     /**
-     * @notice Called whenever tokens are minted to a wallet.
-     * @dev Can be used to update state variables of the compliance contract.
-     *      Should only be called by the token contract.
+     * @notice Emitted when tokens are minted to a wallet.
      * @param _to The address receiving the minted tokens.
      * @param _amount The amount of tokens minted.
      */
-    function created(address _to, uint256 _amount) external;
+    event ComplianceCreated(address indexed _to, uint256 _amount);
 
     /**
-     * @notice Called whenever tokens are burned from a wallet.
-     * @dev Can be used to update state variables of the compliance contract.
-     *      Should only be called by the token contract.
+     * @notice Emitted when tokens are burned from a wallet.
      * @param _from The address from which tokens are burned.
      * @param _amount The amount of tokens burned.
      */
-    function destroyed(address _from, uint256 _amount) external;
+    event ComplianceDestroyed(address indexed _from, uint256 _amount);
 
     /**
      * @notice Initializes the compliance contract with feature flags.

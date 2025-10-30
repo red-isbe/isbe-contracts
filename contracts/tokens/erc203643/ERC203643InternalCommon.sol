@@ -13,6 +13,7 @@ import {ERC3643ComplianceInternal} from '../erc3643/compliance/ERC3643Compliance
 
 import {_CONTROLLER_ROLE} from '../../constants/roles.sol';
 import {_RECOVERY_ROLE} from '../../constants/roles.sol';
+import {_COMPLIANCE_ROLE} from '../../constants/roles.sol';
 
 import {IERC20Isbe} from '../erc20/IERC20Isbe.sol';
 import {IERC3643Freeze} from '../erc3643/token/erc3643freeze/IERC3643Freeze.sol';
@@ -78,9 +79,11 @@ abstract contract ERC203643InternalCommon is
         _updateAccountSnapshot(_to);
         _updateTotalSupplySnapshot();
 
-        // Compliance hooks (ERC-3643 mode only)
-        _canTransfer(_from, _to, _amount);
-        _created(_to, _amount);
+        // Compliance hooks (ERC-3643 mode only). By pass by _COMPLIANCE_ROLE.
+        if (_hasRole(_COMPLIANCE_ROLE, msg.sender)) {
+            _canTransfer(_from, _to, _amount);
+            _created(_to, _amount);
+        }
     }
 
     // =======================
@@ -105,7 +108,11 @@ abstract contract ERC203643InternalCommon is
         // Controller burn with auto-unfreeze capability
         if (_hasRole(_CONTROLLER_ROLE, msg.sender)) {
             _unfreezeIf3643Mode(_from, _amount);
-            _destroyed(_from, _amount);
+
+            // Compliance hooks (ERC-3643 mode only). By pass by _COMPLIANCE_ROLE.
+            if (_hasRole(_COMPLIANCE_ROLE, msg.sender)) {
+                _destroyed(_from, _amount);
+            }
         }
     }
 
@@ -133,9 +140,11 @@ abstract contract ERC203643InternalCommon is
         uint256 balance = _balanceOf(_from);
         require(balance >= _amount, IERC20Isbe.TransferAmountExceedsBalance());
 
-        // Compliance hooks (ERC-3643 mode only)
-        _canTransfer(_from, _to, _amount);
-        _transferred(_from, _to, _amount);
+        // Compliance hooks (ERC-3643 mode only). By pass by _COMPLIANCE_ROLE.
+        if (_hasRole(_COMPLIANCE_ROLE, msg.sender)) {
+            _canTransfer(_from, _to, _amount);
+            _transferred(_from, _to, _amount);
+        }
 
         // Forced transfer logic for controller/recovery roles
         if (

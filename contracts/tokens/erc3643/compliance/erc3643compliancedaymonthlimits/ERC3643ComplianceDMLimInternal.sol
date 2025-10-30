@@ -64,56 +64,56 @@ abstract contract ERC3643ComplianceDMLimInternal is Common {
     /**
      * @dev Internal hook for post-transfer operations for DayMonthLimits feature.
      *      Updates daily and monthly counters.
-     * @param from The address of the sender.
-     * @param amount The amount of tokens transferred.
+     * @param _from The address of the sender.
+     * @param _amount The amount of tokens transferred.
      */
     function _transferActionOnDayMonthLimits(
-        address from,
-        uint256 amount
+        address _from,
+        uint256 _amount
     ) internal {
-        TransferCounter storage counter = _getTransferCounter(from);
+        TransferCounter storage counter = _getTransferCounter(_from);
 
         // Reset timers if needed
-        if (_isDayFinished(from)) {
+        if (_isDayFinished(_from)) {
             counter.dailyTimer = block.timestamp + 1 days;
             counter.dailyCount = 0;
         }
-        if (_isMonthFinished(from)) {
+        if (_isMonthFinished(_from)) {
             counter.monthlyTimer = block.timestamp + 30 days;
             counter.monthlyCount = 0;
         }
 
         // Update counters
-        if ((counter.dailyCount + amount) <= _getDailyLimit()) {
-            counter.dailyCount += amount;
+        if ((counter.dailyCount + _amount) <= _getDailyLimit()) {
+            counter.dailyCount += _amount;
         }
-        if ((counter.monthlyCount + amount) <= _getMonthlyLimit()) {
-            counter.monthlyCount += amount;
+        if ((counter.monthlyCount + _amount) <= _getMonthlyLimit()) {
+            counter.monthlyCount += _amount;
         }
     }
 
     /**
      * @dev Internal hook for post-mint operations for DayMonthLimits feature.
      *      Intentionally left empty for feature mapping.
-     * @param to The address receiving minted tokens.
-     * @param amount The amount of tokens minted.
+     * @param _to The address receiving minted tokens.
+     * @param _amount The amount of tokens minted.
      */
     // solhint-disable no-empty-blocks
     function _creationActionOnDayMonthLimits(
-        address to,
-        uint256 amount
+        address _to,
+        uint256 _amount
     ) internal {}
 
     /**
      * @dev Internal hook for post-burn operations for DayMonthLimits feature.
      *      Intentionally left empty for feature mapping.
-     * @param from The address from which tokens are burned.
-     * @param amount The amount of tokens burned.
+     * @param _from The address from which tokens are burned.
+     * @param _amount The amount of tokens burned.
      */
     // solhint-disable no-empty-blocks
     function _destructionActionOnDayMonthLimits(
-        address from,
-        uint256 amount
+        address _from,
+        uint256 _amount
     ) internal {}
 
     /**
@@ -134,52 +134,52 @@ abstract contract ERC3643ComplianceDMLimInternal is Common {
 
     /**
      * @dev Internal view function to get the transfer counters for a given address.
-     * @param account The address to query.
+     * @param _account The address to query.
      * @return counter The TransferCounter struct for the address.
      */
     function _getTransferCounter(
-        address account
+        address _account
     ) internal view returns (TransferCounter storage counter) {
         ERC3643ComplianceDMLimStorage
             storage $ = _erc3643ComplianceDMLimStorage();
-        return $.usersCounters[account];
+        return $.usersCounters[_account];
     }
 
     /**
      * @dev Internal view function to check if a transfer respects the daily/monthly limits.
-     * @param from The address of the sender.
-     * @param value The amount of tokens to transfer.
+     * @param _from The address of the sender.
+     * @param _value The amount of tokens to transfer.
      * @return True if compliant, false otherwise.
      */
     function _complianceCheckOnDayMonthLimits(
-        address from,
-        uint256 value
+        address _from,
+        uint256 _value
     ) internal view returns (bool) {
-        TransferCounter storage counter = _getTransferCounter(from);
+        TransferCounter storage counter = _getTransferCounter(_from);
 
-        uint256 dailyLimit = _getDailyLimit();
-        uint256 monthlyLimit = _getMonthlyLimit();
+        uint256 _dailyLimit = _getDailyLimit();
+        uint256 _monthlyLimit = _getMonthlyLimit();
 
         // Si el valor excede el daily limit, rechaza
-        if (value > dailyLimit) {
+        if (_value > _dailyLimit) {
             return false;
         }
 
         // Si el día no ha terminado, chequea los contadores diarios y mensuales
         if (
-            !_isDayFinished(from) &&
-            ((counter.dailyCount + value > dailyLimit) ||
-                (counter.monthlyCount + value > monthlyLimit))
+            !_isDayFinished(_from) &&
+            ((counter.dailyCount + _value > _dailyLimit) ||
+                (counter.monthlyCount + _value > _monthlyLimit))
         ) {
             return false;
         }
 
         // Si el día ha terminado, chequea el contador mensual y si el mes ha terminado
         if (
-            _isDayFinished(from) &&
-            (value + counter.monthlyCount > monthlyLimit)
+            _isDayFinished(_from) &&
+            (_value + counter.monthlyCount > _monthlyLimit)
         ) {
-            return _isMonthFinished(from);
+            return _isMonthFinished(_from);
         }
 
         return true;
@@ -187,25 +187,25 @@ abstract contract ERC3643ComplianceDMLimInternal is Common {
 
     /**
      * @dev Internal view function to check if the day has finished for an address.
-     * @param account The address to check.
+     * @param _account The address to check.
      * @return True if the day has finished, false otherwise.
      */
-    function _isDayFinished(address account) internal view returns (bool) {
+    function _isDayFinished(address _account) internal view returns (bool) {
         return
             _erc3643ComplianceDMLimStorage()
-                .usersCounters[account]
+                .usersCounters[_account]
                 .dailyTimer <= block.timestamp;
     }
 
     /**
      * @dev Internal view function to check if the month has finished for an address.
-     * @param account The address to check.
+     * @param _account The address to check.
      * @return True if the month has finished, false otherwise.
      */
-    function _isMonthFinished(address account) internal view returns (bool) {
+    function _isMonthFinished(address _account) internal view returns (bool) {
         return
             _erc3643ComplianceDMLimStorage()
-                .usersCounters[account]
+                .usersCounters[_account]
                 .monthlyTimer <= block.timestamp;
     }
 

@@ -17,7 +17,6 @@ contract ERC3643ComplianceDMLimFacet is
     function interfacesIntrospection()
         external
         pure
-        override
         returns (bytes4[] memory interfaces_)
     {
         return _implementedInterfaces();

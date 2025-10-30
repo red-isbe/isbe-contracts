@@ -30,7 +30,11 @@ abstract contract ERC3643ComplianceMaxBal is
      */
     function initializeERC3643ComplianceMaxBalance(
         uint256 _maxBalance
-    ) external initializer(_ERC3643_COMPLIANCE_MAXBALANCE_RESOLVER_KEY) {
+    )
+        external
+        override
+        initializer(_ERC3643_COMPLIANCE_MAXBALANCE_RESOLVER_KEY)
+    {
         _initializeMaxBalance(_maxBalance);
         emit MaxBalanceSet(_maxBalance);
     }
@@ -64,15 +68,15 @@ abstract contract ERC3643ComplianceMaxBal is
     /**
      * @notice Checks if a transfer respects the max balance restriction.
      * @dev Uses ERC20Internal balance primitive for the receiver.
-     * @param to The address of the receiver.
-     * @param amount The amount of tokens to transfer.
-     * @return isCompliant True if compliant, false otherwise.
+     * @param _to The address of the receiver.
+     * @param _amount The amount of tokens to transfer.
+     * @return _isCompliant True if compliant, false otherwise.
      */
     function complianceCheckOnMaxBalance(
-        address to,
-        uint256 amount
-    ) external view override returns (bool isCompliant) {
-        return _complianceCheckOnMaxBalance(to, amount);
+        address _to,
+        uint256 _amount
+    ) external view override returns (bool _isCompliant) {
+        return _complianceCheckOnMaxBalance(_to, _amount);
     }
 
     /**
