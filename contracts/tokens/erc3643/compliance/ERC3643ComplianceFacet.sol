@@ -36,6 +36,10 @@ contract ERC3643ComplianceFacet is ERC3643Compliance, IEIP2535Introspection {
             .selector;
         selectors_[--selectorsLength] = this.setMaxBalanceEnabled.selector;
         selectors_[--selectorsLength] = this.isMaxBalanceEnabled.selector;
+        selectors_[--selectorsLength] = this
+            .setDailyMonthLimitsEnabled
+            .selector;
+        selectors_[--selectorsLength] = this.isDailyMonthLimitsEnabled.selector;
         selectors_[--selectorsLength] = this.canTransfer.selector;
     }
 }

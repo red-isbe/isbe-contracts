@@ -14,6 +14,15 @@ interface IERC3643ComplianceMaxBal {
     event MaxBalanceSet(uint256 maxBalance);
 
     /**
+     * @notice Initializes the max balance restriction.
+     * @dev Can only be called once via the initializer modifier.
+     * @param _maxBalance The initial max balance value.
+     */
+    function initializeERC3643ComplianceMaxBalance(
+        uint256 _maxBalance
+    ) external;
+
+    /**
      * @notice Sets the maximum balance allowed per address.
      * @param maxBalance The maximum amount of tokens an address can hold.
      */

@@ -87,6 +87,9 @@ bytes32 constant _ERC3643_COMPLIANCE_RESOLVER_KEY = 0x8a5420a9e83a88b62e9b707d31
 // keccak256('isbe.contracts.erc3643.compliance.maxbalance.resolver.key');
 bytes32 constant _ERC3643_COMPLIANCE_MAXBALANCE_RESOLVER_KEY = 0x439f087ef8d9d8d02c3b2d39c55c55a73b329d5b0d78ab0e81eb0e55343cdd9d;
 
+// keccak256('isbe.contracts.erc3643.compliance.daymonthlimits.resolver.key');
+bytes32 constant _ERC3643_COMPLIANCE_DMLIM_RESOLVER_KEY = 0x228279b8c9f85cc60c2a3f60cf0371583eaf4d08a3bb4b04cbeb47711165d29e;
+
 //ERC721 ResolverKeys
 // keccak256('isbe.contracts.erc721.burnable.resolver.key');
 bytes32 constant _ERC721_BURNABLE_RESOLVER_KEY = 0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731;

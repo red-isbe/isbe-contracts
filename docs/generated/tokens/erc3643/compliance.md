@@ -16,7 +16,7 @@ _Disables further initializations for this facet using its resolver key._
 ### initializeERC3643Compliance
 
 ```solidity
-function initializeERC3643Compliance(bool maxBalanceEnabled) external
+function initializeERC3643Compliance(bool maxBalanceEnabled, bool dailyMonthLimitsEnabled) external
 ```
 
 Initializes the MaxBalance feature activation.
@@ -25,9 +25,10 @@ _Can only be called once via the initializer modifier._
 
 #### Parameters
 
-| Name              | Type | Description                                      |
-| ----------------- | ---- | ------------------------------------------------ |
-| maxBalanceEnabled | bool | Initial value for MaxBalance feature activation. |
+| Name                    | Type | Description                                      |
+| ----------------------- | ---- | ------------------------------------------------ |
+| maxBalanceEnabled       | bool | Initial value for MaxBalance feature activation. |
+| dailyMonthLimitsEnabled | bool |                                                  |
 
 ### setMaxBalanceEnabled
 
@@ -36,6 +37,22 @@ function setMaxBalanceEnabled(bool enabled) external
 ```
 
 Enables or disables the MaxBalance feature.
+
+_Restricted to compliance role._
+
+#### Parameters
+
+| Name    | Type | Description                                                                        |
+| ------- | ---- | ---------------------------------------------------------------------------------- |
+| enabled | bool | True to enable, false to disable. Requirements: - Caller must have COMPLIANCE_ROLE |
+
+### setDailyMonthLimitsEnabled
+
+```solidity
+function setDailyMonthLimitsEnabled(bool enabled) external
+```
+
+Enables or disables the Daily/Monthly Limits feature.
 
 _Restricted to compliance role._
 
@@ -135,6 +152,20 @@ Returns true if MaxBalance feature is enabled.
 | ---- | ---- | --------------------------------- |
 | [0]  | bool | True if enabled, false otherwise. |
 
+### isDailyMonthLimitsEnabled
+
+```solidity
+function isDailyMonthLimitsEnabled() external view returns (bool)
+```
+
+Returns true if Daily/Monthly Limits feature is enabled.
+
+#### Return Values
+
+| Name | Type | Description                       |
+| ---- | ---- | --------------------------------- |
+| [0]  | bool | True if enabled, false otherwise. |
+
 ### \_implementedInterfaces
 
 ```solidity
@@ -218,22 +249,24 @@ _Storage structure for ERC-3643 MaxBalance feature activation._
 ```solidity
 struct ERC3643ComplianceStorage {
     bool maxBalanceEnabled;
+    bool dailyMonthLimitsEnabled;
 }
 ```
 
 ### \_initialize
 
 ```solidity
-function _initialize(bool _maxBalanceEnabled) internal
+function _initialize(bool _maxBalanceEnabled, bool _dailyMonthLimitsEnabled) internal
 ```
 
 _Internal function to initialize MaxBalance feature activation in storage._
 
 #### Parameters
 
-| Name                | Type | Description                                      |
-| ------------------- | ---- | ------------------------------------------------ |
-| \_maxBalanceEnabled | bool | Initial value for MaxBalance feature activation. |
+| Name                      | Type | Description                                      |
+| ------------------------- | ---- | ------------------------------------------------ |
+| \_maxBalanceEnabled       | bool | Initial value for MaxBalance feature activation. |
+| \_dailyMonthLimitsEnabled | bool |                                                  |
 
 ### \_setMaxBalanceEnabled
 
@@ -249,19 +282,19 @@ _Internal function to activate or deactivate MaxBalance feature._
 | ------- | ---- | -------------------------------------- |
 | enabled | bool | True to activate, false to deactivate. |
 
-### \_isMaxBalanceEnabled
+### \_setDailyMonthLimitsEnabled
 
 ```solidity
-function _isMaxBalanceEnabled() internal view returns (bool)
+function _setDailyMonthLimitsEnabled(bool enabled) internal
 ```
 
-_Internal view function to check if MaxBalance feature is enabled._
+_Internal function to activate or deactivate Daily/Monthly Limits feature._
 
-#### Return Values
+#### Parameters
 
-| Name | Type | Description                                     |
-| ---- | ---- | ----------------------------------------------- |
-| [0]  | bool | True if MaxBalance is enabled, false otherwise. |
+| Name    | Type | Description                            |
+| ------- | ---- | -------------------------------------- |
+| enabled | bool | True to activate, false to deactivate. |
 
 ### \_transferred
 
@@ -349,6 +382,34 @@ Delegates to MaxBalance feature if enabled._
 | Name | Type | Description                                         |
 | ---- | ---- | --------------------------------------------------- |
 | [0]  | bool | True if the transfer is compliant, false otherwise. |
+
+### \_isMaxBalanceEnabled
+
+```solidity
+function _isMaxBalanceEnabled() internal view returns (bool)
+```
+
+_Internal view function to check if MaxBalance feature is enabled._
+
+#### Return Values
+
+| Name | Type | Description                                     |
+| ---- | ---- | ----------------------------------------------- |
+| [0]  | bool | True if MaxBalance is enabled, false otherwise. |
+
+### \_isDailyMonthLimitsEnabled
+
+```solidity
+function _isDailyMonthLimitsEnabled() internal view returns (bool)
+```
+
+_Internal view function to check if Daily/Monthly Limits feature is enabled._
+
+#### Return Values
+
+| Name | Type | Description                                                |
+| ---- | ---- | ---------------------------------------------------------- |
+| [0]  | bool | True if Daily/Monthly Limits are enabled, false otherwise. |
 
 ---
 
@@ -478,7 +539,7 @@ Should only be called by the token contract._
 ### initializeERC3643Compliance
 
 ```solidity
-function initializeERC3643Compliance(bool _maxBalanceEnabled) external
+function initializeERC3643Compliance(bool _maxBalanceEnabled, bool _dailyMonthLimitsEnabled) external
 ```
 
 Initializes the compliance contract with feature flags.
@@ -487,9 +548,10 @@ _Should be called once during contract setup._
 
 #### Parameters
 
-| Name                | Type | Description                        |
-| ------------------- | ---- | ---------------------------------- |
-| \_maxBalanceEnabled | bool | Enable/disable MaxBalance feature. |
+| Name                      | Type | Description                                  |
+| ------------------------- | ---- | -------------------------------------------- |
+| \_maxBalanceEnabled       | bool | Enable/disable MaxBalance feature.           |
+| \_dailyMonthLimitsEnabled | bool | Enable/disable Daily/Monthly Limits feature. |
 
 ### canTransfer
 

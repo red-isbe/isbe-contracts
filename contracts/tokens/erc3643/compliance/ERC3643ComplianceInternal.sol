@@ -2,6 +2,7 @@
 pragma solidity ^0.8.28;
 
 import {ERC3643ComplianceMaxBalInternal} from './erc3643compliancemaxbalance/ERC3643ComplianceMaxBalInternal.sol';
+import {ERC3643ComplianceDMLimInternal} from './erc3643compliancedaymonthlimits/ERC3643ComplianceDMLimInternal.sol';
 import {_ERC3643_COMPLIANCE_STORAGE_POSITION} from '../../../constants/storagePositions.sol';
 import {ICompliance} from './ICompliance.sol'; // Importa la interfaz con los eventos
 
@@ -12,10 +13,14 @@ import {ICompliance} from './ICompliance.sol'; // Importa la interfaz con los ev
  *      This contract does not emit events or apply access control.
  *      It is intended to be used by external contracts that handle authorization and event emission.
  */
-abstract contract ERC3643ComplianceInternal is ERC3643ComplianceMaxBalInternal {
+abstract contract ERC3643ComplianceInternal is
+    ERC3643ComplianceMaxBalInternal,
+    ERC3643ComplianceDMLimInternal
+{
     /// @dev Storage structure for ERC-3643 MaxBalance feature activation.
     struct ERC3643ComplianceStorage {
         bool maxBalanceEnabled;
+        bool dailyMonthLimitsEnabled;
     }
 
     // --- Initialization ---
@@ -24,12 +29,16 @@ abstract contract ERC3643ComplianceInternal is ERC3643ComplianceMaxBalInternal {
      * @dev Internal function to initialize MaxBalance feature activation in storage.
      * @param _maxBalanceEnabled Initial value for MaxBalance feature activation.
      */
-    function _initialize(bool _maxBalanceEnabled) internal {
+    function _initialize(
+        bool _maxBalanceEnabled,
+        bool _dailyMonthLimitsEnabled
+    ) internal {
         ERC3643ComplianceStorage storage $ = _erc3643complianceStorage();
         $.maxBalanceEnabled = _maxBalanceEnabled;
+        $.dailyMonthLimitsEnabled = _dailyMonthLimitsEnabled;
     }
 
-    // --- Set MaxBalance Activation ---
+    // --- Set Activation ---
 
     /**
      * @dev Internal function to activate or deactivate MaxBalance feature.
@@ -40,15 +49,13 @@ abstract contract ERC3643ComplianceInternal is ERC3643ComplianceMaxBalInternal {
         $.maxBalanceEnabled = enabled;
     }
 
-    // --- Get MaxBalance Activation ---
-
     /**
-     * @dev Internal view function to check if MaxBalance feature is enabled.
-     * @return True if MaxBalance is enabled, false otherwise.
+     * @dev Internal function to activate or deactivate Daily/Monthly Limits feature.
+     * @param enabled True to activate, false to deactivate.
      */
-    function _isMaxBalanceEnabled() internal view returns (bool) {
+    function _setDailyMonthLimitsEnabled(bool enabled) internal {
         ERC3643ComplianceStorage storage $ = _erc3643complianceStorage();
-        return $.maxBalanceEnabled;
+        $.dailyMonthLimitsEnabled = enabled;
     }
 
     // --- Compliance Hooks ---
@@ -65,6 +72,10 @@ abstract contract ERC3643ComplianceInternal is ERC3643ComplianceMaxBalInternal {
         address to,
         uint256 amount
     ) internal returns (bool) {
+        if (_isDailyMonthLimitsEnabled()) {
+            _transferActionOnDayMonthLimits(from, amount);
+        }
+
         emit ICompliance.ComplianceTransfer(from, to, amount);
         return true;
     }
@@ -104,10 +115,38 @@ abstract contract ERC3643ComplianceInternal is ERC3643ComplianceMaxBalInternal {
         address to,
         uint256 amount
     ) internal view returns (bool) {
-        if (_isMaxBalanceEnabled()) {
-            return _complianceCheckOnMaxBalance(to, amount);
+        if (
+            _isMaxBalanceEnabled() && !_complianceCheckOnMaxBalance(to, amount)
+        ) {
+            return false;
+        }
+        if (
+            _isDailyMonthLimitsEnabled() &&
+            !_complianceCheckOnDayMonthLimits(from, amount)
+        ) {
+            return false;
         }
         return true;
+    }
+
+    // --- Get  Activation ---
+
+    /**
+     * @dev Internal view function to check if MaxBalance feature is enabled.
+     * @return True if MaxBalance is enabled, false otherwise.
+     */
+    function _isMaxBalanceEnabled() internal view returns (bool) {
+        ERC3643ComplianceStorage storage $ = _erc3643complianceStorage();
+        return $.maxBalanceEnabled;
+    }
+
+    /**
+     * @dev Internal view function to check if Daily/Monthly Limits feature is enabled.
+     * @return True if Daily/Monthly Limits are enabled, false otherwise.
+     */
+    function _isDailyMonthLimitsEnabled() internal view returns (bool) {
+        ERC3643ComplianceStorage storage $ = _erc3643complianceStorage();
+        return $.dailyMonthLimitsEnabled;
     }
 
     // --- Storage Accessor ---
@@ -123,8 +162,11 @@ abstract contract ERC3643ComplianceInternal is ERC3643ComplianceMaxBalInternal {
         returns (ERC3643ComplianceStorage storage storage_)
     {
         bytes32 position = _ERC3643_COMPLIANCE_STORAGE_POSITION;
+        // slither-disable-start assembly
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             storage_.slot := position
         }
+        // slither-disable-end assembly
     }
 }

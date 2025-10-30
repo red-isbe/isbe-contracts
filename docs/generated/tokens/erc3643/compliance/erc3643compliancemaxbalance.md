@@ -253,6 +253,22 @@ Emitted when the max balance is updated.
 | ---------- | ------- | -------------------------- |
 | maxBalance | uint256 | The new max balance value. |
 
+### initializeERC3643ComplianceMaxBalance
+
+```solidity
+function initializeERC3643ComplianceMaxBalance(uint256 _maxBalance) external
+```
+
+Initializes the max balance restriction.
+
+_Can only be called once via the initializer modifier._
+
+#### Parameters
+
+| Name         | Type    | Description                    |
+| ------------ | ------- | ------------------------------ |
+| \_maxBalance | uint256 | The initial max balance value. |
+
 ### setMaxBalance
 
 ```solidity

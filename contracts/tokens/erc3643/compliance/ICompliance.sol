@@ -74,8 +74,12 @@ interface ICompliance {
      * @notice Initializes the compliance contract with feature flags.
      * @dev Should be called once during contract setup.
      * @param _maxBalanceEnabled Enable/disable MaxBalance feature.
+     * @param _dailyMonthLimitsEnabled Enable/disable Daily/Monthly Limits feature.
      */
-    function initializeERC3643Compliance(bool _maxBalanceEnabled) external;
+    function initializeERC3643Compliance(
+        bool _maxBalanceEnabled,
+        bool _dailyMonthLimitsEnabled
+    ) external;
 
     /**
      * @notice Checks if a transfer is compliant.

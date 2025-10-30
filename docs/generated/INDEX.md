@@ -36,6 +36,7 @@
 - [tokens/erc203643/erc203643capped](tokens/erc203643/erc203643capped.md)
 - [tokens/erc203643/erc203643controller](tokens/erc203643/erc203643controller.md)
 - [tokens/erc3643/compliance](tokens/erc3643/compliance.md)
+- [tokens/erc3643/compliance/erc3643compliancedaymonthlimits](tokens/erc3643/compliance/erc3643compliancedaymonthlimits.md)
 - [tokens/erc3643/compliance/erc3643compliancemaxbalance](tokens/erc3643/compliance/erc3643compliancemaxbalance.md)
 - [tokens/erc3643/token](tokens/erc3643/token.md)
 - [tokens/erc3643/token/erc3643freeze](tokens/erc3643/token/erc3643freeze.md)

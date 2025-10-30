@@ -28,10 +28,15 @@ abstract contract ERC3643Compliance is ICompliance, ERC203643InternalCommon {
      * @param maxBalanceEnabled Initial value for MaxBalance feature activation.
      */
     function initializeERC3643Compliance(
-        bool maxBalanceEnabled
+        bool maxBalanceEnabled,
+        bool dailyMonthLimitsEnabled
     ) external override initializer(_ERC3643_COMPLIANCE_RESOLVER_KEY) {
-        _initialize(maxBalanceEnabled);
+        _initialize(maxBalanceEnabled, dailyMonthLimitsEnabled);
         emit ComplianceFeatureToggled('MaxBalance', maxBalanceEnabled);
+        emit ComplianceFeatureToggled(
+            'DailyMonthLimits',
+            dailyMonthLimitsEnabled
+        );
     }
 
     // --- Set MaxBalance Activation ---
@@ -49,6 +54,22 @@ abstract contract ERC3643Compliance is ICompliance, ERC203643InternalCommon {
     ) external onlyRole(_COMPLIANCE_ROLE) {
         _setMaxBalanceEnabled(enabled);
         emit ComplianceFeatureToggled('MaxBalance', enabled);
+    }
+
+    // --- Set Daily/Monthly Limits Activation ---
+    /**
+     * @notice Enables or disables the Daily/Monthly Limits feature.
+     * @dev Restricted to compliance role.
+     * @param enabled True to enable, false to disable.
+     *
+     * Requirements:
+     * - Caller must have COMPLIANCE_ROLE
+     */
+    function setDailyMonthLimitsEnabled(
+        bool enabled
+    ) external onlyRole(_COMPLIANCE_ROLE) {
+        _setDailyMonthLimitsEnabled(enabled);
+        emit ComplianceFeatureToggled('DailyMonthLimits', enabled);
     }
 
     // --- ICompliance Hooks ---
@@ -118,6 +139,15 @@ abstract contract ERC3643Compliance is ICompliance, ERC203643InternalCommon {
      */
     function isMaxBalanceEnabled() external view returns (bool) {
         return _isMaxBalanceEnabled();
+    }
+
+    // --- Get Daily/Monthly Limits Activation ---
+    /**
+     * @notice Returns true if Daily/Monthly Limits feature is enabled.
+     * @return True if enabled, false otherwise.
+     */
+    function isDailyMonthLimitsEnabled() external view returns (bool) {
+        return _isDailyMonthLimitsEnabled();
     }
 
     // --- Interfaces ---
