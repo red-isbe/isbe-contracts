@@ -24,11 +24,9 @@ abstract contract ERC3643Metadata is IERC3643Metadata, ERC203643InternalCommon {
      * @notice Initializes the metadata fields of the token.
      * @dev Can only be called once via the initializer modifier.
      *      Emits a {UpdatedTokenInformation} event.
-     * @param _newOnchainID The initial onchain identity address. Can be zero if not set.
      * @param _newVersion The initial version string. Must be non-empty.
      */
     function initializeERC3643Metadata(
-        address _newOnchainID,
         string memory _newVersion
     )
         external
@@ -36,13 +34,12 @@ abstract contract ERC3643Metadata is IERC3643Metadata, ERC203643InternalCommon {
         initializer(_ERC3643_METADATA_RESOLVER_KEY)
         emptyString(_newVersion)
     {
-        _initialize(_newOnchainID, _newVersion);
+        _initialize(_newVersion);
         emit UpdatedTokenInformation(
             _name(),
             _symbol(),
             _decimals(),
-            _newVersion,
-            _newOnchainID
+            _newVersion
         );
     }
 
@@ -74,8 +71,7 @@ abstract contract ERC3643Metadata is IERC3643Metadata, ERC203643InternalCommon {
             _newName,
             _symbol(),
             _decimals(),
-            _version(),
-            _onchainID()
+            _version()
         );
     }
 
@@ -107,56 +103,8 @@ abstract contract ERC3643Metadata is IERC3643Metadata, ERC203643InternalCommon {
             _name(),
             _newSymbol,
             _decimals(),
-            _version(),
-            _onchainID()
+            _version()
         );
-    }
-
-    /**
-     * @notice Updates the onchain identity address.
-     * @dev Restricted to metadata role. Requires unpaused state.
-     *      Updates ERC3643-specific storage and emits regulatory compliance event.
-     * @param _newOnchainID The new onchain identity address to assign.
-     *
-     * Requirements:
-     * - Caller must have METADATA_ROLE
-     * - Contract must not be paused
-     * - _newOnchainID must not be zero address
-     *
-     * Emits:
-     * - {UpdatedTokenInformation} event with all current token metadata
-     *
-     * Note: The onchainID provides additional regulatory and compliance information
-     * about the token, managed by the issuer for ERC3643 compliance.
-     */
-    function setOnchainID(
-        address _newOnchainID
-    )
-        external
-        override
-        onlyRole(_METADATA_ROLE)
-        whenNotPaused
-        addressIsNotZero(_newOnchainID)
-    {
-        _setOnchainID(_newOnchainID);
-        emit UpdatedTokenInformation(
-            _name(),
-            _symbol(),
-            _decimals(),
-            _version(),
-            _newOnchainID
-        );
-    }
-
-    /**
-     * @notice Returns the current onchain identity address.
-     * @return address The address of the token's onchain identity contract.
-     *
-     * Note: The onchain identity contains additional information about the token
-     * and is used for regulatory compliance in ERC3643 mode.
-     */
-    function onchainID() external view override returns (address) {
-        return _onchainID();
     }
 
     /**

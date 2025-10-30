@@ -51,7 +51,7 @@ bytes32 constant _ERC20_STORAGE_POSITION = 0xd93ac5c223af8b55b10aca6a04761f02117
 // keccak256('isbe.contracts.erc20.snapshot.storage');
 bytes32 constant _ERC20_SNAPSHOT_STORAGE_POSITION = 0x3c2d5e4f4e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b;
 
-//ERC3643 storage position
+//ERC3643 IERC3643 storage position
 // keccak256('isbe.contracts.erc3643.metadata.storage');
 bytes32 constant _ERC3643_METADATA_STORAGE_POSITION = 0x84ed0b9176400cfe0bb1701ac1a14a9c7d7e2130c0db5a7adfbb9aa29de4d7f2;
 
@@ -67,6 +67,16 @@ bytes32 constant _ERC3643_CONTROL_STORAGE_POSITION = 0x72d835f60ed84d9e97792d54a
 //ERC203643 storage position
 // keccak256('isbe.contracts.erc203643.capped.storage');
 bytes32 constant _ERC203643_CAPPED_STORAGE_POSITION = 0x1f4e8e2a5e3c4b6f8e2d3c4b5a6f7e8d9c0b1a2b3c4d5e6f7e8d9c0b1a2b3c4b;
+
+//ERC3643 ICompliance storage position
+// keccak256('isbe.contracts.erc3643.compliance.storage');
+bytes32 constant _ERC3643_COMPLIANCE_STORAGE_POSITION = 0x0839ed7eb71d13e707e8b2ad0e7cb916fbc4ab86c8b8e577ec9429a0d2550a8f;
+
+// keccak256('isbe.contracts.erc3643.compliance.maxbalance.storage');
+bytes32 constant _ERC3643_COMPLIANCE_MAXBALANCE_STORAGE_POSITION = 0x6239b4c1aece1ee0151d1119cd69e25c484bcdbaae2b77a42d15f153a347f8ee;
+
+// keccak256('isbe.contracts.erc3643.compliance.daymonthlimits.storage');
+bytes32 constant _ERC3643_COMPLIANCE_DMLIM_STORAGE_POSITION = 0xea3ac2aee1c12b7d1264579e2e66d5726f130a61e7f86072d64993e7a6021a35;
 
 //ERC721 storage position
 // keccak256('isbe.contracts.erc721.storage');

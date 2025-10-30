@@ -14,32 +14,16 @@ import {_ERC3643_METADATA_STORAGE_POSITION} from '../../../../constants/storageP
 abstract contract ERC3643MetadataInternal is Common {
     /// @dev Storage structure for ERC-3643 metadata.
     struct ERC3643MetadataStorage {
-        address onchainid;
         string version;
     }
 
     /**
      * @dev Internal function to initialize the onchain identity and version metadata in storage.
      * Sets the initial values for the token's onchain ID and version.
-     * @param _newOnchainID The initial onchain identity address to assign.
      * @param _newVersion The initial version string of the token (e.g., "3.0.0").
      */
-    function _initialize(
-        address _newOnchainID,
-        string memory _newVersion
-    ) internal {
+    function _initialize(string memory _newVersion) internal {
         _setVersion(_newVersion);
-        _setOnchainID(_newOnchainID);
-    }
-
-    /**
-     * @dev Internal function to update the onchain identity address in storage.
-     * Setting the address to zero indicates that no onchain identity is currently bound to the token.
-     * @param _newOnchainID The new onchain identity address to assign.
-     */
-    function _setOnchainID(address _newOnchainID) internal {
-        ERC3643MetadataStorage storage $ = _erc3643MetadataStorage();
-        $.onchainid = _newOnchainID;
     }
 
     /**
@@ -50,14 +34,6 @@ abstract contract ERC3643MetadataInternal is Common {
     function _setVersion(string memory _newVersion) internal {
         ERC3643MetadataStorage storage $ = _erc3643MetadataStorage();
         $.version = _newVersion;
-    }
-
-    /**
-     * @dev Internal view function to retrieve the current onchain identity address from storage.
-     * @return The address of the token's onchain identity.
-     */
-    function _onchainID() internal view returns (address) {
-        return _erc3643MetadataStorage().onchainid;
     }
 
     /**

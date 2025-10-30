@@ -110,42 +110,51 @@ package "ERC20 and ERC3643" {
     ERC3643FreezeFacet --|> ERC3643Freeze
     ERC3643Freeze --|> IERC3643Freeze  
     ERC3643FreezeInternal --|> Common 
-    
-    ' --- Regulatory Infrastructure ---
-    class IERC3643Regulatory <<(I,#FFD700) interface>> #E6E6FA
-    class ERC3643RegulatoryInternal <<(A,#228B22) abstract contract>> #E6E6FA
-    class ERC3643Regulatory <<(A,#228B22) abstract contract>> #E6E6FA
-    class ERC3643RegulatoryFacet <<(C,#1E90FF) contract>> #E6E6FA
-    
-    ERC3643RegulatoryFacet --|> ERC3643Regulatory
-    ERC3643Regulatory --|> IERC3643Regulatory   
-    ERC3643RegulatoryInternal --|> Common
 
+    ' --- Compliance---
+    class ICompliance <<(I,#FFD700) interface>> #77DD77
+    class ERC3643ComplianceInternal <<(A,#228B22) abstract contract>> #77DD77
+    class ERC3643Compliance <<(A,#228B22) abstract contract>> #77DD77
+    class ERC3643ComplianceFacet <<(C,#1E90FF) contract>> #77DD77
+    
+    ERC3643ComplianceFacet --|> ERC3643Compliance
+    ERC3643Compliance --|> ICompliance   
+    ERC3643ComplianceInternal --|> Common
+
+    ' --- Compliance Max Balance---
+    class IERC3643ComplianceMaxBalance <<(I,#FFD700) interface>> #77DD77
+    class ERC3643ComplianceMaxBalanceInternal <<(A,#228B22) abstract contract>> #77DD77
+    class ERC3643ComplianceMaxBalance <<(A,#228B22) abstract contract>> #77DD77
+    class ERC3643ComplianceMaxBalanceFacet <<(C,#1E90FF) contract>> #77DD77
+    
+    ERC3643ComplianceMaxBalanceFacet --|> ERC3643ComplianceMaxBalance
+    ERC3643ComplianceMaxBalance --|> IERC3643ComplianceMaxBalance 
+    ERC3643ComplianceMaxBalanceInternal --|> ERC20Internal
+
+    ERC3643ComplianceInternal --|> ERC3643ComplianceMaxBalanceInternal 
     
 
     ' --- ERC203643 Internal Common ---
     class ERC203643InternalCommon <<(A,#228B22) abstract contract>> #FFFF99
     ERC203643InternalCommon --|> ERC20SnapshotInternal
     ERC203643InternalCommon --|> ERC203643CappedInternal
-
-    ERC203643InternalCommon --|> ERC3643RegulatoryInternal
     ERC203643InternalCommon --|> ERC3643FreezeInternal
     ERC203643InternalCommon --|> ERC3643MetadataInternal 
+    ERC203643InternalCommon --|> ERC3643ComplianceInternal
 
 
-
-
-    
- 
     ERC3643Metadata --|> ERC203643InternalCommon
-    ERC3643Regulatory --|> ERC203643InternalCommon
     ERC3643Freeze --|> ERC203643InternalCommon
-
     ERC20 --|> ERC203643InternalCommon
     ERC20Burnable --|> ERC203643InternalCommon
     ERC203643Capped --|> ERC203643InternalCommon
     ERC203643Controller --|> ERC203643InternalCommon
     ERC20Snapshot --|> ERC203643InternalCommon
+    ERC3643Compliance --|> ERC203643InternalCommon
+    ERC3643ComplianceMaxBalance --|> ERC203643InternalCommon
+
+    
+
 
 }
 @enduml
