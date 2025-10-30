@@ -42,14 +42,6 @@ describe('ERC3643 Token', function () {
 
     let proxyAddress: string
 
-    let tokenOnchainIDAddress: string
-    let identityRegistryAddress: string
-    let complianceAddress: string
-
-    let onchainIdMock: MockOnchainID
-    let identityRegistryMock: MockIdentityRegistry
-    let complianceMock: MockCompliance
-
     const tokenName = 'My3643'
     const tokenSymbol = 'MYX'
     const tokenDecimals = 18
@@ -88,26 +80,6 @@ describe('ERC3643 Token', function () {
         accessControlFacet = result.accessControl
         erc20Facet = result.erc20
         pauseFacet = result.pause
-
-        // Deploy a mock contract to use as ERC3643 onchainID
-        const OnchainIdMock = await ethers.getContractFactory('MockOnchainID')
-        onchainIdMock = await OnchainIdMock.deploy()
-        await onchainIdMock.waitForDeployment()
-        tokenOnchainIDAddress = await onchainIdMock.getAddress()
-
-        // Deploy a mock contract to use as IdentityRegistry
-        const IdentityRegistryMock = await ethers.getContractFactory(
-            'MockIdentityRegistry'
-        )
-        identityRegistryMock = await IdentityRegistryMock.deploy()
-        await identityRegistryMock.waitForDeployment()
-        identityRegistryAddress = await identityRegistryMock.getAddress()
-
-        // Deploy a mock contract to use as Compliance
-        const ComplianceMock = await ethers.getContractFactory('MockCompliance')
-        complianceMock = await ComplianceMock.deploy()
-        await complianceMock.waitForDeployment()
-        complianceAddress = await complianceMock.getAddress()
     }
 
     beforeEach(async () => {
@@ -136,27 +108,18 @@ describe('ERC3643 Token', function () {
                     await expect(
                         erc3643
                             .connect(owner)
-                            .initializeERC3643Metadata(
-                                tokenOnchainIDAddress,
-                                emptyString
-                            )
+                            .initializeERC3643Metadata(emptyString)
                     ).to.be.reverted
                 })
 
                 it('GIVEN metadata already initialized WHEN initializeERC3643Metadata again THEN reverts', async () => {
                     await erc3643
                         .connect(owner)
-                        .initializeERC3643Metadata(
-                            tokenOnchainIDAddress,
-                            version
-                        )
+                        .initializeERC3643Metadata(version)
                     await expect(
                         erc3643
                             .connect(owner)
-                            .initializeERC3643Metadata(
-                                tokenOnchainIDAddress,
-                                version
-                            )
+                            .initializeERC3643Metadata(version)
                     ).to.be.reverted
                 })
 
@@ -168,18 +131,12 @@ describe('ERC3643 Token', function () {
                     await expect(
                         erc3643
                             .connect(owner)
-                            .initializeERC3643Metadata(
-                                tokenOnchainIDAddress,
-                                version
-                            )
+                            .initializeERC3643Metadata(version)
                     )
                         .to.emit(erc3643, 'UpdatedTokenInformation')
-                        .withArgs('', '', 0, version, tokenOnchainIDAddress)
+                        .withArgs('', '', 0, version)
 
                     expect(await erc3643.version()).to.equal(version)
-                    expect(await erc3643.onchainID()).to.equal(
-                        tokenOnchainIDAddress
-                    )
                 })
             })
         })
@@ -209,10 +166,7 @@ describe('ERC3643 Token', function () {
                     await expect(
                         erc3643
                             .connect(owner)
-                            .initializeERC3643Metadata(
-                                tokenOnchainIDAddress,
-                                emptyString
-                            )
+                            .initializeERC3643Metadata(emptyString)
                     ).to.be.reverted
                 })
 
@@ -224,13 +178,10 @@ describe('ERC3643 Token', function () {
                     await expect(
                         erc3643
                             .connect(owner)
-                            .initializeERC3643Metadata(
-                                tokenOnchainIDAddress,
-                                version
-                            )
+                            .initializeERC3643Metadata(version)
                     )
                         .to.emit(erc3643, 'UpdatedTokenInformation')
-                        .withArgs(n, s, d, version, tokenOnchainIDAddress)
+                        .withArgs(n, s, d, version)
                 })
             })
 
@@ -238,10 +189,7 @@ describe('ERC3643 Token', function () {
                 beforeEach(async () => {
                     await erc3643
                         .connect(owner)
-                        .initializeERC3643Metadata(
-                            tokenOnchainIDAddress,
-                            version
-                        )
+                        .initializeERC3643Metadata(version)
                 })
 
                 it('GIVEN no TOKEN_OWNER_ROLE WHEN setName THEN reverts', async () => {
@@ -273,13 +221,7 @@ describe('ERC3643 Token', function () {
 
                     await expect(erc3643.connect(owner).setName(newName))
                         .to.emit(erc3643, 'UpdatedTokenInformation')
-                        .withArgs(
-                            newName,
-                            s,
-                            d,
-                            await erc3643.version(),
-                            await erc3643.onchainID()
-                        )
+                        .withArgs(newName, s, d, await erc3643.version())
 
                     expect(await erc20Facet.name()).to.equal(newName)
                 })
@@ -289,10 +231,7 @@ describe('ERC3643 Token', function () {
                 beforeEach(async () => {
                     await erc3643
                         .connect(owner)
-                        .initializeERC3643Metadata(
-                            tokenOnchainIDAddress,
-                            version
-                        )
+                        .initializeERC3643Metadata(version)
                 })
 
                 it('GIVEN no TOKEN_OWNER_ROLE WHEN setSymbol THEN reverts', async () => {
@@ -324,71 +263,9 @@ describe('ERC3643 Token', function () {
 
                     await expect(erc3643.connect(owner).setSymbol(newSymbol))
                         .to.emit(erc3643, 'UpdatedTokenInformation')
-                        .withArgs(
-                            n,
-                            newSymbol,
-                            d,
-                            await erc3643.version(),
-                            await erc3643.onchainID()
-                        )
+                        .withArgs(n, newSymbol, d, await erc3643.version())
 
                     expect(await erc20Facet.symbol()).to.equal(newSymbol)
-                })
-            })
-
-            describe('setOnchainID', () => {
-                beforeEach(async () => {
-                    await erc3643
-                        .connect(owner)
-                        .initializeERC3643Metadata(
-                            tokenOnchainIDAddress,
-                            version
-                        )
-                })
-
-                it('GIVEN ZeroAddress WHEN setOnchainID THEN reverts', async () => {
-                    await expect(
-                        erc3643.connect(owner).setOnchainID(ZeroAddress)
-                    ).to.be.reverted
-                })
-
-                it('GIVEN no TOKEN_OWNER_ROLE WHEN setOnchainID THEN reverts', async () => {
-                    await accessControlFacet
-                        .connect(owner)
-                        .revokeRole(METADATA_ROLE, ownerAddress)
-                    await expect(
-                        erc3643.connect(owner).setOnchainID(aliceAddress)
-                    ).to.be.reverted
-                })
-
-                it('GIVEN contract paused WHEN setOnchainID THEN reverts', async () => {
-                    await accessControlFacet
-                        .connect(owner)
-                        .grantRole(PAUSER_ROLE, ownerAddress)
-                    await pauseFacet.connect(owner).pause()
-                    await expect(
-                        erc3643.connect(owner).setOnchainID(aliceAddress)
-                    ).to.be.reverted
-                })
-
-                it('GIVEN initialized metadata WHEN setOnchainID with valid address THEN updates onchainID and emits UpdatedTokenInformation', async () => {
-                    const n = await erc20Facet.name()
-                    const s = await erc20Facet.symbol()
-                    const d = await erc20Facet.decimals()
-
-                    await expect(
-                        erc3643.connect(owner).setOnchainID(aliceAddress)
-                    )
-                        .to.emit(erc3643, 'UpdatedTokenInformation')
-                        .withArgs(
-                            n,
-                            s,
-                            d,
-                            await erc3643.version(),
-                            aliceAddress
-                        )
-
-                    expect(await erc3643.onchainID()).to.equal(aliceAddress)
                 })
             })
 
@@ -396,262 +273,9 @@ describe('ERC3643 Token', function () {
                 it('GIVEN initialized metadata WHEN call getters THEN return stored values', async () => {
                     await erc3643
                         .connect(owner)
-                        .initializeERC3643Metadata(aliceAddress, version)
+                        .initializeERC3643Metadata(version)
                     expect(await erc3643.version()).to.equal(version)
-                    expect(await erc3643.onchainID()).to.equal(aliceAddress)
                 })
-            })
-        })
-    })
-
-    // ====================================================================
-    // REGULATORY MODULE
-    // ====================================================================
-    describe('ERC3643 Regulatory', () => {
-        beforeEach(async () => {
-            const fixture = async () => {
-                await accessControlFacet
-                    .connect(owner)
-                    .grantRole(REGULATORY_ROLE, ownerAddress)
-            }
-            await loadFixture(fixture)
-        })
-
-        describe('initializeERC3643Regulatory', () => {
-            it('GIVEN regulatory already initialized WHEN initializeERC3643Regulatory again THEN reverts', async () => {
-                await erc3643
-                    .connect(owner)
-                    .initializeERC3643Regulatory(
-                        identityRegistryAddress,
-                        complianceAddress
-                    )
-                await expect(
-                    erc3643
-                        .connect(owner)
-                        .initializeERC3643Regulatory(
-                            identityRegistryAddress,
-                            complianceAddress
-                        )
-                ).to.be.reverted
-            })
-
-            it('GIVEN both addresses non-zero WHEN initializeERC3643Regulatory THEN binds token in compliance and emits events', async () => {
-                await expect(
-                    erc3643
-                        .connect(owner)
-                        .initializeERC3643Regulatory(
-                            identityRegistryAddress,
-                            complianceAddress
-                        )
-                )
-                    .to.emit(erc3643, 'IdentityRegistryAdded')
-                    .withArgs(identityRegistryAddress)
-                    .and.to.emit(erc3643, 'ComplianceAdded')
-                    .withArgs(complianceAddress)
-
-                const bound = await complianceMock.lastToken()
-                expect(bound.toLowerCase()).to.equal(proxyAddress.toLowerCase())
-
-                expect(await erc3643.identityRegistry()).to.equal(
-                    identityRegistryAddress
-                )
-                expect(await erc3643.compliance()).to.equal(complianceAddress)
-            })
-
-            it('GIVEN both addresses zero WHEN initializeERC3643Regulatory THEN allows zero, emits events with zero and does not bind', async () => {
-                await expect(
-                    erc3643
-                        .connect(owner)
-                        .initializeERC3643Regulatory(ZeroAddress, ZeroAddress)
-                )
-                    .to.emit(erc3643, 'IdentityRegistryAdded')
-                    .withArgs(ZeroAddress)
-                    .and.to.emit(erc3643, 'ComplianceAdded')
-                    .withArgs(ZeroAddress)
-
-                expect(await erc3643.identityRegistry()).to.equal(ZeroAddress)
-                expect(await erc3643.compliance()).to.equal(ZeroAddress)
-
-                // no bindToken should have been called
-                expect(await complianceMock.lastToken()).to.equal(ZeroAddress)
-            })
-
-            it('GIVEN identityRegistry zero and compliance non-zero WHEN initializeERC3643Regulatory THEN stores correctly and binds token', async () => {
-                await expect(
-                    erc3643
-                        .connect(owner)
-                        .initializeERC3643Regulatory(
-                            ZeroAddress,
-                            complianceAddress
-                        )
-                )
-                    .to.emit(erc3643, 'IdentityRegistryAdded')
-                    .withArgs(ZeroAddress)
-                    .and.to.emit(erc3643, 'ComplianceAdded')
-                    .withArgs(complianceAddress)
-
-                const bound = await complianceMock.lastToken()
-                expect(bound.toLowerCase()).to.equal(proxyAddress.toLowerCase())
-
-                expect(await erc3643.identityRegistry()).to.equal(ZeroAddress)
-                expect(await erc3643.compliance()).to.equal(complianceAddress)
-            })
-
-            it('GIVEN identityRegistry non-zero and compliance zero WHEN initializeERC3643Regulatory THEN stores correctly and does not bind', async () => {
-                await expect(
-                    erc3643
-                        .connect(owner)
-                        .initializeERC3643Regulatory(
-                            identityRegistryAddress,
-                            ZeroAddress
-                        )
-                )
-                    .to.emit(erc3643, 'IdentityRegistryAdded')
-                    .withArgs(identityRegistryAddress)
-                    .and.to.emit(erc3643, 'ComplianceAdded')
-                    .withArgs(ZeroAddress)
-
-                expect(await erc3643.identityRegistry()).to.equal(
-                    identityRegistryAddress
-                )
-                expect(await erc3643.compliance()).to.equal(ZeroAddress)
-
-                // no bindToken should have been called
-                expect(await complianceMock.lastToken()).to.equal(ZeroAddress)
-            })
-        })
-
-        describe('setIdentityRegistry', () => {
-            beforeEach(async () => {
-                await erc3643
-                    .connect(owner)
-                    .initializeERC3643Regulatory(ZeroAddress, ZeroAddress)
-            })
-
-            it('GIVEN no TOKEN_OWNER_ROLE WHEN setIdentityRegistry THEN reverts', async () => {
-                await accessControlFacet
-                    .connect(owner)
-                    .revokeRole(REGULATORY_ROLE, ownerAddress)
-
-                await expect(
-                    erc3643
-                        .connect(owner)
-                        .setIdentityRegistry(identityRegistryAddress)
-                ).to.be.reverted
-            })
-
-            it('GIVEN contract paused WHEN setIdentityRegistry THEN reverts', async () => {
-                await accessControlFacet
-                    .connect(owner)
-                    .grantRole(PAUSER_ROLE, ownerAddress)
-
-                await pauseFacet.connect(owner).pause()
-
-                await expect(
-                    erc3643
-                        .connect(owner)
-                        .setIdentityRegistry(identityRegistryAddress)
-                ).to.be.reverted
-            })
-
-            it('GIVEN valid address WHEN setIdentityRegistry THEN updates and emits', async () => {
-                await expect(
-                    erc3643
-                        .connect(owner)
-                        .setIdentityRegistry(identityRegistryAddress)
-                )
-                    .to.emit(erc3643, 'IdentityRegistryAdded')
-                    .withArgs(identityRegistryAddress)
-
-                expect(await erc3643.identityRegistry()).to.equal(
-                    identityRegistryAddress
-                )
-            })
-
-            it('GIVEN zero address WHEN setIdentityRegistry THEN updates to zero and emits', async () => {
-                await expect(
-                    erc3643.connect(owner).setIdentityRegistry(ZeroAddress)
-                )
-                    .to.emit(erc3643, 'IdentityRegistryAdded')
-                    .withArgs(ZeroAddress)
-
-                expect(await erc3643.identityRegistry()).to.equal(ZeroAddress)
-            })
-        })
-
-        describe('setCompliance', () => {
-            beforeEach(async () => {
-                await erc3643
-                    .connect(owner)
-                    .initializeERC3643Regulatory(ZeroAddress, ZeroAddress)
-            })
-
-            it('GIVEN no TOKEN_OWNER_ROLE WHEN setCompliance THEN reverts', async () => {
-                await accessControlFacet
-                    .connect(owner)
-                    .revokeRole(REGULATORY_ROLE, ownerAddress)
-                await expect(
-                    erc3643.connect(owner).setCompliance(complianceAddress)
-                ).to.be.reverted
-            })
-
-            it('GIVEN contract paused WHEN setCompliance THEN reverts', async () => {
-                await accessControlFacet
-                    .connect(owner)
-                    .grantRole(PAUSER_ROLE, ownerAddress)
-                await pauseFacet.connect(owner).pause()
-                await expect(
-                    erc3643.connect(owner).setCompliance(complianceAddress)
-                ).to.be.reverted
-            })
-
-            it('GIVEN zero address WHEN setCompliance THEN updates to zero and emits (no bindToken)', async () => {
-                await expect(erc3643.connect(owner).setCompliance(ZeroAddress))
-                    .to.emit(erc3643, 'ComplianceAdded')
-                    .withArgs(ZeroAddress)
-
-                expect(await erc3643.compliance()).to.equal(ZeroAddress)
-
-                // lastToken should remain zero (no new bind call)
-                expect(await complianceMock.lastToken()).to.equal(ZeroAddress)
-            })
-
-            it('GIVEN valid address WHEN setCompliance THEN updates, emits and binds token', async () => {
-                await expect(
-                    erc3643.connect(owner).setCompliance(complianceAddress)
-                )
-                    .to.emit(erc3643, 'ComplianceAdded')
-                    .withArgs(complianceAddress)
-
-                expect(await erc3643.compliance()).to.equal(complianceAddress)
-
-                const bound = await complianceMock.lastToken()
-                expect(bound.toLowerCase()).to.equal(proxyAddress.toLowerCase())
-            })
-        })
-
-        describe('getters', () => {
-            it('GIVEN initialized regulatory WHEN call getters THEN return stored references', async () => {
-                await erc3643
-                    .connect(owner)
-                    .initializeERC3643Regulatory(
-                        identityRegistryAddress,
-                        complianceAddress
-                    )
-
-                expect(await erc3643.identityRegistry()).to.equal(
-                    identityRegistryAddress
-                )
-                expect(await erc3643.compliance()).to.equal(complianceAddress)
-            })
-
-            it('GIVEN zero initialization WHEN call getters THEN return zero addresses', async () => {
-                await erc3643
-                    .connect(owner)
-                    .initializeERC3643Regulatory(ZeroAddress, ZeroAddress)
-
-                expect(await erc3643.identityRegistry()).to.equal(ZeroAddress)
-                expect(await erc3643.compliance()).to.equal(ZeroAddress)
             })
         })
     })
@@ -1554,14 +1178,8 @@ describe('ERC3643 Token', function () {
                     await erc3643
                         .connect(owner)
                         .initializeERC3643Metadata(
-                            tokenOnchainIDAddress,
+                        
                             version
-                        )
-                    await erc3643
-                        .connect(owner)
-                        .initializeERC3643Regulatory(
-                            identityRegistryAddress,
-                            complianceAddress
                         )
 
                     // Get controller and capped interfaces
@@ -1574,10 +1192,6 @@ describe('ERC3643 Token', function () {
                         'IERC203643Capped',
                         proxyAddress
                     )) as IERC203643Capped
-
-                    // Setup identity registry to allow alice and bob BEFORE minting
-                    await identityRegistryMock.setIsVerified(aliceAddress, true)
-                    await identityRegistryMock.setIsVerified(bobAddress, true)
 
                     // Initialize cap before minting
                     await erc3643Capped
@@ -4446,4 +4060,17 @@ describe('ERC3643 Token', function () {
             })
         })
     })
+
+    // ====================================================================
+    // COMPLIANCE MODULE
+    // ====================================================================
+
+    // ====================================================================
+    // COMPLIANCE MAX BALANCE FEATURE
+    // ====================================================================
+
+    // ====================================================================
+    // COMPLIANCE DAY MONTH LIMIT FEATURE
+    // ====================================================================
+
 })

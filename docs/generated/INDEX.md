@@ -11,7 +11,6 @@
 - [factory/globalisbepause](factory/globalisbepause.md)
 - [factory/proxyfactory](factory/proxyfactory.md)
 - [hashtimestamp](hashtimestamp.md)
-- [identity](identity.md)
 - [identity/didregistry](identity/didregistry.md)
 - [identity/didregistry/interfaces](identity/didregistry/interfaces.md)
 - [identity/ens/ensregistry](identity/ens/ensregistry.md)
