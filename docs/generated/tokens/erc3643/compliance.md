@@ -42,9 +42,9 @@ _Restricted to compliance role._
 
 #### Parameters
 
-| Name      | Type | Description                                                                        |
-| --------- | ---- | ---------------------------------------------------------------------------------- |
-| \_enabled | bool | True to enable, false to disable. Requirements: - Caller must have COMPLIANCE_ROLE |
+| Name      | Type | Description                                                                                                      |
+| --------- | ---- | ---------------------------------------------------------------------------------------------------------------- |
+| \_enabled | bool | True to enable, false to disable. Requirements: - Caller must have COMPLIANCE_ROLE - Contract must not be paused |
 
 ### setDailyMonthLimitsEnabled
 
@@ -58,9 +58,9 @@ _Restricted to compliance role._
 
 #### Parameters
 
-| Name      | Type | Description                                                                        |
-| --------- | ---- | ---------------------------------------------------------------------------------- |
-| \_enabled | bool | True to enable, false to disable. Requirements: - Caller must have COMPLIANCE_ROLE |
+| Name      | Type | Description                                                                                                      |
+| --------- | ---- | ---------------------------------------------------------------------------------------------------------------- |
+| \_enabled | bool | True to enable, false to disable. Requirements: - Caller must have COMPLIANCE_ROLE - Contract must not be paused |
 
 ### isMaxBalanceEnabled
 
@@ -445,6 +445,62 @@ _Should be called once during contract setup._
 | ------------------------- | ---- | -------------------------------------------- |
 | \_maxBalanceEnabled       | bool | Enable/disable MaxBalance feature.           |
 | \_dailyMonthLimitsEnabled | bool | Enable/disable Daily/Monthly Limits feature. |
+
+### setMaxBalanceEnabled
+
+```solidity
+function setMaxBalanceEnabled(bool _enabled) external
+```
+
+Enables or disables the MaxBalance feature.
+
+#### Parameters
+
+| Name      | Type | Description                       |
+| --------- | ---- | --------------------------------- |
+| \_enabled | bool | True to enable, false to disable. |
+
+### setDailyMonthLimitsEnabled
+
+```solidity
+function setDailyMonthLimitsEnabled(bool _enabled) external
+```
+
+Enables or disables the Daily/Monthly Limits feature.
+
+#### Parameters
+
+| Name      | Type | Description                       |
+| --------- | ---- | --------------------------------- |
+| \_enabled | bool | True to enable, false to disable. |
+
+### isMaxBalanceEnabled
+
+```solidity
+function isMaxBalanceEnabled() external view returns (bool)
+```
+
+Returns true if MaxBalance feature is enabled.
+
+#### Return Values
+
+| Name | Type | Description                       |
+| ---- | ---- | --------------------------------- |
+| [0]  | bool | True if enabled, false otherwise. |
+
+### isDailyMonthLimitsEnabled
+
+```solidity
+function isDailyMonthLimitsEnabled() external view returns (bool)
+```
+
+Returns true if Daily/Monthly Limits feature is enabled.
+
+#### Return Values
+
+| Name | Type | Description                       |
+| ---- | ---- | --------------------------------- |
+| [0]  | bool | True if enabled, false otherwise. |
 
 ### canTransfer
 

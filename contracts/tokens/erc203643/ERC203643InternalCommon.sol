@@ -83,7 +83,7 @@ abstract contract ERC203643InternalCommon is
         if (_hasRole(_COMPLIANCE_ROLE, msg.sender)) {
             require(
                 _canTransfer(_from, _to, _amount),
-                "ERC3643: mint violates compliance rules"
+                'ERC3643: mint violates compliance rules'
             );
             _created(_to, _amount);
         }
@@ -147,7 +147,7 @@ abstract contract ERC203643InternalCommon is
         if (_hasRole(_COMPLIANCE_ROLE, msg.sender)) {
             require(
                 _canTransfer(_from, _to, _amount),
-                "ERC3643: transfer violates compliance rules"
+                'ERC3643: transfer violates compliance rules'
             );
             _transferred(_from, _to, _amount);
         }
@@ -160,17 +160,20 @@ abstract contract ERC203643InternalCommon is
             _unfreezeIf3643Mode(_from, _amount);
         } else {
             // Normal transfer: enforce freeze checks (ERC-3643 mode only)
-            require(!_isFrozen(_from), IERC3643Freeze.SenderIsFrozen(_from));
-            require(!_isFrozen(_to), IERC3643Freeze.RecipientIsFrozen(_to));
+            if (_isFrozen(_from)) {
+                revert IERC3643Freeze.SenderIsFrozen(_from);
+            }
+            if (_isFrozen(_to)) {
+                revert IERC3643Freeze.RecipientIsFrozen(_to);
+            }
             uint256 freeBalance = _calculateFreeBalance(_from);
-            require(
-                freeBalance >= _amount,
-                IERC3643Freeze.InsufficientFreeBalance(
+            if (freeBalance < _amount) {
+                revert IERC3643Freeze.InsufficientFreeBalance(
                     _from,
                     _amount,
                     freeBalance
-                )
-            );
+                );
+            }
         }
     }
 

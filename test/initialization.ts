@@ -45,7 +45,7 @@ import {
     ERC3643RecoveryFacet,
     ERC3643ComplianceFacet,
     ERC3643ComplianceMaxBalanceFacet,
-    ERC3643ComplianceDMLimFacet
+    ERC3643ComplianceDMLimFacet,
 } from '../typechain-types'
 import {
     DEFAULT_ADMIN_ROLE,
@@ -86,7 +86,7 @@ import {
     ERC3643_RECOVERY_RESOLVER_KEY,
     ERC3643_COMPLIANCE_RESOLVER_KEY,
     ERC3643_COMPLIANCE_MAXBALANCE_RESOLVER_KEY,
-    ERC3643_COMPLIANCE_DMLIM_RESOLVER_KEY
+    ERC3643_COMPLIANCE_DMLIM_RESOLVER_KEY,
 } from './constants'
 import { getEvent } from '../scripts/utils/getEvent'
 import { getIsbeFactory } from '../scripts/utils/getIsbeFactory'
@@ -375,8 +375,9 @@ export async function deployGovernance(
         erc3643Freeze: useCaseDeployment.erc3643Freeze,
         erc3643Recovery: useCaseDeployment.erc3643Recovery,
         erc3643Compliance: useCaseDeployment.erc3643Compliance,
-        erc3643ComplianceMaxBalance: useCaseDeployment.erc3643ComplianceMaxBalance,
-        erc3643ComplianceDMLim: useCaseDeployment.erc3643ComplianceDMLim
+        erc3643ComplianceMaxBalance:
+            useCaseDeployment.erc3643ComplianceMaxBalance,
+        erc3643ComplianceDMLim: useCaseDeployment.erc3643ComplianceDMLim,
     }
 }
 
@@ -973,9 +974,8 @@ export async function deployERC3643UseCasesFacets(
         'ERC3643ComplianceFacet'
     )
 
-    const ERC3643ComplianceMaxBalanceFacetFactory = await ethers.getContractFactory(
-        'ERC3643ComplianceMaxBalanceFacet'
-    )
+    const ERC3643ComplianceMaxBalanceFacetFactory =
+        await ethers.getContractFactory('ERC3643ComplianceMaxBalanceFacet')
 
     const ERC3643ComplianceDMLimFacetFactory = await ethers.getContractFactory(
         'ERC3643ComplianceDMLimFacet'
@@ -1027,11 +1027,12 @@ export async function deployERC3643UseCasesFacets(
         ERC3643ComplianceFacetFactory
     )
 
-    const erc3643ComplianceMaxBalanceFacet = await deployBusinessLogicFromFactory(
-        ERC3643_COMPLIANCE_MAXBALANCE_RESOLVER_KEY,
-        ERC3643ComplianceMaxBalanceFacetFactory
-    )
-    
+    const erc3643ComplianceMaxBalanceFacet =
+        await deployBusinessLogicFromFactory(
+            ERC3643_COMPLIANCE_MAXBALANCE_RESOLVER_KEY,
+            ERC3643ComplianceMaxBalanceFacetFactory
+        )
+
     const erc3643ComplianceDMLimFacet = await deployBusinessLogicFromFactory(
         ERC3643_COMPLIANCE_DMLIM_RESOLVER_KEY,
         ERC3643ComplianceDMLimFacetFactory
@@ -1075,7 +1076,7 @@ export async function deployERC3643UseCasesFacets(
         {
             businessId: ERC3643_COMPLIANCE_DMLIM_RESOLVER_KEY,
             version: 1,
-        }
+        },
     ])
 
     const tx = await isbeFactory.deployUseCase(
@@ -1113,9 +1114,10 @@ export async function deployERC3643UseCasesFacets(
     const erc3643Compliance = ERC3643ComplianceFacetFactory.attach(
         proxy
     ) as ERC3643ComplianceFacet
-    const erc3643ComplianceMaxBalance = ERC3643ComplianceMaxBalanceFacetFactory.attach(
-        proxy
-    ) as ERC3643ComplianceMaxBalanceFacet
+    const erc3643ComplianceMaxBalance =
+        ERC3643ComplianceMaxBalanceFacetFactory.attach(
+            proxy
+        ) as ERC3643ComplianceMaxBalanceFacet
     const erc3643ComplianceDMLim = ERC3643ComplianceDMLimFacetFactory.attach(
         proxy
     ) as ERC3643ComplianceDMLimFacet
@@ -1145,6 +1147,6 @@ export async function deployERC3643UseCasesFacets(
         erc3643RecoveryFacet,
         erc3643ComplianceFacet,
         erc3643ComplianceMaxBalanceFacet,
-        erc3643ComplianceDMLimFacet
+        erc3643ComplianceDMLimFacet,
     }
 }

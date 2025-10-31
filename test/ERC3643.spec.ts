@@ -1140,8 +1140,7 @@ describe('ERC3643 Token', function () {
         // when ERC3643 is initialized
         // --------------------------------------------------------------------
         describe('when Mode ERC3643', () => {
-
-            describe('when Mode compliance is not active',() => {
+            describe('when Mode compliance is not active', () => {
                 const totalBalance = 1000n
                 const frozenAmount = 400n
                 const freeBalance = totalBalance - frozenAmount // 600n
@@ -1174,7 +1173,11 @@ describe('ERC3643 Token', function () {
                         // Initialize ERC20
                         await erc20Facet
                             .connect(owner)
-                            .initializeErc20(tokenName, tokenSymbol, tokenDecimals)
+                            .initializeErc20(
+                                tokenName,
+                                tokenSymbol,
+                                tokenDecimals
+                            )
 
                         // Initialize ERC3643 modules
                         await erc3643
@@ -1256,9 +1259,9 @@ describe('ERC3643 Token', function () {
                         expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
                             transferAmount
                         )
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            totalBalance - transferAmount
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(totalBalance - transferAmount)
                     })
 
                     it('GIVEN frozen tokens WHEN forceTransfer exceeds free balance THEN auto-unfreezes and emits TokensUnfrozen', async () => {
@@ -1327,9 +1330,9 @@ describe('ERC3643 Token', function () {
                         expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
                             totalBalance
                         )
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            0n
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(0n)
                         expect(
                             await erc3643.getFrozenTokens(aliceAddress)
                         ).to.equal(0n)
@@ -1342,12 +1345,17 @@ describe('ERC3643 Token', function () {
                                 .forceTransfer(aliceAddress, bobAddress, 0n)
                         )
                             .to.emit(erc3643Controller, 'ForceTransfer')
-                            .withArgs(ownerAddress, aliceAddress, bobAddress, 0n)
+                            .withArgs(
+                                ownerAddress,
+                                aliceAddress,
+                                bobAddress,
+                                0n
+                            )
                             .and.to.not.emit(erc3643, 'TokensUnfrozen')
 
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            totalBalance
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(totalBalance)
                     })
 
                     it('GIVEN insufficient total balance WHEN forceTransfer THEN reverts', async () => {
@@ -1434,9 +1442,9 @@ describe('ERC3643 Token', function () {
                             .and.to.emit(erc20Facet, 'Transfer')
                             .withArgs(aliceAddress, ZeroAddress, burnAmount)
 
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            totalBalance - burnAmount
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(totalBalance - burnAmount)
                         expect(await erc20Facet.totalSupply()).to.equal(
                             initialSupply - burnAmount
                         )
@@ -1463,9 +1471,9 @@ describe('ERC3643 Token', function () {
                             .and.to.emit(erc20Facet, 'Transfer')
                             .withArgs(aliceAddress, ZeroAddress, burnAmount)
 
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            totalBalance - burnAmount
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(totalBalance - burnAmount)
                         expect(
                             await erc3643.getFrozenTokens(aliceAddress)
                         ).to.equal(frozenAmount - expectedUnfreeze)
@@ -1487,9 +1495,9 @@ describe('ERC3643 Token', function () {
                             .and.to.emit(erc3643Controller, 'ForceBurn')
                             .withArgs(ownerAddress, aliceAddress, totalBalance)
 
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            0n
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(0n)
                         expect(
                             await erc3643.getFrozenTokens(aliceAddress)
                         ).to.equal(0n)
@@ -1505,9 +1513,9 @@ describe('ERC3643 Token', function () {
                             .withArgs(ownerAddress, aliceAddress, 0n)
                             .and.to.not.emit(erc3643, 'TokensUnfrozen')
 
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            totalBalance
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(totalBalance)
                     })
 
                     it('GIVEN insufficient total balance WHEN forceBurn THEN reverts', async () => {
@@ -1535,9 +1543,9 @@ describe('ERC3643 Token', function () {
                             .to.emit(erc3643Controller, 'ForceBurn')
                             .withArgs(ownerAddress, aliceAddress, burnAmount)
 
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            totalBalance - burnAmount
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(totalBalance - burnAmount)
                     })
                 })
 
@@ -1584,7 +1592,10 @@ describe('ERC3643 Token', function () {
                         await expect(
                             erc3643Controller
                                 .connect(owner)
-                                .batchForceBurn([aliceAddress, bobAddress], [100n])
+                                .batchForceBurn(
+                                    [aliceAddress, bobAddress],
+                                    [100n]
+                                )
                         ).to.be.revertedWithCustomError(
                             erc20Facet,
                             'NotSameLengthArray'
@@ -1599,9 +1610,9 @@ describe('ERC3643 Token', function () {
                             .connect(owner)
                             .batchForceBurn([], [])
 
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            initialBalance
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(initialBalance)
                     })
 
                     it('GIVEN valid batch within free balance WHEN batchForceBurn THEN succeeds and emits multiple ForceBurn events', async () => {
@@ -1640,12 +1651,12 @@ describe('ERC3643 Token', function () {
                             .withArgs(charlieAddress, ZeroAddress, burnAmount2)
 
                         // Verify balances
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            aliceInitialBalance - burnAmount1
-                        )
-                        expect(await erc20Facet.balanceOf(charlieAddress)).to.equal(
-                            charlieInitialBalance - burnAmount2
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(aliceInitialBalance - burnAmount1)
+                        expect(
+                            await erc20Facet.balanceOf(charlieAddress)
+                        ).to.equal(charlieInitialBalance - burnAmount2)
 
                         // Verify total supply decreased
                         expect(await erc20Facet.totalSupply()).to.equal(
@@ -1700,18 +1711,20 @@ describe('ERC3643 Token', function () {
                         // Verify frozen tokens updated correctly
                         expect(
                             await erc3643.getFrozenTokens(aliceAddress)
-                        ).to.equal(BigInt(frozenAmountStr) - aliceExpectedUnfreeze)
+                        ).to.equal(
+                            BigInt(frozenAmountStr) - aliceExpectedUnfreeze
+                        )
                         expect(
                             await erc3643.getFrozenTokens(charlieAddress)
                         ).to.equal(BigInt(frozenAmountStr))
 
                         // Verify balances
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            BigInt(totalBalanceStr) - aliceBurnAmount
-                        )
-                        expect(await erc20Facet.balanceOf(charlieAddress)).to.equal(
-                            BigInt(totalBalanceStr) - charlieBurnAmount
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(BigInt(totalBalanceStr) - aliceBurnAmount)
+                        expect(
+                            await erc20Facet.balanceOf(charlieAddress)
+                        ).to.equal(BigInt(totalBalanceStr) - charlieBurnAmount)
                     })
 
                     it('GIVEN insufficient total balance in one address WHEN batchForceBurn THEN reverts entire batch', async () => {
@@ -1729,12 +1742,12 @@ describe('ERC3643 Token', function () {
                         ).to.be.reverted
 
                         // Verify no tokens were burned (atomic operation)
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            BigInt(totalBalanceStr)
-                        )
-                        expect(await erc20Facet.balanceOf(charlieAddress)).to.equal(
-                            BigInt(totalBalanceStr)
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(BigInt(totalBalanceStr))
+                        expect(
+                            await erc20Facet.balanceOf(charlieAddress)
+                        ).to.equal(BigInt(totalBalanceStr))
                     })
 
                     it('GIVEN addresses are frozen WHEN batchForceBurn THEN succeeds (ignores address freeze)', async () => {
@@ -1763,12 +1776,12 @@ describe('ERC3643 Token', function () {
                             .to.emit(erc3643Controller, 'ForceBurn')
                             .withArgs(ownerAddress, charlieAddress, burnAmount2)
 
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            BigInt(totalBalanceStr) - burnAmount1
-                        )
-                        expect(await erc20Facet.balanceOf(charlieAddress)).to.equal(
-                            BigInt(totalBalanceStr) - burnAmount2
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(BigInt(totalBalanceStr) - burnAmount1)
+                        expect(
+                            await erc20Facet.balanceOf(charlieAddress)
+                        ).to.equal(BigInt(totalBalanceStr) - burnAmount2)
                     })
 
                     it('GIVEN large batch WHEN batchForceBurn THEN succeeds (gas test)', async () => {
@@ -1783,7 +1796,9 @@ describe('ERC3643 Token', function () {
                             const address = await signer.getAddress()
                             addresses.push(address)
                             amounts.push(50n)
-                            await erc3643Capped.connect(owner).mint(address, 200n)
+                            await erc3643Capped
+                                .connect(owner)
+                                .mint(address, 200n)
                         }
 
                         const initialSupply = await erc20Facet.totalSupply()
@@ -1899,9 +1914,9 @@ describe('ERC3643 Token', function () {
                             .connect(owner)
                             .batchForceTransfer([], [], [])
 
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            initialBalance
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(initialBalance)
                     })
 
                     it('GIVEN valid batch within free balance WHEN batchForceTransfer THEN succeeds and emits multiple ForceTransfer events', async () => {
@@ -1942,21 +1957,25 @@ describe('ERC3643 Token', function () {
 
                         await expect(tx)
                             .to.emit(erc20Facet, 'Transfer')
-                            .withArgs(charlieAddress, davidAddress, transferAmount2)
+                            .withArgs(
+                                charlieAddress,
+                                davidAddress,
+                                transferAmount2
+                            )
 
                         // Verify balances
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            BigInt(totalBalanceStr) - transferAmount1
-                        )
-                        expect(await erc20Facet.balanceOf(charlieAddress)).to.equal(
-                            BigInt(totalBalanceStr) - transferAmount2
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(BigInt(totalBalanceStr) - transferAmount1)
+                        expect(
+                            await erc20Facet.balanceOf(charlieAddress)
+                        ).to.equal(BigInt(totalBalanceStr) - transferAmount2)
                         expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
                             transferAmount1
                         )
-                        expect(await erc20Facet.balanceOf(davidAddress)).to.equal(
-                            transferAmount2
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(davidAddress)
+                        ).to.equal(transferAmount2)
                     })
 
                     it('GIVEN frozen tokens WHEN batchForceTransfer exceeds free balance THEN auto-unfreezes and emits TokensUnfrozen', async () => {
@@ -2007,24 +2026,30 @@ describe('ERC3643 Token', function () {
                         // Verify frozen tokens updated correctly
                         expect(
                             await erc3643.getFrozenTokens(aliceAddress)
-                        ).to.equal(BigInt(frozenAmountStr) - aliceExpectedUnfreeze)
+                        ).to.equal(
+                            BigInt(frozenAmountStr) - aliceExpectedUnfreeze
+                        )
                         expect(
                             await erc3643.getFrozenTokens(charlieAddress)
                         ).to.equal(BigInt(frozenAmountStr))
 
                         // Verify balances
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(
                             BigInt(totalBalanceStr) - aliceTransferAmount
                         )
-                        expect(await erc20Facet.balanceOf(charlieAddress)).to.equal(
+                        expect(
+                            await erc20Facet.balanceOf(charlieAddress)
+                        ).to.equal(
                             BigInt(totalBalanceStr) - charlieTransferAmount
                         )
                         expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
                             aliceTransferAmount
                         )
-                        expect(await erc20Facet.balanceOf(davidAddress)).to.equal(
-                            charlieTransferAmount
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(davidAddress)
+                        ).to.equal(charlieTransferAmount)
                     })
 
                     it('GIVEN insufficient total balance in one address WHEN batchForceTransfer THEN reverts entire batch', async () => {
@@ -2042,16 +2067,18 @@ describe('ERC3643 Token', function () {
                         ).to.be.reverted
 
                         // Verify no transfers occurred (atomic operation)
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            BigInt(totalBalanceStr)
-                        )
-                        expect(await erc20Facet.balanceOf(charlieAddress)).to.equal(
-                            BigInt(totalBalanceStr)
-                        )
-                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(0n)
-                        expect(await erc20Facet.balanceOf(davidAddress)).to.equal(
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(BigInt(totalBalanceStr))
+                        expect(
+                            await erc20Facet.balanceOf(charlieAddress)
+                        ).to.equal(BigInt(totalBalanceStr))
+                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
                             0n
                         )
+                        expect(
+                            await erc20Facet.balanceOf(davidAddress)
+                        ).to.equal(0n)
                     })
 
                     it('GIVEN sender is frozen WHEN batchForceTransfer THEN succeeds (ignores sender freeze)', async () => {
@@ -2094,9 +2121,9 @@ describe('ERC3643 Token', function () {
                         expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
                             transferAmount1
                         )
-                        expect(await erc20Facet.balanceOf(davidAddress)).to.equal(
-                            transferAmount2
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(davidAddress)
+                        ).to.equal(transferAmount2)
                     })
 
                     it('GIVEN recipient is frozen WHEN batchForceTransfer THEN succeeds (ignores recipient freeze)', async () => {
@@ -2139,9 +2166,9 @@ describe('ERC3643 Token', function () {
                         expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
                             transferAmount1
                         )
-                        expect(await erc20Facet.balanceOf(davidAddress)).to.equal(
-                            transferAmount2
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(davidAddress)
+                        ).to.equal(transferAmount2)
                     })
 
                     it('GIVEN large batch WHEN batchForceTransfer THEN succeeds (gas test)', async () => {
@@ -2153,8 +2180,12 @@ describe('ERC3643 Token', function () {
                         const amounts: bigint[] = []
 
                         for (let i = 0; i < batchSize; i++) {
-                            const fromSigner = signers[5 + i] as unknown as Signer
-                            const toSigner = signers[10 + i] as unknown as Signer
+                            const fromSigner = signers[
+                                5 + i
+                            ] as unknown as Signer
+                            const toSigner = signers[
+                                10 + i
+                            ] as unknown as Signer
                             const fromAddress = await fromSigner.getAddress()
                             const toAddress = await toSigner.getAddress()
 
@@ -2168,7 +2199,11 @@ describe('ERC3643 Token', function () {
 
                         await erc3643Controller
                             .connect(owner)
-                            .batchForceTransfer(fromAddresses, toAddresses, amounts)
+                            .batchForceTransfer(
+                                fromAddresses,
+                                toAddresses,
+                                amounts
+                            )
 
                         // Verify each transfer
                         for (let i = 0; i < batchSize; i++) {
@@ -2185,99 +2220,102 @@ describe('ERC3643 Token', function () {
                         const amount1 = 100n
                         const amount2 = 150n
 
-                        await erc3643Controller.connect(owner).batchForceTransfer(
-                            [aliceAddress, charlieAddress],
-                            [bobAddress, bobAddress], // Same recipient
-                            [amount1, amount2]
-                        )
+                        await erc3643Controller
+                            .connect(owner)
+                            .batchForceTransfer(
+                                [aliceAddress, charlieAddress],
+                                [bobAddress, bobAddress], // Same recipient
+                                [amount1, amount2]
+                            )
 
                         // Bob should receive both amounts
                         expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
                             amount1 + amount2
                         )
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            BigInt(totalBalanceStr) - amount1
-                        )
-                        expect(await erc20Facet.balanceOf(charlieAddress)).to.equal(
-                            BigInt(totalBalanceStr) - amount2
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(BigInt(totalBalanceStr) - amount1)
+                        expect(
+                            await erc20Facet.balanceOf(charlieAddress)
+                        ).to.equal(BigInt(totalBalanceStr) - amount2)
                     })
 
                     it('GIVEN same sender multiple times WHEN batchForceTransfer THEN deducts amounts correctly', async () => {
                         const amount1 = 100n
                         const amount2 = 150n
 
-                        await erc3643Controller.connect(owner).batchForceTransfer(
-                            [aliceAddress, aliceAddress], // Same sender
-                            [bobAddress, davidAddress],
-                            [amount1, amount2]
-                        )
+                        await erc3643Controller
+                            .connect(owner)
+                            .batchForceTransfer(
+                                [aliceAddress, aliceAddress], // Same sender
+                                [bobAddress, davidAddress],
+                                [amount1, amount2]
+                            )
 
                         // Alice should lose both amounts
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            BigInt(totalBalanceStr) - amount1 - amount2
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(BigInt(totalBalanceStr) - amount1 - amount2)
                         expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
                             amount1
                         )
-                        expect(await erc20Facet.balanceOf(davidAddress)).to.equal(
-                            amount2
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(davidAddress)
+                        ).to.equal(amount2)
                     })
                 })
             })
 
             /**
              * NOTA ARQUITECTURAL: Controller y Compliance Mode
-             * 
+             *
              * ANÁLISIS DE COMPORTAMIENTO:
-             * Las operaciones del Controller (forceTransfer, forceBurn, batch operations) están diseñadas 
+             * Las operaciones del Controller (forceTransfer, forceBurn, batch operations) están diseñadas
              * para SALTARSE (bypass) las restricciones de compliance por diseño arquitectural.
-             * 
+             *
              * RAZÓN TÉCNICA:
-             * En ERC203643InternalCommon.sol, las validaciones de compliance solo se ejecutan si 
+             * En ERC203643InternalCommon.sol, las validaciones de compliance solo se ejecutan si
              * msg.sender tiene COMPLIANCE_ROLE:
-             * 
+             *
              *   if (_hasRole(_COMPLIANCE_ROLE, msg.sender)) {
              *       _canTransfer(_from, _to, _amount);
              *       _transferred(_from, _to, _amount);
              *   }
-             * 
+             *
              * El Controller solo tiene CONTROLLER_ROLE, NO tiene COMPLIANCE_ROLE.
              * Por lo tanto, las operaciones forzadas SIEMPRE ignoran:
              *   - MaxBalance limits
              *   - DayMonthLimits restrictions
              *   - Cualquier otra feature de compliance
-             * 
+             *
              * IMPLICACIÓN:
              * El comportamiento del Controller es IDÉNTICO tanto si compliance está activo como si no.
              * Los tests en "when Mode compliance is not active" (línea 1144) ya cubren completamente
              * todo el comportamiento del Controller.
-             * 
+             *
              * OPCIONES DE IMPLEMENTACIÓN:
-             * 
+             *
              * OPCIÓN 1 (Recomendada): Eliminar estos describe blocks vacíos
              *   - El Controller bypass compliance por diseño
              *   - No hay comportamiento diferencial que testear
              *   - Los tests existentes ya cubren todo
-             * 
+             *
              * OPCIÓN 2 (Exhaustiva): Implementar tests que demuestren explícitamente el bypass
              *   - Tests que verifiquen que forceTransfer IGNORA MaxBalance incluso cuando está habilitado
              *   - Tests que verifiquen que forceTransfer IGNORA DayMonthLimits incluso cuando está habilitado
              *   - Tests que verifiquen que forceBurn siempre funciona sin restricciones de compliance
              *   - Ventaja: Documentación explícita del comportamiento de bypass en los tests
              *   - Desventaja: Tests redundantes que validan el mismo comportamiento ya cubierto
-             * 
-             * DECISIÓN PENDIENTE: Revisar con superiores para determinar si se requiere 
-             * documentación explícita del bypass mediante tests (Opción 2) o si la 
+             *
+             * DECISIÓN PENDIENTE: Revisar con superiores para determinar si se requiere
+             * documentación explícita del bypass mediante tests (Opción 2) o si la
              * documentación en comentarios es suficiente (Opción 1).
              */
-            describe('when Mode compliance is active',() => {
+            describe('when Mode compliance is active', () => {
                 //** Reserved for future compliance-related tests involving the Controller module */
-                describe('when one compliance feature is enabled',() => {
-                })
+                describe('when one compliance feature is enabled', () => {})
 
-                describe('when multiple compliance features are enabled',() => {
+                describe('when multiple compliance features are enabled', () => {
                     //** Probar escenarios donde el compliance de un feature se pasa y el de otro no, y viceversa */
                 })
             })
@@ -2298,7 +2336,7 @@ describe('ERC3643 Token', function () {
         // when ERC3643 is initialized
         // --------------------------------------------------------------------
         describe('when Mode ERC3643', () => {
-            describe('when Mode compliance is not active',() => {
+            describe('when Mode compliance is not active', () => {
                 let erc3643Capped: IERC203643Capped
                 let bob: Signer
                 let bobAddress: string
@@ -2322,7 +2360,11 @@ describe('ERC3643 Token', function () {
                         // Initialize ERC20
                         await erc20Facet
                             .connect(owner)
-                            .initializeErc20(tokenName, tokenSymbol, tokenDecimals)
+                            .initializeErc20(
+                                tokenName,
+                                tokenSymbol,
+                                tokenDecimals
+                            )
 
                         // Initialize ERC3643 modules
                         await erc3643
@@ -2344,7 +2386,9 @@ describe('ERC3643 Token', function () {
                 describe('initializeCap', () => {
                     it('GIVEN cap not initialized WHEN initializeCap THEN succeeds and emits CapSet', async () => {
                         await expect(
-                            erc3643Capped.connect(owner).initializeCap(initialCap)
+                            erc3643Capped
+                                .connect(owner)
+                                .initializeCap(initialCap)
                         )
                             .to.emit(erc3643Capped, 'CapSet')
                             .withArgs(ownerAddress, initialCap)
@@ -2353,16 +2397,21 @@ describe('ERC3643 Token', function () {
                     })
 
                     it('GIVEN cap already initialized WHEN initializeCap again THEN reverts', async () => {
-                        await erc3643Capped.connect(owner).initializeCap(initialCap)
+                        await erc3643Capped
+                            .connect(owner)
+                            .initializeCap(initialCap)
 
                         await expect(
-                            erc3643Capped.connect(owner).initializeCap(initialCap)
+                            erc3643Capped
+                                .connect(owner)
+                                .initializeCap(initialCap)
                         ).to.be.reverted
                     })
 
                     it('GIVEN zero cap WHEN initializeCap THEN reverts', async () => {
-                        await expect(erc3643Capped.connect(owner).initializeCap(0n))
-                            .to.be.reverted
+                        await expect(
+                            erc3643Capped.connect(owner).initializeCap(0n)
+                        ).to.be.reverted
                     })
                 })
 
@@ -2386,7 +2435,9 @@ describe('ERC3643 Token', function () {
                             .revokeRole(MINTER_ROLE, ownerAddress)
 
                         await expect(
-                            erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
+                            erc3643Capped
+                                .connect(owner)
+                                .mint(aliceAddress, 1000n)
                         ).to.be.reverted
                     })
 
@@ -2397,7 +2448,9 @@ describe('ERC3643 Token', function () {
                         await pauseFacet.connect(owner).pause()
 
                         await expect(
-                            erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
+                            erc3643Capped
+                                .connect(owner)
+                                .mint(aliceAddress, 1000n)
                         ).to.be.reverted
                     })
 
@@ -2412,10 +2465,12 @@ describe('ERC3643 Token', function () {
                             .to.emit(erc20Facet, 'Transfer')
                             .withArgs(ZeroAddress, aliceAddress, mintAmount)
 
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(mintAmount)
+                        expect(await erc20Facet.totalSupply()).to.equal(
                             mintAmount
                         )
-                        expect(await erc20Facet.totalSupply()).to.equal(mintAmount)
                     })
 
                     it('GIVEN minting exceeds cap WHEN mint THEN reverts', async () => {
@@ -2459,7 +2514,9 @@ describe('ERC3643 Token', function () {
                             .to.emit(erc20Facet, 'Transfer')
                             .withArgs(ZeroAddress, bobAddress, secondMint)
 
-                        expect(await erc20Facet.totalSupply()).to.equal(initialCap)
+                        expect(await erc20Facet.totalSupply()).to.equal(
+                            initialCap
+                        )
                     })
                 })
 
@@ -2537,7 +2594,11 @@ describe('ERC3643 Token', function () {
                     })
 
                     it('GIVEN valid batch WHEN batchMint THEN succeeds and emits multiple Transfer events', async () => {
-                        const addresses = [aliceAddress, bobAddress, charlieAddress]
+                        const addresses = [
+                            aliceAddress,
+                            bobAddress,
+                            charlieAddress,
+                        ]
                         const amounts = [100n, 200n, 300n]
 
                         const tx = await erc3643Capped
@@ -2556,15 +2617,15 @@ describe('ERC3643 Token', function () {
                             .to.emit(erc20Facet, 'Transfer')
                             .withArgs(ZeroAddress, charlieAddress, amounts[2])
 
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            amounts[0]
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(amounts[0])
                         expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
                             amounts[1]
                         )
-                        expect(await erc20Facet.balanceOf(charlieAddress)).to.equal(
-                            amounts[2]
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(charlieAddress)
+                        ).to.equal(amounts[2])
                         expect(await erc20Facet.totalSupply()).to.equal(600n)
                     })
 
@@ -2618,9 +2679,9 @@ describe('ERC3643 Token', function () {
                             )
 
                         // Alice should receive both amounts: 100 + 200 = 300
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            300n
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(300n)
                     })
 
                     it('GIVEN zero amount WHEN batchMint THEN succeeds and emits Transfer', async () => {
@@ -2632,14 +2693,16 @@ describe('ERC3643 Token', function () {
                             .to.emit(erc20Facet, 'Transfer')
                             .withArgs(ZeroAddress, aliceAddress, 0n)
 
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            0n
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(0n)
                     })
 
                     it('GIVEN partial batch within cap WHEN batchMint THEN succeeds', async () => {
                         // First mint some tokens
-                        await erc3643Capped.connect(owner).mint(aliceAddress, 3000n)
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(aliceAddress, 3000n)
 
                         // Now batch mint more (total will be 3000 + 2000 + 3000 = 8000 < 10000)
                         const addresses = [bobAddress, charlieAddress]
@@ -2679,8 +2742,9 @@ describe('ERC3643 Token', function () {
                             .connect(owner)
                             .revokeRole(CAP_ROLE, ownerAddress)
 
-                        await expect(erc3643Capped.connect(owner).setCap(20000n)).to
-                            .be.reverted
+                        await expect(
+                            erc3643Capped.connect(owner).setCap(20000n)
+                        ).to.be.reverted
                     })
 
                     it('GIVEN new cap >= current supply WHEN setCap THEN succeeds and emits CapSet', async () => {
@@ -2689,7 +2753,9 @@ describe('ERC3643 Token', function () {
 
                         expect(newCap).to.be.greaterThan(currentSupply)
 
-                        await expect(erc3643Capped.connect(owner).setCap(newCap))
+                        await expect(
+                            erc3643Capped.connect(owner).setCap(newCap)
+                        )
                             .to.emit(erc3643Capped, 'CapSet')
                             .withArgs(ownerAddress, newCap)
 
@@ -2714,12 +2780,14 @@ describe('ERC3643 Token', function () {
                             .to.emit(erc3643Capped, 'CapSet')
                             .withArgs(ownerAddress, currentSupply)
 
-                        expect(await erc3643Capped.cap()).to.equal(currentSupply)
+                        expect(await erc3643Capped.cap()).to.equal(
+                            currentSupply
+                        )
                     })
 
                     it('GIVEN zero cap WHEN setCap THEN reverts', async () => {
-                        await expect(erc3643Capped.connect(owner).setCap(0n)).to.be
-                            .reverted
+                        await expect(erc3643Capped.connect(owner).setCap(0n)).to
+                            .be.reverted
                     })
 
                     it('GIVEN cap increased WHEN mint up to new cap THEN succeeds', async () => {
@@ -2757,7 +2825,9 @@ describe('ERC3643 Token', function () {
 
                     describe('cap', () => {
                         it('GIVEN cap initialized WHEN cap() THEN returns correct value', async () => {
-                            expect(await erc3643Capped.cap()).to.equal(initialCap)
+                            expect(await erc3643Capped.cap()).to.equal(
+                                initialCap
+                            )
                         })
 
                         it('GIVEN cap updated WHEN cap() THEN returns new value', async () => {
@@ -2806,7 +2876,11 @@ describe('ERC3643 Token', function () {
                         // Initialize ERC20
                         await erc20Facet
                             .connect(owner)
-                            .initializeErc20(tokenName, tokenSymbol, tokenDecimals)
+                            .initializeErc20(
+                                tokenName,
+                                tokenSymbol,
+                                tokenDecimals
+                            )
 
                         // Initialize ERC3643 Metadata
                         await erc3643
@@ -2835,7 +2909,9 @@ describe('ERC3643 Token', function () {
                         )) as ERC3643ComplianceDMLimFacet
 
                         // Initialize cap
-                        await erc3643Capped.connect(owner).initializeCap(initialCap)
+                        await erc3643Capped
+                            .connect(owner)
+                            .initializeCap(initialCap)
                     }
                     await loadFixture(fixture)
                 })
@@ -2937,7 +3013,11 @@ describe('ERC3643 Token', function () {
 
                         it('GIVEN MaxBalance enabled WHEN batchMint all within limits THEN succeeds', async () => {
                             const amounts = [2000n, 3000n, 4000n]
-                            const recipients = [aliceAddress, bobAddress, aliceAddress]
+                            const recipients = [
+                                aliceAddress,
+                                bobAddress,
+                                aliceAddress,
+                            ]
 
                             // Note: alice will receive 2000 + 4000 = 6000 which exceeds 5000
                             // This should fail
@@ -2967,9 +3047,9 @@ describe('ERC3643 Token', function () {
                             expect(
                                 await erc20Facet.balanceOf(aliceAddress)
                             ).to.equal(3000n)
-                            expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
-                                3000n
-                            )
+                            expect(
+                                await erc20Facet.balanceOf(bobAddress)
+                            ).to.equal(3000n)
                         })
                     })
 
@@ -3025,9 +3105,9 @@ describe('ERC3643 Token', function () {
                             expect(
                                 await erc20Facet.balanceOf(aliceAddress)
                             ).to.equal(5000n)
-                            expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
-                                4000n
-                            )
+                            expect(
+                                await erc20Facet.balanceOf(bobAddress)
+                            ).to.equal(4000n)
                         })
                     })
                 })
@@ -3069,9 +3149,9 @@ describe('ERC3643 Token', function () {
                             .to.emit(erc20Facet, 'Transfer')
                             .withArgs(ZeroAddress, aliceAddress, mintAmount)
 
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            mintAmount
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(mintAmount)
                     })
 
                     it('GIVEN both features enabled WHEN mint exceeds maxBalance THEN reverts (MaxBalance enforced)', async () => {
@@ -3095,9 +3175,9 @@ describe('ERC3643 Token', function () {
                             .to.emit(erc20Facet, 'Transfer')
                             .withArgs(ZeroAddress, aliceAddress, mintAmount)
 
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            maxBalanceLimit
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(maxBalanceLimit)
                     })
 
                     it('GIVEN both features enabled WHEN sequential mints exceed maxBalance THEN second mint reverts', async () => {
@@ -3113,9 +3193,9 @@ describe('ERC3643 Token', function () {
                                 .mint(aliceAddress, 3000n)
                         ).to.be.reverted
 
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            3000n
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(3000n)
                     })
 
                     it('GIVEN both features enabled WHEN sequential mints stay within maxBalance THEN both succeed', async () => {
@@ -3133,14 +3213,18 @@ describe('ERC3643 Token', function () {
                             .to.emit(erc20Facet, 'Transfer')
                             .withArgs(ZeroAddress, aliceAddress, 3000n)
 
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            5000n
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(5000n)
                     })
 
                     it('GIVEN both features enabled WHEN batchMint with one recipient exceeding maxBalance THEN reverts entire batch', async () => {
                         const amounts = [2000n, 3000n, 2000n]
-                        const recipients = [aliceAddress, bobAddress, aliceAddress]
+                        const recipients = [
+                            aliceAddress,
+                            bobAddress,
+                            aliceAddress,
+                        ]
 
                         // alice would receive 2000 + 2000 = 4000 < 5000 ✓
                         // bob would receive 3000 < 5000 ✓
@@ -3151,9 +3235,9 @@ describe('ERC3643 Token', function () {
                                 .batchMint(recipients, amounts)
                         ).to.not.be.reverted
 
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            4000n
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(4000n)
                         expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
                             3000n
                         )
@@ -3161,7 +3245,11 @@ describe('ERC3643 Token', function () {
 
                     it('GIVEN both features enabled WHEN batchMint causes maxBalance violation THEN reverts', async () => {
                         const amounts = [3000n, 2000n, 3000n]
-                        const recipients = [aliceAddress, bobAddress, aliceAddress]
+                        const recipients = [
+                            aliceAddress,
+                            bobAddress,
+                            aliceAddress,
+                        ]
 
                         // alice would receive 3000 + 3000 = 6000 > 5000 ✗
                         await expect(
@@ -3191,9 +3279,9 @@ describe('ERC3643 Token', function () {
                                 .batchMint(recipients, amounts)
                         ).to.not.be.reverted
 
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            2000n
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(2000n)
                         expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
                             3000n
                         )
@@ -3210,8 +3298,7 @@ describe('ERC3643 Token', function () {
     // PRIMITIVES MODULE
     // ====================================================================
     describe('ERC3643 Primitives', () => {
-
-        describe('when Mode compliance is not active',() => {
+        describe('when Mode compliance is not active', () => {
             // --------------------------------------------------------------------
             // Burn Operations Restriction in ERC3643 Mode
             // --------------------------------------------------------------------
@@ -3229,7 +3316,11 @@ describe('ERC3643 Token', function () {
                         // Initialize ERC20
                         await erc20Facet
                             .connect(owner)
-                            .initializeErc20(tokenName, tokenSymbol, tokenDecimals)
+                            .initializeErc20(
+                                tokenName,
+                                tokenSymbol,
+                                tokenDecimals
+                            )
 
                         // Initialize ERC3643 modules (this puts us in ERC3643 mode)
                         await erc3643
@@ -3246,7 +3337,9 @@ describe('ERC3643 Token', function () {
                         await erc3643Capped.connect(owner).initializeCap(10000n)
 
                         // Mint tokens to alice
-                        await erc3643Capped.connect(owner).mint(aliceAddress, 5000n)
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(aliceAddress, 5000n)
 
                         // Try to get ERC20Burnable interface
                         try {
@@ -3267,8 +3360,8 @@ describe('ERC3643 Token', function () {
                         expect(erc20Burnable).to.be.null
                     } else {
                         // Interface exists but should revert when called
-                        await expect(erc20Burnable.connect(alice).burn(100n)).to.be
-                            .reverted
+                        await expect(erc20Burnable.connect(alice).burn(100n)).to
+                            .be.reverted
                     }
                 })
 
@@ -3279,7 +3372,9 @@ describe('ERC3643 Token', function () {
                     } else {
                         // Interface exists but should revert when called
                         // First approve to test burnFrom
-                        await erc20Facet.connect(alice).approve(ownerAddress, 100n)
+                        await erc20Facet
+                            .connect(alice)
+                            .approve(ownerAddress, 100n)
 
                         await expect(
                             erc20Burnable
@@ -3306,7 +3401,11 @@ describe('ERC3643 Token', function () {
                         // Initialize ERC20
                         await erc20Facet
                             .connect(owner)
-                            .initializeErc20(tokenName, tokenSymbol, tokenDecimals)
+                            .initializeErc20(
+                                tokenName,
+                                tokenSymbol,
+                                tokenDecimals
+                            )
 
                         // Initialize ERC3643 modules (this puts us in ERC3643 mode)
                         await erc3643
@@ -3357,7 +3456,11 @@ describe('ERC3643 Token', function () {
                         // Initialize ERC20
                         await erc20Facet
                             .connect(owner)
-                            .initializeErc20(tokenName, tokenSymbol, tokenDecimals)
+                            .initializeErc20(
+                                tokenName,
+                                tokenSymbol,
+                                tokenDecimals
+                            )
 
                         // Initialize ERC3643 modules
                         await erc3643
@@ -3374,7 +3477,9 @@ describe('ERC3643 Token', function () {
                         await erc3643Capped.connect(owner).initializeCap(10000n)
 
                         // Mint tokens to alice
-                        await erc3643Capped.connect(owner).mint(aliceAddress, 5000n)
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(aliceAddress, 5000n)
                     }
                     await loadFixture(fixture)
                 })
@@ -3410,7 +3515,9 @@ describe('ERC3643 Token', function () {
 
                         // Try to transfer 1500 (exceeds free balance of 1000)
                         await expect(
-                            erc20Facet.connect(alice).transfer(bobAddress, 1500n)
+                            erc20Facet
+                                .connect(alice)
+                                .transfer(bobAddress, 1500n)
                         ).to.be.reverted
                     })
 
@@ -3421,9 +3528,9 @@ describe('ERC3643 Token', function () {
                             .to.emit(erc20Facet, 'Transfer')
                             .withArgs(aliceAddress, bobAddress, 100n)
 
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            4900n
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(4900n)
                         expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
                             100n
                         )
@@ -3437,14 +3544,16 @@ describe('ERC3643 Token', function () {
 
                         // Transfer 1500 (within free balance)
                         await expect(
-                            erc20Facet.connect(alice).transfer(bobAddress, 1500n)
+                            erc20Facet
+                                .connect(alice)
+                                .transfer(bobAddress, 1500n)
                         )
                             .to.emit(erc20Facet, 'Transfer')
                             .withArgs(aliceAddress, bobAddress, 1500n)
 
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            3500n
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(3500n)
                         expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
                             1500n
                         )
@@ -3452,7 +3561,9 @@ describe('ERC3643 Token', function () {
 
                     it('GIVEN ERC3643 mode WHEN transfer to zero address THEN reverts', async () => {
                         await expect(
-                            erc20Facet.connect(alice).transfer(ZeroAddress, 100n)
+                            erc20Facet
+                                .connect(alice)
+                                .transfer(ZeroAddress, 100n)
                         ).to.be.reverted
                     })
                 })
@@ -3517,9 +3628,9 @@ describe('ERC3643 Token', function () {
                             .to.emit(erc20Facet, 'Transfer')
                             .withArgs(aliceAddress, bobAddress, 100n)
 
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            4900n
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(4900n)
                         expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
                             100n
                         )
@@ -3540,9 +3651,9 @@ describe('ERC3643 Token', function () {
                             .to.emit(erc20Facet, 'Transfer')
                             .withArgs(aliceAddress, bobAddress, 1500n)
 
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            3500n
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(3500n)
                         expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
                             1500n
                         )
@@ -3584,9 +3695,9 @@ describe('ERC3643 Token', function () {
 
                         await erc20Facet.connect(alice).batchTransfer([], [])
 
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            initialBalance
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(initialBalance)
                     })
 
                     it('GIVEN ERC3643 mode WHEN sender is frozen THEN reverts', async () => {
@@ -3668,15 +3779,17 @@ describe('ERC3643 Token', function () {
                             .withArgs(aliceAddress, bobAddress, amount3)
 
                         // Verify balances
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(
                             aliceInitialBalance - amount1 - amount2 - amount3
                         )
                         expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
                             bobInitialBalance + amount1 + amount3
                         )
-                        expect(await erc20Facet.balanceOf(charlieAddress)).to.equal(
-                            amount2
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(charlieAddress)
+                        ).to.equal(amount2)
                     })
 
                     it('GIVEN ERC3643 mode WHEN batchTransfer with partial freeze THEN succeeds if within free balance', async () => {
@@ -3700,9 +3813,9 @@ describe('ERC3643 Token', function () {
                                 [amount1, amount2]
                             )
 
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            aliceInitialBalance - amount1 - amount2
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(aliceInitialBalance - amount1 - amount2)
                     })
 
                     it('GIVEN ERC3643 mode WHEN batchTransfer exceeds total balance THEN reverts', async () => {
@@ -3741,9 +3854,9 @@ describe('ERC3643 Token', function () {
                             (acc, val) => acc + val,
                             0n
                         )
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            aliceInitialBalance - totalTransferred
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(aliceInitialBalance - totalTransferred)
 
                         // Verify each recipient received their amount
                         for (let i = 0; i < batchSize; i++) {
@@ -3892,20 +4005,28 @@ describe('ERC3643 Token', function () {
                                     .transfer(bobAddress, transferAmount)
                             )
                                 .to.emit(erc20Facet, 'Transfer')
-                                .withArgs(aliceAddress, bobAddress, transferAmount)
+                                .withArgs(
+                                    aliceAddress,
+                                    bobAddress,
+                                    transferAmount
+                                )
 
-                            expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
-                                2000n
-                            )
+                            expect(
+                                await erc20Facet.balanceOf(bobAddress)
+                            ).to.equal(2000n)
                         })
 
                         it('GIVEN MaxBalance enabled WHEN transfer exceeds recipient limit THEN reverts', async () => {
                             // First transfer to bob (bob now has 3000)
-                            await erc20Facet.connect(alice).transfer(bobAddress, 3000n)
+                            await erc20Facet
+                                .connect(alice)
+                                .transfer(bobAddress, 3000n)
 
                             // Now try to transfer more (bob has 3000, receiving 3000 would be 6000, exceeds 5000 maxBalance)
                             await expect(
-                                erc20Facet.connect(alice).transfer(bobAddress, 3000n)
+                                erc20Facet
+                                    .connect(alice)
+                                    .transfer(bobAddress, 3000n)
                             ).to.be.reverted
                         })
 
@@ -3918,14 +4039,18 @@ describe('ERC3643 Token', function () {
                             await expect(
                                 erc20Facet
                                     .connect(owner)
-                                    .transferFrom(aliceAddress, bobAddress, 2000n)
+                                    .transferFrom(
+                                        aliceAddress,
+                                        bobAddress,
+                                        2000n
+                                    )
                             )
                                 .to.emit(erc20Facet, 'Transfer')
                                 .withArgs(aliceAddress, bobAddress, 2000n)
 
-                            expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
-                                2000n
-                            )
+                            expect(
+                                await erc20Facet.balanceOf(bobAddress)
+                            ).to.equal(2000n)
                         })
                     })
                 })
@@ -3966,9 +4091,9 @@ describe('ERC3643 Token', function () {
                                 .to.emit(erc20Facet, 'Transfer')
                                 .withArgs(ZeroAddress, bobAddress, mintAmount)
 
-                            expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
-                                2000n
-                            )
+                            expect(
+                                await erc20Facet.balanceOf(bobAddress)
+                            ).to.equal(2000n)
                         })
                     })
 
@@ -3982,11 +4107,15 @@ describe('ERC3643 Token', function () {
                                     .transfer(bobAddress, transferAmount)
                             )
                                 .to.emit(erc20Facet, 'Transfer')
-                                .withArgs(aliceAddress, bobAddress, transferAmount)
+                                .withArgs(
+                                    aliceAddress,
+                                    bobAddress,
+                                    transferAmount
+                                )
 
-                            expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
-                                800n
-                            )
+                            expect(
+                                await erc20Facet.balanceOf(bobAddress)
+                            ).to.equal(800n)
                         })
 
                         it('GIVEN DayMonthLimits enabled WHEN transfer exceeds daily limit THEN reverts', async () => {
@@ -4001,11 +4130,15 @@ describe('ERC3643 Token', function () {
 
                         it('GIVEN DayMonthLimits enabled WHEN sequential transfers exceed daily limit THEN second reverts', async () => {
                             // First transfer within limit
-                            await erc20Facet.connect(alice).transfer(bobAddress, 600n)
+                            await erc20Facet
+                                .connect(alice)
+                                .transfer(bobAddress, 600n)
 
                             // Second transfer would exceed daily limit (600 + 500 = 1100 > 1000)
                             await expect(
-                                erc20Facet.connect(alice).transfer(bobAddress, 500n)
+                                erc20Facet
+                                    .connect(alice)
+                                    .transfer(bobAddress, 500n)
                             ).to.be.reverted
                         })
 
@@ -4017,14 +4150,18 @@ describe('ERC3643 Token', function () {
                             await expect(
                                 erc20Facet
                                     .connect(owner)
-                                    .transferFrom(aliceAddress, bobAddress, 800n)
+                                    .transferFrom(
+                                        aliceAddress,
+                                        bobAddress,
+                                        800n
+                                    )
                             )
                                 .to.emit(erc20Facet, 'Transfer')
                                 .withArgs(aliceAddress, bobAddress, 800n)
 
-                            expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
-                                800n
-                            )
+                            expect(
+                                await erc20Facet.balanceOf(bobAddress)
+                            ).to.equal(800n)
                         })
                     })
                 })
@@ -4041,12 +4178,17 @@ describe('ERC3643 Token', function () {
                         // Initialize MaxBalance
                         await maxBalanceFacet
                             .connect(owner)
-                            .initializeERC3643ComplianceMaxBalance(maxBalanceLimit)
+                            .initializeERC3643ComplianceMaxBalance(
+                                maxBalanceLimit
+                            )
 
                         // Initialize DayMonthLimits
                         await complianceDMLimFacet
                             .connect(owner)
-                            .initializeERC3643ComplianceDMLim(dailyLimit, monthlyLimit)
+                            .initializeERC3643ComplianceDMLim(
+                                dailyLimit,
+                                monthlyLimit
+                            )
 
                         // Mint initial tokens to alice
                         await erc3643Capped
@@ -4068,9 +4210,9 @@ describe('ERC3643 Token', function () {
                             .to.emit(erc20Facet, 'Transfer')
                             .withArgs(ZeroAddress, aliceAddress, mintAmount)
 
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            4500n
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(4500n)
                     })
 
                     it('GIVEN both features enabled WHEN mint exceeds maxBalance THEN reverts (MaxBalance enforced)', async () => {
@@ -4096,7 +4238,9 @@ describe('ERC3643 Token', function () {
                             .to.emit(erc20Facet, 'Transfer')
                             .withArgs(aliceAddress, bobAddress, transferAmount)
 
-                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(800n)
+                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                            800n
+                        )
                     })
 
                     it('GIVEN both features enabled WHEN transfer exceeds daily limit THEN reverts (DayMonthLimits enforced)', async () => {
@@ -4111,7 +4255,9 @@ describe('ERC3643 Token', function () {
 
                     it('GIVEN both features enabled WHEN transfer exceeds recipient maxBalance THEN reverts (MaxBalance enforced)', async () => {
                         // First, mint to bob to get him close to limit
-                        await erc3643Capped.connect(owner).mint(bobAddress, 4500n)
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(bobAddress, 4500n)
 
                         // Now alice tries to send 800 (within daily limit) but would exceed bob's maxBalance
                         await expect(
@@ -4121,8 +4267,12 @@ describe('ERC3643 Token', function () {
 
                     it('GIVEN both features enabled WHEN sequential transfers THEN both limits checked', async () => {
                         // First transfer: 500 (within both limits)
-                        await erc20Facet.connect(alice).transfer(bobAddress, 500n)
-                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(500n)
+                        await erc20Facet
+                            .connect(alice)
+                            .transfer(bobAddress, 500n)
+                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                            500n
+                        )
 
                         // Second transfer: 400 (total daily = 900 < 1000, bob total = 900 < 5000)
                         await expect(
@@ -4131,7 +4281,9 @@ describe('ERC3643 Token', function () {
                             .to.emit(erc20Facet, 'Transfer')
                             .withArgs(aliceAddress, bobAddress, 400n)
 
-                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(900n)
+                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                            900n
+                        )
 
                         // Third transfer: 200 would exceed daily limit (900 + 200 > 1000)
                         await expect(
@@ -4152,7 +4304,9 @@ describe('ERC3643 Token', function () {
                             .to.emit(erc20Facet, 'Transfer')
                             .withArgs(aliceAddress, bobAddress, 800n)
 
-                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(800n)
+                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                            800n
+                        )
                     })
 
                     it('GIVEN both features enabled WHEN batchTransfer within both limits THEN succeeds', async () => {
@@ -4171,10 +4325,12 @@ describe('ERC3643 Token', function () {
                                 )
                         ).to.not.be.reverted
 
-                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(300n)
-                        expect(await erc20Facet.balanceOf(charlieAddress)).to.equal(
-                            400n
+                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                            300n
                         )
+                        expect(
+                            await erc20Facet.balanceOf(charlieAddress)
+                        ).to.equal(400n)
                     })
 
                     it('GIVEN both features enabled WHEN batchTransfer exceeds daily limit THEN reverts', async () => {
@@ -4195,7 +4351,9 @@ describe('ERC3643 Token', function () {
 
                     it('GIVEN both features enabled WHEN batchTransfer exceeds recipient maxBalance THEN reverts', async () => {
                         // Give bob some tokens first
-                        await erc3643Capped.connect(owner).mint(bobAddress, 4000n)
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(bobAddress, 4000n)
 
                         // Try to send 1500 to bob (would exceed maxBalance)
                         await expect(
@@ -4207,13 +4365,12 @@ describe('ERC3643 Token', function () {
                 })
             })
         })
-
     })
     // ====================================================================
     // RECOVERY MODULE
     // ====================================================================
     describe('ERC3643 Recovery', () => {
-        describe('when Mode compliance is not active',() => {
+        describe('when Mode compliance is not active', () => {
             describe('when not initialized', () => {
                 it('GIVEN ERC3643 not initialized WHEN recoveryAddress THEN reverts', async () => {
                     const bobAddress = await (
@@ -4252,7 +4409,11 @@ describe('ERC3643 Token', function () {
                         // Initialize ERC20
                         await erc20Facet
                             .connect(owner)
-                            .initializeErc20(tokenName, tokenSymbol, tokenDecimals)
+                            .initializeErc20(
+                                tokenName,
+                                tokenSymbol,
+                                tokenDecimals
+                            )
 
                         // Initialize ERC3643 Metadata
                         await erc3643
@@ -4269,7 +4430,9 @@ describe('ERC3643 Token', function () {
                         await erc3643Capped.connect(owner).initializeCap(10000n)
 
                         // Mint tokens to alice using the capped interface
-                        await erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(aliceAddress, 1000n)
                     }
                     await loadFixture(fixture)
                 })
@@ -4323,7 +4486,10 @@ describe('ERC3643 Token', function () {
                             erc3643
                                 .connect(owner)
                                 .recoveryAddress(aliceAddress, ZeroAddress)
-                        ).to.be.revertedWithCustomError(erc3643, 'InvalidNewWallet')
+                        ).to.be.revertedWithCustomError(
+                            erc3643,
+                            'InvalidNewWallet'
+                        )
                     })
 
                     it('GIVEN same lost and new wallet WHEN recoveryAddress THEN reverts with SameWalletAddress', async () => {
@@ -4368,9 +4534,9 @@ describe('ERC3643 Token', function () {
                             .connect(owner)
                             .recoveryAddress(aliceAddress, bobAddress)
 
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            0n
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(0n)
                         expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
                             aliceBalance
                         )
@@ -4418,9 +4584,9 @@ describe('ERC3643 Token', function () {
                             .connect(owner)
                             .recoveryAddress(aliceAddress, bobAddress)
 
-                        expect(await erc3643.getFrozenTokens(bobAddress)).to.equal(
-                            frozenAmount
-                        )
+                        expect(
+                            await erc3643.getFrozenTokens(bobAddress)
+                        ).to.equal(frozenAmount)
                     })
 
                     it('GIVEN frozen address WHEN recoveryAddress THEN preserves freeze status on new wallet', async () => {
@@ -4458,9 +4624,9 @@ describe('ERC3643 Token', function () {
                             .connect(owner)
                             .recoveryAddress(aliceAddress, bobAddress)
 
-                        expect(await erc3643.getFrozenTokens(bobAddress)).to.equal(
-                            frozenAmount
-                        )
+                        expect(
+                            await erc3643.getFrozenTokens(bobAddress)
+                        ).to.equal(frozenAmount)
                         expect(await erc3643.isFrozen(bobAddress)).to.be.true
                     })
                 })
@@ -4535,9 +4701,9 @@ describe('ERC3643 Token', function () {
                         expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
                             totalBalance
                         )
-                        expect(await erc3643.getFrozenTokens(bobAddress)).to.equal(
-                            frozenAmount
-                        )
+                        expect(
+                            await erc3643.getFrozenTokens(bobAddress)
+                        ).to.equal(frozenAmount)
 
                         // Verify free balance calculation
                         const bobFreeBalance =
@@ -4568,10 +4734,12 @@ describe('ERC3643 Token', function () {
                             .connect(owner)
                             .recoveryAddress(bobAddress, daveAddress)
 
-                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(0n)
-                        expect(await erc20Facet.balanceOf(daveAddress)).to.equal(
-                            aliceBalance
+                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                            0n
                         )
+                        expect(
+                            await erc20Facet.balanceOf(daveAddress)
+                        ).to.equal(aliceBalance)
                     })
                 })
             })
@@ -4579,28 +4747,28 @@ describe('ERC3643 Token', function () {
         describe('when Mode compliance is active', () => {
             /**
              * NOTA ARQUITECTURAL: Recovery y Compliance Mode
-             * 
+             *
              * COMPORTAMIENTO:
              * Recovery RESPETA las reglas de compliance cuando el msg.sender tiene COMPLIANCE_ROLE.
-             * 
+             *
              * RAZÓN TÉCNICA:
-             * En ERC203643InternalCommon.sol, las validaciones de compliance se ejecutan 
+             * En ERC203643InternalCommon.sol, las validaciones de compliance se ejecutan
              * cuando msg.sender tiene COMPLIANCE_ROLE (línea 147):
-             * 
+             *
              *   if (_hasRole(_COMPLIANCE_ROLE, msg.sender)) {
              *       require(_canTransfer(_from, _to, _amount), "ERC3643: transfer violates compliance rules");
              *       _transferred(_from, _to, _amount);
              *   }
-             * 
+             *
              * Recovery usa _transfer() internamente, y si el msg.sender (normalmente el owner)
              * tiene COMPLIANCE_ROLE, entonces las validaciones de compliance se aplican.
-             * 
+             *
              * Recovery SÍ tiene bypass de freeze (líneas 155-158):
-             * 
+             *
              *   if (_hasRole(_CONTROLLER_ROLE, msg.sender) || _hasRole(_RECOVERY_ROLE, msg.sender)) {
              *       _unfreezeIf3643Mode(_from, _amount);
              *   }
-             * 
+             *
              * IMPLICACIÓN:
              * Los siguientes tests demuestran que Recovery:
              * 1. RESPETA las reglas de compliance (MaxBalance, DayMonthLimits, etc.)
@@ -4647,7 +4815,9 @@ describe('ERC3643 Token', function () {
                         .initializeErc20(tokenName, tokenSymbol, tokenDecimals)
 
                     // Initialize ERC3643 Metadata
-                    await erc3643.connect(owner).initializeERC3643Metadata(version)
+                    await erc3643
+                        .connect(owner)
+                        .initializeERC3643Metadata(version)
 
                     // Get interfaces
                     erc3643Capped = (await ethers.getContractAt(
@@ -4700,7 +4870,9 @@ describe('ERC3643 Token', function () {
 
                     it('GIVEN MaxBalance enabled WHEN recoveryAddress respects MaxBalance limit THEN succeeds', async () => {
                         // Bob has 500n (under limit)
-                        await erc3643Capped.connect(owner).mint(bobAddress, 500n)
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(bobAddress, 500n)
 
                         // Recovery transfers 2000n from alice to bob
                         // Bob would have 2500n total, under MaxBalance of 3000n
@@ -4718,14 +4890,16 @@ describe('ERC3643 Token', function () {
                         expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
                             2500n
                         )
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            0n
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(0n)
                     })
 
                     it('GIVEN MaxBalance enabled WHEN recoveryAddress would exceed recipient MaxBalance THEN reverts', async () => {
                         // Bob already has 2000n (under limit)
-                        await erc3643Capped.connect(owner).mint(bobAddress, 2000n)
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(bobAddress, 2000n)
 
                         // Recovery would transfer 2000n from alice to bob
                         // Bob would have 4000n total, exceeding MaxBalance of 3000n
@@ -4743,9 +4917,9 @@ describe('ERC3643 Token', function () {
                         expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
                             2000n
                         )
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            2000n
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(2000n)
                     })
                 })
 
@@ -4771,7 +4945,9 @@ describe('ERC3643 Token', function () {
                     it('GIVEN DayMonthLimits enabled WHEN recoveryAddress respects daily limit THEN succeeds', async () => {
                         // Alice starts with 2000n from beforeEach, but we need only 800n
                         // Transfer excess back to owner to have alice with 800n
-                        await erc20Facet.connect(alice).transfer(ownerAddress, 1200n)
+                        await erc20Facet
+                            .connect(alice)
+                            .transfer(ownerAddress, 1200n)
 
                         // Recovery transfers 800n from alice to bob
                         // This is under daily limit of 1000n
@@ -4786,8 +4962,12 @@ describe('ERC3643 Token', function () {
                             .withArgs(aliceAddress, bobAddress)
 
                         // Verify bob received all tokens
-                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(800n)
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(0n)
+                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                            800n
+                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(0n)
                     })
 
                     it('GIVEN DayMonthLimits enabled WHEN recoveryAddress exceeds daily limit THEN reverts', async () => {
@@ -4805,10 +4985,12 @@ describe('ERC3643 Token', function () {
                         )
 
                         // Verify no tokens were transferred
-                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(0n)
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            2000n
+                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                            0n
                         )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(2000n)
                     })
                 })
             })
@@ -4824,7 +5006,9 @@ describe('ERC3643 Token', function () {
                         // Initialize MaxBalance
                         await maxBalanceFacet
                             .connect(owner)
-                            .initializeERC3643ComplianceMaxBalance(maxBalanceLimit)
+                            .initializeERC3643ComplianceMaxBalance(
+                                maxBalanceLimit
+                            )
 
                         // Initialize DayMonthLimits
                         await dayMonthLimitsFacet
@@ -4843,7 +5027,9 @@ describe('ERC3643 Token', function () {
 
                     // Alice starts with 2000n, need only 800n
                     // Transfer excess back to owner
-                    await erc20Facet.connect(alice).transfer(ownerAddress, 1200n)
+                    await erc20Facet
+                        .connect(alice)
+                        .transfer(ownerAddress, 1200n)
 
                     // Recovery transfers 800n from alice to bob
                     // Bob would have 1300n (under MaxBalance of 3000n)
@@ -4859,8 +5045,12 @@ describe('ERC3643 Token', function () {
                         .withArgs(aliceAddress, bobAddress)
 
                     // Verify bob received all tokens
-                    expect(await erc20Facet.balanceOf(bobAddress)).to.equal(1300n)
-                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(0n)
+                    expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                        1300n
+                    )
+                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                        0n
+                    )
                 })
 
                 it('GIVEN both features enabled WHEN recoveryAddress violates MaxBalance THEN reverts', async () => {
@@ -4881,7 +5071,9 @@ describe('ERC3643 Token', function () {
                     )
 
                     // Verify no tokens were transferred
-                    expect(await erc20Facet.balanceOf(bobAddress)).to.equal(2000n)
+                    expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                        2000n
+                    )
                     expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
                         2000n
                     )
@@ -4906,7 +5098,9 @@ describe('ERC3643 Token', function () {
                     )
 
                     // Verify no tokens were transferred
-                    expect(await erc20Facet.balanceOf(bobAddress)).to.equal(500n)
+                    expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                        500n
+                    )
                     expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
                         2000n
                     )
@@ -4923,7 +5117,9 @@ describe('ERC3643 Token', function () {
 
                     // Alice starts with 2000n, need only 800n
                     // Transfer excess back to owner
-                    await erc20Facet.connect(alice).transfer(ownerAddress, 1200n)
+                    await erc20Facet
+                        .connect(alice)
+                        .transfer(ownerAddress, 1200n)
 
                     // Alice has 800n with 500n frozen
                     const frozenAmount = 500n
@@ -4945,8 +5141,12 @@ describe('ERC3643 Token', function () {
                         .withArgs(aliceAddress, bobAddress)
 
                     // Verify tokens transferred
-                    expect(await erc20Facet.balanceOf(bobAddress)).to.equal(1300n)
-                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(0n)
+                    expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                        1300n
+                    )
+                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                        0n
+                    )
 
                     // Verify frozen state was preserved
                     expect(await erc3643.getFrozenTokens(bobAddress)).to.equal(
@@ -5000,7 +5200,11 @@ describe('ERC3643 Token', function () {
                         // Initialize ERC20
                         await erc20Facet
                             .connect(owner)
-                            .initializeErc20(tokenName, tokenSymbol, tokenDecimals)
+                            .initializeErc20(
+                                tokenName,
+                                tokenSymbol,
+                                tokenDecimals
+                            )
 
                         // Initialize ERC3643 Metadata
                         await erc3643
@@ -5035,14 +5239,19 @@ describe('ERC3643 Token', function () {
                                 .connect(owner)
                                 .initializeERC3643Compliance(false, false)
                         )
-                            .to.emit(complianceFacet, 'ComplianceFeatureToggled')
+                            .to.emit(
+                                complianceFacet,
+                                'ComplianceFeatureToggled'
+                            )
                             .withArgs('MaxBalance', false)
-                            .to.emit(complianceFacet, 'ComplianceFeatureToggled')
+                            .to.emit(
+                                complianceFacet,
+                                'ComplianceFeatureToggled'
+                            )
                             .withArgs('DailyMonthLimits', false)
 
-                        expect(
-                            await complianceFacet.isMaxBalanceEnabled()
-                        ).to.be.false
+                        expect(await complianceFacet.isMaxBalanceEnabled()).to
+                            .be.false
                         expect(
                             await complianceFacet.isDailyMonthLimitsEnabled()
                         ).to.be.false
@@ -5054,12 +5263,14 @@ describe('ERC3643 Token', function () {
                                 .connect(owner)
                                 .initializeERC3643Compliance(true, false)
                         )
-                            .to.emit(complianceFacet, 'ComplianceFeatureToggled')
+                            .to.emit(
+                                complianceFacet,
+                                'ComplianceFeatureToggled'
+                            )
                             .withArgs('MaxBalance', true)
 
-                        expect(
-                            await complianceFacet.isMaxBalanceEnabled()
-                        ).to.be.true
+                        expect(await complianceFacet.isMaxBalanceEnabled()).to
+                            .be.true
                         expect(
                             await complianceFacet.isDailyMonthLimitsEnabled()
                         ).to.be.false
@@ -5071,12 +5282,14 @@ describe('ERC3643 Token', function () {
                                 .connect(owner)
                                 .initializeERC3643Compliance(false, true)
                         )
-                            .to.emit(complianceFacet, 'ComplianceFeatureToggled')
+                            .to.emit(
+                                complianceFacet,
+                                'ComplianceFeatureToggled'
+                            )
                             .withArgs('DailyMonthLimits', true)
 
-                        expect(
-                            await complianceFacet.isMaxBalanceEnabled()
-                        ).to.be.false
+                        expect(await complianceFacet.isMaxBalanceEnabled()).to
+                            .be.false
                         expect(
                             await complianceFacet.isDailyMonthLimitsEnabled()
                         ).to.be.true
@@ -5088,14 +5301,19 @@ describe('ERC3643 Token', function () {
                                 .connect(owner)
                                 .initializeERC3643Compliance(true, true)
                         )
-                            .to.emit(complianceFacet, 'ComplianceFeatureToggled')
+                            .to.emit(
+                                complianceFacet,
+                                'ComplianceFeatureToggled'
+                            )
                             .withArgs('MaxBalance', true)
-                            .to.emit(complianceFacet, 'ComplianceFeatureToggled')
+                            .to.emit(
+                                complianceFacet,
+                                'ComplianceFeatureToggled'
+                            )
                             .withArgs('DailyMonthLimits', true)
 
-                        expect(
-                            await complianceFacet.isMaxBalanceEnabled()
-                        ).to.be.true
+                        expect(await complianceFacet.isMaxBalanceEnabled()).to
+                            .be.true
                         expect(
                             await complianceFacet.isDailyMonthLimitsEnabled()
                         ).to.be.true
@@ -5146,12 +5364,14 @@ describe('ERC3643 Token', function () {
                                 .connect(owner)
                                 .setMaxBalanceEnabled(true)
                         )
-                            .to.emit(complianceFacet, 'ComplianceFeatureToggled')
+                            .to.emit(
+                                complianceFacet,
+                                'ComplianceFeatureToggled'
+                            )
                             .withArgs('MaxBalance', true)
 
-                        expect(
-                            await complianceFacet.isMaxBalanceEnabled()
-                        ).to.be.true
+                        expect(await complianceFacet.isMaxBalanceEnabled()).to
+                            .be.true
                     })
 
                     it('GIVEN MaxBalance enabled WHEN setMaxBalanceEnabled to false THEN succeeds and emits event', async () => {
@@ -5164,12 +5384,14 @@ describe('ERC3643 Token', function () {
                                 .connect(owner)
                                 .setMaxBalanceEnabled(false)
                         )
-                            .to.emit(complianceFacet, 'ComplianceFeatureToggled')
+                            .to.emit(
+                                complianceFacet,
+                                'ComplianceFeatureToggled'
+                            )
                             .withArgs('MaxBalance', false)
 
-                        expect(
-                            await complianceFacet.isMaxBalanceEnabled()
-                        ).to.be.false
+                        expect(await complianceFacet.isMaxBalanceEnabled()).to
+                            .be.false
                     })
 
                     it('GIVEN MaxBalance disabled WHEN setMaxBalanceEnabled to false again THEN succeeds', async () => {
@@ -5178,12 +5400,14 @@ describe('ERC3643 Token', function () {
                                 .connect(owner)
                                 .setMaxBalanceEnabled(false)
                         )
-                            .to.emit(complianceFacet, 'ComplianceFeatureToggled')
+                            .to.emit(
+                                complianceFacet,
+                                'ComplianceFeatureToggled'
+                            )
                             .withArgs('MaxBalance', false)
 
-                        expect(
-                            await complianceFacet.isMaxBalanceEnabled()
-                        ).to.be.false
+                        expect(await complianceFacet.isMaxBalanceEnabled()).to
+                            .be.false
                     })
 
                     it('GIVEN MaxBalance enabled WHEN setMaxBalanceEnabled to true again THEN succeeds', async () => {
@@ -5196,12 +5420,14 @@ describe('ERC3643 Token', function () {
                                 .connect(owner)
                                 .setMaxBalanceEnabled(true)
                         )
-                            .to.emit(complianceFacet, 'ComplianceFeatureToggled')
+                            .to.emit(
+                                complianceFacet,
+                                'ComplianceFeatureToggled'
+                            )
                             .withArgs('MaxBalance', true)
 
-                        expect(
-                            await complianceFacet.isMaxBalanceEnabled()
-                        ).to.be.true
+                        expect(await complianceFacet.isMaxBalanceEnabled()).to
+                            .be.true
                     })
                 })
 
@@ -5237,7 +5463,10 @@ describe('ERC3643 Token', function () {
                                 .connect(owner)
                                 .setDailyMonthLimitsEnabled(true)
                         )
-                            .to.emit(complianceFacet, 'ComplianceFeatureToggled')
+                            .to.emit(
+                                complianceFacet,
+                                'ComplianceFeatureToggled'
+                            )
                             .withArgs('DailyMonthLimits', true)
 
                         expect(
@@ -5255,7 +5484,10 @@ describe('ERC3643 Token', function () {
                                 .connect(owner)
                                 .setDailyMonthLimitsEnabled(false)
                         )
-                            .to.emit(complianceFacet, 'ComplianceFeatureToggled')
+                            .to.emit(
+                                complianceFacet,
+                                'ComplianceFeatureToggled'
+                            )
                             .withArgs('DailyMonthLimits', false)
 
                         expect(
@@ -5269,7 +5501,10 @@ describe('ERC3643 Token', function () {
                                 .connect(owner)
                                 .setDailyMonthLimitsEnabled(false)
                         )
-                            .to.emit(complianceFacet, 'ComplianceFeatureToggled')
+                            .to.emit(
+                                complianceFacet,
+                                'ComplianceFeatureToggled'
+                            )
                             .withArgs('DailyMonthLimits', false)
 
                         expect(
@@ -5287,7 +5522,10 @@ describe('ERC3643 Token', function () {
                                 .connect(owner)
                                 .setDailyMonthLimitsEnabled(true)
                         )
-                            .to.emit(complianceFacet, 'ComplianceFeatureToggled')
+                            .to.emit(
+                                complianceFacet,
+                                'ComplianceFeatureToggled'
+                            )
                             .withArgs('DailyMonthLimits', true)
 
                         expect(
@@ -5305,9 +5543,8 @@ describe('ERC3643 Token', function () {
                             .connect(owner)
                             .initializeERC3643Compliance(false, false)
 
-                        expect(
-                            await complianceFacet.isMaxBalanceEnabled()
-                        ).to.be.false
+                        expect(await complianceFacet.isMaxBalanceEnabled()).to
+                            .be.false
                     })
 
                     it('GIVEN compliance initialized with MaxBalance enabled WHEN isMaxBalanceEnabled THEN returns true', async () => {
@@ -5315,9 +5552,8 @@ describe('ERC3643 Token', function () {
                             .connect(owner)
                             .initializeERC3643Compliance(true, false)
 
-                        expect(
-                            await complianceFacet.isMaxBalanceEnabled()
-                        ).to.be.true
+                        expect(await complianceFacet.isMaxBalanceEnabled()).to
+                            .be.true
                     })
 
                     it('GIVEN MaxBalance toggled multiple times WHEN isMaxBalanceEnabled THEN returns current state', async () => {
@@ -5325,23 +5561,20 @@ describe('ERC3643 Token', function () {
                             .connect(owner)
                             .initializeERC3643Compliance(false, false)
 
-                        expect(
-                            await complianceFacet.isMaxBalanceEnabled()
-                        ).to.be.false
+                        expect(await complianceFacet.isMaxBalanceEnabled()).to
+                            .be.false
 
                         await complianceFacet
                             .connect(owner)
                             .setMaxBalanceEnabled(true)
-                        expect(
-                            await complianceFacet.isMaxBalanceEnabled()
-                        ).to.be.true
+                        expect(await complianceFacet.isMaxBalanceEnabled()).to
+                            .be.true
 
                         await complianceFacet
                             .connect(owner)
                             .setMaxBalanceEnabled(false)
-                        expect(
-                            await complianceFacet.isMaxBalanceEnabled()
-                        ).to.be.false
+                        expect(await complianceFacet.isMaxBalanceEnabled()).to
+                            .be.false
                     })
                 })
 
@@ -5551,9 +5784,8 @@ describe('ERC3643 Token', function () {
                             .connect(owner)
                             .setDailyMonthLimitsEnabled(true)
 
-                        expect(
-                            await complianceFacet.isMaxBalanceEnabled()
-                        ).to.be.true
+                        expect(await complianceFacet.isMaxBalanceEnabled()).to
+                            .be.true
                         expect(
                             await complianceFacet.isDailyMonthLimitsEnabled()
                         ).to.be.true
@@ -5574,9 +5806,8 @@ describe('ERC3643 Token', function () {
                             .connect(owner)
                             .setDailyMonthLimitsEnabled(false)
 
-                        expect(
-                            await complianceFacet.isMaxBalanceEnabled()
-                        ).to.be.false
+                        expect(await complianceFacet.isMaxBalanceEnabled()).to
+                            .be.false
                         expect(
                             await complianceFacet.isDailyMonthLimitsEnabled()
                         ).to.be.false
@@ -5587,9 +5818,8 @@ describe('ERC3643 Token', function () {
                             .connect(owner)
                             .setMaxBalanceEnabled(true)
 
-                        expect(
-                            await complianceFacet.isMaxBalanceEnabled()
-                        ).to.be.true
+                        expect(await complianceFacet.isMaxBalanceEnabled()).to
+                            .be.true
                         expect(
                             await complianceFacet.isDailyMonthLimitsEnabled()
                         ).to.be.false
@@ -5598,9 +5828,8 @@ describe('ERC3643 Token', function () {
                             .connect(owner)
                             .setDailyMonthLimitsEnabled(true)
 
-                        expect(
-                            await complianceFacet.isMaxBalanceEnabled()
-                        ).to.be.true
+                        expect(await complianceFacet.isMaxBalanceEnabled()).to
+                            .be.true
                         expect(
                             await complianceFacet.isDailyMonthLimitsEnabled()
                         ).to.be.true
@@ -5609,9 +5838,8 @@ describe('ERC3643 Token', function () {
                             .connect(owner)
                             .setDailyMonthLimitsEnabled(false)
 
-                        expect(
-                            await complianceFacet.isMaxBalanceEnabled()
-                        ).to.be.true
+                        expect(await complianceFacet.isMaxBalanceEnabled()).to
+                            .be.true
                         expect(
                             await complianceFacet.isDailyMonthLimitsEnabled()
                         ).to.be.false
@@ -5622,9 +5850,8 @@ describe('ERC3643 Token', function () {
                             .connect(owner)
                             .setDailyMonthLimitsEnabled(true)
 
-                        expect(
-                            await complianceFacet.isMaxBalanceEnabled()
-                        ).to.be.false
+                        expect(await complianceFacet.isMaxBalanceEnabled()).to
+                            .be.false
                         expect(
                             await complianceFacet.isDailyMonthLimitsEnabled()
                         ).to.be.true
@@ -5633,9 +5860,8 @@ describe('ERC3643 Token', function () {
                             .connect(owner)
                             .setMaxBalanceEnabled(true)
 
-                        expect(
-                            await complianceFacet.isMaxBalanceEnabled()
-                        ).to.be.true
+                        expect(await complianceFacet.isMaxBalanceEnabled()).to
+                            .be.true
                         expect(
                             await complianceFacet.isDailyMonthLimitsEnabled()
                         ).to.be.true
@@ -5644,9 +5870,8 @@ describe('ERC3643 Token', function () {
                             .connect(owner)
                             .setMaxBalanceEnabled(false)
 
-                        expect(
-                            await complianceFacet.isMaxBalanceEnabled()
-                        ).to.be.false
+                        expect(await complianceFacet.isMaxBalanceEnabled()).to
+                            .be.false
                         expect(
                             await complianceFacet.isDailyMonthLimitsEnabled()
                         ).to.be.true
@@ -5670,9 +5895,8 @@ describe('ERC3643 Token', function () {
                             .connect(owner)
                             .setDailyMonthLimitsEnabled(false)
 
-                        expect(
-                            await complianceFacet.isMaxBalanceEnabled()
-                        ).to.be.true
+                        expect(await complianceFacet.isMaxBalanceEnabled()).to
+                            .be.true
                         expect(
                             await complianceFacet.isDailyMonthLimitsEnabled()
                         ).to.be.false
@@ -5711,7 +5935,11 @@ describe('ERC3643 Token', function () {
                         // Initialize ERC20
                         await erc20Facet
                             .connect(owner)
-                            .initializeErc20(tokenName, tokenSymbol, tokenDecimals)
+                            .initializeErc20(
+                                tokenName,
+                                tokenSymbol,
+                                tokenDecimals
+                            )
 
                         // Initialize ERC3643 Metadata
                         await erc3643
@@ -5735,7 +5963,9 @@ describe('ERC3643 Token', function () {
                         )) as IERC203643Capped
 
                         // Initialize cap
-                        await erc3643Capped.connect(owner).initializeCap(100000n)
+                        await erc3643Capped
+                            .connect(owner)
+                            .initializeCap(100000n)
 
                         // Initialize compliance parent (required before child modules)
                         await complianceFacet
@@ -5860,9 +6090,15 @@ describe('ERC3643 Token', function () {
                     })
 
                     it('GIVEN MaxBalance set WHEN setMaxBalance multiple times THEN last value persists', async () => {
-                        await maxBalanceFacet.connect(owner).setMaxBalance(15000n)
-                        await maxBalanceFacet.connect(owner).setMaxBalance(25000n)
-                        await maxBalanceFacet.connect(owner).setMaxBalance(30000n)
+                        await maxBalanceFacet
+                            .connect(owner)
+                            .setMaxBalance(15000n)
+                        await maxBalanceFacet
+                            .connect(owner)
+                            .setMaxBalance(25000n)
+                        await maxBalanceFacet
+                            .connect(owner)
+                            .setMaxBalance(30000n)
 
                         expect(await maxBalanceFacet.maxBalance()).to.equal(
                             30000n
@@ -6172,7 +6408,6 @@ describe('ERC3643 Token', function () {
                 })
             })
         })
-
     })
 
     // ====================================================================
@@ -6203,7 +6438,11 @@ describe('ERC3643 Token', function () {
                         // Initialize ERC20
                         await erc20Facet
                             .connect(owner)
-                            .initializeErc20(tokenName, tokenSymbol, tokenDecimals)
+                            .initializeErc20(
+                                tokenName,
+                                tokenSymbol,
+                                tokenDecimals
+                            )
 
                         // Initialize ERC3643 Metadata
                         await erc3643
@@ -6239,17 +6478,20 @@ describe('ERC3643 Token', function () {
                         await expect(
                             complianceDMLimFacet
                                 .connect(owner)
-                                .initializeERC3643ComplianceDMLim(dailyLimit, monthlyLimit)
+                                .initializeERC3643ComplianceDMLim(
+                                    dailyLimit,
+                                    monthlyLimit
+                                )
                         )
                             .to.emit(complianceDMLimFacet, 'DayMonthLimitsSet')
                             .withArgs(dailyLimit, monthlyLimit)
 
-                        expect(await complianceDMLimFacet.dailyLimit()).to.equal(
-                            dailyLimit
-                        )
-                        expect(await complianceDMLimFacet.monthlyLimit()).to.equal(
-                            monthlyLimit
-                        )
+                        expect(
+                            await complianceDMLimFacet.dailyLimit()
+                        ).to.equal(dailyLimit)
+                        expect(
+                            await complianceDMLimFacet.monthlyLimit()
+                        ).to.equal(monthlyLimit)
                     })
 
                     it('GIVEN DayMonthLimits not initialized WHEN initializeERC3643ComplianceDMLim with zero limits THEN succeeds', async () => {
@@ -6261,8 +6503,12 @@ describe('ERC3643 Token', function () {
                             .to.emit(complianceDMLimFacet, 'DayMonthLimitsSet')
                             .withArgs(0n, 0n)
 
-                        expect(await complianceDMLimFacet.dailyLimit()).to.equal(0n)
-                        expect(await complianceDMLimFacet.monthlyLimit()).to.equal(0n)
+                        expect(
+                            await complianceDMLimFacet.dailyLimit()
+                        ).to.equal(0n)
+                        expect(
+                            await complianceDMLimFacet.monthlyLimit()
+                        ).to.equal(0n)
                     })
 
                     it('GIVEN DayMonthLimits already initialized WHEN initializeERC3643ComplianceDMLim again THEN reverts', async () => {
@@ -6298,7 +6544,9 @@ describe('ERC3643 Token', function () {
                             .revokeRole(COMPLIANCE_ROLE, ownerAddress)
 
                         await expect(
-                            complianceDMLimFacet.connect(owner).setDailyLimit(2000n)
+                            complianceDMLimFacet
+                                .connect(owner)
+                                .setDailyLimit(2000n)
                         ).to.be.reverted
                     })
 
@@ -6315,17 +6563,21 @@ describe('ERC3643 Token', function () {
                             .to.emit(complianceDMLimFacet, 'DayMonthLimitsSet')
                             .withArgs(newDailyLimit, currentMonthlyLimit)
 
-                        expect(await complianceDMLimFacet.dailyLimit()).to.equal(
-                            newDailyLimit
-                        )
+                        expect(
+                            await complianceDMLimFacet.dailyLimit()
+                        ).to.equal(newDailyLimit)
                     })
 
                     it('GIVEN COMPLIANCE_ROLE WHEN setDailyLimit to zero THEN succeeds', async () => {
                         await expect(
-                            complianceDMLimFacet.connect(owner).setDailyLimit(0n)
+                            complianceDMLimFacet
+                                .connect(owner)
+                                .setDailyLimit(0n)
                         ).to.not.be.reverted
 
-                        expect(await complianceDMLimFacet.dailyLimit()).to.equal(0n)
+                        expect(
+                            await complianceDMLimFacet.dailyLimit()
+                        ).to.equal(0n)
                     })
 
                     it('GIVEN COMPLIANCE_ROLE WHEN setDailyLimit to very large value THEN succeeds', async () => {
@@ -6337,9 +6589,9 @@ describe('ERC3643 Token', function () {
                                 .setDailyLimit(largeLimit)
                         ).to.not.be.reverted
 
-                        expect(await complianceDMLimFacet.dailyLimit()).to.equal(
-                            largeLimit
-                        )
+                        expect(
+                            await complianceDMLimFacet.dailyLimit()
+                        ).to.equal(largeLimit)
                     })
                 })
 
@@ -6363,7 +6615,9 @@ describe('ERC3643 Token', function () {
                             .revokeRole(COMPLIANCE_ROLE, ownerAddress)
 
                         await expect(
-                            complianceDMLimFacet.connect(owner).setMonthlyLimit(10000n)
+                            complianceDMLimFacet
+                                .connect(owner)
+                                .setMonthlyLimit(10000n)
                         ).to.be.reverted
                     })
 
@@ -6380,17 +6634,21 @@ describe('ERC3643 Token', function () {
                             .to.emit(complianceDMLimFacet, 'DayMonthLimitsSet')
                             .withArgs(currentDailyLimit, newMonthlyLimit)
 
-                        expect(await complianceDMLimFacet.monthlyLimit()).to.equal(
-                            newMonthlyLimit
-                        )
+                        expect(
+                            await complianceDMLimFacet.monthlyLimit()
+                        ).to.equal(newMonthlyLimit)
                     })
 
                     it('GIVEN COMPLIANCE_ROLE WHEN setMonthlyLimit to zero THEN succeeds', async () => {
                         await expect(
-                            complianceDMLimFacet.connect(owner).setMonthlyLimit(0n)
+                            complianceDMLimFacet
+                                .connect(owner)
+                                .setMonthlyLimit(0n)
                         ).to.not.be.reverted
 
-                        expect(await complianceDMLimFacet.monthlyLimit()).to.equal(0n)
+                        expect(
+                            await complianceDMLimFacet.monthlyLimit()
+                        ).to.equal(0n)
                     })
 
                     it('GIVEN COMPLIANCE_ROLE WHEN setMonthlyLimit to very large value THEN succeeds', async () => {
@@ -6402,9 +6660,9 @@ describe('ERC3643 Token', function () {
                                 .setMonthlyLimit(largeLimit)
                         ).to.not.be.reverted
 
-                        expect(await complianceDMLimFacet.monthlyLimit()).to.equal(
-                            largeLimit
-                        )
+                        expect(
+                            await complianceDMLimFacet.monthlyLimit()
+                        ).to.equal(largeLimit)
                     })
                 })
 
@@ -6424,9 +6682,9 @@ describe('ERC3643 Token', function () {
 
                     describe('dailyLimit', () => {
                         it('GIVEN DayMonthLimits initialized WHEN dailyLimit THEN returns correct value', async () => {
-                            expect(await complianceDMLimFacet.dailyLimit()).to.equal(
-                                1000n
-                            )
+                            expect(
+                                await complianceDMLimFacet.dailyLimit()
+                            ).to.equal(1000n)
                         })
 
                         it('GIVEN daily limit updated WHEN dailyLimit THEN returns new value', async () => {
@@ -6434,9 +6692,9 @@ describe('ERC3643 Token', function () {
                                 .connect(owner)
                                 .setDailyLimit(2000n)
 
-                            expect(await complianceDMLimFacet.dailyLimit()).to.equal(
-                                2000n
-                            )
+                            expect(
+                                await complianceDMLimFacet.dailyLimit()
+                            ).to.equal(2000n)
                         })
                     })
 
@@ -6548,8 +6806,12 @@ describe('ERC3643 Token', function () {
                     })
 
                     it('GIVEN both limits set to zero WHEN any amount THEN complianceCheck returns false', async () => {
-                        await complianceDMLimFacet.connect(owner).setDailyLimit(0n)
-                        await complianceDMLimFacet.connect(owner).setMonthlyLimit(0n)
+                        await complianceDMLimFacet
+                            .connect(owner)
+                            .setDailyLimit(0n)
+                        await complianceDMLimFacet
+                            .connect(owner)
+                            .setMonthlyLimit(0n)
 
                         const isCompliant =
                             await complianceDMLimFacet.complianceCheckOnDayMonthLimits(
@@ -6613,9 +6875,9 @@ describe('ERC3643 Token', function () {
                             .setMonthlyLimit(10000n)
 
                         // Verify the limit was updated
-                        expect(await complianceDMLimFacet.monthlyLimit()).to.equal(
-                            10000n
-                        )
+                        expect(
+                            await complianceDMLimFacet.monthlyLimit()
+                        ).to.equal(10000n)
 
                         // Now 6000 should still pass with the new limit
                         isCompliant =
@@ -6687,6 +6949,5 @@ describe('ERC3643 Token', function () {
                 })
             })
         })
-    
     })
 })
