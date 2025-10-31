@@ -4576,14 +4576,384 @@ describe('ERC3643 Token', function () {
                 })
             })
         })
-        describe('when Mode compliance is active',() => {
-                //** Reserved for future compliance-related tests involving the Controller module */
-                describe('when one compliance feature is enabled',() => {
+        describe('when Mode compliance is active', () => {
+            /**
+             * NOTA ARQUITECTURAL: Recovery y Compliance Mode
+             * 
+             * COMPORTAMIENTO:
+             * Recovery RESPETA las reglas de compliance cuando el msg.sender tiene COMPLIANCE_ROLE.
+             * 
+             * RAZÓN TÉCNICA:
+             * En ERC203643InternalCommon.sol, las validaciones de compliance se ejecutan 
+             * cuando msg.sender tiene COMPLIANCE_ROLE (línea 147):
+             * 
+             *   if (_hasRole(_COMPLIANCE_ROLE, msg.sender)) {
+             *       require(_canTransfer(_from, _to, _amount), "ERC3643: transfer violates compliance rules");
+             *       _transferred(_from, _to, _amount);
+             *   }
+             * 
+             * Recovery usa _transfer() internamente, y si el msg.sender (normalmente el owner)
+             * tiene COMPLIANCE_ROLE, entonces las validaciones de compliance se aplican.
+             * 
+             * Recovery SÍ tiene bypass de freeze (líneas 155-158):
+             * 
+             *   if (_hasRole(_CONTROLLER_ROLE, msg.sender) || _hasRole(_RECOVERY_ROLE, msg.sender)) {
+             *       _unfreezeIf3643Mode(_from, _amount);
+             *   }
+             * 
+             * IMPLICACIÓN:
+             * Los siguientes tests demuestran que Recovery:
+             * 1. RESPETA las reglas de compliance (MaxBalance, DayMonthLimits, etc.)
+             * 2. BYPASEA las reglas de freeze (puede transferir tokens frozen)
+             */
+
+            let erc3643Capped: IERC203643Capped
+            let complianceFacet: ERC3643ComplianceFacet
+            let maxBalanceFacet: ERC3643ComplianceMaxBalanceFacet
+            let dayMonthLimitsFacet: ERC3643ComplianceDMLimFacet
+            let bob: Signer
+            let bobAddress: string
+
+            const maxBalanceLimit = 3000n
+            const dailyLimit = 1000n
+            const monthlyLimit = 5000n
+
+            beforeEach(async () => {
+                const fixture = async () => {
+                    const signers = await ethers.getSigners()
+                    bob = signers[2] as unknown as Signer
+                    bobAddress = await bob.getAddress()
+
+                    // Grant necessary roles
+                    await accessControlFacet
+                        .connect(owner)
+                        .grantRole(METADATA_ROLE, ownerAddress)
+                    await accessControlFacet
+                        .connect(owner)
+                        .grantRole(RECOVERY_ROLE, ownerAddress)
+                    await accessControlFacet
+                        .connect(owner)
+                        .grantRole(MINTER_ROLE, ownerAddress)
+                    await accessControlFacet
+                        .connect(owner)
+                        .grantRole(CAP_ROLE, ownerAddress)
+                    await accessControlFacet
+                        .connect(owner)
+                        .grantRole(COMPLIANCE_ROLE, ownerAddress)
+
+                    // Initialize ERC20
+                    await erc20Facet
+                        .connect(owner)
+                        .initializeErc20(tokenName, tokenSymbol, tokenDecimals)
+
+                    // Initialize ERC3643 Metadata
+                    await erc3643.connect(owner).initializeERC3643Metadata(version)
+
+                    // Get interfaces
+                    erc3643Capped = (await ethers.getContractAt(
+                        'IERC203643Capped',
+                        proxyAddress
+                    )) as IERC203643Capped
+
+                    complianceFacet = (await ethers.getContractAt(
+                        'ERC3643ComplianceFacet',
+                        proxyAddress
+                    )) as ERC3643ComplianceFacet
+
+                    maxBalanceFacet = (await ethers.getContractAt(
+                        'ERC3643ComplianceMaxBalanceFacet',
+                        proxyAddress
+                    )) as ERC3643ComplianceMaxBalanceFacet
+
+                    dayMonthLimitsFacet = (await ethers.getContractAt(
+                        'ERC3643ComplianceDMLimFacet',
+                        proxyAddress
+                    )) as ERC3643ComplianceDMLimFacet
+
+                    // Initialize cap
+                    await erc3643Capped.connect(owner).initializeCap(10000n)
+
+                    // Mint tokens to alice (2000n - amount that respects limits)
+                    await erc3643Capped.connect(owner).mint(aliceAddress, 2000n)
+                }
+                await loadFixture(fixture)
+            })
+
+            describe('when one compliance feature is enabled', () => {
+                describe('MaxBalance feature', () => {
+                    beforeEach(async () => {
+                        const fixture = async () => {
+                            // Initialize compliance with MaxBalance enabled
+                            await complianceFacet
+                                .connect(owner)
+                                .initializeERC3643Compliance(true, false)
+
+                            // Initialize MaxBalance
+                            await maxBalanceFacet
+                                .connect(owner)
+                                .initializeERC3643ComplianceMaxBalance(
+                                    maxBalanceLimit
+                                )
+                        }
+                        await loadFixture(fixture)
+                    })
+
+                    it('GIVEN MaxBalance enabled WHEN recoveryAddress respects MaxBalance limit THEN succeeds', async () => {
+                        // Bob has 500n (under limit)
+                        await erc3643Capped.connect(owner).mint(bobAddress, 500n)
+
+                        // Recovery transfers 2000n from alice to bob
+                        // Bob would have 2500n total, under MaxBalance of 3000n
+                        // Should succeed
+
+                        await expect(
+                            erc3643
+                                .connect(owner)
+                                .recoveryAddress(aliceAddress, bobAddress)
+                        )
+                            .to.emit(erc3643, 'RecoverySuccess')
+                            .withArgs(aliceAddress, bobAddress)
+
+                        // Verify bob received all tokens
+                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                            2500n
+                        )
+                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                            0n
+                        )
+                    })
+
+                    it('GIVEN MaxBalance enabled WHEN recoveryAddress would exceed recipient MaxBalance THEN reverts', async () => {
+                        // Bob already has 2000n (under limit)
+                        await erc3643Capped.connect(owner).mint(bobAddress, 2000n)
+
+                        // Recovery would transfer 2000n from alice to bob
+                        // Bob would have 4000n total, exceeding MaxBalance of 3000n
+                        // Should fail
+
+                        await expect(
+                            erc3643
+                                .connect(owner)
+                                .recoveryAddress(aliceAddress, bobAddress)
+                        ).to.be.revertedWith(
+                            'ERC3643: transfer violates compliance rules'
+                        )
+
+                        // Verify no tokens were transferred
+                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                            2000n
+                        )
+                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                            2000n
+                        )
+                    })
                 })
 
-                describe('when multiple compliance features are enabled',() => {
-                    //** Probar escenarios donde el compliance de un feature se pasa y el de otro no, y viceversa */
+                describe('DayMonthLimits feature', () => {
+                    beforeEach(async () => {
+                        const fixture = async () => {
+                            // Initialize compliance with DayMonthLimits enabled
+                            await complianceFacet
+                                .connect(owner)
+                                .initializeERC3643Compliance(false, true)
+
+                            // Initialize DayMonthLimits
+                            await dayMonthLimitsFacet
+                                .connect(owner)
+                                .initializeERC3643ComplianceDMLim(
+                                    dailyLimit,
+                                    monthlyLimit
+                                )
+                        }
+                        await loadFixture(fixture)
+                    })
+
+                    it('GIVEN DayMonthLimits enabled WHEN recoveryAddress respects daily limit THEN succeeds', async () => {
+                        // Alice starts with 2000n from beforeEach, but we need only 800n
+                        // Transfer excess back to owner to have alice with 800n
+                        await erc20Facet.connect(alice).transfer(ownerAddress, 1200n)
+
+                        // Recovery transfers 800n from alice to bob
+                        // This is under daily limit of 1000n
+                        // Should succeed
+
+                        await expect(
+                            erc3643
+                                .connect(owner)
+                                .recoveryAddress(aliceAddress, bobAddress)
+                        )
+                            .to.emit(erc3643, 'RecoverySuccess')
+                            .withArgs(aliceAddress, bobAddress)
+
+                        // Verify bob received all tokens
+                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(800n)
+                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(0n)
+                    })
+
+                    it('GIVEN DayMonthLimits enabled WHEN recoveryAddress exceeds daily limit THEN reverts', async () => {
+                        // Alice has 2000n (original setup)
+                        // Recovery would transfer 2000n from alice to bob
+                        // This exceeds daily limit of 1000n
+                        // Should fail
+
+                        await expect(
+                            erc3643
+                                .connect(owner)
+                                .recoveryAddress(aliceAddress, bobAddress)
+                        ).to.be.revertedWith(
+                            'ERC3643: transfer violates compliance rules'
+                        )
+
+                        // Verify no tokens were transferred
+                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(0n)
+                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                            2000n
+                        )
+                    })
                 })
+            })
+
+            describe('when multiple compliance features are enabled', () => {
+                beforeEach(async () => {
+                    const fixture = async () => {
+                        // Initialize compliance with both features enabled
+                        await complianceFacet
+                            .connect(owner)
+                            .initializeERC3643Compliance(true, true)
+
+                        // Initialize MaxBalance
+                        await maxBalanceFacet
+                            .connect(owner)
+                            .initializeERC3643ComplianceMaxBalance(maxBalanceLimit)
+
+                        // Initialize DayMonthLimits
+                        await dayMonthLimitsFacet
+                            .connect(owner)
+                            .initializeERC3643ComplianceDMLim(
+                                dailyLimit,
+                                monthlyLimit
+                            )
+                    }
+                    await loadFixture(fixture)
+                })
+
+                it('GIVEN both features enabled WHEN recoveryAddress respects all limits THEN succeeds', async () => {
+                    // Bob has 500n
+                    await erc3643Capped.connect(owner).mint(bobAddress, 500n)
+
+                    // Alice starts with 2000n, need only 800n
+                    // Transfer excess back to owner
+                    await erc20Facet.connect(alice).transfer(ownerAddress, 1200n)
+
+                    // Recovery transfers 800n from alice to bob
+                    // Bob would have 1300n (under MaxBalance of 3000n)
+                    // Transfer is 800n (under daily limit of 1000n)
+                    // Should succeed
+
+                    await expect(
+                        erc3643
+                            .connect(owner)
+                            .recoveryAddress(aliceAddress, bobAddress)
+                    )
+                        .to.emit(erc3643, 'RecoverySuccess')
+                        .withArgs(aliceAddress, bobAddress)
+
+                    // Verify bob received all tokens
+                    expect(await erc20Facet.balanceOf(bobAddress)).to.equal(1300n)
+                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(0n)
+                })
+
+                it('GIVEN both features enabled WHEN recoveryAddress violates MaxBalance THEN reverts', async () => {
+                    // Bob already has 2000n
+                    await erc3643Capped.connect(owner).mint(bobAddress, 2000n)
+
+                    // Alice has 2000n
+                    // Recovery would transfer 2000n from alice to bob
+                    // Bob would have 4000n total, exceeding MaxBalance of 3000n
+                    // Should fail (even though it's under daily limit)
+
+                    await expect(
+                        erc3643
+                            .connect(owner)
+                            .recoveryAddress(aliceAddress, bobAddress)
+                    ).to.be.revertedWith(
+                        'ERC3643: transfer violates compliance rules'
+                    )
+
+                    // Verify no tokens were transferred
+                    expect(await erc20Facet.balanceOf(bobAddress)).to.equal(2000n)
+                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                        2000n
+                    )
+                })
+
+                it('GIVEN both features enabled WHEN recoveryAddress violates DayMonthLimits THEN reverts', async () => {
+                    // Bob has 500n
+                    await erc3643Capped.connect(owner).mint(bobAddress, 500n)
+
+                    // Alice has 2000n (from beforeEach)
+                    // Recovery would transfer 2000n from alice to bob
+                    // Bob would have 2500n (under MaxBalance of 3000n)
+                    // But transfer is 2000n (exceeds daily limit of 1000n)
+                    // Should fail
+
+                    await expect(
+                        erc3643
+                            .connect(owner)
+                            .recoveryAddress(aliceAddress, bobAddress)
+                    ).to.be.revertedWith(
+                        'ERC3643: transfer violates compliance rules'
+                    )
+
+                    // Verify no tokens were transferred
+                    expect(await erc20Facet.balanceOf(bobAddress)).to.equal(500n)
+                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                        2000n
+                    )
+                })
+
+                it('GIVEN both features enabled with frozen state WHEN recoveryAddress respects compliance THEN bypasses freeze and preserves frozen state', async () => {
+                    // Grant freeze role
+                    await accessControlFacet
+                        .connect(owner)
+                        .grantRole(FREEZE_ROLE, ownerAddress)
+
+                    // Bob has 500n
+                    await erc3643Capped.connect(owner).mint(bobAddress, 500n)
+
+                    // Alice starts with 2000n, need only 800n
+                    // Transfer excess back to owner
+                    await erc20Facet.connect(alice).transfer(ownerAddress, 1200n)
+
+                    // Alice has 800n with 500n frozen
+                    const frozenAmount = 500n
+                    await erc3643
+                        .connect(owner)
+                        .freezePartialTokens(aliceAddress, frozenAmount)
+
+                    // Recovery transfers all 800n from alice to bob
+                    // Bob would have 1300n (under MaxBalance of 3000n)
+                    // Transfer is 800n (under daily limit of 1000n)
+                    // Should succeed and preserve frozen state
+
+                    await expect(
+                        erc3643
+                            .connect(owner)
+                            .recoveryAddress(aliceAddress, bobAddress)
+                    )
+                        .to.emit(erc3643, 'RecoverySuccess')
+                        .withArgs(aliceAddress, bobAddress)
+
+                    // Verify tokens transferred
+                    expect(await erc20Facet.balanceOf(bobAddress)).to.equal(1300n)
+                    expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(0n)
+
+                    // Verify frozen state was preserved
+                    expect(await erc3643.getFrozenTokens(bobAddress)).to.equal(
+                        frozenAmount
+                    )
+                })
+            })
         })
     })
 
