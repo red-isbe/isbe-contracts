@@ -10,9 +10,16 @@ import {
     extractCurve,
 } from '../scripts/genesisGenerator'
 import { HttpNetworkConfig } from 'hardhat/types'
-import { GovernanceConfig } from './deployment/types/DeploymentTypes'
+import {
+    DeployedBusinessLogic,
+    GovernanceConfig,
+} from './deployment/types/DeploymentTypes'
 import { SignatureProviderFactory } from './deployment/providers/SignatureProviderFactory'
 import { CleanGovernanceDeployer } from './deployment/deployers/CleanGovernanceDeployer'
+import { CleanBusinessLogicDeployer } from './deployment/deployers/CleanBusinessLogicDeployer'
+import { DeploymentConfig } from './deployment/config/DeploymentConfig'
+import { Signer } from 'ethers'
+import { CleanUseCaseDeployer } from './deployment/deployers/CleanUseCaseDeployer'
 
 const REGISTRY_FILENAME = 'isbe-contract-registry.json'
 
@@ -260,9 +267,42 @@ task(
 
         await validateGenesis(hre, gobernanceaddress)
 
-        console.log(
-            '✅ Genesis validation (Done).----------------------------------------------------------'
+        console.log(' deploy usecase facets......')
+
+        const signatureProvider = SignatureProviderFactory.create(hre)
+
+        const isbeAdmin: Signer = await signatureProvider.getSigner()
+        const isbeAdminAddress = await isbeAdmin.getAddress()
+        console.log(`ISBE Admin Address: ${isbeAdminAddress}`)
+
+        const businessLogicDeployer = new CleanBusinessLogicDeployer(
+            hre,
+            signatureProvider
         )
 
-        return registryFile
+        const config = DeploymentConfig.getDefaultConfig()
+
+        const governanceResult: DeployedBusinessLogic[] =
+            await businessLogicDeployer.deployAll(
+                config.businessLogics,
+                gobernanceaddress
+            )
+
+        console.log(' deploy usecase ......')
+
+        const useCaseDeployer = new CleanUseCaseDeployer(hre, signatureProvider)
+
+        const useCases = await useCaseDeployer.deployAll(
+            config.useCases,
+            gobernanceaddress,
+            governanceResult
+        )
+
+        console.log(
+            `✅ Use cases deployed successfully.   Total: ${useCases.length}----------------------------------------------------------`
+        )
+
+        console.log(
+            '✅ All alidations (Done).----------------------------------------------------------'
+        )
     })
