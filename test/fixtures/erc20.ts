@@ -17,6 +17,7 @@ import {
     IDidRegistry,
     IDidRegistry__factory,
     IIsbeFactory,
+    AccessControlDidFacet,
 } from '../../typechain-types'
 import {
     OWNABLE_RESOLVER_KEY,
@@ -29,6 +30,7 @@ import {
     HASH_TIMESTAMP_RESOLVER_KEY,
     MOCK_TIMESTAMP_RESOLVER_KEY,
     ACCESS_CONTROL_RESOLVER_KEY,
+    ACCESS_CONTROL_DID_RESOLVER_KEY,
     PAUSE_RESOLVER_KEY,
     ISBE_CUT_RESOLVER_KEY,
     ISBE_LOUPE_RESOLVER_KEY,
@@ -79,6 +81,9 @@ export async function deployERC20UseCasesFacets(
         await ethers.getContractFactory('IsbeLoupeFacet')
     const AccessControlFacetFactory =
         await ethers.getContractFactory('AccessControlFacet')
+    const AccessControlDidFacetFactory = await ethers.getContractFactory(
+        'AccessControlDidFacet'
+    )
     const Ownable2StepFacetFactory =
         await ethers.getContractFactory('Ownable2StepFacet')
     const OwnableFacetFactory = await ethers.getContractFactory('OwnableFacet')
@@ -113,6 +118,11 @@ export async function deployERC20UseCasesFacets(
         isbeFactory,
         ACCESS_CONTROL_RESOLVER_KEY,
         AccessControlFacetFactory
+    )
+    await deployBusinessLogicFromFactory(
+        isbeFactory,
+        ACCESS_CONTROL_DID_RESOLVER_KEY,
+        AccessControlDidFacetFactory
     )
     const pauseFacet = await deployBusinessLogicFromFactory(
         isbeFactory,
@@ -304,6 +314,9 @@ export async function deployProxyTestsUseCaseFacets(
         await ethers.getContractFactory('IsbeLoupeFacet')
     const AccessControlFacetFactory =
         await ethers.getContractFactory('AccessControlFacet')
+    const AccessControlDidFacetFactory = await ethers.getContractFactory(
+        'AccessControlDidFacet'
+    )
     const ERC20FacetFactory = await ethers.getContractFactory('ERC20Facet')
     const HashTimestampTestWrapperFactory = await ethers.getContractFactory(
         'HashTimestampTestWrapper'
@@ -327,6 +340,11 @@ export async function deployProxyTestsUseCaseFacets(
         isbeFactory,
         ACCESS_CONTROL_RESOLVER_KEY,
         AccessControlFacetFactory
+    )
+    const accessControlDidFacet = await deployBusinessLogicFromFactory(
+        isbeFactory,
+        ACCESS_CONTROL_DID_RESOLVER_KEY,
+        AccessControlDidFacetFactory
     )
     const pauseFacet = await deployBusinessLogicFromFactory(
         isbeFactory,
@@ -383,6 +401,9 @@ export async function deployProxyTestsUseCaseFacets(
     const accessControl = AccessControlFacetFactory.attach(
         proxy
     ) as AccessControlFacet
+    const accessControlDid = AccessControlDidFacetFactory.attach(
+        proxy
+    ) as AccessControlDidFacet
     const assetEventTracker = AssetEventTrackerTestWrapperFactory.attach(
         proxy
     ) as AssetEventTrackerTestWrapper
@@ -394,11 +415,13 @@ export async function deployProxyTestsUseCaseFacets(
         erc20,
         pause,
         accessControl,
+        accessControlDid,
         assetEventTracker,
         hashTimestamp,
         erc20Facet,
         pauseFacet,
         accessControlFacet,
+        accessControlDidFacet,
         assetEventTrackerFacet,
         hashTimestampFacet,
         isbeCutFacet,

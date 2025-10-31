@@ -1,4 +1,4 @@
-# Table of Contents
+# Documentation table of content
 
 ## Architecture Documentation
 

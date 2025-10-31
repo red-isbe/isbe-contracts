@@ -12,6 +12,7 @@ import {
     ISBE_ROLE,
     PROXY_DEPLOYER_ROLE,
     TIMESTAMPING_REGISTRY_ROLE,
+    BESU_NODE_MANAGER_ROLE,
 } from '../../test/constants'
 
 /**
@@ -62,6 +63,7 @@ export async function deployIsbeFactorySecp256r1(
         'EnsRegistryFacet',
         'TimeStampingRegistryFacet',
         'ClientFilteringFacet',
+        'BesuNodeManagerFacet',
     ]
 
     const facetAddresses: string[] = []
@@ -181,6 +183,10 @@ export async function deployIsbeFactorySecp256r1(
             },
             {
                 role: TIMESTAMPING_REGISTRY_ROLE,
+                members: [accountAddress],
+            },
+            {
+                role: BESU_NODE_MANAGER_ROLE,
                 members: [accountAddress],
             },
         ],

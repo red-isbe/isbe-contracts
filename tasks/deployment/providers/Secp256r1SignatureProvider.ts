@@ -89,7 +89,7 @@ export class Secp256r1SignatureProvider implements ISignatureProvider {
         const deployTx = {
             nonce: nonce,
             gasPrice: 0n,
-            gasLimit: 5000000n,
+            gasLimit: 80_000_000n,
             to: undefined, // Contract deployment
             value: 0n,
             data: deployData,
@@ -107,6 +107,7 @@ export class Secp256r1SignatureProvider implements ISignatureProvider {
         const receipt = await this.waitForTransaction(response, 1, 60000)
 
         if (!receipt || receipt.status !== 1) {
+            console.log(receipt)
             throw new Error(`Failed to deploy ${contractName}`)
         }
 

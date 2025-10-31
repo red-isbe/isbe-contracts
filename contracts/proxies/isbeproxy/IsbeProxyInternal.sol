@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
+import {IsbeFactoryInternal} from './IsbeFactoryInternal.sol';
+import {IIsbeFactory} from '../../factory/IIsbeFactory.sol';
 import {IDiamondLoupe} from '../eip2535/interfaces/IDiamondLoupe.sol';
 import {_ISBE_PROXY_STORAGE_POSITION} from '../../constants/storagePositions.sol';
 import {IConfigurationManagement} from '../../factory/configurationmanagement/IConfigurationManagement.sol';
@@ -18,6 +20,7 @@ import {PauseInternalCommon} from '../../pause/PauseInternalCommon.sol';
  */
 abstract contract IsbeProxyInternal is
     FacetAddressResolver,
+    IsbeFactoryInternal,
     InitializeBusinessLogic,
     AccessControlInternal,
     PauseInternalCommon
@@ -27,7 +30,6 @@ abstract contract IsbeProxyInternal is
      * @dev Stores configuration manager reference and version information
      */
     struct IsbeProxyStorage {
-        IConfigurationManagement configurationManager;
         bytes32 configurationId;
         uint256 version;
     }
@@ -63,7 +65,7 @@ abstract contract IsbeProxyInternal is
         _checkSameLength(length, _initData.length);
 
         IsbeProxyStorage storage $ = _isbeProxyStorage();
-        $.configurationManager = _configurationManager;
+        _setIsbeFactory(IIsbeFactory(address(_configurationManager)));
         $.configurationId = _configurationId;
         $.version = _version;
 
@@ -95,14 +97,14 @@ abstract contract IsbeProxyInternal is
         returns (IDiamondLoupe.Facet[] memory facets_)
     {
         IsbeProxyStorage storage $ = _isbeProxyStorage();
-        facets_ = $.configurationManager.facets($.configurationId, $.version);
+        facets_ = _getIsbeFactory().facets($.configurationId, $.version);
     }
 
     function _facetFunctionSelectors(
         address _facet
     ) internal view returns (bytes4[] memory functionSelectors_) {
         IsbeProxyStorage storage $ = _isbeProxyStorage();
-        functionSelectors_ = $.configurationManager.facetFunctionSelectors(
+        functionSelectors_ = _getIsbeFactory().facetFunctionSelectors(
             $.configurationId,
             $.version,
             _facet
@@ -115,7 +117,7 @@ abstract contract IsbeProxyInternal is
         returns (address[] memory facetAddresses_)
     {
         IsbeProxyStorage storage $ = _isbeProxyStorage();
-        facetAddresses_ = $.configurationManager.facetAddresses(
+        facetAddresses_ = _getIsbeFactory().facetAddresses(
             $.configurationId,
             $.version
         );
@@ -126,7 +128,7 @@ abstract contract IsbeProxyInternal is
     ) internal view override returns (address) {
         IsbeProxyStorage storage $ = _isbeProxyStorage();
         return
-            $.configurationManager.facetAddress(
+            _getIsbeFactory().facetAddress(
                 $.configurationId,
                 $.version,
                 _signature
@@ -138,7 +140,7 @@ abstract contract IsbeProxyInternal is
     ) internal view virtual returns (bool) {
         IsbeProxyStorage storage $ = _isbeProxyStorage();
         return
-            $.configurationManager.facetSupportsInterface(
+            _getIsbeFactory().facetSupportsInterface(
                 $.configurationId,
                 $.version,
                 _interfaceId

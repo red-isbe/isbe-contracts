@@ -9,6 +9,7 @@ import {
 import { Signer } from 'ethers'
 import {
     ACCESS_CONTROL_RESOLVER_KEY,
+    ACCESS_CONTROL_DID_RESOLVER_KEY,
     ASSET_EVENT_TRACKER_RESOLVER_KEY,
     DIAMOND_CUT_RESOLVER_KEY,
     DIAMOND_LOUPE_RESOLVER_KEY,
@@ -280,6 +281,10 @@ describe('ConfigurationManagement', function () {
                     )
                 businessDatas.push(
                     ...[
+                        {
+                            businessId: ACCESS_CONTROL_DID_RESOLVER_KEY,
+                            version: 0,
+                        },
                         {
                             businessId: ACCESS_CONTROL_RESOLVER_KEY,
                             version: 0,

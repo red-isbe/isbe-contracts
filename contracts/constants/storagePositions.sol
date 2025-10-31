@@ -8,6 +8,9 @@ bytes32 constant _DIAMOND_STORAGE_POSITION = 0x14a872dcf5b21c7ac5c7a21241cb3088a
 // keccak256('isbe.contracts.isbe.proxy.storage')
 bytes32 constant _ISBE_PROXY_STORAGE_POSITION = 0x04fb5b1674918eac185959cfae932d99373bdf254d85286d6561bd7c87ae22e8;
 
+// keccak256('isbe.contracts.isbe.factory.storage')
+bytes32 constant _ISBE_FACTORY_STORAGE_POSITION = 0xf18df51d58cf839810651e76968ddc504b87839e67b92222df77a61aa4446f7b;
+
 // keccak256('isbe.contracts.erc20.storage');
 bytes32 constant _ERC20_STORAGE_POSITION = 0xd93ac5c223af8b55b10aca6a04761f021176cb4baf866e7484f3c8d7325c3a93;
 
@@ -101,5 +104,21 @@ bytes32 constant _CLIENT_FILTERING_STORAGE_POSITION = 0x2b5ee3d658648477f5de5bda
 
 // keccak256('isbe.contracts.client.timestamping.registry.storage');
 bytes32 constant _TIMESTAMPING_REGISTRY_STORAGE_POSITION = 0x7bea5e2e127c51f0457ca47f4b1697de117ab9d5dbb6d8653dd490ff43b32fb6;
+
+// BesuNodeManager - Core layer (shared enodes)
+// keccak256('com.isbe.besu.node.manager.core.storage')
+bytes32 constant _BESU_NODE_MANAGER_CORE_STORAGE_POSITION = 0x11ac89760e0337d7c2f84ee9741ea0ddac3e0d00723ece28a875d7acffbb14d1;
+
+// BesuNodeManager - Validator layer
+// keccak256('com.isbe.besu.node.manager.validator.storage')
+bytes32 constant _VALIDATOR_MANAGER_STORAGE_POSITION = 0xbd302c9d8d04a55834b237b500b0ad6cdeaeeb83a98ce85123c5d669ac0074b7;
+
+// BesuNodeManager - BootNode layer
+// keccak256('com.isbe.besu.node.manager.bootnode.storage')
+bytes32 constant _BOOTNODE_MANAGER_STORAGE_POSITION = 0x1c4ee151048963a5447e26f76f477ee266e42e6687937d5eb9aabf216b81aea2;
+
+// BesuNodeManager - ExecutionNode layer
+// keccak256('com.isbe.besu.node.manager.executionnode.storage')
+bytes32 constant _EXECUTION_NODE_MANAGER_STORAGE_POSITION = 0x4a29f4fc2ef7acd6d55f40906cc864109900b56cf3108f89b0f6a07015cee858;
 
 // solhint-enable max-line-length

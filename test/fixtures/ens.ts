@@ -15,6 +15,7 @@ import {
     ENS_TEXT_RESOLVER_RESOLVER_KEY,
     ENS_PUBKEY_RESOLVER_RESOLVER_KEY,
     ACCESS_CONTROL_RESOLVER_KEY,
+    ACCESS_CONTROL_DID_RESOLVER_KEY,
     PAUSE_RESOLVER_KEY,
     ISBE_CUT_RESOLVER_KEY,
     ISBE_LOUPE_RESOLVER_KEY,
@@ -62,6 +63,9 @@ export async function deployEnsPublicResolverUseCaseFacets(
         await ethers.getContractFactory('IsbeLoupeFacet')
     const AccessControlFacetFactory =
         await ethers.getContractFactory('AccessControlFacet')
+    const AccessControlDidFacetFactory = await ethers.getContractFactory(
+        'AccessControlDidFacet'
+    )
     const MockTimestampFacetFactory =
         await ethers.getContractFactory('MockTimestampFacet')
 
@@ -91,6 +95,11 @@ export async function deployEnsPublicResolverUseCaseFacets(
         isbeFactory,
         ACCESS_CONTROL_RESOLVER_KEY,
         AccessControlFacetFactory
+    )
+    await deployBusinessLogicFromFactory(
+        isbeFactory,
+        ACCESS_CONTROL_DID_RESOLVER_KEY,
+        AccessControlDidFacetFactory
     )
     const pauseFacet = await deployBusinessLogicFromFactory(
         isbeFactory,

@@ -9,7 +9,6 @@ import {
 import { deployGovernance } from './governance'
 import {
     randomHex,
-    randomInt,
     randomDid,
     randomVerificationMethodId,
     randomBaseDocument,
@@ -99,7 +98,8 @@ export class DidTestHelpers {
             publicKey65Incorrect: randomHex(65),
             publicKey65: this.walletToPublicKey(wallet),
             publicKey64: '0x'.concat(this.walletToPublicKey(wallet).slice(4)),
-            notBefore: randomInt(),
+            // Use timestamp in the past to ensure capability invocation is immediately active
+            notBefore: 1n,
             get notAfter() {
                 return this.notBefore + TEST_VALIDITY_DURATION
             },
@@ -151,13 +151,37 @@ export async function insertControllerDocument(
 /**
  * Standard test fixture that includes:
  * - Initialized DID registry
- * - Inserted DID document
+ * - Inserted DID document for admin (so admin can call setMockedTimestamp)
+ * - Inserted DID document for wallet
  * - Set mock timestamp
  */
 export async function deployStandardDidFixture() {
     const baseFixture = await deployInitializedDidRegistryFixture()
     const wallet = DidTestHelpers.walletOfFirstSigner()
     const didData = DidTestHelpers.randomizeDidDocument(wallet)
+
+    // Register admin's DID first so admin can call setMockedTimestamp
+    // Use the actual admin signer's wallet (which is the first signer)
+    const adminPublicKey = wallet.signingKey.publicKey
+    const adminDid = randomDid()
+    const adminVMethodId = randomVerificationMethodId()
+    const adminMessage = ethers.keccak256(
+        ethers.solidityPacked(['bytes'], [adminPublicKey])
+    )
+    const adminSignature = wallet.signingKey.sign(adminMessage)
+    const adminProof = ethers.Signature.from(adminSignature).serialized
+
+    await baseFixture.didRegistry.insertFirstDidDocument(
+        adminDid,
+        randomBaseDocument(),
+        adminVMethodId,
+        adminProof,
+        adminPublicKey,
+        EllipticType.SECP_256_K1,
+        didData.notBefore,
+        didData.notAfter,
+        ''
+    )
 
     const did = randomDid()
 

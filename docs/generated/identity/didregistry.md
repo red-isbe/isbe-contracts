@@ -780,6 +780,32 @@ Gets the alsoKnownAs field from a DID document
 | ---- | ------ | ----------------------------------- |
 | [0]  | string | string memory The alsoKnownAs value |
 
+### \_didOf
+
+```solidity
+function _didOf(address account) internal view returns (bytes32 did_)
+```
+
+### \_localDidOf
+
+```solidity
+function _localDidOf(address _account) internal view virtual returns (bytes32)
+```
+
+Override of AccessControlInternal.\_localDidOf for local DID resolution
+
+#### Parameters
+
+| Name      | Type    | Description            |
+| --------- | ------- | ---------------------- |
+| \_account | address | The address to resolve |
+
+#### Return Values
+
+| Name | Type    | Description                                                    |
+| ---- | ------- | -------------------------------------------------------------- |
+| [0]  | bytes32 | bytes32 The DID hash if found and active, otherwise bytes32(0) |
+
 ### \_checkEmptyVerificationRelationship
 
 ```solidity
@@ -1018,7 +1044,7 @@ Comprehensive interface for decentralised identifier (DID) registry operations
 
 _Aggregates all DID management interfaces into a single, unified interface for
 complete DID document lifecycle management including controllers, verification
-methods, and verification relationships_
+methods, verification relationships and registry query._
 
 ---
 

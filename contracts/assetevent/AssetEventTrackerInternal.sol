@@ -2,14 +2,14 @@
 pragma solidity ^0.8.28;
 
 import {_ASSET_EVENT_TRACKER_STORAGE_POSITION} from '../constants/storagePositions.sol';
-import {Common} from '../core/Common.sol';
+import {DidDocumentDetailedInternal} from '../identity/didregistry/DidDocumentDetailedInternal.sol';
 import {LibCommon} from '../core/LibCommon.sol';
 import {IAssetEventTracker} from './IAssetEventTracker.sol';
 
 /// @title AssetEventTrackerInternal
 /// @notice Implements generic state tracking for an asset using events
 /// @author ISBE Development Team
-abstract contract AssetEventTrackerInternal is Common {
+abstract contract AssetEventTrackerInternal is DidDocumentDetailedInternal {
     /// @notice Struct storing all asset events
     struct AssetEventTrackerStorage {
         IAssetEventTracker.AssetEvent[] assetEvents;

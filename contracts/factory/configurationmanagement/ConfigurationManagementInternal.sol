@@ -5,6 +5,7 @@ import {
     _DIAMOND_LOUPE_RESOLVER_KEY,
     _DIAMOND_CUT_RESOLVER_KEY,
     _ACCESS_CONTROL_RESOLVER_KEY,
+    _ACCESS_CONTROL_DID_RESOLVER_KEY,
     _PAUSE_RESOLVER_KEY,
     _ISBE_LOUPE_RESOLVER_KEY,
     _ISBE_CUT_RESOLVER_KEY,
@@ -337,7 +338,7 @@ abstract contract ConfigurationManagementInternal is
         )
     {
         uint256 businessIdsLength = _businessIds.length;
-        uint256 businessAddressesLength = businessIdsLength + 4;
+        uint256 businessAddressesLength = businessIdsLength + 5;
         businessData_ = new IConfigurationManagement.BusinessData[](
             businessAddressesLength
         );
@@ -368,6 +369,10 @@ abstract contract ConfigurationManagementInternal is
             businessAddresses_[--businessAddressesLength],
             businessData_[businessAddressesLength]
         ) = _getBusinessData(_ACCESS_CONTROL_RESOLVER_KEY);
+        (
+            businessAddresses_[--businessAddressesLength],
+            businessData_[businessAddressesLength]
+        ) = _getBusinessData(_ACCESS_CONTROL_DID_RESOLVER_KEY);
     }
 
     function _getBusinessData(
@@ -437,6 +442,7 @@ abstract contract ConfigurationManagementInternal is
             _businessId != _DIAMOND_CUT_RESOLVER_KEY &&
             _businessId != _DIAMOND_LOUPE_RESOLVER_KEY &&
             _businessId != _ACCESS_CONTROL_RESOLVER_KEY &&
+            _businessId != _ACCESS_CONTROL_DID_RESOLVER_KEY &&
             _businessId != _PAUSE_RESOLVER_KEY &&
             _businessId != _ISBE_LOUPE_RESOLVER_KEY &&
             _businessId != _ISBE_CUT_RESOLVER_KEY &&

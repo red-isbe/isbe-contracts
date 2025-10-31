@@ -3,7 +3,7 @@ pragma solidity ^0.8.28;
 
 import {ProxyFactoryInternal} from './ProxyFactoryInternal.sol';
 import {IProxyFactory} from './IProxyFactory.sol';
-import {IAccessControl} from '../../access/accessControl/IAccessControl.sol';
+import {IAccessControlEoa} from '../../access/accessControl/IAccessControl.sol';
 import {_PROXY_DEPLOYER_ROLE} from '../../constants/roles.sol';
 
 /**
@@ -32,7 +32,7 @@ abstract contract ProxyFactory is ProxyFactoryInternal, IProxyFactory {
     function deployUseCase(
         bytes32 _configurationId,
         uint256 _version,
-        IAccessControl.Rbac[] calldata _rbacs,
+        IAccessControlEoa.Rbac[] calldata _rbacs,
         bool _initPause,
         bytes32[] calldata _initBusinessIds,
         bytes[] calldata _initData
@@ -59,7 +59,7 @@ abstract contract ProxyFactory is ProxyFactoryInternal, IProxyFactory {
     function deployUseCaseTo(
         bytes32 _configurationId,
         uint256 _version,
-        IAccessControl.Rbac[] calldata _rbacs,
+        IAccessControlEoa.Rbac[] calldata _rbacs,
         bool _initPause,
         bytes32[] calldata _initBusinessIds,
         bytes[] calldata _initData,

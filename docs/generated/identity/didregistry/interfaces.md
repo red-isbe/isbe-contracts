@@ -758,6 +758,44 @@ verification methods and relationships that were valid at the specified time_
 
 ---
 
+## IDidRegistryQuery
+
+Non-breaking extension surface intended for Diamond Facet composition.
+Provides single-call helpers to resolve an address' DID and check membership
+against a caller-supplied set of DID hashes.
+
+_This interface does NOT modify the original IDidRegistry. It is designed
+to be implemented by a dedicated facet that reads from the existing
+DidDocumentDetailed storage slot._
+
+### isKnownDid
+
+```solidity
+function isKnownDid(address account) external view returns (bool)
+```
+
+### didOf
+
+```solidity
+function didOf(address account) external view returns (bytes32 did)
+```
+
+Resolve the DID of an invocation address and return its did
+
+#### Parameters
+
+| Name    | Type    | Description                                                                     |
+| ------- | ------- | ------------------------------------------------------------------------------- |
+| account | address | EOA or contract address associated to a verification method in the DID Registry |
+
+#### Return Values
+
+| Name | Type    | Description                                   |
+| ---- | ------- | --------------------------------------------- |
+| did  | bytes32 | The DID string if found, otherwise bytes32(0) |
+
+---
+
 ## IDidVerificationMethod
 
 Interface for managing cryptographic verification methods within decentralised

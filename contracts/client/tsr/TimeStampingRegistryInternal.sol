@@ -17,7 +17,7 @@ import {
     _checkNonceAndDeadline,
     InvalidSignature
 } from '../../core/signatureVerification.sol';
-import {Common} from '../../core/Common.sol';
+import {DidDocumentDetailedInternal} from '../../identity/didregistry/DidDocumentDetailedInternal.sol';
 import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 import {LibCommon} from '../../core/LibCommon.sol';
 import {_TIMESTAMPING_REGISTRY_STORAGE_POSITION} from '../../constants/storagePositions.sol';
@@ -30,7 +30,7 @@ import {_TIMESTAMPING_REGISTRY_STORAGE_POSITION} from '../../constants/storagePo
 /// @author ISBE Team
 /// @custom:security-level 3
 /// @custom:auditor ISBE Security Team
-abstract contract TimeStampingRegistryInternal is Common {
+abstract contract TimeStampingRegistryInternal is DidDocumentDetailedInternal {
     using EnumerableSet for EnumerableSet.Bytes32Set;
     using LibCommon for EnumerableSet.Bytes32Set;
 

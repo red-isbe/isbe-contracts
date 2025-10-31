@@ -14,6 +14,9 @@
         "clean:node_modules": "npx -y rimraf node_modules",
         "size": "npx hardhat size-contracts",
         "test": "npx hardhat test",
+        "test:smart": "node scripts/smart-test.js",
+        "test:clean": "npm run clean:cache && npm run compile && npm run test",
+        "test:force-clean": "FORCE_CLEAN=true npm run test",
         "test:parallel": "npx hardhat test --parallel",
         "test:gas": "REPORT_GAS=true npx hardhat test --no-compile && npm run format:gas",
         "format:gas": "npx ts-node scripts/format-gas-summary.ts",
@@ -62,7 +65,8 @@
         "slither": "npm run slither:summary && npm run slither:storageLayout && npm run slither:inheritance && npm run slither:analysis",
         "slither:analysis:local": "slither . -solc-remaps @=node_modules/@ | tee slither-output.txt && node scripts/check-slither.js",
         "docgen": "npx hardhat docgen && npx ts-node scripts/post-docgen.ts",
-        "deployAll": "npx hardhat deployAllClean --nodeployusecases"
+        "deployAll": "npx hardhat deployAllClean --nodeployusecases",
+        "toc:generate": "npx ts-node scripts/generate-toc.ts"
     },
     "repository": {
         "type": "git",

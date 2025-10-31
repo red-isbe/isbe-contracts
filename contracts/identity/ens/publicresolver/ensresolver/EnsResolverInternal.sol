@@ -3,7 +3,7 @@ pragma solidity ^0.8.28;
 
 import {ENS} from '../../ensregistry/ENS.sol';
 import {IEnsResolver} from './IEnsResolver.sol';
-import {Common} from '../../../../core/Common.sol';
+import {DidDocumentDetailedInternal} from '../../../../identity/didregistry/DidDocumentDetailedInternal.sol';
 // solhint-disable-next-line no-unused-import
 import {_ENS_RESOLVER_STORAGE_POSITION} from '../../../../constants/storagePositions.sol';
 import {_ENS_MANAGER_ROLE} from '../../../../constants/roles.sol';
@@ -17,7 +17,7 @@ import {_ENS_MANAGER_ROLE} from '../../../../constants/roles.sol';
  *      the base for all resolver profile implementations (Name, Text, Pubkey, etc.)
  * @author ISBE Development Team
  */
-abstract contract EnsResolverInternal is Common {
+abstract contract EnsResolverInternal is DidDocumentDetailedInternal {
     /**
      * @notice Storage structure containing all ENS resolver state data
      * @param ens Reference to the ENS registry contract for node ownership verification

@@ -14,6 +14,8 @@ export const BASE_RESOLVER_KEYS: ResolverKeys = {
         '0x360faa2d547f0a951a5b1da060a4ffb56888bf8ad05db9de4d6d09b3eae1e5e2',
     ACCESS_CONTROL:
         '0xa4de16c45770db08a06a2cdfeb0229e16d2ff660f7f1bf74c3dc07212770c70c',
+    ACCESS_CONTROL_DID:
+        '0x91be68699977a17d16f4f996441c2bbd87a413d1114ef61d6d70019fc7904f4a',
     PAUSE: '0x7fabf0f3ed655fa26f86c82ae5da60e0ade03a5d35a9ff2985709278942966d3',
 }
 
@@ -71,6 +73,12 @@ export const DID_RESOLVER_KEYS: ResolverKeys = {
 export const CLIENT_RESOLVER_KEYS: ResolverKeys = {
     FILTERING:
         '0x9d459b48dcede9ec86807b1af972b62ab0b2b0237e2187da45c02c25f3aeb016',
+}
+
+// BesuNodeManager facets
+export const BESU_NODE_MANAGER_RESOLVER_KEYS: ResolverKeys = {
+    BESU_NODE_MANAGER:
+        '0xed251ea052ffafa4903db889a3309600adf2ac15456e02760c1221ea3792c1ca',
 }
 
 // ENS facets

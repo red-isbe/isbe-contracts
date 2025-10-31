@@ -1,15 +1,24 @@
 import { expect } from 'chai'
-import { Signer } from 'ethers'
+import { Signer, HDNodeWallet } from 'ethers'
 import { ethers } from 'hardhat'
 import {
     AccessControl,
     ISBEPause,
     HashTimestampTestWrapper,
+    IAccessControlDid,
+    IDidRegistry__factory,
 } from '../typechain-types'
-import { HASH_TIMESTAMP_ROLE, PAUSER_ROLE } from '../utils/constants'
+import {
+    HASH_TIMESTAMP_ROLE,
+    PAUSER_ROLE,
+    DID_REGISTRY_ROLE,
+    CONFIGURATION_ID_ERC20,
+} from '../utils/constants'
 import { deployGovernance } from './fixtures/governance'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { randomBytes32 } from './support'
+import { EllipticType } from './types/identity'
+import { config } from 'hardhat'
 
 describe('Hash Timestamp', function () {
     const HASH = randomBytes32()
@@ -99,6 +108,230 @@ describe('Hash Timestamp', function () {
             await expect(
                 connectedHashTimestamp.timestampHash(HASH)
             ).to.be.revertedWithCustomError(hashTimestamp, 'AccountHasNoRole')
+        })
+    })
+
+    describe('Mixed DID and Address Role Access', function () {
+        let didWallet: HDNodeWallet
+        let did: string
+        let addressAccount: Signer
+        let addressAccountAddress: string
+        let useCaseAccessControlDid: IAccessControlDid
+
+        function walletOfFirstSigner(): HDNodeWallet {
+            const mnemonic = (
+                config.networks.hardhat.accounts as {
+                    mnemonic: string
+                    path: string
+                }
+            ).mnemonic
+            return ethers.Wallet.fromPhrase(mnemonic)
+        }
+
+        async function deployMixedFixture() {
+            const [admin, addressAcc] = await ethers.getSigners()
+            const adminAddr = await admin.getAddress()
+            const addressAccAddr = await addressAcc.getAddress()
+
+            // Create test wallet and DID
+            const baseWallet = walletOfFirstSigner()
+            const wallet = baseWallet.derivePath('300')
+            const didId = ethers.id('did:hashtimestamp:test:1')
+
+            // Deploy governance with DID registry AND use case
+            const govResult = await deployGovernance(
+                admin,
+                [],
+                CONFIGURATION_ID_ERC20
+            )
+
+            // Grant DID registry role
+            await govResult.accessControlGovernance!.grantRole(
+                DID_REGISTRY_ROLE,
+                adminAddr
+            )
+
+            // Initialize DID registry
+            const governanceAddress =
+                await govResult.accessControlGovernance!.getAddress()
+            const didRegistryWithSigner = IDidRegistry__factory.connect(
+                governanceAddress,
+                admin
+            )
+            await didRegistryWithSigner.initializeDiDRegistry(
+                EllipticType.SECP_256_K1
+            )
+
+            // Insert DID document
+            const notBefore = Math.floor(Date.now() / 1000)
+            const notAfter = notBefore + 365 * 24 * 60 * 60
+
+            const publicKey = wallet.signingKey.publicKey
+            const vMethodId = ethers.id(`vmethod:${didId}`)
+            const message = ethers.keccak256(
+                ethers.solidityPacked(['bytes'], [publicKey])
+            )
+            const signature = wallet.signingKey.sign(message)
+            const proof = ethers.Signature.from(signature).serialized
+
+            await didRegistryWithSigner.insertFirstDidDocument(
+                didId,
+                `document:${didId}`,
+                vMethodId,
+                proof,
+                publicKey,
+                EllipticType.SECP_256_K1,
+                notBefore,
+                notAfter,
+                ''
+            )
+
+            // Set mock timestamp to valid period
+            const mockTimestampWithSigner =
+                govResult.mockTimestamp.connect(admin)
+            await mockTimestampWithSigner.setMockedTimestamp(notBefore + 1)
+
+            // Get AccessControlDid interface for use case
+            const AccessControlDidFactory = await ethers.getContractFactory(
+                'AccessControlDidFacet'
+            )
+            const useCaseAccessControlDid = AccessControlDidFactory.attach(
+                await govResult.accessControl.getAddress()
+            ) as IAccessControlDid
+
+            // Grant HASH_TIMESTAMP_ROLE to address
+            await govResult.accessControl.grantRole(
+                HASH_TIMESTAMP_ROLE,
+                addressAccAddr
+            )
+
+            // Grant HASH_TIMESTAMP_ROLE to DID
+            await govResult.accessControl.grantRole(
+                HASH_TIMESTAMP_ROLE,
+                adminAddr
+            )
+            await useCaseAccessControlDid.grantDidRole(
+                HASH_TIMESTAMP_ROLE,
+                didId
+            )
+
+            // Fund DID wallet
+            await admin.sendTransaction({
+                to: wallet.address,
+                value: ethers.parseEther('1.0'),
+            })
+
+            return {
+                adminAccount: admin,
+                hashTimestamp: govResult.hashTimestamp,
+                pause: govResult.pause,
+                accessControl: govResult.accessControl,
+                useCaseAccessControlDid,
+                didWallet: wallet,
+                did: didId,
+                addressAccount: addressAcc,
+                addressAccountAddress: addressAccAddr,
+                mockTimestamp: govResult.mockTimestamp,
+            }
+        }
+
+        beforeEach(async function () {
+            const contracts = await loadFixture(deployMixedFixture)
+            adminAccount = contracts.adminAccount
+            hashTimestamp = contracts.hashTimestamp
+            pause = contracts.pause
+            accessControl = contracts.accessControl
+            useCaseAccessControlDid = contracts.useCaseAccessControlDid
+            didWallet = contracts.didWallet
+            did = contracts.did
+            addressAccount = contracts.addressAccount
+            addressAccountAddress = contracts.addressAccountAddress
+        })
+
+        it('GIVEN role granted to address and DID WHEN both execute timestampHash THEN both succeed', async function () {
+            const hash1 = randomBytes32()
+            const hash2 = randomBytes32()
+
+            // Address executes
+            const connectedHashTimestampAddress =
+                hashTimestamp.connect(addressAccount)
+            await expect(
+                connectedHashTimestampAddress.timestampHash(hash1)
+            ).to.emit(hashTimestamp, 'HashTimestamped')
+
+            // DID wallet executes
+            const didSigner = new ethers.Wallet(
+                didWallet.privateKey,
+                ethers.provider
+            )
+            const connectedHashTimestampDid = hashTimestamp.connect(didSigner)
+            await expect(
+                connectedHashTimestampDid.timestampHash(hash2)
+            ).to.emit(hashTimestamp, 'HashTimestamped')
+
+            expect(await hashTimestamp.exists(hash1)).to.equal(true)
+            expect(await hashTimestamp.exists(hash2)).to.equal(true)
+        })
+
+        it('GIVEN role granted to DID WHEN hasRole checks address THEN returns true', async function () {
+            // Check if DID wallet address has role via DID resolution
+            const hasRole = await accessControl.hasRole(
+                HASH_TIMESTAMP_ROLE,
+                didWallet.address
+            )
+            expect(hasRole).to.be.true
+        })
+
+        it('GIVEN role revoked from DID WHEN DID wallet executes THEN fails', async function () {
+            // Revoke role from DID
+            await useCaseAccessControlDid.revokeDidRole(
+                HASH_TIMESTAMP_ROLE,
+                did
+            )
+
+            // DID wallet should fail
+            const didSigner = new ethers.Wallet(
+                didWallet.privateKey,
+                ethers.provider
+            )
+            const connectedHashTimestampDid = hashTimestamp.connect(didSigner)
+            await expect(
+                connectedHashTimestampDid.timestampHash(randomBytes32())
+            ).to.be.revertedWithCustomError(hashTimestamp, 'AccountHasNoRole')
+        })
+
+        it('GIVEN role revoked from address WHEN address executes THEN fails but DID still works', async function () {
+            // Revoke role from address
+            await accessControl.revokeRole(
+                HASH_TIMESTAMP_ROLE,
+                addressAccountAddress
+            )
+
+            // Address should fail
+            const connectedHashTimestampAddress =
+                hashTimestamp.connect(addressAccount)
+            await expect(
+                connectedHashTimestampAddress.timestampHash(randomBytes32())
+            ).to.be.revertedWithCustomError(hashTimestamp, 'AccountHasNoRole')
+
+            // DID wallet should still work
+            const didSigner = new ethers.Wallet(
+                didWallet.privateKey,
+                ethers.provider
+            )
+            const connectedHashTimestampDid = hashTimestamp.connect(didSigner)
+            await expect(
+                connectedHashTimestampDid.timestampHash(randomBytes32())
+            ).to.emit(hashTimestamp, 'HashTimestamped')
+        })
+
+        it('GIVEN DID has role WHEN checking hasRoleForDid THEN returns true', async function () {
+            // Check role directly for DID
+            const hasRoleForDid = await useCaseAccessControlDid.hasRoleForDid(
+                HASH_TIMESTAMP_ROLE,
+                did
+            )
+            expect(hasRoleForDid).to.be.true
         })
     })
 })

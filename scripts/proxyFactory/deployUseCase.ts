@@ -69,23 +69,32 @@ export async function deployUseCase(
 
     const proxyFactory = await getIsbeFactory(factory, signer)
 
-    const tx = await proxyFactory.deployUseCase(
-        configId,
-        configVersion,
-        initRbacs,
-        false,
-        initBusinessIds,
-        initData
-    )
+    try {
+        const tx = await proxyFactory.deployUseCase(
+            configId,
+            configVersion,
+            initRbacs,
+            false,
+            initBusinessIds,
+            initData
+        )
 
-    const deployedEvent = await getEvent('UseCaseDeployed', tx, proxyFactory)
+        const deployedEvent = await getEvent(
+            'UseCaseDeployed',
+            tx,
+            proxyFactory
+        )
 
-    const { configurationId, version, rbacs, proxy } = deployedEvent.args
+        const { configurationId, version, rbacs, proxy } = deployedEvent.args
 
-    return {
-        configurationId,
-        version: version.toString(),
-        rbacs,
-        proxy,
+        return {
+            configurationId,
+            version: version.toString(),
+            rbacs,
+            proxy,
+        }
+    } catch (error) {
+        console.error('Failed to deploy use case:', error)
+        throw new Error(`Failed to deploy use case: ${error}`)
     }
 }

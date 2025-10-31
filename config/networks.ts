@@ -17,6 +17,9 @@ const LOCALHOST_URL = process.env.LOCALHOST_URL || 'http://172.16.240.30:8545'
 const DEV_URL =
     process.env.DEV_URL ||
     'https://besu-node-validator-1-rpc.dev.aws.envs.redisbe.com/'
+const BARE_URL =
+    process.env.BARE_URL ||
+    'https://besu-node-validator-bare-1-rpc.dev.aws.envs.redisbe.com/'
 const ARSYS_URL = process.env.ARSYS_URL || 'http://213.165.85.41:8545'
 const KEPLER_URL =
     process.env.KEPLER_URL || 'https://regular.pre.iosec.io.builders:8565'
@@ -51,23 +54,34 @@ export function getNetworkConfigs(): NetworksConfig {
         // Local test network (secp256k1)
         localhost: {
             url: LOCALHOST_URL,
-            chainId: 2222,
+            chainId: 31337,
             accounts,
             gasPrice: 0,
-            gas: 100000000,
-            blockGasLimit: 30000000,
+            gas: 10_000_0000,
+            blockGasLimit: 30_000_000,
             curve: 'secp256k1',
         } as NetworkConfigWithCurve,
 
         // ISBE MVP Network (secp256k1)
         dev: {
             url: DEV_URL,
-            chainId: 2023,
+            chainId: 11073,
             accounts,
             gasPrice: 0,
             gas: 20_000_000,
             blockGasLimit: 0x1e84800, // 32,000,000
             curve: 'secp256k1',
+        } as NetworkConfigWithCurve,
+
+        bare: {
+            url: BARE_URL,
+            chainId: 10962,
+            accounts: secp256r1PrivateKeys,
+            gasPrice: 0,
+            gas: 80_000_000,
+            blockGasLimit: 90_000_000,
+            curve: 'secp256r1',
+            secp256r1Accounts,
         } as NetworkConfigWithCurve,
 
         // ISBE Arsys Network (secp256k1)
@@ -98,8 +112,8 @@ export function getNetworkConfigs(): NetworksConfig {
             chainId: 2222,
             accounts: secp256r1PrivateKeys,
             gasPrice: 0,
-            gas: 100000000,
-            blockGasLimit: 30000000,
+            gas: 80_000_000,
+            blockGasLimit: 90_000_000,
             curve: 'secp256r1',
             secp256r1Accounts,
         } as NetworkConfigWithCurve,

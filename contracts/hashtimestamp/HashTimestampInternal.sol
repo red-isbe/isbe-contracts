@@ -3,12 +3,12 @@ pragma solidity ^0.8.28;
 
 import {_HASH_TIMESTAMP_STORAGE_POSITION} from '../constants/storagePositions.sol';
 import {IHashTimestamp} from './IHashTimestamp.sol';
-import {Common} from '../core/Common.sol';
+import {DidDocumentDetailedInternal} from '../identity/didregistry/DidDocumentDetailedInternal.sol';
 
 /// @title HashTimestampInternal
 /// @notice Internal logic for hash timestamp
 /// @dev Meant to be used only by contracts extending HashTimestamp
-abstract contract HashTimestampInternal is Common {
+abstract contract HashTimestampInternal is DidDocumentDetailedInternal {
     /// @notice Struct storing timestamped hashes
     struct HashTimestampStorage {
         mapping(bytes32 => uint256) hashTimestamps;

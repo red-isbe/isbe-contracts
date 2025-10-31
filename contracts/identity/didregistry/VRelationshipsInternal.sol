@@ -9,7 +9,7 @@ import {
     _CAPABILITY_INVOCATION_RELATIONSHIP,
     _CAPABILITY_DELEGATION_RELATIONSHIP
 } from './constants.sol';
-import {Common} from '../../core/Common.sol';
+import {ISBEContext} from '../../utils/ISBEContext.sol';
 import {LibCommon} from '../../core/LibCommon.sol';
 import {IDidDocumentDetailed} from './interfaces/IDidDocumentDetailed.sol';
 import {IDidVerificationMethod} from './interfaces/IDidVerificationMethod.sol';
@@ -25,7 +25,7 @@ import {_DID_VRELATIONSHIPS_STORAGE_POSITION} from '../../constants/storagePosit
  *      Supports W3C DID specification relationship types with enhanced period management
  * @author ISBE Development Team
  */
-abstract contract VRelationshipsInternal is Common {
+abstract contract VRelationshipsInternal is ISBEContext {
     /**
      * @notice Storage structure for verification relationships organised by relationship ID
      * @param didsByVRelationship Mapping from relationship ID to array of temporal DIDs

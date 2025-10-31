@@ -4,7 +4,7 @@ pragma solidity ^0.8.28;
 import {EIP2535Internal} from './EIP2535Internal.sol';
 import {AccessControlInternal} from '../../access/accessControl/AccessControlInternal.sol';
 import {EIP2535} from './EIP2535.sol';
-import {IAccessControl} from '../../access/accessControl/IAccessControl.sol';
+import {IAccessControlEoa} from '../../access/accessControl/IAccessControl.sol';
 
 /**
  * @title EIP2535AccessControl Contract
@@ -26,7 +26,7 @@ contract EIP2535AccessControl is
      *        encoded arguments.
      */
     struct DiamondArgs {
-        IAccessControl.Rbac[] rbacs;
+        IAccessControlEoa.Rbac[] rbacs;
         address init;
         bytes initCalldata;
     }

@@ -39,8 +39,8 @@ task(
             throw new Error('Invalid curve. Must be secp256k1 or secp256r1')
         }
 
-        if (count < 1 || count > 50) {
-            throw new Error('Count must be between 1 and 50')
+        if (count < 1 || count > 100) {
+            throw new Error('Count must be between 1 and 100')
         }
 
         // Handle dual mode

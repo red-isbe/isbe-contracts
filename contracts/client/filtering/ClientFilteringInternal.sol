@@ -2,11 +2,11 @@
 pragma solidity ^0.8.28;
 
 import {_CLIENT_FILTERING_STORAGE_POSITION} from '../../constants/storagePositions.sol';
-import {Common} from '../../core/Common.sol';
+import {DidDocumentDetailedInternal} from '../../identity/didregistry/DidDocumentDetailedInternal.sol';
 import {LibCommon} from '../../core/LibCommon.sol';
 import {IClientFiltering} from './IClientFiltering.sol';
 
-abstract contract ClientFilteringInternal is Common {
+abstract contract ClientFilteringInternal is DidDocumentDetailedInternal {
     struct ClientFilteringStorage {
         IClientFiltering.Filter[] clientFilters;
         mapping(bytes32 => bool) exists;
