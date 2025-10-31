@@ -80,8 +80,7 @@ fi
 
 # Step 3: Validate genesis
 if [ "$SKIP_VALIDATION" = false ]; then
-  npx hardhat genesis:validate --network NO_NETWORK \
-    --gobernanceaddress 0x0B306BF915C4d645ff596e518fAf3F9669b97016
+  npx hardhat genesis:validate --network NO_NETWORK 
   echo "✅ Genesis validation completed."
 fi
 

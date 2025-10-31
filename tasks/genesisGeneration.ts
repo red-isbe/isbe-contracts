@@ -168,11 +168,7 @@ task(
     'genesis:validate',
     'Validate genesis by extracting storage slots from deployment transactions in Hardhat network'
 )
-    .addOptionalParam(
-        'gobernanceaddress',
-        'Gobernance Address',
-        '0x2279b7a0a67db372996a5fab50d91eaa73d2ebe6'
-    )
+    .addOptionalParam('gobernanceaddress', 'Gobernance Address')
     .addOptionalParam(
         'template',
         'Template JSON file to use',
@@ -186,16 +182,6 @@ task(
         console.info(
             '---------------------------------------------------------------------'
         )
-
-        const gobernanceaddress = taskArgs.gobernanceaddress
-        console.log(`📄 Using Gobernance Proxy Address: ${gobernanceaddress}`)
-        if (
-            !gobernanceaddress ||
-            !/^0x[a-fA-F0-9]{40}$/.test(gobernanceaddress)
-        ) {
-            console.error('Invalid Gobernance Proxy Address')
-            return
-        }
 
         const templateDir = (
             hre.config as unknown as {
@@ -241,14 +227,27 @@ task(
         if (outputDir.slice(-1) !== '/') {
             outputDir += '/'
         }
-        const registryFile =
-            (outputDir.endsWith('/') ? outputDir : outputDir + '/') +
-            REGISTRY_FILENAME
-        const contractRegistry = new ContractRegistry()
-        contractRegistry.retrieveContractRegistry(registryFile)
-        console.log(
-            '✅ Contract registry retrieved----------------------------------------------------------'
-        )
+
+        let gobernanceaddress = taskArgs.gobernanceaddress
+        if (!gobernanceaddress) {
+            const registryFile =
+                (outputDir.endsWith('/') ? outputDir : outputDir + '/') +
+                REGISTRY_FILENAME
+            const contractRegistry = new ContractRegistry()
+            contractRegistry.retrieveContractRegistry(registryFile)
+            gobernanceaddress = contractRegistry.getAddress(
+                'EIP2535AccessControl'
+            )
+            console.log(
+                '✅ EIP2535AccessControl retrieved from registry: ' +
+                    gobernanceaddress
+            )
+        } else if (!/^0x[a-fA-F0-9]{40}$/.test(gobernanceaddress)) {
+            console.error('Invalid Gobernance Proxy Address')
+            return
+        }
+        console.log(`📄 Using Gobernance Proxy Address: ${gobernanceaddress}`)
+
         while (!(await jsonRpcCall(url))) {
             process.stdout.write(
                 `Waiting for network ${hre.network.name} to be available... \r`
