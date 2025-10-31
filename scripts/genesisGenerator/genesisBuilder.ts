@@ -55,14 +55,22 @@ export async function buildGenesisWithAlloc(
             `Genesis template file is empty or not found: ${genesisTemplateFile}`
         )
     }
-    const genesis: JSONGenesis = JSON.parse(raw)
+    const data: JSONGenesis = JSON.parse(raw)
 
-    const mergedAlloc = mergeAlloc(genesis.genesis.alloc ?? {}, slotStructure)
+    const mergedAlloc = mergeAlloc(
+        data.genesis ? data.genesis.alloc : data.alloc,
+        slotStructure
+    )
 
-    genesis.genesis.alloc = mergedAlloc
+    if (data.genesis) data.genesis.alloc = mergedAlloc
+    else if (data.alloc) data.alloc = mergedAlloc
+    else
+        throw new Error(
+            "❌ Wrong genesis template format: 'alloc' section is missing."
+        )
 
     await fs.mkdir(path.dirname(outputFile), { recursive: true })
-    await fs.writeFile(outputFile, JSON.stringify(genesis, null, 2), 'utf8')
+    await fs.writeFile(outputFile, JSON.stringify(data, null, 2), 'utf8')
 
     console.log(`✅ Genesis generated at: ${outputFile}`)
 }
@@ -78,7 +86,9 @@ export async function extractISBEAdminAddress(
     }
     const data: JSONGenesis = JSON.parse(raw)
 
-    const genesisAlloc = data.genesis.alloc
+    console.log('Genesis data:', data.alloc) // Debugging line
+
+    const genesisAlloc = data.genesis ? data.genesis.alloc : data.alloc
 
     if (!genesisAlloc || Object.keys(genesisAlloc).length === 0) {
         throw new Error(

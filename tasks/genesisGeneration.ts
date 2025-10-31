@@ -158,7 +158,8 @@ task(
             )
         } catch (error: unknown) {
             const msg = error instanceof Error ? error.message : String(error)
-            console.error('❌ Error during genesis generation:', msg)
+            console.error('❌ - Error during genesis generation:', msg)
+            console.error(error)
             process.exit(1)
         }
     })
@@ -207,11 +208,11 @@ task(
         const curve: string = await extractCurve(genesisTemplateFile)
         console.log(`📄 Using curve: ${curve}`)
 
-        if(curve === "secp256k1") {
+        if (curve === 'secp256k1') {
             hre.network.name = 'genesis_validation_network_k1'
-        }else if(curve === "secp256r1") {
+        } else if (curve === 'secp256r1') {
             hre.network.name = 'genesis_validation_network_r1'
-        }else {
+        } else {
             throw new Error(`Unsupported curve type in genesis file: ${curve}`)
         }
 

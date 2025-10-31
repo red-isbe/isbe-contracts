@@ -84,7 +84,7 @@ web_modules/
 .env.production.local
 .env.local
 .env.secp256r1
-.env.secp256k1
+.env.secp256kgi1
 
 
 # parcel-bundler cache (https://parceljs.org/)
