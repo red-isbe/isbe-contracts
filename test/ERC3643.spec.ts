@@ -12,6 +12,7 @@ import {
     MINTER_ROLE,
     CAP_ROLE,
     RECOVERY_ROLE,
+    COMPLIANCE_ROLE,
 } from './constants'
 import {
     IERC3643,
@@ -20,6 +21,7 @@ import {
     ISBEPause,
     IERC203643Controller,
     IERC203643Capped,
+    ERC3643ComplianceFacet,
 } from '../typechain-types'
 ;('../typechain-types')
 
@@ -3674,6 +3676,736 @@ describe('ERC3643 Token', function () {
     // ====================================================================
     // COMPLIANCE MODULE
     // ====================================================================
+    describe('ERC3643 Compliance', () => {
+        describe('when Mode compliance is not active', () => {
+            describe('when not initialized', () => {
+                it('GIVEN ERC3643 not initialized WHEN initializeERC3643Compliance THEN reverts', async () => {
+                    const complianceFacet = (await ethers.getContractAt(
+                        'ERC3643ComplianceFacet',
+                        proxyAddress
+                    )) as ERC3643ComplianceFacet
+
+                    await expect(
+                        complianceFacet
+                            .connect(owner)
+                            .initializeERC3643Compliance(false, false)
+                    ).to.be.reverted
+                })
+            })
+
+            describe('when initialized', () => {
+                let complianceFacet: ERC3643ComplianceFacet
+                let erc3643Capped: IERC203643Capped
+
+                beforeEach(async () => {
+                    const fixture = async () => {
+                        // Grant necessary roles
+                        await accessControlFacet
+                            .connect(owner)
+                            .grantRole(METADATA_ROLE, ownerAddress)
+                        await accessControlFacet
+                            .connect(owner)
+                            .grantRole(COMPLIANCE_ROLE, ownerAddress)
+                        await accessControlFacet
+                            .connect(owner)
+                            .grantRole(MINTER_ROLE, ownerAddress)
+                        await accessControlFacet
+                            .connect(owner)
+                            .grantRole(CAP_ROLE, ownerAddress)
+
+                        // Initialize ERC20
+                        await erc20Facet
+                            .connect(owner)
+                            .initializeErc20(tokenName, tokenSymbol, tokenDecimals)
+
+                        // Initialize ERC3643 Metadata
+                        await erc3643
+                            .connect(owner)
+                            .initializeERC3643Metadata(version)
+
+                        // Get compliance interface
+                        complianceFacet = (await ethers.getContractAt(
+                            'ERC3643ComplianceFacet',
+                            proxyAddress
+                        )) as ERC3643ComplianceFacet
+
+                        // Get capped interface
+                        erc3643Capped = (await ethers.getContractAt(
+                            'IERC203643Capped',
+                            proxyAddress
+                        )) as IERC203643Capped
+
+                        // Initialize cap
+                        await erc3643Capped.connect(owner).initializeCap(10000n)
+                    }
+                    await loadFixture(fixture)
+                })
+
+                // ----------------------------------------------------------------
+                // initializeERC3643Compliance
+                // ----------------------------------------------------------------
+                describe('initializeERC3643Compliance', () => {
+                    it('GIVEN compliance not initialized WHEN initializeERC3643Compliance with both disabled THEN succeeds and emits events', async () => {
+                        await expect(
+                            complianceFacet
+                                .connect(owner)
+                                .initializeERC3643Compliance(false, false)
+                        )
+                            .to.emit(complianceFacet, 'ComplianceFeatureToggled')
+                            .withArgs('MaxBalance', false)
+                            .to.emit(complianceFacet, 'ComplianceFeatureToggled')
+                            .withArgs('DailyMonthLimits', false)
+
+                        expect(
+                            await complianceFacet.isMaxBalanceEnabled()
+                        ).to.be.false
+                        expect(
+                            await complianceFacet.isDailyMonthLimitsEnabled()
+                        ).to.be.false
+                    })
+
+                    it('GIVEN compliance not initialized WHEN initializeERC3643Compliance with MaxBalance enabled THEN succeeds', async () => {
+                        await expect(
+                            complianceFacet
+                                .connect(owner)
+                                .initializeERC3643Compliance(true, false)
+                        )
+                            .to.emit(complianceFacet, 'ComplianceFeatureToggled')
+                            .withArgs('MaxBalance', true)
+
+                        expect(
+                            await complianceFacet.isMaxBalanceEnabled()
+                        ).to.be.true
+                        expect(
+                            await complianceFacet.isDailyMonthLimitsEnabled()
+                        ).to.be.false
+                    })
+
+                    it('GIVEN compliance not initialized WHEN initializeERC3643Compliance with DailyMonthLimits enabled THEN succeeds', async () => {
+                        await expect(
+                            complianceFacet
+                                .connect(owner)
+                                .initializeERC3643Compliance(false, true)
+                        )
+                            .to.emit(complianceFacet, 'ComplianceFeatureToggled')
+                            .withArgs('DailyMonthLimits', true)
+
+                        expect(
+                            await complianceFacet.isMaxBalanceEnabled()
+                        ).to.be.false
+                        expect(
+                            await complianceFacet.isDailyMonthLimitsEnabled()
+                        ).to.be.true
+                    })
+
+                    it('GIVEN compliance not initialized WHEN initializeERC3643Compliance with both enabled THEN succeeds', async () => {
+                        await expect(
+                            complianceFacet
+                                .connect(owner)
+                                .initializeERC3643Compliance(true, true)
+                        )
+                            .to.emit(complianceFacet, 'ComplianceFeatureToggled')
+                            .withArgs('MaxBalance', true)
+                            .to.emit(complianceFacet, 'ComplianceFeatureToggled')
+                            .withArgs('DailyMonthLimits', true)
+
+                        expect(
+                            await complianceFacet.isMaxBalanceEnabled()
+                        ).to.be.true
+                        expect(
+                            await complianceFacet.isDailyMonthLimitsEnabled()
+                        ).to.be.true
+                    })
+
+                    it('GIVEN compliance already initialized WHEN initializeERC3643Compliance again THEN reverts', async () => {
+                        await complianceFacet
+                            .connect(owner)
+                            .initializeERC3643Compliance(false, false)
+
+                        await expect(
+                            complianceFacet
+                                .connect(owner)
+                                .initializeERC3643Compliance(false, false)
+                        ).to.be.reverted
+                    })
+                })
+
+                // ----------------------------------------------------------------
+                // setMaxBalanceEnabled
+                // ----------------------------------------------------------------
+                describe('setMaxBalanceEnabled', () => {
+                    beforeEach(async () => {
+                        const fixture = async () => {
+                            // Initialize compliance with both disabled
+                            await complianceFacet
+                                .connect(owner)
+                                .initializeERC3643Compliance(false, false)
+                        }
+                        await loadFixture(fixture)
+                    })
+
+                    it('GIVEN no COMPLIANCE_ROLE WHEN setMaxBalanceEnabled THEN reverts', async () => {
+                        await accessControlFacet
+                            .connect(owner)
+                            .revokeRole(COMPLIANCE_ROLE, ownerAddress)
+
+                        await expect(
+                            complianceFacet
+                                .connect(owner)
+                                .setMaxBalanceEnabled(true)
+                        ).to.be.reverted
+                    })
+
+                    it('GIVEN COMPLIANCE_ROLE WHEN setMaxBalanceEnabled to true THEN succeeds and emits event', async () => {
+                        await expect(
+                            complianceFacet
+                                .connect(owner)
+                                .setMaxBalanceEnabled(true)
+                        )
+                            .to.emit(complianceFacet, 'ComplianceFeatureToggled')
+                            .withArgs('MaxBalance', true)
+
+                        expect(
+                            await complianceFacet.isMaxBalanceEnabled()
+                        ).to.be.true
+                    })
+
+                    it('GIVEN MaxBalance enabled WHEN setMaxBalanceEnabled to false THEN succeeds and emits event', async () => {
+                        await complianceFacet
+                            .connect(owner)
+                            .setMaxBalanceEnabled(true)
+
+                        await expect(
+                            complianceFacet
+                                .connect(owner)
+                                .setMaxBalanceEnabled(false)
+                        )
+                            .to.emit(complianceFacet, 'ComplianceFeatureToggled')
+                            .withArgs('MaxBalance', false)
+
+                        expect(
+                            await complianceFacet.isMaxBalanceEnabled()
+                        ).to.be.false
+                    })
+
+                    it('GIVEN MaxBalance disabled WHEN setMaxBalanceEnabled to false again THEN succeeds', async () => {
+                        await expect(
+                            complianceFacet
+                                .connect(owner)
+                                .setMaxBalanceEnabled(false)
+                        )
+                            .to.emit(complianceFacet, 'ComplianceFeatureToggled')
+                            .withArgs('MaxBalance', false)
+
+                        expect(
+                            await complianceFacet.isMaxBalanceEnabled()
+                        ).to.be.false
+                    })
+
+                    it('GIVEN MaxBalance enabled WHEN setMaxBalanceEnabled to true again THEN succeeds', async () => {
+                        await complianceFacet
+                            .connect(owner)
+                            .setMaxBalanceEnabled(true)
+
+                        await expect(
+                            complianceFacet
+                                .connect(owner)
+                                .setMaxBalanceEnabled(true)
+                        )
+                            .to.emit(complianceFacet, 'ComplianceFeatureToggled')
+                            .withArgs('MaxBalance', true)
+
+                        expect(
+                            await complianceFacet.isMaxBalanceEnabled()
+                        ).to.be.true
+                    })
+                })
+
+                // ----------------------------------------------------------------
+                // setDailyMonthLimitsEnabled
+                // ----------------------------------------------------------------
+                describe('setDailyMonthLimitsEnabled', () => {
+                    beforeEach(async () => {
+                        const fixture = async () => {
+                            // Initialize compliance with both disabled
+                            await complianceFacet
+                                .connect(owner)
+                                .initializeERC3643Compliance(false, false)
+                        }
+                        await loadFixture(fixture)
+                    })
+
+                    it('GIVEN no COMPLIANCE_ROLE WHEN setDailyMonthLimitsEnabled THEN reverts', async () => {
+                        await accessControlFacet
+                            .connect(owner)
+                            .revokeRole(COMPLIANCE_ROLE, ownerAddress)
+
+                        await expect(
+                            complianceFacet
+                                .connect(owner)
+                                .setDailyMonthLimitsEnabled(true)
+                        ).to.be.reverted
+                    })
+
+                    it('GIVEN COMPLIANCE_ROLE WHEN setDailyMonthLimitsEnabled to true THEN succeeds and emits event', async () => {
+                        await expect(
+                            complianceFacet
+                                .connect(owner)
+                                .setDailyMonthLimitsEnabled(true)
+                        )
+                            .to.emit(complianceFacet, 'ComplianceFeatureToggled')
+                            .withArgs('DailyMonthLimits', true)
+
+                        expect(
+                            await complianceFacet.isDailyMonthLimitsEnabled()
+                        ).to.be.true
+                    })
+
+                    it('GIVEN DailyMonthLimits enabled WHEN setDailyMonthLimitsEnabled to false THEN succeeds and emits event', async () => {
+                        await complianceFacet
+                            .connect(owner)
+                            .setDailyMonthLimitsEnabled(true)
+
+                        await expect(
+                            complianceFacet
+                                .connect(owner)
+                                .setDailyMonthLimitsEnabled(false)
+                        )
+                            .to.emit(complianceFacet, 'ComplianceFeatureToggled')
+                            .withArgs('DailyMonthLimits', false)
+
+                        expect(
+                            await complianceFacet.isDailyMonthLimitsEnabled()
+                        ).to.be.false
+                    })
+
+                    it('GIVEN DailyMonthLimits disabled WHEN setDailyMonthLimitsEnabled to false again THEN succeeds', async () => {
+                        await expect(
+                            complianceFacet
+                                .connect(owner)
+                                .setDailyMonthLimitsEnabled(false)
+                        )
+                            .to.emit(complianceFacet, 'ComplianceFeatureToggled')
+                            .withArgs('DailyMonthLimits', false)
+
+                        expect(
+                            await complianceFacet.isDailyMonthLimitsEnabled()
+                        ).to.be.false
+                    })
+
+                    it('GIVEN DailyMonthLimits enabled WHEN setDailyMonthLimitsEnabled to true again THEN succeeds', async () => {
+                        await complianceFacet
+                            .connect(owner)
+                            .setDailyMonthLimitsEnabled(true)
+
+                        await expect(
+                            complianceFacet
+                                .connect(owner)
+                                .setDailyMonthLimitsEnabled(true)
+                        )
+                            .to.emit(complianceFacet, 'ComplianceFeatureToggled')
+                            .withArgs('DailyMonthLimits', true)
+
+                        expect(
+                            await complianceFacet.isDailyMonthLimitsEnabled()
+                        ).to.be.true
+                    })
+                })
+
+                // ----------------------------------------------------------------
+                // isMaxBalanceEnabled
+                // ----------------------------------------------------------------
+                describe('isMaxBalanceEnabled', () => {
+                    it('GIVEN compliance initialized with MaxBalance disabled WHEN isMaxBalanceEnabled THEN returns false', async () => {
+                        await complianceFacet
+                            .connect(owner)
+                            .initializeERC3643Compliance(false, false)
+
+                        expect(
+                            await complianceFacet.isMaxBalanceEnabled()
+                        ).to.be.false
+                    })
+
+                    it('GIVEN compliance initialized with MaxBalance enabled WHEN isMaxBalanceEnabled THEN returns true', async () => {
+                        await complianceFacet
+                            .connect(owner)
+                            .initializeERC3643Compliance(true, false)
+
+                        expect(
+                            await complianceFacet.isMaxBalanceEnabled()
+                        ).to.be.true
+                    })
+
+                    it('GIVEN MaxBalance toggled multiple times WHEN isMaxBalanceEnabled THEN returns current state', async () => {
+                        await complianceFacet
+                            .connect(owner)
+                            .initializeERC3643Compliance(false, false)
+
+                        expect(
+                            await complianceFacet.isMaxBalanceEnabled()
+                        ).to.be.false
+
+                        await complianceFacet
+                            .connect(owner)
+                            .setMaxBalanceEnabled(true)
+                        expect(
+                            await complianceFacet.isMaxBalanceEnabled()
+                        ).to.be.true
+
+                        await complianceFacet
+                            .connect(owner)
+                            .setMaxBalanceEnabled(false)
+                        expect(
+                            await complianceFacet.isMaxBalanceEnabled()
+                        ).to.be.false
+                    })
+                })
+
+                // ----------------------------------------------------------------
+                // isDailyMonthLimitsEnabled
+                // ----------------------------------------------------------------
+                describe('isDailyMonthLimitsEnabled', () => {
+                    it('GIVEN compliance initialized with DailyMonthLimits disabled WHEN isDailyMonthLimitsEnabled THEN returns false', async () => {
+                        await complianceFacet
+                            .connect(owner)
+                            .initializeERC3643Compliance(false, false)
+
+                        expect(
+                            await complianceFacet.isDailyMonthLimitsEnabled()
+                        ).to.be.false
+                    })
+
+                    it('GIVEN compliance initialized with DailyMonthLimits enabled WHEN isDailyMonthLimitsEnabled THEN returns true', async () => {
+                        await complianceFacet
+                            .connect(owner)
+                            .initializeERC3643Compliance(false, true)
+
+                        expect(
+                            await complianceFacet.isDailyMonthLimitsEnabled()
+                        ).to.be.true
+                    })
+
+                    it('GIVEN DailyMonthLimits toggled multiple times WHEN isDailyMonthLimitsEnabled THEN returns current state', async () => {
+                        await complianceFacet
+                            .connect(owner)
+                            .initializeERC3643Compliance(false, false)
+
+                        expect(
+                            await complianceFacet.isDailyMonthLimitsEnabled()
+                        ).to.be.false
+
+                        await complianceFacet
+                            .connect(owner)
+                            .setDailyMonthLimitsEnabled(true)
+                        expect(
+                            await complianceFacet.isDailyMonthLimitsEnabled()
+                        ).to.be.true
+
+                        await complianceFacet
+                            .connect(owner)
+                            .setDailyMonthLimitsEnabled(false)
+                        expect(
+                            await complianceFacet.isDailyMonthLimitsEnabled()
+                        ).to.be.false
+                    })
+                })
+
+                // ----------------------------------------------------------------
+                // canTransfer
+                // ----------------------------------------------------------------
+                describe('canTransfer', () => {
+                    beforeEach(async () => {
+                        const fixture = async () => {
+                            // Initialize compliance with both disabled
+                            await complianceFacet
+                                .connect(owner)
+                                .initializeERC3643Compliance(false, false)
+
+                            // Mint tokens to alice
+                            await erc3643Capped
+                                .connect(owner)
+                                .mint(aliceAddress, 1000n)
+                        }
+                        await loadFixture(fixture)
+                    })
+
+                    it('GIVEN all compliance features disabled WHEN canTransfer THEN returns true', async () => {
+                        const signers = await ethers.getSigners()
+                        const bob = signers[2] as unknown as Signer
+                        const bobAddress = await bob.getAddress()
+
+                        const canTransfer = await complianceFacet.canTransfer(
+                            aliceAddress,
+                            bobAddress,
+                            100n
+                        )
+
+                        expect(canTransfer).to.be.true
+                    })
+
+                    it('GIVEN zero amount WHEN canTransfer THEN returns true', async () => {
+                        const signers = await ethers.getSigners()
+                        const bob = signers[2] as unknown as Signer
+                        const bobAddress = await bob.getAddress()
+
+                        const canTransfer = await complianceFacet.canTransfer(
+                            aliceAddress,
+                            bobAddress,
+                            0n
+                        )
+
+                        expect(canTransfer).to.be.true
+                    })
+
+                    it('GIVEN zero address recipient WHEN canTransfer THEN returns result based on compliance', async () => {
+                        // With no compliance enabled, should return true
+                        const canTransfer = await complianceFacet.canTransfer(
+                            aliceAddress,
+                            ZeroAddress,
+                            100n
+                        )
+
+                        expect(canTransfer).to.be.true
+                    })
+
+                    it('GIVEN zero address sender WHEN canTransfer THEN returns result based on compliance', async () => {
+                        const signers = await ethers.getSigners()
+                        const bob = signers[2] as unknown as Signer
+                        const bobAddress = await bob.getAddress()
+
+                        // With no compliance enabled, should return true
+                        const canTransfer = await complianceFacet.canTransfer(
+                            ZeroAddress,
+                            bobAddress,
+                            100n
+                        )
+
+                        expect(canTransfer).to.be.true
+                    })
+                })
+
+                // ----------------------------------------------------------------
+                // Pause Integration
+                // ----------------------------------------------------------------
+                describe('Pause Integration', () => {
+                    beforeEach(async () => {
+                        const fixture = async () => {
+                            await accessControlFacet
+                                .connect(owner)
+                                .grantRole(PAUSER_ROLE, ownerAddress)
+
+                            // Initialize compliance with both disabled
+                            await complianceFacet
+                                .connect(owner)
+                                .initializeERC3643Compliance(false, false)
+                        }
+                        await loadFixture(fixture)
+                    })
+
+                    it('GIVEN paused contract WHEN setMaxBalanceEnabled THEN reverts', async () => {
+                        await pauseFacet.connect(owner).pause()
+
+                        await expect(
+                            complianceFacet
+                                .connect(owner)
+                                .setMaxBalanceEnabled(true)
+                        ).to.be.reverted
+                    })
+
+                    it('GIVEN paused contract WHEN setDailyMonthLimitsEnabled THEN reverts', async () => {
+                        await pauseFacet.connect(owner).pause()
+
+                        await expect(
+                            complianceFacet
+                                .connect(owner)
+                                .setDailyMonthLimitsEnabled(true)
+                        ).to.be.reverted
+                    })
+
+                    it('GIVEN unpaused contract WHEN setMaxBalanceEnabled THEN succeeds', async () => {
+                        await pauseFacet.connect(owner).pause()
+                        await pauseFacet.connect(owner).unpause()
+
+                        await expect(
+                            complianceFacet
+                                .connect(owner)
+                                .setMaxBalanceEnabled(true)
+                        ).to.not.be.reverted
+                    })
+
+                    it('GIVEN unpaused contract WHEN setDailyMonthLimitsEnabled THEN succeeds', async () => {
+                        await pauseFacet.connect(owner).pause()
+                        await pauseFacet.connect(owner).unpause()
+
+                        await expect(
+                            complianceFacet
+                                .connect(owner)
+                                .setDailyMonthLimitsEnabled(true)
+                        ).to.not.be.reverted
+                    })
+                })
+
+                // ----------------------------------------------------------------
+                // Complex Scenarios
+                // ----------------------------------------------------------------
+                describe('Complex Scenarios', () => {
+                    beforeEach(async () => {
+                        const fixture = async () => {
+                            // Initialize compliance with both disabled
+                            await complianceFacet
+                                .connect(owner)
+                                .initializeERC3643Compliance(false, false)
+                        }
+                        await loadFixture(fixture)
+                    })
+
+                    it('GIVEN both features disabled WHEN enabling both simultaneously THEN both are enabled', async () => {
+                        await complianceFacet
+                            .connect(owner)
+                            .setMaxBalanceEnabled(true)
+                        await complianceFacet
+                            .connect(owner)
+                            .setDailyMonthLimitsEnabled(true)
+
+                        expect(
+                            await complianceFacet.isMaxBalanceEnabled()
+                        ).to.be.true
+                        expect(
+                            await complianceFacet.isDailyMonthLimitsEnabled()
+                        ).to.be.true
+                    })
+
+                    it('GIVEN both features enabled WHEN disabling both simultaneously THEN both are disabled', async () => {
+                        await complianceFacet
+                            .connect(owner)
+                            .setMaxBalanceEnabled(true)
+                        await complianceFacet
+                            .connect(owner)
+                            .setDailyMonthLimitsEnabled(true)
+
+                        await complianceFacet
+                            .connect(owner)
+                            .setMaxBalanceEnabled(false)
+                        await complianceFacet
+                            .connect(owner)
+                            .setDailyMonthLimitsEnabled(false)
+
+                        expect(
+                            await complianceFacet.isMaxBalanceEnabled()
+                        ).to.be.false
+                        expect(
+                            await complianceFacet.isDailyMonthLimitsEnabled()
+                        ).to.be.false
+                    })
+
+                    it('GIVEN MaxBalance enabled and DailyMonthLimits disabled WHEN toggling DailyMonthLimits THEN MaxBalance state unchanged', async () => {
+                        await complianceFacet
+                            .connect(owner)
+                            .setMaxBalanceEnabled(true)
+
+                        expect(
+                            await complianceFacet.isMaxBalanceEnabled()
+                        ).to.be.true
+                        expect(
+                            await complianceFacet.isDailyMonthLimitsEnabled()
+                        ).to.be.false
+
+                        await complianceFacet
+                            .connect(owner)
+                            .setDailyMonthLimitsEnabled(true)
+
+                        expect(
+                            await complianceFacet.isMaxBalanceEnabled()
+                        ).to.be.true
+                        expect(
+                            await complianceFacet.isDailyMonthLimitsEnabled()
+                        ).to.be.true
+
+                        await complianceFacet
+                            .connect(owner)
+                            .setDailyMonthLimitsEnabled(false)
+
+                        expect(
+                            await complianceFacet.isMaxBalanceEnabled()
+                        ).to.be.true
+                        expect(
+                            await complianceFacet.isDailyMonthLimitsEnabled()
+                        ).to.be.false
+                    })
+
+                    it('GIVEN DailyMonthLimits enabled and MaxBalance disabled WHEN toggling MaxBalance THEN DailyMonthLimits state unchanged', async () => {
+                        await complianceFacet
+                            .connect(owner)
+                            .setDailyMonthLimitsEnabled(true)
+
+                        expect(
+                            await complianceFacet.isMaxBalanceEnabled()
+                        ).to.be.false
+                        expect(
+                            await complianceFacet.isDailyMonthLimitsEnabled()
+                        ).to.be.true
+
+                        await complianceFacet
+                            .connect(owner)
+                            .setMaxBalanceEnabled(true)
+
+                        expect(
+                            await complianceFacet.isMaxBalanceEnabled()
+                        ).to.be.true
+                        expect(
+                            await complianceFacet.isDailyMonthLimitsEnabled()
+                        ).to.be.true
+
+                        await complianceFacet
+                            .connect(owner)
+                            .setMaxBalanceEnabled(false)
+
+                        expect(
+                            await complianceFacet.isMaxBalanceEnabled()
+                        ).to.be.false
+                        expect(
+                            await complianceFacet.isDailyMonthLimitsEnabled()
+                        ).to.be.true
+                    })
+
+                    it('GIVEN rapid toggling of features WHEN final state checked THEN reflects last operation', async () => {
+                        // Rapid toggles
+                        await complianceFacet
+                            .connect(owner)
+                            .setMaxBalanceEnabled(true)
+                        await complianceFacet
+                            .connect(owner)
+                            .setMaxBalanceEnabled(false)
+                        await complianceFacet
+                            .connect(owner)
+                            .setMaxBalanceEnabled(true)
+                        await complianceFacet
+                            .connect(owner)
+                            .setDailyMonthLimitsEnabled(true)
+                        await complianceFacet
+                            .connect(owner)
+                            .setDailyMonthLimitsEnabled(false)
+
+                        expect(
+                            await complianceFacet.isMaxBalanceEnabled()
+                        ).to.be.true
+                        expect(
+                            await complianceFacet.isDailyMonthLimitsEnabled()
+                        ).to.be.false
+                    })
+                })
+            })
+        })
+
+        describe('when Mode compliance is active', () => {
+            //** Reserved for future tests when compliance features are actively enforcing rules on transfers */
+            describe('when one compliance feature is enabled', () => {})
+
+            describe('when multiple compliance features are enabled', () => {
+                //** Probar escenarios donde el compliance de un feature se pasa y el de otro no, y viceversa */
+            })
+        })
+    })
 
     // ====================================================================
     // COMPLIANCE MAX BALANCE FEATURE

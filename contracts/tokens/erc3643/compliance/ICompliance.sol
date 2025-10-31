@@ -54,6 +54,30 @@ interface ICompliance {
     ) external;
 
     /**
+     * @notice Enables or disables the MaxBalance feature.
+     * @param _enabled True to enable, false to disable.
+     */
+    function setMaxBalanceEnabled(bool _enabled) external;
+
+    /**
+     * @notice Enables or disables the Daily/Monthly Limits feature.
+     * @param _enabled True to enable, false to disable.
+     */
+    function setDailyMonthLimitsEnabled(bool _enabled) external;
+
+    /**
+     * @notice Returns true if MaxBalance feature is enabled.
+     * @return True if enabled, false otherwise.
+     */
+    function isMaxBalanceEnabled() external view returns (bool);
+
+    /**
+     * @notice Returns true if Daily/Monthly Limits feature is enabled.
+     * @return True if enabled, false otherwise.
+     */
+    function isDailyMonthLimitsEnabled() external view returns (bool);
+
+    /**
      * @notice Checks if a transfer is compliant.
      * @dev Read-only function. Does not modify state or emit events.
      *      Returns true if all compliance checks pass, false otherwise.

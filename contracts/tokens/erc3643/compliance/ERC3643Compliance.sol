@@ -49,10 +49,11 @@ abstract contract ERC3643Compliance is ICompliance, ERC203643InternalCommon {
      *
      * Requirements:
      * - Caller must have COMPLIANCE_ROLE
+     * - Contract must not be paused
      */
     function setMaxBalanceEnabled(
         bool _enabled
-    ) external onlyRole(_COMPLIANCE_ROLE) {
+    ) external onlyRole(_COMPLIANCE_ROLE) whenNotPaused {
         _setMaxBalanceEnabled(_enabled);
         emit ComplianceFeatureToggled('MaxBalance', _enabled);
     }
@@ -65,10 +66,11 @@ abstract contract ERC3643Compliance is ICompliance, ERC203643InternalCommon {
      *
      * Requirements:
      * - Caller must have COMPLIANCE_ROLE
+     * - Contract must not be paused
      */
     function setDailyMonthLimitsEnabled(
         bool _enabled
-    ) external onlyRole(_COMPLIANCE_ROLE) {
+    ) external onlyRole(_COMPLIANCE_ROLE) whenNotPaused {
         _setDailyMonthLimitsEnabled(_enabled);
         emit ComplianceFeatureToggled('DailyMonthLimits', _enabled);
     }

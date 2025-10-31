@@ -43,6 +43,7 @@ import {
     ERC3643MetadataFacet,
     ERC3643FreezeFacet,
     ERC3643RecoveryFacet,
+    ERC3643ComplianceFacet
 } from '../typechain-types'
 import {
     DEFAULT_ADMIN_ROLE,
@@ -81,6 +82,7 @@ import {
     ERC3643_METADATA_RESOLVER_KEY,
     ERC3643_FREEZE_RESOLVER_KEY,
     ERC3643_RECOVERY_RESOLVER_KEY,
+    ERC3643_COMPLIANCE_RESOLVER_KEY
 } from './constants'
 import { getEvent } from '../scripts/utils/getEvent'
 import { getIsbeFactory } from '../scripts/utils/getIsbeFactory'
@@ -367,6 +369,8 @@ export async function deployGovernance(
         useCaseProxy: useCaseDeployment.proxy,
         erc3643Metadata: useCaseDeployment.erc3643Metadata,
         erc3643Freeze: useCaseDeployment.erc3643Freeze,
+        erc3643Recovery: useCaseDeployment.erc3643Recovery,
+        erc3643Compliance: useCaseDeployment.erc3643Compliance,
     }
 }
 
@@ -959,6 +963,10 @@ export async function deployERC3643UseCasesFacets(
         'ERC203643ControllerFacet'
     )
 
+    const ERC3643ComplianceFacetFactory = await ethers.getContractFactory(
+        'ERC3643ComplianceFacet'
+    )
+
     // Deploy all business logic contracts before setting configuration
     const isbeCutFacet = await deployBusinessLogicFromFactory(
         ISBE_CUT_RESOLVER_KEY,
@@ -1000,6 +1008,10 @@ export async function deployERC3643UseCasesFacets(
         ERC203643_CONTROLLER_RESOLVER_KEY,
         ERC203643ControllerFacetFactory
     )
+    const erc3643ComplianceFacet = await deployBusinessLogicFromFactory(
+        ERC3643_COMPLIANCE_RESOLVER_KEY,
+        ERC3643ComplianceFacetFactory
+    )
 
     // Set configuration for ERC3643
 
@@ -1026,6 +1038,10 @@ export async function deployERC3643UseCasesFacets(
         },
         {
             businessId: ERC203643_CONTROLLER_RESOLVER_KEY,
+            version: 1,
+        },
+        {
+            businessId: ERC3643_COMPLIANCE_RESOLVER_KEY,
             version: 1,
         },
     ])
@@ -1062,6 +1078,9 @@ export async function deployERC3643UseCasesFacets(
     const erc203643Controller = ERC203643ControllerFacetFactory.attach(
         proxy
     ) as ERC203643ControllerFacet
+    const erc3643Compliance = ERC3643ComplianceFacetFactory.attach(
+        proxy
+    ) as ERC3643ComplianceFacet
 
     return {
         pause,
@@ -1072,6 +1091,7 @@ export async function deployERC3643UseCasesFacets(
         erc3643Recovery,
         erc203643Capped,
         erc203643Controller,
+        erc3643Compliance,
         isbeCutFacet,
         isbeLoupeFacet,
         proxy,
@@ -1083,5 +1103,6 @@ export async function deployERC3643UseCasesFacets(
         erc203643CappedFacet,
         erc203643ControllerFacet,
         erc3643RecoveryFacet,
+        erc3643ComplianceFacet,
     }
 }
