@@ -1,0 +1,27 @@
+version: v2
+
+config:
+  contracts:
+      evm:
+        enabled: true
+        solc: "0.8.28"
+        framework: "hardhat"
+        framework-version: "^2.25.0"
+        node-version: "22"
+        package-manager: "npm"
+        package-manager-version: "10.9.4"
+        skip-assembly: true
+        excluded-paths:
+          - "contracts/testwrapper"
+          - "test/"
+  secrets:
+    enabled: true
+  iac:
+    enabled: true
+  dependencies:
+    js:
+      enabled: true
+
+tasks:
+  install-dependencies:
+    - npm install
