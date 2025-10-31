@@ -4396,15 +4396,6 @@ describe('ERC3643 Token', function () {
                 })
             })
         })
-
-        describe('when Mode compliance is active', () => {
-            //** Reserved for future tests when compliance features are actively enforcing rules on transfers */
-            describe('when one compliance feature is enabled', () => {})
-
-            describe('when multiple compliance features are enabled', () => {
-                //** Probar escenarios donde el compliance de un feature se pasa y el de otro no, y viceversa */
-            })
-        })
     })
 
     // ====================================================================
