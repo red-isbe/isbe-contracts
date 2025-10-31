@@ -2,6 +2,7 @@ import { expect } from 'chai'
 import { ethers } from 'hardhat'
 import { Signer, ZeroAddress } from 'ethers'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
+import '@nomicfoundation/hardhat-chai-matchers'
 import { deployGovernance, CONFIGURATION_ID_ERC3643 } from './initialization'
 import {
     METADATA_ROLE,
