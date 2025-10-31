@@ -6454,6 +6454,10 @@ describe('ERC3643 Token', function () {
                         await accessControlFacet
                             .connect(owner)
                             .grantRole(CAP_ROLE, ownerAddress)
+                        // Grant COMPLIANCE_ROLE to alice so her transfers are validated
+                        await accessControlFacet
+                            .connect(owner)
+                            .grantRole(COMPLIANCE_ROLE, aliceAddress)
 
                         // Initialize ERC20
                         await erc20Facet
@@ -6481,8 +6485,19 @@ describe('ERC3643 Token', function () {
                             proxyAddress
                         )) as IERC203643Capped
 
+                        // Get compliance facet
+                        const complianceFacet = (await ethers.getContractAt(
+                            'ERC3643ComplianceFacet',
+                            proxyAddress
+                        )) as ERC3643ComplianceFacet
+
                         // Initialize cap
                         await erc3643Capped.connect(owner).initializeCap(10000n)
+
+                        // Initialize compliance module with DayMonthLimits enabled
+                        await complianceFacet
+                            .connect(owner)
+                            .initializeERC3643Compliance(false, true)
                     }
                     await loadFixture(fixture)
                 })
@@ -6965,6 +6980,23 @@ describe('ERC3643 Token', function () {
                             )
 
                         expect(isCompliant).to.be.true
+                    })
+
+                    it('GIVEN DayMonthLimits enabled WHEN transfer exceeds daily limit THEN reverts with compliance error', async () => {
+                        const signers = await ethers.getSigners()
+                        const bob = signers[2] as unknown as Signer
+                        const bobAddress = await bob.getAddress()
+
+                        // Daily limit is 1000n (from beforeEach)
+                        // Alice has 20000n tokens (from beforeEach)
+                        const excessAmount = 1001n // Exceeds daily limit of 1000n
+
+                        // Transfer should revert due to compliance rules
+                        await expect(
+                            erc20Facet
+                                .connect(alice)
+                                .transfer(bobAddress, excessAmount)
+                        ).to.be.reverted
                     })
                 })
             })
