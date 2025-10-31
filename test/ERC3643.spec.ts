@@ -4905,12 +4905,18 @@ describe('ERC3643 Token', function () {
                         // Bob would have 4000n total, exceeding MaxBalance of 3000n
                         // Should fail
 
+                        const complianceModule = await ethers.getContractAt(
+                            'ICompliance',
+                            await erc3643.getAddress()
+                        )
+
                         await expect(
                             erc3643
                                 .connect(owner)
                                 .recoveryAddress(aliceAddress, bobAddress)
-                        ).to.be.revertedWith(
-                            'ERC3643: transfer violates compliance rules'
+                        ).to.be.revertedWithCustomError(
+                            complianceModule,
+                            'TransferViolatesComplianceRules'
                         )
 
                         // Verify no tokens were transferred
@@ -4975,13 +4981,18 @@ describe('ERC3643 Token', function () {
                         // Recovery would transfer 2000n from alice to bob
                         // This exceeds daily limit of 1000n
                         // Should fail
+                        const complianceModule = await ethers.getContractAt(
+                            'ICompliance',
+                            await erc3643.getAddress()
+                        )
 
                         await expect(
                             erc3643
                                 .connect(owner)
                                 .recoveryAddress(aliceAddress, bobAddress)
-                        ).to.be.revertedWith(
-                            'ERC3643: transfer violates compliance rules'
+                        ).to.be.revertedWithCustomError(
+                            complianceModule,
+                            'TransferViolatesComplianceRules'
                         )
 
                         // Verify no tokens were transferred
@@ -5062,12 +5073,18 @@ describe('ERC3643 Token', function () {
                     // Bob would have 4000n total, exceeding MaxBalance of 3000n
                     // Should fail (even though it's under daily limit)
 
+                    const complianceModule = await ethers.getContractAt(
+                        'ICompliance',
+                        await erc3643.getAddress()
+                    )
+
                     await expect(
                         erc3643
                             .connect(owner)
                             .recoveryAddress(aliceAddress, bobAddress)
-                    ).to.be.revertedWith(
-                        'ERC3643: transfer violates compliance rules'
+                    ).to.be.revertedWithCustomError(
+                        complianceModule,
+                        'TransferViolatesComplianceRules'
                     )
 
                     // Verify no tokens were transferred
@@ -5089,12 +5106,18 @@ describe('ERC3643 Token', function () {
                     // But transfer is 2000n (exceeds daily limit of 1000n)
                     // Should fail
 
+                    const complianceModule = await ethers.getContractAt(
+                        'ICompliance',
+                        await erc3643.getAddress()
+                    )
+
                     await expect(
                         erc3643
                             .connect(owner)
                             .recoveryAddress(aliceAddress, bobAddress)
-                    ).to.be.revertedWith(
-                        'ERC3643: transfer violates compliance rules'
+                    ).to.be.revertedWithCustomError(
+                        complianceModule,
+                        'TransferViolatesComplianceRules'
                     )
 
                     // Verify no tokens were transferred

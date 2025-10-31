@@ -10,7 +10,7 @@ import {ERC3643MetadataInternal} from '../erc3643/token/erc3643metadata/ERC3643M
 import {ERC3643FreezeInternal} from '../erc3643/token/erc3643freeze/ERC3643FreezeInternal.sol';
 import {ERC20SnapshotInternal} from '../erc20/extensions/snapshot/ERC20SnapshotInternal.sol';
 import {ERC3643ComplianceInternal} from '../erc3643/compliance/ERC3643ComplianceInternal.sol';
-
+import {ICompliance} from '../erc3643/compliance/ICompliance.sol';
 import {_CONTROLLER_ROLE} from '../../constants/roles.sol';
 import {_RECOVERY_ROLE} from '../../constants/roles.sol';
 import {_COMPLIANCE_ROLE} from '../../constants/roles.sol';
@@ -81,10 +81,9 @@ abstract contract ERC203643InternalCommon is
 
         // Compliance hooks (ERC-3643 mode only). By pass by _COMPLIANCE_ROLE.
         if (_hasRole(_COMPLIANCE_ROLE, msg.sender)) {
-            require(
-                _canTransfer(_from, _to, _amount),
-                'ERC3643: mint violates compliance rules'
-            );
+            if (!_canTransfer(_from, _to, _amount)) {
+                revert ICompliance.MintViolatesComplianceRules();
+            }
             _created(_to, _amount);
         }
     }
@@ -106,7 +105,9 @@ abstract contract ERC203643InternalCommon is
         _updateTotalSupplySnapshot();
 
         uint256 balance = _balanceOf(_from);
-        require(balance >= _amount, IERC20Isbe.BurnAmountExceedsBalance());
+        if (balance < _amount) {
+            revert IERC20Isbe.BurnAmountExceedsBalance();
+        }
 
         // Controller burn with auto-unfreeze capability
         if (_hasRole(_CONTROLLER_ROLE, msg.sender)) {
@@ -141,14 +142,15 @@ abstract contract ERC203643InternalCommon is
         _updateAccountSnapshot(_to);
 
         uint256 balance = _balanceOf(_from);
-        require(balance >= _amount, IERC20Isbe.TransferAmountExceedsBalance());
+        if (balance < _amount) {
+            revert IERC20Isbe.TransferAmountExceedsBalance();
+        }
 
         // Compliance hooks (ERC-3643 mode only). By pass by _COMPLIANCE_ROLE.
         if (_hasRole(_COMPLIANCE_ROLE, msg.sender)) {
-            require(
-                _canTransfer(_from, _to, _amount),
-                'ERC3643: transfer violates compliance rules'
-            );
+            if (!_canTransfer(_from, _to, _amount)) {
+                revert ICompliance.TransferViolatesComplianceRules();
+            }
             _transferred(_from, _to, _amount);
         }
 
