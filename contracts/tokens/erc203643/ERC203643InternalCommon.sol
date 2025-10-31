@@ -81,7 +81,10 @@ abstract contract ERC203643InternalCommon is
 
         // Compliance hooks (ERC-3643 mode only). By pass by _COMPLIANCE_ROLE.
         if (_hasRole(_COMPLIANCE_ROLE, msg.sender)) {
-            _canTransfer(_from, _to, _amount);
+            require(
+                _canTransfer(_from, _to, _amount),
+                "ERC3643: mint violates compliance rules"
+            );
             _created(_to, _amount);
         }
     }
@@ -142,7 +145,10 @@ abstract contract ERC203643InternalCommon is
 
         // Compliance hooks (ERC-3643 mode only). By pass by _COMPLIANCE_ROLE.
         if (_hasRole(_COMPLIANCE_ROLE, msg.sender)) {
-            _canTransfer(_from, _to, _amount);
+            require(
+                _canTransfer(_from, _to, _amount),
+                "ERC3643: transfer violates compliance rules"
+            );
             _transferred(_from, _to, _amount);
         }
 

@@ -2770,13 +2770,437 @@ describe('ERC3643 Token', function () {
                 })
             })
 
-            describe('when Mode compliance is active',() => {
-                //** Reserved for future compliance-related tests involving the Controller module */
-                describe('when one compliance feature is enabled',() => {
+            describe('when Mode compliance is active', () => {
+                let erc3643Capped: IERC203643Capped
+                let complianceFacet: ERC3643ComplianceFacet
+                let maxBalanceFacet: ERC3643ComplianceMaxBalanceFacet
+                let complianceDMLimFacet: ERC3643ComplianceDMLimFacet
+                let bob: Signer
+                let bobAddress: string
+
+                const initialCap = 10000n
+                const maxBalanceLimit = 5000n
+                const dailyLimit = 1000n
+                const monthlyLimit = 5000n
+
+                beforeEach(async () => {
+                    const fixture = async () => {
+                        const signers = await ethers.getSigners()
+                        bob = signers[2] as unknown as Signer
+                        bobAddress = await bob.getAddress()
+
+                        // Grant necessary roles including COMPLIANCE_ROLE
+                        await accessControlFacet
+                            .connect(owner)
+                            .grantRole(METADATA_ROLE, ownerAddress)
+                        await accessControlFacet
+                            .connect(owner)
+                            .grantRole(COMPLIANCE_ROLE, ownerAddress)
+                        await accessControlFacet
+                            .connect(owner)
+                            .grantRole(MINTER_ROLE, ownerAddress)
+                        await accessControlFacet
+                            .connect(owner)
+                            .grantRole(CAP_ROLE, ownerAddress)
+
+                        // Initialize ERC20
+                        await erc20Facet
+                            .connect(owner)
+                            .initializeErc20(tokenName, tokenSymbol, tokenDecimals)
+
+                        // Initialize ERC3643 Metadata
+                        await erc3643
+                            .connect(owner)
+                            .initializeERC3643Metadata(version)
+
+                        // Get facet interfaces
+                        erc3643Capped = (await ethers.getContractAt(
+                            'IERC203643Capped',
+                            proxyAddress
+                        )) as IERC203643Capped
+
+                        complianceFacet = (await ethers.getContractAt(
+                            'ERC3643ComplianceFacet',
+                            proxyAddress
+                        )) as ERC3643ComplianceFacet
+
+                        maxBalanceFacet = (await ethers.getContractAt(
+                            'ERC3643ComplianceMaxBalanceFacet',
+                            proxyAddress
+                        )) as ERC3643ComplianceMaxBalanceFacet
+
+                        complianceDMLimFacet = (await ethers.getContractAt(
+                            'ERC3643ComplianceDMLimFacet',
+                            proxyAddress
+                        )) as ERC3643ComplianceDMLimFacet
+
+                        // Initialize cap
+                        await erc3643Capped.connect(owner).initializeCap(initialCap)
+                    }
+                    await loadFixture(fixture)
                 })
 
-                describe('when multiple compliance features are enabled',() => {
-                    //** Probar escenarios donde el compliance de un feature se pasa y el de otro no, y viceversa */
+                describe('when one compliance feature is enabled', () => {
+                    describe('MaxBalance feature', () => {
+                        beforeEach(async () => {
+                            const fixture = async () => {
+                                // Initialize compliance with MaxBalance enabled
+                                await complianceFacet
+                                    .connect(owner)
+                                    .initializeERC3643Compliance(true, false)
+
+                                // Initialize MaxBalance
+                                await maxBalanceFacet
+                                    .connect(owner)
+                                    .initializeERC3643ComplianceMaxBalance(
+                                        maxBalanceLimit
+                                    )
+                            }
+                            await loadFixture(fixture)
+                        })
+
+                        it('GIVEN MaxBalance enabled WHEN mint within maxBalance limit THEN succeeds', async () => {
+                            const mintAmount = 3000n // < 5000 maxBalance
+
+                            await expect(
+                                erc3643Capped
+                                    .connect(owner)
+                                    .mint(aliceAddress, mintAmount)
+                            )
+                                .to.emit(erc20Facet, 'Transfer')
+                                .withArgs(ZeroAddress, aliceAddress, mintAmount)
+
+                            expect(
+                                await erc20Facet.balanceOf(aliceAddress)
+                            ).to.equal(mintAmount)
+                        })
+
+                        it('GIVEN MaxBalance enabled WHEN mint exactly at maxBalance limit THEN succeeds', async () => {
+                            const mintAmount = maxBalanceLimit // = 5000
+
+                            await expect(
+                                erc3643Capped
+                                    .connect(owner)
+                                    .mint(aliceAddress, mintAmount)
+                            )
+                                .to.emit(erc20Facet, 'Transfer')
+                                .withArgs(ZeroAddress, aliceAddress, mintAmount)
+
+                            expect(
+                                await erc20Facet.balanceOf(aliceAddress)
+                            ).to.equal(maxBalanceLimit)
+                        })
+
+                        it('GIVEN MaxBalance enabled WHEN mint exceeding maxBalance limit THEN reverts', async () => {
+                            const mintAmount = 6000n // > 5000 maxBalance
+
+                            await expect(
+                                erc3643Capped
+                                    .connect(owner)
+                                    .mint(aliceAddress, mintAmount)
+                            ).to.be.reverted
+                        })
+
+                        it('GIVEN recipient with existing balance WHEN mint would exceed maxBalance THEN reverts', async () => {
+                            // First mint
+                            await erc3643Capped
+                                .connect(owner)
+                                .mint(aliceAddress, 3000n)
+
+                            // Second mint would exceed (3000 + 3000 = 6000 > 5000)
+                            await expect(
+                                erc3643Capped
+                                    .connect(owner)
+                                    .mint(aliceAddress, 3000n)
+                            ).to.be.reverted
+                        })
+
+                        it('GIVEN recipient with existing balance WHEN mint stays within maxBalance THEN succeeds', async () => {
+                            // First mint
+                            await erc3643Capped
+                                .connect(owner)
+                                .mint(aliceAddress, 3000n)
+
+                            // Second mint within limit (3000 + 2000 = 5000 = maxBalance)
+                            await expect(
+                                erc3643Capped
+                                    .connect(owner)
+                                    .mint(aliceAddress, 2000n)
+                            )
+                                .to.emit(erc20Facet, 'Transfer')
+                                .withArgs(ZeroAddress, aliceAddress, 2000n)
+
+                            expect(
+                                await erc20Facet.balanceOf(aliceAddress)
+                            ).to.equal(maxBalanceLimit)
+                        })
+
+                        it('GIVEN MaxBalance enabled WHEN batchMint all within limits THEN succeeds', async () => {
+                            const amounts = [2000n, 3000n, 4000n]
+                            const recipients = [aliceAddress, bobAddress, aliceAddress]
+
+                            // Note: alice will receive 2000 + 4000 = 6000 which exceeds 5000
+                            // This should fail
+                            await expect(
+                                erc3643Capped
+                                    .connect(owner)
+                                    .batchMint(recipients, amounts)
+                            ).to.be.reverted
+                        })
+
+                        it('GIVEN MaxBalance enabled WHEN batchMint respecting limits THEN succeeds', async () => {
+                            const amounts = [2000n, 3000n, 1000n]
+                            const recipients = [
+                                aliceAddress,
+                                bobAddress,
+                                aliceAddress,
+                            ]
+
+                            // alice: 2000 + 1000 = 3000 < 5000 ✓
+                            // bob: 3000 < 5000 ✓
+                            await expect(
+                                erc3643Capped
+                                    .connect(owner)
+                                    .batchMint(recipients, amounts)
+                            ).to.not.be.reverted
+
+                            expect(
+                                await erc20Facet.balanceOf(aliceAddress)
+                            ).to.equal(3000n)
+                            expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                                3000n
+                            )
+                        })
+                    })
+
+                    describe('DayMonthLimits feature', () => {
+                        beforeEach(async () => {
+                            const fixture = async () => {
+                                // Initialize compliance with DayMonthLimits enabled
+                                await complianceFacet
+                                    .connect(owner)
+                                    .initializeERC3643Compliance(false, true)
+
+                                // Initialize DayMonthLimits
+                                await complianceDMLimFacet
+                                    .connect(owner)
+                                    .initializeERC3643ComplianceDMLim(
+                                        dailyLimit,
+                                        monthlyLimit
+                                    )
+                            }
+                            await loadFixture(fixture)
+                        })
+
+                        it('GIVEN DayMonthLimits enabled WHEN mint any amount THEN succeeds (mint is creation, not transfer)', async () => {
+                            const mintAmount = 8000n // Exceeds daily/monthly limits but should succeed
+
+                            await expect(
+                                erc3643Capped
+                                    .connect(owner)
+                                    .mint(aliceAddress, mintAmount)
+                            )
+                                .to.emit(erc20Facet, 'Transfer')
+                                .withArgs(ZeroAddress, aliceAddress, mintAmount)
+
+                            expect(
+                                await erc20Facet.balanceOf(aliceAddress)
+                            ).to.equal(mintAmount)
+                        })
+
+                        it('GIVEN DayMonthLimits enabled WHEN batchMint large amounts THEN succeeds (creation not restricted)', async () => {
+                            const amounts = [3000n, 4000n, 2000n]
+                            const recipients = [
+                                aliceAddress,
+                                bobAddress,
+                                aliceAddress,
+                            ]
+
+                            await expect(
+                                erc3643Capped
+                                    .connect(owner)
+                                    .batchMint(recipients, amounts)
+                            ).to.not.be.reverted
+
+                            expect(
+                                await erc20Facet.balanceOf(aliceAddress)
+                            ).to.equal(5000n)
+                            expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                                4000n
+                            )
+                        })
+                    })
+                })
+
+                describe('when multiple compliance features are enabled', () => {
+                    beforeEach(async () => {
+                        const fixture = async () => {
+                            // Initialize compliance with BOTH features enabled
+                            await complianceFacet
+                                .connect(owner)
+                                .initializeERC3643Compliance(true, true)
+
+                            // Initialize MaxBalance
+                            await maxBalanceFacet
+                                .connect(owner)
+                                .initializeERC3643ComplianceMaxBalance(
+                                    maxBalanceLimit
+                                )
+
+                            // Initialize DayMonthLimits
+                            await complianceDMLimFacet
+                                .connect(owner)
+                                .initializeERC3643ComplianceDMLim(
+                                    dailyLimit,
+                                    monthlyLimit
+                                )
+                        }
+                        await loadFixture(fixture)
+                    })
+
+                    it('GIVEN both features enabled WHEN mint within maxBalance THEN succeeds (DayMonthLimits does not affect mint)', async () => {
+                        const mintAmount = 4000n // < 5000 maxBalance
+
+                        await expect(
+                            erc3643Capped
+                                .connect(owner)
+                                .mint(aliceAddress, mintAmount)
+                        )
+                            .to.emit(erc20Facet, 'Transfer')
+                            .withArgs(ZeroAddress, aliceAddress, mintAmount)
+
+                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                            mintAmount
+                        )
+                    })
+
+                    it('GIVEN both features enabled WHEN mint exceeds maxBalance THEN reverts (MaxBalance enforced)', async () => {
+                        const mintAmount = 6000n // > 5000 maxBalance
+
+                        await expect(
+                            erc3643Capped
+                                .connect(owner)
+                                .mint(aliceAddress, mintAmount)
+                        ).to.be.reverted
+                    })
+
+                    it('GIVEN both features enabled WHEN mint at maxBalance limit THEN succeeds', async () => {
+                        const mintAmount = maxBalanceLimit // = 5000
+
+                        await expect(
+                            erc3643Capped
+                                .connect(owner)
+                                .mint(aliceAddress, mintAmount)
+                        )
+                            .to.emit(erc20Facet, 'Transfer')
+                            .withArgs(ZeroAddress, aliceAddress, mintAmount)
+
+                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                            maxBalanceLimit
+                        )
+                    })
+
+                    it('GIVEN both features enabled WHEN sequential mints exceed maxBalance THEN second mint reverts', async () => {
+                        // First mint
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(aliceAddress, 3000n)
+
+                        // Second mint would exceed maxBalance
+                        await expect(
+                            erc3643Capped
+                                .connect(owner)
+                                .mint(aliceAddress, 3000n)
+                        ).to.be.reverted
+
+                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                            3000n
+                        )
+                    })
+
+                    it('GIVEN both features enabled WHEN sequential mints stay within maxBalance THEN both succeed', async () => {
+                        // First mint
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(aliceAddress, 2000n)
+
+                        // Second mint within maxBalance
+                        await expect(
+                            erc3643Capped
+                                .connect(owner)
+                                .mint(aliceAddress, 3000n)
+                        )
+                            .to.emit(erc20Facet, 'Transfer')
+                            .withArgs(ZeroAddress, aliceAddress, 3000n)
+
+                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                            5000n
+                        )
+                    })
+
+                    it('GIVEN both features enabled WHEN batchMint with one recipient exceeding maxBalance THEN reverts entire batch', async () => {
+                        const amounts = [2000n, 3000n, 2000n]
+                        const recipients = [aliceAddress, bobAddress, aliceAddress]
+
+                        // alice would receive 2000 + 2000 = 4000 < 5000 ✓
+                        // bob would receive 3000 < 5000 ✓
+                        // Should succeed
+                        await expect(
+                            erc3643Capped
+                                .connect(owner)
+                                .batchMint(recipients, amounts)
+                        ).to.not.be.reverted
+
+                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                            4000n
+                        )
+                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                            3000n
+                        )
+                    })
+
+                    it('GIVEN both features enabled WHEN batchMint causes maxBalance violation THEN reverts', async () => {
+                        const amounts = [3000n, 2000n, 3000n]
+                        const recipients = [aliceAddress, bobAddress, aliceAddress]
+
+                        // alice would receive 3000 + 3000 = 6000 > 5000 ✗
+                        await expect(
+                            erc3643Capped
+                                .connect(owner)
+                                .batchMint(recipients, amounts)
+                        ).to.be.reverted
+                    })
+
+                    it('GIVEN both features enabled WHEN multiple recipients all within maxBalance THEN succeeds', async () => {
+                        const signers = await ethers.getSigners()
+                        const charlie = signers[3] as unknown as Signer
+                        const charlieAddress = await charlie.getAddress()
+
+                        // Total: 2000 + 3000 + 4000 = 9000 < 10000 cap ✓
+                        // Each recipient: < 5000 maxBalance ✓
+                        const amounts = [2000n, 3000n, 4000n]
+                        const recipients = [
+                            aliceAddress,
+                            bobAddress,
+                            charlieAddress,
+                        ]
+
+                        await expect(
+                            erc3643Capped
+                                .connect(owner)
+                                .batchMint(recipients, amounts)
+                        ).to.not.be.reverted
+
+                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
+                            2000n
+                        )
+                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                            3000n
+                        )
+                        expect(
+                            await erc20Facet.balanceOf(charlieAddress)
+                        ).to.equal(4000n)
+                    })
                 })
             })
         })
