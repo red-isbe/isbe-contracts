@@ -4572,7 +4572,6 @@ describe('ERC3643 Token', function () {
                     it('GIVEN frozen tokens WHEN recoveryAddress THEN preserves frozen tokens on new wallet', async () => {
                         const signers = await ethers.getSigners()
                         const bob = signers[2]
-                        const charlie = signers[3]
                         const bobAddress = await bob.getAddress()
 
                         const frozenAmount = 300n
@@ -4592,7 +4591,6 @@ describe('ERC3643 Token', function () {
                     it('GIVEN frozen address WHEN recoveryAddress THEN preserves freeze status on new wallet', async () => {
                         const signers = await ethers.getSigners()
                         const bob = signers[2]
-                        const charlie = signers[3]
                         const bobAddress = await bob.getAddress()
 
                         await erc3643
@@ -4609,7 +4607,6 @@ describe('ERC3643 Token', function () {
                     it('GIVEN frozen tokens and frozen address WHEN recoveryAddress THEN preserves both states', async () => {
                         const signers = await ethers.getSigners()
                         const bob = signers[2]
-                        const charlie = signers[3]
                         const bobAddress = await bob.getAddress()
 
                         const frozenAmount = 400n

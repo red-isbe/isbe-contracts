@@ -429,6 +429,22 @@ Emitted when tokens are burned from a wallet.
 | \_from   | address | The address from which tokens are burned. |
 | \_amount | uint256 | The amount of tokens burned.              |
 
+### MintViolatesComplianceRules
+
+```solidity
+error MintViolatesComplianceRules()
+```
+
+Error thrown when a mint operation violates compliance rules.
+
+### TransferViolatesComplianceRules
+
+```solidity
+error TransferViolatesComplianceRules()
+```
+
+Error thrown when a transfer operation violates compliance rules.
+
 ### initializeERC3643Compliance
 
 ```solidity

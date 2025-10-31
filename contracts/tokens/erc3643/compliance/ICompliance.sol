@@ -9,12 +9,6 @@ pragma solidity ^0.8.28;
  * @author ISBE
  */
 interface ICompliance {
-    /// @notice Error thrown when a mint operation violates compliance rules.
-    error MintViolatesComplianceRules();
-
-    /// @notice Error thrown when a transfer operation violates compliance rules.
-    error TransferViolatesComplianceRules();
-
     /**
      * @notice Emitted when a compliance feature is enabled or disabled.
      * @param _feature The name of the feature (e.g., "MaxBalance").
@@ -47,6 +41,12 @@ interface ICompliance {
      * @param _amount The amount of tokens burned.
      */
     event ComplianceDestroyed(address indexed _from, uint256 _amount);
+
+    /// @notice Error thrown when a mint operation violates compliance rules.
+    error MintViolatesComplianceRules();
+
+    /// @notice Error thrown when a transfer operation violates compliance rules.
+    error TransferViolatesComplianceRules();
 
     /**
      * @notice Initializes the compliance contract with feature flags.
