@@ -186,7 +186,14 @@ describe('ERC3643 Token', function () {
             })
 
             describe('setName', () => {
-
+                beforeEach(async () => {
+                    const fixture = async () => {
+                        await erc3643
+                            .connect(owner)
+                            .initializeERC3643Metadata(version)
+                    }
+                    await loadFixture(fixture)
+                })
 
                 it('GIVEN no TOKEN_OWNER_ROLE WHEN setName THEN reverts', async () => {
                     await accessControlFacet
