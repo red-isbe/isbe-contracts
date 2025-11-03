@@ -15,16 +15,6 @@ import {
     LogConfig,
     LogLevel,
 } from './utils/LoggingEnhancements'
-import { AccessControlGovernanceFacet__factory } from '../../typechain-types'
-import {
-    BUSINESS_LOGIC_DEPLOYER_ROLE,
-    GOVERNANCE_CONFIGURATION_MANAGER_ROLE,
-    GOVERNANCE_MANAGER_ROLE,
-    ISBE_PAUSER_ROLE,
-    ISBE_ROLE,
-    PROXY_DEPLOYER_ROLE,
-    DEFAULT_ADMIN_ROLE,
-} from '../../utils/constants'
 
 /**
  * Clean deployment orchestrator that uses signature provider abstraction
@@ -100,7 +90,6 @@ export class CleanDeploymentOrchestrator {
             await this.deployGovernance(result)
             await this.deployBusinessLogics(result, options)
             await this.deployUseCases(result, options)
-            await this.revokeDeployerRoles(result)
             await this.runValidations(result, options)
 
             this.completeSuccessfulDeployment(result)
@@ -108,77 +97,6 @@ export class CleanDeploymentOrchestrator {
         } catch (error) {
             this.handleDeploymentError(result, error)
             throw error
-        }
-    }
-
-    async revokeDeployerRoles(result: DeploymentResult) {
-        const deployer = (await this.hre.ethers.getSigners())[0]
-        const deployerAddress = await deployer.getAddress()
-
-        const accessControlGovernanceFacet =
-            AccessControlGovernanceFacet__factory.connect(
-                result.governance!.address,
-                deployer
-            )
-        // This must be done in the correct order to avoid permission issues
-        console.log(
-            `\n🔐 Revoking deployer roles from address: ${deployerAddress}`
-        )
-        await (
-            await accessControlGovernanceFacet.revokeRole(
-                ISBE_PAUSER_ROLE,
-                deployerAddress
-            )
-        ).wait()
-        await (
-            await accessControlGovernanceFacet.revokeRole(
-                BUSINESS_LOGIC_DEPLOYER_ROLE,
-                deployerAddress
-            )
-        ).wait()
-        await (
-            await accessControlGovernanceFacet.revokeRole(
-                PROXY_DEPLOYER_ROLE,
-                deployerAddress
-            )
-        ).wait()
-        await (
-            await accessControlGovernanceFacet.revokeRole(
-                GOVERNANCE_CONFIGURATION_MANAGER_ROLE,
-                deployerAddress
-            )
-        ).wait()
-        await (
-            await accessControlGovernanceFacet.revokeRole(
-                GOVERNANCE_MANAGER_ROLE,
-                deployerAddress
-            )
-        ).wait()
-        await (
-            await accessControlGovernanceFacet.revokeRole(
-                ISBE_ROLE,
-                deployerAddress
-            )
-        ).wait()
-        await (
-            await accessControlGovernanceFacet.revokeRole(
-                DEFAULT_ADMIN_ROLE,
-                deployerAddress
-            )
-        ).wait()
-
-        const remainingRoles: bigint =
-            await accessControlGovernanceFacet.getRolesByAccountCount(
-                deployerAddress
-            )
-        if (remainingRoles > 0n) {
-            throw new Error(
-                `Deployer address ${deployerAddress} still has ${remainingRoles} roles assigned after revocation.`
-            )
-        } else {
-            console.log(
-                `✅ All deployer roles successfully revoked from address: ${deployerAddress}`
-            )
         }
     }
 
@@ -257,6 +175,8 @@ export class CleanDeploymentOrchestrator {
         result: DeploymentResult,
         options: DeploymentOptions
     ): Promise<void> {
+        if (options.skipUseCases) return
+
         EnhancedLogger.logSection('Step 3: Use Case Deployment')
         this.timer.startStep('Use Case Deployment')
 
@@ -265,31 +185,15 @@ export class CleanDeploymentOrchestrator {
             this.config.useCases.length
         )
 
-        if (options.skipUseCases) {
-            // Only register configurations but don't deploy use cases
-            console.log(
-                '\n🔧 Registering configurations without deploying use cases'
-            )
-            console.log('   ℹ️  Will call setConfig but skip deployUseCase')
-
-            // Configure use cases but don't deploy them
-            result.useCases = await this.useCaseDeployer.configureAll(
-                this.config.useCases,
-                result.governance!.address,
-                result.businessLogics,
-                progressTracker
-            )
-        } else {
-            // Do full deployment including configuration and proxy creation
-            result.useCases = await this.useCaseDeployer.deployAll(
-                this.config.useCases,
-                result.governance!.address,
-                result.businessLogics,
-                progressTracker
-            )
-        }
-
+        // Use clean use case deployer with progress tracking
+        result.useCases = await this.useCaseDeployer.deployAll(
+            this.config.useCases,
+            result.governance!.address,
+            result.businessLogics,
+            progressTracker
+        )
         result.summary.completedSteps++
+
         this.timer.endStep()
         progressTracker.printSummary()
     }
@@ -418,12 +322,10 @@ export class CleanDeploymentOrchestrator {
         if (failedUseCases.length > 0) {
             console.log('\\n❌ FAILED USE CASES:')
             failedUseCases.forEach((useCase, index) => {
-                console.log(
-                    `   ${index + 1}. ${useCase.config?.description || 'Unknown Use Case'} (ID: ${useCase.config?.configurationId || 'N/A'})`
-                )
+                console.log(`   ${index + 1}. ${useCase.config.description}`)
                 console.log(`      🚨 Error: ${useCase.error}`)
                 console.log(
-                    `      🔗 Config ID: ${useCase.config?.configurationId || 'N/A'}`
+                    `      🔗 Config ID: ${useCase.config.configurationId}`
                 )
             })
         }
