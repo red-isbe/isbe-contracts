@@ -79,11 +79,11 @@ abstract contract ERC203643InternalCommon is
         _updateAccountSnapshot(_to);
         _updateTotalSupplySnapshot();
 
+
+
         // Compliance hooks (ERC-3643 mode only). By pass by _COMPLIANCE_ROLE.
         if (_hasRole(_COMPLIANCE_ROLE, msg.sender)) {
-            if (!_canTransfer(_from, _to, _amount)) {
-                revert ICompliance.MintViolatesComplianceRules();
-            }
+            require(_canTransfer(_from, _to, _amount), ICompliance.MintViolatesComplianceRules());
             _created(_to, _amount);
         }
     }
@@ -105,9 +105,7 @@ abstract contract ERC203643InternalCommon is
         _updateTotalSupplySnapshot();
 
         uint256 balance = _balanceOf(_from);
-        if (balance < _amount) {
-            revert IERC20Isbe.BurnAmountExceedsBalance();
-        }
+        require(balance >= _amount, IERC20Isbe.BurnAmountExceedsBalance());
 
         // Controller burn with auto-unfreeze capability
         if (_hasRole(_CONTROLLER_ROLE, msg.sender)) {
@@ -142,15 +140,11 @@ abstract contract ERC203643InternalCommon is
         _updateAccountSnapshot(_to);
 
         uint256 balance = _balanceOf(_from);
-        if (balance < _amount) {
-            revert IERC20Isbe.TransferAmountExceedsBalance();
-        }
+        require(balance >= _amount, IERC20Isbe.TransferAmountExceedsBalance());
 
         // Compliance hooks (ERC-3643 mode only). By pass by _COMPLIANCE_ROLE.
         if (_hasRole(_COMPLIANCE_ROLE, msg.sender)) {
-            if (!_canTransfer(_from, _to, _amount)) {
-                revert ICompliance.TransferViolatesComplianceRules();
-            }
+            require(_canTransfer(_from, _to, _amount), ICompliance.MintViolatesComplianceRules());
             _transferred(_from, _to, _amount);
         }
 
@@ -162,20 +156,17 @@ abstract contract ERC203643InternalCommon is
             _unfreezeIf3643Mode(_from, _amount);
         } else {
             // Normal transfer: enforce freeze checks (ERC-3643 mode only)
-            if (_isFrozen(_from)) {
-                revert IERC3643Freeze.SenderIsFrozen(_from);
-            }
-            if (_isFrozen(_to)) {
-                revert IERC3643Freeze.RecipientIsFrozen(_to);
-            }
+            require(!_isFrozen(_from), IERC3643Freeze.SenderIsFrozen(_from));
+            require(!_isFrozen(_to), IERC3643Freeze.RecipientIsFrozen(_to));
             uint256 freeBalance = _calculateFreeBalance(_from);
-            if (freeBalance < _amount) {
-                revert IERC3643Freeze.InsufficientFreeBalance(
+            require(
+                freeBalance >= _amount,
+                IERC3643Freeze.InsufficientFreeBalance(
                     _from,
                     _amount,
                     freeBalance
-                );
-            }
+                )
+            );
         }
     }
 
