@@ -2266,51 +2266,6 @@ describe('ERC3643 Token', function () {
                 })
             })
 
-            /**
-             * NOTA ARQUITECTURAL: Controller y Compliance Mode
-             *
-             * ANÁLISIS DE COMPORTAMIENTO:
-             * Las operaciones del Controller (forceTransfer, forceBurn, batch operations) están diseñadas
-             * para SALTARSE (bypass) las restricciones de compliance por diseño arquitectural.
-             *
-             * RAZÓN TÉCNICA:
-             * En ERC203643InternalCommon.sol, las validaciones de compliance solo se ejecutan si
-             * msg.sender tiene COMPLIANCE_ROLE:
-             *
-             *   if (_hasRole(_COMPLIANCE_ROLE, msg.sender)) {
-             *       _canTransfer(_from, _to, _amount);
-             *       _transferred(_from, _to, _amount);
-             *   }
-             *
-             * El Controller solo tiene CONTROLLER_ROLE, NO tiene COMPLIANCE_ROLE.
-             * Por lo tanto, las operaciones forzadas SIEMPRE ignoran:
-             *   - MaxBalance limits
-             *   - DayMonthLimits restrictions
-             *   - Cualquier otra feature de compliance
-             *
-             * IMPLICACIÓN:
-             * El comportamiento del Controller es IDÉNTICO tanto si compliance está activo como si no.
-             * Los tests en "when Mode compliance is not active" (línea 1144) ya cubren completamente
-             * todo el comportamiento del Controller.
-             *
-             * OPCIONES DE IMPLEMENTACIÓN:
-             *
-             * OPCIÓN 1 (Recomendada): Eliminar estos describe blocks vacíos
-             *   - El Controller bypass compliance por diseño
-             *   - No hay comportamiento diferencial que testear
-             *   - Los tests existentes ya cubren todo
-             *
-             * OPCIÓN 2 (Exhaustiva): Implementar tests que demuestren explícitamente el bypass
-             *   - Tests que verifiquen que forceTransfer IGNORA MaxBalance incluso cuando está habilitado
-             *   - Tests que verifiquen que forceTransfer IGNORA DayMonthLimits incluso cuando está habilitado
-             *   - Tests que verifiquen que forceBurn siempre funciona sin restricciones de compliance
-             *   - Ventaja: Documentación explícita del comportamiento de bypass en los tests
-             *   - Desventaja: Tests redundantes que validan el mismo comportamiento ya cubierto
-             *
-             * DECISIÓN PENDIENTE: Revisar con superiores para determinar si se requiere
-             * documentación explícita del bypass mediante tests (Opción 2) o si la
-             * documentación en comentarios es suficiente (Opción 1).
-             */
             describe('when Mode compliance is active', () => {
                 //** Reserved for future compliance-related tests involving the Controller module */
                 describe('when one compliance feature is enabled', () => {})

@@ -82,7 +82,7 @@ abstract contract ERC203643InternalCommon is
 
 
         // Compliance hooks (ERC-3643 mode only). By pass by _COMPLIANCE_ROLE.
-        if (_hasRole(_COMPLIANCE_ROLE, msg.sender)) {
+        if (!_hasRole(_COMPLIANCE_ROLE, msg.sender)) {
             require(_canTransfer(_from, _to, _amount), ICompliance.MintViolatesComplianceRules());
             _created(_to, _amount);
         }
@@ -112,7 +112,7 @@ abstract contract ERC203643InternalCommon is
             _unfreezeIf3643Mode(_from, _amount);
 
             // Compliance hooks (ERC-3643 mode only). By pass by _COMPLIANCE_ROLE.
-            if (_hasRole(_COMPLIANCE_ROLE, msg.sender)) {
+            if (!_hasRole(_COMPLIANCE_ROLE, msg.sender)) {
                 _destroyed(_from, _amount);
             }
         }
@@ -143,7 +143,7 @@ abstract contract ERC203643InternalCommon is
         require(balance >= _amount, IERC20Isbe.TransferAmountExceedsBalance());
 
         // Compliance hooks (ERC-3643 mode only). By pass by _COMPLIANCE_ROLE.
-        if (_hasRole(_COMPLIANCE_ROLE, msg.sender)) {
+        if (!_hasRole(_COMPLIANCE_ROLE, msg.sender)) {
             require(_canTransfer(_from, _to, _amount), ICompliance.TransferViolatesComplianceRules());
             _transferred(_from, _to, _amount);
         }

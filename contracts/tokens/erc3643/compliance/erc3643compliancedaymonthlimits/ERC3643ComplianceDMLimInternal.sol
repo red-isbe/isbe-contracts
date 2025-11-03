@@ -155,34 +155,38 @@ abstract contract ERC3643ComplianceDMLimInternal is Common {
         address _from,
         uint256 _value
     ) internal view returns (bool) {
-        TransferCounter storage counter = _getTransferCounter(_from);
+        if (_from != address(0)) {
+            TransferCounter storage counter = _getTransferCounter(_from);
 
-        uint256 _dailyLimit = _getDailyLimit();
-        uint256 _monthlyLimit = _getMonthlyLimit();
+            uint256 _dailyLimit = _getDailyLimit();
+            uint256 _monthlyLimit = _getMonthlyLimit();
 
-        // Si el valor excede el daily limit, rechaza
-        if (_value > _dailyLimit) {
-            return false;
+            // Si el valor excede el daily limit, rechaza
+            if (_value > _dailyLimit) {
+                return false;
+            }
+
+            // Si el día no ha terminado, chequea los contadores diarios y mensuales
+            if (
+                !_isDayFinished(_from) &&
+                ((counter.dailyCount + _value > _dailyLimit) ||
+                    (counter.monthlyCount + _value > _monthlyLimit))
+            ) {
+                return false;
+            }
+
+            // Si el día ha terminado, chequea el contador mensual y si el mes ha terminado
+            if (
+                _isDayFinished(_from) &&
+                (_value + counter.monthlyCount > _monthlyLimit)
+            ) {
+                return _isMonthFinished(_from);
+            }
+
+            return true;
+        } else {
+            return true;
         }
-
-        // Si el día no ha terminado, chequea los contadores diarios y mensuales
-        if (
-            !_isDayFinished(_from) &&
-            ((counter.dailyCount + _value > _dailyLimit) ||
-                (counter.monthlyCount + _value > _monthlyLimit))
-        ) {
-            return false;
-        }
-
-        // Si el día ha terminado, chequea el contador mensual y si el mes ha terminado
-        if (
-            _isDayFinished(_from) &&
-            (_value + counter.monthlyCount > _monthlyLimit)
-        ) {
-            return _isMonthFinished(_from);
-        }
-
-        return true;
     }
 
     /**

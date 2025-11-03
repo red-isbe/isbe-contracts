@@ -127,7 +127,6 @@ abstract contract ERC3643ComplianceInternal is
         }
         // DayMonthLimits only apply to transfers, not mints (when _from == address(0))
         if (
-            _from != address(0) &&
             _isDailyMonthLimitsEnabled() &&
             !_complianceCheckOnDayMonthLimits(_from, _amount)
         ) {
