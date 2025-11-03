@@ -172,20 +172,24 @@ npx hardhat deployAll --network customR1Network
 npx hardhat deployAll --network hardhat --no-deploy-use-cases
 npx hardhat deployAllClean --network hardhat --no-deploy-use-cases
 
+# Selective deployment - deploy only specific use cases based on JSON configuration
+npx hardhat deployAllClean --network hardhat --config-file custom.json
+
 # Test deployment (comprehensive)
 npx hardhat deployTest
 ```
 
 #### Deployment Options
 
-| Option                  | Description                                                     |
-| ----------------------- | --------------------------------------------------------------- |
-| `--network <name>`      | Specifies the network to deploy to                              |
-| `--precommit`           | Runs pre-commit validations after deployment                    |
-| `--info`                | Shows detailed network and signature provider information       |
-| `--no-deploy-use-cases` | Registers configurations with setConfig but skips deployUseCase |
-| `--log-level <level>`   | Sets logging verbosity (minimal, normal, verbose, debug)        |
-| `--legacy`              | (deployAllClean only) Uses legacy DeploymentOrchestrator        |
+| Option                  | Description                                                          |
+| ----------------------- | -------------------------------------------------------------------- |
+| `--network <name>`      | Specifies the network to deploy to                                   |
+| `--precommit`           | Runs pre-commit validations after deployment                         |
+| `--info`                | Shows detailed network and signature provider information            |
+| `--no-deploy-use-cases` | Registers configurations with setConfig but skips deployUseCase      |
+| `--config-file <file>`  | 🆕 JSON configuration for selective deployment (deployAllClean only) |
+| `--log-level <level>`   | Sets logging verbosity (minimal, normal, verbose, debug)             |
+| `--legacy`              | (deployAllClean only) Uses legacy DeploymentOrchestrator             |
 
 ## 🔐 Account Management
 
@@ -782,6 +786,78 @@ npx hardhat deployAllClean --network <network> --no-deploy-use-cases
 ```
 
 This runs the setConfig step to register all configurations but skips the deployUseCase calls.
+
+#### 🆕 Selective Deployment
+
+Deploy only specific use cases instead of all 150+ available cases. Perfect for development, testing, or incremental deployments.
+
+**Example - Deploy only ERC20 Base:**
+
+```bash
+{
+  "description": "ERC20 Base tokens only - no extensions",
+  "version": "1.0.0",
+  "includeAllBusinessLogics": true,
+  "useCaseFilters": {
+    "enabled": true,
+    "includePatterns": [
+      "ERC20 Base"
+    ],
+    "excludePatterns": [
+      "w/Burn",
+      "w/Cap",
+      "w/Ctrl",
+      "w/Snap",
+      "Complete"
+    ],
+    "categories": [
+      "erc20"
+    ]
+  },
+  "metadata": {
+    "author": "ISBE Development Team",
+    "created": "2025-10-30",
+    "purpose": "Deploy only basic ERC20 token without any extensions"
+  }
+}
+```
+
+### Testing de ERC20 Basic
+
+```bash
+npx hardhat deployAllClean --network localhost --config-file erc20-basic.json
+```
+
+### Setup for Essentials Use Cases
+
+```bash
+npx hardhat deployAllClean --network localhost --config-file essentials.json
+```
+
+### Testing de minimal Functionality
+
+```bash
+npx hardhat deployAllClean --network localhost --config-file minimal.json
+```
+
+### Or Test a customn selection
+
+```bash
+npx hardhat deployAllClean --network localhost --config-file custom.json
+```
+
+**Benefits:**
+
+- ⏱️ **Time Reduction**: ~3 minutes vs ~45 minutes (93% faster)
+- 🎯 **Targeted Testing**: Deploy only what you need
+- 💰 **Cost Optimization**: Reduce gas costs for development
+- 🔧 **Incremental Updates**: Add specific use cases to existing deployments
+
+**Available Filter Options:**
+
+- `includePatterns`: Text patterns to include (e.g., `["ERC20 Base"]`)
+- `excludePatterns`: Text patterns to exclude (e.g., `["w/Burn", "Complete"]`)
+- `categories`: Use case categories (e.g., `["utility", "erc20", "erc721"]`)
 
 ## 🔍 Verification and Monitoring
 

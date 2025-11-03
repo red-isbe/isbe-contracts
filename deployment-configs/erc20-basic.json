@@ -1,0 +1,16 @@
+{
+    "description": "ERC20 Base tokens only - no extensions",
+    "version": "1.0.0",
+    "includeAllBusinessLogics": true,
+    "useCaseFilters": {
+        "enabled": true,
+        "includePatterns": ["ERC20 Base"],
+        "excludePatterns": ["w/Burn", "w/Cap", "w/Ctrl", "w/Snap", "Complete"],
+        "categories": ["erc20"]
+    },
+    "metadata": {
+        "author": "ISBE Development Team",
+        "created": "2025-10-30",
+        "purpose": "Deploy only basic ERC20 token without any extensions"
+    }
+}

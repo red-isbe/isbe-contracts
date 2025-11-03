@@ -1,10 +1,12 @@
 // types/didDocument.types.ts
 import type { IDidDocumentDetailed } from '../../../typechain-types'
 
-export enum EllipticType {
-    SECP_256_K1 = 1,
-    SECP_256_R1 = 2,
-}
+// Replace TS enum (not supported by some TS strip-only loaders) with a const object + type
+export const EllipticType = {
+    SECP_256_K1: 1,
+    SECP_256_R1: 2,
+} as const
+export type EllipticType = (typeof EllipticType)[keyof typeof EllipticType]
 
 export interface VMethod {
     publicKey: string

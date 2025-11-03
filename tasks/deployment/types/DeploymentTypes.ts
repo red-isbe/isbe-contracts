@@ -167,3 +167,22 @@ export interface ValidationConstants {
     DUMB_ROLE: string
     DUMB_ROLE_2: string
 }
+
+export interface UseCaseFilterConfig {
+    enabled: boolean
+    includePatterns: string[]
+    excludePatterns: string[]
+    categories: string[]
+}
+
+export interface SelectiveDeploymentConfig {
+    description: string
+    version: string
+    includeAllBusinessLogics: boolean
+    useCaseFilters: UseCaseFilterConfig
+    metadata?: {
+        author?: string
+        created?: string
+        purpose?: string
+    }
+}
