@@ -151,15 +151,18 @@ abstract contract ERC3643Recovery is IERC3643Recovery, ERC203643InternalCommon {
         address _lostWallet,
         address _newWallet
     ) internal pure {
-        if (_lostWallet == address(0)) {
-            revert IERC3643Recovery.InvalidLostWallet();
-        }
-        if (_newWallet == address(0)) {
-            revert IERC3643Recovery.InvalidNewWallet();
-        }
-        if (_lostWallet == _newWallet) {
-            revert IERC3643Recovery.SameWalletAddress();
-        }
+        require(
+            _lostWallet != address(0),
+            IERC3643Recovery.InvalidLostWallet()
+        );
+        require(
+            _newWallet != address(0),
+            IERC3643Recovery.InvalidNewWallet()
+        );
+        require(
+            _lostWallet != _newWallet,
+            IERC3643Recovery.SameWalletAddress()
+        );
     }
 
     /**
