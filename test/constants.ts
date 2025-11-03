@@ -146,8 +146,6 @@ export const KEY_AGREEMENT_RELATIONSHIP = 'keyAgreement'
 export const CAPABILITY_INVOCATION_RELATIONSHIP = 'capabilityInvocation'
 export const CAPABILITY_DELEGATION_RELATIONSHIP = 'capabilityDelegation'
 
-export const ERC3643_METADATA_STORAGE_POSITION =
-    '0x84ed0b9176400cfe0bb1701ac1a14a9c7d7e2130c0db5a7adfbb9aa29de4d7f2'
 export const ERC3643_METADATA_RESOLVER_KEY =
     '0x8bffaf1ebc4070155b40757cd1d588dd59fcab63cd7007ebf7755f7f60a0c1e1'
 export const ERC3643_FREEZE_RESOLVER_KEY =
