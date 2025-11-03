@@ -79,11 +79,12 @@ abstract contract ERC203643InternalCommon is
         _updateAccountSnapshot(_to);
         _updateTotalSupplySnapshot();
 
-
-
         // Compliance hooks (ERC-3643 mode only). By pass by _COMPLIANCE_ROLE.
         if (!_hasRole(_COMPLIANCE_ROLE, msg.sender)) {
-            require(_canTransfer(_from, _to, _amount), ICompliance.MintViolatesComplianceRules());
+            require(
+                _canTransfer(_from, _to, _amount),
+                ICompliance.MintViolatesComplianceRules()
+            );
             _created(_to, _amount);
         }
     }
@@ -144,7 +145,10 @@ abstract contract ERC203643InternalCommon is
 
         // Compliance hooks (ERC-3643 mode only). By pass by _COMPLIANCE_ROLE.
         if (!_hasRole(_COMPLIANCE_ROLE, msg.sender)) {
-            require(_canTransfer(_from, _to, _amount), ICompliance.TransferViolatesComplianceRules());
+            require(
+                _canTransfer(_from, _to, _amount),
+                ICompliance.TransferViolatesComplianceRules()
+            );
             _transferred(_from, _to, _amount);
         }
 

@@ -25,7 +25,6 @@ import {
     ERC3643ComplianceMaxBalanceFacet,
     ERC3643ComplianceDMLimFacet,
 } from '../typechain-types'
-;('../typechain-types')
 
 describe('ERC3643 Token', function () {
     // ====================================================================
@@ -1135,11 +1134,11 @@ describe('ERC3643 Token', function () {
         describe('when Mode ERC20', () => {
             //** ERC20 module test cover its main use cases. We reserve this space for future implementations that may involve ERC20 behavior not expected by its standard implementation and caused by futures interactions with any logic change from ERC3643 Controller */
         })
-
         // --------------------------------------------------------------------
         // when ERC3643 is initialized
         // --------------------------------------------------------------------
         describe('when Mode ERC3643', () => {
+
             describe('when Mode compliance is not active', () => {
                 const totalBalance = 1000n
                 const frozenAmount = 400n
@@ -1171,7 +1170,7 @@ describe('ERC3643 Token', function () {
                             .grantRole(FREEZE_ROLE, ownerAddress)
 
                         // Initialize ERC20
-                        await erc20Facet
+                        await erc3643
                             .connect(owner)
                             .initializeErc20(
                                 tokenName,
@@ -2267,24 +2266,899 @@ describe('ERC3643 Token', function () {
             })
 
             describe('when Mode compliance is active', () => {
-                //** Reserved for future compliance-related tests involving the Controller module */
-                describe('when one compliance feature is enabled', () => {})
 
-                    
+                describe('when one compliance is enabled', () => {
+                    describe('MaxBalance feature', () => {
+                        let maxBalanceFacet: ERC3643ComplianceMaxBalanceFacet
+                        let erc3643Capped: IERC203643Capped
+                        let erc3643Controller: IERC203643Controller
+                        let bob: Signer
+                        let bobAddress: string
+                        const maxBalanceLimit = 5000n
 
-                    // ** Probar escenarios donde el compliance se pasa y no se pasa. Por ejemplo MaxBalance = 1000, probar mintear menos de 1000, y más de 1000. El segundo deberia fallar */
-                    //when paused
-                    // when wallet role controller + compliance, bypass compliance
+                        beforeEach(async () => {
+                            const signers = await ethers.getSigners()
+                            bob = signers[2] as unknown as Signer
+                            bobAddress = await bob.getAddress()
+
+                            // Grant necessary roles
+                            await accessControlFacet
+                                .connect(owner)
+                                .grantRole(CONTROLLER_ROLE, ownerAddress)
+                            await accessControlFacet
+                                .connect(owner)
+                                .grantRole(MINTER_ROLE, ownerAddress)
+
+                            // Initialize ERC20
+                            await erc20Facet
+                                .connect(owner)
+                                .initializeErc20(
+                                    tokenName,
+                                    tokenSymbol,
+                                    tokenDecimals
+                                )
+
+                            // Initialize ERC3643 modules
+                            await erc3643
+                                .connect(owner)
+                                .initializeERC3643Metadata(version)
+
+                            // Get controller and capped interfaces
+                            erc3643Controller = (await ethers.getContractAt(
+                                'IERC203643Controller',
+                                proxyAddress
+                            )) as IERC203643Controller
+
+                            erc3643Capped = (await ethers.getContractAt(
+                                'IERC203643Capped',
+                                proxyAddress
+                            )) as IERC203643Capped
+
+                            // Get MaxBalance facet
+                            maxBalanceFacet = (await ethers.getContractAt(
+                                'ERC3643ComplianceMaxBalanceFacet',
+                                proxyAddress
+                            )) as ERC3643ComplianceMaxBalanceFacet
+
+                            // Initialize cap with a large value
+                            await erc3643Capped
+                                .connect(owner)
+                                .initializeCap(100000n)
+
+                            // Initialize compliance with ONLY MaxBalance enabled
+                            await erc3643
+                                .connect(owner)
+                                .initializeERC3643Compliance(
+                                    true, // maxBalanceEnabled
+                                    false // dailyMonthLimitsEnabled
+                                )
+
+                            // Initialize MaxBalance
+                            await maxBalanceFacet
+                                .connect(owner)
+                                .initializeERC3643ComplianceMaxBalance(
+                                    maxBalanceLimit
+                                )
+                        })
+
+
+                    it('GIVEN only MaxBalance enabled WHEN forceTransfer exceeds maxBalance THEN reverts', async () => {
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(aliceAddress, 3000n)
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(bobAddress, 3000n)
+
+                        const excessAmount = 3000n
+
+                        await expect(
+                            erc3643Controller
+                                .connect(owner)
+                                .forceTransfer(
+                                    aliceAddress,
+                                    bobAddress,
+                                    excessAmount
+                                )
+                        ).to.be.reverted
+                    })
+
+                    it('GIVEN only MaxBalance enabled WHEN forceTransfer within maxBalance THEN succeeds', async () => {
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(aliceAddress, 3000n)
+
+                        const validAmount = 2500n
+
+                        await expect(
+                            erc3643Controller
+                                .connect(owner)
+                                .forceTransfer(
+                                    aliceAddress,
+                                    bobAddress,
+                                    validAmount
+                                )
+                        ).to.not.be.reverted
+
+                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                            validAmount
+                        )
+                    })
+                    })
+
+                    describe('DayMonthLimits feature', () => {
+                    let complianceDMLimFacet: ERC3643ComplianceDMLimFacet
+                    let erc3643Capped: IERC203643Capped
+                    let erc3643Controller: IERC203643Controller
+                    let bob: Signer
+                    let bobAddress: string
+                    let charlie: Signer
+                    let charlieAddress: string
+                    const dailyLimit = 1000n
+                    const monthlyLimit = 5000n
+
+                    beforeEach(async () => {
+                        const signers = await ethers.getSigners()
+                        bob = signers[2] as unknown as Signer
+                        bobAddress = await bob.getAddress()
+                        charlie = signers[3] as unknown as Signer
+                        charlieAddress = await charlie.getAddress()
+
+                        // Grant necessary roles
+                        await accessControlFacet
+                            .connect(owner)
+                            .grantRole(CONTROLLER_ROLE, ownerAddress)
+                        await accessControlFacet
+                            .connect(owner)
+                            .grantRole(MINTER_ROLE, ownerAddress)
+
+                        // Initialize ERC20
+                        await erc20Facet
+                            .connect(owner)
+                            .initializeErc20(
+                                tokenName,
+                                tokenSymbol,
+                                tokenDecimals
+                            )
+
+                        // Initialize ERC3643 modules
+                        await erc3643
+                            .connect(owner)
+                            .initializeERC3643Metadata(version)
+
+                        // Get controller and capped interfaces
+                        erc3643Controller = (await ethers.getContractAt(
+                            'IERC203643Controller',
+                            proxyAddress
+                        )) as IERC203643Controller
+
+                        erc3643Capped = (await ethers.getContractAt(
+                            'IERC203643Capped',
+                            proxyAddress
+                        )) as IERC203643Capped
+
+                        // Get DMLim facet
+                        complianceDMLimFacet = (await ethers.getContractAt(
+                            'ERC3643ComplianceDMLimFacet',
+                            proxyAddress
+                        )) as ERC3643ComplianceDMLimFacet
+
+                        // Initialize cap with a large value
+                        await erc3643Capped
+                            .connect(owner)
+                            .initializeCap(100000n)
+
+                        // Initialize compliance with ONLY DayMonthLimits enabled
+                        await erc3643
+                            .connect(owner)
+                            .initializeERC3643Compliance(
+                                false, // maxBalanceEnabled
+                                true // dailyMonthLimitsEnabled
+                            )
+
+                        // Initialize DayMonthLimits
+                        await complianceDMLimFacet
+                            .connect(owner)
+                            .initializeERC3643ComplianceDMLim(
+                                dailyLimit,
+                                monthlyLimit
+                            )
+                    })
+
+                    it('GIVEN only DMLim enabled WHEN forceTransfer exceeds daily limit THEN reverts', async () => {
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(aliceAddress, 10000n)
+
+                        const excessAmount = dailyLimit + 1n
+
+                        await expect(
+                            erc3643Controller
+                                .connect(owner)
+                                .forceTransfer(
+                                    aliceAddress,
+                                    bobAddress,
+                                    excessAmount
+                                )
+                        ).to.be.reverted
+                    })
+
+                    it('GIVEN only DMLim enabled WHEN forceTransfer within daily limit THEN succeeds', async () => {
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(aliceAddress, 10000n)
+
+                        const validAmount = dailyLimit
+
+                        await expect(
+                            erc3643Controller
+                                .connect(owner)
+                                .forceTransfer(
+                                    aliceAddress,
+                                    bobAddress,
+                                    validAmount
+                                )
+                        ).to.not.be.reverted
+
+                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                            validAmount
+                        )
+                    })
+
+                    it('GIVEN only DMLim enabled WHEN multiple forceTransfers exceed monthly limit THEN reverts', async () => {
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(aliceAddress, 10000n)
+
+                        // First transfer within daily limit
+                        await erc3643Controller
+                            .connect(owner)
+                            .forceTransfer(aliceAddress, bobAddress, dailyLimit)
+
+                        // Advance time by 1 day
+                        await ethers.provider.send('evm_increaseTime', [
+                            86400,
+                        ])
+                        await ethers.provider.send('evm_mine', [])
+
+                        // Second transfer that would exceed monthly limit
+                        const secondAmount = monthlyLimit - dailyLimit + 1n
+
+                        await expect(
+                            erc3643Controller
+                                .connect(owner)
+                                .forceTransfer(
+                                    aliceAddress,
+                                    bobAddress,
+                                    secondAmount
+                                )
+                        ).to.be.reverted
+                    })
+                    })
+                })
 
                 describe('when multiple compliance features are enabled', () => {
-                    //** Probar escenarios donde el compliance de un feature se pasa y el de otro no, y viceversa */
-                    //when paused
-                    // when wallet role controller + compliance, bypass compliance
+                    let maxBalanceFacet: ERC3643ComplianceMaxBalanceFacet
+                    let complianceDMLimFacet: ERC3643ComplianceDMLimFacet
+                    let erc3643Capped: IERC203643Capped
+                    let erc3643Controller: IERC203643Controller
+                    let bob: Signer
+                    let bobAddress: string
+                    let charlie: Signer
+                    let charlieAddress: string
+                    let david: Signer
+                    let davidAddress: string
+                    const maxBalanceLimit = 15000n
+                    const dailyLimit = 1000n
+                    const monthlyLimit = 5000n
 
+                    beforeEach(async () => {
+                        const signers = await ethers.getSigners()
+                        bob = signers[2] as unknown as Signer
+                        bobAddress = await bob.getAddress()
+                        charlie = signers[3] as unknown as Signer
+                        charlieAddress = await charlie.getAddress()
+                        david = signers[4] as unknown as Signer
+                        davidAddress = await david.getAddress()
+
+                        // Grant necessary roles
+                        await accessControlFacet
+                            .connect(owner)
+                            .grantRole(CONTROLLER_ROLE, ownerAddress)
+                        await accessControlFacet
+                            .connect(owner)
+                            .grantRole(MINTER_ROLE, ownerAddress)
+
+                        // Initialize ERC20
+                        await erc20Facet
+                            .connect(owner)
+                            .initializeErc20(
+                                tokenName,
+                                tokenSymbol,
+                                tokenDecimals
+                            )
+
+                        // Initialize ERC3643 modules
+                        await erc3643
+                            .connect(owner)
+                            .initializeERC3643Metadata(version)
+
+                        // Get controller and capped interfaces
+                        erc3643Controller = (await ethers.getContractAt(
+                            'IERC203643Controller',
+                            proxyAddress
+                        )) as IERC203643Controller
+
+                        erc3643Capped = (await ethers.getContractAt(
+                            'IERC203643Capped',
+                            proxyAddress
+                        )) as IERC203643Capped
+
+                        // Get compliance facets
+                        maxBalanceFacet = (await ethers.getContractAt(
+                            'ERC3643ComplianceMaxBalanceFacet',
+                            proxyAddress
+                        )) as ERC3643ComplianceMaxBalanceFacet
+
+                        complianceDMLimFacet = (await ethers.getContractAt(
+                            'ERC3643ComplianceDMLimFacet',
+                            proxyAddress
+                        )) as ERC3643ComplianceDMLimFacet
+
+                        // Initialize cap with a large value
+                        await erc3643Capped
+                            .connect(owner)
+                            .initializeCap(100000n)
+
+                        // Initialize compliance with BOTH features enabled
+                        await erc3643
+                            .connect(owner)
+                            .initializeERC3643Compliance(
+                                true, // maxBalanceEnabled
+                                true // dailyMonthLimitsEnabled
+                            )
+
+                        // Initialize MaxBalance
+                        await maxBalanceFacet
+                            .connect(owner)
+                            .initializeERC3643ComplianceMaxBalance(
+                                maxBalanceLimit
+                            )
+
+                        // Initialize DayMonthLimits
+                        await complianceDMLimFacet
+                            .connect(owner)
+                            .initializeERC3643ComplianceDMLim(
+                                dailyLimit,
+                                monthlyLimit
+                            )
+                    })
+
+                    it('GIVEN both features enabled WHEN forceTransfer exceeds maxBalance THEN reverts', async () => {
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(aliceAddress, 14000n)
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(bobAddress, 3000n)
+
+                        // Try to transfer amount that would make bob exceed maxBalance (3000 + 13000 = 16000 > 15000)
+                        const excessAmount = 13000n
+
+                        await expect(
+                            erc3643Controller
+                                .connect(owner)
+                                .forceTransfer(
+                                    aliceAddress,
+                                    bobAddress,
+                                    excessAmount
+                                )
+                        ).to.be.reverted
+                    })
+
+                    it('GIVEN both features enabled WHEN forceTransfer exceeds daily limit THEN reverts', async () => {
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(aliceAddress, 10000n)
+
+                        const excessAmount = dailyLimit + 1n
+
+                        await expect(
+                            erc3643Controller
+                                .connect(owner)
+                                .forceTransfer(
+                                    aliceAddress,
+                                    bobAddress,
+                                    excessAmount
+                                )
+                        ).to.be.reverted
+                    })
+
+                    it('GIVEN both features enabled WHEN forceTransfer within both limits THEN succeeds', async () => {
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(aliceAddress, 10000n)
+
+                        const validAmount = dailyLimit // 1000 < maxBalance (5000) and = dailyLimit
+
+                        await expect(
+                            erc3643Controller
+                                .connect(owner)
+                                .forceTransfer(
+                                    aliceAddress,
+                                    bobAddress,
+                                    validAmount
+                                )
+                        ).to.not.be.reverted
+
+                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                            validAmount
+                        )
+                    })
+
+                    it('GIVEN both features enabled WHEN batchForceTransfer exceeds maxBalance on one recipient THEN reverts', async () => {
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(aliceAddress, 10000n)
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(charlieAddress, 10000n)
+
+                        const excessAmount = maxBalanceLimit + 1n
+                        const normalAmount = 500n
+
+                        await expect(
+                            erc3643Controller
+                                .connect(owner)
+                                .batchForceTransfer(
+                                    [aliceAddress, charlieAddress],
+                                    [bobAddress, davidAddress],
+                                    [excessAmount, normalAmount]
+                                )
+                        ).to.be.reverted
+                    })
+
+                    it('GIVEN both features enabled WHEN batchForceTransfer with same recipient multiple times THEN each transfer validated individually', async () => {
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(aliceAddress, 10000n)
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(charlieAddress, 10000n)
+
+                        // Each transfer within maxBalance and dailyLimit individually
+                        // Note: batchForceTransfer validates each transfer separately, not accumulated by recipient
+                        const amount1 = 600n
+                        const amount2 = 600n // Bob receives 1200 total, but each transfer is < dailyLimit
+
+                        await expect(
+                            erc3643Controller
+                                .connect(owner)
+                                .batchForceTransfer(
+                                    [aliceAddress, charlieAddress],
+                                    [bobAddress, bobAddress],
+                                    [amount1, amount2]
+                                )
+                        ).to.not.be.reverted
+
+                        // Verify bob received both amounts
+                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                            amount1 + amount2
+                        )
+                    })
+
+                    it('GIVEN both features enabled WHEN batchForceTransfer respects both limits THEN succeeds', async () => {
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(aliceAddress, 10000n)
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(charlieAddress, 10000n)
+
+                        const amount1 = 500n
+                        const amount2 = 400n
+
+                        await expect(
+                            erc3643Controller
+                                .connect(owner)
+                                .batchForceTransfer(
+                                    [aliceAddress, charlieAddress],
+                                    [bobAddress, davidAddress],
+                                    [amount1, amount2]
+                                )
+                        ).to.not.be.reverted
+
+                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                            amount1
+                        )
+                        expect(
+                            await erc20Facet.balanceOf(davidAddress)
+                        ).to.equal(amount2)
+                    })
+
+                    describe('when caller has CONTROLLER + COMPLIANCE roles (bypass both features)', () => {
+                    let complianceBypassUser: Signer
+                    let complianceBypassAddress: string
+
+                    beforeEach(async () => {
+                        const signers = await ethers.getSigners()
+                        complianceBypassUser = signers[10] as unknown as Signer
+                        complianceBypassAddress =
+                            await complianceBypassUser.getAddress()
+
+                        // Grant CONTROLLER role to complianceBypassUser
+                        await accessControlFacet
+                            .connect(owner)
+                            .grantRole(CONTROLLER_ROLE, complianceBypassAddress)
+
+                        // Grant COMPLIANCE role to complianceBypassUser (for bypass)
+                        await accessControlFacet
+                            .connect(owner)
+                            .grantRole(
+                                COMPLIANCE_ROLE,
+                                complianceBypassAddress
+                            )
+                    })
+
+                    it('GIVEN caller has CONTROLLER + COMPLIANCE roles WHEN forceTransfer exceeds maxBalance THEN bypasses and succeeds', async () => {
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(aliceAddress, 14000n)
+
+                        // Parent maxBalanceLimit is 15000n, so 14000n exceeds it when transferred to bob
+                        const excessAmount = 14000n
+
+                        await expect(
+                            erc3643Controller
+                                .connect(complianceBypassUser)
+                                .forceTransfer(
+                                    aliceAddress,
+                                    bobAddress,
+                                    excessAmount
+                                )
+                        ).to.not.be.reverted
+
+                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                            excessAmount
+                        )
+                    })
+
+                    it('GIVEN caller has CONTROLLER + COMPLIANCE roles WHEN forceTransfer exceeds daily limit THEN bypasses and succeeds', async () => {
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(aliceAddress, 10000n)
+
+                        // Parent dailyLimit is 1000n, so 1500n exceeds it (but < 15000n maxBalance)
+                        const excessAmount = 1500n
+
+                        await expect(
+                            erc3643Controller
+                                .connect(complianceBypassUser)
+                                .forceTransfer(
+                                    aliceAddress,
+                                    bobAddress,
+                                    excessAmount
+                                )
+                        ).to.not.be.reverted
+
+                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                            excessAmount
+                        )
+                    })
+
+                    it('GIVEN caller has CONTROLLER + COMPLIANCE roles WHEN forceTransfer exceeds BOTH limits THEN bypasses and succeeds', async () => {
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(aliceAddress, 14000n)
+
+                        // Exceeds both maxBalance (15000n) and dailyLimit (1000n)
+                        const excessAmount = 14000n
+
+                        await expect(
+                            erc3643Controller
+                                .connect(complianceBypassUser)
+                                .forceTransfer(
+                                    aliceAddress,
+                                    bobAddress,
+                                    excessAmount
+                                )
+                        ).to.not.be.reverted
+
+                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                            excessAmount
+                        )
+                    })
+
+                    it('GIVEN caller has CONTROLLER + COMPLIANCE roles WHEN batchForceTransfer exceeds both limits THEN bypasses and succeeds', async () => {
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(aliceAddress, 14000n)
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(charlieAddress, 10000n)
+
+                        // excessAmount1 exceeds maxBalance and dailyLimit (14000n > 15000n maxBalance, > 1000n dailyLimit)
+                        // excessAmount2 exceeds dailyLimit (1500n > 1000n)
+                        const excessAmount1 = 14000n
+                        const excessAmount2 = 1500n
+
+                        await expect(
+                            erc3643Controller
+                                .connect(complianceBypassUser)
+                                .batchForceTransfer(
+                                    [aliceAddress, charlieAddress],
+                                    [bobAddress, davidAddress],
+                                    [excessAmount1, excessAmount2]
+                                )
+                        ).to.not.be.reverted
+
+                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                            excessAmount1
+                        )
+                        expect(
+                            await erc20Facet.balanceOf(davidAddress)
+                        ).to.equal(excessAmount2)
+                    })
+
+                    it('GIVEN caller has ONLY CONTROLLER role (no COMPLIANCE) WHEN forceTransfer exceeds maxBalance THEN reverts (no bypass)', async () => {
+                        const signers = await ethers.getSigners()
+                        const controllerOnlyUser =
+                            signers[11] as unknown as Signer
+                        const controllerOnlyAddress =
+                            await controllerOnlyUser.getAddress()
+
+                        // Grant ONLY CONTROLLER role (not COMPLIANCE)
+                        await accessControlFacet
+                            .connect(owner)
+                            .grantRole(CONTROLLER_ROLE, controllerOnlyAddress)
+
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(aliceAddress, 14000n)
+
+                        // Parent maxBalanceLimit is 15000n
+                        const excessAmount = 14000n
+
+                        await expect(
+                            erc3643Controller
+                                .connect(controllerOnlyUser)
+                                .forceTransfer(
+                                    aliceAddress,
+                                    bobAddress,
+                                    excessAmount
+                                )
+                        ).to.be.reverted
+                    })
+
+                    it('GIVEN caller has ONLY CONTROLLER role (no COMPLIANCE) WHEN forceTransfer exceeds daily limit THEN reverts (no bypass)', async () => {
+                        const signers = await ethers.getSigners()
+                        const controllerOnlyUser =
+                            signers[11] as unknown as Signer
+                        const controllerOnlyAddress =
+                            await controllerOnlyUser.getAddress()
+
+                        // Grant ONLY CONTROLLER role (not COMPLIANCE)
+                        await accessControlFacet
+                            .connect(owner)
+                            .grantRole(CONTROLLER_ROLE, controllerOnlyAddress)
+
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(aliceAddress, 10000n)
+
+                        // Parent dailyLimit is 1000n
+                        const excessAmount = 1001n
+
+                        await expect(
+                            erc3643Controller
+                                .connect(controllerOnlyUser)
+                                .forceTransfer(
+                                    aliceAddress,
+                                    bobAddress,
+                                    excessAmount
+                                )
+                        ).to.be.reverted
+                    })
+                    })
+                })
+
+                describe('when caller has CONTROLLER role + COMPLIANCE role (bypass)', () => {
+                    let maxBalanceFacet: ERC3643ComplianceMaxBalanceFacet
+                    let erc3643Capped: IERC203643Capped
+                    let erc3643Controller: IERC203643Controller
+                    let bob: Signer
+                    let bobAddress: string
+                    let charlie: Signer
+                    let charlieAddress: string
+                    let david: Signer
+                    let davidAddress: string
+                    let complianceBypassUser: Signer
+                    let complianceBypassAddress: string
+                    const maxBalanceLimit = 5000n
+
+                    beforeEach(async () => {
+                        const signers = await ethers.getSigners()
+                        bob = signers[2] as unknown as Signer
+                        bobAddress = await bob.getAddress()
+                        charlie = signers[3] as unknown as Signer
+                        charlieAddress = await charlie.getAddress()
+                        david = signers[4] as unknown as Signer
+                        davidAddress = await david.getAddress()
+                        complianceBypassUser = signers[10] as unknown as Signer
+                        complianceBypassAddress =
+                            await complianceBypassUser.getAddress()
+
+                        // Grant necessary roles to owner
+                        await accessControlFacet
+                            .connect(owner)
+                            .grantRole(CONTROLLER_ROLE, ownerAddress)
+                        await accessControlFacet
+                            .connect(owner)
+                            .grantRole(MINTER_ROLE, ownerAddress)
+                        await accessControlFacet
+                            .connect(owner)
+                            .grantRole(COMPLIANCE_ROLE, ownerAddress)
+
+                        // Initialize ERC20
+                        await erc20Facet
+                            .connect(owner)
+                            .initializeErc20(
+                                tokenName,
+                                tokenSymbol,
+                                tokenDecimals
+                            )
+
+                        // Initialize ERC3643 modules
+                        await erc3643
+                            .connect(owner)
+                            .initializeERC3643Metadata(version)
+
+                        // Get controller and capped interfaces
+                        erc3643Controller = (await ethers.getContractAt(
+                            'IERC203643Controller',
+                            proxyAddress
+                        )) as IERC203643Controller
+
+                        erc3643Capped = (await ethers.getContractAt(
+                            'IERC203643Capped',
+                            proxyAddress
+                        )) as IERC203643Capped
+
+                        // Get MaxBalance facet
+                        maxBalanceFacet = (await ethers.getContractAt(
+                            'ERC3643ComplianceMaxBalanceFacet',
+                            proxyAddress
+                        )) as ERC3643ComplianceMaxBalanceFacet
+
+                        // Initialize cap with a large value
+                        await erc3643Capped
+                            .connect(owner)
+                            .initializeCap(100000n)
+
+                        // Initialize compliance with MaxBalance enabled
+                        await erc3643
+                            .connect(owner)
+                            .initializeERC3643Compliance(
+                                true, // maxBalanceEnabled
+                                false // dailyMonthLimitsEnabled
+                            )
+
+                        // Initialize MaxBalance
+                        await maxBalanceFacet
+                            .connect(owner)
+                            .initializeERC3643ComplianceMaxBalance(
+                                maxBalanceLimit
+                            )
+
+                        // Grant CONTROLLER role to complianceBypassUser
+                        await accessControlFacet
+                            .connect(owner)
+                            .grantRole(CONTROLLER_ROLE, complianceBypassAddress)
+
+                        // Grant COMPLIANCE role to complianceBypassUser (for bypass)
+                        await accessControlFacet
+                            .connect(owner)
+                            .grantRole(
+                                COMPLIANCE_ROLE,
+                                complianceBypassAddress
+                            )
+                    })
+
+                    it('GIVEN caller has CONTROLLER + COMPLIANCE roles WHEN forceTransfer exceeds maxBalance THEN bypasses compliance and succeeds', async () => {
+                        // Give alice tokens
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(aliceAddress, 20000n)
+
+                        // Try to force transfer MORE than maxBalance (should bypass)
+                        const excessAmount = maxBalanceLimit + 5000n // 10000 > 5000
+
+                        await expect(
+                            erc3643Controller
+                                .connect(complianceBypassUser)
+                                .forceTransfer(
+                                    aliceAddress,
+                                    bobAddress,
+                                    excessAmount
+                                )
+                        ).to.not.be.reverted
+
+                        // Verify the transfer succeeded despite exceeding maxBalance
+                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                            excessAmount
+                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(20000n - excessAmount)
+                    })
+
+                    it('GIVEN caller has CONTROLLER + COMPLIANCE roles WHEN batchForceTransfer exceeds maxBalance THEN bypasses compliance and succeeds', async () => {
+                        // Give alice and charlie tokens
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(aliceAddress, 20000n)
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(charlieAddress, 20000n)
+
+                        // Try to batch transfer exceeding maxBalance (should bypass)
+                        const excessAmount1 = maxBalanceLimit + 3000n // 8000 > 5000
+                        const excessAmount2 = maxBalanceLimit + 2000n // 7000 > 5000
+
+                        await expect(
+                            erc3643Controller
+                                .connect(complianceBypassUser)
+                                .batchForceTransfer(
+                                    [aliceAddress, charlieAddress],
+                                    [bobAddress, davidAddress],
+                                    [excessAmount1, excessAmount2]
+                                )
+                        ).to.not.be.reverted
+
+                        // Verify the transfers succeeded despite exceeding maxBalance
+                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                            excessAmount1
+                        )
+                        expect(
+                            await erc20Facet.balanceOf(davidAddress)
+                        ).to.equal(excessAmount2)
+                    })
+
+                    it('GIVEN caller has ONLY CONTROLLER role (no COMPLIANCE) WHEN forceTransfer exceeds maxBalance THEN reverts (no bypass)', async () => {
+                        // Create another user with only CONTROLLER role
+                        const signers = await ethers.getSigners()
+                        const controllerOnlyUser =
+                            signers[11] as unknown as Signer
+                        const controllerOnlyAddress =
+                            await controllerOnlyUser.getAddress()
+
+                        // Grant ONLY CONTROLLER role (not COMPLIANCE)
+                        await accessControlFacet
+                            .connect(owner)
+                            .grantRole(CONTROLLER_ROLE, controllerOnlyAddress)
+
+                        // Give alice tokens
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(aliceAddress, 20000n)
+
+                        const excessAmount = maxBalanceLimit + 1n
+
+                        // Should revert because caller doesn't have COMPLIANCE role
+                        await expect(
+                            erc3643Controller
+                                .connect(controllerOnlyUser)
+                                .forceTransfer(
+                                    aliceAddress,
+                                    bobAddress,
+                                    excessAmount
+                                )
+                        ).to.be.reverted
+                    })
+                })
                 })
             })
         })
-    })
     // ====================================================================
     // CAPPED MODULE
     // ====================================================================
@@ -3256,7 +4130,7 @@ describe('ERC3643 Token', function () {
                 })
             })
         })
-    })
+        })
 
     // ====================================================================
     // PRIMITIVES MODULE
@@ -5145,7 +6019,6 @@ describe('ERC3643 Token', function () {
     // COMPLIANCE MODULE
     // ====================================================================
     describe('ERC3643 Compliance', () => {
-        
         let complianceFacet: ERC3643ComplianceFacet
         let erc3643Capped: IERC203643Capped
 
@@ -5168,16 +6041,10 @@ describe('ERC3643 Token', function () {
                 // Initialize ERC20
                 await erc20Facet
                     .connect(owner)
-                    .initializeErc20(
-                        tokenName,
-                        tokenSymbol,
-                        tokenDecimals
-                    )
+                    .initializeErc20(tokenName, tokenSymbol, tokenDecimals)
 
                 // Initialize ERC3643 Metadata
-                await erc3643
-                    .connect(owner)
-                    .initializeERC3643Metadata(version)
+                await erc3643.connect(owner).initializeERC3643Metadata(version)
 
                 // Get compliance interface
                 complianceFacet = (await ethers.getContractAt(
@@ -5207,22 +6074,14 @@ describe('ERC3643 Token', function () {
                         .connect(owner)
                         .initializeERC3643Compliance(false, false)
                 )
-                    .to.emit(
-                        complianceFacet,
-                        'ComplianceFeatureToggled'
-                    )
+                    .to.emit(complianceFacet, 'ComplianceFeatureToggled')
                     .withArgs('MaxBalance', false)
-                    .to.emit(
-                        complianceFacet,
-                        'ComplianceFeatureToggled'
-                    )
+                    .to.emit(complianceFacet, 'ComplianceFeatureToggled')
                     .withArgs('DailyMonthLimits', false)
 
-                expect(await complianceFacet.isMaxBalanceEnabled()).to
-                    .be.false
-                expect(
-                    await complianceFacet.isDailyMonthLimitsEnabled()
-                ).to.be.false
+                expect(await complianceFacet.isMaxBalanceEnabled()).to.be.false
+                expect(await complianceFacet.isDailyMonthLimitsEnabled()).to.be
+                    .false
             })
 
             it('GIVEN compliance not initialized WHEN initializeERC3643Compliance with MaxBalance enabled THEN succeeds', async () => {
@@ -5231,17 +6090,12 @@ describe('ERC3643 Token', function () {
                         .connect(owner)
                         .initializeERC3643Compliance(true, false)
                 )
-                    .to.emit(
-                        complianceFacet,
-                        'ComplianceFeatureToggled'
-                    )
+                    .to.emit(complianceFacet, 'ComplianceFeatureToggled')
                     .withArgs('MaxBalance', true)
 
-                expect(await complianceFacet.isMaxBalanceEnabled()).to
-                    .be.true
-                expect(
-                    await complianceFacet.isDailyMonthLimitsEnabled()
-                ).to.be.false
+                expect(await complianceFacet.isMaxBalanceEnabled()).to.be.true
+                expect(await complianceFacet.isDailyMonthLimitsEnabled()).to.be
+                    .false
             })
 
             it('GIVEN compliance not initialized WHEN initializeERC3643Compliance with DailyMonthLimits enabled THEN succeeds', async () => {
@@ -5250,17 +6104,12 @@ describe('ERC3643 Token', function () {
                         .connect(owner)
                         .initializeERC3643Compliance(false, true)
                 )
-                    .to.emit(
-                        complianceFacet,
-                        'ComplianceFeatureToggled'
-                    )
+                    .to.emit(complianceFacet, 'ComplianceFeatureToggled')
                     .withArgs('DailyMonthLimits', true)
 
-                expect(await complianceFacet.isMaxBalanceEnabled()).to
-                    .be.false
-                expect(
-                    await complianceFacet.isDailyMonthLimitsEnabled()
-                ).to.be.true
+                expect(await complianceFacet.isMaxBalanceEnabled()).to.be.false
+                expect(await complianceFacet.isDailyMonthLimitsEnabled()).to.be
+                    .true
             })
 
             it('GIVEN compliance not initialized WHEN initializeERC3643Compliance with both enabled THEN succeeds', async () => {
@@ -5269,22 +6118,14 @@ describe('ERC3643 Token', function () {
                         .connect(owner)
                         .initializeERC3643Compliance(true, true)
                 )
-                    .to.emit(
-                        complianceFacet,
-                        'ComplianceFeatureToggled'
-                    )
+                    .to.emit(complianceFacet, 'ComplianceFeatureToggled')
                     .withArgs('MaxBalance', true)
-                    .to.emit(
-                        complianceFacet,
-                        'ComplianceFeatureToggled'
-                    )
+                    .to.emit(complianceFacet, 'ComplianceFeatureToggled')
                     .withArgs('DailyMonthLimits', true)
 
-                expect(await complianceFacet.isMaxBalanceEnabled()).to
-                    .be.true
-                expect(
-                    await complianceFacet.isDailyMonthLimitsEnabled()
-                ).to.be.true
+                expect(await complianceFacet.isMaxBalanceEnabled()).to.be.true
+                expect(await complianceFacet.isDailyMonthLimitsEnabled()).to.be
+                    .true
             })
 
             it('GIVEN compliance already initialized WHEN initializeERC3643Compliance again THEN reverts', async () => {
@@ -5320,82 +6161,52 @@ describe('ERC3643 Token', function () {
                     .revokeRole(COMPLIANCE_ROLE, ownerAddress)
 
                 await expect(
-                    complianceFacet
-                        .connect(owner)
-                        .setMaxBalanceEnabled(true)
+                    complianceFacet.connect(owner).setMaxBalanceEnabled(true)
                 ).to.be.reverted
             })
 
             it('GIVEN COMPLIANCE_ROLE WHEN setMaxBalanceEnabled to true THEN succeeds and emits event', async () => {
                 await expect(
-                    complianceFacet
-                        .connect(owner)
-                        .setMaxBalanceEnabled(true)
+                    complianceFacet.connect(owner).setMaxBalanceEnabled(true)
                 )
-                    .to.emit(
-                        complianceFacet,
-                        'ComplianceFeatureToggled'
-                    )
+                    .to.emit(complianceFacet, 'ComplianceFeatureToggled')
                     .withArgs('MaxBalance', true)
 
-                expect(await complianceFacet.isMaxBalanceEnabled()).to
-                    .be.true
+                expect(await complianceFacet.isMaxBalanceEnabled()).to.be.true
             })
 
             it('GIVEN MaxBalance enabled WHEN setMaxBalanceEnabled to false THEN succeeds and emits event', async () => {
-                await complianceFacet
-                    .connect(owner)
-                    .setMaxBalanceEnabled(true)
+                await complianceFacet.connect(owner).setMaxBalanceEnabled(true)
 
                 await expect(
-                    complianceFacet
-                        .connect(owner)
-                        .setMaxBalanceEnabled(false)
+                    complianceFacet.connect(owner).setMaxBalanceEnabled(false)
                 )
-                    .to.emit(
-                        complianceFacet,
-                        'ComplianceFeatureToggled'
-                    )
+                    .to.emit(complianceFacet, 'ComplianceFeatureToggled')
                     .withArgs('MaxBalance', false)
 
-                expect(await complianceFacet.isMaxBalanceEnabled()).to
-                    .be.false
+                expect(await complianceFacet.isMaxBalanceEnabled()).to.be.false
             })
 
             it('GIVEN MaxBalance disabled WHEN setMaxBalanceEnabled to false again THEN succeeds', async () => {
                 await expect(
-                    complianceFacet
-                        .connect(owner)
-                        .setMaxBalanceEnabled(false)
+                    complianceFacet.connect(owner).setMaxBalanceEnabled(false)
                 )
-                    .to.emit(
-                        complianceFacet,
-                        'ComplianceFeatureToggled'
-                    )
+                    .to.emit(complianceFacet, 'ComplianceFeatureToggled')
                     .withArgs('MaxBalance', false)
 
-                expect(await complianceFacet.isMaxBalanceEnabled()).to
-                    .be.false
+                expect(await complianceFacet.isMaxBalanceEnabled()).to.be.false
             })
 
             it('GIVEN MaxBalance enabled WHEN setMaxBalanceEnabled to true again THEN succeeds', async () => {
-                await complianceFacet
-                    .connect(owner)
-                    .setMaxBalanceEnabled(true)
+                await complianceFacet.connect(owner).setMaxBalanceEnabled(true)
 
                 await expect(
-                    complianceFacet
-                        .connect(owner)
-                        .setMaxBalanceEnabled(true)
+                    complianceFacet.connect(owner).setMaxBalanceEnabled(true)
                 )
-                    .to.emit(
-                        complianceFacet,
-                        'ComplianceFeatureToggled'
-                    )
+                    .to.emit(complianceFacet, 'ComplianceFeatureToggled')
                     .withArgs('MaxBalance', true)
 
-                expect(await complianceFacet.isMaxBalanceEnabled()).to
-                    .be.true
+                expect(await complianceFacet.isMaxBalanceEnabled()).to.be.true
             })
         })
 
@@ -5431,15 +6242,11 @@ describe('ERC3643 Token', function () {
                         .connect(owner)
                         .setDailyMonthLimitsEnabled(true)
                 )
-                    .to.emit(
-                        complianceFacet,
-                        'ComplianceFeatureToggled'
-                    )
+                    .to.emit(complianceFacet, 'ComplianceFeatureToggled')
                     .withArgs('DailyMonthLimits', true)
 
-                expect(
-                    await complianceFacet.isDailyMonthLimitsEnabled()
-                ).to.be.true
+                expect(await complianceFacet.isDailyMonthLimitsEnabled()).to.be
+                    .true
             })
 
             it('GIVEN DailyMonthLimits enabled WHEN setDailyMonthLimitsEnabled to false THEN succeeds and emits event', async () => {
@@ -5452,15 +6259,11 @@ describe('ERC3643 Token', function () {
                         .connect(owner)
                         .setDailyMonthLimitsEnabled(false)
                 )
-                    .to.emit(
-                        complianceFacet,
-                        'ComplianceFeatureToggled'
-                    )
+                    .to.emit(complianceFacet, 'ComplianceFeatureToggled')
                     .withArgs('DailyMonthLimits', false)
 
-                expect(
-                    await complianceFacet.isDailyMonthLimitsEnabled()
-                ).to.be.false
+                expect(await complianceFacet.isDailyMonthLimitsEnabled()).to.be
+                    .false
             })
 
             it('GIVEN DailyMonthLimits disabled WHEN setDailyMonthLimitsEnabled to false again THEN succeeds', async () => {
@@ -5469,15 +6272,11 @@ describe('ERC3643 Token', function () {
                         .connect(owner)
                         .setDailyMonthLimitsEnabled(false)
                 )
-                    .to.emit(
-                        complianceFacet,
-                        'ComplianceFeatureToggled'
-                    )
+                    .to.emit(complianceFacet, 'ComplianceFeatureToggled')
                     .withArgs('DailyMonthLimits', false)
 
-                expect(
-                    await complianceFacet.isDailyMonthLimitsEnabled()
-                ).to.be.false
+                expect(await complianceFacet.isDailyMonthLimitsEnabled()).to.be
+                    .false
             })
 
             it('GIVEN DailyMonthLimits enabled WHEN setDailyMonthLimitsEnabled to true again THEN succeeds', async () => {
@@ -5490,15 +6289,11 @@ describe('ERC3643 Token', function () {
                         .connect(owner)
                         .setDailyMonthLimitsEnabled(true)
                 )
-                    .to.emit(
-                        complianceFacet,
-                        'ComplianceFeatureToggled'
-                    )
+                    .to.emit(complianceFacet, 'ComplianceFeatureToggled')
                     .withArgs('DailyMonthLimits', true)
 
-                expect(
-                    await complianceFacet.isDailyMonthLimitsEnabled()
-                ).to.be.true
+                expect(await complianceFacet.isDailyMonthLimitsEnabled()).to.be
+                    .true
             })
         })
 
@@ -5511,8 +6306,7 @@ describe('ERC3643 Token', function () {
                     .connect(owner)
                     .initializeERC3643Compliance(false, false)
 
-                expect(await complianceFacet.isMaxBalanceEnabled()).to
-                    .be.false
+                expect(await complianceFacet.isMaxBalanceEnabled()).to.be.false
             })
 
             it('GIVEN compliance initialized with MaxBalance enabled WHEN isMaxBalanceEnabled THEN returns true', async () => {
@@ -5520,8 +6314,7 @@ describe('ERC3643 Token', function () {
                     .connect(owner)
                     .initializeERC3643Compliance(true, false)
 
-                expect(await complianceFacet.isMaxBalanceEnabled()).to
-                    .be.true
+                expect(await complianceFacet.isMaxBalanceEnabled()).to.be.true
             })
 
             it('GIVEN MaxBalance toggled multiple times WHEN isMaxBalanceEnabled THEN returns current state', async () => {
@@ -5529,20 +6322,13 @@ describe('ERC3643 Token', function () {
                     .connect(owner)
                     .initializeERC3643Compliance(false, false)
 
-                expect(await complianceFacet.isMaxBalanceEnabled()).to
-                    .be.false
+                expect(await complianceFacet.isMaxBalanceEnabled()).to.be.false
 
-                await complianceFacet
-                    .connect(owner)
-                    .setMaxBalanceEnabled(true)
-                expect(await complianceFacet.isMaxBalanceEnabled()).to
-                    .be.true
+                await complianceFacet.connect(owner).setMaxBalanceEnabled(true)
+                expect(await complianceFacet.isMaxBalanceEnabled()).to.be.true
 
-                await complianceFacet
-                    .connect(owner)
-                    .setMaxBalanceEnabled(false)
-                expect(await complianceFacet.isMaxBalanceEnabled()).to
-                    .be.false
+                await complianceFacet.connect(owner).setMaxBalanceEnabled(false)
+                expect(await complianceFacet.isMaxBalanceEnabled()).to.be.false
             })
         })
 
@@ -5555,9 +6341,8 @@ describe('ERC3643 Token', function () {
                     .connect(owner)
                     .initializeERC3643Compliance(false, false)
 
-                expect(
-                    await complianceFacet.isDailyMonthLimitsEnabled()
-                ).to.be.false
+                expect(await complianceFacet.isDailyMonthLimitsEnabled()).to.be
+                    .false
             })
 
             it('GIVEN compliance initialized with DailyMonthLimits enabled WHEN isDailyMonthLimitsEnabled THEN returns true', async () => {
@@ -5565,9 +6350,8 @@ describe('ERC3643 Token', function () {
                     .connect(owner)
                     .initializeERC3643Compliance(false, true)
 
-                expect(
-                    await complianceFacet.isDailyMonthLimitsEnabled()
-                ).to.be.true
+                expect(await complianceFacet.isDailyMonthLimitsEnabled()).to.be
+                    .true
             })
 
             it('GIVEN DailyMonthLimits toggled multiple times WHEN isDailyMonthLimitsEnabled THEN returns current state', async () => {
@@ -5575,23 +6359,20 @@ describe('ERC3643 Token', function () {
                     .connect(owner)
                     .initializeERC3643Compliance(false, false)
 
-                expect(
-                    await complianceFacet.isDailyMonthLimitsEnabled()
-                ).to.be.false
+                expect(await complianceFacet.isDailyMonthLimitsEnabled()).to.be
+                    .false
 
                 await complianceFacet
                     .connect(owner)
                     .setDailyMonthLimitsEnabled(true)
-                expect(
-                    await complianceFacet.isDailyMonthLimitsEnabled()
-                ).to.be.true
+                expect(await complianceFacet.isDailyMonthLimitsEnabled()).to.be
+                    .true
 
                 await complianceFacet
                     .connect(owner)
                     .setDailyMonthLimitsEnabled(false)
-                expect(
-                    await complianceFacet.isDailyMonthLimitsEnabled()
-                ).to.be.false
+                expect(await complianceFacet.isDailyMonthLimitsEnabled()).to.be
+                    .false
             })
         })
 
@@ -5607,9 +6388,7 @@ describe('ERC3643 Token', function () {
                         .initializeERC3643Compliance(false, false)
 
                     // Mint tokens to alice
-                    await erc3643Capped
-                        .connect(owner)
-                        .mint(aliceAddress, 1000n)
+                    await erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
                 }
                 await loadFixture(fixture)
             })
@@ -5691,9 +6470,7 @@ describe('ERC3643 Token', function () {
                 await pauseFacet.connect(owner).pause()
 
                 await expect(
-                    complianceFacet
-                        .connect(owner)
-                        .setMaxBalanceEnabled(true)
+                    complianceFacet.connect(owner).setMaxBalanceEnabled(true)
                 ).to.be.reverted
             })
 
@@ -5712,9 +6489,7 @@ describe('ERC3643 Token', function () {
                 await pauseFacet.connect(owner).unpause()
 
                 await expect(
-                    complianceFacet
-                        .connect(owner)
-                        .setMaxBalanceEnabled(true)
+                    complianceFacet.connect(owner).setMaxBalanceEnabled(true)
                 ).to.not.be.reverted
             })
 
@@ -5745,72 +6520,54 @@ describe('ERC3643 Token', function () {
             })
 
             it('GIVEN both features disabled WHEN enabling both simultaneously THEN both are enabled', async () => {
-                await complianceFacet
-                    .connect(owner)
-                    .setMaxBalanceEnabled(true)
+                await complianceFacet.connect(owner).setMaxBalanceEnabled(true)
                 await complianceFacet
                     .connect(owner)
                     .setDailyMonthLimitsEnabled(true)
 
-                expect(await complianceFacet.isMaxBalanceEnabled()).to
-                    .be.true
-                expect(
-                    await complianceFacet.isDailyMonthLimitsEnabled()
-                ).to.be.true
+                expect(await complianceFacet.isMaxBalanceEnabled()).to.be.true
+                expect(await complianceFacet.isDailyMonthLimitsEnabled()).to.be
+                    .true
             })
 
             it('GIVEN both features enabled WHEN disabling both simultaneously THEN both are disabled', async () => {
-                await complianceFacet
-                    .connect(owner)
-                    .setMaxBalanceEnabled(true)
+                await complianceFacet.connect(owner).setMaxBalanceEnabled(true)
                 await complianceFacet
                     .connect(owner)
                     .setDailyMonthLimitsEnabled(true)
 
-                await complianceFacet
-                    .connect(owner)
-                    .setMaxBalanceEnabled(false)
+                await complianceFacet.connect(owner).setMaxBalanceEnabled(false)
                 await complianceFacet
                     .connect(owner)
                     .setDailyMonthLimitsEnabled(false)
 
-                expect(await complianceFacet.isMaxBalanceEnabled()).to
-                    .be.false
-                expect(
-                    await complianceFacet.isDailyMonthLimitsEnabled()
-                ).to.be.false
+                expect(await complianceFacet.isMaxBalanceEnabled()).to.be.false
+                expect(await complianceFacet.isDailyMonthLimitsEnabled()).to.be
+                    .false
             })
 
             it('GIVEN MaxBalance enabled and DailyMonthLimits disabled WHEN toggling DailyMonthLimits THEN MaxBalance state unchanged', async () => {
-                await complianceFacet
-                    .connect(owner)
-                    .setMaxBalanceEnabled(true)
+                await complianceFacet.connect(owner).setMaxBalanceEnabled(true)
 
-                expect(await complianceFacet.isMaxBalanceEnabled()).to
-                    .be.true
-                expect(
-                    await complianceFacet.isDailyMonthLimitsEnabled()
-                ).to.be.false
+                expect(await complianceFacet.isMaxBalanceEnabled()).to.be.true
+                expect(await complianceFacet.isDailyMonthLimitsEnabled()).to.be
+                    .false
 
                 await complianceFacet
                     .connect(owner)
                     .setDailyMonthLimitsEnabled(true)
 
-                expect(await complianceFacet.isMaxBalanceEnabled()).to
-                    .be.true
-                expect(
-                    await complianceFacet.isDailyMonthLimitsEnabled()
-                ).to.be.true
+                expect(await complianceFacet.isMaxBalanceEnabled()).to.be.true
+                expect(await complianceFacet.isDailyMonthLimitsEnabled()).to.be
+                    .true
 
                 await complianceFacet
                     .connect(owner)
                     .setDailyMonthLimitsEnabled(false)
 
-                expect(await complianceFacet.isMaxBalanceEnabled()).to
-                    .be.true
-                expect(
-                    await complianceFacet.isDailyMonthLimitsEnabled()
-                ).to.be.false
+                expect(await complianceFacet.isMaxBalanceEnabled()).to.be.true
+                expect(await complianceFacet.isDailyMonthLimitsEnabled()).to.be
+                    .false
             })
 
             it('GIVEN DailyMonthLimits enabled and MaxBalance disabled WHEN toggling MaxBalance THEN DailyMonthLimits state unchanged', async () => {
@@ -5818,44 +6575,28 @@ describe('ERC3643 Token', function () {
                     .connect(owner)
                     .setDailyMonthLimitsEnabled(true)
 
-                expect(await complianceFacet.isMaxBalanceEnabled()).to
-                    .be.false
-                expect(
-                    await complianceFacet.isDailyMonthLimitsEnabled()
-                ).to.be.true
+                expect(await complianceFacet.isMaxBalanceEnabled()).to.be.false
+                expect(await complianceFacet.isDailyMonthLimitsEnabled()).to.be
+                    .true
 
-                await complianceFacet
-                    .connect(owner)
-                    .setMaxBalanceEnabled(true)
+                await complianceFacet.connect(owner).setMaxBalanceEnabled(true)
 
-                expect(await complianceFacet.isMaxBalanceEnabled()).to
-                    .be.true
-                expect(
-                    await complianceFacet.isDailyMonthLimitsEnabled()
-                ).to.be.true
+                expect(await complianceFacet.isMaxBalanceEnabled()).to.be.true
+                expect(await complianceFacet.isDailyMonthLimitsEnabled()).to.be
+                    .true
 
-                await complianceFacet
-                    .connect(owner)
-                    .setMaxBalanceEnabled(false)
+                await complianceFacet.connect(owner).setMaxBalanceEnabled(false)
 
-                expect(await complianceFacet.isMaxBalanceEnabled()).to
-                    .be.false
-                expect(
-                    await complianceFacet.isDailyMonthLimitsEnabled()
-                ).to.be.true
+                expect(await complianceFacet.isMaxBalanceEnabled()).to.be.false
+                expect(await complianceFacet.isDailyMonthLimitsEnabled()).to.be
+                    .true
             })
 
             it('GIVEN rapid toggling of features WHEN final state checked THEN reflects last operation', async () => {
                 // Rapid toggles
-                await complianceFacet
-                    .connect(owner)
-                    .setMaxBalanceEnabled(true)
-                await complianceFacet
-                    .connect(owner)
-                    .setMaxBalanceEnabled(false)
-                await complianceFacet
-                    .connect(owner)
-                    .setMaxBalanceEnabled(true)
+                await complianceFacet.connect(owner).setMaxBalanceEnabled(true)
+                await complianceFacet.connect(owner).setMaxBalanceEnabled(false)
+                await complianceFacet.connect(owner).setMaxBalanceEnabled(true)
                 await complianceFacet
                     .connect(owner)
                     .setDailyMonthLimitsEnabled(true)
@@ -5863,22 +6604,17 @@ describe('ERC3643 Token', function () {
                     .connect(owner)
                     .setDailyMonthLimitsEnabled(false)
 
-                expect(await complianceFacet.isMaxBalanceEnabled()).to
-                    .be.true
-                expect(
-                    await complianceFacet.isDailyMonthLimitsEnabled()
-                ).to.be.false
+                expect(await complianceFacet.isMaxBalanceEnabled()).to.be.true
+                expect(await complianceFacet.isDailyMonthLimitsEnabled()).to.be
+                    .false
             })
         })
-     
-        
     })
 
     // ====================================================================
     // COMPLIANCE MAX BALANCE FEATURE
     // ====================================================================
     describe('ERC3643 Compliance MaxBalance', () => {
-        
         let maxBalanceFacet: ERC3643ComplianceMaxBalanceFacet
         let complianceFacet: ERC3643ComplianceFacet
         let erc3643Capped: IERC203643Capped
@@ -5902,16 +6638,10 @@ describe('ERC3643 Token', function () {
                 // Initialize ERC20
                 await erc20Facet
                     .connect(owner)
-                    .initializeErc20(
-                        tokenName,
-                        tokenSymbol,
-                        tokenDecimals
-                    )
+                    .initializeErc20(tokenName, tokenSymbol, tokenDecimals)
 
                 // Initialize ERC3643 Metadata
-                await erc3643
-                    .connect(owner)
-                    .initializeERC3643Metadata(version)
+                await erc3643.connect(owner).initializeERC3643Metadata(version)
 
                 // Get facet interfaces
                 maxBalanceFacet = (await ethers.getContractAt(
@@ -5930,9 +6660,7 @@ describe('ERC3643 Token', function () {
                 )) as IERC203643Capped
 
                 // Initialize cap
-                await erc3643Capped
-                    .connect(owner)
-                    .initializeCap(100000n)
+                await erc3643Capped.connect(owner).initializeCap(100000n)
 
                 // Initialize compliance parent (required before child modules)
                 await complianceFacet
@@ -5952,9 +6680,7 @@ describe('ERC3643 Token', function () {
                 await expect(
                     maxBalanceFacet
                         .connect(owner)
-                        .initializeERC3643ComplianceMaxBalance(
-                            maxBalanceValue
-                        )
+                        .initializeERC3643ComplianceMaxBalance(maxBalanceValue)
                 )
                     .to.emit(maxBalanceFacet, 'MaxBalanceSet')
                     .withArgs(maxBalanceValue)
@@ -6017,9 +6743,7 @@ describe('ERC3643 Token', function () {
                 const newMaxBalance = 20000n
 
                 await expect(
-                    maxBalanceFacet
-                        .connect(owner)
-                        .setMaxBalance(newMaxBalance)
+                    maxBalanceFacet.connect(owner).setMaxBalance(newMaxBalance)
                 )
                     .to.emit(maxBalanceFacet, 'MaxBalanceSet')
                     .withArgs(newMaxBalance)
@@ -6030,9 +6754,7 @@ describe('ERC3643 Token', function () {
             })
 
             it('GIVEN MaxBalance set WHEN setMaxBalance to zero THEN succeeds', async () => {
-                await expect(
-                    maxBalanceFacet.connect(owner).setMaxBalance(0n)
-                )
+                await expect(maxBalanceFacet.connect(owner).setMaxBalance(0n))
                     .to.emit(maxBalanceFacet, 'MaxBalanceSet')
                     .withArgs(0n)
 
@@ -6040,8 +6762,7 @@ describe('ERC3643 Token', function () {
             })
 
             it('GIVEN MaxBalance set WHEN setMaxBalance to same value THEN succeeds', async () => {
-                const currentMaxBalance =
-                    await maxBalanceFacet.maxBalance()
+                const currentMaxBalance = await maxBalanceFacet.maxBalance()
 
                 await expect(
                     maxBalanceFacet
@@ -6057,19 +6778,11 @@ describe('ERC3643 Token', function () {
             })
 
             it('GIVEN MaxBalance set WHEN setMaxBalance multiple times THEN last value persists', async () => {
-                await maxBalanceFacet
-                    .connect(owner)
-                    .setMaxBalance(15000n)
-                await maxBalanceFacet
-                    .connect(owner)
-                    .setMaxBalance(25000n)
-                await maxBalanceFacet
-                    .connect(owner)
-                    .setMaxBalance(30000n)
+                await maxBalanceFacet.connect(owner).setMaxBalance(15000n)
+                await maxBalanceFacet.connect(owner).setMaxBalance(25000n)
+                await maxBalanceFacet.connect(owner).setMaxBalance(30000n)
 
-                expect(await maxBalanceFacet.maxBalance()).to.equal(
-                    30000n
-                )
+                expect(await maxBalanceFacet.maxBalance()).to.equal(30000n)
             })
         })
 
@@ -6081,9 +6794,7 @@ describe('ERC3643 Token', function () {
                 const maxBalanceValue = 15000n
                 await maxBalanceFacet
                     .connect(owner)
-                    .initializeERC3643ComplianceMaxBalance(
-                        maxBalanceValue
-                    )
+                    .initializeERC3643ComplianceMaxBalance(maxBalanceValue)
 
                 expect(await maxBalanceFacet.maxBalance()).to.equal(
                     maxBalanceValue
@@ -6118,9 +6829,7 @@ describe('ERC3643 Token', function () {
                         .initializeERC3643ComplianceMaxBalance(5000n)
 
                     // Mint some tokens to alice
-                    await erc3643Capped
-                        .connect(owner)
-                        .mint(aliceAddress, 3000n)
+                    await erc3643Capped.connect(owner).mint(aliceAddress, 3000n)
                 }
                 await loadFixture(fixture)
             })
@@ -6146,9 +6855,7 @@ describe('ERC3643 Token', function () {
                 const bobAddress = await bob.getAddress()
 
                 // Mint to bob first so he has 3000
-                await erc3643Capped
-                    .connect(owner)
-                    .mint(bobAddress, 3000n)
+                await erc3643Capped.connect(owner).mint(bobAddress, 3000n)
 
                 // Bob has 3000, max is 5000, transferring 3000 -> bob would have 6000 > 5000
                 const isCompliant =
@@ -6166,9 +6873,7 @@ describe('ERC3643 Token', function () {
                 const bobAddress = await bob.getAddress()
 
                 // Mint to bob first so he has 2000
-                await erc3643Capped
-                    .connect(owner)
-                    .mint(bobAddress, 2000n)
+                await erc3643Capped.connect(owner).mint(bobAddress, 2000n)
 
                 // Bob has 2000, max is 5000, transferring 3000 -> bob would have 5000 = 5000
                 const isCompliant =
@@ -6216,9 +6921,7 @@ describe('ERC3643 Token', function () {
                 const bobAddress = await bob.getAddress()
 
                 // Mint to bob so he has exactly max balance (5000)
-                await erc3643Capped
-                    .connect(owner)
-                    .mint(bobAddress, 5000n)
+                await erc3643Capped.connect(owner).mint(bobAddress, 5000n)
 
                 const isCompliant =
                     await maxBalanceFacet.complianceCheckOnMaxBalance(
@@ -6250,9 +6953,7 @@ describe('ERC3643 Token', function () {
                 const bobAddress = await bob.getAddress()
 
                 // Mint 8000 to bob
-                await erc3643Capped
-                    .connect(owner)
-                    .mint(bobAddress, 8000n)
+                await erc3643Capped.connect(owner).mint(bobAddress, 8000n)
 
                 // With max=10000, transferring 3000 would exceed (11000 > 10000)
                 let isCompliant =
@@ -6263,16 +6964,13 @@ describe('ERC3643 Token', function () {
                 expect(isCompliant).to.be.false
 
                 // Increase max to 15000
-                await maxBalanceFacet
-                    .connect(owner)
-                    .setMaxBalance(15000n)
+                await maxBalanceFacet.connect(owner).setMaxBalance(15000n)
 
                 // Now transferring 3000 is compliant (11000 < 15000)
-                isCompliant =
-                    await maxBalanceFacet.complianceCheckOnMaxBalance(
-                        bobAddress,
-                        3000n
-                    )
+                isCompliant = await maxBalanceFacet.complianceCheckOnMaxBalance(
+                    bobAddress,
+                    3000n
+                )
                 expect(isCompliant).to.be.true
             })
 
@@ -6284,14 +6982,10 @@ describe('ERC3643 Token', function () {
                 const charlieAddress = await charlie.getAddress()
 
                 // Bob has 9000
-                await erc3643Capped
-                    .connect(owner)
-                    .mint(bobAddress, 9000n)
+                await erc3643Capped.connect(owner).mint(bobAddress, 9000n)
 
                 // Charlie has 2000
-                await erc3643Capped
-                    .connect(owner)
-                    .mint(charlieAddress, 2000n)
+                await erc3643Capped.connect(owner).mint(charlieAddress, 2000n)
 
                 // Max is 10000
                 // Bob + 2000 = 11000 > 10000 (not compliant)
@@ -6318,9 +7012,7 @@ describe('ERC3643 Token', function () {
 
                 // Set very high max balance
                 const veryHighMax = ethers.parseEther('1000000')
-                await maxBalanceFacet
-                    .connect(owner)
-                    .setMaxBalance(veryHighMax)
+                await maxBalanceFacet.connect(owner).setMaxBalance(veryHighMax)
 
                 const largeAmount = ethers.parseEther('500000')
                 const isCompliant =
@@ -6337,14 +7029,10 @@ describe('ERC3643 Token', function () {
                 const bob = signers[2] as unknown as Signer
                 const bobAddress = await bob.getAddress()
 
-                await erc3643Capped
-                    .connect(owner)
-                    .mint(bobAddress, 5000n)
+                await erc3643Capped.connect(owner).mint(bobAddress, 5000n)
 
                 // Rapid changes
-                await maxBalanceFacet
-                    .connect(owner)
-                    .setMaxBalance(6000n)
+                await maxBalanceFacet.connect(owner).setMaxBalance(6000n)
                 let isCompliant =
                     await maxBalanceFacet.complianceCheckOnMaxBalance(
                         bobAddress,
@@ -6352,24 +7040,18 @@ describe('ERC3643 Token', function () {
                     )
                 expect(isCompliant).to.be.false // 7000 > 6000
 
-                await maxBalanceFacet
-                    .connect(owner)
-                    .setMaxBalance(8000n)
-                isCompliant =
-                    await maxBalanceFacet.complianceCheckOnMaxBalance(
-                        bobAddress,
-                        2000n
-                    )
+                await maxBalanceFacet.connect(owner).setMaxBalance(8000n)
+                isCompliant = await maxBalanceFacet.complianceCheckOnMaxBalance(
+                    bobAddress,
+                    2000n
+                )
                 expect(isCompliant).to.be.true // 7000 < 8000
 
-                await maxBalanceFacet
-                    .connect(owner)
-                    .setMaxBalance(7000n)
-                isCompliant =
-                    await maxBalanceFacet.complianceCheckOnMaxBalance(
-                        bobAddress,
-                        2000n
-                    )
+                await maxBalanceFacet.connect(owner).setMaxBalance(7000n)
+                isCompliant = await maxBalanceFacet.complianceCheckOnMaxBalance(
+                    bobAddress,
+                    2000n
+                )
                 expect(isCompliant).to.be.true // 7000 = 7000
             })
         })
@@ -6379,7 +7061,6 @@ describe('ERC3643 Token', function () {
     // COMPLIANCE DAY MONTH LIMIT FEATURE
     // ====================================================================
     describe('ERC3643 Compliance DayMonthLimits', () => {
-        
         let complianceDMLimFacet: ERC3643ComplianceDMLimFacet
         let erc3643Capped: IERC203643Capped
 
@@ -6406,16 +7087,10 @@ describe('ERC3643 Token', function () {
                 // Initialize ERC20
                 await erc20Facet
                     .connect(owner)
-                    .initializeErc20(
-                        tokenName,
-                        tokenSymbol,
-                        tokenDecimals
-                    )
+                    .initializeErc20(tokenName, tokenSymbol, tokenDecimals)
 
                 // Initialize ERC3643 Metadata
-                await erc3643
-                    .connect(owner)
-                    .initializeERC3643Metadata(version)
+                await erc3643.connect(owner).initializeERC3643Metadata(version)
 
                 // Get DayMonthLimits compliance interface
                 complianceDMLimFacet = (await ethers.getContractAt(
@@ -6465,12 +7140,12 @@ describe('ERC3643 Token', function () {
                     .to.emit(complianceDMLimFacet, 'DayMonthLimitsSet')
                     .withArgs(dailyLimit, monthlyLimit)
 
-                expect(
-                    await complianceDMLimFacet.dailyLimit()
-                ).to.equal(dailyLimit)
-                expect(
-                    await complianceDMLimFacet.monthlyLimit()
-                ).to.equal(monthlyLimit)
+                expect(await complianceDMLimFacet.dailyLimit()).to.equal(
+                    dailyLimit
+                )
+                expect(await complianceDMLimFacet.monthlyLimit()).to.equal(
+                    monthlyLimit
+                )
             })
 
             it('GIVEN DayMonthLimits not initialized WHEN initializeERC3643ComplianceDMLim with zero limits THEN succeeds', async () => {
@@ -6482,12 +7157,8 @@ describe('ERC3643 Token', function () {
                     .to.emit(complianceDMLimFacet, 'DayMonthLimitsSet')
                     .withArgs(0n, 0n)
 
-                expect(
-                    await complianceDMLimFacet.dailyLimit()
-                ).to.equal(0n)
-                expect(
-                    await complianceDMLimFacet.monthlyLimit()
-                ).to.equal(0n)
+                expect(await complianceDMLimFacet.dailyLimit()).to.equal(0n)
+                expect(await complianceDMLimFacet.monthlyLimit()).to.equal(0n)
             })
 
             it('GIVEN DayMonthLimits already initialized WHEN initializeERC3643ComplianceDMLim again THEN reverts', async () => {
@@ -6523,9 +7194,7 @@ describe('ERC3643 Token', function () {
                     .revokeRole(COMPLIANCE_ROLE, ownerAddress)
 
                 await expect(
-                    complianceDMLimFacet
-                        .connect(owner)
-                        .setDailyLimit(2000n)
+                    complianceDMLimFacet.connect(owner).setDailyLimit(2000n)
                 ).to.be.reverted
             })
 
@@ -6542,21 +7211,17 @@ describe('ERC3643 Token', function () {
                     .to.emit(complianceDMLimFacet, 'DayMonthLimitsSet')
                     .withArgs(newDailyLimit, currentMonthlyLimit)
 
-                expect(
-                    await complianceDMLimFacet.dailyLimit()
-                ).to.equal(newDailyLimit)
+                expect(await complianceDMLimFacet.dailyLimit()).to.equal(
+                    newDailyLimit
+                )
             })
 
             it('GIVEN COMPLIANCE_ROLE WHEN setDailyLimit to zero THEN succeeds', async () => {
                 await expect(
-                    complianceDMLimFacet
-                        .connect(owner)
-                        .setDailyLimit(0n)
+                    complianceDMLimFacet.connect(owner).setDailyLimit(0n)
                 ).to.not.be.reverted
 
-                expect(
-                    await complianceDMLimFacet.dailyLimit()
-                ).to.equal(0n)
+                expect(await complianceDMLimFacet.dailyLimit()).to.equal(0n)
             })
 
             it('GIVEN COMPLIANCE_ROLE WHEN setDailyLimit to very large value THEN succeeds', async () => {
@@ -6568,9 +7233,9 @@ describe('ERC3643 Token', function () {
                         .setDailyLimit(largeLimit)
                 ).to.not.be.reverted
 
-                expect(
-                    await complianceDMLimFacet.dailyLimit()
-                ).to.equal(largeLimit)
+                expect(await complianceDMLimFacet.dailyLimit()).to.equal(
+                    largeLimit
+                )
             })
         })
 
@@ -6594,9 +7259,7 @@ describe('ERC3643 Token', function () {
                     .revokeRole(COMPLIANCE_ROLE, ownerAddress)
 
                 await expect(
-                    complianceDMLimFacet
-                        .connect(owner)
-                        .setMonthlyLimit(10000n)
+                    complianceDMLimFacet.connect(owner).setMonthlyLimit(10000n)
                 ).to.be.reverted
             })
 
@@ -6613,21 +7276,17 @@ describe('ERC3643 Token', function () {
                     .to.emit(complianceDMLimFacet, 'DayMonthLimitsSet')
                     .withArgs(currentDailyLimit, newMonthlyLimit)
 
-                expect(
-                    await complianceDMLimFacet.monthlyLimit()
-                ).to.equal(newMonthlyLimit)
+                expect(await complianceDMLimFacet.monthlyLimit()).to.equal(
+                    newMonthlyLimit
+                )
             })
 
             it('GIVEN COMPLIANCE_ROLE WHEN setMonthlyLimit to zero THEN succeeds', async () => {
                 await expect(
-                    complianceDMLimFacet
-                        .connect(owner)
-                        .setMonthlyLimit(0n)
+                    complianceDMLimFacet.connect(owner).setMonthlyLimit(0n)
                 ).to.not.be.reverted
 
-                expect(
-                    await complianceDMLimFacet.monthlyLimit()
-                ).to.equal(0n)
+                expect(await complianceDMLimFacet.monthlyLimit()).to.equal(0n)
             })
 
             it('GIVEN COMPLIANCE_ROLE WHEN setMonthlyLimit to very large value THEN succeeds', async () => {
@@ -6639,9 +7298,9 @@ describe('ERC3643 Token', function () {
                         .setMonthlyLimit(largeLimit)
                 ).to.not.be.reverted
 
-                expect(
-                    await complianceDMLimFacet.monthlyLimit()
-                ).to.equal(largeLimit)
+                expect(await complianceDMLimFacet.monthlyLimit()).to.equal(
+                    largeLimit
+                )
             })
         })
 
@@ -6661,9 +7320,9 @@ describe('ERC3643 Token', function () {
 
             describe('dailyLimit', () => {
                 it('GIVEN DayMonthLimits initialized WHEN dailyLimit THEN returns correct value', async () => {
-                    expect(
-                        await complianceDMLimFacet.dailyLimit()
-                    ).to.equal(1000n)
+                    expect(await complianceDMLimFacet.dailyLimit()).to.equal(
+                        1000n
+                    )
                 })
 
                 it('GIVEN daily limit updated WHEN dailyLimit THEN returns new value', async () => {
@@ -6671,17 +7330,17 @@ describe('ERC3643 Token', function () {
                         .connect(owner)
                         .setDailyLimit(2000n)
 
-                    expect(
-                        await complianceDMLimFacet.dailyLimit()
-                    ).to.equal(2000n)
+                    expect(await complianceDMLimFacet.dailyLimit()).to.equal(
+                        2000n
+                    )
                 })
             })
 
             describe('monthlyLimit', () => {
                 it('GIVEN DayMonthLimits initialized WHEN monthlyLimit THEN returns correct value', async () => {
-                    expect(
-                        await complianceDMLimFacet.monthlyLimit()
-                    ).to.equal(5000n)
+                    expect(await complianceDMLimFacet.monthlyLimit()).to.equal(
+                        5000n
+                    )
                 })
 
                 it('GIVEN monthly limit updated WHEN monthlyLimit THEN returns new value', async () => {
@@ -6689,9 +7348,9 @@ describe('ERC3643 Token', function () {
                         .connect(owner)
                         .setMonthlyLimit(10000n)
 
-                    expect(
-                        await complianceDMLimFacet.monthlyLimit()
-                    ).to.equal(10000n)
+                    expect(await complianceDMLimFacet.monthlyLimit()).to.equal(
+                        10000n
+                    )
                 })
             })
         })
@@ -6785,12 +7444,8 @@ describe('ERC3643 Token', function () {
             })
 
             it('GIVEN both limits set to zero WHEN any amount THEN complianceCheck returns false', async () => {
-                await complianceDMLimFacet
-                    .connect(owner)
-                    .setDailyLimit(0n)
-                await complianceDMLimFacet
-                    .connect(owner)
-                    .setMonthlyLimit(0n)
+                await complianceDMLimFacet.connect(owner).setDailyLimit(0n)
+                await complianceDMLimFacet.connect(owner).setMonthlyLimit(0n)
 
                 const isCompliant =
                     await complianceDMLimFacet.complianceCheckOnDayMonthLimits(
@@ -6811,9 +7466,7 @@ describe('ERC3643 Token', function () {
                 expect(isCompliant).to.be.false
 
                 // Increase daily limit
-                await complianceDMLimFacet
-                    .connect(owner)
-                    .setDailyLimit(2000n)
+                await complianceDMLimFacet.connect(owner).setDailyLimit(2000n)
 
                 // Now should pass
                 isCompliant =
@@ -6826,9 +7479,7 @@ describe('ERC3643 Token', function () {
 
             it('GIVEN monthly limit increased WHEN complianceCheck THEN respects new limit', async () => {
                 // Set daily limit high to focus on monthly
-                await complianceDMLimFacet
-                    .connect(owner)
-                    .setDailyLimit(10000n)
+                await complianceDMLimFacet.connect(owner).setDailyLimit(10000n)
 
                 // First, check that amount within monthly limit passes
                 let isCompliant =
@@ -6854,9 +7505,9 @@ describe('ERC3643 Token', function () {
                     .setMonthlyLimit(10000n)
 
                 // Verify the limit was updated
-                expect(
-                    await complianceDMLimFacet.monthlyLimit()
-                ).to.equal(10000n)
+                expect(await complianceDMLimFacet.monthlyLimit()).to.equal(
+                    10000n
+                )
 
                 // Now 6000 should still pass with the new limit
                 isCompliant =
@@ -6877,9 +7528,7 @@ describe('ERC3643 Token', function () {
                 expect(isCompliant).to.be.true
 
                 // Decrease daily limit
-                await complianceDMLimFacet
-                    .connect(owner)
-                    .setDailyLimit(500n)
+                await complianceDMLimFacet.connect(owner).setDailyLimit(500n)
 
                 // Now should fail
                 isCompliant =
@@ -6909,12 +7558,8 @@ describe('ERC3643 Token', function () {
 
             it('GIVEN daily and monthly limits WHEN amount equals daily but monthly would exceed THEN returns false', async () => {
                 // Set daily=1000, monthly=1000 (same)
-                await complianceDMLimFacet
-                    .connect(owner)
-                    .setDailyLimit(1000n)
-                await complianceDMLimFacet
-                    .connect(owner)
-                    .setMonthlyLimit(1000n)
+                await complianceDMLimFacet.connect(owner).setDailyLimit(1000n)
+                await complianceDMLimFacet.connect(owner).setMonthlyLimit(1000n)
 
                 // First transfer of 1000 should pass
                 const isCompliant =
@@ -6937,12 +7582,10 @@ describe('ERC3643 Token', function () {
 
                 // Transfer should revert due to compliance rules
                 await expect(
-                    erc20Facet
-                        .connect(alice)
-                        .transfer(bobAddress, excessAmount)
+                    erc20Facet.connect(alice).transfer(bobAddress, excessAmount)
                 ).to.be.reverted
             })
         })
     })
-   
-})
+
+    })

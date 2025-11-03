@@ -7,6 +7,15 @@ pragma solidity ^0.8.28;
  * @dev Allows setting and getting the max balance, and checking compliance for transfers.
  */
 interface IERC3643ComplianceMaxBal {
+
+    /**
+     * @notice Error emitted when a transfer would exceed the max balance.
+     * @param to The address of the receiver.
+     * @param attemptedBalance The balance that would be exceeded.
+     * @param maxBalance The maximum allowed balance.
+     */
+    error MaxBalanceExceeded(address to, uint256 attemptedBalance, uint256 maxBalance);
+
     /**
      * @notice Emitted when the max balance is updated.
      * @param _maxBalance The new max balance value.
