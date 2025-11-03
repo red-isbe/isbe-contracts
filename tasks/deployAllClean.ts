@@ -3,6 +3,7 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { CleanDeploymentOrchestrator } from './deployment/CleanDeploymentOrchestrator'
 import { DeploymentOrchestrator } from './deployment/DeploymentOrchestrator'
 import { DeploymentConfig } from './deployment/config/DeploymentConfig'
+import { DeploymentResult } from './deployment/types/DeploymentTypes'
 import { logNetworkInfo } from '../utils/networkUtils'
 import { PreCommitValidator } from './validation/PreCommitValidator'
 import { SignatureProviderFactory } from './deployment/providers/SignatureProviderFactory'
@@ -11,7 +12,6 @@ import {
     LogLevel,
     EnhancedLogger,
 } from './deployment/utils/LoggingEnhancements'
-import { validateAddress } from '@scripts/utils/validation'
 
 interface TaskArgs {
     precommit?: boolean
@@ -19,6 +19,7 @@ interface TaskArgs {
     legacy?: boolean
     logLevel?: string
     noDeployUseCases?: boolean
+    configFile?: string
 }
 
 /**
@@ -48,6 +49,11 @@ task(
     .addFlag(
         'noDeployUseCases',
         'Register configurations with setConfig but skip actual deployUseCase deployment (cannot be used with --precommit)'
+    )
+    .addOptionalParam(
+        'configFile',
+        'JSON configuration file for selective deployment (e.g., selective-deployment.json)',
+        undefined
     )
     .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
         // Validate flags - precommit and noDeployUseCases cannot be used together
@@ -103,9 +109,11 @@ async function deployWithCleanOrchestrator(
     hre: HardhatRuntimeEnvironment
 ) {
     try {
-        console.log('\\n📋 CLEAN DEPLOYMENT CONFIGURATION:')
-               // Create configuration
-        const config = DeploymentConfig.getDefaultConfig()
+        // Create configuration - use selective config if specified
+        const config = taskArgs.configFile
+            ? DeploymentConfig.load(taskArgs.configFile.replace('.json', ''))
+            : DeploymentConfig.getDefaultConfig()
+
         // Create clean orchestrator (automatically detects and uses appropriate provider)
         const orchestrator = new CleanDeploymentOrchestrator(hre, config)
 
@@ -113,6 +121,9 @@ async function deployWithCleanOrchestrator(
             `   • Business logics to deploy: ${config.businessLogics.length}`
         )
         console.log(`   • Configured use cases: ${config.useCases.length}`)
+        if (taskArgs.configFile) {
+            console.log(`   Using selective config: ${taskArgs.configFile}`)
+        }
         if (taskArgs.noDeployUseCases) {
             console.log(
                 `   ⚠️  Use cases will be registered but NOT deployed (noDeployUseCases flag active)`
@@ -142,6 +153,7 @@ async function deployWithCleanOrchestrator(
         displayFinalSummary(
             deploymentResult,
             providerInfo.curve,
+            hre.network.name,
             taskArgs.noDeployUseCases
         )
 
@@ -216,6 +228,7 @@ async function deployWithLegacyOrchestrator(
         displayFinalSummary(
             deploymentResult,
             'legacy',
+            hre.network.name,
             taskArgs.noDeployUseCases
         )
 
@@ -315,6 +328,7 @@ async function runPreCommitValidations(
 function displayFinalSummary(
     deploymentResult: DeploymentResult,
     curve: string,
+    networkName: string,
     noDeployUseCases: boolean = false
 ): void {
     console.log('📋 FINAL SUMMARY:')

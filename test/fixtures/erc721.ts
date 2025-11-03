@@ -26,6 +26,7 @@ import {
     ERC721_ROYALTY_RESOLVER_KEY,
     ERC721_CONSECUTIVE_RESOLVER_KEY,
     ACCESS_CONTROL_RESOLVER_KEY,
+    ACCESS_CONTROL_DID_RESOLVER_KEY,
     PAUSE_RESOLVER_KEY,
     ISBE_CUT_RESOLVER_KEY,
     ISBE_LOUPE_RESOLVER_KEY,
@@ -72,6 +73,9 @@ export async function deployERC721UseCasesFacets(
         await ethers.getContractFactory('IsbeLoupeFacet')
     const AccessControlFacetFactory =
         await ethers.getContractFactory('AccessControlFacet')
+    const AccessControlDidFacetFactory = await ethers.getContractFactory(
+        'AccessControlDidFacet'
+    )
     const ERC721FacetFactory = await ethers.getContractFactory('ERC721Facet')
     const ERC721TestWrapperFacetFactory = await ethers.getContractFactory(
         'ERC721TestWrapperFacet'
@@ -110,6 +114,11 @@ export async function deployERC721UseCasesFacets(
         isbeFactory,
         ACCESS_CONTROL_RESOLVER_KEY,
         AccessControlFacetFactory
+    )
+    await deployBusinessLogicFromFactory(
+        isbeFactory,
+        ACCESS_CONTROL_DID_RESOLVER_KEY,
+        AccessControlDidFacetFactory
     )
     const pauseFacet = await deployBusinessLogicFromFactory(
         isbeFactory,

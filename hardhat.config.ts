@@ -1,3 +1,6 @@
+BigInt.prototype.toJSON = function () {
+    return this.toString()
+}
 import { HardhatUserConfig } from 'hardhat/config'
 import '@nomicfoundation/hardhat-toolbox'
 import '@nomicfoundation/hardhat-chai-matchers'
@@ -17,7 +20,6 @@ import { getNetworkConfigs, ConfigManager, logger } from './config'
 // This replaces the many individual task imports with a consolidated approach
 import './tasks/register'
 import { EthGasReporterConfig } from 'hardhat-gas-reporter/dist/src/types'
-import { randomBytes } from 'crypto'
 
 // Initialize configuration management
 const configManager = ConfigManager.getInstance()
@@ -52,9 +54,9 @@ logger.summary('Configuration Summary', {
 // Get network configurations from unified config
 const networkConfigs = getNetworkConfigs()
 
-const ACCOUNTS = (
-    process.env.ACCOUNTS ?? randomBytes(32).toString('hex')
-).split(',')
+// const ACCOUNTS = (
+//     process.env.ACCOUNTS ?? randomBytes(32).toString('hex')
+// ).split(',')
 const config: HardhatUserConfig & {
     genesisGenerator: { outputDir: string; templateDir: string }
 } = {

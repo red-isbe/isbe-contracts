@@ -5,16 +5,17 @@ import {
     _AUTHENTICATION_RELATIONSHIP,
     _CAPABILITY_INVOCATION_RELATIONSHIP
 } from './constants.sol';
+import {
+    _recoverSigner,
+    InvalidSignature
+} from '../../core/signatureVerification.sol';
+import {Common} from '../../core/Common.sol';
 import {IDidDocumentDetailed} from './interfaces/IDidDocumentDetailed.sol';
 import {IDidVerificationMethod} from './interfaces/IDidVerificationMethod.sol';
 import {IDidVerificationRelationship} from './interfaces/IDidVerificationRelationship.sol';
 import {LibCommon} from '../../core/LibCommon.sol';
 import {VRelationshipsInternal} from './VRelationshipsInternal.sol';
 import {_DID_DOCUMENT_DETAILED_STORAGE_POSITION} from '../../constants/storagePositions.sol';
-import {
-    _recoverSigner,
-    InvalidSignature
-} from '../../core/signatureVerification.sol';
 
 /**
  * @title Decentralised Identity Document Internal Implementation
@@ -25,7 +26,10 @@ import {
  *      Implements temporal filtering and cryptographic key validation for enhanced security
  * @author ISBE Development Team
  */
-abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
+abstract contract DidDocumentDetailedInternal is
+    Common,
+    VRelationshipsInternal
+{
     /**
      * @notice Complete DID document structure with verification methods and relationships
      * @param baseDocument Base JSON document structure containing DID metadata
@@ -63,7 +67,7 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
      * @param networkEllipticType Network-wide elliptic curve type for consistency
      * @param didList Mapping from DID string to complete document structure
      * @param dids Array of all registered DID identifiers for enumeration
-     * @param invocationAddressToDidResolver Mapping from address to controlling DID
+     * @param invocationAddressToDid Mapping from address to controlling DID
      */
     struct DidDocumentsStorage {
         IDidDocumentDetailed.EllipticType networkEllipticType;
@@ -580,7 +584,9 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
      */
     function _checkKnownDid(address _address) internal view {
         require(
-            _isKnownDid(_address),
+            _isUseCase()
+                ? _getIsbeFactory().isKnownDid(_address)
+                : _isKnownDid(_address),
             IDidDocumentDetailed.AddressNotKnown(_address)
         );
     }
@@ -666,14 +672,9 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
      * @return bool True if address is known with active capability invocation, false otherwise
      */
     function _isKnownDid(address _address) internal view returns (bool) {
-        // 1. Check address is mapped to a DID
-        bytes32 did = _getDidFromAddress(_address);
-        if (!_isNotEmptyBytes32(did)) return false;
-
-        // 2. Get DID document and validate capability invocation
         return
             _hasActiveCapabilityInvocation(
-                _didDocumentsStorage().didList[did],
+                _didDocumentsStorage().didList[_getDidFromAddress(_address)],
                 _address
             );
     }
@@ -698,6 +699,25 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
         bytes32 _did
     ) internal view returns (string memory) {
         return _didDocumentsStorage().didList[_did].alsoKnownAs;
+    }
+
+    function _didOf(address account) internal view returns (bytes32 did_) {
+        DidDocumentsStorage storage $ = _didDocumentsStorage();
+        did_ = $.invocationAddressToDid[account];
+        DidDocument storage didDocument = $.didList[did_];
+        return
+            _hasActiveCapabilityInvocation(didDocument, account)
+                ? did_
+                : bytes32(0);
+    }
+
+    /// @notice Override of AccessControlInternal._localDidOf for local DID resolution
+    /// @param _account The address to resolve
+    /// @return bytes32 The DID hash if found and active, otherwise bytes32(0)
+    function _localDidOf(
+        address _account
+    ) internal view virtual override returns (bytes32) {
+        return _didOf(_account);
     }
 
     function _checkEmptyVerificationRelationship(
@@ -883,21 +903,18 @@ abstract contract DidDocumentDetailedInternal is VRelationshipsInternal {
         DidDocument storage _document,
         address _address
     ) private view returns (bool) {
-        // 1. Get vMethodId from address
+        if (!_document.exists) return false;
         bytes32 vMethodId = _document.vMethodIdOfAddress[_address];
         if (
             !_isNotEmptyBytes32(vMethodId) ||
             !_document.capabilityInvocationMethodIdExist[vMethodId]
         ) return false;
-
-        // 2. Check temporal validity
         uint256 capIndex = _document.capabilityInvocationMethodIdIndex[
             vMethodId
         ];
         IDidDocumentDetailed.VRelationship memory capInvocation = _document
             .capabilityInvocations[capIndex];
         uint256 blockTimestamp = _blockTimestamp();
-
         return
             blockTimestamp >= capInvocation.notBefore &&
             blockTimestamp < capInvocation.notAfter;

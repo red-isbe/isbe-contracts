@@ -1,3 +1,102 @@
+- [ISBE Contracts](#isbe-contracts)
+    - [🚀 Quick Start](#-quick-start)
+        - [Requirements](#requirements)
+        - [Installation](#installation)
+    - [🌐 Network Support](#-network-support)
+        - [Available Networks](#available-networks)
+        - [Deployment Commands](#deployment-commands)
+        - [Deployment Options](#deployment-options)
+    - [🔐 Account Management](#-account-management)
+        - [secp256k1 Networks (Standard Ethereum)](#secp256k1-networks-standard-ethereum)
+        - [secp256r1 Networks (Hyperledger Besu)](#secp256r1-networks-hyperledger-besu)
+        - [Account Validation](#account-validation)
+    - [🏗️ Architecture Overview](#-architecture-overview)
+        - [Core Components](#core-components)
+        - [Key Contracts](#key-contracts)
+    - [🔇 Silent Configuration System](#-silent-configuration-system)
+        - [Quick Start](#quick-start)
+        - [Benefits](#benefits)
+    - [🔧 TypeScript Utilities & Code Quality](#-typescript-utilities--code-quality)
+        - [🏠 Core Utilities](#-core-utilities)
+            - [Custom Error System](#custom-error-system)
+            - [Ethereum Utilities](#ethereum-utilities)
+            - [Enhanced Validation](#enhanced-validation)
+        - [📜 Enhanced TypeScript Scripts](#-enhanced-typescript-scripts)
+        - [🎖️ Quality Improvements](#-quality-improvements)
+    - [🔐 secp256r1 Signature Support](#-secp256r1-signature-support)
+        - [Current Implementation Status](#current-implementation-status)
+        - [⚠️ Known Architectural Issues](#-known-architectural-issues)
+        - [Developer Usage](#developer-usage)
+            - [Network Configuration](#network-configuration)
+            - [Automatic Curve Detection](#automatic-curve-detection)
+            - [Manual Provider Creation](#manual-provider-creation)
+        - [Event Detection & Reliability](#event-detection--reliability)
+        - [Development & Debugging](#development--debugging)
+            - [Debug Mode](#debug-mode)
+            - [Testing Both Curves](#testing-both-curves)
+        - [Architecture Improvement Plan](#architecture-improvement-plan)
+        - [Known Limitations](#known-limitations)
+        - [Production Readiness](#production-readiness)
+    - [📋 Development Tasks](#-development-tasks)
+        - [Build and Compilation](#build-and-compilation)
+        - [Testing](#testing)
+            - [Quick Start](#quick-start)
+            - [Test Performance & Optimization](#test-performance--optimization)
+        - [Code Quality](#code-quality)
+        - [Security Analysis](#security-analysis)
+        - [Gas Analysis](#gas-analysis)
+        - [Documentation](#documentation)
+        - [Pre-commit Pipeline](#pre-commit-pipeline)
+    - [🎯 Deployment Tasks](#-deployment-tasks)
+        - [Full Deployment](#full-deployment)
+        - [Business Logic Management](#business-logic-management)
+        - [Configuration Management](#configuration-management)
+            - [Building Custom Configuration IDs](#building-custom-configuration-ids)
+        - [Use Case Deployment](#use-case-deployment)
+            - [Configuration-Only Approach](#configuration-only-approach)
+    - [🔍 Verification and Monitoring](#-verification-and-monitoring)
+        - [Deployment Verification](#deployment-verification)
+        - [Governance Analysis](#governance-analysis)
+        - [Diamond Pattern Tasks](#diamond-pattern-tasks)
+        - [Access Control](#access-control)
+        - [Pause Controls](#pause-controls)
+    - [🛠️ Curve-Aware Development](#-curve-aware-development)
+        - [Working with secp256k1 (Standard Ethereum)](#working-with-secp256k1-standard-ethereum)
+        - [Working with secp256r1 (Hyperledger Besu)](#working-with-secp256r1-hyperledger-besu)
+        - [Cross-Curve Development](#cross-curve-development)
+        - [⚠️ EXPERIMENTAL SECP256R1 SUPPORT](#-experimental-secp256r1-support)
+        - [Current secp256r1 Implementation Status](#current-secp256r1-implementation-status)
+    - [📊 Examples](#-examples)
+        - [Complete Deployment Example](#complete-deployment-example)
+    - [👥 User Roles](#-user-roles)
+    - [📝 Development Workflow](#-development-workflow)
+        - [Branch Naming Convention](#branch-naming-convention)
+        - [Commit Requirements](#commit-requirements)
+        - [Pull Request Process](#pull-request-process)
+    - [✅ Code Quality Standards](#-code-quality-standards)
+        - [Mandatory Requirements](#mandatory-requirements)
+        - [Configuration ID Algorithm](#configuration-id-algorithm)
+            - [Algorithm Flow](#algorithm-flow)
+            - [Example: Complete Deployment Flow](#example-complete-deployment-flow)
+            - [Available Resolver Keys](#available-resolver-keys)
+            - [Common Use Cases](#common-use-cases)
+        - [Pre-commit Validation](#pre-commit-validation)
+    - [📦 NPM Package Usage](#-npm-package-usage)
+    - [📚 Documentation](#-documentation)
+        - [📖 Gas Measurement](#-gas-measurement)
+    - [🔧 Troubleshooting](#-troubleshooting)
+        - [Common Issues with Configuration IDs](#common-issues-with-configuration-ids)
+        - [Other Common Issues](#other-common-issues)
+        - [Network Connection Issues](#network-connection-issues)
+        - [secp256r1 Specific Issues (EXPERIMENTAL)](#secp256r1-specific-issues-experimental)
+    - [🚀 Advanced Usage](#-advanced-usage)
+        - [Custom Network Configuration](#custom-network-configuration)
+        - [Environment-Specific Deployment](#environment-specific-deployment)
+    - [User Roles](#user-roles)
+    - [Changes Procedure](#changes-procedure)
+    - [Deploy to isbe besu local deployer](#deploy-to-isbe-besu-local-deployer)
+    - [Resources table](#resources-table)
+
 # ISBE Contracts
 
 Repository of certified and audited smart contracts for the ISBE (Interoperable Secure Blockchain Ecosystem) network, developed by Alastria. This project implements sophisticated Diamond Pattern (EIP-2535) architecture for modular, upgradeable smart contracts with comprehensive governance controls.
@@ -73,20 +172,24 @@ npx hardhat deployAll --network customR1Network
 npx hardhat deployAll --network hardhat --no-deploy-use-cases
 npx hardhat deployAllClean --network hardhat --no-deploy-use-cases
 
+# Selective deployment - deploy only specific use cases based on JSON configuration
+npx hardhat deployAllClean --network hardhat --config-file custom.json
+
 # Test deployment (comprehensive)
 npx hardhat deployTest
 ```
 
 #### Deployment Options
 
-| Option                  | Description                                                     |
-| ----------------------- | --------------------------------------------------------------- |
-| `--network <name>`      | Specifies the network to deploy to                              |
-| `--precommit`           | Runs pre-commit validations after deployment                    |
-| `--info`                | Shows detailed network and signature provider information       |
-| `--no-deploy-use-cases` | Registers configurations with setConfig but skips deployUseCase |
-| `--log-level <level>`   | Sets logging verbosity (minimal, normal, verbose, debug)        |
-| `--legacy`              | (deployAllClean only) Uses legacy DeploymentOrchestrator        |
+| Option                  | Description                                                          |
+| ----------------------- | -------------------------------------------------------------------- |
+| `--network <name>`      | Specifies the network to deploy to                                   |
+| `--precommit`           | Runs pre-commit validations after deployment                         |
+| `--info`                | Shows detailed network and signature provider information            |
+| `--no-deploy-use-cases` | Registers configurations with setConfig but skips deployUseCase      |
+| `--config-file <file>`  | 🆕 JSON configuration for selective deployment (deployAllClean only) |
+| `--log-level <level>`   | Sets logging verbosity (minimal, normal, verbose, debug)             |
+| `--legacy`              | (deployAllClean only) Uses legacy DeploymentOrchestrator             |
 
 ## 🔐 Account Management
 
@@ -684,6 +787,78 @@ npx hardhat deployAllClean --network <network> --no-deploy-use-cases
 
 This runs the setConfig step to register all configurations but skips the deployUseCase calls.
 
+#### 🆕 Selective Deployment
+
+Deploy only specific use cases instead of all 150+ available cases. Perfect for development, testing, or incremental deployments.
+
+**Example - Deploy only ERC20 Base:**
+
+```bash
+{
+  "description": "ERC20 Base tokens only - no extensions",
+  "version": "1.0.0",
+  "includeAllBusinessLogics": true,
+  "useCaseFilters": {
+    "enabled": true,
+    "includePatterns": [
+      "ERC20 Base"
+    ],
+    "excludePatterns": [
+      "w/Burn",
+      "w/Cap",
+      "w/Ctrl",
+      "w/Snap",
+      "Complete"
+    ],
+    "categories": [
+      "erc20"
+    ]
+  },
+  "metadata": {
+    "author": "ISBE Development Team",
+    "created": "2025-10-30",
+    "purpose": "Deploy only basic ERC20 token without any extensions"
+  }
+}
+```
+
+### Testing de ERC20 Basic
+
+```bash
+npx hardhat deployAllClean --network localhost --config-file erc20-basic.json
+```
+
+### Setup for Essentials Use Cases
+
+```bash
+npx hardhat deployAllClean --network localhost --config-file essentials.json
+```
+
+### Testing de minimal Functionality
+
+```bash
+npx hardhat deployAllClean --network localhost --config-file minimal.json
+```
+
+### Or Test a customn selection
+
+```bash
+npx hardhat deployAllClean --network localhost --config-file custom.json
+```
+
+**Benefits:**
+
+- ⏱️ **Time Reduction**: ~3 minutes vs ~45 minutes (93% faster)
+- 🎯 **Targeted Testing**: Deploy only what you need
+- 💰 **Cost Optimization**: Reduce gas costs for development
+- 🔧 **Incremental Updates**: Add specific use cases to existing deployments
+
+**Available Filter Options:**
+
+- `includePatterns`: Text patterns to include (e.g., `["ERC20 Base"]`)
+- `excludePatterns`: Text patterns to exclude (e.g., `["w/Burn", "Complete"]`)
+- `categories`: Use case categories (e.g., `["utility", "erc20", "erc721"]`)
+
 ## 🔍 Verification and Monitoring
 
 ### Deployment Verification
@@ -1252,3 +1427,15 @@ To deploy to Isbe besu local deployer, the test network provided on the repo, yo
 - PRIVATE_KEY: It should be the same value of ACCOUNTS
 
 Then you can do deployAll command and it should work as expected.
+
+# Resources table
+
+- [ISBE Configuration](./config/README.md)
+- [Documentation table of content](./docs/README.md)
+- [Architecture Decision Records (ADRs)](./docs/adrs/README.md)
+- [Artifacts from Smart Contracts group](./docs/artifacts/README.md)
+- [Deployments done in each network](./docs/deployments/README.md)
+- [Module documentation index](./docs/generated/INDEX.md)
+- [PDR — Smart Contract “Catálogo de Redes” (Revisión con Resources genérico)](./docs/pdr/PDR-DirectorioDeRedes.md)
+- [Tasks Index](./tasks/README.md)
+- [ISBE Contract Utilities](./utils/README.md)

@@ -42,6 +42,12 @@ export const UTILITY_DEFINITIONS = [
         artifactPath: ARTIFACT_PATHS.ACCESS_CONTROL,
     },
     {
+        description: CONTRACT_NAMES.ACCESS_CONTROL_DID,
+        key: BASE_RESOLVER_KEYS.ACCESS_CONTROL_DID,
+        contractName: CONTRACT_NAMES.ACCESS_CONTROL_DID,
+        artifactPath: ARTIFACT_PATHS.ACCESS_CONTROL_DID,
+    },
+    {
         description: CONTRACT_NAMES.PAUSE,
         key: BASE_RESOLVER_KEYS.PAUSE,
         contractName: CONTRACT_NAMES.PAUSE,

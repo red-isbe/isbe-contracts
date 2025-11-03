@@ -62,4 +62,7 @@ bytes32 constant _CLIENT_FILTERING_ROLE = 0xcbb09df20dd6e5dbe10d3957a6ca4269c2c9
 // keccak256('isbe.contracts.role.timestamping.registry');
 bytes32 constant _TIMESTAMPING_REGISTRY_ROLE = 0xde626b2d09629d2f22e508eb4635d61e0f8ab77b4ad08e0823135c887724bac8;
 
+// keccak256('BESU_NODE_MANAGER_ROLE');
+bytes32 constant _BESU_NODE_MANAGER_ROLE = 0xb041d3ca73c73e8e0c7f8c77caf5bd3268e3aaca676b32484b3da5b75deb85fe;
+
 // solhint-enable max-line-length

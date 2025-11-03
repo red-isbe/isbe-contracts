@@ -5,6 +5,7 @@ import {
     DidDocumentDetailedFacet,
     DidVerificationMethodFacet,
     DidVerificationRelationshipFacet,
+    DidRegistryQueryFacet,
     IDidVerificationMethod,
     IDidRegistry,
     MockTimestampFacet,
@@ -22,6 +23,7 @@ import {
     DID_CONTROLLER_RESOLVER_KEY,
     DID_VERIFICATION_RELATIONSHIP_RESOLVER_KEY,
     DID_VERIFICATION_METHOD_RESOLVER_KEY,
+    DID_REGISTRY_QUERY_RESOLVER_KEY,
 } from '../../utils/constants'
 import { deployGovernance } from '../fixtures/governance'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
@@ -91,7 +93,8 @@ const randomizeDidDocument = (wallet: HDNodeWallet) => {
     vMethodId = randomHex(32)
     publicKey65 = walletToPublicKey(wallet)
     publicKey64 = '0x'.concat(publicKey65.slice(4))
-    notBefore = randomInt()
+    // Use timestamp in the past to ensure capability invocation is immediately active
+    notBefore = 5n
     notAfter = notBefore + TEST_VALIDITY_DURATION
 }
 
@@ -102,6 +105,7 @@ let didDocumentDetailedFacet: DidDocumentDetailedFacet
 let didControllerFacet: DidControllerFacet
 let didVerificationMethodFacet: DidVerificationMethodFacet
 let didVerificationRelationshipFacet: DidVerificationRelationshipFacet
+let didRegistryQueryFacet: DidRegistryQueryFacet
 
 /**
  * Helper function to create a standard test fixture:
@@ -338,6 +342,7 @@ describe('DiDRegistry', function () {
             didVerificationMethodFacet: gov.didVerificationMethodFacet,
             didVerificationRelationshipFacet:
                 gov.didVerificationRelationshipFacet,
+            didRegistryQueryFacet: gov.didRegistryQueryFacet,
             didRegistry: gov.didRegistry.connect(
                 adminSigner
             ) as typeof gov.didRegistry,
@@ -355,6 +360,7 @@ describe('DiDRegistry', function () {
         didVerificationMethodFacet = contracts.didVerificationMethodFacet
         didVerificationRelationshipFacet =
             contracts.didVerificationRelationshipFacet
+        didRegistryQueryFacet = contracts.didRegistryQueryFacet
         didRegistry = contracts.didRegistry
         mockTimestamp = contracts.mockTimestamp
     })
@@ -3091,6 +3097,8 @@ describe('DiDRegistry', function () {
                 await loadFixture(fixture)
             })
             it('GIVEN inserted document WHEN check controller with a non linked did THEN fails', async () => {
+                // Set timestamp before notBefore to ensure capability invocation is not yet active
+                await mockTimestamp.setMockedTimestamp(notBefore - 1n)
                 await expectControllerStatus(
                     did,
                     await wallet.getAddress(),
@@ -3223,6 +3231,277 @@ describe('DiDRegistry', function () {
                         wallet4Address
                     )
                 ).to.be.false
+            })
+        })
+
+        describe('DID Registry Query Functions', () => {
+            let wallet: HDNodeWallet
+
+            beforeEach(async () => {
+                did = randomDid()
+                const fixture = await createStandardFixture(did)
+                wallet = fixture.wallet
+            })
+
+            describe('didOf', () => {
+                it('GIVEN address with DID WHEN querying didOf THEN returns correct DID', async () => {
+                    await mockTimestamp.setMockedTimestamp(notBefore + 1n)
+                    const walletAddress = await wallet.getAddress()
+
+                    const resolvedDid = await didRegistry.didOf(walletAddress)
+
+                    expect(resolvedDid).to.equal(did)
+                    expect(resolvedDid).to.not.equal(ethers.ZeroHash)
+                })
+
+                it('GIVEN address without DID WHEN querying didOf THEN returns zero', async () => {
+                    await mockTimestamp.setMockedTimestamp(notBefore + 1n)
+                    const unknownAddress = ethers.Wallet.createRandom().address
+
+                    const resolvedDid = await didRegistry.didOf(unknownAddress)
+
+                    expect(resolvedDid).to.equal(ethers.ZeroHash)
+                })
+
+                it('GIVEN address with revoked verification method WHEN querying didOf THEN returns zero', async () => {
+                    await mockTimestamp.setMockedTimestamp(notBefore + 1n)
+                    const walletAddress = await wallet.getAddress()
+
+                    // Initially returns DID
+                    expect(await didRegistry.didOf(walletAddress)).to.equal(did)
+
+                    // Revoke the verification method
+                    await didRegistry.revokeVerificationMethod(
+                        did,
+                        vMethodId,
+                        notBefore
+                    )
+
+                    // After revocation, should return zero
+                    expect(await didRegistry.didOf(walletAddress)).to.equal(
+                        ethers.ZeroHash
+                    )
+                })
+
+                it('GIVEN address with vMethod but no capability invocation WHEN querying didOf THEN returns zero', async () => {
+                    await mockTimestamp.setMockedTimestamp(notBefore + 1n)
+
+                    // Add a vMethod without capability invocation
+                    const wallet2 = deriveWallet(wallet, '20')
+                    const publicKey2 = wallet2.signingKey.publicKey
+                    const vMethodId2 = randomDid()
+
+                    await didRegistry.addVerificationMethod(
+                        did,
+                        vMethodId2,
+                        publicKey2,
+                        EllipticType.SECP_256_K1
+                    )
+
+                    // This address has a vMethod but no capability invocation
+                    const wallet2Address = await wallet2.getAddress()
+                    expect(await didRegistry.didOf(wallet2Address)).to.equal(
+                        ethers.ZeroHash
+                    )
+                })
+            })
+
+            describe('isKnownDid', () => {
+                it('GIVEN address with active DID WHEN checking isKnownDid THEN returns true', async () => {
+                    await mockTimestamp.setMockedTimestamp(notBefore + 1n)
+                    const walletAddress = await wallet.getAddress()
+
+                    expect(await didRegistry.isKnownDid(walletAddress)).to.be
+                        .true
+                })
+
+                it('GIVEN address without DID WHEN checking isKnownDid THEN returns false', async () => {
+                    const unknownAddress = ethers.Wallet.createRandom().address
+
+                    expect(await didRegistry.isKnownDid(unknownAddress)).to.be
+                        .false
+                })
+
+                it('GIVEN address with revoked capability invocation WHEN checking isKnownDid THEN returns false', async () => {
+                    await mockTimestamp.setMockedTimestamp(notBefore + 1n)
+                    const walletAddress = await wallet.getAddress()
+
+                    // Initially returns true
+                    expect(await didRegistry.isKnownDid(walletAddress)).to.be
+                        .true
+
+                    // Revoke the verification method (which revokes capability invocation)
+                    await didRegistry.revokeVerificationMethod(
+                        did,
+                        vMethodId,
+                        notBefore
+                    )
+
+                    // After revocation, should return false
+                    expect(await didRegistry.isKnownDid(walletAddress)).to.be
+                        .false
+                })
+
+                it('GIVEN address with vMethod but no capability invocation WHEN checking isKnownDid THEN returns false', async () => {
+                    await mockTimestamp.setMockedTimestamp(notBefore + 1n)
+
+                    // Add a vMethod without capability invocation
+                    const wallet3 = deriveWallet(wallet, '21')
+                    const publicKey3 = wallet3.signingKey.publicKey
+                    const vMethodId3 = randomDid()
+
+                    await didRegistry.addVerificationMethod(
+                        did,
+                        vMethodId3,
+                        publicKey3,
+                        EllipticType.SECP_256_K1
+                    )
+
+                    // This address has a vMethod but no capability invocation
+                    const wallet3Address = await wallet3.getAddress()
+                    expect(await didRegistry.isKnownDid(wallet3Address)).to.be
+                        .false
+                })
+
+                it('GIVEN address with expired capability invocation WHEN checking isKnownDid THEN returns false', async () => {
+                    // Set time to after expiration
+                    await mockTimestamp.setMockedTimestamp(notAfter + 1n)
+                    const walletAddress = await wallet.getAddress()
+
+                    // After expiration, should return false
+                    expect(await didRegistry.isKnownDid(walletAddress)).to.be
+                        .false
+                })
+            })
+        })
+
+        describe('Facet Introspection Functions', () => {
+            describe('DidDocumentDetailedFacet introspection', () => {
+                it('GIVEN DidDocumentDetailedFacet WHEN calling interfacesIntrospection THEN returns interface IDs', async () => {
+                    const interfaces =
+                        await didDocumentDetailedFacet.interfacesIntrospection()
+
+                    expect(interfaces.length).to.be.greaterThan(0)
+                    // Should contain IDidDocumentDetailed interface
+                    expect(interfaces).to.not.be.empty
+                })
+
+                it('GIVEN DidDocumentDetailedFacet WHEN calling businessIdIntrospection THEN returns correct business ID', async () => {
+                    const businessId =
+                        await didDocumentDetailedFacet.businessIdIntrospection()
+
+                    expect(businessId).to.equal(
+                        DID_DOCUMENT_DETAILED_RESOLVER_KEY
+                    )
+                })
+
+                it('GIVEN DidDocumentDetailedFacet WHEN calling selectorsIntrospection THEN returns selectors', async () => {
+                    const selectors =
+                        await didDocumentDetailedFacet.selectorsIntrospection()
+
+                    expect(selectors.length).to.be.greaterThan(0)
+                })
+            })
+
+            describe('DidControllerFacet introspection', () => {
+                it('GIVEN DidControllerFacet WHEN calling interfacesIntrospection THEN returns interface IDs', async () => {
+                    const interfaces =
+                        await didControllerFacet.interfacesIntrospection()
+
+                    expect(interfaces.length).to.be.greaterThan(0)
+                    expect(interfaces).to.not.be.empty
+                })
+
+                it('GIVEN DidControllerFacet WHEN calling businessIdIntrospection THEN returns correct business ID', async () => {
+                    const businessId =
+                        await didControllerFacet.businessIdIntrospection()
+
+                    expect(businessId).to.equal(DID_CONTROLLER_RESOLVER_KEY)
+                })
+
+                it('GIVEN DidControllerFacet WHEN calling selectorsIntrospection THEN returns selectors', async () => {
+                    const selectors =
+                        await didControllerFacet.selectorsIntrospection()
+
+                    expect(selectors.length).to.be.greaterThan(0)
+                })
+            })
+
+            describe('DidVerificationMethodFacet introspection', () => {
+                it('GIVEN DidVerificationMethodFacet WHEN calling interfacesIntrospection THEN returns interface IDs', async () => {
+                    const interfaces =
+                        await didVerificationMethodFacet.interfacesIntrospection()
+
+                    expect(interfaces.length).to.be.greaterThan(0)
+                    expect(interfaces).to.not.be.empty
+                })
+
+                it('GIVEN DidVerificationMethodFacet WHEN calling businessIdIntrospection THEN returns correct business ID', async () => {
+                    const businessId =
+                        await didVerificationMethodFacet.businessIdIntrospection()
+
+                    expect(businessId).to.equal(
+                        DID_VERIFICATION_METHOD_RESOLVER_KEY
+                    )
+                })
+
+                it('GIVEN DidVerificationMethodFacet WHEN calling selectorsIntrospection THEN returns selectors', async () => {
+                    const selectors =
+                        await didVerificationMethodFacet.selectorsIntrospection()
+
+                    expect(selectors.length).to.be.greaterThan(0)
+                })
+            })
+
+            describe('DidVerificationRelationshipFacet introspection', () => {
+                it('GIVEN DidVerificationRelationshipFacet WHEN calling interfacesIntrospection THEN returns interface IDs', async () => {
+                    const interfaces =
+                        await didVerificationRelationshipFacet.interfacesIntrospection()
+
+                    expect(interfaces.length).to.be.greaterThan(0)
+                    expect(interfaces).to.not.be.empty
+                })
+
+                it('GIVEN DidVerificationRelationshipFacet WHEN calling businessIdIntrospection THEN returns correct business ID', async () => {
+                    const businessId =
+                        await didVerificationRelationshipFacet.businessIdIntrospection()
+
+                    expect(businessId).to.equal(
+                        DID_VERIFICATION_RELATIONSHIP_RESOLVER_KEY
+                    )
+                })
+
+                it('GIVEN DidVerificationRelationshipFacet WHEN calling selectorsIntrospection THEN returns selectors', async () => {
+                    const selectors =
+                        await didVerificationRelationshipFacet.selectorsIntrospection()
+
+                    expect(selectors.length).to.be.greaterThan(0)
+                })
+            })
+
+            describe('DidRegistryQueryFacet introspection', () => {
+                it('GIVEN DidRegistryQueryFacet WHEN calling interfacesIntrospection THEN returns interface IDs', async () => {
+                    const interfaces =
+                        await didRegistryQueryFacet.interfacesIntrospection()
+
+                    expect(interfaces.length).to.be.greaterThan(0)
+                    expect(interfaces).to.not.be.empty
+                })
+
+                it('GIVEN DidRegistryQueryFacet WHEN calling businessIdIntrospection THEN returns correct business ID', async () => {
+                    const businessId =
+                        await didRegistryQueryFacet.businessIdIntrospection()
+
+                    expect(businessId).to.equal(DID_REGISTRY_QUERY_RESOLVER_KEY)
+                })
+
+                it('GIVEN DidRegistryQueryFacet WHEN calling selectorsIntrospection THEN returns selectors', async () => {
+                    const selectors =
+                        await didRegistryQueryFacet.selectorsIntrospection()
+
+                    expect(selectors.length).to.be.greaterThan(0)
+                    expect(selectors.length).to.equal(2) // didOf and isKnownDid
+                })
             })
         })
     })

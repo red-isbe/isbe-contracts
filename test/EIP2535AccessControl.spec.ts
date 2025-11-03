@@ -1241,5 +1241,118 @@ describe('EIP2535AccessControlProxy', function () {
                 )
             })
         })
+
+        describe('ERC165 Interface Detection Edge Cases', () => {
+            it('GIVEN DiamondLoupe WHEN checking ERC165 interface THEN returns true', async () => {
+                const diamondLoupe: DiamondLoupeFacet =
+                    DiamondLoupeFacetFactory.attach(
+                        await diamondProxy.getAddress()
+                    )
+                // ERC165 interface ID is 0x01ffc9a7
+                expect(await diamondLoupe.supportsInterface('0x01ffc9a7')).to.be
+                    .true
+            })
+
+            it('GIVEN DiamondLoupe WHEN checking IDiamondLoupe interface THEN returns true', async () => {
+                const diamondLoupe: DiamondLoupeFacet =
+                    DiamondLoupeFacetFactory.attach(
+                        await diamondProxy.getAddress()
+                    )
+                // IDiamondLoupe interface ID is 0x48e2b093
+                expect(await diamondLoupe.supportsInterface('0x48e2b093')).to.be
+                    .true
+            })
+
+            it('GIVEN DiamondLoupe WHEN checking invalid interface 0xffffffff THEN returns false', async () => {
+                const diamondLoupe: DiamondLoupeFacet =
+                    DiamondLoupeFacetFactory.attach(
+                        await diamondProxy.getAddress()
+                    )
+                // 0xffffffff is the forbidden interface
+                expect(await diamondLoupe.supportsInterface('0xffffffff')).to.be
+                    .false
+            })
+
+            it('GIVEN DiamondLoupe WHEN checking unknown interface THEN returns false', async () => {
+                const diamondLoupe: DiamondLoupeFacet =
+                    DiamondLoupeFacetFactory.attach(
+                        await diamondProxy.getAddress()
+                    )
+                // Random interface that doesn't exist
+                expect(await diamondLoupe.supportsInterface('0xdeadbeef')).to.be
+                    .false
+            })
+
+            it('GIVEN DiamondLoupe WHEN checking zero interface THEN returns false', async () => {
+                const diamondLoupe: DiamondLoupeFacet =
+                    DiamondLoupeFacetFactory.attach(
+                        await diamondProxy.getAddress()
+                    )
+                expect(await diamondLoupe.supportsInterface('0x00000000')).to.be
+                    .false
+            })
+        })
+
+        describe('DiamondLoupe Edge Cases', () => {
+            it('GIVEN non-existent selector WHEN querying facetAddress THEN returns zero address', async () => {
+                const diamondLoupe: DiamondLoupeFacet =
+                    DiamondLoupeFacetFactory.attach(
+                        await diamondProxy.getAddress()
+                    )
+                const address = await diamondLoupe.facetAddress('0xdeadbeef')
+                expect(address).to.equal(ethers.ZeroAddress)
+            })
+
+            it('GIVEN non-existent facet WHEN querying selectors THEN returns empty array', async () => {
+                const diamondLoupe: DiamondLoupeFacet =
+                    DiamondLoupeFacetFactory.attach(
+                        await diamondProxy.getAddress()
+                    )
+                const randomAddress = ethers.Wallet.createRandom().address
+                const selectors =
+                    await diamondLoupe.facetFunctionSelectors(randomAddress)
+                expect(selectors).to.have.length(0)
+            })
+
+            it('GIVEN zero address WHEN querying facetFunctionSelectors THEN returns empty array', async () => {
+                const diamondLoupe: DiamondLoupeFacet =
+                    DiamondLoupeFacetFactory.attach(
+                        await diamondProxy.getAddress()
+                    )
+                const selectors = await diamondLoupe.facetFunctionSelectors(
+                    ethers.ZeroAddress
+                )
+                expect(selectors).to.have.length(0)
+            })
+
+            it('GIVEN deployed diamond WHEN querying facetAddresses THEN returns all facets', async () => {
+                const diamondLoupe: DiamondLoupeFacet =
+                    DiamondLoupeFacetFactory.attach(
+                        await diamondProxy.getAddress()
+                    )
+                const addresses = await diamondLoupe.facetAddresses()
+                expect(addresses.length).to.be.greaterThan(0)
+                expect(addresses).to.include(await diamondCutFacet.getAddress())
+                expect(addresses).to.include(
+                    await diamondLoupeFacet.getAddress()
+                )
+            })
+
+            it('GIVEN deployed diamond WHEN querying facets THEN returns complete structure', async () => {
+                const diamondLoupe: DiamondLoupeFacet =
+                    DiamondLoupeFacetFactory.attach(
+                        await diamondProxy.getAddress()
+                    )
+                const facets = await diamondLoupe.facets()
+
+                expect(facets.length).to.be.greaterThan(0)
+
+                // Verify each facet has address and selectors
+                for (const facet of facets) {
+                    expect(facet.facetAddress).to.not.equal(ethers.ZeroAddress)
+                    expect(facet.functionSelectors.length).to.be.greaterThan(0)
+                }
+            })
+        })
     })
 })

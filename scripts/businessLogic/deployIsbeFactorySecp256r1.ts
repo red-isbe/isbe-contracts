@@ -62,6 +62,7 @@ export async function deployIsbeFactorySecp256r1(
         'EnsRegistryFacet',
         'TimeStampingRegistryFacet',
         'ClientFilteringFacet',
+        'BesuNodeManagerFacet',
     ]
 
     const facetAddresses: string[] = []
@@ -181,6 +182,10 @@ export async function deployIsbeFactorySecp256r1(
             },
             {
                 role: TIMESTAMPING_REGISTRY_ROLE,
+                members: [accountAddress],
+            },
+            {
+                role: BESU_NODE_MANAGER_ROLE,
                 members: [accountAddress],
             },
         ],

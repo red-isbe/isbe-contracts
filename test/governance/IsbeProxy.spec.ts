@@ -13,6 +13,7 @@ import { deployGovernance } from '../fixtures/governance'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import {
     ACCESS_CONTROL_RESOLVER_KEY,
+    ACCESS_CONTROL_DID_RESOLVER_KEY,
     ASSET_EVENT_TRACKER_RESOLVER_KEY,
     CONFIGURATION_ID_PROXY_TESTS,
     CONFIGURATION_MANAGER_ROLE,
@@ -91,6 +92,7 @@ describe('IsbeProxy', function () {
             HASH_TIMESTAMP_RESOLVER_KEY,
             ASSET_EVENT_TRACKER_RESOLVER_KEY,
             ACCESS_CONTROL_RESOLVER_KEY,
+            ACCESS_CONTROL_DID_RESOLVER_KEY,
             PAUSE_RESOLVER_KEY,
             ISBE_CUT_RESOLVER_KEY,
             ISBE_LOUPE_RESOLVER_KEY,

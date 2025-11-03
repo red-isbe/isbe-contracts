@@ -1,7 +1,12 @@
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
-import { Signer } from 'ethers'
-import { ERC20, ERC20Capped } from '../typechain-types'
+import { Signer, HDNodeWallet } from 'ethers'
+import {
+    ERC20,
+    ERC20Capped,
+    IAccessControlDid,
+    IDidRegistry__factory,
+} from '../typechain-types'
 import {
     CAP_ROLE,
     MINTER_ROLE,
@@ -9,9 +14,12 @@ import {
     CONTROLLER_ROLE,
     ERC20_RESOLVER_KEY,
     ERC20_CAPPED_RESOLVER_KEY,
+    DID_REGISTRY_ROLE,
 } from '../utils/constants'
 import { deployGovernance } from './fixtures/governance'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
+import { EllipticType } from './types/identity'
+import { config } from 'hardhat'
 describe('ERC20', function () {
     const decimals = 2
     const name = 'ISBE stable token'
@@ -1111,6 +1119,273 @@ describe('ERC20', function () {
             expect(
                 await contracts.erc20.balanceOf(contracts.ownerAddress)
             ).to.be.equal(MINTED)
+        })
+    })
+
+    describe('Mixed DID and Address Role Access', function () {
+        let didWallet: HDNodeWallet
+        let did: string
+        let addressAccount: Signer
+        let addressAccountAddress: string
+        let useCaseAccessControlDid: IAccessControlDid
+        let erc20Mixed: ERC20
+        let erc20CappedMixed: ERC20Capped
+        let accessControlMixed: unknown
+
+        function walletOfFirstSigner(): HDNodeWallet {
+            const mnemonic = (
+                config.networks.hardhat.accounts as {
+                    mnemonic: string
+                    path: string
+                }
+            ).mnemonic
+            return ethers.Wallet.fromPhrase(mnemonic)
+        }
+
+        async function deployMixedFixture() {
+            const [admin, addressAcc] = await ethers.getSigners()
+            const adminAddr = await admin.getAddress()
+            const addressAccAddr = await addressAcc.getAddress()
+
+            // Create test wallet and DID
+            const baseWallet = walletOfFirstSigner()
+            const wallet = baseWallet.derivePath('302')
+            const didId = ethers.id('did:erc20:test:1')
+
+            // Deploy ERC20 with initialization
+            const ERC20Factory = await ethers.getContractFactory('ERC20Facet')
+            const CappedFactory =
+                await ethers.getContractFactory('ERC20CappedFacet')
+
+            const businessIds = [ERC20_RESOLVER_KEY, ERC20_CAPPED_RESOLVER_KEY]
+            const data = [
+                ERC20Factory.interface.encodeFunctionData('initializeErc20', [
+                    name,
+                    symbol,
+                    decimals,
+                ]),
+                CappedFactory.interface.encodeFunctionData('initializeCap', [
+                    1000,
+                ]),
+            ]
+
+            const govResult = await deployGovernance(
+                admin,
+                [],
+                undefined,
+                false,
+                '0x',
+                businessIds,
+                data
+            )
+
+            // Grant DID registry role
+            await govResult.accessControlGovernance!.grantRole(
+                DID_REGISTRY_ROLE,
+                adminAddr
+            )
+
+            // Initialize DID registry
+            const governanceAddress =
+                await govResult.accessControlGovernance!.getAddress()
+            const didRegistryWithSigner = IDidRegistry__factory.connect(
+                governanceAddress,
+                admin
+            )
+            await didRegistryWithSigner.initializeDiDRegistry(
+                EllipticType.SECP_256_K1
+            )
+
+            // Insert DID document
+            const notBefore = Math.floor(Date.now() / 1000)
+            const notAfter = notBefore + 365 * 24 * 60 * 60
+
+            const publicKey = wallet.signingKey.publicKey
+            const vMethodId = ethers.id(`vmethod:${didId}`)
+            const message = ethers.keccak256(
+                ethers.solidityPacked(['bytes'], [publicKey])
+            )
+            const signature = wallet.signingKey.sign(message)
+            const proof = ethers.Signature.from(signature).serialized
+
+            await didRegistryWithSigner.insertFirstDidDocument(
+                didId,
+                `document:${didId}`,
+                vMethodId,
+                proof,
+                publicKey,
+                EllipticType.SECP_256_K1,
+                notBefore,
+                notAfter,
+                ''
+            )
+
+            // Set mock timestamp to valid period
+            const mockTimestampWithSigner =
+                govResult.mockTimestamp.connect(admin)
+            await mockTimestampWithSigner.setMockedTimestamp(notBefore + 1)
+
+            // Get AccessControlDid interface for use case
+            const AccessControlDidFactory = await ethers.getContractFactory(
+                'AccessControlDidFacet'
+            )
+            const useCaseAccessControlDid = AccessControlDidFactory.attach(
+                await govResult.accessControl.getAddress()
+            ) as IAccessControlDid
+
+            // Grant MINTER_ROLE to address
+            await govResult.accessControl.grantRole(MINTER_ROLE, addressAccAddr)
+
+            // Grant MINTER_ROLE to DID
+            await govResult.accessControl.grantRole(MINTER_ROLE, adminAddr)
+            await useCaseAccessControlDid.grantDidRole(MINTER_ROLE, didId)
+
+            // Grant CAP_ROLE to DID
+            await govResult.accessControl.grantRole(CAP_ROLE, adminAddr)
+            await useCaseAccessControlDid.grantDidRole(CAP_ROLE, didId)
+
+            // Fund DID wallet
+            await admin.sendTransaction({
+                to: wallet.address,
+                value: ethers.parseEther('1.0'),
+            })
+
+            return {
+                erc20: govResult.erc20,
+                erc20Capped: govResult.erc20Capped,
+                erc20Snapshot: govResult.erc20Snapshot,
+                accessControl: govResult.accessControl,
+                useCaseAccessControlDid,
+                didWallet: wallet,
+                did: didId,
+                addressAccount: addressAcc,
+                addressAccountAddress: addressAccAddr,
+                adminAccount: admin,
+            }
+        }
+
+        beforeEach(async function () {
+            const contracts = await loadFixture(deployMixedFixture)
+            erc20Mixed = contracts.erc20
+            erc20CappedMixed = contracts.erc20Capped
+            accessControlMixed = contracts.accessControl
+            useCaseAccessControlDid = contracts.useCaseAccessControlDid
+            didWallet = contracts.didWallet
+            did = contracts.did
+            addressAccount = contracts.addressAccount
+            addressAccountAddress = contracts.addressAccountAddress
+        })
+
+        it('GIVEN MINTER_ROLE granted to address and DID WHEN both mint tokens THEN both succeed', async function () {
+            // Address mints
+            const connectedErc20CappedAddress =
+                erc20CappedMixed.connect(addressAccount)
+            await expect(
+                connectedErc20CappedAddress.mint(addressAccountAddress, 100)
+            )
+                .to.emit(erc20Mixed, 'Transfer')
+                .withArgs(ethers.ZeroAddress, addressAccountAddress, 100)
+
+            // DID wallet mints
+            const didSigner = new ethers.Wallet(
+                didWallet.privateKey,
+                ethers.provider
+            )
+            const connectedErc20CappedDid = erc20CappedMixed.connect(didSigner)
+            await expect(connectedErc20CappedDid.mint(didWallet.address, 200))
+                .to.emit(erc20Mixed, 'Transfer')
+                .withArgs(ethers.ZeroAddress, didWallet.address, 200)
+
+            expect(await erc20Mixed.balanceOf(addressAccountAddress)).to.equal(
+                100
+            )
+            expect(await erc20Mixed.balanceOf(didWallet.address)).to.equal(200)
+            expect(await erc20Mixed.totalSupply()).to.equal(300)
+        })
+
+        it('GIVEN MINTER_ROLE granted to DID WHEN hasRole checks address THEN returns true', async function () {
+            // Check if DID wallet address has role via DID resolution
+            const hasRole = await accessControlMixed.hasRole(
+                MINTER_ROLE,
+                didWallet.address
+            )
+            expect(hasRole).to.be.true
+        })
+
+        it('GIVEN CAP_ROLE granted to DID WHEN DID wallet sets cap THEN succeeds', async function () {
+            // DID wallet sets cap
+            const didSigner = new ethers.Wallet(
+                didWallet.privateKey,
+                ethers.provider
+            )
+            const connectedErc20CappedDid = erc20CappedMixed.connect(didSigner)
+            await expect(connectedErc20CappedDid.setCap(2000))
+                .to.emit(erc20CappedMixed, 'CapSet')
+                .withArgs(didWallet.address, 2000)
+
+            expect(await erc20CappedMixed.cap()).to.equal(2000)
+        })
+
+        it('GIVEN role revoked from DID WHEN DID wallet executes THEN fails', async function () {
+            // Revoke MINTER_ROLE from DID
+            await useCaseAccessControlDid.revokeDidRole(MINTER_ROLE, did)
+
+            // DID wallet should fail
+            const didSigner = new ethers.Wallet(
+                didWallet.privateKey,
+                ethers.provider
+            )
+            const connectedErc20CappedDid = erc20CappedMixed.connect(didSigner)
+            await expect(
+                connectedErc20CappedDid.mint(didWallet.address, 100)
+            ).to.be.revertedWithCustomError(
+                accessControlMixed,
+                'AccountHasNoRole'
+            )
+        })
+
+        it('GIVEN role revoked from address WHEN address executes THEN fails but DID still works', async function () {
+            // Revoke MINTER_ROLE from address
+            await accessControlMixed.revokeRole(
+                MINTER_ROLE,
+                addressAccountAddress
+            )
+
+            // Address should fail
+            const connectedErc20CappedAddress =
+                erc20CappedMixed.connect(addressAccount)
+            await expect(
+                connectedErc20CappedAddress.mint(addressAccountAddress, 100)
+            ).to.be.revertedWithCustomError(
+                accessControlMixed,
+                'AccountHasNoRole'
+            )
+
+            // DID wallet should still work
+            const didSigner = new ethers.Wallet(
+                didWallet.privateKey,
+                ethers.provider
+            )
+            const connectedErc20CappedDid = erc20CappedMixed.connect(didSigner)
+            await expect(
+                connectedErc20CappedDid.mint(didWallet.address, 100)
+            ).to.emit(erc20Mixed, 'Transfer')
+        })
+
+        it('GIVEN DID has multiple roles WHEN checking hasRoleForDid THEN returns true for all', async function () {
+            // Check MINTER_ROLE
+            const hasMinterRole = await useCaseAccessControlDid.hasRoleForDid(
+                MINTER_ROLE,
+                did
+            )
+            expect(hasMinterRole).to.be.true
+
+            // Check CAP_ROLE
+            const hasCapRole = await useCaseAccessControlDid.hasRoleForDid(
+                CAP_ROLE,
+                did
+            )
+            expect(hasCapRole).to.be.true
         })
     })
 })

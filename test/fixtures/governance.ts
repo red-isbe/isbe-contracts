@@ -15,6 +15,8 @@ import {
     DiamondLoupeFacet,
     DiamondLoupeFacet__factory,
     AccessControlGovernanceFacet,
+    AccessControlDidGovernanceFacet,
+    AccessControl,
     ISBEPauseFacet,
     ISBEPauseFacet__factory,
     IDidRegistry,
@@ -27,6 +29,8 @@ import {
     DidControllerFacet,
     DidVerificationRelationshipFacet,
     DidVerificationMethodFacet,
+    DidRegistryQueryFacet,
+    DidRegistryQueryFacet__factory,
     EnsRegistryFacet__factory,
     DidVerificationRelationshipFacet__factory,
     DidVerificationMethodFacet__factory,
@@ -39,6 +43,8 @@ import {
     EnsRegistryFacet,
     TimeStampingRegistryTestWrapper__factory,
     TimeStampingRegistryFacet,
+    BesuNodeManagerFacet,
+    BesuNodeManagerFacetTestWrapper__factory,
 } from '../../typechain-types'
 import {
     DEFAULT_ADMIN_ROLE,
@@ -53,6 +59,7 @@ import {
     ENS_MANAGER_ROLE,
     CLIENT_FILTERING_ROLE,
     TIMESTAMPING_REGISTRY_ROLE,
+    BESU_NODE_MANAGER_ROLE,
     CONFIGURATION_ID_ERC20,
     CONFIGURATION_ID_ERC721,
     CONFIGURATION_ID_ENS_REGISTRY,
@@ -60,6 +67,8 @@ import {
     CONFIGURATION_ID_CLIENT_FILTERING,
     CONFIGURATION_ID_TIMESTAMPING_REGISTRY,
     CONFIGURATION_ID_PROXY_TESTS,
+    CONFIGURATION_ID_KNOWN_DID_TEST,
+    CONFIGURATION_ID_BESU_NODE_MANAGER,
 } from '../../utils/constants'
 import { getIsbeFactory } from '../../scripts/utils/getIsbeFactory'
 import {
@@ -67,6 +76,7 @@ import {
     deployProxyTestsUseCaseFacets,
 } from './erc20'
 import { deployERC721UseCasesFacets } from './erc721'
+import { deployKnownDidTestWrapperUseCaseFacets } from './knownDid'
 
 let BusinessLogicFactoryFacetFactory: BusinessLogicFactoryFacet__factory
 let EIP2535AccessControlFactory: EIP2535AccessControl__factory
@@ -80,10 +90,12 @@ let DidDocumentDetailedFacetFactory: DidDocumentDetailedFacet__factory
 let DidControllerFacetFactory: DidControllerFacet__factory
 let DidVerificationMethodFacetFactory: DidVerificationMethodFacet__factory
 let DidVerificationRelationshipFacetFactory: DidVerificationRelationshipFacet__factory
+let DidRegistryQueryFacetFactory: DidRegistryQueryFacet__factory
 let EnsRegistryFacetFactory: EnsRegistryFacet__factory
 let ClientFilteringFacetFactory: ClientFilteringFacet__factory
 let TimeStampingRegistryFacetFactory: TimeStampingRegistryTestWrapper__factory
 let MockTimestampFacetFactory: MockTimestampFacet__factory
+let BesuNodeManagerFacetFactory: BesuNodeManagerFacetTestWrapper__factory
 let isbeFactory: IIsbeFactory
 
 export async function deployGovernance(
@@ -99,40 +111,42 @@ export async function deployGovernance(
     init_CallData_UseCase: string[] = [],
     isUseCaseOwnable: boolean = false
 ) {
+    const ownerAddress = await owner.getAddress()
     const rbacs = [
         {
             role: DEFAULT_ADMIN_ROLE,
-            members: [owner],
+            members: [ownerAddress],
         },
         {
             role: PROXY_DEPLOYER_ROLE,
-            members: [owner],
+            members: [ownerAddress],
         },
         {
             role: BUSINESS_LOGIC_DEPLOYER_ROLE,
-            members: [owner],
+            members: [ownerAddress],
         },
         {
             role: CONFIGURATION_MANAGER_ROLE,
-            members: [owner],
+            members: [ownerAddress],
         },
         {
             role: GOVERNANCE_CONFIGURATION_MANAGER_ROLE,
-            members: [owner],
+            members: [ownerAddress],
         },
         {
             role: GOVERNANCE_MANAGER_ROLE,
-            members: [owner],
+            members: [ownerAddress],
         },
         {
             role: ISBE_PAUSER_ROLE,
-            members: [owner],
+            members: [ownerAddress],
         },
-        { role: PAUSER_ROLE, members: [owner] },
-        { role: DID_REGISTRY_ROLE, members: [owner] },
-        { role: ENS_MANAGER_ROLE, members: [owner] },
-        { role: CLIENT_FILTERING_ROLE, members: [owner] },
-        { role: TIMESTAMPING_REGISTRY_ROLE, members: [owner] },
+        { role: PAUSER_ROLE, members: [ownerAddress] },
+        { role: DID_REGISTRY_ROLE, members: [ownerAddress] },
+        { role: ENS_MANAGER_ROLE, members: [ownerAddress] },
+        { role: CLIENT_FILTERING_ROLE, members: [ownerAddress] },
+        { role: TIMESTAMPING_REGISTRY_ROLE, members: [ownerAddress] },
+        { role: BESU_NODE_MANAGER_ROLE, members: [ownerAddress] },
     ]
 
     BusinessLogicFactoryFacetFactory = await ethers.getContractFactory(
@@ -167,6 +181,9 @@ export async function deployGovernance(
     DidVerificationRelationshipFacetFactory = await ethers.getContractFactory(
         'DidVerificationRelationshipTestWrapperFacet'
     )
+    DidRegistryQueryFacetFactory = await ethers.getContractFactory(
+        'DidRegistryQueryTestWrapperFacet'
+    )
     EnsRegistryFacetFactory =
         await ethers.getContractFactory('EnsRegistryFacet')
     ClientFilteringFacetFactory = await ethers.getContractFactory(
@@ -175,12 +192,17 @@ export async function deployGovernance(
     TimeStampingRegistryFacetFactory = await ethers.getContractFactory(
         'TimeStampingRegistryTestWrapper'
     )
+    BesuNodeManagerFacetFactory = await ethers.getContractFactory(
+        'BesuNodeManagerFacetTestWrapper'
+    )
     MockTimestampFacetFactory =
         await ethers.getContractFactory('MockTimestampFacet')
 
     const AccessControlGovernanceFacetFactory = await ethers.getContractFactory(
         'AccessControlGovernanceFacet'
     )
+    const AccessControlDidGovernanceFacetFactory =
+        await ethers.getContractFactory('AccessControlDidGovernanceFacet')
     ISBEPauseFacetFactory = await ethers.getContractFactory('ISBEPauseFacet')
 
     const businessLogicFactoryFacet: BusinessLogicFactoryFacet =
@@ -211,6 +233,10 @@ export async function deployGovernance(
         await AccessControlGovernanceFacetFactory.deploy()
     await accessControlGovernanceFacet.waitForDeployment()
 
+    const accessControlDidGovernanceFacet: AccessControlDidGovernanceFacet =
+        await AccessControlDidGovernanceFacetFactory.deploy()
+    await accessControlDidGovernanceFacet.waitForDeployment()
+
     const iSBEPauseFacet: ISBEPauseFacet = await ISBEPauseFacetFactory.deploy()
     await iSBEPauseFacet.waitForDeployment()
 
@@ -222,12 +248,16 @@ export async function deployGovernance(
         await DidVerificationMethodFacetFactory.deploy()
     const didVerificationRelationshipFacet: DidVerificationRelationshipFacet =
         await DidVerificationRelationshipFacetFactory.deploy()
+    const didRegistryQueryFacet: DidRegistryQueryFacet =
+        await DidRegistryQueryFacetFactory.deploy()
     const ensRegistryFacet: EnsRegistryFacet =
         await EnsRegistryFacetFactory.deploy()
     const clientFilteringFacet: ClientFiltering =
         await ClientFilteringFacetFactory.deploy()
     const timeStampingRegistryFacet: TimeStampingRegistryFacet =
         await TimeStampingRegistryFacetFactory.deploy()
+    const besuNodeManagerFacet: BesuNodeManagerFacet =
+        await BesuNodeManagerFacetFactory.deploy()
     const mockTimestampFacet: MockTimestampFacet =
         await MockTimestampFacetFactory.deploy()
 
@@ -235,9 +265,11 @@ export async function deployGovernance(
     await didControllerFacet.waitForDeployment()
     await didVerificationMethodFacet.waitForDeployment()
     await didVerificationRelationshipFacet.waitForDeployment()
+    await didRegistryQueryFacet.waitForDeployment()
     await ensRegistryFacet.waitForDeployment()
     await clientFilteringFacet.waitForDeployment()
     await timeStampingRegistryFacet.waitForDeployment()
+    await besuNodeManagerFacet.waitForDeployment()
 
     const governanceFacets = [
         await businessLogicFactoryFacet.getAddress(),
@@ -247,14 +279,17 @@ export async function deployGovernance(
         await diamondCutAccessControlFacet.getAddress(),
         await diamondLoupeFacet.getAddress(),
         await accessControlGovernanceFacet.getAddress(),
+        await accessControlDidGovernanceFacet.getAddress(),
         await iSBEPauseFacet.getAddress(),
         await didDocumentDetailedFacet.getAddress(),
         await didControllerFacet.getAddress(),
         await didVerificationMethodFacet.getAddress(),
         await didVerificationRelationshipFacet.getAddress(),
+        await didRegistryQueryFacet.getAddress(),
         await ensRegistryFacet.getAddress(),
         await clientFilteringFacet.getAddress(),
         await timeStampingRegistryFacet.getAddress(),
+        await besuNodeManagerFacet.getAddress(),
         await mockTimestampFacet.getAddress(),
     ]
 
@@ -307,10 +342,21 @@ export async function deployGovernance(
                     init_BusinessId_UseCase,
                     init_CallData_UseCase
                 )
+
+            case CONFIGURATION_ID_KNOWN_DID_TEST:
+                return await deployKnownDidTestWrapperUseCaseFacets(
+                    isbeFactory,
+                    ISBEPauseFacetFactory,
+                    rbacsUseCase,
+                    init_pause,
+                    init_BusinessId_UseCase,
+                    init_CallData_UseCase
+                )
             case CONFIGURATION_ID_ENS_REGISTRY:
             case CONFIGURATION_ID_DID_REGISTRY:
             case CONFIGURATION_ID_CLIENT_FILTERING:
             case CONFIGURATION_ID_TIMESTAMPING_REGISTRY:
+            case CONFIGURATION_ID_BESU_NODE_MANAGER:
                 break
             default:
                 throw new Error(`Unknown configuration id ${configurationId}`)
@@ -348,11 +394,20 @@ export async function deployGovernance(
             governanceAddress
         ) as MockTimestampFacet,
 
+        // Access Control (for tests that don't use a use case)
+        accessControl: (await ethers.getContractAt(
+            'AccessControl',
+            governanceAddress,
+            owner
+        )) as AccessControl,
+        accessControlFacet: accessControlGovernanceFacet,
+
         // DID Registry
         didDocumentDetailedFacet,
         didControllerFacet,
         didVerificationMethodFacet,
         didVerificationRelationshipFacet,
+        didRegistryQueryFacet,
         didRegistry: IDidRegistry__factory.connect(
             governanceAddress,
             owner
@@ -373,6 +428,12 @@ export async function deployGovernance(
         timeStampingRegistry: TimeStampingRegistryFacetFactory.attach(
             governanceAddress
         ) as TimeStampingRegistry,
+
+        // Besu Node Manager
+        besuNodeManagerFacet,
+        besuNodeManager: BesuNodeManagerFacetFactory.attach(
+            governanceAddress
+        ) as BesuNodeManagerFacet,
 
         // Use case deployment (spread all properties)
         ...(useCaseDeployment || {}),

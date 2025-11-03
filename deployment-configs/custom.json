@@ -1,0 +1,25 @@
+{
+    "description": "Deploy custom functionality",
+    "version": "1.0.0",
+    "includeAllBusinessLogics": true,
+    "useCaseFilters": {
+        "enabled": true,
+        "includePatterns": [],
+        "excludePatterns": [
+            "w/Burn",
+            "w/Cap",
+            "w/Ctrl",
+            "w/Snap",
+            "w/Royal",
+            "w/Cons",
+            "w/Enum",
+            "Complete"
+        ],
+        "categories": []
+    },
+    "metadata": {
+        "author": "ISBE Development Team",
+        "created": "2025-10-30",
+        "purpose": "Deploy custom functionality"
+    }
+}

@@ -26,10 +26,7 @@ export class CleanGovernanceDeployer {
         private signatureProvider: ISignatureProvider
     ) {}
 
-    async deploy(
-        config: GovernanceConfig,
-        provider: ISignatureProvider,
-    ) {
+    async deploy(config: GovernanceConfig, provider: ISignatureProvider) {
         console.log('🏛️ Deploying governance system...')
         console.log(`   🔐 Using ${provider.getCurveType()} signatures`)
 
@@ -43,7 +40,7 @@ export class CleanGovernanceDeployer {
             const factoryAddress = await this.deployFactory(
                 accountAddress,
                 config,
-                provider,
+                provider
             )
             console.log(`   📍 Factory address: ${factoryAddress}`)
 
@@ -77,7 +74,7 @@ export class CleanGovernanceDeployer {
     private async deployFactory(
         accountAddress: string,
         config: GovernanceConfig,
-        provider: ISignatureProvider,
+        provider: ISignatureProvider
     ): Promise<string> {
         console.log(
             `   🔧 Deploying ISBE factory with ${provider.getCurveType()}...`
@@ -89,6 +86,7 @@ export class CleanGovernanceDeployer {
             'ProxyFactoryFacet',
             'GlobalIsbePauseFacet',
             'AccessControlGovernanceFacet',
+            'AccessControlDidGovernanceFacet',
             'ISBEPauseFacet',
             'DiamondCutAccessControlFacet',
             'DiamondLoupeFacet',
@@ -97,6 +95,7 @@ export class CleanGovernanceDeployer {
             'DidControllerFacet',
             'DidVerificationMethodFacet',
             'DidVerificationRelationshipFacet',
+            'DidRegistryQueryFacet',
             'EnsRegistryFacet',
             'TimeStampingRegistryFacet',
             'ClientFilteringFacet',

@@ -18,6 +18,8 @@ export const CONFIGURATION_IDS = {
         '0x0000000000000000000000000000000000000000456e735075626c6963526573',
     TIMESTAMPING_REGISTRY:
         '0x00000000000000000000000054696d655374616d70696e675265676973747279',
+    BESU_NODE_MANAGER:
+        '0x180c2fef93ef0c6e1d7cdf4808a61d4136eb9103da2759601e2a137d0bb35573',
 }
 
 export const ARTIFACT_PATHS = {
@@ -25,6 +27,8 @@ export const ARTIFACT_PATHS = {
     ISBE_CUT: 'contracts/proxies/isbeproxy/facets/IsbeCutFacet.sol',
     ISBE_LOUPE: 'contracts/proxies/isbeproxy/facets/IsbeLoupeFacet.sol',
     ACCESS_CONTROL: 'contracts/access/accessControl/AccessControlFacet.sol',
+    ACCESS_CONTROL_DID:
+        'contracts/access/accessControl/AccessControlDidFacet.sol',
     PAUSE: 'contracts/pause/ISBEPauseFacet.sol',
 
     // ERC20 facets
@@ -80,6 +84,9 @@ export const ARTIFACT_PATHS = {
         'contracts/identity/ens/publicresolver/profiles/pubkey/PubkeyResolverFacet.sol',
     // TimeStampingRegistry facets
     TIMESTAMPING_REGISTRY: 'contracts/client/tsr/TimeStampingRegistryFacet.sol',
+    // BesuNodeManager facets
+    BESU_NODE_MANAGER:
+        'contracts/client/besuNodeManager/BesuNodeManagerFacet.sol',
 } as const
 
 export const CONTRACT_NAMES = {
@@ -87,6 +94,7 @@ export const CONTRACT_NAMES = {
     ISBE_CUT: 'IsbeCutFacet',
     ISBE_LOUPE: 'IsbeLoupeFacet',
     ACCESS_CONTROL: 'AccessControlFacet',
+    ACCESS_CONTROL_DID: 'AccessControlDidFacet',
     PAUSE: 'ISBEPauseFacet',
 
     // ERC20 facets
@@ -125,4 +133,6 @@ export const CONTRACT_NAMES = {
     ENS_PUBKEY_RESOLVER: 'PubkeyResolverFacet',
     // TimeStampingRegistry facets
     TIMESTAMPING_REGISTRY: 'TimeStampingRegistryFacet',
+    // BesuNodeManager facets
+    BESU_NODE_MANAGER: 'BesuNodeManagerFacet',
 } as const
