@@ -1,0 +1,30 @@
+{
+    "description": "Essential use cases - core utilities and basic tokens",
+    "version": "1.0.0",
+    "includeAllBusinessLogics": true,
+    "useCaseFilters": {
+        "enabled": true,
+        "includePatterns": [
+            "Hash Timestamp Service",
+            "ENS Public Resolver",
+            "ERC20 Base",
+            "ERC721 Base"
+        ],
+        "excludePatterns": [
+            "w/Burn",
+            "w/Cap",
+            "w/Ctrl",
+            "w/Snap",
+            "w/Royal",
+            "w/Cons",
+            "w/Enum",
+            "Complete"
+        ],
+        "categories": ["utility", "ens", "erc20", "erc721"]
+    },
+    "metadata": {
+        "author": "ISBE Development Team",
+        "created": "2025-10-30",
+        "purpose": "Deploy essential use cases for basic testing and development"
+    }
+}

@@ -1,0 +1,29 @@
+{
+    "description": "Deploy minimal development",
+    "version": "1.0.0",
+    "includeAllBusinessLogics": true,
+    "useCaseFilters": {
+        "enabled": true,
+        "includePatterns": [],
+        "excludePatterns": [
+            "w/Burn",
+            "w/Cap",
+            "w/Ctrl",
+            "w/Snap",
+            "w/Royal",
+            "w/Cons",
+            "w/Enum",
+            "Complete",
+            "Hash Timestamp Service",
+            "ENS Public Resolver",
+            "ERC20 Base",
+            "ERC721 Base"
+        ],
+        "categories": []
+    },
+    "metadata": {
+        "author": "ISBE Development Team",
+        "created": "2025-10-30",
+        "purpose": "Deploy minimal development"
+    }
+}
