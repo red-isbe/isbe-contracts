@@ -1,10 +1,6 @@
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
-import {
-    IIsbeFactory,
-    AccessControl,
-    ProxyFactoryFacet,
-} from '../../typechain-types'
+import { IIsbeFactory, AccessControl } from '../../typechain-types'
 import { Signer } from 'ethers'
 import { deployGovernance } from '../fixtures/governance'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
@@ -21,7 +17,6 @@ import {
     RANDOM_HASH_FOR_CONFIGURATION_ID,
 } from '../../utils/constants'
 import { EventLog } from 'ethers'
-import { ContractRegistry } from '../../scripts/genesisGenerator'
 
 const registryFile: string | undefined = process.env.REGISTRY_LOCATION
 if (registryFile) {
