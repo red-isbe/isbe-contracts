@@ -52,7 +52,7 @@ abstract contract ERC3643ComplianceMaxBal is
      */
     function setMaxBalance(
         uint256 _maxBalance
-    ) external override onlyRole(_COMPLIANCE_ROLE) {
+    ) external override onlyRole(_COMPLIANCE_ROLE) whenNotPaused {
         _setMaxBalance(_maxBalance);
         emit MaxBalanceSet(_maxBalance);
     }

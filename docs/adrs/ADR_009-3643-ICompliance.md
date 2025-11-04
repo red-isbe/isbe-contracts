@@ -1,13 +1,14 @@
 # ADR_YYY: Modularización de ICompliance en arquitectura Diamond ERC-3643
 
 ## Tabla de contenidos
+
 1. Status
 2. Contexto y visión Tokeny
 3. Decisión ISBE Diamond
-    3.1. Arquitectura y orquestación interna
-    3.2. Modularidad y gestión de features
-    3.3. Roles y control
-    3.4. Métodos expuestos
+   3.1. Arquitectura y orquestación interna
+   3.2. Modularidad y gestión de features
+   3.3. Roles y control
+   3.4. Métodos expuestos
 4. Ejemplo de inicialización de features
 5. Beneficios
 
@@ -20,6 +21,7 @@ Finished
 ## 2. Contexto y visión Tokeny
 
 El estándar ERC-3643 define la interfaz ICompliance para la gestión de cumplimiento regulatorio. Tokeny ofrece dos enfoques principales:
+
 - **Legacy**: Contrato monolítico, binding a un token, gestión de agentes y features por herencia.
 - **Modular**: Contrato principal + módulos independientes, owner añade/quita módulos dinámicamente, validación recorre todos los módulos activos.
 
@@ -41,6 +43,7 @@ Ambos modelos dependen de binding externo y gestión de features por herencia o 
 - Así, la lógica de compliance está centralizada y orquestada en `ERC3643ComplianceInternal`, mientras que el contrato común solo asegura que se invoquen los hooks en el momento correcto.
 
 #### Pseudocódigo del proceso
+
 ```solidity
 // En ERC203643InternalCommon
 function _handleTransferOperation(_from, _to, _amount) internal {
@@ -98,19 +101,18 @@ function _canTransfer(_from, _to, _amount) internal view returns (bool) {
 
 ```solidity
 // Inicialización de MaxBalance
-function initializeERC3643ComplianceMaxBalance(uint256 _maxBalance)
-    external
-    initializer(_ERC3643_COMPLIANCE_MAXBALANCE_RESOLVER_KEY)
-{
+function initializeERC3643ComplianceMaxBalance(
+    uint256 _maxBalance
+) external initializer(_ERC3643_COMPLIANCE_MAXBALANCE_RESOLVER_KEY) {
     _initializeMaxBalance(_maxBalance);
     emit MaxBalanceSet(_maxBalance);
 }
 
 // Inicialización de DailyMonthLimits
-function initializeERC3643ComplianceDMLim(uint256 _dailyLimit, uint256 _monthlyLimit)
-    external
-    initializer(_ERC3643_COMPLIANCE_DMLIM_RESOLVER_KEY)
-{
+function initializeERC3643ComplianceDMLim(
+    uint256 _dailyLimit,
+    uint256 _monthlyLimit
+) external initializer(_ERC3643_COMPLIANCE_DMLIM_RESOLVER_KEY) {
     _initializeDMLim(_dailyLimit, _monthlyLimit);
     emit DayMonthLimitsSet(_dailyLimit, _monthlyLimit);
 }
@@ -119,8 +121,8 @@ function initializeERC3643ComplianceDMLim(uint256 _dailyLimit, uint256 _monthlyL
 De este modo, cada módulo puede ser inicializado y gestionado de forma independiente, manteniendo la modularidad y la extensibilidad del sistema.
 
 ## 5. Beneficios
+
 - Centralización y simplificación de la lógica de compliance.
 - Activación dinámica de features sin redeploy ni binding externo.
 - Mayor granularidad y control por roles.
 - Compatibilidad total con Diamond y ERC-3643.
-

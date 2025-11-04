@@ -50,7 +50,7 @@ abstract contract ERC3643ComplianceDMLim is
      */
     function setDailyLimit(
         uint256 _dailyLimit
-    ) external override onlyRole(_COMPLIANCE_ROLE) {
+    ) external override onlyRole(_COMPLIANCE_ROLE) whenNotPaused {
         _setDailyLimit(_dailyLimit);
         emit DayMonthLimitsSet(_getDailyLimit(), _getMonthlyLimit());
     }
@@ -68,7 +68,7 @@ abstract contract ERC3643ComplianceDMLim is
      */
     function setMonthlyLimit(
         uint256 _monthlyLimit
-    ) external override onlyRole(_COMPLIANCE_ROLE) {
+    ) external override onlyRole(_COMPLIANCE_ROLE) whenNotPaused {
         _setMonthlyLimit(_monthlyLimit);
         emit DayMonthLimitsSet(_getDailyLimit(), _getMonthlyLimit());
     }
@@ -89,6 +89,7 @@ abstract contract ERC3643ComplianceDMLim is
         external
         view
         override
+        whenNotPaused
         returns (uint256 _monthlyLimit)
     {
         return _getMonthlyLimit();
