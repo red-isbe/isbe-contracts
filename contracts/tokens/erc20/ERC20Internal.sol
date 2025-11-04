@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {Common} from '../../core/Common.sol';
+import {DidDocumentDetailedInternal} from '../../identity/didregistry/DidDocumentDetailedInternal.sol';
 import {IERC20Isbe} from './IERC20Isbe.sol';
 import {_ERC20_STORAGE_POSITION} from '../../constants/storagePositions.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
@@ -13,7 +13,7 @@ import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
  * @dev This contract defines internal functions that form the backbone of ERC20 token operations.
  *      It adheres to the ERC20 standard and provides reusable methods for advanced token management.
  */
-abstract contract ERC20Internal is Common {
+abstract contract ERC20Internal is DidDocumentDetailedInternal {
     struct ERC20Storage {
         mapping(address account => uint256) balances;
         mapping(address account => mapping(address spender => uint256)) allowances;

@@ -1,3 +1,52 @@
+## IsbeFactoryInternal
+
+Internal implementation for ISBE proxy configuration management
+
+_Abstract contract providing core proxy functionality with configuration management_
+
+### IsbeFactoryStorage
+
+Storage structure for ISBE factory configuration data
+
+_Stores configuration manager reference and version information_
+
+```solidity
+struct IsbeFactoryStorage {
+  contract IIsbeFactory isbeFactory;
+}
+```
+
+### \_setIsbeFactory
+
+```solidity
+function _setIsbeFactory(contract IIsbeFactory _isbeFactory) internal
+```
+
+### \_getIsbeFactory
+
+```solidity
+function _getIsbeFactory() internal view returns (contract IIsbeFactory)
+```
+
+Returns the governance address for DID and other queries
+
+_Overrides GovernanceAddressResolver to return configurationManager
+This enables external DID resolution for business logic proxies_
+
+#### Return Values
+
+| Name | Type                  | Description                       |
+| ---- | --------------------- | --------------------------------- |
+| [0]  | contract IIsbeFactory | The configuration manager address |
+
+### \_isUseCase
+
+```solidity
+function _isUseCase() internal view returns (bool)
+```
+
+---
+
 ## IsbeProxy
 
 EIP-2535 Diamond proxy implementation for ISBE system
@@ -38,9 +87,8 @@ _Stores configuration manager reference and version information_
 
 ```solidity
 struct IsbeProxyStorage {
-  contract IConfigurationManagement configurationManager;
-  bytes32 configurationId;
-  uint256 version;
+    bytes32 configurationId;
+    uint256 version;
 }
 ```
 

@@ -1,5 +1,5 @@
 import { task } from 'hardhat/config'
-import { getSigner } from '../../../scripts/utils/getSigner'
+import { SignatureProviderFactory } from '../../deployment/providers/SignatureProviderFactory'
 import { revokeRole } from '../../../scripts/access/accessControl/revokeRole'
 
 /**
@@ -9,13 +9,31 @@ import { revokeRole } from '../../../scripts/access/accessControl/revokeRole'
   --diamond "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6"
  */
 
-task('revokeRole', 'Grants a role to an account')
+task('revokeRole', 'Revoke a role to an account')
     .addParam('role', 'The role identifier (bytes32)')
     .addParam('account', 'The address to grant the role to')
     .addParam('diamond', 'The address of the contract')
     .setAction(async (taskArgs, hre) => {
         const { role, account, diamond } = taskArgs
-        const signer = await getSigner(hre)
-        const result = await revokeRole(role, account, diamond, signer)
-        console.log('Revoked role:' + JSON.stringify(result))
+        console.log('🔐 Initializing signature provider for access control...')
+        const signatureProvider = SignatureProviderFactory.create(hre)
+
+        console.log('📋 Revoking role with parameters:')
+        console.log(`   Role: ${role}`)
+        console.log(`   Account: ${account}`)
+        console.log(`   Diamond: ${diamond}`)
+        console.log(`   Network: ${hre.network.name}`)
+        console.log(`   Curve: ${signatureProvider.getCurveType()}`)
+
+        const result = await revokeRole(
+            role,
+            account,
+            diamond,
+            signatureProvider
+        )
+
+        console.log('\n✅ Role revoked successfully:')
+        console.log(`   Role: ${result.role}`)
+        console.log(`   Account: ${result.account}`)
+        console.log(`   Revoked by: ${result.sender}`)
     })

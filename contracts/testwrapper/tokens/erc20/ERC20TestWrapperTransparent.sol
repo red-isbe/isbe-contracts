@@ -9,6 +9,8 @@ import {ERC20} from '../../../tokens/erc20/ERC20.sol';
 import {ISBEPause} from '../../../pause/ISBEPause.sol';
 import {Pause} from '../../../pause/Pause.sol';
 import {AccessControl} from '../../../access/accessControl/AccessControl.sol';
+import {AccessControlInternal} from '../../../access/accessControl/AccessControlInternal.sol';
+import {DidDocumentDetailedInternal} from '../../../identity/didregistry/DidDocumentDetailedInternal.sol';
 
 // solhint-disable-next-line
 contract ERC20TestWrapperTransparent is
@@ -20,6 +22,17 @@ contract ERC20TestWrapperTransparent is
     ISBEPause,
     AccessControl
 {
+    function _localDidOf(
+        address _account
+    )
+        internal
+        view
+        override(AccessControlInternal, DidDocumentDetailedInternal)
+        returns (bytes32)
+    {
+        return DidDocumentDetailedInternal._localDidOf(_account);
+    }
+
     function _implementedInterfaces()
         internal
         pure

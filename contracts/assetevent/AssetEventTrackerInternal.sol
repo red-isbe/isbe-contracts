@@ -2,12 +2,14 @@
 pragma solidity ^0.8.28;
 
 import {_ASSET_EVENT_TRACKER_STORAGE_POSITION} from '../constants/storagePositions.sol';
-import {Common} from '../core/Common.sol';
+import {DidDocumentDetailedInternal} from '../identity/didregistry/DidDocumentDetailedInternal.sol';
+import {LibCommon} from '../core/LibCommon.sol';
 import {IAssetEventTracker} from './IAssetEventTracker.sol';
 
 /// @title AssetEventTrackerInternal
 /// @notice Implements generic state tracking for an asset using events
-abstract contract AssetEventTrackerInternal is Common {
+/// @author ISBE Development Team
+abstract contract AssetEventTrackerInternal is DidDocumentDetailedInternal {
     /// @notice Struct storing all asset events
     struct AssetEventTrackerStorage {
         IAssetEventTracker.AssetEvent[] assetEvents;
@@ -20,6 +22,8 @@ abstract contract AssetEventTrackerInternal is Common {
         _;
     }
 
+    /// @notice Record a new state in storage and emit an event
+    /// @param _newState The new state to be recorded
     function _recordState(uint256 _newState) internal virtual {
         uint256 timestamp = _blockTimestamp();
         _assetEventTrackerStorage().assetEvents.push(
@@ -31,6 +35,10 @@ abstract contract AssetEventTrackerInternal is Common {
         emit IAssetEventTracker.StateRecorded(_newState, timestamp, msg.sender);
     }
 
+    /// @notice Get a paginated slice of asset events
+    /// @param _pageNumber Page number (0-based)
+    /// @param _resultsPerPage Number of results per page
+    /// @return assetEvents_ Slice of events for the requested page
     function _getAssetEvents(
         uint256 _pageNumber,
         uint256 _resultsPerPage
@@ -40,24 +48,28 @@ abstract contract AssetEventTrackerInternal is Common {
         virtual
         returns (IAssetEventTracker.AssetEvent[] memory assetEvents_)
     {
-        uint256 start = _pageNumber * _resultsPerPage;
-        uint256 totalEvents = _assetEventTrackerStorage().assetEvents.length;
+        (uint256 start, uint256 end) = LibCommon.getStartAndEnd(
+            _pageNumber,
+            _resultsPerPage
+        );
+        uint256 resultLength = LibCommon.getSize(
+            start,
+            end,
+            _assetEventTrackerStorage().assetEvents.length
+        );
 
-        if (start >= totalEvents) {
-            return assetEvents_;
-        }
-
-        uint256 end = start + _resultsPerPage;
-        end = end > totalEvents ? totalEvents : end;
-
-        uint256 resultLength = end - start;
         assetEvents_ = new IAssetEventTracker.AssetEvent[](resultLength);
-
-        for (uint256 i = 0; i < resultLength; i++) {
-            assetEvents_[i] = _getAssetEventByIndex(start + i);
+        for (uint256 i; i < resultLength; ) {
+            assetEvents_[i] = _getAssetEventByIndex(start);
+            unchecked {
+                ++i;
+                ++start;
+            }
         }
     }
 
+    /// @notice Get the latest stored asset event
+    /// @return assetEvent_ Latest event or default if none
     function _getLatestAssetEvent()
         internal
         view
@@ -72,6 +84,8 @@ abstract contract AssetEventTrackerInternal is Common {
             : assetEvent_;
     }
 
+    /// @notice Get the current state from the latest event
+    /// @return Current state value
     function _getCurrentState() internal view virtual returns (uint256) {
         return _getLatestAssetEvent().state;
     }
@@ -94,6 +108,10 @@ abstract contract AssetEventTrackerInternal is Common {
         );
     }
 
+    /// @notice Check if a state transition is allowed
+    /// @param _currentState Current state
+    /// @param _newState New state to validate
+    /// @return Whether the state transition is allowed
     function _isStateChangeAllowed(
         uint256 _currentState,
         uint256 _newState

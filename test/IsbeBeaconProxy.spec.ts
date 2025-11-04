@@ -3,73 +3,79 @@ import { ethers } from 'hardhat'
 import {
     ERC20TestWrapperTransparent,
     ERC20TestWrapperTransparent__factory,
-    IsbeUpgradeableBeacon__factory,
     IsbeUpgradeableBeacon,
-    IsbeBeaconProxy__factory,
 } from '../typechain-types'
-import { DEFAULT_ADMIN_ROLE, MINTER_ROLE } from './constants'
-import { Signer } from 'ethers'
+import { DEFAULT_ADMIN_ROLE, MINTER_ROLE } from '../utils/constants'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
+import { randomString } from './support'
 
-const NAME = 'My Token'
-const SYMBOL = 'MTK'
+const NAME = randomString(8) + ' Token'
+const SYMBOL = randomString(3).toUpperCase()
 const DECIMALS = 18
 
 describe('BeaconProxy', function () {
-    let admin: Signer
-    let upgradeableBeaconFactory: IsbeUpgradeableBeacon__factory
     let upgradableBeaconImplementation: IsbeUpgradeableBeacon
-    let beaconProxyFactory: IsbeBeaconProxy__factory
-
-    let ERC20TestWrapperTransparentFactory: ERC20TestWrapperTransparent__factory
-    let erc20ImplementationTransparent: ERC20TestWrapperTransparent
     let erc20Transparent: ERC20TestWrapperTransparent
+    let ERC20TestWrapperTransparentFactory: ERC20TestWrapperTransparent__factory
 
-    async function deployInitial() {
-        ;[admin] = await ethers.getSigners()
+    async function deployFixture() {
+        const [adminSigner] = await ethers.getSigners()
+        const adminAddress = await adminSigner.getAddress()
 
-        ERC20TestWrapperTransparentFactory = await ethers.getContractFactory(
-            'ERC20TestWrapperTransparent'
-        )
-        erc20ImplementationTransparent =
-            await ERC20TestWrapperTransparentFactory.deploy()
-
+        const erc20TestWrapperTransparentFactory =
+            await ethers.getContractFactory('ERC20TestWrapperTransparent')
+        const erc20ImplementationTransparent =
+            await erc20TestWrapperTransparentFactory.deploy()
         await erc20ImplementationTransparent.waitForDeployment()
 
-        upgradeableBeaconFactory = await ethers.getContractFactory(
+        const upgradeableBeaconFactory = await ethers.getContractFactory(
             'IsbeUpgradeableBeacon'
         )
-        upgradableBeaconImplementation = await upgradeableBeaconFactory.deploy(
-            await erc20ImplementationTransparent.getAddress()
-        )
+        const upgradableBeaconImplementationInstance =
+            await upgradeableBeaconFactory.deploy(
+                await erc20ImplementationTransparent.getAddress()
+            )
+        await upgradableBeaconImplementationInstance.waitForDeployment()
 
-        await upgradableBeaconImplementation.waitForDeployment()
-
-        beaconProxyFactory = await ethers.getContractFactory('IsbeBeaconProxy')
-    }
-
-    before(async () => {
-        await deployInitial()
-    })
-
-    beforeEach(async () => {
+        const beaconProxyFactory =
+            await ethers.getContractFactory('IsbeBeaconProxy')
         const beaconProxy = await beaconProxyFactory.deploy(
-            await upgradableBeaconImplementation.getAddress()
+            await upgradableBeaconImplementationInstance.getAddress()
         )
         await beaconProxy.waitForDeployment()
 
-        erc20Transparent = ERC20TestWrapperTransparentFactory.attach(
-            await beaconProxy.getAddress()
-        ) as ERC20TestWrapperTransparent
-        await erc20Transparent.initializeErc20(NAME, SYMBOL, DECIMALS)
-        await erc20Transparent.initializeCap(10000)
-        const adminAddress = await admin.getAddress()
-        await erc20Transparent.initializeAccessControl([
+        const erc20TransparentInstance =
+            erc20TestWrapperTransparentFactory.attach(
+                await beaconProxy.getAddress()
+            ) as ERC20TestWrapperTransparent
+
+        await erc20TransparentInstance.initializeErc20(NAME, SYMBOL, DECIMALS)
+        await erc20TransparentInstance.initializeCap(10000)
+        await erc20TransparentInstance.initializeAccessControl([
             {
                 role: DEFAULT_ADMIN_ROLE,
                 members: [adminAddress],
             },
         ])
-        await erc20Transparent.grantRole(MINTER_ROLE, adminAddress)
+        await erc20TransparentInstance.grantRole(MINTER_ROLE, adminAddress)
+
+        return {
+            admin: adminSigner,
+            upgradableBeaconImplementation:
+                upgradableBeaconImplementationInstance,
+            erc20Transparent: erc20TransparentInstance,
+            ERC20TestWrapperTransparentFactory:
+                erc20TestWrapperTransparentFactory,
+        }
+    }
+
+    beforeEach(async () => {
+        const contracts = await loadFixture(deployFixture)
+        upgradableBeaconImplementation =
+            contracts.upgradableBeaconImplementation
+        erc20Transparent = contracts.erc20Transparent
+        ERC20TestWrapperTransparentFactory =
+            contracts.ERC20TestWrapperTransparentFactory
     })
 
     it('GIVEN an ERC20 deployed WHEN using Beacon Proxy THEN it can be initialized', async () => {

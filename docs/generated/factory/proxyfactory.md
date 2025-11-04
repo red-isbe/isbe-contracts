@@ -8,19 +8,19 @@ facets and manage their configurations through diamond patterns_
 ### UseCaseDeployed
 
 ```solidity
-event UseCaseDeployed(bytes32 configurationId, uint256 version, struct IAccessControl.Rbac[] rbacs, address proxy)
+event UseCaseDeployed(bytes32 configurationId, uint256 version, struct IAccessControlEoa.Rbac[] rbacs, address proxy)
 ```
 
 Emitted when a new use-case proxy is successfully deployed
 
 #### Parameters
 
-| Name            | Type                         | Description                                       |
-| --------------- | ---------------------------- | ------------------------------------------------- |
-| configurationId | bytes32                      | The unique identifier for the configuration       |
-| version         | uint256                      | The version number of the configuration used      |
-| rbacs           | struct IAccessControl.Rbac[] | Array of role-based access control configurations |
-| proxy           | address                      | The address of the deployed proxy contract        |
+| Name            | Type                            | Description                                       |
+| --------------- | ------------------------------- | ------------------------------------------------- |
+| configurationId | bytes32                         | The unique identifier for the configuration       |
+| version         | uint256                         | The version number of the configuration used      |
+| rbacs           | struct IAccessControlEoa.Rbac[] | Array of role-based access control configurations |
+| proxy           | address                         | The address of the deployed proxy contract        |
 
 ### NotEmptyBusinessIds
 
@@ -124,7 +124,7 @@ has already been used for a previous deployment
 ### deployUseCase
 
 ```solidity
-function deployUseCase(bytes32 _configurationId, uint256 _version, struct IAccessControl.Rbac[] _rbacs, bool _initPause, bytes32[] _initBusinessIds, bytes[] _initData) external
+function deployUseCase(bytes32 _configurationId, uint256 _version, struct IAccessControlEoa.Rbac[] _rbacs, bool _initPause, bytes32[] _initBusinessIds, bytes[] _initData) external
 ```
 
 Deploys a new use-case proxy with the specified configuration
@@ -134,19 +134,19 @@ control, then initialises it with the provided data_
 
 #### Parameters
 
-| Name              | Type                         | Description                                            |
-| ----------------- | ---------------------------- | ------------------------------------------------------ |
-| \_configurationId | bytes32                      | The unique identifier for the configuration            |
-| \_version         | uint256                      | The version number of the configuration (0 for latest) |
-| \_rbacs           | struct IAccessControl.Rbac[] | Array of role-based access control configurations      |
-| \_initPause       | bool                         | use case is initialized paused or not                  |
-| \_initBusinessIds | bytes32[]                    | The business IDs of the facets to use for init         |
-| \_initData        | bytes[]                      | The calldata for the initialisation function           |
+| Name              | Type                            | Description                                            |
+| ----------------- | ------------------------------- | ------------------------------------------------------ |
+| \_configurationId | bytes32                         | The unique identifier for the configuration            |
+| \_version         | uint256                         | The version number of the configuration (0 for latest) |
+| \_rbacs           | struct IAccessControlEoa.Rbac[] | Array of role-based access control configurations      |
+| \_initPause       | bool                            | use case is initialized paused or not                  |
+| \_initBusinessIds | bytes32[]                       | The business IDs of the facets to use for init         |
+| \_initData        | bytes[]                         | The calldata for the initialisation function           |
 
 ### deployUseCaseTo
 
 ```solidity
-function deployUseCaseTo(bytes32 _configurationId, uint256 _version, struct IAccessControl.Rbac[] _rbacs, bool _initPause, bytes32[] _initBusinessIds, bytes[] _initData, bytes32 _salt) external
+function deployUseCaseTo(bytes32 _configurationId, uint256 _version, struct IAccessControlEoa.Rbac[] _rbacs, bool _initPause, bytes32[] _initBusinessIds, bytes[] _initData, bytes32 _salt) external
 ```
 
 Identical to deployUseCase but deploys to a specific address (CREATE2)
@@ -156,15 +156,15 @@ control, then initialises it with the provided data_
 
 #### Parameters
 
-| Name              | Type                         | Description                                                  |
-| ----------------- | ---------------------------- | ------------------------------------------------------------ |
-| \_configurationId | bytes32                      | The unique identifier for the configuration                  |
-| \_version         | uint256                      | The version number of the configuration (0 for latest)       |
-| \_rbacs           | struct IAccessControl.Rbac[] | Array of role-based access control configurations            |
-| \_initPause       | bool                         | use case is initialized paused or not                        |
-| \_initBusinessIds | bytes32[]                    | The business IDs of the facets to use for init               |
-| \_initData        | bytes[]                      | The calldata for the initialisation function                 |
-| \_salt            | bytes32                      | The salt used to determine the deployed address with CREATE2 |
+| Name              | Type                            | Description                                                  |
+| ----------------- | ------------------------------- | ------------------------------------------------------------ |
+| \_configurationId | bytes32                         | The unique identifier for the configuration                  |
+| \_version         | uint256                         | The version number of the configuration (0 for latest)       |
+| \_rbacs           | struct IAccessControlEoa.Rbac[] | Array of role-based access control configurations            |
+| \_initPause       | bool                            | use case is initialized paused or not                        |
+| \_initBusinessIds | bytes32[]                       | The business IDs of the facets to use for init               |
+| \_initData        | bytes[]                         | The calldata for the initialisation function                 |
+| \_salt            | bytes32                         | The salt used to determine the deployed address with CREATE2 |
 
 ### getDeployedProxiesByConfiguration
 
@@ -242,7 +242,7 @@ _Modifier to validate that a configuration exists and is valid_
 ### deployUseCase
 
 ```solidity
-function deployUseCase(bytes32 _configurationId, uint256 _version, struct IAccessControl.Rbac[] _rbacs, bool _initPause, bytes32[] _initBusinessIds, bytes[] _initData) external
+function deployUseCase(bytes32 _configurationId, uint256 _version, struct IAccessControlEoa.Rbac[] _rbacs, bool _initPause, bytes32[] _initBusinessIds, bytes[] _initData) external
 ```
 
 Deploys a new use-case proxy with the specified configuration
@@ -252,19 +252,19 @@ control, then initialises it with the provided data_
 
 #### Parameters
 
-| Name              | Type                         | Description                                            |
-| ----------------- | ---------------------------- | ------------------------------------------------------ |
-| \_configurationId | bytes32                      | The unique identifier for the configuration            |
-| \_version         | uint256                      | The version number of the configuration (0 for latest) |
-| \_rbacs           | struct IAccessControl.Rbac[] | Array of role-based access control configurations      |
-| \_initPause       | bool                         | use case is initialized paused or not                  |
-| \_initBusinessIds | bytes32[]                    | The business IDs of the facets to use for init         |
-| \_initData        | bytes[]                      | The calldata for the initialisation function           |
+| Name              | Type                            | Description                                            |
+| ----------------- | ------------------------------- | ------------------------------------------------------ |
+| \_configurationId | bytes32                         | The unique identifier for the configuration            |
+| \_version         | uint256                         | The version number of the configuration (0 for latest) |
+| \_rbacs           | struct IAccessControlEoa.Rbac[] | Array of role-based access control configurations      |
+| \_initPause       | bool                            | use case is initialized paused or not                  |
+| \_initBusinessIds | bytes32[]                       | The business IDs of the facets to use for init         |
+| \_initData        | bytes[]                         | The calldata for the initialisation function           |
 
 ### deployUseCaseTo
 
 ```solidity
-function deployUseCaseTo(bytes32 _configurationId, uint256 _version, struct IAccessControl.Rbac[] _rbacs, bool _initPause, bytes32[] _initBusinessIds, bytes[] _initData, bytes32 _salt) external
+function deployUseCaseTo(bytes32 _configurationId, uint256 _version, struct IAccessControlEoa.Rbac[] _rbacs, bool _initPause, bytes32[] _initBusinessIds, bytes[] _initData, bytes32 _salt) external
 ```
 
 Identical to deployUseCase but deploys to a specific address (CREATE2)
@@ -274,15 +274,15 @@ control, then initialises it with the provided data_
 
 #### Parameters
 
-| Name              | Type                         | Description                                                  |
-| ----------------- | ---------------------------- | ------------------------------------------------------------ |
-| \_configurationId | bytes32                      | The unique identifier for the configuration                  |
-| \_version         | uint256                      | The version number of the configuration (0 for latest)       |
-| \_rbacs           | struct IAccessControl.Rbac[] | Array of role-based access control configurations            |
-| \_initPause       | bool                         | use case is initialized paused or not                        |
-| \_initBusinessIds | bytes32[]                    | The business IDs of the facets to use for init               |
-| \_initData        | bytes[]                      | The calldata for the initialisation function                 |
-| \_salt            | bytes32                      | The salt used to determine the deployed address with CREATE2 |
+| Name              | Type                            | Description                                                  |
+| ----------------- | ------------------------------- | ------------------------------------------------------------ |
+| \_configurationId | bytes32                         | The unique identifier for the configuration                  |
+| \_version         | uint256                         | The version number of the configuration (0 for latest)       |
+| \_rbacs           | struct IAccessControlEoa.Rbac[] | Array of role-based access control configurations            |
+| \_initPause       | bool                            | use case is initialized paused or not                        |
+| \_initBusinessIds | bytes32[]                       | The business IDs of the facets to use for init               |
+| \_initData        | bytes[]                         | The calldata for the initialisation function                 |
+| \_salt            | bytes32                         | The salt used to determine the deployed address with CREATE2 |
 
 ### getDeployedProxiesByConfiguration
 
@@ -419,13 +419,13 @@ struct ProxyFactoryStorage {
 ### \_deployUseCase
 
 ```solidity
-function _deployUseCase(bytes32 _configurationId, uint256 _version, struct IAccessControl.Rbac[] _rbacs, bool _initPause, bytes32[] _initBusinessIds, bytes[] _initData, bool createTo, bytes32 _salt) internal returns (address proxyAddress_)
+function _deployUseCase(bytes32 _configurationId, uint256 _version, struct IAccessControlEoa.Rbac[] _rbacs, bool _initPause, bytes32[] _initBusinessIds, bytes[] _initData, bool createTo, bytes32 _salt) internal returns (address proxyAddress_)
 ```
 
 ### \_initializeUseCase
 
 ```solidity
-function _initializeUseCase(address _proxyAddress, struct IAccessControl.Rbac[] _rbacs, bool _initPause) internal
+function _initializeUseCase(address _proxyAddress, struct IAccessControlEoa.Rbac[] _rbacs, bool _initPause) internal
 ```
 
 ### \_buildUseCaseDeployArgs

@@ -9,7 +9,7 @@ import {
     _CAPABILITY_INVOCATION_RELATIONSHIP,
     _CAPABILITY_DELEGATION_RELATIONSHIP
 } from './constants.sol';
-import {Common} from '../../core/Common.sol';
+import {ISBEContext} from '../../utils/ISBEContext.sol';
 import {LibCommon} from '../../core/LibCommon.sol';
 import {IDidDocumentDetailed} from './interfaces/IDidDocumentDetailed.sol';
 import {IDidVerificationMethod} from './interfaces/IDidVerificationMethod.sol';
@@ -25,19 +25,20 @@ import {_DID_VRELATIONSHIPS_STORAGE_POSITION} from '../../constants/storagePosit
  *      Supports W3C DID specification relationship types with enhanced period management
  * @author ISBE Development Team
  */
-abstract contract VRelationshipsInternal is Common {
+abstract contract VRelationshipsInternal is ISBEContext {
     /**
      * @notice Storage structure for verification relationships organised by relationship ID
      * @param didsByVRelationship Mapping from relationship ID to array of temporal DIDs
      */
     struct VRelationshipsStorage {
-        mapping(uint256 => IDidVerificationRelationship.DidWithPeriod[]) didsByVRelationship;
+        // solhint-disable-next-line max-line-length
+        mapping(uint256 vRelationshipId => IDidVerificationRelationship.DidWithPeriod[] didsWithPeriod) didsByVRelationship;
     }
 
     function _addVerificationRelationship(
-        string memory _vMethodId,
+        bytes32 _vMethodId,
         string memory _name,
-        string memory _did,
+        bytes32 _did,
         uint256 _notBefore,
         uint256 _notAfter
     ) internal returns (uint256) {
@@ -51,7 +52,7 @@ abstract contract VRelationshipsInternal is Common {
     }
 
     function _updateVerificationRelationship(
-        string memory _vMethodId,
+        bytes32 _vMethodId,
         string memory _name,
         uint256 _indexDid,
         uint256 _notAfter
@@ -64,7 +65,7 @@ abstract contract VRelationshipsInternal is Common {
     }
 
     function _getDidsByVerificationRelationship(
-        string memory _vMethodId,
+        bytes32 _vMethodId,
         string memory _name,
         uint256 _page,
         uint256 _pageSize
@@ -119,20 +120,20 @@ abstract contract VRelationshipsInternal is Common {
     function _checkValidRelationshipName(string memory _method) internal pure {
         require(
             _isValidRelationshipName(_method),
-            IDidDocumentDetailed.InvalidVerificationMethod(_method)
+            IDidDocumentDetailed.InvalidVerificationMethodName(_method)
         );
     }
 
     function _buildVerificationRelationshipId(
         string memory _method,
-        string memory _vMethodId
+        bytes32 _vMethodId
     ) internal pure returns (uint256 vrId_) {
         return
             vrId_ = uint256(keccak256(abi.encodePacked(_method, _vMethodId)));
     }
 
     function _buildDidWithPeriod(
-        string memory _did,
+        bytes32 _did,
         uint256 _notBefore,
         uint256 _notAfter
     )

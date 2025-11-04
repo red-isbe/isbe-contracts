@@ -13,6 +13,8 @@ abstract contract Ownable2Step is
     OwnableBase,
     Ownable2StepInternal
 {
+    /// @notice Initiates ownership transfer to a new address
+    /// @param _newOwner Address to transfer ownership to
     function transferOwnership(
         address _newOwner
     ) external override onlyOwner addressIsNotZero(_newOwner) whenNotPaused {
@@ -20,15 +22,20 @@ abstract contract Ownable2Step is
         emit OwnershipTransferStarted(_msgSender(), _newOwner);
     }
 
+    /// @notice Completes the ownership transfer to the pending owner
     function acceptOwnership() external onlyPendingOwner whenNotPaused {
         _acceptOwnership();
         emit OwnershipAccepted(_msgSender());
     }
 
+    /// @notice Returns the pending owner address
+    /// @return The address of the pending owner
     function pendingOwner() external view returns (address) {
         return _pendingOwner();
     }
 
+    /// @notice Returns the interfaces implemented by this contract
+    /// @return interfaces_ Array of interface IDs
     function _implementedInterfaces()
         internal
         pure

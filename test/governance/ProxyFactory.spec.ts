@@ -2,9 +2,11 @@ import { expect } from 'chai'
 import { ethers } from 'hardhat'
 import { IIsbeFactory, AccessControl } from '../../typechain-types'
 import { Signer } from 'ethers'
-import { CONFIGURATION_ID_ERC20, deployGovernance } from '../initialization'
+import { deployGovernance } from '../fixtures/governance'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import {
     ASSET_EVENT_TRACKER_RESOLVER_KEY,
+    CONFIGURATION_ID_PROXY_TESTS,
     CONFIGURATION_MANAGER_ROLE,
     DEFAULT_ADMIN_ROLE,
     ERC20_RESOLVER_KEY,
@@ -13,7 +15,7 @@ import {
     PROXY_DEPLOYER_ROLE,
     PROXY_FACTORY_RESOLVER_KEY,
     RANDOM_HASH_FOR_CONFIGURATION_ID,
-} from '../constants'
+} from '../../utils/constants'
 import { EventLog } from 'ethers'
 
 describe('ProxyFactory', function () {
@@ -24,34 +26,50 @@ describe('ProxyFactory', function () {
     let isbeFactory: IIsbeFactory
     let accessControl: AccessControl
 
-    async function deployInitial() {
-        ;[admin, nonAdmin] = await ethers.getSigners()
-
+    async function deployFixture() {
+        const [adminSigner, nonAdminSigner] = await ethers.getSigners()
+        admin = adminSigner
+        nonAdmin = nonAdminSigner
         adminAddress = await admin.getAddress()
         nonAdminAddress = await nonAdmin.getAddress()
 
-        await deployIsbeFactory()
-    }
-
-    async function deployIsbeFactory() {
-        const result = await deployGovernance(admin)
-
-        isbeFactory = await ethers.getContractAt(
-            'IIsbeFactory',
-            await result.governanceContract.getAddress()
+        const result = await deployGovernance(
+            admin,
+            [],
+            CONFIGURATION_ID_PROXY_TESTS
         )
 
-        accessControl = await ethers.getContractAt(
-            'AccessControl',
-            await result.governanceContract.getAddress()
-        )
+        const contracts = {
+            admin,
+            nonAdmin,
+            adminAddress,
+            nonAdminAddress,
+            isbeFactory: await ethers.getContractAt(
+                'IIsbeFactory',
+                await result.governanceContract.getAddress()
+            ),
+            accessControl: await ethers.getContractAt(
+                'AccessControl',
+                await result.governanceContract.getAddress()
+            ),
+            proxyFactoryFacet: result.proxyFactoryFacet,
+        }
+
         expect(
             await result.proxyFactoryFacet.businessIdIntrospection()
         ).to.be.equal(PROXY_FACTORY_RESOLVER_KEY)
+
+        return contracts
     }
 
     beforeEach(async () => {
-        await deployInitial()
+        const contracts = await loadFixture(deployFixture)
+        admin = contracts.admin
+        nonAdmin = contracts.nonAdmin
+        adminAddress = contracts.adminAddress
+        nonAdminAddress = contracts.nonAdminAddress
+        isbeFactory = contracts.isbeFactory
+        accessControl = contracts.accessControl
     })
 
     describe('ProxyFactory', () => {
@@ -94,12 +112,12 @@ describe('ProxyFactory', function () {
 
                     await expect(
                         isbeFactory.connect(admin).deployUseCase(
-                            CONFIGURATION_ID_ERC20,
+                            CONFIGURATION_ID_PROXY_TESTS,
                             1,
                             [
                                 {
                                     role: ROLE,
-                                    members: [admin],
+                                    members: [adminAddress],
                                 },
                             ],
                             false,

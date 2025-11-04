@@ -6,8 +6,8 @@ import {AccessControl} from './AccessControl.sol';
 import {IEIP2535Introspection} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 
 /// @title AccessControlFacet
-/// @notice Access Control Facet smart contract
-/// @dev Adds IEIP2535Introspection functionality
+/// @notice Access Control EOA Facet smart contract
+/// @dev Adds IEIP2535Introspection functionality for address-based access control
 contract AccessControlFacet is AccessControl, IEIP2535Introspection {
     function interfacesIntrospection()
         external

@@ -3,7 +3,7 @@ pragma solidity ^0.8.28;
 
 import {IEIP2535Introspection} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 import {_BUSINESS_LOGIC_STORAGE_POSITION} from '../../constants/storagePositions.sol';
-import {Common} from '../../core/Common.sol';
+import {DidDocumentDetailedInternal} from '../../identity/didregistry/DidDocumentDetailedInternal.sol';
 
 /**
  * @title Business Logic Factory Internal
@@ -14,7 +14,7 @@ import {Common} from '../../core/Common.sol';
  *      It handles contract deployment via the CREATE opcode and maintains
  *      a versioned record of each business logic contract.
  */
-abstract contract BusinessLogicFactoryInternal is Common {
+abstract contract BusinessLogicFactoryInternal is DidDocumentDetailedInternal {
     /// @dev Holds all data related to business logic deployments.
     struct BusinessLogicStorage {
         // Maps a business logic ID to its latest version's address.

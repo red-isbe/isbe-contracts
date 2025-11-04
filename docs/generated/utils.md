@@ -143,6 +143,12 @@ overridden in child contracts for testing purposes._
 | ---- | ------ | ------------------------------------------------ |
 | [0]  | bytes4 | bytes4 The function selector from the call data. |
 
+### \_blockChainId
+
+```solidity
+function _blockChainId() internal view virtual returns (uint256)
+```
+
 ### \_checkAddressIsNotZero
 
 ```solidity
@@ -315,6 +321,24 @@ after timestamp is before the before timestamp. Ensures temporal consistency_
 
 ```solidity
 function _isEmptyString(string _string) internal pure returns (bool)
+```
+
+### \_isNotEmptyBytes32
+
+```solidity
+function _isNotEmptyBytes32(bytes32 _hash) internal pure returns (bool)
+```
+
+### \_isNotEmptyAddress
+
+```solidity
+function _isNotEmptyAddress(address _addr) internal pure returns (bool)
+```
+
+### \_isNotEmptySignature
+
+```solidity
+function _isNotEmptySignature(bytes4 _sig) internal pure returns (bool)
 ```
 
 ---

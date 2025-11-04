@@ -5,5 +5,5 @@ import {AccessControlFacet} from '../../access/accessControl/AccessControlFacet.
 
 contract AccessControlGovernanceFacet is AccessControlFacet {
     // solhint-disable-next-line no-empty-blocks
-    function _protectISBERole(bytes32 _role) internal pure override {}
+    function _checkProtectISBERole(bytes32 _role) internal pure override {}
 }

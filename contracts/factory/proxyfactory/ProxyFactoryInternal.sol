@@ -4,7 +4,7 @@ pragma solidity ^0.8.28;
 import {IsbeProxy} from '../../proxies/isbeproxy/IsbeProxy.sol';
 import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 import {_PROXY_FACTORY_STORAGE_POSITION} from '../../constants/storagePositions.sol';
-import {IAccessControl} from '../../access/accessControl/IAccessControl.sol';
+import {IAccessControlEoa} from '../../access/accessControl/IAccessControl.sol';
 import {IPause} from '../../pause/IPause.sol';
 import {IProxyFactory} from './IProxyFactory.sol';
 import {
@@ -36,7 +36,7 @@ abstract contract ProxyFactoryInternal is ConfigurationManagementInternal {
     function _deployUseCase(
         bytes32 _configurationId,
         uint256 _version,
-        IAccessControl.Rbac[] memory _rbacs,
+        IAccessControlEoa.Rbac[] memory _rbacs,
         bool _initPause,
         bytes32[] memory _initBusinessIds,
         bytes[] memory _initData,
@@ -63,10 +63,10 @@ abstract contract ProxyFactoryInternal is ConfigurationManagementInternal {
 
     function _initializeUseCase(
         address _proxyAddress,
-        IAccessControl.Rbac[] memory _rbacs,
+        IAccessControlEoa.Rbac[] memory _rbacs,
         bool _initPause
     ) internal {
-        IAccessControl(_proxyAddress).initializeAccessControl(
+        IAccessControlEoa(_proxyAddress).initializeAccessControl(
             _adaptRbacWithIsbeRoles(_rbacs)
         );
         IPause(_proxyAddress).initializePause(_initPause);
@@ -191,8 +191,8 @@ abstract contract ProxyFactoryInternal is ConfigurationManagementInternal {
     }
 
     function _adaptRbacWithIsbeRoles(
-        IAccessControl.Rbac[] memory _rbacs
-    ) private view returns (IAccessControl.Rbac[] memory rbacs_) {
+        IAccessControlEoa.Rbac[] memory _rbacs
+    ) private view returns (IAccessControlEoa.Rbac[] memory rbacs_) {
         _validateRolesThatCantBeInitializedByUser(_rbacs);
         rbacs_ = _addDefaultAdminAndIsbeRoles(
             _rbacs,
@@ -202,7 +202,7 @@ abstract contract ProxyFactoryInternal is ConfigurationManagementInternal {
     }
 
     function _validateRolesThatCantBeInitializedByUser(
-        IAccessControl.Rbac[] memory _rbacs
+        IAccessControlEoa.Rbac[] memory _rbacs
     ) private pure {
         uint256 length = _rbacs.length;
         bytes32 role;
@@ -221,13 +221,13 @@ abstract contract ProxyFactoryInternal is ConfigurationManagementInternal {
     }
 
     function _addDefaultAdminAndIsbeRoles(
-        IAccessControl.Rbac[] memory _rbacs,
+        IAccessControlEoa.Rbac[] memory _rbacs,
         address[] memory _defaultAdminRoleMenbers,
         address[] memory _isbeRoleMembers
-    ) private pure returns (IAccessControl.Rbac[] memory rbacs_) {
+    ) private pure returns (IAccessControlEoa.Rbac[] memory rbacs_) {
         uint256 length = _rbacs.length;
         unchecked {
-            rbacs_ = new IAccessControl.Rbac[](length + 3);
+            rbacs_ = new IAccessControlEoa.Rbac[](length + 3);
         }
         rbacs_[0] = _buildRbac(_DEFAULT_ADMIN_ROLE, _defaultAdminRoleMenbers);
         rbacs_[1] = _buildRbac(_ISBE_ROLE, _isbeRoleMembers);
@@ -245,8 +245,8 @@ abstract contract ProxyFactoryInternal is ConfigurationManagementInternal {
     function _buildRbac(
         bytes32 _role,
         address[] memory _members
-    ) private pure returns (IAccessControl.Rbac memory rbac_) {
-        rbac_ = IAccessControl.Rbac(_role, _members);
+    ) private pure returns (IAccessControlEoa.Rbac memory rbac_) {
+        rbac_ = IAccessControlEoa.Rbac(_role, _members);
     }
 
     function _proxyFactoryStorage()

@@ -1,33 +1,36 @@
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
 import {
-    IsbeCutFacet,
     AccessControl,
     ConfigurationManagementFacet,
-    ISBEPause,
-    IsbeLoupeFacet,
     IEIP2535Introspection,
+    IsbeCutFacet,
+    IsbeLoupeFacet,
+    ISBEPause,
 } from '../../typechain-types'
 import { Signer } from 'ethers'
-import { CONFIGURATION_ID_ERC20, deployGovernance } from '../initialization'
+import { deployGovernance } from '../fixtures/governance'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import {
     ACCESS_CONTROL_RESOLVER_KEY,
+    ACCESS_CONTROL_DID_RESOLVER_KEY,
     ASSET_EVENT_TRACKER_RESOLVER_KEY,
-    OWNABLE_RESOLVER_KEY,
-    ERC20_SNAPSHOT_RESOLVER_KEY,
+    CONFIGURATION_ID_PROXY_TESTS,
+    CONFIGURATION_MANAGER_ROLE,
     ERC20_BURNABLE_RESOLVER_KEY,
     ERC203643_CAPPED_RESOLVER_KEY,
     ERC203643_CONTROLLER_RESOLVER_KEY,
     ERC20_RESOLVER_KEY,
-    MOCK_TIMESTAMP_RESOLVER_KEY,
-    CONFIGURATION_MANAGER_ROLE,
+    ERC20_SNAPSHOT_RESOLVER_KEY,
     FORBIDDEN_ERC165_INTERFACE_ID,
     HASH_TIMESTAMP_RESOLVER_KEY,
     ISBE_CUT_RESOLVER_KEY,
     ISBE_LOUPE_RESOLVER_KEY,
+    MOCK_TIMESTAMP_RESOLVER_KEY,
+    OWNABLE_RESOLVER_KEY,
     PAUSE_RESOLVER_KEY,
     PAUSER_ROLE,
-} from '../constants'
+} from '../../utils/constants'
 
 describe('IsbeProxy', function () {
     let admin: Signer
@@ -38,42 +41,50 @@ describe('IsbeProxy', function () {
     let configurationManagementFacet: ConfigurationManagementFacet
     let pause: ISBEPause
 
-    async function deployInitial() {
-        ;[admin] = await ethers.getSigners()
+    async function deployFixture() {
+        const [adminSigner] = await ethers.getSigners()
+        admin = adminSigner
 
-        await deployIsbeFactory()
-    }
-
-    async function deployIsbeFactory() {
-        const result = await deployGovernance(admin)
+        const result = await deployGovernance(
+            admin,
+            [],
+            CONFIGURATION_ID_PROXY_TESTS
+        )
 
         governanceAddress = await result.governanceContract.getAddress()
 
-        isbeCutFacet = await ethers.getContractAt(
-            'IsbeCutFacet',
-            result.useCaseProxy
-        )
-
-        isbeLoupeFacet = await ethers.getContractAt(
-            'IsbeLoupeFacet',
-            result.useCaseProxy
-        )
-
-        accessControl = await ethers.getContractAt(
-            'AccessControl',
-            result.useCaseProxy
-        )
-
-        configurationManagementFacet = await ethers.getContractAt(
-            'ConfigurationManagementFacet',
-            await result.governanceContract.getAddress()
-        )
-
-        pause = await ethers.getContractAt('ISBEPause', result.useCaseProxy)
+        return {
+            admin,
+            governanceAddress,
+            isbeCutFacet: await ethers.getContractAt(
+                'IsbeCutFacet',
+                result.useCaseProxy
+            ),
+            isbeLoupeFacet: await ethers.getContractAt(
+                'IsbeLoupeFacet',
+                result.useCaseProxy
+            ),
+            accessControl: await ethers.getContractAt(
+                'AccessControl',
+                result.useCaseProxy
+            ),
+            configurationManagementFacet: await ethers.getContractAt(
+                'ConfigurationManagementFacet',
+                await result.governanceContract.getAddress()
+            ),
+            pause: await ethers.getContractAt('ISBEPause', result.useCaseProxy),
+        }
     }
 
     beforeEach(async () => {
-        await deployInitial()
+        const contracts = await loadFixture(deployFixture)
+        admin = contracts.admin
+        governanceAddress = contracts.governanceAddress
+        isbeCutFacet = contracts.isbeCutFacet
+        isbeLoupeFacet = contracts.isbeLoupeFacet
+        accessControl = contracts.accessControl
+        configurationManagementFacet = contracts.configurationManagementFacet
+        pause = contracts.pause
     })
 
     async function extracted() {
@@ -81,6 +92,7 @@ describe('IsbeProxy', function () {
             HASH_TIMESTAMP_RESOLVER_KEY,
             ASSET_EVENT_TRACKER_RESOLVER_KEY,
             ACCESS_CONTROL_RESOLVER_KEY,
+            ACCESS_CONTROL_DID_RESOLVER_KEY,
             PAUSE_RESOLVER_KEY,
             ISBE_CUT_RESOLVER_KEY,
             ISBE_LOUPE_RESOLVER_KEY,
@@ -133,7 +145,7 @@ describe('IsbeProxy', function () {
             await expect(
                 isbeCutFacet.setIsbeProxyConfiguration(
                     governanceAddress,
-                    CONFIGURATION_ID_ERC20,
+                    CONFIGURATION_ID_PROXY_TESTS,
                     1,
                     [],
                     []
@@ -142,12 +154,15 @@ describe('IsbeProxy', function () {
         })
 
         it('GIVEN deployed use Case proxy WHEN admin account sets new configuration to address 0 THEN it fails', async () => {
-            await accessControl.grantRole(CONFIGURATION_MANAGER_ROLE, admin)
+            await accessControl.grantRole(
+                CONFIGURATION_MANAGER_ROLE,
+                await admin.getAddress()
+            )
 
             await expect(
                 isbeCutFacet.setIsbeProxyConfiguration(
                     ethers.ZeroAddress,
-                    CONFIGURATION_ID_ERC20,
+                    CONFIGURATION_ID_PROXY_TESTS,
                     1,
                     [],
                     []
@@ -156,12 +171,15 @@ describe('IsbeProxy', function () {
         })
 
         it('GIVEN deployed use Case proxy WHEN admin account sets new configuration passing wrong initialization THEN it fails', async () => {
-            await accessControl.grantRole(CONFIGURATION_MANAGER_ROLE, admin)
+            await accessControl.grantRole(
+                CONFIGURATION_MANAGER_ROLE,
+                await admin.getAddress()
+            )
 
             await expect(
                 isbeCutFacet.setIsbeProxyConfiguration(
                     governanceAddress,
-                    CONFIGURATION_ID_ERC20,
+                    CONFIGURATION_ID_PROXY_TESTS,
                     1,
                     [ethers.ZeroAddress],
                     []
@@ -172,7 +190,10 @@ describe('IsbeProxy', function () {
         })
 
         it('GIVEN deployed use Case proxy WHEN admin account sets new configuration to 0 THEN it fails', async () => {
-            await accessControl.grantRole(CONFIGURATION_MANAGER_ROLE, admin)
+            await accessControl.grantRole(
+                CONFIGURATION_MANAGER_ROLE,
+                await admin.getAddress()
+            )
 
             await expect(
                 isbeCutFacet.setIsbeProxyConfiguration(
@@ -186,14 +207,17 @@ describe('IsbeProxy', function () {
         })
 
         it('GIVEN deployed use Case proxy WHEN admin account sets new configuration to non existing version THEN it fails', async () => {
-            await accessControl.grantRole(CONFIGURATION_MANAGER_ROLE, admin)
+            await accessControl.grantRole(
+                CONFIGURATION_MANAGER_ROLE,
+                await admin.getAddress()
+            )
 
             const wrongVersion = 10000000000
 
             await expect(
                 isbeCutFacet.setIsbeProxyConfiguration(
                     governanceAddress,
-                    CONFIGURATION_ID_ERC20,
+                    CONFIGURATION_ID_PROXY_TESTS,
                     wrongVersion,
                     [],
                     []
@@ -203,19 +227,22 @@ describe('IsbeProxy', function () {
                     configurationManagementFacet,
                     'InvalidConfiguration'
                 )
-                .withArgs(CONFIGURATION_ID_ERC20, wrongVersion)
+                .withArgs(CONFIGURATION_ID_PROXY_TESTS, wrongVersion)
         })
 
         it('GIVEN paused deployed use Case proxy WHEN admin account sets new configuration THEN it fails', async () => {
-            await accessControl.grantRole(CONFIGURATION_MANAGER_ROLE, admin)
-            await accessControl.grantRole(PAUSER_ROLE, admin)
+            await accessControl.grantRole(
+                CONFIGURATION_MANAGER_ROLE,
+                await admin.getAddress()
+            )
+            await accessControl.grantRole(PAUSER_ROLE, await admin.getAddress())
 
             await pause.pause()
 
             await expect(
                 isbeCutFacet.setIsbeProxyConfiguration(
                     governanceAddress,
-                    CONFIGURATION_ID_ERC20,
+                    CONFIGURATION_ID_PROXY_TESTS,
                     1,
                     [],
                     []
@@ -224,19 +251,28 @@ describe('IsbeProxy', function () {
         })
 
         it('GIVEN deployed use Case proxy WHEN admin account sets new configuration THEN it succeeds', async () => {
-            await accessControl.grantRole(CONFIGURATION_MANAGER_ROLE, admin)
+            await accessControl.grantRole(
+                CONFIGURATION_MANAGER_ROLE,
+                await admin.getAddress()
+            )
 
             await expect(
                 isbeCutFacet.setIsbeProxyConfiguration(
                     governanceAddress,
-                    CONFIGURATION_ID_ERC20,
-                    0,
+                    CONFIGURATION_ID_PROXY_TESTS,
+                    1,
                     [],
                     []
                 )
             )
                 .to.emit(isbeCutFacet, 'IsbeProxyConfigurationSet')
-                .withArgs(governanceAddress, CONFIGURATION_ID_ERC20, 0, [], [])
+                .withArgs(
+                    governanceAddress,
+                    CONFIGURATION_ID_PROXY_TESTS,
+                    1,
+                    [],
+                    []
+                )
 
             await extracted()
         })

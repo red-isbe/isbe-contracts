@@ -44,7 +44,7 @@ interface IDidDocumentDetailed {
      */
     struct VRelationship {
         string name;
-        string vMethodId;
+        bytes32 vMethodId;
         uint256 notBefore;
         uint256 notAfter;
         uint256 indexDid;
@@ -67,9 +67,9 @@ interface IDidDocumentDetailed {
      * @param notAfter The timestamp after which the verification method expires
      */
     event DidDocumentInserted(
-        string did,
+        bytes32 did,
         string baseDocument,
-        string vMethodId,
+        bytes32 vMethodId,
         bytes publicKey,
         EllipticType ellipticType,
         uint256 notBefore,
@@ -77,11 +77,40 @@ interface IDidDocumentDetailed {
     );
 
     /**
+     * @notice Emitted when the first DID document is successfully inserted by an ISBE authorised account
+     * @param did The decentralised identifier string that was registered
+     * @param baseDocument The base JSON-LD document content for the DID
+     * @param vMethodId The unique identifier for the initial verification method
+     * @param publicKey The public key material for the initial verification method
+     * @param ellipticType The elliptic curve algorithm used for the initial key
+     * @param notBefore The timestamp before which the verification method is invalid
+     * @param notAfter The timestamp after which the verification method expires
+     * @param alsoKnownAs Alternative identifier for the entity (e.g., irn:orgs:inetum)
+     */
+    event FirstDidDocumentInserted(
+        bytes32 did,
+        string baseDocument,
+        bytes32 vMethodId,
+        bytes publicKey,
+        EllipticType ellipticType,
+        uint256 notBefore,
+        uint256 notAfter,
+        string alsoKnownAs
+    );
+
+    /**
+     * @notice Emitted when the alsoKnownAs field is updated by an ISBE authorised account
+     * @param did The decentralised identifier whose alsoKnownAs was updated
+     * @param alsoKnownAs The new alsoKnownAs value
+     */
+    event AlsoKnownAsUpdated(bytes32 did, string alsoKnownAs);
+
+    /**
      * @notice Emitted when the base document content of a DID is updated
      * @param did The decentralised identifier whose base document was modified
      * @param baseDocument The new base JSON-LD document content
      */
-    event BaseDocumentUpdated(string did, string baseDocument);
+    event BaseDocumentUpdated(bytes32 did, string baseDocument);
 
     /**
      * @notice Raised when an invalid or unsupported elliptic curve type is specified
@@ -103,14 +132,14 @@ interface IDidDocumentDetailed {
      * @dev This error prevents duplicate DID registration and maintains registry integrity
      * @param did The decentralised identifier string that already exists
      */
-    error DidAlreadyExists(string did);
+    error DidAlreadyExists(bytes32 did);
 
     /**
      * @notice Raised when attempting to use a DID that does not exist in the registry
      * @dev This error ensures operations target valid DIDs and prevents unauthorised access
      * @param did The decentralised identifier string that does not exist
      */
-    error DidNotExists(string did);
+    error DidNotExists(bytes32 did);
 
     /**
      * @notice Raised when provided control bytes are malformed or invalid
@@ -130,9 +159,9 @@ interface IDidDocumentDetailed {
      * @notice Raised when attempting to operate with an invalid verification method
      * @dev This error prevents operations on malformed or non-existent verification
      *      methods to maintain document integrity and security
-     * @param method The verification method identifier that is invalid
+     * @param methodName The verification method identifier that is invalid
      */
-    error InvalidVerificationMethod(string method);
+    error InvalidVerificationMethodName(string methodName);
 
     /**
      * @notice Raised when attempting to create a verification relationship that already exists
@@ -143,10 +172,44 @@ interface IDidDocumentDetailed {
      * @param vMethodId The verification method identifier that already has this relationship
      */
     error VerificationRelationshipExists(
-        string did,
+        bytes32 did,
         string name,
-        string vMethodId
+        bytes32 vMethodId
     );
+
+    /**
+     * @notice Raised when attempting to perform an operation requiring ISBE authorisation
+     * @dev This error ensures that sensitive operations are only performed by
+     *      accounts with the appropriate ISBE role
+     */
+    error UnauthorizedIsbeAccount();
+
+    /**
+     * @notice Raised when an address is not known in the DID registry or has invalid/expired capability invocation
+     * @dev This covers: not registered, revoked, no capability invocation, or expired
+     * @param addr The Ethereum address that is not known
+     */
+    error AddressNotKnown(address addr);
+
+    /**
+     * @notice Raised when caller is not an authorized controller of the target DID
+     * @param caller The address attempting the operation
+     * @param callerDid The DID of the caller
+     * @param targetDid The target DID that requires authorization
+     */
+    error UnauthorizedController(
+        address caller,
+        bytes32 callerDid,
+        bytes32 targetDid
+    );
+
+    /**
+     * @notice Raised when attempting to insert a subsequent DID document without a first document
+     * @dev This error ensures that the first document must be inserted via insertFirstDidDocument
+     *      before additional documents can be added
+     * @param did The decentralised identifier that requires a first document
+     */
+    error FirstDocumentNotInserted(bytes32 did);
 
     /**
      * @notice Initialises the DID registry with the specified elliptic curve algorithm
@@ -157,9 +220,39 @@ interface IDidDocumentDetailed {
     function initializeDiDRegistry(EllipticType ellipticType) external;
 
     /**
+     * @notice Inserts the first DID document with cryptographic proof validation
+     * @dev Creates the initial DID document with the DID itself as controller.
+     *      Only callable by accounts with ISBE role. Validates cryptographic proof
+     *      against the provided public key and DID for secure identity establishment
+     * @param did The decentralised identifier string to register
+     * @param baseDocument The base JSON-LD document content containing DID metadata
+     * @param vMethodId The unique identifier for the initial verification method
+     * @param proof The cryptographic proof to validate against public key and DID
+     * @param publicKey The public key bytes for cryptographic verification
+     * @param ellipticType The elliptic curve algorithm for the verification method
+     * @param notBefore Unix timestamp when the verification method becomes valid
+     * @param notAfter Unix timestamp when the verification method expires
+     * @param alsoKnownAs Alternative identifier for the entity (e.g., irn:orgs:inetum)
+     * @return success Boolean indicating whether the insertion completed successfully
+     */
+    function insertFirstDidDocument(
+        bytes32 did,
+        string memory baseDocument,
+        bytes32 vMethodId,
+        bytes memory proof,
+        bytes memory publicKey,
+        EllipticType ellipticType,
+        uint256 notBefore,
+        uint256 notAfter,
+        string memory alsoKnownAs
+    ) external returns (bool success);
+
+    /**
      * @notice Inserts a new DID document with initial verification method into the registry
      * @dev Creates a complete DID document with cryptographic verification capabilities
-     *      and temporal validity constraints for secure identity management
+     *      and temporal validity constraints for secure identity management.
+     *      Inherits alsoKnownAs from the first document. Can only be called by
+     *      authorised controllers of the DID
      * @param did The decentralised identifier string to register
      * @param baseDocument The base JSON-LD document content containing DID metadata
      * @param vMethodId The unique identifier for the initial verification method
@@ -170,9 +263,9 @@ interface IDidDocumentDetailed {
      * @return success Boolean indicating whether the insertion completed successfully
      */
     function insertDidDocument(
-        string memory did,
+        bytes32 did,
         string memory baseDocument,
-        string memory vMethodId,
+        bytes32 vMethodId,
         bytes memory publicKey,
         EllipticType ellipticType,
         uint256 notBefore,
@@ -188,8 +281,21 @@ interface IDidDocumentDetailed {
      * @return success Boolean indicating whether the update completed successfully
      */
     function updateBaseDocument(
-        string memory did,
+        bytes32 did,
         string memory baseDocument
+    ) external returns (bool success);
+
+    /**
+     * @notice Updates the alsoKnownAs field of an existing DID
+     * @dev Modifies the alternative identifier whilst preserving all other document data.
+     *      Only callable by accounts with ISBE role for security and governance
+     * @param did The decentralised identifier whose alsoKnownAs should be updated
+     * @param alsoKnownAs The new alternative identifier value to set
+     * @return success Boolean indicating whether the update completed successfully
+     */
+    function updateAlsoKnownAs(
+        bytes32 did,
+        string memory alsoKnownAs
     ) external returns (bool success);
 
     /**
@@ -211,7 +317,7 @@ interface IDidDocumentDetailed {
         external
         view
         returns (
-            string[] memory items,
+            bytes32[] memory items,
             uint256 total,
             uint256 howMany,
             uint256 prev,
@@ -220,24 +326,26 @@ interface IDidDocumentDetailed {
 
     /**
      * @notice Retrieves the complete current DID document with all verification methods
-     * @dev Returns the full document structure including base content, controllers,
+     * @dev Returns the full document structure including base content, alsoKnownAs, controllers,
      *      verification methods, and relationships as they exist at the current timestamp
      * @param did The decentralised identifier to retrieve
      * @return baseDocument The base JSON-LD document content
+     * @return alsoKnownAs The alternative identifier for the entity
      * @return controllers Array of DID strings authorised to control this document
      * @return vMethodIds Array of verification method identifiers
      * @return vMethods Array of verification method structures with keys and algorithms
      * @return vRelationships Array of verification relationships with temporal validity
      */
     function getDidDocument(
-        string memory did
+        bytes32 did
     )
         external
         view
         returns (
             string memory baseDocument,
-            string[] memory controllers,
-            string[] memory vMethodIds,
+            string memory alsoKnownAs,
+            bytes32[] memory controllers,
+            bytes32[] memory vMethodIds,
             VMethod[] memory vMethods,
             VRelationship[] memory vRelationships
         );
@@ -249,21 +357,23 @@ interface IDidDocumentDetailed {
      * @param did The decentralised identifier to retrieve
      * @param timestamp Unix timestamp for historical document state retrieval
      * @return baseDocument The base JSON-LD document content at the specified time
+     * @return alsoKnownAs The alternative identifier for the entity
      * @return controllers Array of DID strings authorised to control this document
      * @return vMethodIds Array of verification method identifiers valid at timestamp
      * @return vMethods Array of verification methods that were active at timestamp
      * @return vRelationships Array of relationships that were valid at timestamp
      */
     function getDidDocumentByTimestamp(
-        string memory did,
+        bytes32 did,
         uint256 timestamp
     )
         external
         view
         returns (
             string memory baseDocument,
-            string[] memory controllers,
-            string[] memory vMethodIds,
+            string memory alsoKnownAs,
+            bytes32[] memory controllers,
+            bytes32[] memory vMethodIds,
             VMethod[] memory vMethods,
             VRelationship[] memory vRelationships
         );

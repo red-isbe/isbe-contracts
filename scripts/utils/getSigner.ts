@@ -1,5 +1,13 @@
+// Re-export the curve-aware signer for backwards compatibility
+export { getCurveAwareSigner as getSigner } from './getCurveAwareSigner'
+
+// Legacy function - deprecated, use getCurveAwareSigner instead
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function getSigner(hre: any) {
+export async function getSignerLegacy(hre: any) {
+    console.warn(
+        '⚠️  Using legacy getSigner - consider switching to getCurveAwareSigner for better curve support'
+    )
+
     const privateKey =
         hre.network.name === 'hardhat'
             ? hre.ethers.Wallet.fromPhrase(

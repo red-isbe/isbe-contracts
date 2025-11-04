@@ -6,6 +6,9 @@ pragma solidity ^0.8.28;
 // keccak256('isbe.contracts.access.control.resolver.key');
 bytes32 constant _ACCESS_CONTROL_RESOLVER_KEY = 0xa4de16c45770db08a06a2cdfeb0229e16d2ff660f7f1bf74c3dc07212770c70c;
 
+// keccak256('isbe.contracts.access.control.did.resolver.key');
+bytes32 constant _ACCESS_CONTROL_DID_RESOLVER_KEY = 0x91be68699977a17d16f4f996441c2bbd87a413d1114ef61d6d70019fc7904f4a;
+
 // keccak256('isbe.contracts.asset.event.tracker.resolver.key');
 bytes32 constant _ASSET_EVENT_TRACKER_RESOLVER_KEY = 0x112dd723577b76611d03a5df6740ef34e4adf801a94538796f066cda9100e157;
 
@@ -129,5 +132,35 @@ bytes32 constant _DID_VERIFICATION_METHOD_RESOLVER_KEY = 0xac8773db319c7049be61a
 
 // keccak256('isbe.contracts.did.verification.relationship.resolver.key');
 bytes32 constant _DID_VERIFICATION_RELATIONSHIP_RESOLVER_KEY = 0x32bd32541f3651dc69848ddc9cad21896eabb6a11034c19b03683da6e19b76d7;
+
+// keccak256('isbe.contracts.did.client.filtering.resolver.key');
+bytes32 constant _CLIENT_FILTERING_RESOLVER_KEY = 0x9d459b48dcede9ec86807b1af972b62ab0b2b0237e2187da45c02c25f3aeb016;
+
+// keccak256('isbe.contracts.did.registry.query.resolver.key');
+bytes32 constant _DID_REGISTRY_QUERY_RESOLVER_KEY = 0x5fb7bbf7185d00a34fa9c782b90e076f7b5d9e337febead788d0b980b59aa53b;
+
+// keccak256('isbe.contracts.ens.registry.resolver.key');
+bytes32 constant _ENS_REGISTRY_RESOLVER_KEY = 0xc0629a5fdc41a377e7fd772f766ce559d0fecbb52e72bd1b4915525935b59053;
+
+// keccak256('isbe.contracts.ens.resolver.resolver.key');
+bytes32 constant _ENS_RESOLVER_RESOLVER_KEY = 0x9daad5d269e40315c6ea27f7ccd5ec5e9cc50b975d6172504109b111170ce5d4;
+
+// keccak256('isbe.contracts.ens.name.resolver.resolver.key');
+bytes32 constant _ENS_NAME_RESOLVER_RESOLVER_KEY = 0xb220ec5bf774f9c3a891b2fc9f0b0bbfae8503f22056a0c835252f4a2feb5b4f;
+
+// keccak256('isbe.contracts.ens.text.resolver.resolver.key');
+bytes32 constant _ENS_TEXT_RESOLVER_RESOLVER_KEY = 0x153e8d37fcd8b283cb133570078b11503f8e93bb9437f0d6306f0e57443f9818;
+
+// keccak256('isbe.contracts.ens.pubkey.resolver.resolver.key');
+bytes32 constant _ENS_PUBKEY_RESOLVER_RESOLVER_KEY = 0x1c46b1cdbebdf5f3d15aae4a89c2a8fca0d9eff35f1f040b17caebc1726f8260;
+
+// keccak256('isbe.contracts.ens.public.resolver.resolver.key');
+bytes32 constant _ENS_PUBLIC_RESOLVER_RESOLVER_KEY = 0x01286e867987641a8805e8007327a88f6ebe0d80426ec755c0f86f57d5913c61;
+
+// keccak256('isbe.contracts.timestamping.registry.resolver.key');
+bytes32 constant _TIMESTAMPING_REGISTRY_RESOLVER_KEY = 0xc96c356b7532d6eba398b97f362b68829d7392627c879e8ba5909c4810ca7ad5;
+
+// keccak256('BESU_NODE_MANAGER')
+bytes32 constant _BESU_NODE_MANAGER_RESOLVER_KEY = 0xed251ea052ffafa4903db889a3309600adf2ac15456e02760c1221ea3792c1ca;
 
 // solhint-enable max-line-length

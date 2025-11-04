@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {IAccessControl} from '../../access/accessControl/IAccessControl.sol';
+import {IAccessControlEoa} from '../../access/accessControl/IAccessControl.sol';
 
 /**
  * @title Proxy Factory Interface
@@ -21,7 +21,7 @@ interface IProxyFactory {
     event UseCaseDeployed(
         bytes32 configurationId,
         uint256 version,
-        IAccessControl.Rbac[] rbacs,
+        IAccessControlEoa.Rbac[] rbacs,
         address proxy
     );
 
@@ -88,7 +88,7 @@ interface IProxyFactory {
     function deployUseCase(
         bytes32 _configurationId,
         uint256 _version,
-        IAccessControl.Rbac[] calldata _rbacs,
+        IAccessControlEoa.Rbac[] calldata _rbacs,
         bool _initPause,
         bytes32[] calldata _initBusinessIds,
         bytes[] calldata _initData
@@ -109,7 +109,7 @@ interface IProxyFactory {
     function deployUseCaseTo(
         bytes32 _configurationId,
         uint256 _version,
-        IAccessControl.Rbac[] calldata _rbacs,
+        IAccessControlEoa.Rbac[] calldata _rbacs,
         bool _initPause,
         bytes32[] calldata _initBusinessIds,
         bytes[] calldata _initData,

@@ -2,7 +2,6 @@ module.exports = {
     skipFiles: ['testwrapper/'],
     mocha: {
         timeout: 120000,
-        parallel: false,
     },
     configureYulOptimizer: true,
     measureStatementCoverage: true,

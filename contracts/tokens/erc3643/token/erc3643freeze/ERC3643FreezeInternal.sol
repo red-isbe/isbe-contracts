@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {Common} from '../../../../core/Common.sol';
 import {IERC3643Freeze} from './IERC3643Freeze.sol';
 import {_ERC3643_FREEZE_STORAGE_POSITION} from '../../../../constants/storagePositions.sol';
+import {DidDocumentDetailedInternal} from '../../../../identity/didregistry/DidDocumentDetailedInternal.sol';
 
 /**
  * @title ERC3643FreezeInternal
@@ -12,7 +12,7 @@ import {_ERC3643_FREEZE_STORAGE_POSITION} from '../../../../constants/storagePos
  *      This contract does not emit events or apply access control.
  *      It is intended to be used by external contracts that handle authorization and event emission.
  */
-abstract contract ERC3643FreezeInternal is Common {
+abstract contract ERC3643FreezeInternal is DidDocumentDetailedInternal {
     /// @dev Storage structure for ERC-3643 freeze.
     struct ERC3643FreezeStorage {
         mapping(address => bool) frozen; // full address freeze

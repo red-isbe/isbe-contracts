@@ -1,5 +1,5 @@
 import { task } from 'hardhat/config'
-import * as dotenv from 'dotenv'
+
 import { getContractStorageSlots } from '../../scripts/extract/getContractStorageSlot'
 
 /**
@@ -8,8 +8,6 @@ import { getContractStorageSlots } from '../../scripts/extract/getContractStorag
   --start "0x04fb5b1674918eac185959cfae932d99373bdf254d85286d6561bd7c87ae22e8" \
   --end "0x04fb5b1674918eac185959cfae932d99373bdf254d85286d6561bd7c87ae22eB"
  */
-
-dotenv.config()
 
 task('StorageSlots', 'Pauses a deployed smart contract')
     .addParam('address', 'The address of the contract to extract its code from')

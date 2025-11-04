@@ -1,5 +1,6 @@
 import { task } from 'hardhat/config'
-import { getSigner } from '../scripts/utils/getSigner'
+import { SignatureProviderFactory } from './deployment/providers/SignatureProviderFactory'
+import { ISignatureProvider } from './deployment/providers/ISignatureProvider'
 import { deployIsbeFactory } from '../scripts/businessLogic/deployIsbeFactory' // Adjust path if needed
 import fs from 'fs'
 import path from 'path'
@@ -48,6 +49,7 @@ const DEFAULT_BUSINESS_LOGICS_CODE_PATHS = [
     './artifacts/contracts/proxies/isbeproxy/facets/IsbeCutFacet.sol/IsbeCutFacet.json',
     './artifacts/contracts/proxies/isbeproxy/facets/IsbeLoupeFacet.sol/IsbeLoupeFacet.json',
     './artifacts/contracts/access/accessControl/AccessControlFacet.sol/AccessControlFacet.json',
+    './artifacts/contracts/access/accessControl/AccessControlDidFacet.sol/AccessControlDidFacet.json',
     './artifacts/contracts/pause/ISBEPauseFacet.sol/ISBEPauseFacet.json',
 ]
 
@@ -55,6 +57,7 @@ const DEFAULT_BUSINESS_LOGICS_IDS = [
     '0x3e325d62f8652528edf5d41ed730a283b473d9e55ee9b6631b261b52199eac25',
     '0x360faa2d547f0a951a5b1da060a4ffb56888bf8ad05db9de4d6d09b3eae1e5e2',
     '0xa4de16c45770db08a06a2cdfeb0229e16d2ff660f7f1bf74c3dc07212770c70c',
+    '0x91be68699977a17d16f4f996441c2bbd87a413d1114ef61d6d70019fc7904f4a',
     '0x7fabf0f3ed655fa26f86c82ae5da60e0ade03a5d35a9ff2985709278942966d3',
 ]
 
@@ -89,8 +92,14 @@ task(
 
     console.log('ISBE Factory deployed at:', GovernanceAddress)
 
-    // getting signer
-    const signer = await getSigner(hre)
+    // getting signature provider (automatically detects curve based on network)
+    const signatureProvider: ISignatureProvider =
+        SignatureProviderFactory.create(hre)
+    const signer = await signatureProvider.getSigner()
+
+    console.log(
+        `🔐 Using ${signatureProvider.getCurveType()} signature provider for deployment tests`
+    )
 
     // check governance facets and selectors
     const resultGovernanceFacets = await getFacets(GovernanceAddress, signer)
@@ -136,7 +145,10 @@ task(
     }
 
     // pause and unpause governance
-    const resultPauseGovernance = await pause(GovernanceAddress, signer)
+    const resultPauseGovernance = await pause(
+        GovernanceAddress,
+        signatureProvider
+    )
 
     console.log('Governance Pause result:', resultPauseGovernance)
 
@@ -145,7 +157,10 @@ task(
     if (!resultIsPauseGovernance.isPaused)
         throw Error('Governance pause did not work')
 
-    const resultUNPauseGovernance = await unpause(GovernanceAddress, signer)
+    const resultUNPauseGovernance = await unpause(
+        GovernanceAddress,
+        signatureProvider
+    )
 
     console.log('Governance Unpause result:', resultUNPauseGovernance)
 
@@ -175,7 +190,7 @@ task(
             DEFAULT_BUSINESS_LOGICS_IDS[i],
             bytecodeDefault,
             GovernanceAddress,
-            signer
+            signatureProvider
         )
 
         console.log('Default deployment result:', resultDeployDefaultBL)
@@ -226,7 +241,7 @@ task(
         CUSTOM_BUSINESS_LOGIC_ID,
         bytecode,
         GovernanceAddress,
-        signer
+        signatureProvider
     )
 
     console.log('Deployment result:', resultDeployBL)
@@ -376,7 +391,7 @@ task(
         DUMB_ROLE,
         accountAddress,
         UseCaseAddress,
-        signer
+        signatureProvider
     )
     console.log('Granted role: ' + JSON.stringify(resultGrantRole))
 
@@ -393,7 +408,7 @@ task(
         DUMB_ROLE,
         accountAddress,
         UseCaseAddress,
-        signer
+        signatureProvider
     )
     console.log('Revoked role: ' + JSON.stringify(resultRevoke))
 
@@ -406,18 +421,27 @@ task(
 
     if (resultHasRole_2.hasRole) throw new Error('Role not revoked')
 
-    await grantRole(DUMB_ROLE, accountAddress, UseCaseAddress, signer)
+    await grantRole(
+        DUMB_ROLE,
+        accountAddress,
+        UseCaseAddress,
+        signatureProvider
+    )
     console.log('Granted role again')
 
     const resultSetRoleAdmin = await setRoleAdmin(
         DUMB_ROLE,
         DUMB_ROLE_2,
         UseCaseAddress,
-        signer
+        signatureProvider
     )
     console.log('Set Role Admin: ' + JSON.stringify(resultSetRoleAdmin))
 
-    const resultRenounce = await renounceRole(DUMB_ROLE, UseCaseAddress, signer)
+    const resultRenounce = await renounceRole(
+        DUMB_ROLE,
+        UseCaseAddress,
+        signatureProvider
+    )
     console.log('Renounce role: ' + JSON.stringify(resultRenounce))
 
     for (let i = 0; i < USE_CASE_ROLES.length; i++) {
@@ -441,7 +465,7 @@ task(
     const resultPauseISBE = await pauseIsbe(
         UseCaseAddress,
         GovernanceAddress,
-        signer
+        signatureProvider
     )
 
     console.log('UseCase Pause result:', resultPauseISBE)
@@ -449,7 +473,7 @@ task(
     const resultUNPauseISBE = await unpauseIsbe(
         UseCaseAddress,
         GovernanceAddress,
-        signer
+        signatureProvider
     )
 
     console.log('UseCase UnPause result:', resultUNPauseISBE)

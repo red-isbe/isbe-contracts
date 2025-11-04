@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {Common} from '../../../../core/Common.sol';
 import {_ERC3643_COMPLIANCE_DMLIM_STORAGE_POSITION} from '../../../../constants/storagePositions.sol';
+import {DidDocumentDetailedInternal} from '../../../../identity/didregistry/DidDocumentDetailedInternal.sol';
 
 /**
  * @title ERC3643ComplianceDMLimInternal
@@ -11,7 +11,9 @@ import {_ERC3643_COMPLIANCE_DMLIM_STORAGE_POSITION} from '../../../../constants/
  *      This contract does not emit events or apply access control.
  *      It is intended to be used by external contracts that handle authorization and event emission.
  */
-abstract contract ERC3643ComplianceDMLimInternal is Common {
+abstract contract ERC3643ComplianceDMLimInternal is
+    DidDocumentDetailedInternal
+{
     /// @dev Storage structure for ERC-3643 daily/monthly limits.
     struct ERC3643ComplianceDMLimStorage {
         uint256 dailyLimit;

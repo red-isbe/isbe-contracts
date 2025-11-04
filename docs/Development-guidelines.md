@@ -1,5 +1,7 @@
 # Development guidelines
 
+> **🆕 Configuration Update**: ISBE now uses a unified configuration system in `config/networks.ts` with silent logging. Use `DEBUG=true` for detailed output during development.
+
 The purpose of this document is to establish a set of guidelines to be followed for the development of smart contracts intended for deployment on the ISBE network. This facilitates the development of various use cases, providing developers with a clear understanding of the standards to follow and ensuring compliance with the requirements established for deployment on the network. Adherence to these guidelines is essential, as their fulfillment will be validated during the auditing process by the ISBE network administrators. Otherwise, the contracts will not be allowed to be deployed.
 
 These guidelines are divided into three levels. The first level includes requirements that every contract must meet, while the following two levels define specific requirements depending on the type of proxy chosen for deploying the use case.

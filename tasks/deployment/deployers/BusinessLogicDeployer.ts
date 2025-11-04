@@ -4,6 +4,7 @@ import {
     DeployedBusinessLogic,
 } from '../types/DeploymentTypes'
 import { BytecodeExtractor } from '../utils/BytecodeExtractor'
+import { ISignatureProvider } from '../providers/ISignatureProvider'
 import { deployBusinessLogic } from ',,/../../scripts/businessLogic/deployBusinessLogic'
 import { getBusinessLogicAddress } from ',,/../../scripts/businessLogic/getBusinessLogicAddress'
 import { getBusinessLogics } from ',,/../../scripts/businessLogic/getBusinessLogics'
@@ -12,12 +13,15 @@ import { Signer, ZeroAddress } from 'ethers'
 import { ProviderError } from 'hardhat/internal/core/providers/errors'
 
 /**
- * Specialised in the deployment of business logic
+ * Specialised in the deployment of business logic using signature provider abstraction
  */
 export class BusinessLogicDeployer {
     private bytecodeExtractor: BytecodeExtractor
 
-    constructor(private hre: HardhatRuntimeEnvironment) {
+    constructor(
+        private hre: HardhatRuntimeEnvironment,
+        private signatureProvider?: ISignatureProvider
+    ) {
         this.bytecodeExtractor = new BytecodeExtractor(hre)
     }
 
@@ -130,13 +134,39 @@ export class BusinessLogicDeployer {
             config.artifactPath
         )
 
-        // Deploy using the factory
-        const businessLogic = await deployBusinessLogic(
-            config.key,
-            bytecode,
-            factoryAddress,
-            signer
-        )
+        let businessLogic: {
+            businessAddress: string
+            businessId: string
+            version: string
+        }
+
+        if (
+            this.signatureProvider &&
+            this.signatureProvider.getCurveType() === 'secp256r1'
+        ) {
+            console.log(
+                `      🔧 Using ${this.signatureProvider.getCurveType()} deployment...`
+            )
+            // Use secp256r1-compatible deployment with raw transactions
+            const { deployBusinessLogicSecp256r1 } = await import(
+                '../../../scripts/businessLogic/deployBusinessLogicSecp256r1'
+            )
+            businessLogic = await deployBusinessLogicSecp256r1(
+                this.hre,
+                config.key,
+                bytecode,
+                factoryAddress
+            )
+        } else {
+            console.log('      🔧 Using standard deployment...')
+            // Use standard deployment for secp256k1 networks
+            businessLogic = await deployBusinessLogic(
+                config.key,
+                bytecode,
+                factoryAddress,
+                signer
+            )
+        }
 
         const businessLogics = await getBusinessLogics(factoryAddress, signer)
         const businessLogicVersions = await getBusinessLogicVersions(

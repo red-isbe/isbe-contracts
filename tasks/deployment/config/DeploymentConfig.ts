@@ -5,6 +5,8 @@ import {
     UseCaseConfig,
     GovernanceConfig,
     ValidationConstants,
+    SelectiveDeploymentConfig,
+    UseCaseFilterConfig,
 } from '../types/DeploymentTypes'
 import {
     BUSINESS_LOGIC_DEFINITIONS,
@@ -63,6 +65,17 @@ export class DeploymentConfig {
 
         try {
             const configData = JSON.parse(fs.readFileSync(configPath, 'utf8'))
+
+            // Check if this is a selective deployment config
+            if (
+                configData.useCaseFilters &&
+                configData.useCaseFilters.enabled
+            ) {
+                return this.getSelectiveConfig(
+                    configData as SelectiveDeploymentConfig
+                )
+            }
+
             return new DeploymentConfig(
                 configData.governance,
                 configData.businessLogics,
@@ -77,10 +90,118 @@ export class DeploymentConfig {
     }
 
     static getDefaultConfig(): DeploymentConfig {
+        // Create a copy and filter out any undefined or invalid configurations
+        const useCases = DEFAULT_USE_CASE_CONFIGURATIONS.slice().filter(
+            (cfg) => cfg && cfg.description && cfg.configurationId
+        )
+
+        // Validate use cases
+        const invalidConfigs = useCases.filter(
+            (cfg) => !cfg || !cfg.description
+        )
+        if (invalidConfigs.length > 0) {
+            throw new Error(
+                `Invalid use case configuration(s) detected: ${invalidConfigs.length} use case(s) are missing required properties.`
+            )
+        }
+
+        // Log the number of configured use cases
+        console.log(`   📋 Configured use cases: ${useCases.length}`)
+
         return new DeploymentConfig(
             DEFAULT_GOVERNANCE_CONFIG,
             BUSINESS_LOGIC_DEFINITIONS.slice(), // Create a copy to avoid mutations
-            DEFAULT_USE_CASE_CONFIGURATIONS.slice() // Create a copy to avoid mutations
+            useCases
         )
+    }
+
+    /**
+     * Create a selective deployment configuration based on filters
+     */
+    static getSelectiveConfig(
+        selectiveConfig: SelectiveDeploymentConfig
+    ): DeploymentConfig {
+        console.log(
+            ` Loading selective deployment: ${selectiveConfig.description}`
+        )
+
+        // Start with default business logics (or filter them if needed)
+        const businessLogics = selectiveConfig.includeAllBusinessLogics
+            ? BUSINESS_LOGIC_DEFINITIONS.slice()
+            : BUSINESS_LOGIC_DEFINITIONS.slice() // For now, always include all business logics
+
+        // Start with all default use cases
+        let filteredUseCases = DEFAULT_USE_CASE_CONFIGURATIONS.slice()
+
+        // Apply filtering if enabled
+        if (selectiveConfig.useCaseFilters.enabled) {
+            filteredUseCases = this.filterUseCases(
+                filteredUseCases,
+                selectiveConfig.useCaseFilters
+            )
+        }
+
+        console.log(`    Selected use cases: ${filteredUseCases.length}`)
+        console.log(`    Business logics: ${businessLogics.length}`)
+
+        return new DeploymentConfig(
+            DEFAULT_GOVERNANCE_CONFIG,
+            businessLogics,
+            filteredUseCases
+        )
+    }
+
+    /**
+     * Filter use cases based on the provided filters
+     */
+    private static filterUseCases(
+        useCases: UseCaseConfig[],
+        filters: UseCaseFilterConfig
+    ): UseCaseConfig[] {
+        let filtered = useCases.slice()
+
+        // Apply include patterns (if any)
+        if (filters.includePatterns && filters.includePatterns.length > 0) {
+            filtered = filtered.filter((useCase) =>
+                filters.includePatterns.some((pattern: string) =>
+                    useCase.description
+                        .toLowerCase()
+                        .includes(pattern.toLowerCase())
+                )
+            )
+        }
+
+        // Apply exclude patterns (if any)
+        if (filters.excludePatterns && filters.excludePatterns.length > 0) {
+            filtered = filtered.filter(
+                (useCase) =>
+                    !filters.excludePatterns.some((pattern: string) =>
+                        useCase.description
+                            .toLowerCase()
+                            .includes(pattern.toLowerCase())
+                    )
+            )
+        }
+
+        // Apply category filters (if any)
+        if (filters.categories && filters.categories.length > 0) {
+            filtered = filtered.filter((useCase) =>
+                filters.categories.some((category: string) =>
+                    useCase.type.toLowerCase().includes(category.toLowerCase())
+                )
+            )
+        }
+
+        // Log details about filtered results
+        if (filters.includePatterns && filters.includePatterns.length > 0) {
+            console.log(
+                `    Include patterns: ${filters.includePatterns.join(', ')}`
+            )
+        }
+        if (filters.categories && filters.categories.length > 0) {
+            console.log(`  Categories: ${filters.categories.join(', ')}`)
+        }
+
+        return filtered
     }
 }

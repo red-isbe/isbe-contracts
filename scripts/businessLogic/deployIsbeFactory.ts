@@ -17,6 +17,26 @@ import {
     DiamondLoupeFacet,
     ConfigurationManagementFacet,
     ConfigurationManagementFacet__factory,
+    DidDocumentDetailedFacet,
+    DidDocumentDetailedFacet__factory,
+    DidControllerFacet__factory,
+    DidVerificationMethodFacet__factory,
+    DidVerificationRelationshipFacet__factory,
+    DidVerificationMethodFacet,
+    DidControllerFacet,
+    DidVerificationRelationshipFacet,
+    ClientFilteringFacet,
+    EnsRegistryFacet,
+    EnsRegistryFacet__factory,
+    ClientFilteringFacet__factory,
+    TimeStampingRegistryFacet__factory,
+    TimeStampingRegistryFacet,
+    DidRegistryQueryFacet,
+    AccessControlDidFacet,
+    DidRegistryQueryFacet__factory,
+    AccessControlDidFacet__factory,
+    BesuNodeManagerFacet,
+    BesuNodeManagerFacet__factory,
 } from '../../typechain-types'
 import {
     BUSINESS_LOGIC_DEPLOYER_ROLE,
@@ -26,9 +46,15 @@ import {
     ISBE_PAUSER_ROLE,
     ISBE_ROLE,
     PROXY_DEPLOYER_ROLE,
-} from '../../test/constants'
+    DID_REGISTRY_ROLE,
+    ENS_MANAGER_ROLE,
+    CLIENT_FILTERING_ROLE,
+    TIMESTAMPING_REGISTRY_ROLE,
+    BESU_NODE_MANAGER_ROLE,
+} from '../../utils/constants'
 
 let AccessControlFacetFactory: AccessControlGovernanceFacet__factory
+let AccessControlDidFacetFactory: AccessControlDidFacet__factory
 let IsbePausableFacetFactory: ISBEPauseFacet__factory
 let GlobalIsbePauseFacetFactory: GlobalIsbePauseFacet__factory
 let EIP2535AccessControlFactory: EIP2535AccessControl__factory
@@ -37,15 +63,35 @@ let ProxyFactoryFacetFactory: ProxyFactoryFacet__factory
 let DiamondCutFacetFactory: DiamondCutAccessControlFacet__factory
 let DiamondLoupeFacetFactory: DiamondLoupeFacet__factory
 let ConfigMgmtFacetFactory: ConfigurationManagementFacet__factory
+let DidDocumentDetailedFacetFactory: DidDocumentDetailedFacet__factory
+let DidControllerFacetFactory: DidControllerFacet__factory
+let DidVerificationMethodFacetFactory: DidVerificationMethodFacet__factory
+let DidVerificationRelationshipFacetFactory: DidVerificationRelationshipFacet__factory
+let DidRegistryQueryFacetFactory: DidRegistryQueryFacet__factory
+let EnsRegistryFacetFactory: EnsRegistryFacet__factory
+let TimeStampingRegistryFacetFactory: TimeStampingRegistryFacet__factory
+let ClientFilteringFacetFactory: ClientFilteringFacet__factory
+let BesuNodeManagerFacetFactory: BesuNodeManagerFacet__factory
+
 let diamondProxy: EIP2535AccessControl
 let businessLogicFactoryFacet: BusinessLogicFactoryFacet
 let proxyFactoryFacet: ProxyFactoryFacet
 let globalIsbePauseFacet: GlobalIsbePauseFacet
 let accessControlFacet: AccessControlGovernanceFacet
+let accessControlDidFacet: AccessControlDidFacet
 let pauseFacet: ISBEPauseFacet
 let diamondCutFacet: DiamondCutAccessControlFacet
 let diamondLoupeFacet: DiamondLoupeFacet
 let configMgmtFacet: ConfigurationManagementFacet
+let didDocumentDetailedFacet: DidDocumentDetailedFacet
+let didControllerFacet: DidControllerFacet
+let didVerificationMethodFacet: DidVerificationMethodFacet
+let didVerificationRelationshipFacet: DidVerificationRelationshipFacet
+let didRegistryQueryFacet: DidRegistryQueryFacet
+let ensRegistryFacet: EnsRegistryFacet
+let timeStampingRegistryFacet: TimeStampingRegistryFacet
+let clientFilteringFacet: ClientFilteringFacet
+let besuNodeManagerFacet: BesuNodeManagerFacet
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function deployInitial(ethers: any) {
@@ -63,6 +109,9 @@ async function deployInitial(ethers: any) {
     AccessControlFacetFactory = await ethers.getContractFactory(
         'AccessControlGovernanceFacet'
     )
+    AccessControlDidFacetFactory = await ethers.getContractFactory(
+        'AccessControlDidFacet'
+    )
     IsbePausableFacetFactory = await ethers.getContractFactory('ISBEPauseFacet')
     DiamondCutFacetFactory = await ethers.getContractFactory(
         'DiamondCutAccessControlFacet'
@@ -72,24 +121,82 @@ async function deployInitial(ethers: any) {
     ConfigMgmtFacetFactory = await ethers.getContractFactory(
         'ConfigurationManagementFacet'
     )
+    DidDocumentDetailedFacetFactory = await ethers.getContractFactory(
+        'DidDocumentDetailedFacet'
+    )
+    DidControllerFacetFactory =
+        await ethers.getContractFactory('DidControllerFacet')
+    DidVerificationMethodFacetFactory = await ethers.getContractFactory(
+        'DidVerificationMethodFacet'
+    )
+    DidVerificationRelationshipFacetFactory = await ethers.getContractFactory(
+        'DidVerificationRelationshipFacet'
+    )
+    DidRegistryQueryFacetFactory = await ethers.getContractFactory(
+        'DidRegistryQueryFacet'
+    )
+    EnsRegistryFacetFactory =
+        await ethers.getContractFactory('EnsRegistryFacet')
+    TimeStampingRegistryFacetFactory = await ethers.getContractFactory(
+        'TimeStampingRegistryFacet'
+    )
+    ClientFilteringFacetFactory = await ethers.getContractFactory(
+        'ClientFilteringFacet'
+    )
+    BesuNodeManagerFacetFactory = await ethers.getContractFactory(
+        'BesuNodeManagerFacet'
+    )
 
-    businessLogicFactoryFacet = await BusinessLogicFactoryFactory.deploy()
-    proxyFactoryFacet = await ProxyFactoryFacetFactory.deploy()
-    globalIsbePauseFacet = await GlobalIsbePauseFacetFactory.deploy()
-    accessControlFacet = await AccessControlFacetFactory.deploy()
-    pauseFacet = await IsbePausableFacetFactory.deploy()
-    diamondCutFacet = await DiamondCutFacetFactory.deploy()
-    diamondLoupeFacet = await DiamondLoupeFacetFactory.deploy()
-    configMgmtFacet = await ConfigMgmtFacetFactory.deploy()
+    // Add explicit gas limit to fix Internal error with non-validator nodes
+    const deployOptions = { gasLimit: 25_000_000 }
+
+    businessLogicFactoryFacet =
+        await BusinessLogicFactoryFactory.deploy(deployOptions)
+    proxyFactoryFacet = await ProxyFactoryFacetFactory.deploy(deployOptions)
+    globalIsbePauseFacet =
+        await GlobalIsbePauseFacetFactory.deploy(deployOptions)
+    accessControlFacet = await AccessControlFacetFactory.deploy(deployOptions)
+    accessControlDidFacet =
+        await AccessControlDidFacetFactory.deploy(deployOptions)
+    pauseFacet = await IsbePausableFacetFactory.deploy(deployOptions)
+    diamondCutFacet = await DiamondCutFacetFactory.deploy(deployOptions)
+    diamondLoupeFacet = await DiamondLoupeFacetFactory.deploy(deployOptions)
+    configMgmtFacet = await ConfigMgmtFacetFactory.deploy(deployOptions)
+    didDocumentDetailedFacet =
+        await DidDocumentDetailedFacetFactory.deploy(deployOptions)
+    didControllerFacet = await DidControllerFacetFactory.deploy(deployOptions)
+    didVerificationMethodFacet =
+        await DidVerificationMethodFacetFactory.deploy(deployOptions)
+    didVerificationRelationshipFacet =
+        await DidVerificationRelationshipFacetFactory.deploy(deployOptions)
+    didRegistryQueryFacet =
+        await DidRegistryQueryFacetFactory.deploy(deployOptions)
+    ensRegistryFacet = await EnsRegistryFacetFactory.deploy(deployOptions)
+    timeStampingRegistryFacet =
+        await TimeStampingRegistryFacetFactory.deploy(deployOptions)
+    clientFilteringFacet =
+        await ClientFilteringFacetFactory.deploy(deployOptions)
+    besuNodeManagerFacet =
+        await BesuNodeManagerFacetFactory.deploy(deployOptions)
 
     await businessLogicFactoryFacet.waitForDeployment()
     await proxyFactoryFacet.waitForDeployment()
     await globalIsbePauseFacet.waitForDeployment()
     await accessControlFacet.waitForDeployment()
+    await accessControlDidFacet.waitForDeployment()
     await pauseFacet.waitForDeployment()
     await diamondCutFacet.waitForDeployment()
     await diamondLoupeFacet.waitForDeployment()
     await configMgmtFacet.waitForDeployment()
+    await didDocumentDetailedFacet.waitForDeployment()
+    await didControllerFacet.waitForDeployment()
+    await didVerificationMethodFacet.waitForDeployment()
+    await didVerificationRelationshipFacet.waitForDeployment()
+    await didRegistryQueryFacet.waitForDeployment()
+    await ensRegistryFacet.waitForDeployment()
+    await timeStampingRegistryFacet.waitForDeployment()
+    await clientFilteringFacet.waitForDeployment()
+    await besuNodeManagerFacet.waitForDeployment()
 }
 
 export async function deployIsbeFactory(
@@ -105,46 +212,82 @@ export async function deployIsbeFactory(
         await businessLogicFactoryFacet.getAddress(),
         await globalIsbePauseFacet.getAddress(),
         await accessControlFacet.getAddress(),
+        await accessControlDidFacet.getAddress(),
         await pauseFacet.getAddress(),
         await proxyFactoryFacet.getAddress(),
         await diamondCutFacet.getAddress(),
         await diamondLoupeFacet.getAddress(),
         await configMgmtFacet.getAddress(),
+        await didDocumentDetailedFacet.getAddress(),
+        await didControllerFacet.getAddress(),
+        await didVerificationMethodFacet.getAddress(),
+        await didVerificationRelationshipFacet.getAddress(),
+        await didRegistryQueryFacet.getAddress(),
+        await ensRegistryFacet.getAddress(),
+        await timeStampingRegistryFacet.getAddress(),
+        await clientFilteringFacet.getAddress(),
+        await besuNodeManagerFacet.getAddress(),
     ]
-    diamondProxy = await EIP2535AccessControlFactory.deploy(facetAddresses, {
-        rbacs: [
-            {
-                role: DEFAULT_ADMIN_ROLE,
-                members: [accountAddress],
-            },
-            {
-                role: ISBE_ROLE,
-                members: [accountAddress],
-            },
-            {
-                role: PROXY_DEPLOYER_ROLE,
-                members: [accountAddress],
-            },
-            {
-                role: GOVERNANCE_CONFIGURATION_MANAGER_ROLE,
-                members: [accountAddress],
-            },
-            {
-                role: BUSINESS_LOGIC_DEPLOYER_ROLE,
-                members: [accountAddress],
-            },
-            {
-                role: ISBE_PAUSER_ROLE,
-                members: [accountAddress],
-            },
-            {
-                role: GOVERNANCE_MANAGER_ROLE,
-                members: [accountAddress],
-            },
-        ],
-        init: ethers.ZeroAddress,
-        initCalldata: initCalldata,
-    })
+    diamondProxy = await EIP2535AccessControlFactory.deploy(
+        facetAddresses,
+        {
+            rbacs: [
+                {
+                    role: DEFAULT_ADMIN_ROLE,
+                    members: [accountAddress],
+                },
+                {
+                    role: ISBE_ROLE,
+                    members: [accountAddress],
+                },
+                {
+                    role: PROXY_DEPLOYER_ROLE,
+                    members: [accountAddress],
+                },
+                {
+                    role: GOVERNANCE_CONFIGURATION_MANAGER_ROLE,
+                    members: [accountAddress],
+                },
+                {
+                    role: BUSINESS_LOGIC_DEPLOYER_ROLE,
+                    members: [accountAddress],
+                },
+                {
+                    role: ISBE_PAUSER_ROLE,
+                    members: [accountAddress],
+                },
+                {
+                    role: GOVERNANCE_MANAGER_ROLE,
+                    members: [accountAddress],
+                },
+                {
+                    role: DID_REGISTRY_ROLE,
+                    members: [accountAddress],
+                },
+                {
+                    role: ENS_MANAGER_ROLE,
+                    members: [accountAddress],
+                },
+                {
+                    role: CLIENT_FILTERING_ROLE,
+                    members: [accountAddress],
+                },
+                {
+                    role: TIMESTAMPING_REGISTRY_ROLE,
+                    members: [accountAddress],
+                },
+                {
+                    role: BESU_NODE_MANAGER_ROLE,
+                    members: [accountAddress],
+                },
+            ],
+            init: ethers.ZeroAddress,
+            initCalldata: initCalldata,
+        },
+        // Add explicit gas limit to fix Internal error with non-validator nodes
+        { gasLimit: 25_000_000 }
+    )
+
     await diamondProxy.waitForDeployment()
     return await diamondProxy.getAddress()
 }

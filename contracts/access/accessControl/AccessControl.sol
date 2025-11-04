@@ -2,25 +2,23 @@
 pragma solidity ^0.8.28;
 
 import {Common} from '../../core/Common.sol';
-import {IAccessControl} from './IAccessControl.sol';
+import {IAccessControlEoa} from './IAccessControlEoa.sol';
 import {_ACCESS_CONTROL_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
-import {_ISBE_ROLE} from '../../constants/roles.sol';
 
 /// @title AccessControl
-/// @notice Implements role-based access control mechanisms
-/// @dev Inherits from IAccessControl and Common, providing external role management functions
-abstract contract AccessControl is IAccessControl, Common {
-    modifier protectISBERole(bytes32 _role) {
-        _protectISBERole(_role);
-        _;
-    }
+/// @author ISBE team
+/// @notice Implements EOA-based role access control mechanisms
+/// @dev Inherits from IAccessControlEoa and Common, providing address-based role management functions
+abstract contract AccessControl is IAccessControlEoa, Common {
     /// @notice Constructor that disables the initializer
     constructor() {
         _disableInitializers(_ACCESS_CONTROL_RESOLVER_KEY);
     }
 
+    /// @notice Initializes the access control contract
+    /// @param _rbacs Array of role-based access control configurations to initialize with
     function initializeAccessControl(
-        IAccessControl.Rbac[] memory _rbacs
+        IAccessControlEoa.Rbac[] memory _rbacs
     ) external initializer(_ACCESS_CONTROL_RESOLVER_KEY) {
         _initializeRbacs(_rbacs);
     }
@@ -108,6 +106,8 @@ abstract contract AccessControl is IAccessControl, Common {
         return _getRolesByAccount(_account, _pageIndex, _pageLength);
     }
 
+    /// @notice Returns the interfaces implemented by this contract
+    /// @return interfaces_ Array of interface IDs
     function _implementedInterfaces()
         internal
         pure
@@ -117,14 +117,6 @@ abstract contract AccessControl is IAccessControl, Common {
     {
         uint256 interfacesLength = 1;
         interfaces_ = new bytes4[](interfacesLength);
-        interfaces_[--interfacesLength] = type(IAccessControl).interfaceId;
-    }
-
-    function _protectISBERole(bytes32 _role) internal pure virtual {
-        if (_isISBERole(_role)) revert RoleIsImmutable(_role);
-    }
-
-    function _isISBERole(bytes32 _role) internal pure returns (bool) {
-        return _role == _ISBE_ROLE;
+        interfaces_[--interfacesLength] = type(IAccessControlEoa).interfaceId;
     }
 }

@@ -21,28 +21,33 @@ abstract contract DidControllerInternal is DidDocumentDetailedInternal {
      * @param didsByControllerIndex Mapping for efficient index lookup of DIDs by controller
      */
     struct ControllersStorage {
-        mapping(string => string[]) didsByController;
-        mapping(string => mapping(string => uint256)) didsByControllerIndex;
+        mapping(bytes32 controller => bytes32[] dids) didsByController;
+        mapping(bytes32 controller => mapping(bytes32 did => uint256 index)) didsByControllerIndex;
     }
 
-    modifier onlyControllerOrAuth(string memory did) {
+    modifier onlyControllerOrAuth(bytes32 did) {
         _checkControllerOrAuth(did);
         _;
     }
 
-    modifier onlyNotController(string memory did, string memory controller) {
+    modifier onlyNotController(bytes32 did, bytes32 controller) {
         _checkIsNotController(did, controller);
         _;
     }
 
-    modifier onlyController(string memory did, string memory controller) {
+    modifier onlyController(bytes32 did, bytes32 controller) {
         _checkIsController(did, controller);
         _;
     }
 
+    modifier onlyNotLastController(bytes32 did, bytes32 controller) {
+        _checkNotLastController(did, controller);
+        _;
+    }
+
     function _linkDidToController(
-        string memory did,
-        string memory controller
+        bytes32 did,
+        bytes32 controller
     ) internal returns (bool) {
         ControllersStorage storage $ = _controllersStorage();
         uint256 index = $.didsByController[controller].length;
@@ -52,11 +57,11 @@ abstract contract DidControllerInternal is DidDocumentDetailedInternal {
     }
 
     function _unlinkDidFromController(
-        string memory _did,
-        string memory _controller
+        bytes32 _did,
+        bytes32 _controller
     ) internal returns (bool) {
         ControllersStorage storage $ = _controllersStorage();
-        string[] storage dids = $.didsByController[_controller];
+        bytes32[] storage dids = $.didsByController[_controller];
         uint256 index = $.didsByControllerIndex[_controller][_did];
         uint256 lastDid = dids.length;
         unchecked {
@@ -72,21 +77,21 @@ abstract contract DidControllerInternal is DidDocumentDetailedInternal {
     }
 
     function _getDidsByController(
-        string memory controller,
+        bytes32 controller,
         uint256 _page,
         uint256 _pageSize
     )
         internal
         view
         returns (
-            string[] memory items_,
+            bytes32[] memory items_,
             uint256 total_,
             uint256 howMany_,
             uint256 prev_,
             uint256 next_
         )
     {
-        string[] storage dids = _controllersStorage().didsByController[
+        bytes32[] storage dids = _controllersStorage().didsByController[
             controller
         ];
         total_ = dids.length;
@@ -97,7 +102,7 @@ abstract contract DidControllerInternal is DidDocumentDetailedInternal {
             _pageSize
         );
         if (howMany_ == 0) return (items_, total_, howMany_, prev_, next_);
-        items_ = new string[](howMany_);
+        items_ = new bytes32[](howMany_);
         for (uint256 i; i < howMany_; ) {
             items_[i] = dids[cursor];
             unchecked {
@@ -107,8 +112,8 @@ abstract contract DidControllerInternal is DidDocumentDetailedInternal {
         }
     }
 
-    function _checkControllerOrAuth(string memory did) private view {
-        _checkEmptyString(did);
+    function _checkControllerOrAuth(bytes32 did) private view {
+        _checkBytes32IsNotZero(did);
         address sender = _msgSender();
         require(
             _isController(did, sender),
@@ -116,10 +121,7 @@ abstract contract DidControllerInternal is DidDocumentDetailedInternal {
         );
     }
 
-    function _checkIsController(
-        string memory did,
-        string memory controller
-    ) private view {
+    function _checkIsController(bytes32 did, bytes32 controller) private view {
         require(
             _isController(did, controller),
             IDidController.DidIsNotControlledBy(did, controller)
@@ -127,12 +129,22 @@ abstract contract DidControllerInternal is DidDocumentDetailedInternal {
     }
 
     function _checkIsNotController(
-        string memory did,
-        string memory controller
+        bytes32 did,
+        bytes32 controller
     ) private view {
         require(
             _isNotController(did, controller),
             IDidController.DidIsControlledBy(did, controller)
+        );
+    }
+
+    function _checkNotLastController(
+        bytes32 did,
+        bytes32 controller
+    ) private view {
+        require(
+            _getControllerCount(did) > 1,
+            IDidController.CannotLeaveDidWithoutControllers(did, controller)
         );
     }
 

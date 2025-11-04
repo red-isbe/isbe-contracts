@@ -8,6 +8,8 @@ import {ERC20Snapshot} from '../../../tokens/erc20/extensions/snapshot/ERC20Snap
 import {ERC20} from '../../../tokens/erc20/ERC20.sol';
 import {ISBEPause} from '../../../pause/ISBEPause.sol';
 import {AccessControl} from '../../../access/accessControl/AccessControl.sol';
+import {AccessControlInternal} from '../../../access/accessControl/AccessControlInternal.sol';
+import {DidDocumentDetailedInternal} from '../../../identity/didregistry/DidDocumentDetailedInternal.sol';
 import {IsbeUUPSUpgradeable} from '../../../proxies/utils/IsbeUUPSUpgradeable.sol';
 import {Pause} from '../../../pause/Pause.sol';
 
@@ -22,6 +24,17 @@ contract ERC20TestWrapperUUPS is
     AccessControl,
     IsbeUUPSUpgradeable
 {
+    function _localDidOf(
+        address _account
+    )
+        internal
+        view
+        override(AccessControlInternal, DidDocumentDetailedInternal)
+        returns (bytes32)
+    {
+        return DidDocumentDetailedInternal._localDidOf(_account);
+    }
+
     function _implementedInterfaces()
         internal
         pure

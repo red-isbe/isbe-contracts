@@ -205,6 +205,10 @@ abstract contract ERC20 is IERC20Isbe, ERC203643InternalCommon {
         return true;
     }
 
+    /// @notice Get the amount of tokens that an owner allowed a spender to manage
+    /// @param _owner The address which owns the funds
+    /// @param _spender The address which can spend the funds
+    /// @return The allowance amount
     function allowance(
         address _owner,
         address _spender
@@ -212,28 +216,41 @@ abstract contract ERC20 is IERC20Isbe, ERC203643InternalCommon {
         return _allowance(_owner, _spender);
     }
 
+    /// @notice Returns the number of decimals used for token amounts
+    /// @return The token decimals
     function decimals() external view override returns (uint8) {
         return _decimals();
     }
 
+    /// @notice Returns the token symbol
+    /// @return The symbol of the token
     function symbol() external view override returns (string memory) {
         return _symbol();
     }
 
+    /// @notice Returns the token name
+    /// @return The name of the token
     function name() external view override returns (string memory) {
         return _name();
     }
 
+    /// @notice Returns the total supply of tokens
+    /// @return The total token supply
     function totalSupply() external view override returns (uint256) {
         return _totalSupply();
     }
 
+    /// @notice Returns the token balance of an account
+    /// @param _account Address of the account to query
+    /// @return The account's token balance
     function balanceOf(
         address _account
     ) external view override returns (uint256) {
         return _balanceOf(_account);
     }
 
+    /// @notice Returns the list of interfaces implemented by this contract
+    /// @return interfaces_ Array of interface IDs
     function _implementedInterfaces()
         internal
         pure

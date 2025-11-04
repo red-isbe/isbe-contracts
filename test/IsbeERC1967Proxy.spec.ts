@@ -1,62 +1,63 @@
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
+import { loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers'
 import {
-    IsbeERC1967Proxy__factory,
     ERC20TestWrapperUUPS__factory,
     ERC20TestWrapperUUPS,
 } from '../typechain-types'
-import { DEFAULT_ADMIN_ROLE, MINTER_ROLE } from './constants'
-import { Signer } from 'ethers'
+import { DEFAULT_ADMIN_ROLE, MINTER_ROLE } from '../utils/constants'
 
 const NAME = 'My Token'
 const SYMBOL = 'MTK'
 const DECIMALS = 18
 
 describe('IsbeERC1967Proxy', function () {
-    let admin: Signer
-    let IsbeERC1967ProxyFactory: IsbeERC1967Proxy__factory
     let ERC20TestWrapperUUPSFactory: ERC20TestWrapperUUPS__factory
-    let erc20ImplementationUUPS: ERC20TestWrapperUUPS
     let erc20UUPS: ERC20TestWrapperUUPS
 
-    async function deployInitial() {
-        ;[admin] = await ethers.getSigners()
+    async function deployFixture() {
+        const [adminSigner] = await ethers.getSigners()
+        const adminAddress = await adminSigner.getAddress()
 
-        ERC20TestWrapperUUPSFactory = await ethers.getContractFactory(
+        const erc20TestWrapperUUPSFactory = await ethers.getContractFactory(
             'ERC20TestWrapperUUPS'
         )
-        erc20ImplementationUUPS = await ERC20TestWrapperUUPSFactory.deploy()
-
+        const erc20ImplementationUUPS =
+            await erc20TestWrapperUUPSFactory.deploy()
         await erc20ImplementationUUPS.waitForDeployment()
 
-        IsbeERC1967ProxyFactory =
+        const isbeERC1967ProxyFactory =
             await ethers.getContractFactory('IsbeERC1967Proxy')
-    }
-
-    before(async () => {
-        await deployInitial()
-    })
-
-    beforeEach(async () => {
-        const IsbeERC1967Proxy = await IsbeERC1967ProxyFactory.deploy(
+        const isbeERC1967Proxy = await isbeERC1967ProxyFactory.deploy(
             await erc20ImplementationUUPS.getAddress()
         )
-        await IsbeERC1967Proxy.waitForDeployment()
+        await isbeERC1967Proxy.waitForDeployment()
 
-        erc20UUPS = ERC20TestWrapperUUPSFactory.attach(
-            await IsbeERC1967Proxy.getAddress()
+        const erc20UUPSInstance = erc20TestWrapperUUPSFactory.attach(
+            await isbeERC1967Proxy.getAddress()
         ) as ERC20TestWrapperUUPS
 
-        await erc20UUPS.initializeErc20(NAME, SYMBOL, DECIMALS)
-        await erc20UUPS.initializeCap(10000)
-        const adminAddress = await admin.getAddress()
-        await erc20UUPS.initializeAccessControl([
+        await erc20UUPSInstance.initializeErc20(NAME, SYMBOL, DECIMALS)
+        await erc20UUPSInstance.initializeCap(10000)
+        await erc20UUPSInstance.initializeAccessControl([
             {
                 role: DEFAULT_ADMIN_ROLE,
                 members: [adminAddress],
             },
         ])
-        await erc20UUPS.grantRole(MINTER_ROLE, adminAddress)
+        await erc20UUPSInstance.grantRole(MINTER_ROLE, adminAddress)
+
+        return {
+            admin: adminSigner,
+            ERC20TestWrapperUUPSFactory: erc20TestWrapperUUPSFactory,
+            erc20UUPS: erc20UUPSInstance,
+        }
+    }
+
+    beforeEach(async () => {
+        const contracts = await loadFixture(deployFixture)
+        ERC20TestWrapperUUPSFactory = contracts.ERC20TestWrapperUUPSFactory
+        erc20UUPS = contracts.erc20UUPS
     })
 
     it('GIVEN an ERC20 deployed WHEN deploy a Uups proxy THEN it can be initialized', async () => {

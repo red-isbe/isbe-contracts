@@ -8,37 +8,37 @@ authorisation mechanisms_
 ### ControllerAdded
 
 ```solidity
-event ControllerAdded(string did, string controller)
+event ControllerAdded(bytes32 did, bytes32 controller)
 ```
 
 Emitted when a new controller is added to a DID
 
 #### Parameters
 
-| Name       | Type   | Description                                               |
-| ---------- | ------ | --------------------------------------------------------- |
-| did        | string | The decentralised identifier receiving the new controller |
-| controller | string | The controller identifier being added                     |
+| Name       | Type    | Description                                               |
+| ---------- | ------- | --------------------------------------------------------- |
+| did        | bytes32 | The decentralised identifier receiving the new controller |
+| controller | bytes32 | The controller identifier being added                     |
 
 ### ControllerRevoked
 
 ```solidity
-event ControllerRevoked(string did, string controller)
+event ControllerRevoked(bytes32 did, bytes32 controller)
 ```
 
 Emitted when a controller is revoked from a DID
 
 #### Parameters
 
-| Name       | Type   | Description                                        |
-| ---------- | ------ | -------------------------------------------------- |
-| did        | string | The decentralised identifier losing the controller |
-| controller | string | The controller identifier being revoked            |
+| Name       | Type    | Description                                        |
+| ---------- | ------- | -------------------------------------------------- |
+| did        | bytes32 | The decentralised identifier losing the controller |
+| controller | bytes32 | The controller identifier being revoked            |
 
 ### ControllerNotAuthorized
 
 ```solidity
-error ControllerNotAuthorized(string did, address controller)
+error ControllerNotAuthorized(bytes32 did, address controller)
 ```
 
 Raised when a controller is not authorized
@@ -47,43 +47,60 @@ Raised when a controller is not authorized
 
 | Name       | Type    | Description                                        |
 | ---------- | ------- | -------------------------------------------------- |
-| did        | string  | The decentralised identifier losing the controller |
+| did        | bytes32 | The decentralised identifier losing the controller |
 | controller | address | The controller identifier being revoked            |
 
 ### DidIsNotControlledBy
 
 ```solidity
-error DidIsNotControlledBy(string did, string controller)
+error DidIsNotControlledBy(bytes32 did, bytes32 controller)
 ```
 
 Raised when a DID is not controlled by
 
 #### Parameters
 
-| Name       | Type   | Description                  |
-| ---------- | ------ | ---------------------------- |
-| did        | string | The decentralised identifier |
-| controller | string | The controller identifier    |
+| Name       | Type    | Description                  |
+| ---------- | ------- | ---------------------------- |
+| did        | bytes32 | The decentralised identifier |
+| controller | bytes32 | The controller identifier    |
 
 ### DidIsControlledBy
 
 ```solidity
-error DidIsControlledBy(string did, string controller)
+error DidIsControlledBy(bytes32 did, bytes32 controller)
 ```
 
 Raised when a DID is controlled by
 
 #### Parameters
 
-| Name       | Type   | Description                  |
-| ---------- | ------ | ---------------------------- |
-| did        | string | The decentralised identifier |
-| controller | string | The controller identifier    |
+| Name       | Type    | Description                  |
+| ---------- | ------- | ---------------------------- |
+| did        | bytes32 | The decentralised identifier |
+| controller | bytes32 | The controller identifier    |
+
+### CannotLeaveDidWithoutControllers
+
+```solidity
+error CannotLeaveDidWithoutControllers(bytes32 did, bytes32 controller)
+```
+
+Raised when attempting to revoke the last controller from a DID
+
+_Prevents DIDs from becoming unmanageable by ensuring at least one controller remains_
+
+#### Parameters
+
+| Name       | Type    | Description                                                         |
+| ---------- | ------- | ------------------------------------------------------------------- |
+| did        | bytes32 | The decentralised identifier that would be left without controllers |
+| controller | bytes32 | The controller identifier being revoked                             |
 
 ### addController
 
 ```solidity
-function addController(string did, string controller) external returns (bool success)
+function addController(bytes32 did, bytes32 controller) external returns (bool success)
 ```
 
 Adds a new controller to the specified DID
@@ -92,10 +109,10 @@ _Requires appropriate authorisation to modify the DID_
 
 #### Parameters
 
-| Name       | Type   | Description                                                |
-| ---------- | ------ | ---------------------------------------------------------- |
-| did        | string | The decentralised identifier to receive the new controller |
-| controller | string | The controller identifier to be added                      |
+| Name       | Type    | Description                                                |
+| ---------- | ------- | ---------------------------------------------------------- |
+| did        | bytes32 | The decentralised identifier to receive the new controller |
+| controller | bytes32 | The controller identifier to be added                      |
 
 #### Return Values
 
@@ -106,7 +123,7 @@ _Requires appropriate authorisation to modify the DID_
 ### revokeController
 
 ```solidity
-function revokeController(string did, string controller) external returns (bool success)
+function revokeController(bytes32 did, bytes32 controller) external returns (bool success)
 ```
 
 Revokes an existing controller from the specified DID
@@ -115,10 +132,10 @@ _Requires appropriate authorisation to modify the DID_
 
 #### Parameters
 
-| Name       | Type   | Description                                         |
-| ---------- | ------ | --------------------------------------------------- |
-| did        | string | The decentralised identifier to lose the controller |
-| controller | string | The controller identifier to be revoked             |
+| Name       | Type    | Description                                         |
+| ---------- | ------- | --------------------------------------------------- |
+| did        | bytes32 | The decentralised identifier to lose the controller |
+| controller | bytes32 | The controller identifier to be revoked             |
 
 #### Return Values
 
@@ -129,7 +146,7 @@ _Requires appropriate authorisation to modify the DID_
 ### getDidsByController
 
 ```solidity
-function getDidsByController(string controller, uint256 page, uint256 pageSize) external view returns (string[] items, uint256 total, uint256 howMany, uint256 prev, uint256 next)
+function getDidsByController(bytes32 controller, uint256 page, uint256 pageSize) external view returns (bytes32[] items, uint256 total, uint256 howMany, uint256 prev, uint256 next)
 ```
 
 Retrieves paginated list of DIDs controlled by the specified controller
@@ -140,35 +157,35 @@ _Returns paginated results to handle large datasets efficiently_
 
 | Name       | Type    | Description                              |
 | ---------- | ------- | ---------------------------------------- |
-| controller | string  | The controller identifier to query for   |
+| controller | bytes32 | The controller identifier to query for   |
 | page       | uint256 | The page number to retrieve (zero-based) |
 | pageSize   | uint256 | The maximum number of items per page     |
 
 #### Return Values
 
-| Name    | Type     | Description                                                 |
-| ------- | -------- | ----------------------------------------------------------- |
-| items   | string[] | Array of DID strings controlled by the specified controller |
-| total   | uint256  | Total number of DIDs controlled by this controller          |
-| howMany | uint256  | Number of items returned in current page                    |
-| prev    | uint256  | Previous page number (zero if no previous page)             |
-| next    | uint256  | Next page number (zero if no next page)                     |
+| Name    | Type      | Description                                                 |
+| ------- | --------- | ----------------------------------------------------------- |
+| items   | bytes32[] | Array of DID strings controlled by the specified controller |
+| total   | uint256   | Total number of DIDs controlled by this controller          |
+| howMany | uint256   | Number of items returned in current page                    |
+| prev    | uint256   | Previous page number (zero if no previous page)             |
+| next    | uint256   | Next page number (zero if no next page)                     |
 
 ### checkController
 
 ```solidity
-function checkController(string did, address controller) external view returns (bool isController)
+function checkController(bytes32 did, address controller) external view returns (bool isController)
 ```
 
 Checks if an address is authorised as a controller for the specified DID
 
-_Validates controller permissions using string DID format_
+_Validates controller permissions using bytes32 did format_
 
 #### Parameters
 
 | Name       | Type    | Description                                   |
 | ---------- | ------- | --------------------------------------------- |
-| did        | string  | The decentralised identifier to check against |
+| did        | bytes32 | The decentralised identifier to check against |
 | controller | address | The address to verify as a controller         |
 
 #### Return Values
@@ -256,7 +273,7 @@ Structure representing a verification relationship with temporal validity
 ```solidity
 struct VRelationship {
     string name;
-    string vMethodId;
+    bytes32 vMethodId;
     uint256 notBefore;
     uint256 notAfter;
     uint256 indexDid;
@@ -280,7 +297,7 @@ Emitted when the DID registry is initialised with cryptographic parameters
 ### DidDocumentInserted
 
 ```solidity
-event DidDocumentInserted(string did, string baseDocument, string vMethodId, bytes publicKey, enum IDidDocumentDetailed.EllipticType ellipticType, uint256 notBefore, uint256 notAfter)
+event DidDocumentInserted(bytes32 did, string baseDocument, bytes32 vMethodId, bytes publicKey, enum IDidDocumentDetailed.EllipticType ellipticType, uint256 notBefore, uint256 notAfter)
 ```
 
 Emitted when a new DID document is successfully inserted into the registry
@@ -289,28 +306,64 @@ Emitted when a new DID document is successfully inserted into the registry
 
 | Name         | Type                                   | Description                                                   |
 | ------------ | -------------------------------------- | ------------------------------------------------------------- |
-| did          | string                                 | The decentralised identifier string that was registered       |
+| did          | bytes32                                | The decentralised identifier string that was registered       |
 | baseDocument | string                                 | The base JSON-LD document content for the DID                 |
-| vMethodId    | string                                 | The unique identifier for the initial verification method     |
+| vMethodId    | bytes32                                | The unique identifier for the initial verification method     |
 | publicKey    | bytes                                  | The public key material for the initial verification method   |
 | ellipticType | enum IDidDocumentDetailed.EllipticType | The elliptic curve algorithm used for the initial key         |
 | notBefore    | uint256                                | The timestamp before which the verification method is invalid |
 | notAfter     | uint256                                | The timestamp after which the verification method expires     |
 
+### FirstDidDocumentInserted
+
+```solidity
+event FirstDidDocumentInserted(bytes32 did, string baseDocument, bytes32 vMethodId, bytes publicKey, enum IDidDocumentDetailed.EllipticType ellipticType, uint256 notBefore, uint256 notAfter, string alsoKnownAs)
+```
+
+Emitted when the first DID document is successfully inserted by an ISBE authorised account
+
+#### Parameters
+
+| Name         | Type                                   | Description                                                   |
+| ------------ | -------------------------------------- | ------------------------------------------------------------- |
+| did          | bytes32                                | The decentralised identifier string that was registered       |
+| baseDocument | string                                 | The base JSON-LD document content for the DID                 |
+| vMethodId    | bytes32                                | The unique identifier for the initial verification method     |
+| publicKey    | bytes                                  | The public key material for the initial verification method   |
+| ellipticType | enum IDidDocumentDetailed.EllipticType | The elliptic curve algorithm used for the initial key         |
+| notBefore    | uint256                                | The timestamp before which the verification method is invalid |
+| notAfter     | uint256                                | The timestamp after which the verification method expires     |
+| alsoKnownAs  | string                                 | Alternative identifier for the entity (e.g., irn:orgs:inetum) |
+
+### AlsoKnownAsUpdated
+
+```solidity
+event AlsoKnownAsUpdated(bytes32 did, string alsoKnownAs)
+```
+
+Emitted when the alsoKnownAs field is updated by an ISBE authorised account
+
+#### Parameters
+
+| Name        | Type    | Description                                                |
+| ----------- | ------- | ---------------------------------------------------------- |
+| did         | bytes32 | The decentralised identifier whose alsoKnownAs was updated |
+| alsoKnownAs | string  | The new alsoKnownAs value                                  |
+
 ### BaseDocumentUpdated
 
 ```solidity
-event BaseDocumentUpdated(string did, string baseDocument)
+event BaseDocumentUpdated(bytes32 did, string baseDocument)
 ```
 
 Emitted when the base document content of a DID is updated
 
 #### Parameters
 
-| Name         | Type   | Description                                                   |
-| ------------ | ------ | ------------------------------------------------------------- |
-| did          | string | The decentralised identifier whose base document was modified |
-| baseDocument | string | The new base JSON-LD document content                         |
+| Name         | Type    | Description                                                   |
+| ------------ | ------- | ------------------------------------------------------------- |
+| did          | bytes32 | The decentralised identifier whose base document was modified |
+| baseDocument | string  | The new base JSON-LD document content                         |
 
 ### InvalidEllipticCurve
 
@@ -343,7 +396,7 @@ the initial verification method to use the network's configured algorithm_
 ### DidAlreadyExists
 
 ```solidity
-error DidAlreadyExists(string did)
+error DidAlreadyExists(bytes32 did)
 ```
 
 Raised when attempting to register a DID that already exists in the registry
@@ -352,14 +405,14 @@ _This error prevents duplicate DID registration and maintains registry integrity
 
 #### Parameters
 
-| Name | Type   | Description                                             |
-| ---- | ------ | ------------------------------------------------------- |
-| did  | string | The decentralised identifier string that already exists |
+| Name | Type    | Description                                             |
+| ---- | ------- | ------------------------------------------------------- |
+| did  | bytes32 | The decentralised identifier string that already exists |
 
 ### DidNotExists
 
 ```solidity
-error DidNotExists(string did)
+error DidNotExists(bytes32 did)
 ```
 
 Raised when attempting to use a DID that does not exist in the registry
@@ -368,9 +421,9 @@ _This error ensures operations target valid DIDs and prevents unauthorised acces
 
 #### Parameters
 
-| Name | Type   | Description                                             |
-| ---- | ------ | ------------------------------------------------------- |
-| did  | string | The decentralised identifier string that does not exist |
+| Name | Type    | Description                                             |
+| ---- | ------- | ------------------------------------------------------- |
+| did  | bytes32 | The decentralised identifier string that does not exist |
 
 ### InvalidControlBytes
 
@@ -394,10 +447,10 @@ Raised when public key length does not match expected format requirements
 _This error ensures cryptographic keys conform to expected byte lengths for
 the specified elliptic curve algorithm to prevent malformed key usage_
 
-### InvalidVerificationMethod
+### InvalidVerificationMethodName
 
 ```solidity
-error InvalidVerificationMethod(string method)
+error InvalidVerificationMethodName(string methodName)
 ```
 
 Raised when attempting to operate with an invalid verification method
@@ -407,14 +460,14 @@ methods to maintain document integrity and security_
 
 #### Parameters
 
-| Name   | Type   | Description                                        |
-| ------ | ------ | -------------------------------------------------- |
-| method | string | The verification method identifier that is invalid |
+| Name       | Type   | Description                                        |
+| ---------- | ------ | -------------------------------------------------- |
+| methodName | string | The verification method identifier that is invalid |
 
 ### VerificationRelationshipExists
 
 ```solidity
-error VerificationRelationshipExists(string did, string name, string vMethodId)
+error VerificationRelationshipExists(bytes32 did, string name, bytes32 vMethodId)
 ```
 
 Raised when attempting to create a verification relationship that already exists
@@ -424,11 +477,71 @@ to maintain data consistency and prevent conflicting permissions_
 
 #### Parameters
 
-| Name      | Type   | Description                                                           |
-| --------- | ------ | --------------------------------------------------------------------- |
-| did       | string | The decentralised identifier containing the existing relationship     |
-| name      | string | The verification relationship name that already exists                |
-| vMethodId | string | The verification method identifier that already has this relationship |
+| Name      | Type    | Description                                                           |
+| --------- | ------- | --------------------------------------------------------------------- |
+| did       | bytes32 | The decentralised identifier containing the existing relationship     |
+| name      | string  | The verification relationship name that already exists                |
+| vMethodId | bytes32 | The verification method identifier that already has this relationship |
+
+### UnauthorizedIsbeAccount
+
+```solidity
+error UnauthorizedIsbeAccount()
+```
+
+Raised when attempting to perform an operation requiring ISBE authorisation
+
+_This error ensures that sensitive operations are only performed by
+accounts with the appropriate ISBE role_
+
+### AddressNotKnown
+
+```solidity
+error AddressNotKnown(address addr)
+```
+
+Raised when an address is not known in the DID registry or has invalid/expired capability invocation
+
+_This covers: not registered, revoked, no capability invocation, or expired_
+
+#### Parameters
+
+| Name | Type    | Description                            |
+| ---- | ------- | -------------------------------------- |
+| addr | address | The Ethereum address that is not known |
+
+### UnauthorizedController
+
+```solidity
+error UnauthorizedController(address caller, bytes32 callerDid, bytes32 targetDid)
+```
+
+Raised when caller is not an authorized controller of the target DID
+
+#### Parameters
+
+| Name      | Type    | Description                                |
+| --------- | ------- | ------------------------------------------ |
+| caller    | address | The address attempting the operation       |
+| callerDid | bytes32 | The DID of the caller                      |
+| targetDid | bytes32 | The target DID that requires authorization |
+
+### FirstDocumentNotInserted
+
+```solidity
+error FirstDocumentNotInserted(bytes32 did)
+```
+
+Raised when attempting to insert a subsequent DID document without a first document
+
+_This error ensures that the first document must be inserted via insertFirstDidDocument
+before additional documents can be added_
+
+#### Parameters
+
+| Name | Type    | Description                                                 |
+| ---- | ------- | ----------------------------------------------------------- |
+| did  | bytes32 | The decentralised identifier that requires a first document |
 
 ### initializeDiDRegistry
 
@@ -447,24 +560,58 @@ DID document operations. This function can only be called once per deployment_
 | ------------ | -------------------------------------- | ---------------------------------------------------------- |
 | ellipticType | enum IDidDocumentDetailed.EllipticType | The elliptic curve algorithm to use for the entire network |
 
+### insertFirstDidDocument
+
+```solidity
+function insertFirstDidDocument(bytes32 did, string baseDocument, bytes32 vMethodId, bytes proof, bytes publicKey, enum IDidDocumentDetailed.EllipticType ellipticType, uint256 notBefore, uint256 notAfter, string alsoKnownAs) external returns (bool success)
+```
+
+Inserts the first DID document with cryptographic proof validation
+
+_Creates the initial DID document with the DID itself as controller.
+Only callable by accounts with ISBE role. Validates cryptographic proof
+against the provided public key and DID for secure identity establishment_
+
+#### Parameters
+
+| Name         | Type                                   | Description                                                    |
+| ------------ | -------------------------------------- | -------------------------------------------------------------- |
+| did          | bytes32                                | The decentralised identifier string to register                |
+| baseDocument | string                                 | The base JSON-LD document content containing DID metadata      |
+| vMethodId    | bytes32                                | The unique identifier for the initial verification method      |
+| proof        | bytes                                  | The cryptographic proof to validate against public key and DID |
+| publicKey    | bytes                                  | The public key bytes for cryptographic verification            |
+| ellipticType | enum IDidDocumentDetailed.EllipticType | The elliptic curve algorithm for the verification method       |
+| notBefore    | uint256                                | Unix timestamp when the verification method becomes valid      |
+| notAfter     | uint256                                | Unix timestamp when the verification method expires            |
+| alsoKnownAs  | string                                 | Alternative identifier for the entity (e.g., irn:orgs:inetum)  |
+
+#### Return Values
+
+| Name    | Type | Description                                                     |
+| ------- | ---- | --------------------------------------------------------------- |
+| success | bool | Boolean indicating whether the insertion completed successfully |
+
 ### insertDidDocument
 
 ```solidity
-function insertDidDocument(string did, string baseDocument, string vMethodId, bytes publicKey, enum IDidDocumentDetailed.EllipticType ellipticType, uint256 notBefore, uint256 notAfter) external returns (bool success)
+function insertDidDocument(bytes32 did, string baseDocument, bytes32 vMethodId, bytes publicKey, enum IDidDocumentDetailed.EllipticType ellipticType, uint256 notBefore, uint256 notAfter) external returns (bool success)
 ```
 
 Inserts a new DID document with initial verification method into the registry
 
 _Creates a complete DID document with cryptographic verification capabilities
-and temporal validity constraints for secure identity management_
+and temporal validity constraints for secure identity management.
+Inherits alsoKnownAs from the first document. Can only be called by
+authorised controllers of the DID_
 
 #### Parameters
 
 | Name         | Type                                   | Description                                               |
 | ------------ | -------------------------------------- | --------------------------------------------------------- |
-| did          | string                                 | The decentralised identifier string to register           |
+| did          | bytes32                                | The decentralised identifier string to register           |
 | baseDocument | string                                 | The base JSON-LD document content containing DID metadata |
-| vMethodId    | string                                 | The unique identifier for the initial verification method |
+| vMethodId    | bytes32                                | The unique identifier for the initial verification method |
 | publicKey    | bytes                                  | The public key bytes for cryptographic verification       |
 | ellipticType | enum IDidDocumentDetailed.EllipticType | The elliptic curve algorithm for the verification method  |
 | notBefore    | uint256                                | Unix timestamp when the verification method becomes valid |
@@ -479,7 +626,7 @@ and temporal validity constraints for secure identity management_
 ### updateBaseDocument
 
 ```solidity
-function updateBaseDocument(string did, string baseDocument) external returns (bool success)
+function updateBaseDocument(bytes32 did, string baseDocument) external returns (bool success)
 ```
 
 Updates the base document content of an existing DID
@@ -489,10 +636,34 @@ and relationships. Requires appropriate authorisation to prevent unauthorised ch
 
 #### Parameters
 
-| Name         | Type   | Description                                                        |
-| ------------ | ------ | ------------------------------------------------------------------ |
-| did          | string | The decentralised identifier whose base document should be updated |
-| baseDocument | string | The new base JSON-LD document content to set                       |
+| Name         | Type    | Description                                                        |
+| ------------ | ------- | ------------------------------------------------------------------ |
+| did          | bytes32 | The decentralised identifier whose base document should be updated |
+| baseDocument | string  | The new base JSON-LD document content to set                       |
+
+#### Return Values
+
+| Name    | Type | Description                                                  |
+| ------- | ---- | ------------------------------------------------------------ |
+| success | bool | Boolean indicating whether the update completed successfully |
+
+### updateAlsoKnownAs
+
+```solidity
+function updateAlsoKnownAs(bytes32 did, string alsoKnownAs) external returns (bool success)
+```
+
+Updates the alsoKnownAs field of an existing DID
+
+_Modifies the alternative identifier whilst preserving all other document data.
+Only callable by accounts with ISBE role for security and governance_
+
+#### Parameters
+
+| Name        | Type    | Description                                                      |
+| ----------- | ------- | ---------------------------------------------------------------- |
+| did         | bytes32 | The decentralised identifier whose alsoKnownAs should be updated |
+| alsoKnownAs | string  | The new alternative identifier value to set                      |
 
 #### Return Values
 
@@ -503,7 +674,7 @@ and relationships. Requires appropriate authorisation to prevent unauthorised ch
 ### getDids
 
 ```solidity
-function getDids(uint256 page, uint256 pageSize) external view returns (string[] items, uint256 total, uint256 howMany, uint256 prev, uint256 next)
+function getDids(uint256 page, uint256 pageSize) external view returns (bytes32[] items, uint256 total, uint256 howMany, uint256 prev, uint256 next)
 ```
 
 Retrieves a paginated list of registered decentralised identifiers
@@ -520,45 +691,46 @@ support for large datasets and optimised gas usage_
 
 #### Return Values
 
-| Name    | Type     | Description                                            |
-| ------- | -------- | ------------------------------------------------------ |
-| items   | string[] | Array of DID strings for the requested page            |
-| total   | uint256  | Total number of DIDs registered in the entire registry |
-| howMany | uint256  | Actual number of DIDs returned in this response        |
-| prev    | uint256  | Previous page number (0 if on first page)              |
-| next    | uint256  | Next page number (0 if on last page)                   |
+| Name    | Type      | Description                                            |
+| ------- | --------- | ------------------------------------------------------ |
+| items   | bytes32[] | Array of DID strings for the requested page            |
+| total   | uint256   | Total number of DIDs registered in the entire registry |
+| howMany | uint256   | Actual number of DIDs returned in this response        |
+| prev    | uint256   | Previous page number (0 if on first page)              |
+| next    | uint256   | Next page number (0 if on last page)                   |
 
 ### getDidDocument
 
 ```solidity
-function getDidDocument(string did) external view returns (string baseDocument, string[] controllers, string[] vMethodIds, struct IDidDocumentDetailed.VMethod[] vMethods, struct IDidDocumentDetailed.VRelationship[] vRelationships)
+function getDidDocument(bytes32 did) external view returns (string baseDocument, string alsoKnownAs, bytes32[] controllers, bytes32[] vMethodIds, struct IDidDocumentDetailed.VMethod[] vMethods, struct IDidDocumentDetailed.VRelationship[] vRelationships)
 ```
 
 Retrieves the complete current DID document with all verification methods
 
-_Returns the full document structure including base content, controllers,
+_Returns the full document structure including base content, alsoKnownAs, controllers,
 verification methods, and relationships as they exist at the current timestamp_
 
 #### Parameters
 
-| Name | Type   | Description                              |
-| ---- | ------ | ---------------------------------------- |
-| did  | string | The decentralised identifier to retrieve |
+| Name | Type    | Description                              |
+| ---- | ------- | ---------------------------------------- |
+| did  | bytes32 | The decentralised identifier to retrieve |
 
 #### Return Values
 
 | Name           | Type                                        | Description                                                      |
 | -------------- | ------------------------------------------- | ---------------------------------------------------------------- |
 | baseDocument   | string                                      | The base JSON-LD document content                                |
-| controllers    | string[]                                    | Array of DID strings authorised to control this document         |
-| vMethodIds     | string[]                                    | Array of verification method identifiers                         |
+| alsoKnownAs    | string                                      | The alternative identifier for the entity                        |
+| controllers    | bytes32[]                                   | Array of DID strings authorised to control this document         |
+| vMethodIds     | bytes32[]                                   | Array of verification method identifiers                         |
 | vMethods       | struct IDidDocumentDetailed.VMethod[]       | Array of verification method structures with keys and algorithms |
 | vRelationships | struct IDidDocumentDetailed.VRelationship[] | Array of verification relationships with temporal validity       |
 
 ### getDidDocumentByTimestamp
 
 ```solidity
-function getDidDocumentByTimestamp(string did, uint256 timestamp) external view returns (string baseDocument, string[] controllers, string[] vMethodIds, struct IDidDocumentDetailed.VMethod[] vMethods, struct IDidDocumentDetailed.VRelationship[] vRelationships)
+function getDidDocumentByTimestamp(bytes32 did, uint256 timestamp) external view returns (string baseDocument, string alsoKnownAs, bytes32[] controllers, bytes32[] vMethodIds, struct IDidDocumentDetailed.VMethod[] vMethods, struct IDidDocumentDetailed.VRelationship[] vRelationships)
 ```
 
 Retrieves the DID document as it existed at a specific historical timestamp
@@ -570,7 +742,7 @@ verification methods and relationships that were valid at the specified time_
 
 | Name      | Type    | Description                                            |
 | --------- | ------- | ------------------------------------------------------ |
-| did       | string  | The decentralised identifier to retrieve               |
+| did       | bytes32 | The decentralised identifier to retrieve               |
 | timestamp | uint256 | Unix timestamp for historical document state retrieval |
 
 #### Return Values
@@ -578,10 +750,49 @@ verification methods and relationships that were valid at the specified time_
 | Name           | Type                                        | Description                                                 |
 | -------------- | ------------------------------------------- | ----------------------------------------------------------- |
 | baseDocument   | string                                      | The base JSON-LD document content at the specified time     |
-| controllers    | string[]                                    | Array of DID strings authorised to control this document    |
-| vMethodIds     | string[]                                    | Array of verification method identifiers valid at timestamp |
+| alsoKnownAs    | string                                      | The alternative identifier for the entity                   |
+| controllers    | bytes32[]                                   | Array of DID strings authorised to control this document    |
+| vMethodIds     | bytes32[]                                   | Array of verification method identifiers valid at timestamp |
 | vMethods       | struct IDidDocumentDetailed.VMethod[]       | Array of verification methods that were active at timestamp |
 | vRelationships | struct IDidDocumentDetailed.VRelationship[] | Array of relationships that were valid at timestamp         |
+
+---
+
+## IDidRegistryQuery
+
+Non-breaking extension surface intended for Diamond Facet composition.
+Provides single-call helpers to resolve an address' DID and check membership
+against a caller-supplied set of DID hashes.
+
+_This interface does NOT modify the original IDidRegistry. It is designed
+to be implemented by a dedicated facet that reads from the existing
+DidDocumentDetailed storage slot._
+
+### isKnownDid
+
+```solidity
+function isKnownDid(address account) external view returns (bool)
+```
+
+### didOf
+
+```solidity
+function didOf(address account) external view returns (bytes32 did)
+```
+
+Resolve the DID of an invocation address and return its did
+
+#### Parameters
+
+| Name    | Type    | Description                                                                     |
+| ------- | ------- | ------------------------------------------------------------------------------- |
+| account | address | EOA or contract address associated to a verification method in the DID Registry |
+
+#### Return Values
+
+| Name | Type    | Description                                   |
+| ---- | ------- | --------------------------------------------- |
+| did  | bytes32 | The DID string if found, otherwise bytes32(0) |
 
 ---
 
@@ -606,13 +817,13 @@ Arguments structure for rolling verification methods from old to new keys
 
 ```solidity
 struct RollArgs {
-  string did;
-  string vMethodId;
+  bytes32 did;
+  bytes32 vMethodId;
   bytes publicKey;
   enum IDidDocumentDetailed.EllipticType ellipticType;
   uint256 notBefore;
   uint256 notAfter;
-  string oldVMethodId;
+  bytes32 oldVMethodId;
   uint256 duration;
 }
 ```
@@ -620,7 +831,7 @@ struct RollArgs {
 ### VerificationMethodAdded
 
 ```solidity
-event VerificationMethodAdded(string did, string vMethodId, bytes publicKey, enum IDidDocumentDetailed.EllipticType ellipticType)
+event VerificationMethodAdded(bytes32 did, bytes32 vMethodId, bytes publicKey, enum IDidDocumentDetailed.EllipticType ellipticType)
 ```
 
 Emitted when a new verification method is successfully added to a DID document
@@ -629,15 +840,15 @@ Emitted when a new verification method is successfully added to a DID document
 
 | Name         | Type                                   | Description                                                        |
 | ------------ | -------------------------------------- | ------------------------------------------------------------------ |
-| did          | string                                 | The decentralised identifier receiving the new verification method |
-| vMethodId    | string                                 | The unique identifier assigned to the verification method          |
+| did          | bytes32                                | The decentralised identifier receiving the new verification method |
+| vMethodId    | bytes32                                | The unique identifier assigned to the verification method          |
 | publicKey    | bytes                                  | The public key bytes associated with the verification method       |
 | ellipticType | enum IDidDocumentDetailed.EllipticType | Cryptographic algorithm specification for signature verification   |
 
 ### VerificationMethodRevoked
 
 ```solidity
-event VerificationMethodRevoked(string did, string vMethodId, uint256 notAfter)
+event VerificationMethodRevoked(bytes32 did, bytes32 vMethodId, uint256 notAfter)
 ```
 
 Emitted when a verification method is revoked and permanently disabled
@@ -646,14 +857,14 @@ Emitted when a verification method is revoked and permanently disabled
 
 | Name      | Type    | Description                                                 |
 | --------- | ------- | ----------------------------------------------------------- |
-| did       | string  | The decentralised identifier losing the verification method |
-| vMethodId | string  | The identifier of the verification method being revoked     |
+| did       | bytes32 | The decentralised identifier losing the verification method |
+| vMethodId | bytes32 | The identifier of the verification method being revoked     |
 | notAfter  | uint256 | Unix timestamp when the revocation becomes effective        |
 
 ### VerificationMethodExpired
 
 ```solidity
-event VerificationMethodExpired(string did, string vMethodId, uint256 notAfter)
+event VerificationMethodExpired(bytes32 did, bytes32 vMethodId, uint256 notAfter)
 ```
 
 Emitted when a verification method reaches its expiration timestamp
@@ -662,14 +873,14 @@ Emitted when a verification method reaches its expiration timestamp
 
 | Name      | Type    | Description                                                        |
 | --------- | ------- | ------------------------------------------------------------------ |
-| did       | string  | The decentralised identifier with the expiring verification method |
-| vMethodId | string  | The identifier of the verification method expiring                 |
+| did       | bytes32 | The decentralised identifier with the expiring verification method |
+| vMethodId | bytes32 | The identifier of the verification method expiring                 |
 | notAfter  | uint256 | Unix timestamp when the method expires and becomes invalid         |
 
 ### VerificationMethodRolled
 
 ```solidity
-event VerificationMethodRolled(string did, string vMethodId, bytes publicKey, enum IDidDocumentDetailed.EllipticType ellipticType, uint256 notBefore, uint256 notAfter, string oldVMethodId, uint256 duration)
+event VerificationMethodRolled(bytes32 did, bytes32 vMethodId, bytes publicKey, enum IDidDocumentDetailed.EllipticType ellipticType, uint256 notBefore, uint256 notAfter, bytes32 oldVMethodId, uint256 duration)
 ```
 
 Emitted when a verification method is rolled over to a new cryptographic key
@@ -678,19 +889,19 @@ Emitted when a verification method is rolled over to a new cryptographic key
 
 | Name         | Type                                   | Description                                                          |
 | ------------ | -------------------------------------- | -------------------------------------------------------------------- |
-| did          | string                                 | The decentralised identifier undergoing verification method rollover |
-| vMethodId    | string                                 | The new verification method identifier being created                 |
+| did          | bytes32                                | The decentralised identifier undergoing verification method rollover |
+| vMethodId    | bytes32                                | The new verification method identifier being created                 |
 | publicKey    | bytes                                  | The new public key bytes for cryptographic verification              |
 | ellipticType | enum IDidDocumentDetailed.EllipticType | Cryptographic algorithm specification for signature verification     |
 | notBefore    | uint256                                | Unix timestamp when the new verification method becomes valid        |
 | notAfter     | uint256                                | Unix timestamp when the new verification method expires              |
-| oldVMethodId | string                                 | The identifier of the verification method being replaced             |
+| oldVMethodId | bytes32                                | The identifier of the verification method being replaced             |
 | duration     | uint256                                | The validity period in seconds for the new verification method       |
 
 ### VerificationMethodExists
 
 ```solidity
-error VerificationMethodExists(string did, string vMethodId)
+error VerificationMethodExists(bytes32 did, bytes32 vMethodId)
 ```
 
 Raised when attempting to add a verification method that already exists
@@ -700,15 +911,15 @@ to maintain document integrity and prevent conflicting method identifiers_
 
 #### Parameters
 
-| Name      | Type   | Description                                                              |
-| --------- | ------ | ------------------------------------------------------------------------ |
-| did       | string | The decentralised identifier containing the existing verification method |
-| vMethodId | string | The verification method identifier that already exists                   |
+| Name      | Type    | Description                                                              |
+| --------- | ------- | ------------------------------------------------------------------------ |
+| did       | bytes32 | The decentralised identifier containing the existing verification method |
+| vMethodId | bytes32 | The verification method identifier that already exists                   |
 
 ### VerificationMethodNotExists
 
 ```solidity
-error VerificationMethodNotExists(string did, string vMethodId)
+error VerificationMethodNotExists(bytes32 did, bytes32 vMethodId)
 ```
 
 Raised when attempting to operate on a non-existent verification method
@@ -718,10 +929,10 @@ documents and prevents unauthorised access attempts_
 
 #### Parameters
 
-| Name      | Type   | Description                                                              |
-| --------- | ------ | ------------------------------------------------------------------------ |
-| did       | string | The decentralised identifier that should contain the verification method |
-| vMethodId | string | The verification method identifier that does not exist                   |
+| Name      | Type    | Description                                                              |
+| --------- | ------- | ------------------------------------------------------------------------ |
+| did       | bytes32 | The decentralised identifier that should contain the verification method |
+| vMethodId | bytes32 | The verification method identifier that does not exist                   |
 
 ### PublicKeyAlreadyInUse
 
@@ -751,10 +962,28 @@ Raised when the notAfter timestamp is invalid for the requested operation
 _This error ensures temporal validity constraints are met for verification
 method lifecycle operations such as expiration, revocation, or rollover_
 
+### NewVMethodMustMatchNetworkEllipticType
+
+```solidity
+error NewVMethodMustMatchNetworkEllipticType(bytes32 vMethodId)
+```
+
+Raised when rolling a verification method with capabilityInvocation
+to a different elliptic type than the network
+
+_This error prevents incomplete key rotation where the capabilityInvocation
+relationship cannot be created due to elliptic type mismatch with network_
+
+#### Parameters
+
+| Name      | Type    | Description                                          |
+| --------- | ------- | ---------------------------------------------------- |
+| vMethodId | bytes32 | The new verification method identifier being created |
+
 ### addVerificationMethod
 
 ```solidity
-function addVerificationMethod(string did, string vMethodId, bytes publicKey, enum IDidDocumentDetailed.EllipticType ellipticType) external returns (bool success)
+function addVerificationMethod(bytes32 did, bytes32 vMethodId, bytes publicKey, enum IDidDocumentDetailed.EllipticType ellipticType) external returns (bool success)
 ```
 
 Adds a new verification method to the specified decentralised identifier
@@ -766,8 +995,8 @@ and associates it with the DID document for authentication purposes_
 
 | Name         | Type                                   | Description                                                      |
 | ------------ | -------------------------------------- | ---------------------------------------------------------------- |
-| did          | string                                 | The decentralised identifier to receive the verification method  |
-| vMethodId    | string                                 | The unique identifier for the new verification method            |
+| did          | bytes32                                | The decentralised identifier to receive the verification method  |
+| vMethodId    | bytes32                                | The unique identifier for the new verification method            |
 | publicKey    | bytes                                  | The public key bytes for cryptographic verification operations   |
 | ellipticType | enum IDidDocumentDetailed.EllipticType | Cryptographic algorithm specification for signature verification |
 
@@ -780,7 +1009,7 @@ and associates it with the DID document for authentication purposes_
 ### revokeVerificationMethod
 
 ```solidity
-function revokeVerificationMethod(string did, string vMethodId, uint256 notAfter) external returns (bool success)
+function revokeVerificationMethod(bytes32 did, bytes32 vMethodId, uint256 notAfter) external returns (bool success)
 ```
 
 Revokes an existing verification method from the specified DID document
@@ -792,8 +1021,8 @@ preventing any future use for authentication or authorisation purposes_
 
 | Name      | Type    | Description                                                 |
 | --------- | ------- | ----------------------------------------------------------- |
-| did       | string  | The decentralised identifier losing the verification method |
-| vMethodId | string  | The identifier of the verification method to revoke         |
+| did       | bytes32 | The decentralised identifier losing the verification method |
+| vMethodId | bytes32 | The identifier of the verification method to revoke         |
 | notAfter  | uint256 | Unix timestamp when the revocation becomes effective        |
 
 #### Return Values
@@ -805,7 +1034,7 @@ preventing any future use for authentication or authorisation purposes_
 ### expireVerificationMethod
 
 ```solidity
-function expireVerificationMethod(string did, string vMethodId, uint256 notAfter) external returns (bool success)
+function expireVerificationMethod(bytes32 did, bytes32 vMethodId, uint256 notAfter) external returns (bool success)
 ```
 
 Sets an expiration timestamp for a verification method
@@ -817,8 +1046,8 @@ timestamp, allowing for planned key rotation and temporal access control_
 
 | Name      | Type    | Description                                                        |
 | --------- | ------- | ------------------------------------------------------------------ |
-| did       | string  | The decentralised identifier with the expiring verification method |
-| vMethodId | string  | The identifier of the verification method to expire                |
+| did       | bytes32 | The decentralised identifier with the expiring verification method |
+| vMethodId | bytes32 | The identifier of the verification method to expire                |
 | notAfter  | uint256 | Unix timestamp when the method should expire and become invalid    |
 
 #### Return Values
@@ -870,7 +1099,7 @@ Structure representing a DID with its validity period
 
 ```solidity
 struct DidWithPeriod {
-    string did;
+    bytes32 did;
     uint256 notBefore;
     uint256 notAfter;
 }
@@ -879,7 +1108,7 @@ struct DidWithPeriod {
 ### VerificationRelationshipAdded
 
 ```solidity
-event VerificationRelationshipAdded(string did, string name, string vMethodId, uint256 notBefore, uint256 notAfter)
+event VerificationRelationshipAdded(bytes32 did, string name, bytes32 vMethodId, uint256 notBefore, uint256 notAfter)
 ```
 
 Emitted when a new verification relationship is established
@@ -888,16 +1117,34 @@ Emitted when a new verification relationship is established
 
 | Name      | Type    | Description                                               |
 | --------- | ------- | --------------------------------------------------------- |
-| did       | string  | The decentralised identifier involved in the relationship |
+| did       | bytes32 | The decentralised identifier involved in the relationship |
 | name      | string  | The name of the verification relationship type            |
-| vMethodId | string  | The verification method identifier being linked           |
+| vMethodId | bytes32 | The verification method identifier being linked           |
 | notBefore | uint256 | Unix timestamp when the relationship becomes valid        |
 | notAfter  | uint256 | Unix timestamp when the relationship expires              |
+
+### VerificationMethodIsRevoked
+
+```solidity
+error VerificationMethodIsRevoked(bytes32 did, bytes32 vMethodId)
+```
+
+Raised when attempting to create a verification relationship with a revoked method
+
+_This error prevents operations on revoked verification methods to maintain
+security and prevent use of compromised or invalidated cryptographic keys_
+
+#### Parameters
+
+| Name      | Type    | Description                                                             |
+| --------- | ------- | ----------------------------------------------------------------------- |
+| did       | bytes32 | The decentralised identifier containing the revoked verification method |
+| vMethodId | bytes32 | The verification method identifier that has been revoked                |
 
 ### addVerificationRelationship
 
 ```solidity
-function addVerificationRelationship(string did, string name, string vMethodId, uint256 notBefore, uint256 notAfter) external returns (bool success)
+function addVerificationRelationship(bytes32 did, string name, bytes32 vMethodId, uint256 notBefore, uint256 notAfter) external returns (bool success)
 ```
 
 Establishes a new verification relationship between a DID and verification method
@@ -908,9 +1155,9 @@ _Creates a temporal link with specified validity period_
 
 | Name      | Type    | Description                                                    |
 | --------- | ------- | -------------------------------------------------------------- |
-| did       | string  | The decentralised identifier to establish the relationship for |
+| did       | bytes32 | The decentralised identifier to establish the relationship for |
 | name      | string  | The type of verification relationship (e.g., "authentication") |
-| vMethodId | string  | The verification method identifier to link with                |
+| vMethodId | bytes32 | The verification method identifier to link with                |
 | notBefore | uint256 | Unix timestamp when the relationship becomes active            |
 | notAfter  | uint256 | Unix timestamp when the relationship expires                   |
 
@@ -923,7 +1170,7 @@ _Creates a temporal link with specified validity period_
 ### getDidsByVerificationRelationship
 
 ```solidity
-function getDidsByVerificationRelationship(string vMethodId, string name, uint256 page, uint256 pageSize) external view returns (struct IDidVerificationRelationship.DidWithPeriod[] items, uint256 total, uint256 howMany, uint256 prev, uint256 next)
+function getDidsByVerificationRelationship(bytes32 vMethodId, string name, uint256 page, uint256 pageSize) external view returns (struct IDidVerificationRelationship.DidWithPeriod[] items, uint256 total, uint256 howMany, uint256 prev, uint256 next)
 ```
 
 Retrieves paginated list of DIDs associated with a verification relationship
@@ -934,7 +1181,7 @@ _Returns DIDs that have the specified verification method and relationship type_
 
 | Name      | Type    | Description                                     |
 | --------- | ------- | ----------------------------------------------- |
-| vMethodId | string  | The verification method identifier to query for |
+| vMethodId | bytes32 | The verification method identifier to query for |
 | name      | string  | The verification relationship name to filter by |
 | page      | uint256 | The page number to retrieve (zero-based)        |
 | pageSize  | uint256 | The maximum number of items per page            |

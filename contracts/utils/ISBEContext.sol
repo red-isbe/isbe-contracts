@@ -87,6 +87,10 @@ abstract contract ISBEContext is Context {
         return msg.sig;
     }
 
+    function _blockChainId() internal view virtual returns (uint256) {
+        return block.chainid;
+    }
+
     /**
      * @notice Checks that a given address is not the zero address.
      * @dev Reverts with `AddressZero` error if the condition is not met.
@@ -94,7 +98,7 @@ abstract contract ISBEContext is Context {
      * @param _addr The address to check.
      */
     function _checkAddressIsNotZero(address _addr) internal pure {
-        require(_addr != address(0), AddressZero(_addr));
+        require(_isNotEmptyAddress(_addr), AddressZero(_addr));
     }
 
     /**
@@ -103,7 +107,7 @@ abstract contract ISBEContext is Context {
      * @param _hash The `bytes32` value to check.
      */
     function _checkBytes32IsNotZero(bytes32 _hash) internal pure {
-        require(_hash != bytes32(0), EmptyBytes32());
+        require(_isNotEmptyBytes32(_hash), EmptyBytes32());
     }
 
     /**
@@ -192,5 +196,17 @@ abstract contract ISBEContext is Context {
         string memory _string
     ) internal pure returns (bool) {
         return abi.encodePacked(_string).length == 0;
+    }
+
+    function _isNotEmptyBytes32(bytes32 _hash) internal pure returns (bool) {
+        return _hash != bytes32(0);
+    }
+
+    function _isNotEmptyAddress(address _addr) internal pure returns (bool) {
+        return _addr != address(0);
+    }
+
+    function _isNotEmptySignature(bytes4 _sig) internal pure returns (bool) {
+        return _sig != bytes4(0);
     }
 }

@@ -290,7 +290,6 @@ describe('ERC3643 Token', function () {
     // FREEZE MODULE
     // ====================================================================
     describe('ERC3643 Freeze', () => {
-        let charlie: Signer
         let bobAddress: string
         let charlieAddress: string
         let erc3643Capped: IERC203643Capped
@@ -299,13 +298,9 @@ describe('ERC3643 Token', function () {
                 await accessControlFacet
                     .connect(owner)
                     .grantRole(FREEZE_ROLE, ownerAddress)
-                let bob: Signer
-
                 const signers = await ethers.getSigners()
-                bob = signers[2] as unknown as Signer
-                charlie = signers[3] as unknown as Signer
+                const bob: Signer = signers[2] as unknown as Signer
                 bobAddress = await bob.getAddress()
-                charlieAddress = await charlie.getAddress()
             }
             await loadFixture(fixture)
         })
@@ -2365,20 +2360,10 @@ describe('ERC3643 Token', function () {
                         let complianceDMLimFacet: ERC3643ComplianceDMLimFacet
                         let erc3643Capped: IERC203643Capped
                         let erc3643Controller: IERC203643Controller
-                        let bob: Signer
-                        let bobAddress: string
-                        let charlie: Signer
-                        let charlieAddress: string
                         const dailyLimit = 1000n
                         const monthlyLimit = 5000n
 
                         beforeEach(async () => {
-                            const signers = await ethers.getSigners()
-                            bob = signers[2] as unknown as Signer
-                            bobAddress = await bob.getAddress()
-                            charlie = signers[3] as unknown as Signer
-                            charlieAddress = await charlie.getAddress()
-
                             // Grant necessary roles
                             await accessControlFacet
                                 .connect(owner)
@@ -6077,7 +6062,6 @@ describe('ERC3643 Token', function () {
                 await accessControlFacet
                     .connect(owner)
                     .grantRole(MINTER_ROLE, aliceAddress)
-             
 
                 // Initialize ERC20
                 await erc20Facet
@@ -6663,7 +6647,6 @@ describe('ERC3643 Token', function () {
                 await accessControlFacet
                     .connect(owner)
                     .grantRole(PAUSER_ROLE, ownerAddress)
-       
 
                 // Initialize ERC20
                 await erc20Facet
@@ -6963,69 +6946,68 @@ describe('ERC3643 Token', function () {
             })
         })
 
-            // ----------------------------------------------------------------
-            // whenNotPaused modifier
-            // ----------------------------------------------------------------
-            describe('whenNotPaused modifier', () => {
-                beforeEach(async () => {
-                    const fixture = async () => {
-                        // Initialize MaxBalance
-                        await maxBalanceFacet
-                            .connect(owner)
-                            .initializeERC3643ComplianceMaxBalance(5000n)
-                        
-                    }
-                    await loadFixture(fixture)
-                })
-
-                it('GIVEN contract is paused WHEN setMaxBalance THEN reverts', async () => {
-                    // Pause the contract
-                    await pauseFacet.connect(owner).pause()
-
-                    await expect(
-                        maxBalanceFacet.connect(owner).setMaxBalance(10000n)
-                    ).to.be.reverted
-                })
-
-                it('GIVEN contract is not paused WHEN setMaxBalance THEN succeeds', async () => {
-                    const newMaxBalance = 10000n
-
-                    await expect(
-                        maxBalanceFacet.connect(owner).setMaxBalance(newMaxBalance)
-                    )
-                        .to.emit(maxBalanceFacet, 'MaxBalanceSet')
-                        .withArgs(newMaxBalance)
-
-                    expect(await maxBalanceFacet.maxBalance()).to.equal(
-                        newMaxBalance
-                    )
-                })
-
-                it('GIVEN contract was paused and unpaused WHEN setMaxBalance THEN succeeds', async () => {
-                    // Pause
-                    await pauseFacet.connect(owner).pause()
-
-                    // Verify it reverts while paused
-                    await expect(
-                        maxBalanceFacet.connect(owner).setMaxBalance(10000n)
-                    ).to.be.reverted
-
-                    // Unpause
-                    await pauseFacet.connect(owner).unpause()
-
-                    // Now it should succeed
-                    const newMaxBalance = 15000n
-                    await expect(
-                        maxBalanceFacet.connect(owner).setMaxBalance(newMaxBalance)
-                    )
-                        .to.emit(maxBalanceFacet, 'MaxBalanceSet')
-                        .withArgs(newMaxBalance)
-
-                    expect(await maxBalanceFacet.maxBalance()).to.equal(
-                        newMaxBalance
-                    )
-                })
+        // ----------------------------------------------------------------
+        // whenNotPaused modifier
+        // ----------------------------------------------------------------
+        describe('whenNotPaused modifier', () => {
+            beforeEach(async () => {
+                const fixture = async () => {
+                    // Initialize MaxBalance
+                    await maxBalanceFacet
+                        .connect(owner)
+                        .initializeERC3643ComplianceMaxBalance(5000n)
+                }
+                await loadFixture(fixture)
             })
+
+            it('GIVEN contract is paused WHEN setMaxBalance THEN reverts', async () => {
+                // Pause the contract
+                await pauseFacet.connect(owner).pause()
+
+                await expect(
+                    maxBalanceFacet.connect(owner).setMaxBalance(10000n)
+                ).to.be.reverted
+            })
+
+            it('GIVEN contract is not paused WHEN setMaxBalance THEN succeeds', async () => {
+                const newMaxBalance = 10000n
+
+                await expect(
+                    maxBalanceFacet.connect(owner).setMaxBalance(newMaxBalance)
+                )
+                    .to.emit(maxBalanceFacet, 'MaxBalanceSet')
+                    .withArgs(newMaxBalance)
+
+                expect(await maxBalanceFacet.maxBalance()).to.equal(
+                    newMaxBalance
+                )
+            })
+
+            it('GIVEN contract was paused and unpaused WHEN setMaxBalance THEN succeeds', async () => {
+                // Pause
+                await pauseFacet.connect(owner).pause()
+
+                // Verify it reverts while paused
+                await expect(
+                    maxBalanceFacet.connect(owner).setMaxBalance(10000n)
+                ).to.be.reverted
+
+                // Unpause
+                await pauseFacet.connect(owner).unpause()
+
+                // Now it should succeed
+                const newMaxBalance = 15000n
+                await expect(
+                    maxBalanceFacet.connect(owner).setMaxBalance(newMaxBalance)
+                )
+                    .to.emit(maxBalanceFacet, 'MaxBalanceSet')
+                    .withArgs(newMaxBalance)
+
+                expect(await maxBalanceFacet.maxBalance()).to.equal(
+                    newMaxBalance
+                )
+            })
+        })
 
         // ----------------------------------------------------------------
         // Complex Scenarios
@@ -7397,144 +7379,144 @@ describe('ERC3643 Token', function () {
             })
         })
 
-            // ----------------------------------------------------------------
-            // whenNotPaused modifier
-            // ----------------------------------------------------------------
-            describe('whenNotPaused modifier', () => {
-                beforeEach(async () => {
-                    const fixture = async () => {
-                        // Initialize DayMonthLimits
-                        await complianceDMLimFacet
+        // ----------------------------------------------------------------
+        // whenNotPaused modifier
+        // ----------------------------------------------------------------
+        describe('whenNotPaused modifier', () => {
+            beforeEach(async () => {
+                const fixture = async () => {
+                    // Initialize DayMonthLimits
+                    await complianceDMLimFacet
+                        .connect(owner)
+                        .initializeERC3643ComplianceDMLim(1000n, 5000n)
+                }
+                await loadFixture(fixture)
+            })
+
+            describe('setDailyLimit', () => {
+                it('GIVEN contract is paused WHEN setDailyLimit THEN reverts', async () => {
+                    // Pause the contract
+                    await pauseFacet.connect(owner).pause()
+
+                    await expect(
+                        complianceDMLimFacet.connect(owner).setDailyLimit(2000n)
+                    ).to.be.reverted
+                })
+
+                it('GIVEN contract is not paused WHEN setDailyLimit THEN succeeds', async () => {
+                    const newDailyLimit = 2000n
+
+                    await expect(
+                        complianceDMLimFacet
                             .connect(owner)
-                            .initializeERC3643ComplianceDMLim(1000n, 5000n)
-                    }
-                    await loadFixture(fixture)
+                            .setDailyLimit(newDailyLimit)
+                    )
+                        .to.emit(complianceDMLimFacet, 'DayMonthLimitsSet')
+                        .withArgs(
+                            newDailyLimit,
+                            await complianceDMLimFacet.monthlyLimit()
+                        )
+
+                    expect(await complianceDMLimFacet.dailyLimit()).to.equal(
+                        newDailyLimit
+                    )
                 })
 
-                describe('setDailyLimit', () => {
-                    it('GIVEN contract is paused WHEN setDailyLimit THEN reverts', async () => {
-                        // Pause the contract
-                        await pauseFacet.connect(owner).pause()
+                it('GIVEN contract was paused and unpaused WHEN setDailyLimit THEN succeeds', async () => {
+                    // Pause
+                    await pauseFacet.connect(owner).pause()
 
-                        await expect(
-                            complianceDMLimFacet.connect(owner).setDailyLimit(2000n)
-                        ).to.be.reverted
-                    })
+                    // Verify it reverts while paused
+                    await expect(
+                        complianceDMLimFacet.connect(owner).setDailyLimit(2000n)
+                    ).to.be.reverted
 
-                    it('GIVEN contract is not paused WHEN setDailyLimit THEN succeeds', async () => {
-                        const newDailyLimit = 2000n
+                    // Unpause
+                    await pauseFacet.connect(owner).unpause()
 
-                        await expect(
-                            complianceDMLimFacet
-                                .connect(owner)
-                                .setDailyLimit(newDailyLimit)
+                    // Now it should succeed
+                    const newDailyLimit = 3000n
+                    await expect(
+                        complianceDMLimFacet
+                            .connect(owner)
+                            .setDailyLimit(newDailyLimit)
+                    )
+                        .to.emit(complianceDMLimFacet, 'DayMonthLimitsSet')
+                        .withArgs(
+                            newDailyLimit,
+                            await complianceDMLimFacet.monthlyLimit()
                         )
-                            .to.emit(complianceDMLimFacet, 'DayMonthLimitsSet')
-                            .withArgs(
-                                newDailyLimit,
-                                await complianceDMLimFacet.monthlyLimit()
-                            )
 
-                        expect(await complianceDMLimFacet.dailyLimit()).to.equal(
-                            newDailyLimit
-                        )
-                    })
-
-                    it('GIVEN contract was paused and unpaused WHEN setDailyLimit THEN succeeds', async () => {
-                        // Pause
-                        await pauseFacet.connect(owner).pause()
-
-                        // Verify it reverts while paused
-                        await expect(
-                            complianceDMLimFacet.connect(owner).setDailyLimit(2000n)
-                        ).to.be.reverted
-
-                        // Unpause
-                        await pauseFacet.connect(owner).unpause()
-
-                        // Now it should succeed
-                        const newDailyLimit = 3000n
-                        await expect(
-                            complianceDMLimFacet
-                                .connect(owner)
-                                .setDailyLimit(newDailyLimit)
-                        )
-                            .to.emit(complianceDMLimFacet, 'DayMonthLimitsSet')
-                            .withArgs(
-                                newDailyLimit,
-                                await complianceDMLimFacet.monthlyLimit()
-                            )
-
-                        expect(await complianceDMLimFacet.dailyLimit()).to.equal(
-                            newDailyLimit
-                        )
-                    })
-                })
-
-                describe('setMonthlyLimit', () => {
-                    it('GIVEN contract is paused WHEN setMonthlyLimit THEN reverts', async () => {
-                        // Pause the contract
-                        await pauseFacet.connect(owner).pause()
-
-                        await expect(
-                            complianceDMLimFacet
-                                .connect(owner)
-                                .setMonthlyLimit(10000n)
-                        ).to.be.reverted
-                    })
-
-                    it('GIVEN contract is not paused WHEN setMonthlyLimit THEN succeeds', async () => {
-                        const newMonthlyLimit = 10000n
-
-                        await expect(
-                            complianceDMLimFacet
-                                .connect(owner)
-                                .setMonthlyLimit(newMonthlyLimit)
-                        )
-                            .to.emit(complianceDMLimFacet, 'DayMonthLimitsSet')
-                            .withArgs(
-                                await complianceDMLimFacet.dailyLimit(),
-                                newMonthlyLimit
-                            )
-
-                        expect(await complianceDMLimFacet.monthlyLimit()).to.equal(
-                            newMonthlyLimit
-                        )
-                    })
-
-                    it('GIVEN contract was paused and unpaused WHEN setMonthlyLimit THEN succeeds', async () => {
-                        // Pause
-                        await pauseFacet.connect(owner).pause()
-
-                        // Verify it reverts while paused
-                        await expect(
-                            complianceDMLimFacet
-                                .connect(owner)
-                                .setMonthlyLimit(10000n)
-                        ).to.be.reverted
-
-                        // Unpause
-                        await pauseFacet.connect(owner).unpause()
-
-                        // Now it should succeed
-                        const newMonthlyLimit = 15000n
-                        await expect(
-                            complianceDMLimFacet
-                                .connect(owner)
-                                .setMonthlyLimit(newMonthlyLimit)
-                        )
-                            .to.emit(complianceDMLimFacet, 'DayMonthLimitsSet')
-                            .withArgs(
-                                await complianceDMLimFacet.dailyLimit(),
-                                newMonthlyLimit
-                            )
-
-                        expect(await complianceDMLimFacet.monthlyLimit()).to.equal(
-                            newMonthlyLimit
-                        )
-                    })
+                    expect(await complianceDMLimFacet.dailyLimit()).to.equal(
+                        newDailyLimit
+                    )
                 })
             })
+
+            describe('setMonthlyLimit', () => {
+                it('GIVEN contract is paused WHEN setMonthlyLimit THEN reverts', async () => {
+                    // Pause the contract
+                    await pauseFacet.connect(owner).pause()
+
+                    await expect(
+                        complianceDMLimFacet
+                            .connect(owner)
+                            .setMonthlyLimit(10000n)
+                    ).to.be.reverted
+                })
+
+                it('GIVEN contract is not paused WHEN setMonthlyLimit THEN succeeds', async () => {
+                    const newMonthlyLimit = 10000n
+
+                    await expect(
+                        complianceDMLimFacet
+                            .connect(owner)
+                            .setMonthlyLimit(newMonthlyLimit)
+                    )
+                        .to.emit(complianceDMLimFacet, 'DayMonthLimitsSet')
+                        .withArgs(
+                            await complianceDMLimFacet.dailyLimit(),
+                            newMonthlyLimit
+                        )
+
+                    expect(await complianceDMLimFacet.monthlyLimit()).to.equal(
+                        newMonthlyLimit
+                    )
+                })
+
+                it('GIVEN contract was paused and unpaused WHEN setMonthlyLimit THEN succeeds', async () => {
+                    // Pause
+                    await pauseFacet.connect(owner).pause()
+
+                    // Verify it reverts while paused
+                    await expect(
+                        complianceDMLimFacet
+                            .connect(owner)
+                            .setMonthlyLimit(10000n)
+                    ).to.be.reverted
+
+                    // Unpause
+                    await pauseFacet.connect(owner).unpause()
+
+                    // Now it should succeed
+                    const newMonthlyLimit = 15000n
+                    await expect(
+                        complianceDMLimFacet
+                            .connect(owner)
+                            .setMonthlyLimit(newMonthlyLimit)
+                    )
+                        .to.emit(complianceDMLimFacet, 'DayMonthLimitsSet')
+                        .withArgs(
+                            await complianceDMLimFacet.dailyLimit(),
+                            newMonthlyLimit
+                        )
+
+                    expect(await complianceDMLimFacet.monthlyLimit()).to.equal(
+                        newMonthlyLimit
+                    )
+                })
+            })
+        })
 
         // ----------------------------------------------------------------
         // Getters

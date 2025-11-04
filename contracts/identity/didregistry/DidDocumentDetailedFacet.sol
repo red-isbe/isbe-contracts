@@ -42,11 +42,13 @@ contract DidDocumentDetailedFacet is
         override
         returns (bytes4[] memory selectors_)
     {
-        uint256 selectorsLength = 6;
+        uint256 selectorsLength = 8;
         selectors_ = new bytes4[](selectorsLength);
         selectors_[--selectorsLength] = this.initializeDiDRegistry.selector;
+        selectors_[--selectorsLength] = this.insertFirstDidDocument.selector;
         selectors_[--selectorsLength] = this.insertDidDocument.selector;
         selectors_[--selectorsLength] = this.updateBaseDocument.selector;
+        selectors_[--selectorsLength] = this.updateAlsoKnownAs.selector;
         selectors_[--selectorsLength] = this.getDids.selector;
         selectors_[--selectorsLength] = this.getDidDocument.selector;
         selectors_[--selectorsLength] = this.getDidDocumentByTimestamp.selector;

@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
-import { Signer, ZeroAddress } from 'ethers'
+import { Signer, ZeroAddress, HDNodeWallet } from 'ethers'
 import {
     ERC721Capped,
     ERC721TestWrapper,
@@ -13,8 +13,10 @@ import {
     ERC721Enumerable,
     ERC721Royalty,
     ERC721Consecutive,
+    IAccessControlDid,
+    IDidRegistry__factory,
 } from '../typechain-types'
-import { CONFIGURATION_ID_ERC721, deployGovernance } from './initialization'
+import { deployGovernance } from './fixtures/governance'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import {
     CAP_ROLE,
@@ -23,7 +25,11 @@ import {
     SNAPSHOT_ROLE,
     CONTROLLER_ROLE,
     ROYALTY_ROLE,
-} from './constants'
+    CONFIGURATION_ID_ERC721,
+    DID_REGISTRY_ROLE,
+} from '../utils/constants'
+import { EllipticType } from './types/identity'
+import { config } from 'hardhat'
 
 describe('ERC721', function () {
     const name = 'ISBE NFT'
@@ -39,43 +45,72 @@ describe('ERC721', function () {
     let erc721Royalty: ERC721Royalty
     let erc721Consecutive: ERC721Consecutive
     let erc20Address: string
-    let owner: Signer
     let ownerAddress: string
     let other: Signer
     let otherAddress: string
-    let third: Signer
     let thirdAddress: string
     let accessControl: AccessControl
     let pause: ISBEPause
 
-    async function deployInitial() {
-        ;[owner, other, third] = await ethers.getSigners()
-        ownerAddress = await owner.getAddress()
-        otherAddress = await other.getAddress()
-        thirdAddress = await third.getAddress()
+    async function deployFixture() {
+        const [ownerSigner, otherSigner, thirdSigner] =
+            await ethers.getSigners()
+        const ownerAddress = await ownerSigner.getAddress()
+        const otherAddress = await otherSigner.getAddress()
+        const thirdAddress = await thirdSigner.getAddress()
 
         const result = await deployGovernance(
-            owner,
-            undefined,
+            ownerSigner,
+            [],
             CONFIGURATION_ID_ERC721
         )
 
-        erc721 = result.erc721
-        erc721TestWrapper = result.erc721TestWrapper
-        erc721Capped = result.erc721Capped
-        erc721Snapshot = result.erc721Snapshot
-        erc721Burn = result.erc721Burn
-        erc721Controller = result.erc721Controller
-        erc721Enumerable = result.erc721Enumerable
-        erc721Royalty = result.erc721Royalty
-        erc721Consecutive = result.erc721Consecutive
-        erc20Address = await result.erc721Facet.getAddress()
-        accessControl = result.accessControl
-        pause = result.pause
+        if (!result.erc721) {
+            throw new Error(
+                'ERC721 deployment failed - result.erc721 is undefined'
+            )
+        }
+
+        return {
+            owner: ownerSigner,
+            other: otherSigner,
+            third: thirdSigner,
+            ownerAddress,
+            otherAddress,
+            thirdAddress,
+            erc721: result.erc721,
+            erc721TestWrapper: result.erc721TestWrapper,
+            erc721Capped: result.erc721Capped,
+            erc721Snapshot: result.erc721Snapshot,
+            erc721Burn: result.erc721Burn,
+            erc721Controller: result.erc721Controller,
+            erc721Enumerable: result.erc721Enumerable,
+            erc721Royalty: result.erc721Royalty,
+            erc721Consecutive: result.erc721Consecutive,
+            erc20Address: await result.erc721.getAddress(),
+            accessControl: result.accessControl,
+            pause: result.pause,
+        }
     }
 
     beforeEach(async () => {
-        await loadFixture(deployInitial)
+        const contracts = await loadFixture(deployFixture)
+        other = contracts.other
+        ownerAddress = contracts.ownerAddress
+        otherAddress = contracts.otherAddress
+        thirdAddress = contracts.thirdAddress
+        erc721 = contracts.erc721
+        erc721TestWrapper = contracts.erc721TestWrapper
+        erc721Capped = contracts.erc721Capped
+        erc721Snapshot = contracts.erc721Snapshot
+        erc721Burn = contracts.erc721Burn
+        erc721Controller = contracts.erc721Controller
+        erc721Enumerable = contracts.erc721Enumerable
+        erc721Royalty = contracts.erc721Royalty
+        erc721Consecutive = contracts.erc721Consecutive
+        erc20Address = contracts.erc20Address
+        accessControl = contracts.accessControl
+        pause = contracts.pause
     })
 
     describe('Deployment', () => {
@@ -1334,6 +1369,293 @@ describe('ERC721', function () {
             await expect(
                 erc721Consecutive.mintConsecutive(ownerAddress, 2)
             ).to.be.revertedWithCustomError(erc721Consecutive, 'IsPaused')
+        })
+    })
+
+    describe('Mixed DID and Address Role Access', function () {
+        let didWallet: HDNodeWallet
+        let did: string
+        let addressAccount: Signer
+        let addressAccountAddress: string
+        let useCaseAccessControlDid: IAccessControlDid
+        let erc721Mixed: ERC721
+        let erc721CappedMixed: ERC721Capped
+        let erc721RoyaltyMixed: ERC721Royalty
+        let accessControlMixed: AccessControl
+
+        function walletOfFirstSigner(): HDNodeWallet {
+            const mnemonic = (
+                config.networks.hardhat.accounts as {
+                    mnemonic: string
+                    path: string
+                }
+            ).mnemonic
+            return ethers.Wallet.fromPhrase(mnemonic)
+        }
+
+        async function deployMixedFixture() {
+            const [admin, addressAcc] = await ethers.getSigners()
+            const adminAddr = await admin.getAddress()
+            const addressAccAddr = await addressAcc.getAddress()
+
+            // Create test wallet and DID
+            const baseWallet = walletOfFirstSigner()
+            const wallet = baseWallet.derivePath('303')
+            const didId = ethers.id('did:erc721:test:1')
+
+            // Deploy ERC721 use case
+            const govResult = await deployGovernance(
+                admin,
+                [],
+                CONFIGURATION_ID_ERC721
+            )
+
+            // Initialize ERC721
+            await govResult.erc721!.initializeErc721(name, symbol)
+            await govResult.erc721Capped!.initializeCap(1000)
+
+            // Grant DID registry role
+            await govResult.accessControlGovernance!.grantRole(
+                DID_REGISTRY_ROLE,
+                adminAddr
+            )
+
+            // Initialize DID registry
+            const governanceAddress =
+                await govResult.accessControlGovernance!.getAddress()
+            const didRegistryWithSigner = IDidRegistry__factory.connect(
+                governanceAddress,
+                admin
+            )
+            await didRegistryWithSigner.initializeDiDRegistry(
+                EllipticType.SECP_256_K1
+            )
+
+            // Insert DID document
+            const notBefore = Math.floor(Date.now() / 1000)
+            const notAfter = notBefore + 365 * 24 * 60 * 60
+
+            const publicKey = wallet.signingKey.publicKey
+            const vMethodId = ethers.id(`vmethod:${didId}`)
+            const message = ethers.keccak256(
+                ethers.solidityPacked(['bytes'], [publicKey])
+            )
+            const signature = wallet.signingKey.sign(message)
+            const proof = ethers.Signature.from(signature).serialized
+
+            await didRegistryWithSigner.insertFirstDidDocument(
+                didId,
+                `document:${didId}`,
+                vMethodId,
+                proof,
+                publicKey,
+                EllipticType.SECP_256_K1,
+                notBefore,
+                notAfter,
+                ''
+            )
+
+            // Set mock timestamp to valid period
+            const mockTimestampWithSigner =
+                govResult.mockTimestamp.connect(admin)
+            await mockTimestampWithSigner.setMockedTimestamp(notBefore + 1)
+
+            // Get AccessControlDid interface for use case
+            const AccessControlDidFactory = await ethers.getContractFactory(
+                'AccessControlDidFacet'
+            )
+            const useCaseAccessControlDid = AccessControlDidFactory.attach(
+                await govResult.accessControl.getAddress()
+            ) as IAccessControlDid
+
+            // Grant MINTER_ROLE to address
+            await govResult.accessControl.grantRole(MINTER_ROLE, addressAccAddr)
+
+            // Grant MINTER_ROLE to DID
+            await govResult.accessControl.grantRole(MINTER_ROLE, adminAddr)
+            await useCaseAccessControlDid.grantDidRole(MINTER_ROLE, didId)
+
+            // Grant CAP_ROLE to DID
+            await govResult.accessControl.grantRole(CAP_ROLE, adminAddr)
+            await useCaseAccessControlDid.grantDidRole(CAP_ROLE, didId)
+
+            // Grant ROYALTY_ROLE to DID
+            await govResult.accessControl.grantRole(ROYALTY_ROLE, adminAddr)
+            await useCaseAccessControlDid.grantDidRole(ROYALTY_ROLE, didId)
+
+            // Fund DID wallet
+            await admin.sendTransaction({
+                to: wallet.address,
+                value: ethers.parseEther('1.0'),
+            })
+
+            return {
+                erc721: govResult.erc721!,
+                erc721Capped: govResult.erc721Capped!,
+                erc721Royalty: govResult.erc721Royalty!,
+                accessControl: govResult.accessControl,
+                useCaseAccessControlDid,
+                didWallet: wallet,
+                did: didId,
+                addressAccount: addressAcc,
+                addressAccountAddress: addressAccAddr,
+            }
+        }
+
+        beforeEach(async function () {
+            const contracts = await loadFixture(deployMixedFixture)
+            erc721Mixed = contracts.erc721
+            erc721CappedMixed = contracts.erc721Capped
+            erc721RoyaltyMixed = contracts.erc721Royalty
+            accessControlMixed = contracts.accessControl
+            useCaseAccessControlDid = contracts.useCaseAccessControlDid
+            didWallet = contracts.didWallet
+            did = contracts.did
+            addressAccount = contracts.addressAccount
+            addressAccountAddress = contracts.addressAccountAddress
+        })
+
+        it('GIVEN MINTER_ROLE granted to address and DID WHEN both mint tokens THEN both succeed', async function () {
+            // Address mints
+            const connectedErc721CappedAddress =
+                erc721CappedMixed.connect(addressAccount)
+            await expect(
+                connectedErc721CappedAddress.mint(addressAccountAddress, 1)
+            )
+                .to.emit(erc721Mixed, 'Transfer')
+                .withArgs(ethers.ZeroAddress, addressAccountAddress, 1)
+
+            // DID wallet mints
+            const didSigner = new ethers.Wallet(
+                didWallet.privateKey,
+                ethers.provider
+            )
+            const connectedErc721CappedDid =
+                erc721CappedMixed.connect(didSigner)
+            await expect(connectedErc721CappedDid.mint(didWallet.address, 2))
+                .to.emit(erc721Mixed, 'Transfer')
+                .withArgs(ethers.ZeroAddress, didWallet.address, 2)
+
+            expect(await erc721Mixed.ownerOf(1)).to.equal(addressAccountAddress)
+            expect(await erc721Mixed.ownerOf(2)).to.equal(didWallet.address)
+        })
+
+        it('GIVEN MINTER_ROLE granted to DID WHEN hasRole checks address THEN returns true', async function () {
+            // Check if DID wallet address has role via DID resolution
+            const hasRole = await accessControlMixed.hasRole(
+                MINTER_ROLE,
+                didWallet.address
+            )
+            expect(hasRole).to.be.true
+        })
+
+        it('GIVEN CAP_ROLE granted to DID WHEN DID wallet sets cap THEN succeeds', async function () {
+            // DID wallet sets cap
+            const didSigner = new ethers.Wallet(
+                didWallet.privateKey,
+                ethers.provider
+            )
+            const connectedErc721CappedDid =
+                erc721CappedMixed.connect(didSigner)
+            await expect(connectedErc721CappedDid.setCap(2000))
+                .to.emit(erc721CappedMixed, 'CapSet')
+                .withArgs(didWallet.address, 2000)
+
+            expect(await erc721CappedMixed.cap()).to.equal(2000)
+        })
+
+        it('GIVEN ROYALTY_ROLE granted to DID WHEN DID wallet sets royalty THEN succeeds', async function () {
+            // DID wallet sets fee denominator first, then default royalty
+            const didSigner = new ethers.Wallet(
+                didWallet.privateKey,
+                ethers.provider
+            )
+            const connectedErc721RoyaltyDid =
+                erc721RoyaltyMixed.connect(didSigner)
+
+            // Set fee denominator first
+            await connectedErc721RoyaltyDid.setFeeDenominator(10000)
+
+            // Then set default royalty
+            await connectedErc721RoyaltyDid.setDefaultRoyalty(
+                didWallet.address,
+                500
+            )
+
+            const royaltyInfo = await erc721RoyaltyMixed.royaltyInfo(1, 10000)
+            expect(royaltyInfo[0]).to.equal(didWallet.address)
+            expect(royaltyInfo[1]).to.equal(500)
+        })
+
+        it('GIVEN role revoked from DID WHEN DID wallet executes THEN fails', async function () {
+            // Revoke MINTER_ROLE from DID
+            await useCaseAccessControlDid.revokeDidRole(MINTER_ROLE, did)
+
+            // DID wallet should fail
+            const didSigner = new ethers.Wallet(
+                didWallet.privateKey,
+                ethers.provider
+            )
+            const connectedErc721CappedDid =
+                erc721CappedMixed.connect(didSigner)
+            await expect(
+                connectedErc721CappedDid.mint(didWallet.address, 3)
+            ).to.be.revertedWithCustomError(
+                accessControlMixed,
+                'AccountHasNoRole'
+            )
+        })
+
+        it('GIVEN role revoked from address WHEN address executes THEN fails but DID still works', async function () {
+            // Revoke MINTER_ROLE from address
+            await accessControlMixed.revokeRole(
+                MINTER_ROLE,
+                addressAccountAddress
+            )
+
+            // Address should fail
+            const connectedErc721CappedAddress =
+                erc721CappedMixed.connect(addressAccount)
+            await expect(
+                connectedErc721CappedAddress.mint(addressAccountAddress, 3)
+            ).to.be.revertedWithCustomError(
+                accessControlMixed,
+                'AccountHasNoRole'
+            )
+
+            // DID wallet should still work
+            const didSigner = new ethers.Wallet(
+                didWallet.privateKey,
+                ethers.provider
+            )
+            const connectedErc721CappedDid =
+                erc721CappedMixed.connect(didSigner)
+            await expect(
+                connectedErc721CappedDid.mint(didWallet.address, 3)
+            ).to.emit(erc721Mixed, 'Transfer')
+        })
+
+        it('GIVEN DID has multiple roles WHEN checking hasRoleForDid THEN returns true for all', async function () {
+            // Check MINTER_ROLE
+            const hasMinterRole = await useCaseAccessControlDid.hasRoleForDid(
+                MINTER_ROLE,
+                did
+            )
+            expect(hasMinterRole).to.be.true
+
+            // Check CAP_ROLE
+            const hasCapRole = await useCaseAccessControlDid.hasRoleForDid(
+                CAP_ROLE,
+                did
+            )
+            expect(hasCapRole).to.be.true
+
+            // Check ROYALTY_ROLE
+            const hasRoyaltyRole = await useCaseAccessControlDid.hasRoleForDid(
+                ROYALTY_ROLE,
+                did
+            )
+            expect(hasRoyaltyRole).to.be.true
         })
     })
 })
