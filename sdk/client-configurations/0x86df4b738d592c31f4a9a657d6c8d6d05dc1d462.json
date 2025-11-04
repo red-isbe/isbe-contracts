@@ -1,0 +1,129 @@
+{
+  "address": "0x86df4b738d592c31f4a9a657d6c8d6d05dc1d462",
+  "createdAt": "2025-11-03T04:31:44.813Z",
+  "updatedAt": "2025-11-03T08:48:25.680Z",
+  "configurations": [
+    {
+      "configId": "0x0000000000000000000000000000000000000000000000000000000000000020",
+      "name": "ERC20 Basic",
+      "standard": "ERC20",
+      "businessLogics": [
+        "ERC20Facet"
+      ],
+      "features": [
+        "Basic transfers",
+        "Balance queries",
+        "Allowances"
+      ],
+      "description": "Simple ERC20 token with standard functionality",
+      "addedAt": "2025-11-03T04:31:44.813Z"
+    },
+    {
+      "configId": "0x0000000000000000000000000000000000000000000000000000000000002a20",
+      "name": "ERC20 Mintable with Cap",
+      "standard": "ERC20",
+      "businessLogics": [
+        "ERC20Facet",
+        "ERC20CappedFacet",
+        "ERC20MintableFacet"
+      ],
+      "features": [
+        "Minting",
+        "Supply cap",
+        "Role-based access"
+      ],
+      "description": "ERC20 token with minting capability and maximum supply cap",
+      "addedAt": "2025-11-03T04:31:44.813Z"
+    }
+  ],
+  "deployments": [
+    {
+      "tokenAddress": "0x0b2c3F1cf80098A2906AD14b5F2A521aDD4BC5D0",
+      "configId": "0x3cded029c8c8614f489c50eea82088577a4de9714a767d26fc2d48db49d8c8f0",
+      "configName": "ERC20 Burnable",
+      "tokenName": "Prueba SDK",
+      "tokenSymbol": "PSDK",
+      "deployedAt": "2025-11-03T07:14:04.239Z",
+      "transactionHash": "0x763fb41f9ca8f9b5f7812b951a58cfdf6d1219cf1de2f920ef491c96ae7aa7e5",
+      "blockNumber": 242836,
+      "network": "dev"
+    },
+    {
+      "tokenAddress": "0x4d09e03456Bdb580Be6FF8b7103C021a9De7D9C4",
+      "configId": "0x766ff5144f07e681d617f5b28a6c6f007cd0a7ea5e2880f3e732b97fd1f3da80",
+      "configName": "ERC20 Burnable + Capped",
+      "tokenName": "Prueba SDK 2",
+      "tokenSymbol": "PSDK2",
+      "deployedAt": "2025-11-03T07:36:23.144Z",
+      "transactionHash": "0x6f08ab7fa96efb117cff606630cc4e6794ff5a4aba1e231acc72c8a24ae0ead2",
+      "blockNumber": 243506,
+      "network": "dev"
+    },
+    {
+      "tokenAddress": "0x57bea149F4fe1427C58c53D1f830E63b302F3Ff3",
+      "configId": "0x59feed5aef5068f542c88f585246b1c161bab5db8ccaf5b3a286e5b393e913e4",
+      "configName": "ERC721 Basic",
+      "tokenName": "NFT SDK",
+      "tokenSymbol": "NFTSDK",
+      "deployedAt": "2025-11-03T08:34:02.583Z",
+      "transactionHash": "0x2f4adf5c4e2f8ce24637096d94cede5680052652901d447eb83bdd2184c24c5a",
+      "blockNumber": 245235,
+      "network": "dev"
+    },
+    {
+      "tokenAddress": "0x520ea041382124DdA4b8196933B9c0183BD5c49c",
+      "configId": "0x59feed5aef5068f542c88f585246b1c161bab5db8ccaf5b3a286e5b393e913e4",
+      "configName": "ERC721 Basic",
+      "tokenName": "NFT SDK",
+      "tokenSymbol": "NFTSDK",
+      "deployedAt": "2025-11-03T08:35:05.822Z",
+      "transactionHash": "0x9eba4f813a2b2a7456441dd3e75f9b95a1754752823ceae164413d3d3def7532",
+      "blockNumber": 245267,
+      "network": "dev"
+    },
+    {
+      "tokenAddress": "0xA1d7726ab3A9Fd53085338707B850cB783094935",
+      "configId": "0x96a0dd141dbe4542667f8b89888f23c3a7a8be9fa42f393b942134e3c179a159",
+      "configName": "ERC721 Capped",
+      "tokenName": "NFT SDK",
+      "tokenSymbol": "NFTSDK",
+      "deployedAt": "2025-11-03T08:42:04.173Z",
+      "transactionHash": "0xc9ecb0bdaabd36af1362f45be17c3badd4d36c1499188d6562b61a4b1cd3ec86",
+      "blockNumber": 245476,
+      "network": "dev"
+    },
+    {
+      "tokenAddress": "0xF5a5D7574C45efE8746886cb22983F7d8F65266E",
+      "configId": "0x96a0dd141dbe4542667f8b89888f23c3a7a8be9fa42f393b942134e3c179a159",
+      "configName": "ERC721 Capped",
+      "tokenName": "NFT SDK",
+      "tokenSymbol": "NFTSDK",
+      "deployedAt": "2025-11-03T08:44:22.537Z",
+      "transactionHash": "0x008217942c97f710061340177047279e7004894ffee571fc105ac12465620b43",
+      "blockNumber": 245545,
+      "network": "dev"
+    },
+    {
+      "tokenAddress": "0x7614F9e0FF899d9529C2976e2fF9C6b104ade7D6",
+      "configId": "0x96a0dd141dbe4542667f8b89888f23c3a7a8be9fa42f393b942134e3c179a159",
+      "configName": "ERC721 Capped",
+      "tokenName": "NFT SDK",
+      "tokenSymbol": "NFTSDK",
+      "deployedAt": "2025-11-03T08:46:21.031Z",
+      "transactionHash": "0x905de935be524cea5a8005634543e7a0d3c7de103d256fd2359018121ea63249",
+      "blockNumber": 245605,
+      "network": "dev"
+    },
+    {
+      "tokenAddress": "0xe293D3A4fB0929d3ad5f390C054B3A4AD325B13C",
+      "configId": "0x96a0dd141dbe4542667f8b89888f23c3a7a8be9fa42f393b942134e3c179a159",
+      "configName": "ERC721 Capped",
+      "tokenName": "NFT SDK",
+      "tokenSymbol": "NFTSDK",
+      "deployedAt": "2025-11-03T08:48:25.679Z",
+      "transactionHash": "0x89e74405c93c6ecc9b8b6a3a7adcf68c62d1e2785a3bb4d0a297490caed4be4b",
+      "blockNumber": 245667,
+      "network": "dev"
+    }
+  ]
+}

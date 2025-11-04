@@ -9,3 +9,4 @@
 | ADR_005    | TimeStampingRegistry with Comprehensive Validation Framework  | Implemented | [ADR_005-TimeStampingRegistry-Validation-Framework.md](ADR_005-TimeStampingRegistry-Validation-Framework.md) |
 | ADR_007    | Besu Node Manager Smart Contract                              | Pending     | [ADR_007-besu-node-manager.md](ADR_007-besu-node-manager.md)                                                 |
 | ADR_008    | DID-Aware Role Management via Internal Extension              | Implemented | [ADR_008-AccessControl-Did-integration.md](ADR_008-AccessControl-Did-integration.md)                         |
+| ADR_009    | SDK for ISBE Portal No-Code Application                       | Implemented | [ADR_009-SDK-No-Code-Portal.md](ADR_009-SDK-No-Code-Portal.md)                                               |

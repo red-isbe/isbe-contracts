@@ -1,0 +1,418 @@
+{
+  "generated": "2025-11-03T05:50:28.731Z",
+  "network": "dev",
+  "factoryAddress": "0xeF7FCccE809437ba23D8D9b25CeC127cEC19f0de",
+  "standard": "ERC20",
+  "algorithm": "ADR-007: keccak256(abi.encodePacked(sortedResolverKeys))",
+  "totalConfigurations": 16,
+  "configurations": [
+    {
+      "configId": "0xa5d562f7e76b654357cf73ec0becae9cfe5f39850abe3dc2004d0e224350b500",
+      "name": "ERC20 Basic",
+      "standard": "ERC20",
+      "features": [
+        "base"
+      ],
+      "businessLogics": [
+        "0x2428f215905ecd05cc26794e218b9fad455e6ae2ca828b2f1c1903e8770265ad"
+      ],
+      "facetCount": 1,
+      "description": "ERC20 token with basic functionality only",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE"
+      ]
+    },
+    {
+      "configId": "0x3cded029c8c8614f489c50eea82088577a4de9714a767d26fc2d48db49d8c8f0",
+      "name": "ERC20 Burnable",
+      "standard": "ERC20",
+      "features": [
+        "base",
+        "burnable"
+      ],
+      "businessLogics": [
+        "0x2428f215905ecd05cc26794e218b9fad455e6ae2ca828b2f1c1903e8770265ad",
+        "0x81c694c8d5a595cfca0b2b486a8e2aff0a72d8063c636a02c1ca1cc12e55d471"
+      ],
+      "facetCount": 2,
+      "description": "ERC20 token with burnable",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE"
+      ]
+    },
+    {
+      "configId": "0xfb174b17a554e0b8c9ff139e2ded13b01a80c502cfe07f299bf1b2c06dc72ac1",
+      "name": "ERC20 Capped",
+      "standard": "ERC20",
+      "features": [
+        "base",
+        "capped"
+      ],
+      "businessLogics": [
+        "0x2428f215905ecd05cc26794e218b9fad455e6ae2ca828b2f1c1903e8770265ad",
+        "0x94ece6781e9aebbdab29d2bbc0301c80b7bcb1194c5c3efc08e3d35c7f6d741b"
+      ],
+      "facetCount": 2,
+      "description": "ERC20 token with capped",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "MINTER_ROLE"
+      ]
+    },
+    {
+      "configId": "0x766ff5144f07e681d617f5b28a6c6f007cd0a7ea5e2880f3e732b97fd1f3da80",
+      "name": "ERC20 Burnable + Capped",
+      "standard": "ERC20",
+      "features": [
+        "base",
+        "burnable",
+        "capped"
+      ],
+      "businessLogics": [
+        "0x2428f215905ecd05cc26794e218b9fad455e6ae2ca828b2f1c1903e8770265ad",
+        "0x81c694c8d5a595cfca0b2b486a8e2aff0a72d8063c636a02c1ca1cc12e55d471",
+        "0x94ece6781e9aebbdab29d2bbc0301c80b7bcb1194c5c3efc08e3d35c7f6d741b"
+      ],
+      "facetCount": 3,
+      "description": "ERC20 token with burnable, capped",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "MINTER_ROLE"
+      ]
+    },
+    {
+      "configId": "0x99230b447b13de48e5690fbe34a85f27492c47f6110dc3114590c2cf63aa0298",
+      "name": "ERC20 Snapshot",
+      "standard": "ERC20",
+      "features": [
+        "base",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x2428f215905ecd05cc26794e218b9fad455e6ae2ca828b2f1c1903e8770265ad",
+        "0xc4968fe952eba32a52cb112176a56b4e86a0fbaff835dc8336fa0e804a0af398"
+      ],
+      "facetCount": 2,
+      "description": "ERC20 token with snapshot",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0xfd95003ed8a96e7be53b7f12b1df6f0cba85976b7a07308b52686cbac665398e",
+      "name": "ERC20 Burnable + Snapshot",
+      "standard": "ERC20",
+      "features": [
+        "base",
+        "burnable",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x2428f215905ecd05cc26794e218b9fad455e6ae2ca828b2f1c1903e8770265ad",
+        "0x81c694c8d5a595cfca0b2b486a8e2aff0a72d8063c636a02c1ca1cc12e55d471",
+        "0xc4968fe952eba32a52cb112176a56b4e86a0fbaff835dc8336fa0e804a0af398"
+      ],
+      "facetCount": 3,
+      "description": "ERC20 token with burnable, snapshot",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0x5bd3d2a166b586394e207f60a6e9f73daa71ddab3165c9e8ecc79b68e658ffcd",
+      "name": "ERC20 Capped + Snapshot",
+      "standard": "ERC20",
+      "features": [
+        "base",
+        "capped",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x2428f215905ecd05cc26794e218b9fad455e6ae2ca828b2f1c1903e8770265ad",
+        "0x94ece6781e9aebbdab29d2bbc0301c80b7bcb1194c5c3efc08e3d35c7f6d741b",
+        "0xc4968fe952eba32a52cb112176a56b4e86a0fbaff835dc8336fa0e804a0af398"
+      ],
+      "facetCount": 3,
+      "description": "ERC20 token with capped, snapshot",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "MINTER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0x433d3da0268b36e1e910b324a9661d20de9c2177d7a90d8142d375f2701a16c8",
+      "name": "ERC20 Burnable + Capped + Snapshot",
+      "standard": "ERC20",
+      "features": [
+        "base",
+        "burnable",
+        "capped",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x2428f215905ecd05cc26794e218b9fad455e6ae2ca828b2f1c1903e8770265ad",
+        "0x81c694c8d5a595cfca0b2b486a8e2aff0a72d8063c636a02c1ca1cc12e55d471",
+        "0x94ece6781e9aebbdab29d2bbc0301c80b7bcb1194c5c3efc08e3d35c7f6d741b",
+        "0xc4968fe952eba32a52cb112176a56b4e86a0fbaff835dc8336fa0e804a0af398"
+      ],
+      "facetCount": 4,
+      "description": "ERC20 token with burnable, capped, snapshot",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "MINTER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0xb4030e496d54ef3500cabc0a64c87aa4192d12abcee57800d5b53c6372446f1e",
+      "name": "ERC20 Controller",
+      "standard": "ERC20",
+      "features": [
+        "base",
+        "controller"
+      ],
+      "businessLogics": [
+        "0x2428f215905ecd05cc26794e218b9fad455e6ae2ca828b2f1c1903e8770265ad",
+        "0xed76d446b6029b8a177fda4fc38162d9dc0dc29ab636541fd6e75ae60fe17151"
+      ],
+      "facetCount": 2,
+      "description": "ERC20 token with controller",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "CONTROLLER_ROLE"
+      ]
+    },
+    {
+      "configId": "0x00f0f306d1d8f941580e80aad948aa1d747d47e6d75dab7b4ffecec159ae2d08",
+      "name": "ERC20 Burnable + Controller",
+      "standard": "ERC20",
+      "features": [
+        "base",
+        "burnable",
+        "controller"
+      ],
+      "businessLogics": [
+        "0x2428f215905ecd05cc26794e218b9fad455e6ae2ca828b2f1c1903e8770265ad",
+        "0x81c694c8d5a595cfca0b2b486a8e2aff0a72d8063c636a02c1ca1cc12e55d471",
+        "0xed76d446b6029b8a177fda4fc38162d9dc0dc29ab636541fd6e75ae60fe17151"
+      ],
+      "facetCount": 3,
+      "description": "ERC20 token with burnable, controller",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "CONTROLLER_ROLE"
+      ]
+    },
+    {
+      "configId": "0xadce621b2bc3d66e6f8b06a7a13dc1faa437ef7a02af0b66ca824bc1be4ba501",
+      "name": "ERC20 Capped + Controller",
+      "standard": "ERC20",
+      "features": [
+        "base",
+        "capped",
+        "controller"
+      ],
+      "businessLogics": [
+        "0x2428f215905ecd05cc26794e218b9fad455e6ae2ca828b2f1c1903e8770265ad",
+        "0x94ece6781e9aebbdab29d2bbc0301c80b7bcb1194c5c3efc08e3d35c7f6d741b",
+        "0xed76d446b6029b8a177fda4fc38162d9dc0dc29ab636541fd6e75ae60fe17151"
+      ],
+      "facetCount": 3,
+      "description": "ERC20 token with capped, controller",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "MINTER_ROLE",
+        "CONTROLLER_ROLE"
+      ]
+    },
+    {
+      "configId": "0x7eca230d05840ddf1abeafa23c118a085ae2119af8858894efabac7adc809fb0",
+      "name": "ERC20 Burnable + Capped + Controller",
+      "standard": "ERC20",
+      "features": [
+        "base",
+        "burnable",
+        "capped",
+        "controller"
+      ],
+      "businessLogics": [
+        "0x2428f215905ecd05cc26794e218b9fad455e6ae2ca828b2f1c1903e8770265ad",
+        "0x81c694c8d5a595cfca0b2b486a8e2aff0a72d8063c636a02c1ca1cc12e55d471",
+        "0x94ece6781e9aebbdab29d2bbc0301c80b7bcb1194c5c3efc08e3d35c7f6d741b",
+        "0xed76d446b6029b8a177fda4fc38162d9dc0dc29ab636541fd6e75ae60fe17151"
+      ],
+      "facetCount": 4,
+      "description": "ERC20 token with burnable, capped, controller",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "MINTER_ROLE",
+        "CONTROLLER_ROLE"
+      ]
+    },
+    {
+      "configId": "0xfc34bd215927c50a51a689849de351fcad073660b999d731f16c30d305fda385",
+      "name": "ERC20 Snapshot + Controller",
+      "standard": "ERC20",
+      "features": [
+        "base",
+        "controller",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x2428f215905ecd05cc26794e218b9fad455e6ae2ca828b2f1c1903e8770265ad",
+        "0xc4968fe952eba32a52cb112176a56b4e86a0fbaff835dc8336fa0e804a0af398",
+        "0xed76d446b6029b8a177fda4fc38162d9dc0dc29ab636541fd6e75ae60fe17151"
+      ],
+      "facetCount": 3,
+      "description": "ERC20 token with snapshot, controller",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "SNAPSHOT_ROLE",
+        "CONTROLLER_ROLE"
+      ]
+    },
+    {
+      "configId": "0xe7fe6bb10fd9df0bf3de2aa8298db7edd28d666e18ba59c33ad75c7e0b6628c9",
+      "name": "ERC20 Burnable + Snapshot + Controller",
+      "standard": "ERC20",
+      "features": [
+        "base",
+        "burnable",
+        "controller",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x2428f215905ecd05cc26794e218b9fad455e6ae2ca828b2f1c1903e8770265ad",
+        "0x81c694c8d5a595cfca0b2b486a8e2aff0a72d8063c636a02c1ca1cc12e55d471",
+        "0xc4968fe952eba32a52cb112176a56b4e86a0fbaff835dc8336fa0e804a0af398",
+        "0xed76d446b6029b8a177fda4fc38162d9dc0dc29ab636541fd6e75ae60fe17151"
+      ],
+      "facetCount": 4,
+      "description": "ERC20 token with burnable, snapshot, controller",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "SNAPSHOT_ROLE",
+        "CONTROLLER_ROLE"
+      ]
+    },
+    {
+      "configId": "0x2c205bfbb090d165856a321d22a966b22da4865b8a02e109b85475720585d643",
+      "name": "ERC20 Capped + Snapshot + Controller",
+      "standard": "ERC20",
+      "features": [
+        "base",
+        "capped",
+        "controller",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x2428f215905ecd05cc26794e218b9fad455e6ae2ca828b2f1c1903e8770265ad",
+        "0x94ece6781e9aebbdab29d2bbc0301c80b7bcb1194c5c3efc08e3d35c7f6d741b",
+        "0xc4968fe952eba32a52cb112176a56b4e86a0fbaff835dc8336fa0e804a0af398",
+        "0xed76d446b6029b8a177fda4fc38162d9dc0dc29ab636541fd6e75ae60fe17151"
+      ],
+      "facetCount": 4,
+      "description": "ERC20 token with capped, snapshot, controller",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "MINTER_ROLE",
+        "SNAPSHOT_ROLE",
+        "CONTROLLER_ROLE"
+      ]
+    },
+    {
+      "configId": "0x680fadbb1b117455f1205950899eaaae7817d1b79301acbe8cdc5ff2c3da3335",
+      "name": "ERC20 Burnable + Capped + Snapshot + Controller",
+      "standard": "ERC20",
+      "features": [
+        "base",
+        "burnable",
+        "capped",
+        "controller",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x2428f215905ecd05cc26794e218b9fad455e6ae2ca828b2f1c1903e8770265ad",
+        "0x81c694c8d5a595cfca0b2b486a8e2aff0a72d8063c636a02c1ca1cc12e55d471",
+        "0x94ece6781e9aebbdab29d2bbc0301c80b7bcb1194c5c3efc08e3d35c7f6d741b",
+        "0xc4968fe952eba32a52cb112176a56b4e86a0fbaff835dc8336fa0e804a0af398",
+        "0xed76d446b6029b8a177fda4fc38162d9dc0dc29ab636541fd6e75ae60fe17151"
+      ],
+      "facetCount": 5,
+      "description": "ERC20 token with burnable, capped, snapshot, controller",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "MINTER_ROLE",
+        "SNAPSHOT_ROLE",
+        "CONTROLLER_ROLE"
+      ]
+    }
+  ],
+  "index": {
+    "byFeatures": {
+      "base": "0xa5d562f7e76b654357cf73ec0becae9cfe5f39850abe3dc2004d0e224350b500",
+      "base+burnable": "0x3cded029c8c8614f489c50eea82088577a4de9714a767d26fc2d48db49d8c8f0",
+      "base+capped": "0xfb174b17a554e0b8c9ff139e2ded13b01a80c502cfe07f299bf1b2c06dc72ac1",
+      "base+burnable+capped": "0x766ff5144f07e681d617f5b28a6c6f007cd0a7ea5e2880f3e732b97fd1f3da80",
+      "base+snapshot": "0x99230b447b13de48e5690fbe34a85f27492c47f6110dc3114590c2cf63aa0298",
+      "base+burnable+snapshot": "0xfd95003ed8a96e7be53b7f12b1df6f0cba85976b7a07308b52686cbac665398e",
+      "base+capped+snapshot": "0x5bd3d2a166b586394e207f60a6e9f73daa71ddab3165c9e8ecc79b68e658ffcd",
+      "base+burnable+capped+snapshot": "0x433d3da0268b36e1e910b324a9661d20de9c2177d7a90d8142d375f2701a16c8",
+      "base+controller": "0xb4030e496d54ef3500cabc0a64c87aa4192d12abcee57800d5b53c6372446f1e",
+      "base+burnable+controller": "0x00f0f306d1d8f941580e80aad948aa1d747d47e6d75dab7b4ffecec159ae2d08",
+      "base+capped+controller": "0xadce621b2bc3d66e6f8b06a7a13dc1faa437ef7a02af0b66ca824bc1be4ba501",
+      "base+burnable+capped+controller": "0x7eca230d05840ddf1abeafa23c118a085ae2119af8858894efabac7adc809fb0",
+      "base+controller+snapshot": "0xfc34bd215927c50a51a689849de351fcad073660b999d731f16c30d305fda385",
+      "base+burnable+controller+snapshot": "0xe7fe6bb10fd9df0bf3de2aa8298db7edd28d666e18ba59c33ad75c7e0b6628c9",
+      "base+capped+controller+snapshot": "0x2c205bfbb090d165856a321d22a966b22da4865b8a02e109b85475720585d643",
+      "base+burnable+capped+controller+snapshot": "0x680fadbb1b117455f1205950899eaaae7817d1b79301acbe8cdc5ff2c3da3335"
+    },
+    "byName": {
+      "ERC20 Basic": "0xa5d562f7e76b654357cf73ec0becae9cfe5f39850abe3dc2004d0e224350b500",
+      "ERC20 Burnable": "0x3cded029c8c8614f489c50eea82088577a4de9714a767d26fc2d48db49d8c8f0",
+      "ERC20 Capped": "0xfb174b17a554e0b8c9ff139e2ded13b01a80c502cfe07f299bf1b2c06dc72ac1",
+      "ERC20 Burnable + Capped": "0x766ff5144f07e681d617f5b28a6c6f007cd0a7ea5e2880f3e732b97fd1f3da80",
+      "ERC20 Snapshot": "0x99230b447b13de48e5690fbe34a85f27492c47f6110dc3114590c2cf63aa0298",
+      "ERC20 Burnable + Snapshot": "0xfd95003ed8a96e7be53b7f12b1df6f0cba85976b7a07308b52686cbac665398e",
+      "ERC20 Capped + Snapshot": "0x5bd3d2a166b586394e207f60a6e9f73daa71ddab3165c9e8ecc79b68e658ffcd",
+      "ERC20 Burnable + Capped + Snapshot": "0x433d3da0268b36e1e910b324a9661d20de9c2177d7a90d8142d375f2701a16c8",
+      "ERC20 Controller": "0xb4030e496d54ef3500cabc0a64c87aa4192d12abcee57800d5b53c6372446f1e",
+      "ERC20 Burnable + Controller": "0x00f0f306d1d8f941580e80aad948aa1d747d47e6d75dab7b4ffecec159ae2d08",
+      "ERC20 Capped + Controller": "0xadce621b2bc3d66e6f8b06a7a13dc1faa437ef7a02af0b66ca824bc1be4ba501",
+      "ERC20 Burnable + Capped + Controller": "0x7eca230d05840ddf1abeafa23c118a085ae2119af8858894efabac7adc809fb0",
+      "ERC20 Snapshot + Controller": "0xfc34bd215927c50a51a689849de351fcad073660b999d731f16c30d305fda385",
+      "ERC20 Burnable + Snapshot + Controller": "0xe7fe6bb10fd9df0bf3de2aa8298db7edd28d666e18ba59c33ad75c7e0b6628c9",
+      "ERC20 Capped + Snapshot + Controller": "0x2c205bfbb090d165856a321d22a966b22da4865b8a02e109b85475720585d643",
+      "ERC20 Burnable + Capped + Snapshot + Controller": "0x680fadbb1b117455f1205950899eaaae7817d1b79301acbe8cdc5ff2c3da3335"
+    },
+    "byConfigId": {
+      "0xa5d562f7e76b654357cf73ec0becae9cfe5f39850abe3dc2004d0e224350b500": 0,
+      "0x3cded029c8c8614f489c50eea82088577a4de9714a767d26fc2d48db49d8c8f0": 1,
+      "0xfb174b17a554e0b8c9ff139e2ded13b01a80c502cfe07f299bf1b2c06dc72ac1": 2,
+      "0x766ff5144f07e681d617f5b28a6c6f007cd0a7ea5e2880f3e732b97fd1f3da80": 3,
+      "0x99230b447b13de48e5690fbe34a85f27492c47f6110dc3114590c2cf63aa0298": 4,
+      "0xfd95003ed8a96e7be53b7f12b1df6f0cba85976b7a07308b52686cbac665398e": 5,
+      "0x5bd3d2a166b586394e207f60a6e9f73daa71ddab3165c9e8ecc79b68e658ffcd": 6,
+      "0x433d3da0268b36e1e910b324a9661d20de9c2177d7a90d8142d375f2701a16c8": 7,
+      "0xb4030e496d54ef3500cabc0a64c87aa4192d12abcee57800d5b53c6372446f1e": 8,
+      "0x00f0f306d1d8f941580e80aad948aa1d747d47e6d75dab7b4ffecec159ae2d08": 9,
+      "0xadce621b2bc3d66e6f8b06a7a13dc1faa437ef7a02af0b66ca824bc1be4ba501": 10,
+      "0x7eca230d05840ddf1abeafa23c118a085ae2119af8858894efabac7adc809fb0": 11,
+      "0xfc34bd215927c50a51a689849de351fcad073660b999d731f16c30d305fda385": 12,
+      "0xe7fe6bb10fd9df0bf3de2aa8298db7edd28d666e18ba59c33ad75c7e0b6628c9": 13,
+      "0x2c205bfbb090d165856a321d22a966b22da4865b8a02e109b85475720585d643": 14,
+      "0x680fadbb1b117455f1205950899eaaae7817d1b79301acbe8cdc5ff2c3da3335": 15
+    }
+  }
+}

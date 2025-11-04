@@ -1,0 +1,41 @@
+{
+  "name": "@isbe/sdk",
+  "version": "0.1.0",
+  "description": "TypeScript SDK for deploying and managing tokens on ISBE network using Factory Diamond",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "example:connection": "ts-node examples/01-basic-connection.ts",
+    "lint": "eslint src/**/*.ts",
+    "test": "echo 'Tests coming soon'"
+  },
+  "keywords": [
+    "isbe",
+    "blockchain",
+    "token",
+    "erc20",
+    "erc721",
+    "diamond-pattern",
+    "sdk"
+  ],
+  "author": "ISBE Team",
+  "license": "MIT",
+  "peerDependencies": {
+    "ethers": "^6.0.0"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "ts-node": "^10.9.0"
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ]
+}

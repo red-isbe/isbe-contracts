@@ -1,0 +1,3602 @@
+{
+  "generated": "2025-11-03T06:01:10.146Z",
+  "network": "hardhat",
+  "factoryAddress": "0xeF7FCccE809437ba23D8D9b25CeC127cEC19f0de",
+  "standard": "ERC721",
+  "algorithm": "ADR-007: keccak256(abi.encodePacked(sortedResolverKeys))",
+  "totalConfigurations": 128,
+  "configurations": [
+    {
+      "configId": "0x59feed5aef5068f542c88f585246b1c161bab5db8ccaf5b3a286e5b393e913e4",
+      "name": "ERC721 Basic",
+      "standard": "ERC721",
+      "features": [
+        "base"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413"
+      ],
+      "facetCount": 1,
+      "description": "ERC721 NFT with basic functionality only",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE"
+      ]
+    },
+    {
+      "configId": "0x8c52f6b2363328314f2b453099d6a812887e8c0518b3fce1a02fd6cb11c28678",
+      "name": "ERC721 Burnable",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731"
+      ],
+      "facetCount": 2,
+      "description": "ERC721 NFT with burnable",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE"
+      ]
+    },
+    {
+      "configId": "0x650a434be0dda7991a826343e4cff60dece9f354331cba7b670b04028bed1ddf",
+      "name": "ERC721 Enumerable",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "enumerable"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5"
+      ],
+      "facetCount": 2,
+      "description": "ERC721 NFT with enumerable",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE"
+      ]
+    },
+    {
+      "configId": "0x4ae5600f3b388305831dc9b279cc7b7786ca0bf7a7934be03cc42c690c3e94d6",
+      "name": "ERC721 Burnable + Enumerable",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "enumerable"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5"
+      ],
+      "facetCount": 3,
+      "description": "ERC721 NFT with burnable, enumerable",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE"
+      ]
+    },
+    {
+      "configId": "0x96a0dd141dbe4542667f8b89888f23c3a7a8be9fa42f393b942134e3c179a159",
+      "name": "ERC721 Capped",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "capped"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c"
+      ],
+      "facetCount": 2,
+      "description": "ERC721 NFT with capped",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "MINTER_ROLE"
+      ]
+    },
+    {
+      "configId": "0xc5742c5a3468007617713cd6cb74c6267e42d3a3c9a9762c9a31280538220989",
+      "name": "ERC721 Burnable + Capped",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "capped"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c"
+      ],
+      "facetCount": 3,
+      "description": "ERC721 NFT with burnable, capped",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "MINTER_ROLE"
+      ]
+    },
+    {
+      "configId": "0xdf658b7e82ae9aaf092d6f6ca1195fdc8021aab597533df158a03511d4d4d913",
+      "name": "ERC721 Enumerable + Capped",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "capped",
+        "enumerable"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c"
+      ],
+      "facetCount": 3,
+      "description": "ERC721 NFT with enumerable, capped",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "MINTER_ROLE"
+      ]
+    },
+    {
+      "configId": "0x03ae8988d9a07e5ab2386477c73260aaace6d851a9bdbd9337c00138235ca642",
+      "name": "ERC721 Burnable + Enumerable + Capped",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "capped",
+        "enumerable"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c"
+      ],
+      "facetCount": 4,
+      "description": "ERC721 NFT with burnable, enumerable, capped",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "MINTER_ROLE"
+      ]
+    },
+    {
+      "configId": "0x40f8f163eb8a599d6bc4f3decd802209ab904b85c1592b7296ee5583cf70def4",
+      "name": "ERC721 Controller",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "controller"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367"
+      ],
+      "facetCount": 2,
+      "description": "ERC721 NFT with controller",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "CONTROLLER_ROLE"
+      ]
+    },
+    {
+      "configId": "0x9988da2397dec0005992cb56a10abda491d90259a7e5529b1d2be24755cf6906",
+      "name": "ERC721 Burnable + Controller",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "controller"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367"
+      ],
+      "facetCount": 3,
+      "description": "ERC721 NFT with burnable, controller",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "CONTROLLER_ROLE"
+      ]
+    },
+    {
+      "configId": "0x493d638a20c884a0eab2103600ea53d147225012bf070f0c1b04ceae62d322fb",
+      "name": "ERC721 Enumerable + Controller",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "controller",
+        "enumerable"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367"
+      ],
+      "facetCount": 3,
+      "description": "ERC721 NFT with enumerable, controller",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "CONTROLLER_ROLE"
+      ]
+    },
+    {
+      "configId": "0x461a75b034161cf2ced85d19d39b845749352ca5be83ea026a4145efdc8119bb",
+      "name": "ERC721 Burnable + Enumerable + Controller",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "controller",
+        "enumerable"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367"
+      ],
+      "facetCount": 4,
+      "description": "ERC721 NFT with burnable, enumerable, controller",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "CONTROLLER_ROLE"
+      ]
+    },
+    {
+      "configId": "0x34e35e07d3499ff3f1b245c9f07e531dd8eafcb35bfdde06a53f2715926220f1",
+      "name": "ERC721 Capped + Controller",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "capped",
+        "controller"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367"
+      ],
+      "facetCount": 3,
+      "description": "ERC721 NFT with capped, controller",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "MINTER_ROLE",
+        "CONTROLLER_ROLE"
+      ]
+    },
+    {
+      "configId": "0xf99dc06ba1eac16602222331f41791f1cd5d97520d2ee2ed55dd7333f421b9a8",
+      "name": "ERC721 Burnable + Capped + Controller",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "capped",
+        "controller"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367"
+      ],
+      "facetCount": 4,
+      "description": "ERC721 NFT with burnable, capped, controller",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "MINTER_ROLE",
+        "CONTROLLER_ROLE"
+      ]
+    },
+    {
+      "configId": "0xc12b91c70e459b20b4991e1d2da3931be14cb5af082858fbc33632604ac87cf7",
+      "name": "ERC721 Enumerable + Capped + Controller",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "capped",
+        "controller",
+        "enumerable"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367"
+      ],
+      "facetCount": 4,
+      "description": "ERC721 NFT with enumerable, capped, controller",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "MINTER_ROLE",
+        "CONTROLLER_ROLE"
+      ]
+    },
+    {
+      "configId": "0x216e0dc39c33f9e80dc070ffed3cf588cb43b39fb031ab202ef2bc6b504fb6b5",
+      "name": "ERC721 Burnable + Enumerable + Capped + Controller",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "capped",
+        "controller",
+        "enumerable"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367"
+      ],
+      "facetCount": 5,
+      "description": "ERC721 NFT with burnable, enumerable, capped, controller",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "MINTER_ROLE",
+        "CONTROLLER_ROLE"
+      ]
+    },
+    {
+      "configId": "0x4d78ef4092cfad7064467246ff09e721c75300712801033df0c34b8196a6d32c",
+      "name": "ERC721 Snapshot",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d"
+      ],
+      "facetCount": 2,
+      "description": "ERC721 NFT with snapshot",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0xc2941988e2fe2569fa08de61ea8295fc1a67b8852c1362b40b7348eeb1380dcb",
+      "name": "ERC721 Burnable + Snapshot",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d"
+      ],
+      "facetCount": 3,
+      "description": "ERC721 NFT with burnable, snapshot",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0xe319a5d7550a7dac2c639d35023f12910ea5c8e483aca1da683369ca81758a0a",
+      "name": "ERC721 Enumerable + Snapshot",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "enumerable",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d"
+      ],
+      "facetCount": 3,
+      "description": "ERC721 NFT with enumerable, snapshot",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0xee495c75d142cedf500476f2b1d2f202c2b4c80c4a249267bb0cf614bc835878",
+      "name": "ERC721 Burnable + Enumerable + Snapshot",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "enumerable",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d"
+      ],
+      "facetCount": 4,
+      "description": "ERC721 NFT with burnable, enumerable, snapshot",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0x00d77dcf6ca0a2fe52e278aae412e5ee83b631658550dfd1a163d606f735c470",
+      "name": "ERC721 Capped + Snapshot",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "capped",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d"
+      ],
+      "facetCount": 3,
+      "description": "ERC721 NFT with capped, snapshot",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "MINTER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0x729d0a123c1132f72860e29b176782433d142c7756c0cae6674a88da51b34724",
+      "name": "ERC721 Burnable + Capped + Snapshot",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "capped",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d"
+      ],
+      "facetCount": 4,
+      "description": "ERC721 NFT with burnable, capped, snapshot",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "MINTER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0xab802f3da69f2fe5a1fdd584ce363ed91531437e90c4b9309bfdad28f407ee0a",
+      "name": "ERC721 Enumerable + Capped + Snapshot",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "capped",
+        "enumerable",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d"
+      ],
+      "facetCount": 4,
+      "description": "ERC721 NFT with enumerable, capped, snapshot",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "MINTER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0xbb385f04397fe488a486d01db8d5661fd29dfa16dde6530be7fec78788556a21",
+      "name": "ERC721 Burnable + Enumerable + Capped + Snapshot",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "capped",
+        "enumerable",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d"
+      ],
+      "facetCount": 5,
+      "description": "ERC721 NFT with burnable, enumerable, capped, snapshot",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "MINTER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0x7b09282d0c89eaa73ed11942ff7e60d41ea4e3818dceb42304aa3c80b97affad",
+      "name": "ERC721 Controller + Snapshot",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "controller",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d"
+      ],
+      "facetCount": 3,
+      "description": "ERC721 NFT with controller, snapshot",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "CONTROLLER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0x7ca9e7e6f18f0401ed169b3276192a0c6db82e24cdaac05d8404f34b27b2baab",
+      "name": "ERC721 Burnable + Controller + Snapshot",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "controller",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d"
+      ],
+      "facetCount": 4,
+      "description": "ERC721 NFT with burnable, controller, snapshot",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "CONTROLLER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0x6ea16cef162fe480e44c5e72c5841974e3e735f529b61b979eabfb7fe992b5ac",
+      "name": "ERC721 Enumerable + Controller + Snapshot",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "controller",
+        "enumerable",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d"
+      ],
+      "facetCount": 4,
+      "description": "ERC721 NFT with enumerable, controller, snapshot",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "CONTROLLER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0xccd8da648964e3f87c07ac83b8b47ed1387509340349427e7a9ae7b9f9db0883",
+      "name": "ERC721 Burnable + Enumerable + Controller + Snapshot",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "controller",
+        "enumerable",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d"
+      ],
+      "facetCount": 5,
+      "description": "ERC721 NFT with burnable, enumerable, controller, snapshot",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "CONTROLLER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0xd67f39b0a6f4e7be90355588ded287bdefbaf2a982a6052682277f0e4dc799ef",
+      "name": "ERC721 Capped + Controller + Snapshot",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "capped",
+        "controller",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d"
+      ],
+      "facetCount": 4,
+      "description": "ERC721 NFT with capped, controller, snapshot",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "MINTER_ROLE",
+        "CONTROLLER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0xd50515c6aff5946006a6c76f87ccda740600e67c397f619d23fd3d63825d43c1",
+      "name": "ERC721 Burnable + Capped + Controller + Snapshot",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "capped",
+        "controller",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d"
+      ],
+      "facetCount": 5,
+      "description": "ERC721 NFT with burnable, capped, controller, snapshot",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "MINTER_ROLE",
+        "CONTROLLER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0xcca7ccec85cba0bc1615924e60032d26eeb61b4b9d9b416bbefe68db507adb8a",
+      "name": "ERC721 Enumerable + Capped + Controller + Snapshot",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "capped",
+        "controller",
+        "enumerable",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d"
+      ],
+      "facetCount": 5,
+      "description": "ERC721 NFT with enumerable, capped, controller, snapshot",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "MINTER_ROLE",
+        "CONTROLLER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0x3c11b7bc3d21af11b2cceb6dd7f533ac6040a2e7386b272fa0fba87f9b51ae29",
+      "name": "ERC721 Burnable + Enumerable + Capped + Controller + Snapshot",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "capped",
+        "controller",
+        "enumerable",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d"
+      ],
+      "facetCount": 6,
+      "description": "ERC721 NFT with burnable, enumerable, capped, controller, snapshot",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "MINTER_ROLE",
+        "CONTROLLER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0xade0601991cfcac87c6bfe0d4ec283c5bc40df430ec67fc49f057e723c25b7cd",
+      "name": "ERC721 Royalty",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "royalty"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76"
+      ],
+      "facetCount": 2,
+      "description": "ERC721 NFT with royalty",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE"
+      ]
+    },
+    {
+      "configId": "0x2437265a78ebb1421ca948de5e1de84e10d12807b52c34725c0cbd0716b3c201",
+      "name": "ERC721 Burnable + Royalty",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "royalty"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76"
+      ],
+      "facetCount": 3,
+      "description": "ERC721 NFT with burnable, royalty",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE"
+      ]
+    },
+    {
+      "configId": "0xb9bbce01540d6ec86656e97a5105c528bb2163ff1889d5542748bd953ac9ad45",
+      "name": "ERC721 Enumerable + Royalty",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "enumerable",
+        "royalty"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76"
+      ],
+      "facetCount": 3,
+      "description": "ERC721 NFT with enumerable, royalty",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE"
+      ]
+    },
+    {
+      "configId": "0xb1bd9ca586056781150353f835d4530e4cb071500d1543b41219c3da40fa84f7",
+      "name": "ERC721 Burnable + Enumerable + Royalty",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "enumerable",
+        "royalty"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76"
+      ],
+      "facetCount": 4,
+      "description": "ERC721 NFT with burnable, enumerable, royalty",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE"
+      ]
+    },
+    {
+      "configId": "0xd017026a7c233e1c7631a880966d246f7c55d24afc6013e63fa73db0a6044bc5",
+      "name": "ERC721 Capped + Royalty",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "capped",
+        "royalty"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76"
+      ],
+      "facetCount": 3,
+      "description": "ERC721 NFT with capped, royalty",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "MINTER_ROLE"
+      ]
+    },
+    {
+      "configId": "0xb39ac9c55bf313d755cc02f8e0d688ca2973fb8c3f169918f31ea1dcae1574bd",
+      "name": "ERC721 Burnable + Capped + Royalty",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "capped",
+        "royalty"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76"
+      ],
+      "facetCount": 4,
+      "description": "ERC721 NFT with burnable, capped, royalty",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "MINTER_ROLE"
+      ]
+    },
+    {
+      "configId": "0x2b7b4d8c077c956164da40f6e58eefa2dc371169bddfc251848bb62e8e0d9237",
+      "name": "ERC721 Enumerable + Capped + Royalty",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "capped",
+        "enumerable",
+        "royalty"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76"
+      ],
+      "facetCount": 4,
+      "description": "ERC721 NFT with enumerable, capped, royalty",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "MINTER_ROLE"
+      ]
+    },
+    {
+      "configId": "0x7667d2ced7be95eccc6341e74dfc4b2691b491bd2e489f70bbde68d4d5108666",
+      "name": "ERC721 Burnable + Enumerable + Capped + Royalty",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "capped",
+        "enumerable",
+        "royalty"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76"
+      ],
+      "facetCount": 5,
+      "description": "ERC721 NFT with burnable, enumerable, capped, royalty",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "MINTER_ROLE"
+      ]
+    },
+    {
+      "configId": "0x0351db5f1f251034b363da3d1128e9483363663803d4f3a2daced164f952c372",
+      "name": "ERC721 Controller + Royalty",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "controller",
+        "royalty"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76"
+      ],
+      "facetCount": 3,
+      "description": "ERC721 NFT with controller, royalty",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "CONTROLLER_ROLE"
+      ]
+    },
+    {
+      "configId": "0xe3af06f7497cf8ac16305dc445fdbb38b89a5e453d7df838c4e2bd6999c0d1b5",
+      "name": "ERC721 Burnable + Controller + Royalty",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "controller",
+        "royalty"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76"
+      ],
+      "facetCount": 4,
+      "description": "ERC721 NFT with burnable, controller, royalty",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "CONTROLLER_ROLE"
+      ]
+    },
+    {
+      "configId": "0x63584143190f086e7062405495a28d30d7cd1d60d4edd556ad97f5a2518f1ec6",
+      "name": "ERC721 Enumerable + Controller + Royalty",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "controller",
+        "enumerable",
+        "royalty"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76"
+      ],
+      "facetCount": 4,
+      "description": "ERC721 NFT with enumerable, controller, royalty",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "CONTROLLER_ROLE"
+      ]
+    },
+    {
+      "configId": "0xb3223b88f753b16f1cedb5e165321aae36f66aa1428ea0c6c5471bb62e861e27",
+      "name": "ERC721 Burnable + Enumerable + Controller + Royalty",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "controller",
+        "enumerable",
+        "royalty"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76"
+      ],
+      "facetCount": 5,
+      "description": "ERC721 NFT with burnable, enumerable, controller, royalty",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "CONTROLLER_ROLE"
+      ]
+    },
+    {
+      "configId": "0xa378ad1138c8e80b2f76dc48caff8ad23ffa0b02c09c84feb09790b6f46265d2",
+      "name": "ERC721 Capped + Controller + Royalty",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "capped",
+        "controller",
+        "royalty"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76"
+      ],
+      "facetCount": 4,
+      "description": "ERC721 NFT with capped, controller, royalty",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "MINTER_ROLE",
+        "CONTROLLER_ROLE"
+      ]
+    },
+    {
+      "configId": "0x2f5cad3171fabd53d9a9d9e43115b13c4f0823e194c3ea3e68fbaeae5003b286",
+      "name": "ERC721 Burnable + Capped + Controller + Royalty",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "capped",
+        "controller",
+        "royalty"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76"
+      ],
+      "facetCount": 5,
+      "description": "ERC721 NFT with burnable, capped, controller, royalty",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "MINTER_ROLE",
+        "CONTROLLER_ROLE"
+      ]
+    },
+    {
+      "configId": "0xf040c33aad284edbed79bf80313d4d45660635048d1f5fed2c9ea9a492c760b9",
+      "name": "ERC721 Enumerable + Capped + Controller + Royalty",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "capped",
+        "controller",
+        "enumerable",
+        "royalty"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76"
+      ],
+      "facetCount": 5,
+      "description": "ERC721 NFT with enumerable, capped, controller, royalty",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "MINTER_ROLE",
+        "CONTROLLER_ROLE"
+      ]
+    },
+    {
+      "configId": "0x0d33bab0182db515424c411253c780348ff2bd676c355b931670aaaa51063fc2",
+      "name": "ERC721 Burnable + Enumerable + Capped + Controller + Royalty",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "capped",
+        "controller",
+        "enumerable",
+        "royalty"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76"
+      ],
+      "facetCount": 6,
+      "description": "ERC721 NFT with burnable, enumerable, capped, controller, royalty",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "MINTER_ROLE",
+        "CONTROLLER_ROLE"
+      ]
+    },
+    {
+      "configId": "0x5ad029ebfd5b52e6e1b19051c5aa79226538241c51791b8a227e9e40b01c92cb",
+      "name": "ERC721 Snapshot + Royalty",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "royalty",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76"
+      ],
+      "facetCount": 3,
+      "description": "ERC721 NFT with snapshot, royalty",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0x98ccfa1adf07990f981f4e5284539d95c4659bec025b7234ff97b804e0cdb76d",
+      "name": "ERC721 Burnable + Snapshot + Royalty",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "royalty",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76"
+      ],
+      "facetCount": 4,
+      "description": "ERC721 NFT with burnable, snapshot, royalty",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0x658dff05c271cd8a2d9c08a8b47dc8c03cacc63271a4772b9a6f26c929e8e54f",
+      "name": "ERC721 Enumerable + Snapshot + Royalty",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "enumerable",
+        "royalty",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76"
+      ],
+      "facetCount": 4,
+      "description": "ERC721 NFT with enumerable, snapshot, royalty",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0x3187abbb1c06efa8dbc07fe4b553b3421771503f38b0aebd27dbcdd160a6eaf6",
+      "name": "ERC721 Burnable + Enumerable + Snapshot + Royalty",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "enumerable",
+        "royalty",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76"
+      ],
+      "facetCount": 5,
+      "description": "ERC721 NFT with burnable, enumerable, snapshot, royalty",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0xfc92ec2e626fc4172aa472aef864d9f3456caa2267e0d8a24a9129a8a248ac64",
+      "name": "ERC721 Capped + Snapshot + Royalty",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "capped",
+        "royalty",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76"
+      ],
+      "facetCount": 4,
+      "description": "ERC721 NFT with capped, snapshot, royalty",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "MINTER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0x1aae9bcdeebaf3243c0a6d324f64efc765276e2d4b277910c2dc5481004fd1b3",
+      "name": "ERC721 Burnable + Capped + Snapshot + Royalty",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "capped",
+        "royalty",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76"
+      ],
+      "facetCount": 5,
+      "description": "ERC721 NFT with burnable, capped, snapshot, royalty",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "MINTER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0x9bf9e574961aeaa2c348e8a669a86bc2a431ac6520f5a2a10d8526a6d55b5c04",
+      "name": "ERC721 Enumerable + Capped + Snapshot + Royalty",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "capped",
+        "enumerable",
+        "royalty",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76"
+      ],
+      "facetCount": 5,
+      "description": "ERC721 NFT with enumerable, capped, snapshot, royalty",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "MINTER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0x75d4e2bccda31aaa3398e1fb1076e7c61d101b4c8e70cfc94f2c4f5c5845b995",
+      "name": "ERC721 Burnable + Enumerable + Capped + Snapshot + Royalty",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "capped",
+        "enumerable",
+        "royalty",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76"
+      ],
+      "facetCount": 6,
+      "description": "ERC721 NFT with burnable, enumerable, capped, snapshot, royalty",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "MINTER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0x077178fcc4e6f39dd8dbbe570b78e9f95bf0b013a332e91a81dba0fa2335a14d",
+      "name": "ERC721 Controller + Snapshot + Royalty",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "controller",
+        "royalty",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76"
+      ],
+      "facetCount": 4,
+      "description": "ERC721 NFT with controller, snapshot, royalty",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "CONTROLLER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0xa23ad47e7d29e33586846201a85b4ec1bd860b24cc95c57a3ed6f8b4246e53e4",
+      "name": "ERC721 Burnable + Controller + Snapshot + Royalty",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "controller",
+        "royalty",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76"
+      ],
+      "facetCount": 5,
+      "description": "ERC721 NFT with burnable, controller, snapshot, royalty",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "CONTROLLER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0xa013eec71d317af2000ce14a06f25cef20d8d559b1cb5ac1c1f98384a27f4466",
+      "name": "ERC721 Enumerable + Controller + Snapshot + Royalty",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "controller",
+        "enumerable",
+        "royalty",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76"
+      ],
+      "facetCount": 5,
+      "description": "ERC721 NFT with enumerable, controller, snapshot, royalty",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "CONTROLLER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0x3d53ad0c6100eeed25eadc79e7bc3a57aac873a5dde0db7786c41a9d15b14ed6",
+      "name": "ERC721 Burnable + Enumerable + Controller + Snapshot + Royalty",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "controller",
+        "enumerable",
+        "royalty",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76"
+      ],
+      "facetCount": 6,
+      "description": "ERC721 NFT with burnable, enumerable, controller, snapshot, royalty",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "CONTROLLER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0x25f97cde027a79453d8ea385f31337a3194eeced151bdfbf57e92a1c630541fa",
+      "name": "ERC721 Capped + Controller + Snapshot + Royalty",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "capped",
+        "controller",
+        "royalty",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76"
+      ],
+      "facetCount": 5,
+      "description": "ERC721 NFT with capped, controller, snapshot, royalty",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "MINTER_ROLE",
+        "CONTROLLER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0x1a56ce49bf4a5d4653d93146a501146a26fbaa84629aa971a53335bf95ca6bfe",
+      "name": "ERC721 Burnable + Capped + Controller + Snapshot + Royalty",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "capped",
+        "controller",
+        "royalty",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76"
+      ],
+      "facetCount": 6,
+      "description": "ERC721 NFT with burnable, capped, controller, snapshot, royalty",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "MINTER_ROLE",
+        "CONTROLLER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0x557ef604f45688a31d0ef50b017001dd6eaeb08a7017c2264719f00d47abd35f",
+      "name": "ERC721 Enumerable + Capped + Controller + Snapshot + Royalty",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "capped",
+        "controller",
+        "enumerable",
+        "royalty",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76"
+      ],
+      "facetCount": 6,
+      "description": "ERC721 NFT with enumerable, capped, controller, snapshot, royalty",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "MINTER_ROLE",
+        "CONTROLLER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0x0cec505ddee0303c3d79f9e3418c36c74cc9bf165234d306ed34e8de31d8d254",
+      "name": "ERC721 Burnable + Enumerable + Capped + Controller + Snapshot + Royalty",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "capped",
+        "controller",
+        "enumerable",
+        "royalty",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76"
+      ],
+      "facetCount": 7,
+      "description": "ERC721 NFT with burnable, enumerable, capped, controller, snapshot, royalty",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "MINTER_ROLE",
+        "CONTROLLER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0xe5e5e44666548d3459a7a1d7e4aa7c9e07fb7afd28ca6a6efcaacaae187928d9",
+      "name": "ERC721 Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "consecutive"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 2,
+      "description": "ERC721 NFT with consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE"
+      ]
+    },
+    {
+      "configId": "0x064a270fe8602d3761c4b1e25df507f33ed7edce1801d724ff0c0f5541db34a6",
+      "name": "ERC721 Burnable + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "consecutive"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 3,
+      "description": "ERC721 NFT with burnable, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE"
+      ]
+    },
+    {
+      "configId": "0xf405475caac3b7aa764ed43c8f8af641d42bea4ba22bd84b7cea52a39eb16c4f",
+      "name": "ERC721 Enumerable + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "consecutive",
+        "enumerable"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 3,
+      "description": "ERC721 NFT with enumerable, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE"
+      ]
+    },
+    {
+      "configId": "0x8a772322c4e8902f74d932571dfb904823478634d95909c115cf079bcd045916",
+      "name": "ERC721 Burnable + Enumerable + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "consecutive",
+        "enumerable"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 4,
+      "description": "ERC721 NFT with burnable, enumerable, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE"
+      ]
+    },
+    {
+      "configId": "0xf35ef6513a7beb5a63503b50c197aa6fc73812d50ea082d2ad6326c20c3bd8ff",
+      "name": "ERC721 Capped + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "capped",
+        "consecutive"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 3,
+      "description": "ERC721 NFT with capped, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "MINTER_ROLE"
+      ]
+    },
+    {
+      "configId": "0x85deb5fdc540950bc79f4df9e1889a5df6339434b3ee0d4b8f9fb776077f5aa6",
+      "name": "ERC721 Burnable + Capped + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "capped",
+        "consecutive"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 4,
+      "description": "ERC721 NFT with burnable, capped, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "MINTER_ROLE"
+      ]
+    },
+    {
+      "configId": "0x3ebb1e7e697f447f4f0c09017a3a343ae8202f6e4ce8714c3f952c4662a8ade6",
+      "name": "ERC721 Enumerable + Capped + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "capped",
+        "consecutive",
+        "enumerable"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 4,
+      "description": "ERC721 NFT with enumerable, capped, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "MINTER_ROLE"
+      ]
+    },
+    {
+      "configId": "0xb378b67f2da007792e8c31466dadd152d8f5bd8d75ab38dd6aaf1ab6cb981f03",
+      "name": "ERC721 Burnable + Enumerable + Capped + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "capped",
+        "consecutive",
+        "enumerable"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 5,
+      "description": "ERC721 NFT with burnable, enumerable, capped, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "MINTER_ROLE"
+      ]
+    },
+    {
+      "configId": "0x0666b0c06c870106e60384fc46c8d5dc4bce7ef63952bee2ee6a743c1e536c76",
+      "name": "ERC721 Controller + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "consecutive",
+        "controller"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 3,
+      "description": "ERC721 NFT with controller, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "CONTROLLER_ROLE"
+      ]
+    },
+    {
+      "configId": "0xa8d9b41644cb86958779d8e00ad541a739f3da265d39f3bda13d36f1246e1af1",
+      "name": "ERC721 Burnable + Controller + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "consecutive",
+        "controller"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 4,
+      "description": "ERC721 NFT with burnable, controller, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "CONTROLLER_ROLE"
+      ]
+    },
+    {
+      "configId": "0x24376de0487cb753f6614fdda479485a4e2b27d9e239c3c161182e4fefd58920",
+      "name": "ERC721 Enumerable + Controller + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "consecutive",
+        "controller",
+        "enumerable"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 4,
+      "description": "ERC721 NFT with enumerable, controller, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "CONTROLLER_ROLE"
+      ]
+    },
+    {
+      "configId": "0x11c093079c26aad6113b40addbedc80f33a683f4080f0f952f6b8772c31b3fc9",
+      "name": "ERC721 Burnable + Enumerable + Controller + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "consecutive",
+        "controller",
+        "enumerable"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 5,
+      "description": "ERC721 NFT with burnable, enumerable, controller, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "CONTROLLER_ROLE"
+      ]
+    },
+    {
+      "configId": "0xbfea7ee3a0af8f04b8f347d294f0a94044f5eaf7901912365d7d51971604f51e",
+      "name": "ERC721 Capped + Controller + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "capped",
+        "consecutive",
+        "controller"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 4,
+      "description": "ERC721 NFT with capped, controller, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "MINTER_ROLE",
+        "CONTROLLER_ROLE"
+      ]
+    },
+    {
+      "configId": "0x035f052222f5408a93d7e3c58efd0041cb000d51c17ac9f63ecb24a569306ba3",
+      "name": "ERC721 Burnable + Capped + Controller + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "capped",
+        "consecutive",
+        "controller"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 5,
+      "description": "ERC721 NFT with burnable, capped, controller, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "MINTER_ROLE",
+        "CONTROLLER_ROLE"
+      ]
+    },
+    {
+      "configId": "0x0fb5e4b5e8fb9c73534658b3d95f59cff40b6b4e39dff01026f998adb3b8fa29",
+      "name": "ERC721 Enumerable + Capped + Controller + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "capped",
+        "consecutive",
+        "controller",
+        "enumerable"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 5,
+      "description": "ERC721 NFT with enumerable, capped, controller, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "MINTER_ROLE",
+        "CONTROLLER_ROLE"
+      ]
+    },
+    {
+      "configId": "0xf96fe008a74c6d4ae0473337fa0edaae8e8ae6c7a2eb4a23bc0db01c387157de",
+      "name": "ERC721 Burnable + Enumerable + Capped + Controller + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "capped",
+        "consecutive",
+        "controller",
+        "enumerable"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 6,
+      "description": "ERC721 NFT with burnable, enumerable, capped, controller, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "MINTER_ROLE",
+        "CONTROLLER_ROLE"
+      ]
+    },
+    {
+      "configId": "0x19f6371b0f57b93f3bfa358d5320ede5d7b088eedd73598de3cdd57fa1f76de2",
+      "name": "ERC721 Snapshot + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "consecutive",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 3,
+      "description": "ERC721 NFT with snapshot, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0xa8a6af269681f4904fb10531bb5a4dc945658e8ee492086ac52ba66014a09d1a",
+      "name": "ERC721 Burnable + Snapshot + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "consecutive",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 4,
+      "description": "ERC721 NFT with burnable, snapshot, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0x6cd86a1ccdeacace9ee865069d20e9bf12dbb9bf7bb4e0972def3f5849b7cf61",
+      "name": "ERC721 Enumerable + Snapshot + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "consecutive",
+        "enumerable",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 4,
+      "description": "ERC721 NFT with enumerable, snapshot, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0x88ef796e9d2fc3a522ccf247ce914375e462bd70ce645a1af94596692b8b133a",
+      "name": "ERC721 Burnable + Enumerable + Snapshot + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "consecutive",
+        "enumerable",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 5,
+      "description": "ERC721 NFT with burnable, enumerable, snapshot, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0xe6469c526ef71d1f2443a2107547f2364995d411cf4c5ff349a40778cc9b6d72",
+      "name": "ERC721 Capped + Snapshot + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "capped",
+        "consecutive",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 4,
+      "description": "ERC721 NFT with capped, snapshot, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "MINTER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0x2f2d032e0ae3d930b691af1e39ce77e293acbef4fd94866db5d162e171a9b0ce",
+      "name": "ERC721 Burnable + Capped + Snapshot + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "capped",
+        "consecutive",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 5,
+      "description": "ERC721 NFT with burnable, capped, snapshot, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "MINTER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0x4224be5a6f3e582c353d76b691440887a517f17873a56f1ddf247a2102f9e2ba",
+      "name": "ERC721 Enumerable + Capped + Snapshot + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "capped",
+        "consecutive",
+        "enumerable",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 5,
+      "description": "ERC721 NFT with enumerable, capped, snapshot, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "MINTER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0xbf252c4365dfb0592af54fe24c34138fbdb175bf3cd3fbbe5709fe036b3c9818",
+      "name": "ERC721 Burnable + Enumerable + Capped + Snapshot + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "capped",
+        "consecutive",
+        "enumerable",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 6,
+      "description": "ERC721 NFT with burnable, enumerable, capped, snapshot, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "MINTER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0x04bf386614ac7c03626df942a4b4c8df1f1e7b739ccce6265e51ca19343e4063",
+      "name": "ERC721 Controller + Snapshot + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "consecutive",
+        "controller",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 4,
+      "description": "ERC721 NFT with controller, snapshot, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "CONTROLLER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0x7fc055edc9d7de4875567e5dded7c7f77ac8a947f682c02ce704e07a25806890",
+      "name": "ERC721 Burnable + Controller + Snapshot + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "consecutive",
+        "controller",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 5,
+      "description": "ERC721 NFT with burnable, controller, snapshot, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "CONTROLLER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0x81b8b0660530d9e637f59f8077c78557e0816e81bca13ede9fad84f8be563054",
+      "name": "ERC721 Enumerable + Controller + Snapshot + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "consecutive",
+        "controller",
+        "enumerable",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 5,
+      "description": "ERC721 NFT with enumerable, controller, snapshot, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "CONTROLLER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0xf7891fb06ad92ae03a2a746565751903580077f32b4da0b5b2c52333b2a2f0f6",
+      "name": "ERC721 Burnable + Enumerable + Controller + Snapshot + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "consecutive",
+        "controller",
+        "enumerable",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 6,
+      "description": "ERC721 NFT with burnable, enumerable, controller, snapshot, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "CONTROLLER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0xc2d5e48a91de5262e6d646d28b79eb06c1f11be90be922bfd1f2f06a3e5983a0",
+      "name": "ERC721 Capped + Controller + Snapshot + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "capped",
+        "consecutive",
+        "controller",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 5,
+      "description": "ERC721 NFT with capped, controller, snapshot, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "MINTER_ROLE",
+        "CONTROLLER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0xabd5277f6a951e033f5a95b204518eb13367df5f2d23f1da4350c1e60b452c12",
+      "name": "ERC721 Burnable + Capped + Controller + Snapshot + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "capped",
+        "consecutive",
+        "controller",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 6,
+      "description": "ERC721 NFT with burnable, capped, controller, snapshot, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "MINTER_ROLE",
+        "CONTROLLER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0xcf8680457d51ad6822b4db534ea0b2735a3d1b41609823c2abe798fafcf0ad64",
+      "name": "ERC721 Enumerable + Capped + Controller + Snapshot + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "capped",
+        "consecutive",
+        "controller",
+        "enumerable",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 6,
+      "description": "ERC721 NFT with enumerable, capped, controller, snapshot, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "MINTER_ROLE",
+        "CONTROLLER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0x6b87415f38e0ef4defd146c889c438f49bd3469d7ee33e4cab66c408a0716773",
+      "name": "ERC721 Burnable + Enumerable + Capped + Controller + Snapshot + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "capped",
+        "consecutive",
+        "controller",
+        "enumerable",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 7,
+      "description": "ERC721 NFT with burnable, enumerable, capped, controller, snapshot, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "MINTER_ROLE",
+        "CONTROLLER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0x79fed8df0c1ed733e8492d7276999f33207906328211e8fd820d0da102a0b879",
+      "name": "ERC721 Royalty + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "consecutive",
+        "royalty"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 3,
+      "description": "ERC721 NFT with royalty, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE"
+      ]
+    },
+    {
+      "configId": "0x8b133a326d43cdc561aadb97803c53d03921a1bb8a27d5a39c45847a83f7b1fc",
+      "name": "ERC721 Burnable + Royalty + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "consecutive",
+        "royalty"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 4,
+      "description": "ERC721 NFT with burnable, royalty, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE"
+      ]
+    },
+    {
+      "configId": "0x8685831566b809ba773e4d99894b08287160b48f579445c533e2c461e11bdf7f",
+      "name": "ERC721 Enumerable + Royalty + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "consecutive",
+        "enumerable",
+        "royalty"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 4,
+      "description": "ERC721 NFT with enumerable, royalty, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE"
+      ]
+    },
+    {
+      "configId": "0x3389c44d546c137bf3b87e43911fe764b7d6af5b5cfc9857de0002f2ae6ee74f",
+      "name": "ERC721 Burnable + Enumerable + Royalty + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "consecutive",
+        "enumerable",
+        "royalty"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 5,
+      "description": "ERC721 NFT with burnable, enumerable, royalty, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE"
+      ]
+    },
+    {
+      "configId": "0xad96559552eedb050fc0056c4965bd88cb11e3d3bf7824902bb0dfdb7c861214",
+      "name": "ERC721 Capped + Royalty + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "capped",
+        "consecutive",
+        "royalty"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 4,
+      "description": "ERC721 NFT with capped, royalty, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "MINTER_ROLE"
+      ]
+    },
+    {
+      "configId": "0x61a9020dd064a658605a2626940230d1123487f4168fa9cee21d3be403085a1b",
+      "name": "ERC721 Burnable + Capped + Royalty + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "capped",
+        "consecutive",
+        "royalty"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 5,
+      "description": "ERC721 NFT with burnable, capped, royalty, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "MINTER_ROLE"
+      ]
+    },
+    {
+      "configId": "0x366a564de24ff979dee21341af771fb73c98752f9402b37f9cd56a02d54c3a23",
+      "name": "ERC721 Enumerable + Capped + Royalty + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "capped",
+        "consecutive",
+        "enumerable",
+        "royalty"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 5,
+      "description": "ERC721 NFT with enumerable, capped, royalty, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "MINTER_ROLE"
+      ]
+    },
+    {
+      "configId": "0x53405b6cc9dd3cfc26f3ca35cc83dd0a9ea8ed353307374ed70bf85af1514319",
+      "name": "ERC721 Burnable + Enumerable + Capped + Royalty + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "capped",
+        "consecutive",
+        "enumerable",
+        "royalty"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 6,
+      "description": "ERC721 NFT with burnable, enumerable, capped, royalty, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "MINTER_ROLE"
+      ]
+    },
+    {
+      "configId": "0xd0e57c5b307e351dcf8eaac3a8027a3e419d2687df6d70c051f123b01b9344c9",
+      "name": "ERC721 Controller + Royalty + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "consecutive",
+        "controller",
+        "royalty"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 4,
+      "description": "ERC721 NFT with controller, royalty, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "CONTROLLER_ROLE"
+      ]
+    },
+    {
+      "configId": "0x024e5529a9601ca7141c94686425789a0f57e9845f54e036b33166de414da6af",
+      "name": "ERC721 Burnable + Controller + Royalty + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "consecutive",
+        "controller",
+        "royalty"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 5,
+      "description": "ERC721 NFT with burnable, controller, royalty, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "CONTROLLER_ROLE"
+      ]
+    },
+    {
+      "configId": "0x683634744d11c26ecd5f49ebcc5b69dd7dfc84f12fd9d55fc542bd4457196c80",
+      "name": "ERC721 Enumerable + Controller + Royalty + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "consecutive",
+        "controller",
+        "enumerable",
+        "royalty"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 5,
+      "description": "ERC721 NFT with enumerable, controller, royalty, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "CONTROLLER_ROLE"
+      ]
+    },
+    {
+      "configId": "0xfb78bb88e43db812324ecfa6b616d5291bf7d02e76560ed029148175d518a7e8",
+      "name": "ERC721 Burnable + Enumerable + Controller + Royalty + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "consecutive",
+        "controller",
+        "enumerable",
+        "royalty"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 6,
+      "description": "ERC721 NFT with burnable, enumerable, controller, royalty, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "CONTROLLER_ROLE"
+      ]
+    },
+    {
+      "configId": "0xd433804f14f962e4fc444305343a9eef514cd3c5130894d0cecf9c64c46f7649",
+      "name": "ERC721 Capped + Controller + Royalty + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "capped",
+        "consecutive",
+        "controller",
+        "royalty"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 5,
+      "description": "ERC721 NFT with capped, controller, royalty, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "MINTER_ROLE",
+        "CONTROLLER_ROLE"
+      ]
+    },
+    {
+      "configId": "0x236096a83152e90552a02185e92f6b067c3d51c775c35323b121ee8e5593c2f0",
+      "name": "ERC721 Burnable + Capped + Controller + Royalty + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "capped",
+        "consecutive",
+        "controller",
+        "royalty"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 6,
+      "description": "ERC721 NFT with burnable, capped, controller, royalty, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "MINTER_ROLE",
+        "CONTROLLER_ROLE"
+      ]
+    },
+    {
+      "configId": "0x70987aeb70d9f86083ec62bff66911ad8d1d1e297c3698369fd7505858e6c689",
+      "name": "ERC721 Enumerable + Capped + Controller + Royalty + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "capped",
+        "consecutive",
+        "controller",
+        "enumerable",
+        "royalty"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 6,
+      "description": "ERC721 NFT with enumerable, capped, controller, royalty, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "MINTER_ROLE",
+        "CONTROLLER_ROLE"
+      ]
+    },
+    {
+      "configId": "0x6abe6881629f7866d1f95db6cbb7effc4c05a716ecaf1f229bb622128141bf3b",
+      "name": "ERC721 Burnable + Enumerable + Capped + Controller + Royalty + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "capped",
+        "consecutive",
+        "controller",
+        "enumerable",
+        "royalty"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 7,
+      "description": "ERC721 NFT with burnable, enumerable, capped, controller, royalty, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "MINTER_ROLE",
+        "CONTROLLER_ROLE"
+      ]
+    },
+    {
+      "configId": "0xf840d0fa281e6f3dec78abe6a6d9ed0f4fd52a0f598f66b40efbd93697d72c1c",
+      "name": "ERC721 Snapshot + Royalty + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "consecutive",
+        "royalty",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 4,
+      "description": "ERC721 NFT with snapshot, royalty, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0xa5d4a7322c7c4614cab5eb47a66ce2fe1a7ad62241c560cf02e2a6e41e61606f",
+      "name": "ERC721 Burnable + Snapshot + Royalty + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "consecutive",
+        "royalty",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 5,
+      "description": "ERC721 NFT with burnable, snapshot, royalty, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0xac6d728061e6e8189c868468781c1699a3224cc71ab885993239d1d91dc971cf",
+      "name": "ERC721 Enumerable + Snapshot + Royalty + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "consecutive",
+        "enumerable",
+        "royalty",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 5,
+      "description": "ERC721 NFT with enumerable, snapshot, royalty, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0x304a4c8d569fa28f36cfa076ec893dc6e381062e47505a94bf53b71e2923fea0",
+      "name": "ERC721 Burnable + Enumerable + Snapshot + Royalty + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "consecutive",
+        "enumerable",
+        "royalty",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 6,
+      "description": "ERC721 NFT with burnable, enumerable, snapshot, royalty, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0x9fc6fe8683ac9563d8793a8623fd95743b4acb70fa18b4745da6790128da0f18",
+      "name": "ERC721 Capped + Snapshot + Royalty + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "capped",
+        "consecutive",
+        "royalty",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 5,
+      "description": "ERC721 NFT with capped, snapshot, royalty, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "MINTER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0x08c825bcd81621fe6b8cd9e66ae66213c89462886f213f7c305a8891375c15f7",
+      "name": "ERC721 Burnable + Capped + Snapshot + Royalty + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "capped",
+        "consecutive",
+        "royalty",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 6,
+      "description": "ERC721 NFT with burnable, capped, snapshot, royalty, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "MINTER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0x0c898ab28140e01e430ccedb0687360ff244dd2cc075ef4c8581275edf61448c",
+      "name": "ERC721 Enumerable + Capped + Snapshot + Royalty + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "capped",
+        "consecutive",
+        "enumerable",
+        "royalty",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 6,
+      "description": "ERC721 NFT with enumerable, capped, snapshot, royalty, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "MINTER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0x0d66c6cf9c6e57b78fa9074eb283e3e2bd7c9cec35826c9a563d72c25dd57e55",
+      "name": "ERC721 Burnable + Enumerable + Capped + Snapshot + Royalty + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "capped",
+        "consecutive",
+        "enumerable",
+        "royalty",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 7,
+      "description": "ERC721 NFT with burnable, enumerable, capped, snapshot, royalty, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "MINTER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0x7894d7708d0aef6fa4a0462f4e55a89aeff1c46728c3d347b1b828168b3728bd",
+      "name": "ERC721 Controller + Snapshot + Royalty + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "consecutive",
+        "controller",
+        "royalty",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 5,
+      "description": "ERC721 NFT with controller, snapshot, royalty, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "CONTROLLER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0x5a74c5f3696da0b3b76a5463d068f8094e60b125a1d8c88e1753f7f3c217981d",
+      "name": "ERC721 Burnable + Controller + Snapshot + Royalty + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "consecutive",
+        "controller",
+        "royalty",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 6,
+      "description": "ERC721 NFT with burnable, controller, snapshot, royalty, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "CONTROLLER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0x05c57ebd309e4f792fdc3dc1eacf622eb8e48698e94a55f9300e2c2f800b9784",
+      "name": "ERC721 Enumerable + Controller + Snapshot + Royalty + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "consecutive",
+        "controller",
+        "enumerable",
+        "royalty",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 6,
+      "description": "ERC721 NFT with enumerable, controller, snapshot, royalty, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "CONTROLLER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0xcc5afbf6c3c694113e04e82a29cd92f5d89f602a98cd512814c9c23e2e277450",
+      "name": "ERC721 Burnable + Enumerable + Controller + Snapshot + Royalty + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "consecutive",
+        "controller",
+        "enumerable",
+        "royalty",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 7,
+      "description": "ERC721 NFT with burnable, enumerable, controller, snapshot, royalty, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "CONTROLLER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0x2ec2969c290053e006e330e8e48b82c60fc3fbf77240d3401014170d895cc8df",
+      "name": "ERC721 Capped + Controller + Snapshot + Royalty + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "capped",
+        "consecutive",
+        "controller",
+        "royalty",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 6,
+      "description": "ERC721 NFT with capped, controller, snapshot, royalty, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "MINTER_ROLE",
+        "CONTROLLER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0x1bd796e1093658e8312e78a1ae9b44dea430c86adde1864a4855b3ca9578c1b9",
+      "name": "ERC721 Burnable + Capped + Controller + Snapshot + Royalty + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "capped",
+        "consecutive",
+        "controller",
+        "royalty",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 7,
+      "description": "ERC721 NFT with burnable, capped, controller, snapshot, royalty, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "MINTER_ROLE",
+        "CONTROLLER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0x8733b17757caea595ddba0a812afce9923883151dee73cff65e94fce89939b38",
+      "name": "ERC721 Enumerable + Capped + Controller + Snapshot + Royalty + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "capped",
+        "consecutive",
+        "controller",
+        "enumerable",
+        "royalty",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 7,
+      "description": "ERC721 NFT with enumerable, capped, controller, snapshot, royalty, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "MINTER_ROLE",
+        "CONTROLLER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    },
+    {
+      "configId": "0xcd7943825f5d57606e0e74bef6f35a8f78ea4e1d2725be899a05d22989ac0740",
+      "name": "ERC721 Burnable + Enumerable + Capped + Controller + Snapshot + Royalty + Consecutive",
+      "standard": "ERC721",
+      "features": [
+        "base",
+        "burnable",
+        "capped",
+        "consecutive",
+        "controller",
+        "enumerable",
+        "royalty",
+        "snapshot"
+      ],
+      "businessLogics": [
+        "0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413",
+        "0x206b0e4238408e5768282093d791f76fa433862449b7d2f6bcfcf6334c68b731",
+        "0xedb7f9fdb1d3f5f42d41b01b9be5a65625ceb3729df0767c42252b0ba9d8ccd5",
+        "0x562609faca97c2599c7b5267f4c9852db8d80261577ecea4c9660ff46f48ac8c",
+        "0x3151ba844095052447f78f5266df4cb3ce2c27fccb2dddb913b38ef0f5856367",
+        "0xf1a2b064b8a113b55cf2e7361db7c9361c635ec4d56c34424cf80a1d6478b51d",
+        "0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76",
+        "0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4"
+      ],
+      "facetCount": 8,
+      "description": "ERC721 NFT with burnable, enumerable, capped, controller, snapshot, royalty, consecutive",
+      "requiredRoles": [
+        "DEFAULT_ADMIN_ROLE",
+        "BURNER_ROLE",
+        "MINTER_ROLE",
+        "CONTROLLER_ROLE",
+        "SNAPSHOT_ROLE"
+      ]
+    }
+  ],
+  "index": {
+    "byFeatures": {
+      "base": "0x59feed5aef5068f542c88f585246b1c161bab5db8ccaf5b3a286e5b393e913e4",
+      "base+burnable": "0x8c52f6b2363328314f2b453099d6a812887e8c0518b3fce1a02fd6cb11c28678",
+      "base+enumerable": "0x650a434be0dda7991a826343e4cff60dece9f354331cba7b670b04028bed1ddf",
+      "base+burnable+enumerable": "0x4ae5600f3b388305831dc9b279cc7b7786ca0bf7a7934be03cc42c690c3e94d6",
+      "base+capped": "0x96a0dd141dbe4542667f8b89888f23c3a7a8be9fa42f393b942134e3c179a159",
+      "base+burnable+capped": "0xc5742c5a3468007617713cd6cb74c6267e42d3a3c9a9762c9a31280538220989",
+      "base+capped+enumerable": "0xdf658b7e82ae9aaf092d6f6ca1195fdc8021aab597533df158a03511d4d4d913",
+      "base+burnable+capped+enumerable": "0x03ae8988d9a07e5ab2386477c73260aaace6d851a9bdbd9337c00138235ca642",
+      "base+controller": "0x40f8f163eb8a599d6bc4f3decd802209ab904b85c1592b7296ee5583cf70def4",
+      "base+burnable+controller": "0x9988da2397dec0005992cb56a10abda491d90259a7e5529b1d2be24755cf6906",
+      "base+controller+enumerable": "0x493d638a20c884a0eab2103600ea53d147225012bf070f0c1b04ceae62d322fb",
+      "base+burnable+controller+enumerable": "0x461a75b034161cf2ced85d19d39b845749352ca5be83ea026a4145efdc8119bb",
+      "base+capped+controller": "0x34e35e07d3499ff3f1b245c9f07e531dd8eafcb35bfdde06a53f2715926220f1",
+      "base+burnable+capped+controller": "0xf99dc06ba1eac16602222331f41791f1cd5d97520d2ee2ed55dd7333f421b9a8",
+      "base+capped+controller+enumerable": "0xc12b91c70e459b20b4991e1d2da3931be14cb5af082858fbc33632604ac87cf7",
+      "base+burnable+capped+controller+enumerable": "0x216e0dc39c33f9e80dc070ffed3cf588cb43b39fb031ab202ef2bc6b504fb6b5",
+      "base+snapshot": "0x4d78ef4092cfad7064467246ff09e721c75300712801033df0c34b8196a6d32c",
+      "base+burnable+snapshot": "0xc2941988e2fe2569fa08de61ea8295fc1a67b8852c1362b40b7348eeb1380dcb",
+      "base+enumerable+snapshot": "0xe319a5d7550a7dac2c639d35023f12910ea5c8e483aca1da683369ca81758a0a",
+      "base+burnable+enumerable+snapshot": "0xee495c75d142cedf500476f2b1d2f202c2b4c80c4a249267bb0cf614bc835878",
+      "base+capped+snapshot": "0x00d77dcf6ca0a2fe52e278aae412e5ee83b631658550dfd1a163d606f735c470",
+      "base+burnable+capped+snapshot": "0x729d0a123c1132f72860e29b176782433d142c7756c0cae6674a88da51b34724",
+      "base+capped+enumerable+snapshot": "0xab802f3da69f2fe5a1fdd584ce363ed91531437e90c4b9309bfdad28f407ee0a",
+      "base+burnable+capped+enumerable+snapshot": "0xbb385f04397fe488a486d01db8d5661fd29dfa16dde6530be7fec78788556a21",
+      "base+controller+snapshot": "0x7b09282d0c89eaa73ed11942ff7e60d41ea4e3818dceb42304aa3c80b97affad",
+      "base+burnable+controller+snapshot": "0x7ca9e7e6f18f0401ed169b3276192a0c6db82e24cdaac05d8404f34b27b2baab",
+      "base+controller+enumerable+snapshot": "0x6ea16cef162fe480e44c5e72c5841974e3e735f529b61b979eabfb7fe992b5ac",
+      "base+burnable+controller+enumerable+snapshot": "0xccd8da648964e3f87c07ac83b8b47ed1387509340349427e7a9ae7b9f9db0883",
+      "base+capped+controller+snapshot": "0xd67f39b0a6f4e7be90355588ded287bdefbaf2a982a6052682277f0e4dc799ef",
+      "base+burnable+capped+controller+snapshot": "0xd50515c6aff5946006a6c76f87ccda740600e67c397f619d23fd3d63825d43c1",
+      "base+capped+controller+enumerable+snapshot": "0xcca7ccec85cba0bc1615924e60032d26eeb61b4b9d9b416bbefe68db507adb8a",
+      "base+burnable+capped+controller+enumerable+snapshot": "0x3c11b7bc3d21af11b2cceb6dd7f533ac6040a2e7386b272fa0fba87f9b51ae29",
+      "base+royalty": "0xade0601991cfcac87c6bfe0d4ec283c5bc40df430ec67fc49f057e723c25b7cd",
+      "base+burnable+royalty": "0x2437265a78ebb1421ca948de5e1de84e10d12807b52c34725c0cbd0716b3c201",
+      "base+enumerable+royalty": "0xb9bbce01540d6ec86656e97a5105c528bb2163ff1889d5542748bd953ac9ad45",
+      "base+burnable+enumerable+royalty": "0xb1bd9ca586056781150353f835d4530e4cb071500d1543b41219c3da40fa84f7",
+      "base+capped+royalty": "0xd017026a7c233e1c7631a880966d246f7c55d24afc6013e63fa73db0a6044bc5",
+      "base+burnable+capped+royalty": "0xb39ac9c55bf313d755cc02f8e0d688ca2973fb8c3f169918f31ea1dcae1574bd",
+      "base+capped+enumerable+royalty": "0x2b7b4d8c077c956164da40f6e58eefa2dc371169bddfc251848bb62e8e0d9237",
+      "base+burnable+capped+enumerable+royalty": "0x7667d2ced7be95eccc6341e74dfc4b2691b491bd2e489f70bbde68d4d5108666",
+      "base+controller+royalty": "0x0351db5f1f251034b363da3d1128e9483363663803d4f3a2daced164f952c372",
+      "base+burnable+controller+royalty": "0xe3af06f7497cf8ac16305dc445fdbb38b89a5e453d7df838c4e2bd6999c0d1b5",
+      "base+controller+enumerable+royalty": "0x63584143190f086e7062405495a28d30d7cd1d60d4edd556ad97f5a2518f1ec6",
+      "base+burnable+controller+enumerable+royalty": "0xb3223b88f753b16f1cedb5e165321aae36f66aa1428ea0c6c5471bb62e861e27",
+      "base+capped+controller+royalty": "0xa378ad1138c8e80b2f76dc48caff8ad23ffa0b02c09c84feb09790b6f46265d2",
+      "base+burnable+capped+controller+royalty": "0x2f5cad3171fabd53d9a9d9e43115b13c4f0823e194c3ea3e68fbaeae5003b286",
+      "base+capped+controller+enumerable+royalty": "0xf040c33aad284edbed79bf80313d4d45660635048d1f5fed2c9ea9a492c760b9",
+      "base+burnable+capped+controller+enumerable+royalty": "0x0d33bab0182db515424c411253c780348ff2bd676c355b931670aaaa51063fc2",
+      "base+royalty+snapshot": "0x5ad029ebfd5b52e6e1b19051c5aa79226538241c51791b8a227e9e40b01c92cb",
+      "base+burnable+royalty+snapshot": "0x98ccfa1adf07990f981f4e5284539d95c4659bec025b7234ff97b804e0cdb76d",
+      "base+enumerable+royalty+snapshot": "0x658dff05c271cd8a2d9c08a8b47dc8c03cacc63271a4772b9a6f26c929e8e54f",
+      "base+burnable+enumerable+royalty+snapshot": "0x3187abbb1c06efa8dbc07fe4b553b3421771503f38b0aebd27dbcdd160a6eaf6",
+      "base+capped+royalty+snapshot": "0xfc92ec2e626fc4172aa472aef864d9f3456caa2267e0d8a24a9129a8a248ac64",
+      "base+burnable+capped+royalty+snapshot": "0x1aae9bcdeebaf3243c0a6d324f64efc765276e2d4b277910c2dc5481004fd1b3",
+      "base+capped+enumerable+royalty+snapshot": "0x9bf9e574961aeaa2c348e8a669a86bc2a431ac6520f5a2a10d8526a6d55b5c04",
+      "base+burnable+capped+enumerable+royalty+snapshot": "0x75d4e2bccda31aaa3398e1fb1076e7c61d101b4c8e70cfc94f2c4f5c5845b995",
+      "base+controller+royalty+snapshot": "0x077178fcc4e6f39dd8dbbe570b78e9f95bf0b013a332e91a81dba0fa2335a14d",
+      "base+burnable+controller+royalty+snapshot": "0xa23ad47e7d29e33586846201a85b4ec1bd860b24cc95c57a3ed6f8b4246e53e4",
+      "base+controller+enumerable+royalty+snapshot": "0xa013eec71d317af2000ce14a06f25cef20d8d559b1cb5ac1c1f98384a27f4466",
+      "base+burnable+controller+enumerable+royalty+snapshot": "0x3d53ad0c6100eeed25eadc79e7bc3a57aac873a5dde0db7786c41a9d15b14ed6",
+      "base+capped+controller+royalty+snapshot": "0x25f97cde027a79453d8ea385f31337a3194eeced151bdfbf57e92a1c630541fa",
+      "base+burnable+capped+controller+royalty+snapshot": "0x1a56ce49bf4a5d4653d93146a501146a26fbaa84629aa971a53335bf95ca6bfe",
+      "base+capped+controller+enumerable+royalty+snapshot": "0x557ef604f45688a31d0ef50b017001dd6eaeb08a7017c2264719f00d47abd35f",
+      "base+burnable+capped+controller+enumerable+royalty+snapshot": "0x0cec505ddee0303c3d79f9e3418c36c74cc9bf165234d306ed34e8de31d8d254",
+      "base+consecutive": "0xe5e5e44666548d3459a7a1d7e4aa7c9e07fb7afd28ca6a6efcaacaae187928d9",
+      "base+burnable+consecutive": "0x064a270fe8602d3761c4b1e25df507f33ed7edce1801d724ff0c0f5541db34a6",
+      "base+consecutive+enumerable": "0xf405475caac3b7aa764ed43c8f8af641d42bea4ba22bd84b7cea52a39eb16c4f",
+      "base+burnable+consecutive+enumerable": "0x8a772322c4e8902f74d932571dfb904823478634d95909c115cf079bcd045916",
+      "base+capped+consecutive": "0xf35ef6513a7beb5a63503b50c197aa6fc73812d50ea082d2ad6326c20c3bd8ff",
+      "base+burnable+capped+consecutive": "0x85deb5fdc540950bc79f4df9e1889a5df6339434b3ee0d4b8f9fb776077f5aa6",
+      "base+capped+consecutive+enumerable": "0x3ebb1e7e697f447f4f0c09017a3a343ae8202f6e4ce8714c3f952c4662a8ade6",
+      "base+burnable+capped+consecutive+enumerable": "0xb378b67f2da007792e8c31466dadd152d8f5bd8d75ab38dd6aaf1ab6cb981f03",
+      "base+consecutive+controller": "0x0666b0c06c870106e60384fc46c8d5dc4bce7ef63952bee2ee6a743c1e536c76",
+      "base+burnable+consecutive+controller": "0xa8d9b41644cb86958779d8e00ad541a739f3da265d39f3bda13d36f1246e1af1",
+      "base+consecutive+controller+enumerable": "0x24376de0487cb753f6614fdda479485a4e2b27d9e239c3c161182e4fefd58920",
+      "base+burnable+consecutive+controller+enumerable": "0x11c093079c26aad6113b40addbedc80f33a683f4080f0f952f6b8772c31b3fc9",
+      "base+capped+consecutive+controller": "0xbfea7ee3a0af8f04b8f347d294f0a94044f5eaf7901912365d7d51971604f51e",
+      "base+burnable+capped+consecutive+controller": "0x035f052222f5408a93d7e3c58efd0041cb000d51c17ac9f63ecb24a569306ba3",
+      "base+capped+consecutive+controller+enumerable": "0x0fb5e4b5e8fb9c73534658b3d95f59cff40b6b4e39dff01026f998adb3b8fa29",
+      "base+burnable+capped+consecutive+controller+enumerable": "0xf96fe008a74c6d4ae0473337fa0edaae8e8ae6c7a2eb4a23bc0db01c387157de",
+      "base+consecutive+snapshot": "0x19f6371b0f57b93f3bfa358d5320ede5d7b088eedd73598de3cdd57fa1f76de2",
+      "base+burnable+consecutive+snapshot": "0xa8a6af269681f4904fb10531bb5a4dc945658e8ee492086ac52ba66014a09d1a",
+      "base+consecutive+enumerable+snapshot": "0x6cd86a1ccdeacace9ee865069d20e9bf12dbb9bf7bb4e0972def3f5849b7cf61",
+      "base+burnable+consecutive+enumerable+snapshot": "0x88ef796e9d2fc3a522ccf247ce914375e462bd70ce645a1af94596692b8b133a",
+      "base+capped+consecutive+snapshot": "0xe6469c526ef71d1f2443a2107547f2364995d411cf4c5ff349a40778cc9b6d72",
+      "base+burnable+capped+consecutive+snapshot": "0x2f2d032e0ae3d930b691af1e39ce77e293acbef4fd94866db5d162e171a9b0ce",
+      "base+capped+consecutive+enumerable+snapshot": "0x4224be5a6f3e582c353d76b691440887a517f17873a56f1ddf247a2102f9e2ba",
+      "base+burnable+capped+consecutive+enumerable+snapshot": "0xbf252c4365dfb0592af54fe24c34138fbdb175bf3cd3fbbe5709fe036b3c9818",
+      "base+consecutive+controller+snapshot": "0x04bf386614ac7c03626df942a4b4c8df1f1e7b739ccce6265e51ca19343e4063",
+      "base+burnable+consecutive+controller+snapshot": "0x7fc055edc9d7de4875567e5dded7c7f77ac8a947f682c02ce704e07a25806890",
+      "base+consecutive+controller+enumerable+snapshot": "0x81b8b0660530d9e637f59f8077c78557e0816e81bca13ede9fad84f8be563054",
+      "base+burnable+consecutive+controller+enumerable+snapshot": "0xf7891fb06ad92ae03a2a746565751903580077f32b4da0b5b2c52333b2a2f0f6",
+      "base+capped+consecutive+controller+snapshot": "0xc2d5e48a91de5262e6d646d28b79eb06c1f11be90be922bfd1f2f06a3e5983a0",
+      "base+burnable+capped+consecutive+controller+snapshot": "0xabd5277f6a951e033f5a95b204518eb13367df5f2d23f1da4350c1e60b452c12",
+      "base+capped+consecutive+controller+enumerable+snapshot": "0xcf8680457d51ad6822b4db534ea0b2735a3d1b41609823c2abe798fafcf0ad64",
+      "base+burnable+capped+consecutive+controller+enumerable+snapshot": "0x6b87415f38e0ef4defd146c889c438f49bd3469d7ee33e4cab66c408a0716773",
+      "base+consecutive+royalty": "0x79fed8df0c1ed733e8492d7276999f33207906328211e8fd820d0da102a0b879",
+      "base+burnable+consecutive+royalty": "0x8b133a326d43cdc561aadb97803c53d03921a1bb8a27d5a39c45847a83f7b1fc",
+      "base+consecutive+enumerable+royalty": "0x8685831566b809ba773e4d99894b08287160b48f579445c533e2c461e11bdf7f",
+      "base+burnable+consecutive+enumerable+royalty": "0x3389c44d546c137bf3b87e43911fe764b7d6af5b5cfc9857de0002f2ae6ee74f",
+      "base+capped+consecutive+royalty": "0xad96559552eedb050fc0056c4965bd88cb11e3d3bf7824902bb0dfdb7c861214",
+      "base+burnable+capped+consecutive+royalty": "0x61a9020dd064a658605a2626940230d1123487f4168fa9cee21d3be403085a1b",
+      "base+capped+consecutive+enumerable+royalty": "0x366a564de24ff979dee21341af771fb73c98752f9402b37f9cd56a02d54c3a23",
+      "base+burnable+capped+consecutive+enumerable+royalty": "0x53405b6cc9dd3cfc26f3ca35cc83dd0a9ea8ed353307374ed70bf85af1514319",
+      "base+consecutive+controller+royalty": "0xd0e57c5b307e351dcf8eaac3a8027a3e419d2687df6d70c051f123b01b9344c9",
+      "base+burnable+consecutive+controller+royalty": "0x024e5529a9601ca7141c94686425789a0f57e9845f54e036b33166de414da6af",
+      "base+consecutive+controller+enumerable+royalty": "0x683634744d11c26ecd5f49ebcc5b69dd7dfc84f12fd9d55fc542bd4457196c80",
+      "base+burnable+consecutive+controller+enumerable+royalty": "0xfb78bb88e43db812324ecfa6b616d5291bf7d02e76560ed029148175d518a7e8",
+      "base+capped+consecutive+controller+royalty": "0xd433804f14f962e4fc444305343a9eef514cd3c5130894d0cecf9c64c46f7649",
+      "base+burnable+capped+consecutive+controller+royalty": "0x236096a83152e90552a02185e92f6b067c3d51c775c35323b121ee8e5593c2f0",
+      "base+capped+consecutive+controller+enumerable+royalty": "0x70987aeb70d9f86083ec62bff66911ad8d1d1e297c3698369fd7505858e6c689",
+      "base+burnable+capped+consecutive+controller+enumerable+royalty": "0x6abe6881629f7866d1f95db6cbb7effc4c05a716ecaf1f229bb622128141bf3b",
+      "base+consecutive+royalty+snapshot": "0xf840d0fa281e6f3dec78abe6a6d9ed0f4fd52a0f598f66b40efbd93697d72c1c",
+      "base+burnable+consecutive+royalty+snapshot": "0xa5d4a7322c7c4614cab5eb47a66ce2fe1a7ad62241c560cf02e2a6e41e61606f",
+      "base+consecutive+enumerable+royalty+snapshot": "0xac6d728061e6e8189c868468781c1699a3224cc71ab885993239d1d91dc971cf",
+      "base+burnable+consecutive+enumerable+royalty+snapshot": "0x304a4c8d569fa28f36cfa076ec893dc6e381062e47505a94bf53b71e2923fea0",
+      "base+capped+consecutive+royalty+snapshot": "0x9fc6fe8683ac9563d8793a8623fd95743b4acb70fa18b4745da6790128da0f18",
+      "base+burnable+capped+consecutive+royalty+snapshot": "0x08c825bcd81621fe6b8cd9e66ae66213c89462886f213f7c305a8891375c15f7",
+      "base+capped+consecutive+enumerable+royalty+snapshot": "0x0c898ab28140e01e430ccedb0687360ff244dd2cc075ef4c8581275edf61448c",
+      "base+burnable+capped+consecutive+enumerable+royalty+snapshot": "0x0d66c6cf9c6e57b78fa9074eb283e3e2bd7c9cec35826c9a563d72c25dd57e55",
+      "base+consecutive+controller+royalty+snapshot": "0x7894d7708d0aef6fa4a0462f4e55a89aeff1c46728c3d347b1b828168b3728bd",
+      "base+burnable+consecutive+controller+royalty+snapshot": "0x5a74c5f3696da0b3b76a5463d068f8094e60b125a1d8c88e1753f7f3c217981d",
+      "base+consecutive+controller+enumerable+royalty+snapshot": "0x05c57ebd309e4f792fdc3dc1eacf622eb8e48698e94a55f9300e2c2f800b9784",
+      "base+burnable+consecutive+controller+enumerable+royalty+snapshot": "0xcc5afbf6c3c694113e04e82a29cd92f5d89f602a98cd512814c9c23e2e277450",
+      "base+capped+consecutive+controller+royalty+snapshot": "0x2ec2969c290053e006e330e8e48b82c60fc3fbf77240d3401014170d895cc8df",
+      "base+burnable+capped+consecutive+controller+royalty+snapshot": "0x1bd796e1093658e8312e78a1ae9b44dea430c86adde1864a4855b3ca9578c1b9",
+      "base+capped+consecutive+controller+enumerable+royalty+snapshot": "0x8733b17757caea595ddba0a812afce9923883151dee73cff65e94fce89939b38",
+      "base+burnable+capped+consecutive+controller+enumerable+royalty+snapshot": "0xcd7943825f5d57606e0e74bef6f35a8f78ea4e1d2725be899a05d22989ac0740"
+    },
+    "byName": {
+      "ERC721 Basic": "0x59feed5aef5068f542c88f585246b1c161bab5db8ccaf5b3a286e5b393e913e4",
+      "ERC721 Burnable": "0x8c52f6b2363328314f2b453099d6a812887e8c0518b3fce1a02fd6cb11c28678",
+      "ERC721 Enumerable": "0x650a434be0dda7991a826343e4cff60dece9f354331cba7b670b04028bed1ddf",
+      "ERC721 Burnable + Enumerable": "0x4ae5600f3b388305831dc9b279cc7b7786ca0bf7a7934be03cc42c690c3e94d6",
+      "ERC721 Capped": "0x96a0dd141dbe4542667f8b89888f23c3a7a8be9fa42f393b942134e3c179a159",
+      "ERC721 Burnable + Capped": "0xc5742c5a3468007617713cd6cb74c6267e42d3a3c9a9762c9a31280538220989",
+      "ERC721 Enumerable + Capped": "0xdf658b7e82ae9aaf092d6f6ca1195fdc8021aab597533df158a03511d4d4d913",
+      "ERC721 Burnable + Enumerable + Capped": "0x03ae8988d9a07e5ab2386477c73260aaace6d851a9bdbd9337c00138235ca642",
+      "ERC721 Controller": "0x40f8f163eb8a599d6bc4f3decd802209ab904b85c1592b7296ee5583cf70def4",
+      "ERC721 Burnable + Controller": "0x9988da2397dec0005992cb56a10abda491d90259a7e5529b1d2be24755cf6906",
+      "ERC721 Enumerable + Controller": "0x493d638a20c884a0eab2103600ea53d147225012bf070f0c1b04ceae62d322fb",
+      "ERC721 Burnable + Enumerable + Controller": "0x461a75b034161cf2ced85d19d39b845749352ca5be83ea026a4145efdc8119bb",
+      "ERC721 Capped + Controller": "0x34e35e07d3499ff3f1b245c9f07e531dd8eafcb35bfdde06a53f2715926220f1",
+      "ERC721 Burnable + Capped + Controller": "0xf99dc06ba1eac16602222331f41791f1cd5d97520d2ee2ed55dd7333f421b9a8",
+      "ERC721 Enumerable + Capped + Controller": "0xc12b91c70e459b20b4991e1d2da3931be14cb5af082858fbc33632604ac87cf7",
+      "ERC721 Burnable + Enumerable + Capped + Controller": "0x216e0dc39c33f9e80dc070ffed3cf588cb43b39fb031ab202ef2bc6b504fb6b5",
+      "ERC721 Snapshot": "0x4d78ef4092cfad7064467246ff09e721c75300712801033df0c34b8196a6d32c",
+      "ERC721 Burnable + Snapshot": "0xc2941988e2fe2569fa08de61ea8295fc1a67b8852c1362b40b7348eeb1380dcb",
+      "ERC721 Enumerable + Snapshot": "0xe319a5d7550a7dac2c639d35023f12910ea5c8e483aca1da683369ca81758a0a",
+      "ERC721 Burnable + Enumerable + Snapshot": "0xee495c75d142cedf500476f2b1d2f202c2b4c80c4a249267bb0cf614bc835878",
+      "ERC721 Capped + Snapshot": "0x00d77dcf6ca0a2fe52e278aae412e5ee83b631658550dfd1a163d606f735c470",
+      "ERC721 Burnable + Capped + Snapshot": "0x729d0a123c1132f72860e29b176782433d142c7756c0cae6674a88da51b34724",
+      "ERC721 Enumerable + Capped + Snapshot": "0xab802f3da69f2fe5a1fdd584ce363ed91531437e90c4b9309bfdad28f407ee0a",
+      "ERC721 Burnable + Enumerable + Capped + Snapshot": "0xbb385f04397fe488a486d01db8d5661fd29dfa16dde6530be7fec78788556a21",
+      "ERC721 Controller + Snapshot": "0x7b09282d0c89eaa73ed11942ff7e60d41ea4e3818dceb42304aa3c80b97affad",
+      "ERC721 Burnable + Controller + Snapshot": "0x7ca9e7e6f18f0401ed169b3276192a0c6db82e24cdaac05d8404f34b27b2baab",
+      "ERC721 Enumerable + Controller + Snapshot": "0x6ea16cef162fe480e44c5e72c5841974e3e735f529b61b979eabfb7fe992b5ac",
+      "ERC721 Burnable + Enumerable + Controller + Snapshot": "0xccd8da648964e3f87c07ac83b8b47ed1387509340349427e7a9ae7b9f9db0883",
+      "ERC721 Capped + Controller + Snapshot": "0xd67f39b0a6f4e7be90355588ded287bdefbaf2a982a6052682277f0e4dc799ef",
+      "ERC721 Burnable + Capped + Controller + Snapshot": "0xd50515c6aff5946006a6c76f87ccda740600e67c397f619d23fd3d63825d43c1",
+      "ERC721 Enumerable + Capped + Controller + Snapshot": "0xcca7ccec85cba0bc1615924e60032d26eeb61b4b9d9b416bbefe68db507adb8a",
+      "ERC721 Burnable + Enumerable + Capped + Controller + Snapshot": "0x3c11b7bc3d21af11b2cceb6dd7f533ac6040a2e7386b272fa0fba87f9b51ae29",
+      "ERC721 Royalty": "0xade0601991cfcac87c6bfe0d4ec283c5bc40df430ec67fc49f057e723c25b7cd",
+      "ERC721 Burnable + Royalty": "0x2437265a78ebb1421ca948de5e1de84e10d12807b52c34725c0cbd0716b3c201",
+      "ERC721 Enumerable + Royalty": "0xb9bbce01540d6ec86656e97a5105c528bb2163ff1889d5542748bd953ac9ad45",
+      "ERC721 Burnable + Enumerable + Royalty": "0xb1bd9ca586056781150353f835d4530e4cb071500d1543b41219c3da40fa84f7",
+      "ERC721 Capped + Royalty": "0xd017026a7c233e1c7631a880966d246f7c55d24afc6013e63fa73db0a6044bc5",
+      "ERC721 Burnable + Capped + Royalty": "0xb39ac9c55bf313d755cc02f8e0d688ca2973fb8c3f169918f31ea1dcae1574bd",
+      "ERC721 Enumerable + Capped + Royalty": "0x2b7b4d8c077c956164da40f6e58eefa2dc371169bddfc251848bb62e8e0d9237",
+      "ERC721 Burnable + Enumerable + Capped + Royalty": "0x7667d2ced7be95eccc6341e74dfc4b2691b491bd2e489f70bbde68d4d5108666",
+      "ERC721 Controller + Royalty": "0x0351db5f1f251034b363da3d1128e9483363663803d4f3a2daced164f952c372",
+      "ERC721 Burnable + Controller + Royalty": "0xe3af06f7497cf8ac16305dc445fdbb38b89a5e453d7df838c4e2bd6999c0d1b5",
+      "ERC721 Enumerable + Controller + Royalty": "0x63584143190f086e7062405495a28d30d7cd1d60d4edd556ad97f5a2518f1ec6",
+      "ERC721 Burnable + Enumerable + Controller + Royalty": "0xb3223b88f753b16f1cedb5e165321aae36f66aa1428ea0c6c5471bb62e861e27",
+      "ERC721 Capped + Controller + Royalty": "0xa378ad1138c8e80b2f76dc48caff8ad23ffa0b02c09c84feb09790b6f46265d2",
+      "ERC721 Burnable + Capped + Controller + Royalty": "0x2f5cad3171fabd53d9a9d9e43115b13c4f0823e194c3ea3e68fbaeae5003b286",
+      "ERC721 Enumerable + Capped + Controller + Royalty": "0xf040c33aad284edbed79bf80313d4d45660635048d1f5fed2c9ea9a492c760b9",
+      "ERC721 Burnable + Enumerable + Capped + Controller + Royalty": "0x0d33bab0182db515424c411253c780348ff2bd676c355b931670aaaa51063fc2",
+      "ERC721 Snapshot + Royalty": "0x5ad029ebfd5b52e6e1b19051c5aa79226538241c51791b8a227e9e40b01c92cb",
+      "ERC721 Burnable + Snapshot + Royalty": "0x98ccfa1adf07990f981f4e5284539d95c4659bec025b7234ff97b804e0cdb76d",
+      "ERC721 Enumerable + Snapshot + Royalty": "0x658dff05c271cd8a2d9c08a8b47dc8c03cacc63271a4772b9a6f26c929e8e54f",
+      "ERC721 Burnable + Enumerable + Snapshot + Royalty": "0x3187abbb1c06efa8dbc07fe4b553b3421771503f38b0aebd27dbcdd160a6eaf6",
+      "ERC721 Capped + Snapshot + Royalty": "0xfc92ec2e626fc4172aa472aef864d9f3456caa2267e0d8a24a9129a8a248ac64",
+      "ERC721 Burnable + Capped + Snapshot + Royalty": "0x1aae9bcdeebaf3243c0a6d324f64efc765276e2d4b277910c2dc5481004fd1b3",
+      "ERC721 Enumerable + Capped + Snapshot + Royalty": "0x9bf9e574961aeaa2c348e8a669a86bc2a431ac6520f5a2a10d8526a6d55b5c04",
+      "ERC721 Burnable + Enumerable + Capped + Snapshot + Royalty": "0x75d4e2bccda31aaa3398e1fb1076e7c61d101b4c8e70cfc94f2c4f5c5845b995",
+      "ERC721 Controller + Snapshot + Royalty": "0x077178fcc4e6f39dd8dbbe570b78e9f95bf0b013a332e91a81dba0fa2335a14d",
+      "ERC721 Burnable + Controller + Snapshot + Royalty": "0xa23ad47e7d29e33586846201a85b4ec1bd860b24cc95c57a3ed6f8b4246e53e4",
+      "ERC721 Enumerable + Controller + Snapshot + Royalty": "0xa013eec71d317af2000ce14a06f25cef20d8d559b1cb5ac1c1f98384a27f4466",
+      "ERC721 Burnable + Enumerable + Controller + Snapshot + Royalty": "0x3d53ad0c6100eeed25eadc79e7bc3a57aac873a5dde0db7786c41a9d15b14ed6",
+      "ERC721 Capped + Controller + Snapshot + Royalty": "0x25f97cde027a79453d8ea385f31337a3194eeced151bdfbf57e92a1c630541fa",
+      "ERC721 Burnable + Capped + Controller + Snapshot + Royalty": "0x1a56ce49bf4a5d4653d93146a501146a26fbaa84629aa971a53335bf95ca6bfe",
+      "ERC721 Enumerable + Capped + Controller + Snapshot + Royalty": "0x557ef604f45688a31d0ef50b017001dd6eaeb08a7017c2264719f00d47abd35f",
+      "ERC721 Burnable + Enumerable + Capped + Controller + Snapshot + Royalty": "0x0cec505ddee0303c3d79f9e3418c36c74cc9bf165234d306ed34e8de31d8d254",
+      "ERC721 Consecutive": "0xe5e5e44666548d3459a7a1d7e4aa7c9e07fb7afd28ca6a6efcaacaae187928d9",
+      "ERC721 Burnable + Consecutive": "0x064a270fe8602d3761c4b1e25df507f33ed7edce1801d724ff0c0f5541db34a6",
+      "ERC721 Enumerable + Consecutive": "0xf405475caac3b7aa764ed43c8f8af641d42bea4ba22bd84b7cea52a39eb16c4f",
+      "ERC721 Burnable + Enumerable + Consecutive": "0x8a772322c4e8902f74d932571dfb904823478634d95909c115cf079bcd045916",
+      "ERC721 Capped + Consecutive": "0xf35ef6513a7beb5a63503b50c197aa6fc73812d50ea082d2ad6326c20c3bd8ff",
+      "ERC721 Burnable + Capped + Consecutive": "0x85deb5fdc540950bc79f4df9e1889a5df6339434b3ee0d4b8f9fb776077f5aa6",
+      "ERC721 Enumerable + Capped + Consecutive": "0x3ebb1e7e697f447f4f0c09017a3a343ae8202f6e4ce8714c3f952c4662a8ade6",
+      "ERC721 Burnable + Enumerable + Capped + Consecutive": "0xb378b67f2da007792e8c31466dadd152d8f5bd8d75ab38dd6aaf1ab6cb981f03",
+      "ERC721 Controller + Consecutive": "0x0666b0c06c870106e60384fc46c8d5dc4bce7ef63952bee2ee6a743c1e536c76",
+      "ERC721 Burnable + Controller + Consecutive": "0xa8d9b41644cb86958779d8e00ad541a739f3da265d39f3bda13d36f1246e1af1",
+      "ERC721 Enumerable + Controller + Consecutive": "0x24376de0487cb753f6614fdda479485a4e2b27d9e239c3c161182e4fefd58920",
+      "ERC721 Burnable + Enumerable + Controller + Consecutive": "0x11c093079c26aad6113b40addbedc80f33a683f4080f0f952f6b8772c31b3fc9",
+      "ERC721 Capped + Controller + Consecutive": "0xbfea7ee3a0af8f04b8f347d294f0a94044f5eaf7901912365d7d51971604f51e",
+      "ERC721 Burnable + Capped + Controller + Consecutive": "0x035f052222f5408a93d7e3c58efd0041cb000d51c17ac9f63ecb24a569306ba3",
+      "ERC721 Enumerable + Capped + Controller + Consecutive": "0x0fb5e4b5e8fb9c73534658b3d95f59cff40b6b4e39dff01026f998adb3b8fa29",
+      "ERC721 Burnable + Enumerable + Capped + Controller + Consecutive": "0xf96fe008a74c6d4ae0473337fa0edaae8e8ae6c7a2eb4a23bc0db01c387157de",
+      "ERC721 Snapshot + Consecutive": "0x19f6371b0f57b93f3bfa358d5320ede5d7b088eedd73598de3cdd57fa1f76de2",
+      "ERC721 Burnable + Snapshot + Consecutive": "0xa8a6af269681f4904fb10531bb5a4dc945658e8ee492086ac52ba66014a09d1a",
+      "ERC721 Enumerable + Snapshot + Consecutive": "0x6cd86a1ccdeacace9ee865069d20e9bf12dbb9bf7bb4e0972def3f5849b7cf61",
+      "ERC721 Burnable + Enumerable + Snapshot + Consecutive": "0x88ef796e9d2fc3a522ccf247ce914375e462bd70ce645a1af94596692b8b133a",
+      "ERC721 Capped + Snapshot + Consecutive": "0xe6469c526ef71d1f2443a2107547f2364995d411cf4c5ff349a40778cc9b6d72",
+      "ERC721 Burnable + Capped + Snapshot + Consecutive": "0x2f2d032e0ae3d930b691af1e39ce77e293acbef4fd94866db5d162e171a9b0ce",
+      "ERC721 Enumerable + Capped + Snapshot + Consecutive": "0x4224be5a6f3e582c353d76b691440887a517f17873a56f1ddf247a2102f9e2ba",
+      "ERC721 Burnable + Enumerable + Capped + Snapshot + Consecutive": "0xbf252c4365dfb0592af54fe24c34138fbdb175bf3cd3fbbe5709fe036b3c9818",
+      "ERC721 Controller + Snapshot + Consecutive": "0x04bf386614ac7c03626df942a4b4c8df1f1e7b739ccce6265e51ca19343e4063",
+      "ERC721 Burnable + Controller + Snapshot + Consecutive": "0x7fc055edc9d7de4875567e5dded7c7f77ac8a947f682c02ce704e07a25806890",
+      "ERC721 Enumerable + Controller + Snapshot + Consecutive": "0x81b8b0660530d9e637f59f8077c78557e0816e81bca13ede9fad84f8be563054",
+      "ERC721 Burnable + Enumerable + Controller + Snapshot + Consecutive": "0xf7891fb06ad92ae03a2a746565751903580077f32b4da0b5b2c52333b2a2f0f6",
+      "ERC721 Capped + Controller + Snapshot + Consecutive": "0xc2d5e48a91de5262e6d646d28b79eb06c1f11be90be922bfd1f2f06a3e5983a0",
+      "ERC721 Burnable + Capped + Controller + Snapshot + Consecutive": "0xabd5277f6a951e033f5a95b204518eb13367df5f2d23f1da4350c1e60b452c12",
+      "ERC721 Enumerable + Capped + Controller + Snapshot + Consecutive": "0xcf8680457d51ad6822b4db534ea0b2735a3d1b41609823c2abe798fafcf0ad64",
+      "ERC721 Burnable + Enumerable + Capped + Controller + Snapshot + Consecutive": "0x6b87415f38e0ef4defd146c889c438f49bd3469d7ee33e4cab66c408a0716773",
+      "ERC721 Royalty + Consecutive": "0x79fed8df0c1ed733e8492d7276999f33207906328211e8fd820d0da102a0b879",
+      "ERC721 Burnable + Royalty + Consecutive": "0x8b133a326d43cdc561aadb97803c53d03921a1bb8a27d5a39c45847a83f7b1fc",
+      "ERC721 Enumerable + Royalty + Consecutive": "0x8685831566b809ba773e4d99894b08287160b48f579445c533e2c461e11bdf7f",
+      "ERC721 Burnable + Enumerable + Royalty + Consecutive": "0x3389c44d546c137bf3b87e43911fe764b7d6af5b5cfc9857de0002f2ae6ee74f",
+      "ERC721 Capped + Royalty + Consecutive": "0xad96559552eedb050fc0056c4965bd88cb11e3d3bf7824902bb0dfdb7c861214",
+      "ERC721 Burnable + Capped + Royalty + Consecutive": "0x61a9020dd064a658605a2626940230d1123487f4168fa9cee21d3be403085a1b",
+      "ERC721 Enumerable + Capped + Royalty + Consecutive": "0x366a564de24ff979dee21341af771fb73c98752f9402b37f9cd56a02d54c3a23",
+      "ERC721 Burnable + Enumerable + Capped + Royalty + Consecutive": "0x53405b6cc9dd3cfc26f3ca35cc83dd0a9ea8ed353307374ed70bf85af1514319",
+      "ERC721 Controller + Royalty + Consecutive": "0xd0e57c5b307e351dcf8eaac3a8027a3e419d2687df6d70c051f123b01b9344c9",
+      "ERC721 Burnable + Controller + Royalty + Consecutive": "0x024e5529a9601ca7141c94686425789a0f57e9845f54e036b33166de414da6af",
+      "ERC721 Enumerable + Controller + Royalty + Consecutive": "0x683634744d11c26ecd5f49ebcc5b69dd7dfc84f12fd9d55fc542bd4457196c80",
+      "ERC721 Burnable + Enumerable + Controller + Royalty + Consecutive": "0xfb78bb88e43db812324ecfa6b616d5291bf7d02e76560ed029148175d518a7e8",
+      "ERC721 Capped + Controller + Royalty + Consecutive": "0xd433804f14f962e4fc444305343a9eef514cd3c5130894d0cecf9c64c46f7649",
+      "ERC721 Burnable + Capped + Controller + Royalty + Consecutive": "0x236096a83152e90552a02185e92f6b067c3d51c775c35323b121ee8e5593c2f0",
+      "ERC721 Enumerable + Capped + Controller + Royalty + Consecutive": "0x70987aeb70d9f86083ec62bff66911ad8d1d1e297c3698369fd7505858e6c689",
+      "ERC721 Burnable + Enumerable + Capped + Controller + Royalty + Consecutive": "0x6abe6881629f7866d1f95db6cbb7effc4c05a716ecaf1f229bb622128141bf3b",
+      "ERC721 Snapshot + Royalty + Consecutive": "0xf840d0fa281e6f3dec78abe6a6d9ed0f4fd52a0f598f66b40efbd93697d72c1c",
+      "ERC721 Burnable + Snapshot + Royalty + Consecutive": "0xa5d4a7322c7c4614cab5eb47a66ce2fe1a7ad62241c560cf02e2a6e41e61606f",
+      "ERC721 Enumerable + Snapshot + Royalty + Consecutive": "0xac6d728061e6e8189c868468781c1699a3224cc71ab885993239d1d91dc971cf",
+      "ERC721 Burnable + Enumerable + Snapshot + Royalty + Consecutive": "0x304a4c8d569fa28f36cfa076ec893dc6e381062e47505a94bf53b71e2923fea0",
+      "ERC721 Capped + Snapshot + Royalty + Consecutive": "0x9fc6fe8683ac9563d8793a8623fd95743b4acb70fa18b4745da6790128da0f18",
+      "ERC721 Burnable + Capped + Snapshot + Royalty + Consecutive": "0x08c825bcd81621fe6b8cd9e66ae66213c89462886f213f7c305a8891375c15f7",
+      "ERC721 Enumerable + Capped + Snapshot + Royalty + Consecutive": "0x0c898ab28140e01e430ccedb0687360ff244dd2cc075ef4c8581275edf61448c",
+      "ERC721 Burnable + Enumerable + Capped + Snapshot + Royalty + Consecutive": "0x0d66c6cf9c6e57b78fa9074eb283e3e2bd7c9cec35826c9a563d72c25dd57e55",
+      "ERC721 Controller + Snapshot + Royalty + Consecutive": "0x7894d7708d0aef6fa4a0462f4e55a89aeff1c46728c3d347b1b828168b3728bd",
+      "ERC721 Burnable + Controller + Snapshot + Royalty + Consecutive": "0x5a74c5f3696da0b3b76a5463d068f8094e60b125a1d8c88e1753f7f3c217981d",
+      "ERC721 Enumerable + Controller + Snapshot + Royalty + Consecutive": "0x05c57ebd309e4f792fdc3dc1eacf622eb8e48698e94a55f9300e2c2f800b9784",
+      "ERC721 Burnable + Enumerable + Controller + Snapshot + Royalty + Consecutive": "0xcc5afbf6c3c694113e04e82a29cd92f5d89f602a98cd512814c9c23e2e277450",
+      "ERC721 Capped + Controller + Snapshot + Royalty + Consecutive": "0x2ec2969c290053e006e330e8e48b82c60fc3fbf77240d3401014170d895cc8df",
+      "ERC721 Burnable + Capped + Controller + Snapshot + Royalty + Consecutive": "0x1bd796e1093658e8312e78a1ae9b44dea430c86adde1864a4855b3ca9578c1b9",
+      "ERC721 Enumerable + Capped + Controller + Snapshot + Royalty + Consecutive": "0x8733b17757caea595ddba0a812afce9923883151dee73cff65e94fce89939b38",
+      "ERC721 Burnable + Enumerable + Capped + Controller + Snapshot + Royalty + Consecutive": "0xcd7943825f5d57606e0e74bef6f35a8f78ea4e1d2725be899a05d22989ac0740"
+    },
+    "byConfigId": {
+      "0x59feed5aef5068f542c88f585246b1c161bab5db8ccaf5b3a286e5b393e913e4": 0,
+      "0x8c52f6b2363328314f2b453099d6a812887e8c0518b3fce1a02fd6cb11c28678": 1,
+      "0x650a434be0dda7991a826343e4cff60dece9f354331cba7b670b04028bed1ddf": 2,
+      "0x4ae5600f3b388305831dc9b279cc7b7786ca0bf7a7934be03cc42c690c3e94d6": 3,
+      "0x96a0dd141dbe4542667f8b89888f23c3a7a8be9fa42f393b942134e3c179a159": 4,
+      "0xc5742c5a3468007617713cd6cb74c6267e42d3a3c9a9762c9a31280538220989": 5,
+      "0xdf658b7e82ae9aaf092d6f6ca1195fdc8021aab597533df158a03511d4d4d913": 6,
+      "0x03ae8988d9a07e5ab2386477c73260aaace6d851a9bdbd9337c00138235ca642": 7,
+      "0x40f8f163eb8a599d6bc4f3decd802209ab904b85c1592b7296ee5583cf70def4": 8,
+      "0x9988da2397dec0005992cb56a10abda491d90259a7e5529b1d2be24755cf6906": 9,
+      "0x493d638a20c884a0eab2103600ea53d147225012bf070f0c1b04ceae62d322fb": 10,
+      "0x461a75b034161cf2ced85d19d39b845749352ca5be83ea026a4145efdc8119bb": 11,
+      "0x34e35e07d3499ff3f1b245c9f07e531dd8eafcb35bfdde06a53f2715926220f1": 12,
+      "0xf99dc06ba1eac16602222331f41791f1cd5d97520d2ee2ed55dd7333f421b9a8": 13,
+      "0xc12b91c70e459b20b4991e1d2da3931be14cb5af082858fbc33632604ac87cf7": 14,
+      "0x216e0dc39c33f9e80dc070ffed3cf588cb43b39fb031ab202ef2bc6b504fb6b5": 15,
+      "0x4d78ef4092cfad7064467246ff09e721c75300712801033df0c34b8196a6d32c": 16,
+      "0xc2941988e2fe2569fa08de61ea8295fc1a67b8852c1362b40b7348eeb1380dcb": 17,
+      "0xe319a5d7550a7dac2c639d35023f12910ea5c8e483aca1da683369ca81758a0a": 18,
+      "0xee495c75d142cedf500476f2b1d2f202c2b4c80c4a249267bb0cf614bc835878": 19,
+      "0x00d77dcf6ca0a2fe52e278aae412e5ee83b631658550dfd1a163d606f735c470": 20,
+      "0x729d0a123c1132f72860e29b176782433d142c7756c0cae6674a88da51b34724": 21,
+      "0xab802f3da69f2fe5a1fdd584ce363ed91531437e90c4b9309bfdad28f407ee0a": 22,
+      "0xbb385f04397fe488a486d01db8d5661fd29dfa16dde6530be7fec78788556a21": 23,
+      "0x7b09282d0c89eaa73ed11942ff7e60d41ea4e3818dceb42304aa3c80b97affad": 24,
+      "0x7ca9e7e6f18f0401ed169b3276192a0c6db82e24cdaac05d8404f34b27b2baab": 25,
+      "0x6ea16cef162fe480e44c5e72c5841974e3e735f529b61b979eabfb7fe992b5ac": 26,
+      "0xccd8da648964e3f87c07ac83b8b47ed1387509340349427e7a9ae7b9f9db0883": 27,
+      "0xd67f39b0a6f4e7be90355588ded287bdefbaf2a982a6052682277f0e4dc799ef": 28,
+      "0xd50515c6aff5946006a6c76f87ccda740600e67c397f619d23fd3d63825d43c1": 29,
+      "0xcca7ccec85cba0bc1615924e60032d26eeb61b4b9d9b416bbefe68db507adb8a": 30,
+      "0x3c11b7bc3d21af11b2cceb6dd7f533ac6040a2e7386b272fa0fba87f9b51ae29": 31,
+      "0xade0601991cfcac87c6bfe0d4ec283c5bc40df430ec67fc49f057e723c25b7cd": 32,
+      "0x2437265a78ebb1421ca948de5e1de84e10d12807b52c34725c0cbd0716b3c201": 33,
+      "0xb9bbce01540d6ec86656e97a5105c528bb2163ff1889d5542748bd953ac9ad45": 34,
+      "0xb1bd9ca586056781150353f835d4530e4cb071500d1543b41219c3da40fa84f7": 35,
+      "0xd017026a7c233e1c7631a880966d246f7c55d24afc6013e63fa73db0a6044bc5": 36,
+      "0xb39ac9c55bf313d755cc02f8e0d688ca2973fb8c3f169918f31ea1dcae1574bd": 37,
+      "0x2b7b4d8c077c956164da40f6e58eefa2dc371169bddfc251848bb62e8e0d9237": 38,
+      "0x7667d2ced7be95eccc6341e74dfc4b2691b491bd2e489f70bbde68d4d5108666": 39,
+      "0x0351db5f1f251034b363da3d1128e9483363663803d4f3a2daced164f952c372": 40,
+      "0xe3af06f7497cf8ac16305dc445fdbb38b89a5e453d7df838c4e2bd6999c0d1b5": 41,
+      "0x63584143190f086e7062405495a28d30d7cd1d60d4edd556ad97f5a2518f1ec6": 42,
+      "0xb3223b88f753b16f1cedb5e165321aae36f66aa1428ea0c6c5471bb62e861e27": 43,
+      "0xa378ad1138c8e80b2f76dc48caff8ad23ffa0b02c09c84feb09790b6f46265d2": 44,
+      "0x2f5cad3171fabd53d9a9d9e43115b13c4f0823e194c3ea3e68fbaeae5003b286": 45,
+      "0xf040c33aad284edbed79bf80313d4d45660635048d1f5fed2c9ea9a492c760b9": 46,
+      "0x0d33bab0182db515424c411253c780348ff2bd676c355b931670aaaa51063fc2": 47,
+      "0x5ad029ebfd5b52e6e1b19051c5aa79226538241c51791b8a227e9e40b01c92cb": 48,
+      "0x98ccfa1adf07990f981f4e5284539d95c4659bec025b7234ff97b804e0cdb76d": 49,
+      "0x658dff05c271cd8a2d9c08a8b47dc8c03cacc63271a4772b9a6f26c929e8e54f": 50,
+      "0x3187abbb1c06efa8dbc07fe4b553b3421771503f38b0aebd27dbcdd160a6eaf6": 51,
+      "0xfc92ec2e626fc4172aa472aef864d9f3456caa2267e0d8a24a9129a8a248ac64": 52,
+      "0x1aae9bcdeebaf3243c0a6d324f64efc765276e2d4b277910c2dc5481004fd1b3": 53,
+      "0x9bf9e574961aeaa2c348e8a669a86bc2a431ac6520f5a2a10d8526a6d55b5c04": 54,
+      "0x75d4e2bccda31aaa3398e1fb1076e7c61d101b4c8e70cfc94f2c4f5c5845b995": 55,
+      "0x077178fcc4e6f39dd8dbbe570b78e9f95bf0b013a332e91a81dba0fa2335a14d": 56,
+      "0xa23ad47e7d29e33586846201a85b4ec1bd860b24cc95c57a3ed6f8b4246e53e4": 57,
+      "0xa013eec71d317af2000ce14a06f25cef20d8d559b1cb5ac1c1f98384a27f4466": 58,
+      "0x3d53ad0c6100eeed25eadc79e7bc3a57aac873a5dde0db7786c41a9d15b14ed6": 59,
+      "0x25f97cde027a79453d8ea385f31337a3194eeced151bdfbf57e92a1c630541fa": 60,
+      "0x1a56ce49bf4a5d4653d93146a501146a26fbaa84629aa971a53335bf95ca6bfe": 61,
+      "0x557ef604f45688a31d0ef50b017001dd6eaeb08a7017c2264719f00d47abd35f": 62,
+      "0x0cec505ddee0303c3d79f9e3418c36c74cc9bf165234d306ed34e8de31d8d254": 63,
+      "0xe5e5e44666548d3459a7a1d7e4aa7c9e07fb7afd28ca6a6efcaacaae187928d9": 64,
+      "0x064a270fe8602d3761c4b1e25df507f33ed7edce1801d724ff0c0f5541db34a6": 65,
+      "0xf405475caac3b7aa764ed43c8f8af641d42bea4ba22bd84b7cea52a39eb16c4f": 66,
+      "0x8a772322c4e8902f74d932571dfb904823478634d95909c115cf079bcd045916": 67,
+      "0xf35ef6513a7beb5a63503b50c197aa6fc73812d50ea082d2ad6326c20c3bd8ff": 68,
+      "0x85deb5fdc540950bc79f4df9e1889a5df6339434b3ee0d4b8f9fb776077f5aa6": 69,
+      "0x3ebb1e7e697f447f4f0c09017a3a343ae8202f6e4ce8714c3f952c4662a8ade6": 70,
+      "0xb378b67f2da007792e8c31466dadd152d8f5bd8d75ab38dd6aaf1ab6cb981f03": 71,
+      "0x0666b0c06c870106e60384fc46c8d5dc4bce7ef63952bee2ee6a743c1e536c76": 72,
+      "0xa8d9b41644cb86958779d8e00ad541a739f3da265d39f3bda13d36f1246e1af1": 73,
+      "0x24376de0487cb753f6614fdda479485a4e2b27d9e239c3c161182e4fefd58920": 74,
+      "0x11c093079c26aad6113b40addbedc80f33a683f4080f0f952f6b8772c31b3fc9": 75,
+      "0xbfea7ee3a0af8f04b8f347d294f0a94044f5eaf7901912365d7d51971604f51e": 76,
+      "0x035f052222f5408a93d7e3c58efd0041cb000d51c17ac9f63ecb24a569306ba3": 77,
+      "0x0fb5e4b5e8fb9c73534658b3d95f59cff40b6b4e39dff01026f998adb3b8fa29": 78,
+      "0xf96fe008a74c6d4ae0473337fa0edaae8e8ae6c7a2eb4a23bc0db01c387157de": 79,
+      "0x19f6371b0f57b93f3bfa358d5320ede5d7b088eedd73598de3cdd57fa1f76de2": 80,
+      "0xa8a6af269681f4904fb10531bb5a4dc945658e8ee492086ac52ba66014a09d1a": 81,
+      "0x6cd86a1ccdeacace9ee865069d20e9bf12dbb9bf7bb4e0972def3f5849b7cf61": 82,
+      "0x88ef796e9d2fc3a522ccf247ce914375e462bd70ce645a1af94596692b8b133a": 83,
+      "0xe6469c526ef71d1f2443a2107547f2364995d411cf4c5ff349a40778cc9b6d72": 84,
+      "0x2f2d032e0ae3d930b691af1e39ce77e293acbef4fd94866db5d162e171a9b0ce": 85,
+      "0x4224be5a6f3e582c353d76b691440887a517f17873a56f1ddf247a2102f9e2ba": 86,
+      "0xbf252c4365dfb0592af54fe24c34138fbdb175bf3cd3fbbe5709fe036b3c9818": 87,
+      "0x04bf386614ac7c03626df942a4b4c8df1f1e7b739ccce6265e51ca19343e4063": 88,
+      "0x7fc055edc9d7de4875567e5dded7c7f77ac8a947f682c02ce704e07a25806890": 89,
+      "0x81b8b0660530d9e637f59f8077c78557e0816e81bca13ede9fad84f8be563054": 90,
+      "0xf7891fb06ad92ae03a2a746565751903580077f32b4da0b5b2c52333b2a2f0f6": 91,
+      "0xc2d5e48a91de5262e6d646d28b79eb06c1f11be90be922bfd1f2f06a3e5983a0": 92,
+      "0xabd5277f6a951e033f5a95b204518eb13367df5f2d23f1da4350c1e60b452c12": 93,
+      "0xcf8680457d51ad6822b4db534ea0b2735a3d1b41609823c2abe798fafcf0ad64": 94,
+      "0x6b87415f38e0ef4defd146c889c438f49bd3469d7ee33e4cab66c408a0716773": 95,
+      "0x79fed8df0c1ed733e8492d7276999f33207906328211e8fd820d0da102a0b879": 96,
+      "0x8b133a326d43cdc561aadb97803c53d03921a1bb8a27d5a39c45847a83f7b1fc": 97,
+      "0x8685831566b809ba773e4d99894b08287160b48f579445c533e2c461e11bdf7f": 98,
+      "0x3389c44d546c137bf3b87e43911fe764b7d6af5b5cfc9857de0002f2ae6ee74f": 99,
+      "0xad96559552eedb050fc0056c4965bd88cb11e3d3bf7824902bb0dfdb7c861214": 100,
+      "0x61a9020dd064a658605a2626940230d1123487f4168fa9cee21d3be403085a1b": 101,
+      "0x366a564de24ff979dee21341af771fb73c98752f9402b37f9cd56a02d54c3a23": 102,
+      "0x53405b6cc9dd3cfc26f3ca35cc83dd0a9ea8ed353307374ed70bf85af1514319": 103,
+      "0xd0e57c5b307e351dcf8eaac3a8027a3e419d2687df6d70c051f123b01b9344c9": 104,
+      "0x024e5529a9601ca7141c94686425789a0f57e9845f54e036b33166de414da6af": 105,
+      "0x683634744d11c26ecd5f49ebcc5b69dd7dfc84f12fd9d55fc542bd4457196c80": 106,
+      "0xfb78bb88e43db812324ecfa6b616d5291bf7d02e76560ed029148175d518a7e8": 107,
+      "0xd433804f14f962e4fc444305343a9eef514cd3c5130894d0cecf9c64c46f7649": 108,
+      "0x236096a83152e90552a02185e92f6b067c3d51c775c35323b121ee8e5593c2f0": 109,
+      "0x70987aeb70d9f86083ec62bff66911ad8d1d1e297c3698369fd7505858e6c689": 110,
+      "0x6abe6881629f7866d1f95db6cbb7effc4c05a716ecaf1f229bb622128141bf3b": 111,
+      "0xf840d0fa281e6f3dec78abe6a6d9ed0f4fd52a0f598f66b40efbd93697d72c1c": 112,
+      "0xa5d4a7322c7c4614cab5eb47a66ce2fe1a7ad62241c560cf02e2a6e41e61606f": 113,
+      "0xac6d728061e6e8189c868468781c1699a3224cc71ab885993239d1d91dc971cf": 114,
+      "0x304a4c8d569fa28f36cfa076ec893dc6e381062e47505a94bf53b71e2923fea0": 115,
+      "0x9fc6fe8683ac9563d8793a8623fd95743b4acb70fa18b4745da6790128da0f18": 116,
+      "0x08c825bcd81621fe6b8cd9e66ae66213c89462886f213f7c305a8891375c15f7": 117,
+      "0x0c898ab28140e01e430ccedb0687360ff244dd2cc075ef4c8581275edf61448c": 118,
+      "0x0d66c6cf9c6e57b78fa9074eb283e3e2bd7c9cec35826c9a563d72c25dd57e55": 119,
+      "0x7894d7708d0aef6fa4a0462f4e55a89aeff1c46728c3d347b1b828168b3728bd": 120,
+      "0x5a74c5f3696da0b3b76a5463d068f8094e60b125a1d8c88e1753f7f3c217981d": 121,
+      "0x05c57ebd309e4f792fdc3dc1eacf622eb8e48698e94a55f9300e2c2f800b9784": 122,
+      "0xcc5afbf6c3c694113e04e82a29cd92f5d89f602a98cd512814c9c23e2e277450": 123,
+      "0x2ec2969c290053e006e330e8e48b82c60fc3fbf77240d3401014170d895cc8df": 124,
+      "0x1bd796e1093658e8312e78a1ae9b44dea430c86adde1864a4855b3ca9578c1b9": 125,
+      "0x8733b17757caea595ddba0a812afce9923883151dee73cff65e94fce89939b38": 126,
+      "0xcd7943825f5d57606e0e74bef6f35a8f78ea4e1d2725be899a05d22989ac0740": 127
+    }
+  }
+}
