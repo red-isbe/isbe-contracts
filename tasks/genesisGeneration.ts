@@ -64,6 +64,7 @@ task(
 )
     .addParam('templatefile', 'Template JSON file to use')
     .addParam('outputfile', 'Generated Output JSON file')
+    .addFlag('generateregister', 'Generate contract register JSON')
     .setAction(async (taskArgs, hre) => {
         try {
             const contractRegistry = new ContractRegistry()
@@ -80,11 +81,15 @@ task(
 
             const outputFile = taskArgs.outputfile
 
+            const isGenerateRegisterActive = taskArgs.generateregister
             const registryFile =
                 path.dirname(outputFile) + '/' + REGISTRY_FILENAME
             console.log(`📄 Using template file: ${genesisTemplateFile}`)
             console.log(`📄 Using output file: ${outputFile}`)
             console.log(`📄 Using registry file: ${registryFile}`)
+            console.log(
+                `📄 Generate register: ${isGenerateRegisterActive ? 'ENABLED' : 'DISABLED'}`
+            )
 
             const isbeAdmin = await extractISBEAdminAddress(genesisTemplateFile)
             console.log(
@@ -125,7 +130,13 @@ task(
                 '✅ Genesis file generated successfully.-----------------------------------------------'
             )
 
-            contractRegistry.dumpRegistry(slotStructure, registryFile)
+            if (isGenerateRegisterActive) {
+                console.log('🚀 Generating contract registry...')
+                contractRegistry.dumpRegistry(slotStructure, registryFile)
+                console.log(
+                    '✅ Contract registry retrieved from HRE.----------------------------------------------------------'
+                )
+            }
 
             console.log(
                 '✅ Contract registry generated----------------------------------------------------------'

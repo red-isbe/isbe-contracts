@@ -15,6 +15,7 @@ EXEC_BESU="bash install.sh -b"
 SKIP_GEN=false
 SKIP_BESU_STARTUP=true
 SKIP_VALIDATION=true
+GENERATE_REGISTER=false
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -29,6 +30,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     --do-validation)
       SKIP_VALIDATION=false
+      GENERATE_REGISTER=true
       shift
       ;;
     --besu-dir)
@@ -43,6 +45,10 @@ while [[ $# -gt 0 ]]; do
       OUTPUT_FILE="$2"
       shift 2
       ;;
+    --do-generate-register)
+      GENERATE_REGISTER=true
+      shift
+      ;;
     *)
       if [ $1 != --help ]; then
         echo "⚠️  Unknown argument: $1"
@@ -55,6 +61,7 @@ while [[ $# -gt 0 ]]; do
       echo "  --besu-dir <path>       Specify the directory containing the Besu build."
       echo "  --template-file <file>  Specify the genesis template JSON file to use. (MANDATORY)"
       echo "  --output-file <file>    Specify the generated output JSON file. (MANDATORY if not skipping genesis)"
+      echo "  --do-generate-register     Generate contract register JSON. (Default: false)"
       echo ""
       echo "Example:"
       echo "  ./script.sh --skip-gen --do-besu-startup --besu-dir ./besu/"
@@ -84,7 +91,11 @@ fi
 # Step 1: Genesis generation
 if [ "$SKIP_GEN" = false ]; then
   echo "🔧 Generating genesis..."
-  NODE_OPTIONS="--max-old-space-size=24576" npx hardhat genesis:generate --templatefile "$TEMPLATE_FILE" --outputfile "$OUTPUT_FILE"
+  EXEC_CHAIN="npx hardhat genesis:generate --templatefile "$TEMPLATE_FILE" --outputfile "$OUTPUT_FILE""
+  if [ "$GENERATE_REGISTER" = true ]; then
+    EXEC_CHAIN="$EXEC_CHAIN --generateregister"
+  fi
+  NODE_OPTIONS="--max-old-space-size=24576" $EXEC_CHAIN
 else
   echo "⏩ Skipping genesis generation (--skip-gen)"
 fi
