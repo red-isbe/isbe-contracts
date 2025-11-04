@@ -6,6 +6,9 @@ start=$(date +%s)
 
 # Default values
 BESU_DIR="../isbe-besu-local-deployer"
+TEMPLATE_FILE="#"
+OUTPUT_FILE="#"
+
 EXEC_BESU="bash install.sh -b"
 
 # Flags
@@ -32,6 +35,14 @@ while [[ $# -gt 0 ]]; do
       BESU_DIR="$2"
       shift 2
       ;;
+    --template-file)
+      TEMPLATE_FILE="$2"
+      shift 2
+      ;;
+    --output-file)
+      OUTPUT_FILE="$2"
+      shift 2
+      ;;
     *)
       if [ $1 != --help ]; then
         echo "⚠️  Unknown argument: $1"
@@ -42,6 +53,8 @@ while [[ $# -gt 0 ]]; do
       echo "  --do-besu-startup       Run the Besu startup procedure."
       echo "  --do-validation          Execute post-start validation steps."
       echo "  --besu-dir <path>       Specify the directory containing the Besu build."
+      echo "  --template-file <file>  Specify the genesis template JSON file to use. (MANDATORY)"
+      echo "  --output-file <file>    Specify the generated output JSON file. (MANDATORY if not skipping genesis)"
       echo ""
       echo "Example:"
       echo "  ./script.sh --skip-gen --do-besu-startup --besu-dir ./besu/"
@@ -58,10 +71,20 @@ echo "📁 BESU_DIR set to: $BESU_DIR"
 echo "   (use --besu-dir <path> to override)"
 echo ""
 
+if [ "$TEMPLATE_FILE" = "#" ]; then
+  echo "📁 Wrong template file specified."
+  exit 1
+fi
+
+if [ "$OUTPUT_FILE" = "#" ] && [ "$SKIP_GEN" = false ]; then
+  echo "📁 Wrong template file specified."
+  exit 1
+fi
+
 # Step 1: Genesis generation
 if [ "$SKIP_GEN" = false ]; then
   echo "🔧 Generating genesis..."
-  NODE_OPTIONS="--max-old-space-size=24576" npx hardhat genesis:generate
+  NODE_OPTIONS="--max-old-space-size=24576" npx hardhat genesis:generate --templatefile "$TEMPLATE_FILE" --outputfile "$OUTPUT_FILE"
 else
   echo "⏩ Skipping genesis generation (--skip-gen)"
 fi
@@ -80,7 +103,7 @@ fi
 
 # Step 3: Validate genesis
 if [ "$SKIP_VALIDATION" = false ]; then
-  npx hardhat genesis:validate --network NO_NETWORK 
+  npx hardhat genesis:validate --network NO_NETWORK --templatefile "$TEMPLATE_FILE" --outputfile "$OUTPUT_FILE"
   echo "✅ Genesis validation completed."
 fi
 

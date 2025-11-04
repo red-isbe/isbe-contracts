@@ -8,7 +8,6 @@ import '@typechain/hardhat'
 import 'hardhat-contract-sizer'
 import 'solidity-docgen'
 import 'hardhat-gas-reporter'
-import './tasks/genesisGeneration'
 
 // Configure dotenv globally without verbose logging
 import 'dotenv/config'
@@ -57,9 +56,7 @@ const networkConfigs = getNetworkConfigs()
 // const ACCOUNTS = (
 //     process.env.ACCOUNTS ?? randomBytes(32).toString('hex')
 // ).split(',')
-const config: HardhatUserConfig & {
-    genesisGenerator: { outputDir: string; templateDir: string }
-} = {
+const config: HardhatUserConfig = {
     solidity: {
         version: '0.8.28',
         settings: {
@@ -92,10 +89,6 @@ const config: HardhatUserConfig & {
         pages: 'items',
         exclude: ['testwrapper'],
         collapseNewlines: true,
-    },
-    genesisGenerator: {
-        outputDir: '../isbe-besu-local-deployer/config/',
-        templateDir: './tasks/genesisTemplates/',
     },
     gasReporter: {
         enabled: process.env.REPORT_GAS === 'true',

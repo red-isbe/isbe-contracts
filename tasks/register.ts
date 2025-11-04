@@ -84,3 +84,4 @@ import './client/getFiltersByPage'
 import './client/isFilterRegistered'
 
 import './utils/buildConfigurationId'
+import './genesisGeneration'

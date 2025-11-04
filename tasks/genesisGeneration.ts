@@ -1,3 +1,4 @@
+import path from 'path'
 import { task } from 'hardhat/config'
 import {
     buildGenesisWithAlloc,
@@ -61,11 +62,8 @@ task(
     'genesis:generate',
     'Generate genesis by extracting storage slots from deployment transactions in Hardhat network'
 )
-    .addOptionalParam(
-        'template',
-        'Template JSON file to use',
-        'qbftConfigFile.json'
-    )
+    .addParam('templatefile', 'Template JSON file to use')
+    .addParam('outputfile', 'Generated Output JSON file')
     .setAction(async (taskArgs, hre) => {
         try {
             const contractRegistry = new ContractRegistry()
@@ -78,31 +76,15 @@ task(
             )
             hre.network.name = 'hardhat'
 
-            let templateDir = (
-                hre.config as unknown as {
-                    genesisGenerator: { templateDir: string }
-                }
-            ).genesisGenerator.templateDir
-            if (templateDir.slice(-1) !== '/') {
-                templateDir += '/'
-            }
-            let outputDir = (
-                hre.config as unknown as {
-                    genesisGenerator: { outputDir: string }
-                }
-            ).genesisGenerator.outputDir
-            if (outputDir.slice(-1) !== '/') {
-                outputDir += '/'
-            }
+            const genesisTemplateFile = taskArgs.templatefile
 
-            const templateFile = taskArgs.template
-            const genesisTemplateFile = templateDir + templateFile
-            const outputFile = outputDir + templateFile
+            const outputFile = taskArgs.outputfile
 
             const registryFile =
-                (outputDir.endsWith('/') ? outputDir : outputDir + '/') +
-                REGISTRY_FILENAME
+                path.dirname(outputFile) + '/' + REGISTRY_FILENAME
             console.log(`📄 Using template file: ${genesisTemplateFile}`)
+            console.log(`📄 Using output file: ${outputFile}`)
+            console.log(`📄 Using registry file: ${registryFile}`)
 
             const isbeAdmin = await extractISBEAdminAddress(genesisTemplateFile)
             console.log(
@@ -176,11 +158,8 @@ task(
     'Validate genesis by extracting storage slots from deployment transactions in Hardhat network'
 )
     .addOptionalParam('gobernanceaddress', 'Gobernance Address')
-    .addOptionalParam(
-        'template',
-        'Template JSON file to use',
-        'qbftConfigFile.json'
-    )
+    .addParam('templatefile', 'Template JSON file to use')
+    .addParam('outputfile', 'Generated Output JSON file')
     .setAction(async (taskArgs, hre) => {
         console.info(
             '---------------------------------------------------------------------'
@@ -190,14 +169,9 @@ task(
             '---------------------------------------------------------------------'
         )
 
-        const templateDir = (
-            hre.config as unknown as {
-                genesisGenerator: { templateDir: string }
-            }
-        ).genesisGenerator.templateDir
+        const outputFile = taskArgs.outputfile
 
-        const templateFile = taskArgs.template
-        const genesisTemplateFile = templateDir + templateFile
+        const genesisTemplateFile = taskArgs.templatefile
         const curve: string = await extractCurve(genesisTemplateFile)
         console.log(`📄 Using curve: ${curve}`)
 
@@ -228,18 +202,11 @@ task(
         }
         console.log(`Using network url: ${url}`)
 
-        let outputDir = (
-            hre.config as unknown as { genesisGenerator: { outputDir: string } }
-        ).genesisGenerator.outputDir
-        if (outputDir.slice(-1) !== '/') {
-            outputDir += '/'
-        }
-
         let gobernanceaddress = taskArgs.gobernanceaddress
         if (!gobernanceaddress) {
             const registryFile =
-                (outputDir.endsWith('/') ? outputDir : outputDir + '/') +
-                REGISTRY_FILENAME
+                path.dirname(outputFile) + '/' + REGISTRY_FILENAME
+            console.log(`📄 Using registry file: ${registryFile}`)
             const contractRegistry = new ContractRegistry()
             contractRegistry.retrieveContractRegistry(registryFile)
             gobernanceaddress = contractRegistry.getAddress(
