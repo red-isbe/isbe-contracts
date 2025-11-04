@@ -8,6 +8,12 @@ pragma solidity ^0.8.28;
  */
 interface IERC3643ComplianceMaxBal {
     /**
+     * @notice Emitted when the max balance is updated.
+     * @param _maxBalance The new max balance value.
+     */
+    event MaxBalanceSet(uint256 _maxBalance);
+
+    /**
      * @notice Error emitted when a transfer would exceed the max balance.
      * @param to The address of the receiver.
      * @param attemptedBalance The balance that would be exceeded.
@@ -18,12 +24,6 @@ interface IERC3643ComplianceMaxBal {
         uint256 attemptedBalance,
         uint256 maxBalance
     );
-
-    /**
-     * @notice Emitted when the max balance is updated.
-     * @param _maxBalance The new max balance value.
-     */
-    event MaxBalanceSet(uint256 _maxBalance);
 
     /**
      * @notice Initializes the max balance restriction.

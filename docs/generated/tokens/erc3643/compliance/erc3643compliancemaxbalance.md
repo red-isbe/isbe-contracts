@@ -239,6 +239,20 @@ Interface for ERC-3643 compliance feature: MaxBalance restriction.
 
 _Allows setting and getting the max balance, and checking compliance for transfers._
 
+### MaxBalanceSet
+
+```solidity
+event MaxBalanceSet(uint256 _maxBalance)
+```
+
+Emitted when the max balance is updated.
+
+#### Parameters
+
+| Name         | Type    | Description                |
+| ------------ | ------- | -------------------------- |
+| \_maxBalance | uint256 | The new max balance value. |
+
 ### MaxBalanceExceeded
 
 ```solidity
@@ -254,20 +268,6 @@ Error emitted when a transfer would exceed the max balance.
 | to               | address | The address of the receiver.        |
 | attemptedBalance | uint256 | The balance that would be exceeded. |
 | maxBalance       | uint256 | The maximum allowed balance.        |
-
-### MaxBalanceSet
-
-```solidity
-event MaxBalanceSet(uint256 _maxBalance)
-```
-
-Emitted when the max balance is updated.
-
-#### Parameters
-
-| Name         | Type    | Description                |
-| ------------ | ------- | -------------------------- |
-| \_maxBalance | uint256 | The new max balance value. |
 
 ### initializeERC3643ComplianceMaxBalance
 
