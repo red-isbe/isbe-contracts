@@ -2,8 +2,7 @@ import { expect } from 'chai'
 import { ethers } from 'hardhat'
 import { Signer, ZeroAddress } from 'ethers'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
-import '@nomicfoundation/hardhat-chai-matchers'
-import { deployGovernance, CONFIGURATION_ID_ERC3643 } from './initialization'
+import { deployGovernance } from './fixtures/governance'
 import {
     METADATA_ROLE,
     FREEZE_ROLE,
@@ -13,12 +12,13 @@ import {
     CAP_ROLE,
     RECOVERY_ROLE,
     COMPLIANCE_ROLE,
-} from './constants'
+    CONFIGURATION_ID_ERC3643,
+} from '../utils/constants'
 import {
     IERC3643,
     AccessControl,
-    ERC20,
-    ISBEPause,
+    ERC20Facet,
+    ISBEPauseFacet,
     IERC203643Controller,
     IERC203643Capped,
     ERC3643ComplianceFacet,
@@ -32,12 +32,16 @@ describe('ERC3643 Token', function () {
     // ====================================================================
     let owner: Signer
     let alice: Signer
+    let bob: Signer
     let ownerAddress: string
     let aliceAddress: string
+    let bobAddress: string
+    let charlieAddress: string
+    let davidAddress: string
     let erc3643: IERC3643
-    let accessControlFacet: AccessControl
-    let erc20Facet: ERC20
-    let pauseFacet: ISBEPause
+    let accessControl: AccessControl
+    let erc20Facet: ERC20Facet
+    let pauseFacet: ISBEPauseFacet
 
     let proxyAddress: string
 
@@ -50,39 +54,70 @@ describe('ERC3643 Token', function () {
     // ====================================================================
     // COMMON FIXTURES
     // ====================================================================
-    async function deployInitialConfiguration() {
-        const signers = await ethers.getSigners()
-        owner = signers[0] as unknown as Signer
-        alice = signers[1] as unknown as Signer
+    async function deployFixture() {
+        const [ownerSigner, aliceSigner, bobSigner] = await ethers.getSigners()
+        const ownerAddress = await ownerSigner.getAddress()
+        const aliceAddress = await aliceSigner.getAddress()
+        const bobAddress = await bobSigner.getAddress()
 
-        ownerAddress = await owner.getAddress()
-        aliceAddress = await alice.getAddress()
-
-        const result = await deployGovernance(
-            owner,
+        const gov = await deployGovernance(
+            ownerSigner,
             [],
-            CONFIGURATION_ID_ERC3643,
-            false,
-            '0x',
-            [],
-            [],
-            false
+            CONFIGURATION_ID_ERC3643
         )
 
-        // The Diamond proxy contain all ERC3643 facets through the same address
-        proxyAddress = await result.useCaseProxy
-        erc3643 = (await ethers.getContractAt(
+        const proxyAddress = gov.useCaseProxy!
+
+        // Attach all facets to the proxy using getContractAt
+        const erc3643 = (await ethers.getContractAt(
             'IERC3643',
             proxyAddress
         )) as IERC3643
+        const accessControl = (await ethers.getContractAt(
+            'AccessControlFacet',
+            proxyAddress
+        )) as AccessControl
+        const erc20Facet = (await ethers.getContractAt(
+            'ERC20Facet',
+            proxyAddress
+        )) as ERC20Facet
+        const pauseFacet = (await ethers.getContractAt(
+            'ISBEPauseFacet',
+            proxyAddress
+        )) as ISBEPauseFacet
 
-        accessControlFacet = result.accessControl
-        erc20Facet = result.erc20
-        pauseFacet = result.pause
+        return {
+            owner: ownerSigner,
+            alice: aliceSigner,
+            bob: bobSigner,
+            ownerAddress,
+            aliceAddress,
+            bobAddress,
+            charlieAddress,
+            davidAddress,
+            proxyAddress,
+            erc3643,
+            accessControl,
+            erc20Facet,
+            pauseFacet,
+        }
     }
 
     beforeEach(async () => {
-        await loadFixture(deployInitialConfiguration)
+        const contracts = await loadFixture(deployFixture)
+        owner = contracts.owner
+        alice = contracts.alice
+        bob = contracts.bob
+        ownerAddress = contracts.ownerAddress
+        aliceAddress = contracts.aliceAddress
+        bobAddress = contracts.bobAddress
+        charlieAddress = contracts.charlieAddress
+        davidAddress = contracts.davidAddress
+        proxyAddress = contracts.proxyAddress
+        erc3643 = contracts.erc3643
+        accessControl = contracts.accessControl
+        erc20Facet = contracts.erc20Facet
+        pauseFacet = contracts.pauseFacet
     })
 
     // ====================================================================
@@ -95,7 +130,7 @@ describe('ERC3643 Token', function () {
         describe('when ERC20 not initialized', () => {
             beforeEach(async () => {
                 const fixture = async () => {
-                    await accessControlFacet
+                    await accessControl
                         .connect(owner)
                         .grantRole(METADATA_ROLE, ownerAddress)
                 }
@@ -146,7 +181,7 @@ describe('ERC3643 Token', function () {
         describe('when ERC20 is initialized', () => {
             beforeEach(async () => {
                 const fixture = async () => {
-                    await accessControlFacet
+                    await accessControl
                         .connect(owner)
                         .grantRole(METADATA_ROLE, ownerAddress)
                     await erc20Facet
@@ -196,7 +231,7 @@ describe('ERC3643 Token', function () {
                 })
 
                 it('GIVEN no TOKEN_OWNER_ROLE WHEN setName THEN reverts', async () => {
-                    await accessControlFacet
+                    await accessControl
                         .connect(owner)
                         .revokeRole(METADATA_ROLE, ownerAddress)
                     await expect(erc3643.connect(owner).setName('Nope')).to.be
@@ -204,7 +239,7 @@ describe('ERC3643 Token', function () {
                 })
 
                 it('GIVEN contract paused WHEN setName THEN reverts', async () => {
-                    await accessControlFacet
+                    await accessControl
                         .connect(owner)
                         .grantRole(PAUSER_ROLE, ownerAddress)
                     await pauseFacet.connect(owner).pause()
@@ -241,7 +276,7 @@ describe('ERC3643 Token', function () {
                 })
 
                 it('GIVEN no TOKEN_OWNER_ROLE WHEN setSymbol THEN reverts', async () => {
-                    await accessControlFacet
+                    await accessControl
                         .connect(owner)
                         .revokeRole(METADATA_ROLE, ownerAddress)
                     await expect(erc3643.connect(owner).setSymbol('NOPE')).to.be
@@ -249,7 +284,7 @@ describe('ERC3643 Token', function () {
                 })
 
                 it('GIVEN contract paused WHEN setSymbol THEN reverts', async () => {
-                    await accessControlFacet
+                    await accessControl
                         .connect(owner)
                         .grantRole(PAUSER_ROLE, ownerAddress)
                     await pauseFacet.connect(owner).pause()
@@ -290,24 +325,19 @@ describe('ERC3643 Token', function () {
     // FREEZE MODULE
     // ====================================================================
     describe('ERC3643 Freeze', () => {
-        let bobAddress: string
-        let charlieAddress: string
         let erc3643Capped: IERC203643Capped
         beforeEach(async () => {
             const fixture = async () => {
-                await accessControlFacet
+                await accessControl
                     .connect(owner)
                     .grantRole(FREEZE_ROLE, ownerAddress)
-                const signers = await ethers.getSigners()
-                const bob: Signer = signers[2] as unknown as Signer
-                bobAddress = await bob.getAddress()
             }
             await loadFixture(fixture)
         })
 
         describe('setAddressFrozen', () => {
             it('GIVEN no TOKEN_AGENT_ROLE WHEN setAddressFrozen THEN reverts', async () => {
-                await accessControlFacet
+                await accessControl
                     .connect(owner)
                     .revokeRole(FREEZE_ROLE, ownerAddress)
 
@@ -317,7 +347,7 @@ describe('ERC3643 Token', function () {
             })
 
             it('GIVEN contract paused WHEN setAddressFrozen THEN reverts', async () => {
-                await accessControlFacet
+                await accessControl
                     .connect(owner)
                     .grantRole(PAUSER_ROLE, ownerAddress)
                 await pauseFacet.connect(owner).pause()
@@ -394,7 +424,7 @@ describe('ERC3643 Token', function () {
             const amount = 100n
 
             it('GIVEN no TOKEN_AGENT_ROLE WHEN freezePartialTokens THEN reverts', async () => {
-                await accessControlFacet
+                await accessControl
                     .connect(owner)
                     .revokeRole(FREEZE_ROLE, ownerAddress)
 
@@ -406,7 +436,7 @@ describe('ERC3643 Token', function () {
             })
 
             it('GIVEN contract paused WHEN freezePartialTokens THEN reverts', async () => {
-                await accessControlFacet
+                await accessControl
                     .connect(owner)
                     .grantRole(PAUSER_ROLE, ownerAddress)
                 await pauseFacet.connect(owner).pause()
@@ -418,7 +448,7 @@ describe('ERC3643 Token', function () {
                 ).to.be.reverted
             })
             it('GIVEN no TOKEN_AGENT_ROLE WHEN unfreezePartialTokens THEN reverts', async () => {
-                await accessControlFacet
+                await accessControl
                     .connect(owner)
                     .revokeRole(FREEZE_ROLE, ownerAddress)
 
@@ -430,7 +460,7 @@ describe('ERC3643 Token', function () {
             })
 
             it('GIVEN contract paused WHEN unfreezePartialTokens THEN reverts', async () => {
-                await accessControlFacet
+                await accessControl
                     .connect(owner)
                     .grantRole(PAUSER_ROLE, ownerAddress)
                 await pauseFacet.connect(owner).pause()
@@ -571,7 +601,7 @@ describe('ERC3643 Token', function () {
 
         describe('batchSetAddressFrozen', () => {
             it('GIVEN no FREEZE_ROLE WHEN batchSetAddressFrozen THEN reverts', async () => {
-                await accessControlFacet
+                await accessControl
                     .connect(owner)
                     .revokeRole(FREEZE_ROLE, ownerAddress)
 
@@ -583,7 +613,7 @@ describe('ERC3643 Token', function () {
             })
 
             it('GIVEN contract paused WHEN batchSetAddressFrozen THEN reverts', async () => {
-                await accessControlFacet
+                await accessControl
                     .connect(owner)
                     .grantRole(PAUSER_ROLE, ownerAddress)
                 await pauseFacet.connect(owner).pause()
@@ -713,10 +743,10 @@ describe('ERC3643 Token', function () {
                     )) as unknown as IERC203643Capped
 
                     // Grant necessary roles
-                    await accessControlFacet
+                    await accessControl
                         .connect(owner)
                         .grantRole(MINTER_ROLE, ownerAddress)
-                    await accessControlFacet
+                    await accessControl
                         .connect(owner)
                         .grantRole(CAP_ROLE, ownerAddress)
 
@@ -736,7 +766,7 @@ describe('ERC3643 Token', function () {
             })
 
             it('GIVEN no FREEZE_ROLE WHEN batchFreezePartialTokens THEN reverts', async () => {
-                await accessControlFacet
+                await accessControl
                     .connect(owner)
                     .revokeRole(FREEZE_ROLE, ownerAddress)
 
@@ -748,7 +778,7 @@ describe('ERC3643 Token', function () {
             })
 
             it('GIVEN contract paused WHEN batchFreezePartialTokens THEN reverts', async () => {
-                await accessControlFacet
+                await accessControl
                     .connect(owner)
                     .grantRole(PAUSER_ROLE, ownerAddress)
                 await pauseFacet.connect(owner).pause()
@@ -885,10 +915,10 @@ describe('ERC3643 Token', function () {
                     )) as unknown as IERC203643Capped
 
                     // Grant necessary roles
-                    await accessControlFacet
+                    await accessControl
                         .connect(owner)
                         .grantRole(MINTER_ROLE, ownerAddress)
-                    await accessControlFacet
+                    await accessControl
                         .connect(owner)
                         .grantRole(CAP_ROLE, ownerAddress)
 
@@ -919,7 +949,7 @@ describe('ERC3643 Token', function () {
             })
 
             it('GIVEN no FREEZE_ROLE WHEN batchUnfreezePartialTokens THEN reverts', async () => {
-                await accessControlFacet
+                await accessControl
                     .connect(owner)
                     .revokeRole(FREEZE_ROLE, ownerAddress)
 
@@ -931,7 +961,7 @@ describe('ERC3643 Token', function () {
             })
 
             it('GIVEN contract paused WHEN batchUnfreezePartialTokens THEN reverts', async () => {
-                await accessControlFacet
+                await accessControl
                     .connect(owner)
                     .grantRole(PAUSER_ROLE, ownerAddress)
                 await pauseFacet.connect(owner).pause()
@@ -1121,23 +1151,17 @@ describe('ERC3643 Token', function () {
 
                 let erc3643Capped: IERC203643Capped
                 let erc3643Controller: IERC203643Controller
-                let bob: Signer
-                let bobAddress: string
 
                 beforeEach(async () => {
                     const fixture = async () => {
-                        const signers = await ethers.getSigners()
-                        bob = signers[2] as unknown as Signer
-                        bobAddress = await bob.getAddress()
-
                         // necessary roles of TOKEN_OWNER_ROLE
-                        await accessControlFacet
+                        await accessControl
                             .connect(owner)
                             .grantRole(CONTROLLER_ROLE, ownerAddress)
-                        await accessControlFacet
+                        await accessControl
                             .connect(owner)
                             .grantRole(MINTER_ROLE, ownerAddress)
-                        await accessControlFacet
+                        await accessControl
                             .connect(owner)
                             .grantRole(FREEZE_ROLE, ownerAddress)
 
@@ -1181,7 +1205,7 @@ describe('ERC3643 Token', function () {
 
                 describe('forceTransfer', () => {
                     it('GIVEN no CONTROLLER_ROLE WHEN forceTransfer THEN reverts', async () => {
-                        await accessControlFacet
+                        await accessControl
                             .connect(owner)
                             .revokeRole(CONTROLLER_ROLE, ownerAddress)
 
@@ -1193,7 +1217,7 @@ describe('ERC3643 Token', function () {
                     })
 
                     it('GIVEN contract paused WHEN forceTransfer THEN reverts', async () => {
-                        await accessControlFacet
+                        await accessControl
                             .connect(owner)
                             .grantRole(PAUSER_ROLE, ownerAddress)
                         await pauseFacet.connect(owner).pause()
@@ -1375,7 +1399,7 @@ describe('ERC3643 Token', function () {
 
                 describe('forceBurn', () => {
                     it('GIVEN no CONTROLLER_ROLE WHEN forceBurn THEN reverts', async () => {
-                        await accessControlFacet
+                        await accessControl
                             .connect(owner)
                             .revokeRole(CONTROLLER_ROLE, ownerAddress)
 
@@ -1387,7 +1411,7 @@ describe('ERC3643 Token', function () {
                     })
 
                     it('GIVEN contract paused WHEN forceBurn THEN reverts', async () => {
-                        await accessControlFacet
+                        await accessControl
                             .connect(owner)
                             .grantRole(PAUSER_ROLE, ownerAddress)
                         await pauseFacet.connect(owner).pause()
@@ -1521,21 +1545,14 @@ describe('ERC3643 Token', function () {
                 })
 
                 describe('batchForceBurn', () => {
-                    let charlie: Signer
-                    let charlieAddress: string
-
                     beforeEach(async () => {
-                        const signers = await ethers.getSigners()
-                        charlie = signers[3] as unknown as Signer
-                        charlieAddress = await charlie.getAddress()
-
                         await erc3643Capped
                             .connect(owner)
                             .mint(charlieAddress, BigInt(totalBalanceStr))
                     })
 
                     it('GIVEN no CONTROLLER_ROLE WHEN batchForceBurn THEN reverts', async () => {
-                        await accessControlFacet
+                        await accessControl
                             .connect(owner)
                             .revokeRole(CONTROLLER_ROLE, ownerAddress)
 
@@ -1547,7 +1564,7 @@ describe('ERC3643 Token', function () {
                     })
 
                     it('GIVEN contract paused WHEN batchForceBurn THEN reverts', async () => {
-                        await accessControlFacet
+                        await accessControl
                             .connect(owner)
                             .grantRole(PAUSER_ROLE, ownerAddress)
                         await pauseFacet.connect(owner).pause()
@@ -1797,25 +1814,14 @@ describe('ERC3643 Token', function () {
                 })
 
                 describe('batchForceTransfer', () => {
-                    let charlie: Signer
-                    let charlieAddress: string
-                    let david: Signer
-                    let davidAddress: string
-
                     beforeEach(async () => {
-                        const signers = await ethers.getSigners()
-                        charlie = signers[3] as unknown as Signer
-                        charlieAddress = await charlie.getAddress()
-                        david = signers[4] as unknown as Signer
-                        davidAddress = await david.getAddress()
-
                         await erc3643Capped
                             .connect(owner)
                             .mint(charlieAddress, BigInt(totalBalanceStr))
                     })
 
                     it('GIVEN no CONTROLLER_ROLE WHEN batchForceTransfer THEN reverts', async () => {
-                        await accessControlFacet
+                        await accessControl
                             .connect(owner)
                             .revokeRole(CONTROLLER_ROLE, ownerAddress)
 
@@ -1831,7 +1837,7 @@ describe('ERC3643 Token', function () {
                     })
 
                     it('GIVEN contract paused WHEN batchForceTransfer THEN reverts', async () => {
-                        await accessControlFacet
+                        await accessControl
                             .connect(owner)
                             .grantRole(PAUSER_ROLE, ownerAddress)
                         await pauseFacet.connect(owner).pause()
@@ -2243,20 +2249,15 @@ describe('ERC3643 Token', function () {
                         let maxBalanceFacet: ERC3643ComplianceMaxBalanceFacet
                         let erc3643Capped: IERC203643Capped
                         let erc3643Controller: IERC203643Controller
-                        let bob: Signer
-                        let bobAddress: string
+
                         const maxBalanceLimit = 5000n
 
                         beforeEach(async () => {
-                            const signers = await ethers.getSigners()
-                            bob = signers[2] as unknown as Signer
-                            bobAddress = await bob.getAddress()
-
                             // Grant necessary roles
-                            await accessControlFacet
+                            await accessControl
                                 .connect(owner)
                                 .grantRole(CONTROLLER_ROLE, ownerAddress)
-                            await accessControlFacet
+                            await accessControl
                                 .connect(owner)
                                 .grantRole(MINTER_ROLE, ownerAddress)
 
@@ -2365,10 +2366,10 @@ describe('ERC3643 Token', function () {
 
                         beforeEach(async () => {
                             // Grant necessary roles
-                            await accessControlFacet
+                            await accessControl
                                 .connect(owner)
                                 .grantRole(CONTROLLER_ROLE, ownerAddress)
-                            await accessControlFacet
+                            await accessControl
                                 .connect(owner)
                                 .grantRole(MINTER_ROLE, ownerAddress)
 
@@ -2506,30 +2507,16 @@ describe('ERC3643 Token', function () {
                     let complianceDMLimFacet: ERC3643ComplianceDMLimFacet
                     let erc3643Capped: IERC203643Capped
                     let erc3643Controller: IERC203643Controller
-                    let bob: Signer
-                    let bobAddress: string
-                    let charlie: Signer
-                    let charlieAddress: string
-                    let david: Signer
-                    let davidAddress: string
                     const maxBalanceLimit = 15000n
                     const dailyLimit = 1000n
                     const monthlyLimit = 5000n
 
                     beforeEach(async () => {
-                        const signers = await ethers.getSigners()
-                        bob = signers[2] as unknown as Signer
-                        bobAddress = await bob.getAddress()
-                        charlie = signers[3] as unknown as Signer
-                        charlieAddress = await charlie.getAddress()
-                        david = signers[4] as unknown as Signer
-                        davidAddress = await david.getAddress()
-
                         // Grant necessary roles
-                        await accessControlFacet
+                        await accessControl
                             .connect(owner)
                             .grantRole(CONTROLLER_ROLE, ownerAddress)
-                        await accessControlFacet
+                        await accessControl
                             .connect(owner)
                             .grantRole(MINTER_ROLE, ownerAddress)
 
@@ -2752,7 +2739,7 @@ describe('ERC3643 Token', function () {
                                 await complianceBypassUser.getAddress()
 
                             // Grant CONTROLLER role to complianceBypassUser
-                            await accessControlFacet
+                            await accessControl
                                 .connect(owner)
                                 .grantRole(
                                     CONTROLLER_ROLE,
@@ -2760,7 +2747,7 @@ describe('ERC3643 Token', function () {
                                 )
 
                             // Grant COMPLIANCE role to complianceBypassUser (for bypass)
-                            await accessControlFacet
+                            await accessControl
                                 .connect(owner)
                                 .grantRole(
                                     COMPLIANCE_ROLE,
@@ -2876,7 +2863,7 @@ describe('ERC3643 Token', function () {
                                 await controllerOnlyUser.getAddress()
 
                             // Grant ONLY CONTROLLER role (not COMPLIANCE)
-                            await accessControlFacet
+                            await accessControl
                                 .connect(owner)
                                 .grantRole(
                                     CONTROLLER_ROLE,
@@ -2909,7 +2896,7 @@ describe('ERC3643 Token', function () {
                                 await controllerOnlyUser.getAddress()
 
                             // Grant ONLY CONTROLLER role (not COMPLIANCE)
-                            await accessControlFacet
+                            await accessControl
                                 .connect(owner)
                                 .grantRole(
                                     CONTROLLER_ROLE,
@@ -2940,36 +2927,24 @@ describe('ERC3643 Token', function () {
                     let maxBalanceFacet: ERC3643ComplianceMaxBalanceFacet
                     let erc3643Capped: IERC203643Capped
                     let erc3643Controller: IERC203643Controller
-                    let bob: Signer
-                    let bobAddress: string
-                    let charlie: Signer
-                    let charlieAddress: string
-                    let david: Signer
-                    let davidAddress: string
                     let complianceBypassUser: Signer
                     let complianceBypassAddress: string
                     const maxBalanceLimit = 5000n
 
                     beforeEach(async () => {
                         const signers = await ethers.getSigners()
-                        bob = signers[2] as unknown as Signer
-                        bobAddress = await bob.getAddress()
-                        charlie = signers[3] as unknown as Signer
-                        charlieAddress = await charlie.getAddress()
-                        david = signers[4] as unknown as Signer
-                        davidAddress = await david.getAddress()
                         complianceBypassUser = signers[10] as unknown as Signer
                         complianceBypassAddress =
                             await complianceBypassUser.getAddress()
 
                         // Grant necessary roles to owner
-                        await accessControlFacet
+                        await accessControl
                             .connect(owner)
                             .grantRole(CONTROLLER_ROLE, ownerAddress)
-                        await accessControlFacet
+                        await accessControl
                             .connect(owner)
                             .grantRole(MINTER_ROLE, ownerAddress)
-                        await accessControlFacet
+                        await accessControl
                             .connect(owner)
                             .grantRole(COMPLIANCE_ROLE, ownerAddress)
 
@@ -3025,12 +3000,12 @@ describe('ERC3643 Token', function () {
                             )
 
                         // Grant CONTROLLER role to complianceBypassUser
-                        await accessControlFacet
+                        await accessControl
                             .connect(owner)
                             .grantRole(CONTROLLER_ROLE, complianceBypassAddress)
 
                         // Grant COMPLIANCE role to complianceBypassUser (for bypass)
-                        await accessControlFacet
+                        await accessControl
                             .connect(owner)
                             .grantRole(COMPLIANCE_ROLE, complianceBypassAddress)
                     })
@@ -3104,7 +3079,7 @@ describe('ERC3643 Token', function () {
                             await controllerOnlyUser.getAddress()
 
                         // Grant ONLY CONTROLLER role (not COMPLIANCE)
-                        await accessControlFacet
+                        await accessControl
                             .connect(owner)
                             .grantRole(CONTROLLER_ROLE, controllerOnlyAddress)
 
@@ -3147,22 +3122,16 @@ describe('ERC3643 Token', function () {
         describe('when Mode ERC3643', () => {
             describe('when Mode compliance is not active', () => {
                 let erc3643Capped: IERC203643Capped
-                let bob: Signer
-                let bobAddress: string
 
                 const initialCap = 10000n
 
                 beforeEach(async () => {
                     const fixture = async () => {
-                        const signers = await ethers.getSigners()
-                        bob = signers[2] as unknown as Signer
-                        bobAddress = await bob.getAddress()
-
                         // Grant necessary roles
-                        await accessControlFacet
+                        await accessControl
                             .connect(owner)
                             .grantRole(MINTER_ROLE, ownerAddress)
-                        await accessControlFacet
+                        await accessControl
                             .connect(owner)
                             .grantRole(CAP_ROLE, ownerAddress)
 
@@ -3239,7 +3208,7 @@ describe('ERC3643 Token', function () {
                     })
 
                     it('GIVEN no MINTER_ROLE WHEN mint THEN reverts', async () => {
-                        await accessControlFacet
+                        await accessControl
                             .connect(owner)
                             .revokeRole(MINTER_ROLE, ownerAddress)
 
@@ -3251,7 +3220,7 @@ describe('ERC3643 Token', function () {
                     })
 
                     it('GIVEN contract paused WHEN mint THEN reverts', async () => {
-                        await accessControlFacet
+                        await accessControl
                             .connect(owner)
                             .grantRole(PAUSER_ROLE, ownerAddress)
                         await pauseFacet.connect(owner).pause()
@@ -3333,19 +3302,8 @@ describe('ERC3643 Token', function () {
                 // batchMint
                 // ----------------------------------------------------------------
                 describe('batchMint', () => {
-                    let bob: Signer
-                    let charlie: Signer
-                    let bobAddress: string
-                    let charlieAddress: string
-
                     beforeEach(async () => {
                         const fixture = async () => {
-                            const signers = await ethers.getSigners()
-                            bob = signers[2] as unknown as Signer
-                            charlie = signers[3] as unknown as Signer
-                            bobAddress = await bob.getAddress()
-                            charlieAddress = await charlie.getAddress()
-
                             // Initialize cap
                             await erc3643Capped
                                 .connect(owner)
@@ -3355,7 +3313,7 @@ describe('ERC3643 Token', function () {
                     })
 
                     it('GIVEN no MINTER_ROLE WHEN batchMint THEN reverts', async () => {
-                        await accessControlFacet
+                        await accessControl
                             .connect(owner)
                             .revokeRole(MINTER_ROLE, ownerAddress)
 
@@ -3367,7 +3325,7 @@ describe('ERC3643 Token', function () {
                     })
 
                     it('GIVEN contract paused WHEN batchMint THEN reverts', async () => {
-                        await accessControlFacet
+                        await accessControl
                             .connect(owner)
                             .grantRole(PAUSER_ROLE, ownerAddress)
                         await pauseFacet.connect(owner).pause()
@@ -3547,7 +3505,7 @@ describe('ERC3643 Token', function () {
                     })
 
                     it('GIVEN no CAP_ROLE WHEN setCap THEN reverts', async () => {
-                        await accessControlFacet
+                        await accessControl
                             .connect(owner)
                             .revokeRole(CAP_ROLE, ownerAddress)
 
@@ -3654,8 +3612,6 @@ describe('ERC3643 Token', function () {
                 let complianceFacet: ERC3643ComplianceFacet
                 let maxBalanceFacet: ERC3643ComplianceMaxBalanceFacet
                 let complianceDMLimFacet: ERC3643ComplianceDMLimFacet
-                let bob: Signer
-                let bobAddress: string
 
                 const initialCap = 10000n
                 const maxBalanceLimit = 5000n
@@ -3664,18 +3620,14 @@ describe('ERC3643 Token', function () {
 
                 beforeEach(async () => {
                     const fixture = async () => {
-                        const signers = await ethers.getSigners()
-                        bob = signers[2] as unknown as Signer
-                        bobAddress = await bob.getAddress()
-
                         // Grant necessary roles (NOT COMPLIANCE_ROLE to test normal compliance validation)
-                        await accessControlFacet
+                        await accessControl
                             .connect(owner)
                             .grantRole(METADATA_ROLE, ownerAddress)
-                        await accessControlFacet
+                        await accessControl
                             .connect(owner)
                             .grantRole(MINTER_ROLE, ownerAddress)
-                        await accessControlFacet
+                        await accessControl
                             .connect(owner)
                             .grantRole(CAP_ROLE, ownerAddress)
 
@@ -4063,10 +4015,6 @@ describe('ERC3643 Token', function () {
                     })
 
                     it('GIVEN both features enabled WHEN multiple recipients all within maxBalance THEN succeeds', async () => {
-                        const signers = await ethers.getSigners()
-                        const charlie = signers[3] as unknown as Signer
-                        const charlieAddress = await charlie.getAddress()
-
                         // Total: 2000 + 3000 + 4000 = 9000 < 10000 cap ✓
                         // Each recipient: < 5000 maxBalance ✓
                         const amounts = [2000n, 3000n, 4000n]
@@ -4112,7 +4060,7 @@ describe('ERC3643 Token', function () {
                 beforeEach(async () => {
                     const fixture = async () => {
                         // Grant necessary roles
-                        await accessControlFacet
+                        await accessControl
                             .connect(owner)
                             .grantRole(MINTER_ROLE, ownerAddress)
 
@@ -4197,7 +4145,7 @@ describe('ERC3643 Token', function () {
                 beforeEach(async () => {
                     const fixture = async () => {
                         // Grant necessary roles
-                        await accessControlFacet
+                        await accessControl
                             .connect(owner)
                             .grantRole(MINTER_ROLE, ownerAddress)
 
@@ -4239,20 +4187,14 @@ describe('ERC3643 Token', function () {
             // --------------------------------------------------------------------
             describe('Transfer Operations', () => {
                 let erc3643Capped: IERC203643Capped
-                let bob: Signer
-                let bobAddress: string
 
                 beforeEach(async () => {
                     const fixture = async () => {
-                        const signers = await ethers.getSigners()
-                        bob = signers[2] as unknown as Signer
-                        bobAddress = await bob.getAddress()
-
                         // Grant necessary roles
-                        await accessControlFacet
+                        await accessControl
                             .connect(owner)
                             .grantRole(MINTER_ROLE, ownerAddress)
-                        await accessControlFacet
+                        await accessControl
                             .connect(owner)
                             .grantRole(FREEZE_ROLE, ownerAddress)
 
@@ -4551,11 +4493,6 @@ describe('ERC3643 Token', function () {
                         const amount1 = 100n
                         const amount2 = 200n
                         const amount3 = 150n
-
-                        const signers = await ethers.getSigners()
-                        const charlie = signers[3] as unknown as Signer
-                        const charlieAddress = await charlie.getAddress()
-
                         const aliceInitialBalance =
                             await erc20Facet.balanceOf(aliceAddress)
                         const bobInitialBalance =
@@ -4677,8 +4614,6 @@ describe('ERC3643 Token', function () {
             let complianceFacet: ERC3643ComplianceFacet
             let maxBalanceFacet: ERC3643ComplianceMaxBalanceFacet
             let complianceDMLimFacet: ERC3643ComplianceDMLimFacet
-            let bob: Signer
-            let bobAddress: string
 
             const initialCap = 10000n
             const maxBalanceLimit = 5000n
@@ -4687,23 +4622,19 @@ describe('ERC3643 Token', function () {
 
             beforeEach(async () => {
                 const fixture = async () => {
-                    const signers = await ethers.getSigners()
-                    bob = signers[2] as unknown as Signer
-                    bobAddress = await bob.getAddress()
-
                     // Grant COMPLIANCE_ROLE to owner (for configuration)
-                    await accessControlFacet
+                    await accessControl
                         .connect(owner)
                         .grantRole(METADATA_ROLE, ownerAddress)
-                    await accessControlFacet
+                    await accessControl
                         .connect(owner)
                         .grantRole(COMPLIANCE_ROLE, ownerAddress)
-                    await accessControlFacet
+                    await accessControl
                         .connect(owner)
                         .grantRole(FREEZE_ROLE, ownerAddress)
 
                     // Grant MINTER_ROLE to alice (without COMPLIANCE_ROLE for proper validation)
-                    await accessControlFacet
+                    await accessControl
                         .connect(owner)
                         .grantRole(MINTER_ROLE, aliceAddress)
 
@@ -4746,15 +4677,8 @@ describe('ERC3643 Token', function () {
 
             describe('when one compliance feature is enabled', () => {
                 describe('MaxBalance feature', () => {
-                    let bob: Signer
-                    let bobAddress: string
-
                     beforeEach(async () => {
                         const fixture = async () => {
-                            const signers = await ethers.getSigners()
-                            bob = signers[2] as unknown as Signer
-                            bobAddress = await bob.getAddress()
-
                             // Initialize compliance with MaxBalance enabled
                             await complianceFacet
                                 .connect(owner)
@@ -5116,10 +5040,6 @@ describe('ERC3643 Token', function () {
                     })
 
                     it('GIVEN both features enabled WHEN batchTransfer within both limits THEN succeeds', async () => {
-                        const signers = await ethers.getSigners()
-                        const charlie = signers[3] as unknown as Signer
-                        const charlieAddress = await charlie.getAddress()
-
                         // Total: 300 + 400 = 700 < 1000 daily limit
                         // Each recipient < 5000 maxBalance
                         await expect(
@@ -5140,10 +5060,6 @@ describe('ERC3643 Token', function () {
                     })
 
                     it('GIVEN both features enabled WHEN batchTransfer exceeds daily limit THEN reverts', async () => {
-                        const signers = await ethers.getSigners()
-                        const charlie = signers[3] as unknown as Signer
-                        const charlieAddress = await charlie.getAddress()
-
                         // Total: 600 + 500 = 1100 > 1000 daily limit
                         await expect(
                             erc20Facet
@@ -5180,27 +5096,12 @@ describe('ERC3643 Token', function () {
         let complianceFacet: ERC3643ComplianceFacet
         let maxBalanceFacet: ERC3643ComplianceMaxBalanceFacet
         let dayMonthLimitsFacet: ERC3643ComplianceDMLimFacet
-        let bob: Signer
-        let bobAddress: string
-        let alice: Signer
-        let aliceAddress: string
         const maxBalanceLimit = 3000n
         const dailyLimit = 1000n
         const monthlyLimit = 5000n
 
         describe('when Mode compliance is not active', () => {
             describe('when not initialized', () => {
-                beforeEach(async () => {
-                    const fixture = async () => {
-                        const signers = await ethers.getSigners()
-                        alice = signers[1] as unknown as Signer
-                        aliceAddress = await alice.getAddress()
-                        bob = signers[2] as unknown as Signer
-                        bobAddress = await bob.getAddress()
-                    }
-                    await loadFixture(fixture)
-                })
-
                 it('GIVEN ERC3643 not initialized WHEN recoveryAddress THEN reverts', async () => {
                     await expect(
                         erc3643
@@ -5214,17 +5115,17 @@ describe('ERC3643 Token', function () {
                 beforeEach(async () => {
                     const fixture = async () => {
                         // Grant necessary roles
-                        await accessControlFacet
+                        await accessControl
                             .connect(owner)
                             .grantRole(METADATA_ROLE, ownerAddress)
-                        await accessControlFacet
+                        await accessControl
                             .connect(owner)
                             .grantRole(COMPLIANCE_ROLE, ownerAddress)
-                        await accessControlFacet
+                        await accessControl
                             .connect(owner)
                             .grantRole(CAP_ROLE, ownerAddress)
                         // Grant MINTER_ROLE to alice (without COMPLIANCE_ROLE for proper validation)
-                        await accessControlFacet
+                        await accessControl
                             .connect(owner)
                             .grantRole(MINTER_ROLE, aliceAddress)
 
@@ -5279,7 +5180,7 @@ describe('ERC3643 Token', function () {
                             )
 
                         // Grant RECOVERY_ROLE to owner (needed for recovery operations)
-                        await accessControlFacet
+                        await accessControl
                             .connect(owner)
                             .grantRole(RECOVERY_ROLE, ownerAddress)
 
@@ -5293,10 +5194,6 @@ describe('ERC3643 Token', function () {
 
                 describe('Access Control', () => {
                     it('GIVEN no RECOVERY_ROLE WHEN recoveryAddress THEN reverts', async () => {
-                        const signers = await ethers.getSigners()
-                        const bob = signers[2]
-                        const bobAddress = await bob.getAddress()
-
                         // Alice does NOT have RECOVERY_ROLE
                         await expect(
                             erc3643
@@ -5306,10 +5203,6 @@ describe('ERC3643 Token', function () {
                     })
 
                     it('GIVEN RECOVERY_ROLE WHEN recoveryAddress THEN succeeds', async () => {
-                        const signers = await ethers.getSigners()
-                        const bob = signers[2]
-                        const bobAddress = await bob.getAddress()
-
                         // Owner HAS RECOVERY_ROLE
                         await expect(
                             erc3643
@@ -5323,10 +5216,6 @@ describe('ERC3643 Token', function () {
 
                 describe('Input Validation', () => {
                     it('GIVEN zero lost wallet WHEN recoveryAddress THEN reverts with InvalidLostWallet', async () => {
-                        const signers = await ethers.getSigners()
-                        const bob = signers[2]
-                        const bobAddress = await bob.getAddress()
-
                         await expect(
                             erc3643
                                 .connect(owner)
@@ -5361,9 +5250,7 @@ describe('ERC3643 Token', function () {
 
                     it('GIVEN lost wallet with zero balance WHEN recoveryAddress THEN reverts with NoTokensToRecover', async () => {
                         const signers = await ethers.getSigners()
-                        const bob = signers[2]
                         const dave = signers[4]
-                        const bobAddress = await bob.getAddress()
                         const daveAddress = await dave.getAddress()
 
                         await expect(
@@ -5379,10 +5266,6 @@ describe('ERC3643 Token', function () {
 
                 describe('Token Transfer', () => {
                     it('GIVEN valid recovery WHEN recoveryAddress THEN transfers all tokens', async () => {
-                        const signers = await ethers.getSigners()
-                        const bob = signers[2]
-                        const bobAddress = await bob.getAddress()
-
                         const aliceBalance =
                             await erc20Facet.balanceOf(aliceAddress)
 
@@ -5399,9 +5282,6 @@ describe('ERC3643 Token', function () {
                     })
 
                     it('GIVEN recovery with tokens WHEN recoveryAddress THEN emits Transfer event', async () => {
-                        const signers = await ethers.getSigners()
-                        const bob = signers[2]
-                        const bobAddress = await bob.getAddress()
                         const aliceBalance =
                             await erc20Facet.balanceOf(aliceAddress)
 
@@ -5418,7 +5298,7 @@ describe('ERC3643 Token', function () {
                 describe('Frozen State Preservation', () => {
                     beforeEach(async () => {
                         const fixture = async () => {
-                            await accessControlFacet
+                            await accessControl
                                 .connect(owner)
                                 .grantRole(FREEZE_ROLE, ownerAddress)
                         }
@@ -5426,10 +5306,6 @@ describe('ERC3643 Token', function () {
                     })
 
                     it('GIVEN frozen tokens WHEN recoveryAddress THEN preserves frozen tokens on new wallet', async () => {
-                        const signers = await ethers.getSigners()
-                        const bob = signers[2]
-                        const bobAddress = await bob.getAddress()
-
                         const frozenAmount = 300n
                         await erc3643
                             .connect(owner)
@@ -5445,10 +5321,6 @@ describe('ERC3643 Token', function () {
                     })
 
                     it('GIVEN frozen address WHEN recoveryAddress THEN preserves freeze status on new wallet', async () => {
-                        const signers = await ethers.getSigners()
-                        const bob = signers[2]
-                        const bobAddress = await bob.getAddress()
-
                         await erc3643
                             .connect(owner)
                             .setAddressFrozen(aliceAddress, true)
@@ -5461,10 +5333,6 @@ describe('ERC3643 Token', function () {
                     })
 
                     it('GIVEN frozen tokens and frozen address WHEN recoveryAddress THEN preserves both states', async () => {
-                        const signers = await ethers.getSigners()
-                        const bob = signers[2]
-                        const bobAddress = await bob.getAddress()
-
                         const frozenAmount = 400n
                         await erc3643
                             .connect(owner)
@@ -5487,7 +5355,7 @@ describe('ERC3643 Token', function () {
                 describe('Pause Integration', () => {
                     beforeEach(async () => {
                         const fixture = async () => {
-                            await accessControlFacet
+                            await accessControl
                                 .connect(owner)
                                 .grantRole(PAUSER_ROLE, ownerAddress)
                         }
@@ -5495,10 +5363,6 @@ describe('ERC3643 Token', function () {
                     })
 
                     it('GIVEN paused contract WHEN recoveryAddress THEN reverts', async () => {
-                        const signers = await ethers.getSigners()
-                        const bob = signers[2]
-                        const bobAddress = await bob.getAddress()
-
                         await pauseFacet.connect(owner).pause()
 
                         await expect(
@@ -5511,10 +5375,6 @@ describe('ERC3643 Token', function () {
 
                 describe('Events', () => {
                     it('GIVEN successful recovery WHEN recoveryAddress THEN emits RecoverySuccess', async () => {
-                        const signers = await ethers.getSigners()
-                        const bob = signers[2]
-                        const bobAddress = await bob.getAddress()
-
                         await expect(
                             erc3643
                                 .connect(owner)
@@ -5528,7 +5388,7 @@ describe('ERC3643 Token', function () {
                 describe('Complex Scenarios', () => {
                     beforeEach(async () => {
                         const fixture = async () => {
-                            await accessControlFacet
+                            await accessControl
                                 .connect(owner)
                                 .grantRole(FREEZE_ROLE, ownerAddress)
                         }
@@ -5536,9 +5396,6 @@ describe('ERC3643 Token', function () {
                     })
 
                     it('GIVEN partial frozen tokens WHEN recoveryAddress THEN new wallet has correct free balance', async () => {
-                        const signers = await ethers.getSigners()
-                        const bob = signers[2]
-                        const bobAddress = await bob.getAddress()
                         const totalBalance = 2000n // Alice has 2000n from beforeEach
                         const frozenAmount = 600n
                         const freeBalance = totalBalance - frozenAmount
@@ -5567,9 +5424,7 @@ describe('ERC3643 Token', function () {
 
                     it('GIVEN multiple recoveries WHEN recoveryAddress twice THEN both succeed', async () => {
                         const signers = await ethers.getSigners()
-                        const bob = signers[2]
                         const dave = signers[4]
-                        const bobAddress = await bob.getAddress()
                         const daveAddress = await dave.getAddress()
 
                         const aliceBalance =
@@ -5600,33 +5455,27 @@ describe('ERC3643 Token', function () {
         describe('when Mode compliance is active', () => {
             beforeEach(async () => {
                 const fixture = async () => {
-                    const signers = await ethers.getSigners()
-                    alice = signers[1] as unknown as Signer
-                    aliceAddress = await alice.getAddress()
-                    bob = signers[2] as unknown as Signer
-                    bobAddress = await bob.getAddress()
-
                     // Grant necessary roles to owner (WITHOUT COMPLIANCE_ROLE to ensure recovery respects compliance)
-                    await accessControlFacet
+                    await accessControl
                         .connect(owner)
                         .grantRole(METADATA_ROLE, ownerAddress)
-                    await accessControlFacet
+                    await accessControl
                         .connect(owner)
                         .grantRole(CAP_ROLE, ownerAddress)
-                    await accessControlFacet
+                    await accessControl
                         .connect(owner)
                         .grantRole(RECOVERY_ROLE, ownerAddress)
-                    await accessControlFacet
+                    await accessControl
                         .connect(owner)
                         .grantRole(FREEZE_ROLE, ownerAddress)
 
                     // Grant COMPLIANCE_ROLE separately for compliance initialization only
-                    await accessControlFacet
+                    await accessControl
                         .connect(owner)
                         .grantRole(COMPLIANCE_ROLE, ownerAddress)
 
                     // Grant MINTER_ROLE to alice (without COMPLIANCE_ROLE for proper validation)
-                    await accessControlFacet
+                    await accessControl
                         .connect(owner)
                         .grantRole(MINTER_ROLE, aliceAddress)
 
@@ -5684,7 +5533,7 @@ describe('ERC3643 Token', function () {
                                 )
 
                             // Revoke COMPLIANCE_ROLE from owner so recovery respects compliance rules
-                            await accessControlFacet
+                            await accessControl
                                 .connect(owner)
                                 .revokeRole(COMPLIANCE_ROLE, ownerAddress)
 
@@ -5774,7 +5623,7 @@ describe('ERC3643 Token', function () {
                                     )
 
                                 // Revoke COMPLIANCE_ROLE from owner so recovery respects compliance rules
-                                await accessControlFacet
+                                await accessControl
                                     .connect(owner)
                                     .revokeRole(COMPLIANCE_ROLE, ownerAddress)
 
@@ -5827,7 +5676,7 @@ describe('ERC3643 Token', function () {
                                     )
 
                                 // Revoke COMPLIANCE_ROLE from owner so recovery respects compliance rules
-                                await accessControlFacet
+                                await accessControl
                                     .connect(owner)
                                     .revokeRole(COMPLIANCE_ROLE, ownerAddress)
 
@@ -5894,7 +5743,7 @@ describe('ERC3643 Token', function () {
                             )
 
                         // Revoke COMPLIANCE_ROLE from owner so recovery respects compliance rules
-                        await accessControlFacet
+                        await accessControl
                             .connect(owner)
                             .revokeRole(COMPLIANCE_ROLE, ownerAddress)
 
@@ -5999,7 +5848,7 @@ describe('ERC3643 Token', function () {
 
                 it('GIVEN both features enabled with frozen state WHEN recoveryAddress respects compliance THEN bypasses freeze and preserves frozen state', async () => {
                     // Grant freeze role
-                    await accessControlFacet
+                    await accessControl
                         .connect(owner)
                         .grantRole(FREEZE_ROLE, ownerAddress)
 
@@ -6044,22 +5893,18 @@ describe('ERC3643 Token', function () {
 
         beforeEach(async () => {
             const fixture = async () => {
-                const signers = await ethers.getSigners()
-                const bob = signers[2] as unknown as Signer
-                const bobAddress = await bob.getAddress()
-
                 // Grant necessary roles (including COMPLIANCE_ROLE for configuration)
-                await accessControlFacet
+                await accessControl
                     .connect(owner)
                     .grantRole(METADATA_ROLE, ownerAddress)
-                await accessControlFacet
+                await accessControl
                     .connect(owner)
                     .grantRole(COMPLIANCE_ROLE, ownerAddress)
-                await accessControlFacet
+                await accessControl
                     .connect(owner)
                     .grantRole(CAP_ROLE, ownerAddress)
                 // Grant MINTER_ROLE to alice (without COMPLIANCE_ROLE for proper validation)
-                await accessControlFacet
+                await accessControl
                     .connect(owner)
                     .grantRole(MINTER_ROLE, aliceAddress)
 
@@ -6187,7 +6032,7 @@ describe('ERC3643 Token', function () {
             })
 
             it('GIVEN no COMPLIANCE_ROLE WHEN setMaxBalanceEnabled THEN reverts', async () => {
-                await accessControlFacet
+                await accessControl
                     .connect(owner)
                     .revokeRole(COMPLIANCE_ROLE, ownerAddress)
 
@@ -6256,7 +6101,7 @@ describe('ERC3643 Token', function () {
             })
 
             it('GIVEN no COMPLIANCE_ROLE WHEN setDailyMonthLimitsEnabled THEN reverts', async () => {
-                await accessControlFacet
+                await accessControl
                     .connect(owner)
                     .revokeRole(COMPLIANCE_ROLE, ownerAddress)
 
@@ -6412,9 +6257,6 @@ describe('ERC3643 Token', function () {
         // ----------------------------------------------------------------
         describe('canTransfer', () => {
             it('GIVEN all compliance features disabled WHEN canTransfer THEN returns true', async () => {
-                const signers = await ethers.getSigners()
-                const bob = signers[2] as unknown as Signer
-                const bobAddress = await bob.getAddress()
                 const canTransfer = await complianceFacet.canTransfer(
                     aliceAddress,
                     bobAddress,
@@ -6425,10 +6267,6 @@ describe('ERC3643 Token', function () {
             })
 
             it('GIVEN zero amount WHEN canTransfer THEN returns true', async () => {
-                const signers = await ethers.getSigners()
-                const bob = signers[2] as unknown as Signer
-                const bobAddress = await bob.getAddress()
-
                 const canTransfer = await complianceFacet.canTransfer(
                     aliceAddress,
                     bobAddress,
@@ -6450,10 +6288,6 @@ describe('ERC3643 Token', function () {
             })
 
             it('GIVEN zero address sender WHEN canTransfer THEN returns result based on compliance', async () => {
-                const signers = await ethers.getSigners()
-                const bob = signers[2] as unknown as Signer
-                const bobAddress = await bob.getAddress()
-
                 // With no compliance enabled, should return true
                 const canTransfer = await complianceFacet.canTransfer(
                     ZeroAddress,
@@ -6471,7 +6305,7 @@ describe('ERC3643 Token', function () {
         describe('Pause Integration', () => {
             beforeEach(async () => {
                 const fixture = async () => {
-                    await accessControlFacet
+                    await accessControl
                         .connect(owner)
                         .grantRole(PAUSER_ROLE, ownerAddress)
 
@@ -6632,19 +6466,19 @@ describe('ERC3643 Token', function () {
         beforeEach(async () => {
             const fixture = async () => {
                 // Grant necessary roles (including COMPLIANCE_ROLE for configuration)
-                await accessControlFacet
+                await accessControl
                     .connect(owner)
                     .grantRole(METADATA_ROLE, ownerAddress)
-                await accessControlFacet
+                await accessControl
                     .connect(owner)
                     .grantRole(COMPLIANCE_ROLE, ownerAddress)
-                await accessControlFacet
+                await accessControl
                     .connect(owner)
                     .grantRole(MINTER_ROLE, ownerAddress)
-                await accessControlFacet
+                await accessControl
                     .connect(owner)
                     .grantRole(CAP_ROLE, ownerAddress)
-                await accessControlFacet
+                await accessControl
                     .connect(owner)
                     .grantRole(PAUSER_ROLE, ownerAddress)
 
@@ -6743,7 +6577,7 @@ describe('ERC3643 Token', function () {
             })
 
             it('GIVEN no COMPLIANCE_ROLE WHEN setMaxBalance THEN reverts', async () => {
-                await accessControlFacet
+                await accessControl
                     .connect(owner)
                     .revokeRole(COMPLIANCE_ROLE, ownerAddress)
 
@@ -6848,10 +6682,6 @@ describe('ERC3643 Token', function () {
             })
 
             it('GIVEN recipient balance below max WHEN complianceCheckOnMaxBalance with valid amount THEN returns true', async () => {
-                const signers = await ethers.getSigners()
-                const bob = signers[2] as unknown as Signer
-                const bobAddress = await bob.getAddress()
-
                 // Bob has 0, max is 5000, transferring 2000 -> bob will have 2000 < 5000
                 const isCompliant =
                     await maxBalanceFacet.complianceCheckOnMaxBalance(
@@ -6863,10 +6693,6 @@ describe('ERC3643 Token', function () {
             })
 
             it('GIVEN recipient balance would exceed max WHEN complianceCheckOnMaxBalance THEN returns false', async () => {
-                const signers = await ethers.getSigners()
-                const bob = signers[2] as unknown as Signer
-                const bobAddress = await bob.getAddress()
-
                 // Mint to bob first so he has 3000
                 await erc3643Capped.connect(owner).mint(bobAddress, 3000n)
 
@@ -6881,10 +6707,6 @@ describe('ERC3643 Token', function () {
             })
 
             it('GIVEN recipient balance would equal max WHEN complianceCheckOnMaxBalance THEN returns true', async () => {
-                const signers = await ethers.getSigners()
-                const bob = signers[2] as unknown as Signer
-                const bobAddress = await bob.getAddress()
-
                 // Mint to bob first so he has 2000
                 await erc3643Capped.connect(owner).mint(bobAddress, 2000n)
 
@@ -6899,10 +6721,6 @@ describe('ERC3643 Token', function () {
             })
 
             it('GIVEN zero amount transfer WHEN complianceCheckOnMaxBalance THEN returns true', async () => {
-                const signers = await ethers.getSigners()
-                const bob = signers[2] as unknown as Signer
-                const bobAddress = await bob.getAddress()
-
                 const isCompliant =
                     await maxBalanceFacet.complianceCheckOnMaxBalance(
                         bobAddress,
@@ -6915,10 +6733,6 @@ describe('ERC3643 Token', function () {
             it('GIVEN max balance is zero WHEN complianceCheckOnMaxBalance with any amount THEN returns false', async () => {
                 await maxBalanceFacet.connect(owner).setMaxBalance(0n)
 
-                const signers = await ethers.getSigners()
-                const bob = signers[2] as unknown as Signer
-                const bobAddress = await bob.getAddress()
-
                 const isCompliant =
                     await maxBalanceFacet.complianceCheckOnMaxBalance(
                         bobAddress,
@@ -6929,10 +6743,6 @@ describe('ERC3643 Token', function () {
             })
 
             it('GIVEN recipient already at max balance WHEN complianceCheckOnMaxBalance with any amount THEN returns false', async () => {
-                const signers = await ethers.getSigners()
-                const bob = signers[2] as unknown as Signer
-                const bobAddress = await bob.getAddress()
-
                 // Mint to bob so he has exactly max balance (5000)
                 await erc3643Capped.connect(owner).mint(bobAddress, 5000n)
 
@@ -7024,10 +6834,6 @@ describe('ERC3643 Token', function () {
             })
 
             it('GIVEN MaxBalance changes WHEN complianceCheckOnMaxBalance THEN reflects new limit', async () => {
-                const signers = await ethers.getSigners()
-                const bob = signers[2] as unknown as Signer
-                const bobAddress = await bob.getAddress()
-
                 // Mint 8000 to bob
                 await erc3643Capped.connect(owner).mint(bobAddress, 8000n)
 
@@ -7051,12 +6857,6 @@ describe('ERC3643 Token', function () {
             })
 
             it('GIVEN multiple recipients with different balances WHEN complianceCheckOnMaxBalance THEN each evaluated independently', async () => {
-                const signers = await ethers.getSigners()
-                const bob = signers[2] as unknown as Signer
-                const charlie = signers[3] as unknown as Signer
-                const bobAddress = await bob.getAddress()
-                const charlieAddress = await charlie.getAddress()
-
                 // Bob has 9000
                 await erc3643Capped.connect(owner).mint(bobAddress, 9000n)
 
@@ -7082,10 +6882,6 @@ describe('ERC3643 Token', function () {
             })
 
             it('GIVEN MaxBalance set very high WHEN complianceCheckOnMaxBalance with large amounts THEN returns true', async () => {
-                const signers = await ethers.getSigners()
-                const bob = signers[2] as unknown as Signer
-                const bobAddress = await bob.getAddress()
-
                 // Set very high max balance
                 const veryHighMax = ethers.parseEther('1000000')
                 await maxBalanceFacet.connect(owner).setMaxBalance(veryHighMax)
@@ -7101,10 +6897,6 @@ describe('ERC3643 Token', function () {
             })
 
             it('GIVEN rapid max balance changes WHEN complianceCheckOnMaxBalance THEN always reflects current value', async () => {
-                const signers = await ethers.getSigners()
-                const bob = signers[2] as unknown as Signer
-                const bobAddress = await bob.getAddress()
-
                 await erc3643Capped.connect(owner).mint(bobAddress, 5000n)
 
                 // Rapid changes
@@ -7143,19 +6935,19 @@ describe('ERC3643 Token', function () {
         beforeEach(async () => {
             const fixture = async () => {
                 // Grant necessary roles (including COMPLIANCE_ROLE for configuration)
-                await accessControlFacet
+                await accessControl
                     .connect(owner)
                     .grantRole(METADATA_ROLE, ownerAddress)
-                await accessControlFacet
+                await accessControl
                     .connect(owner)
                     .grantRole(COMPLIANCE_ROLE, ownerAddress)
-                await accessControlFacet
+                await accessControl
                     .connect(owner)
                     .grantRole(MINTER_ROLE, ownerAddress)
-                await accessControlFacet
+                await accessControl
                     .connect(owner)
                     .grantRole(CAP_ROLE, ownerAddress)
-                await accessControlFacet
+                await accessControl
                     .connect(owner)
                     .grantRole(PAUSER_ROLE, ownerAddress)
 
@@ -7264,7 +7056,7 @@ describe('ERC3643 Token', function () {
             })
 
             it('GIVEN no COMPLIANCE_ROLE WHEN setDailyLimit THEN reverts', async () => {
-                await accessControlFacet
+                await accessControl
                     .connect(owner)
                     .revokeRole(COMPLIANCE_ROLE, ownerAddress)
 
@@ -7329,7 +7121,7 @@ describe('ERC3643 Token', function () {
             })
 
             it('GIVEN no COMPLIANCE_ROLE WHEN setMonthlyLimit THEN reverts', async () => {
-                await accessControlFacet
+                await accessControl
                     .connect(owner)
                     .revokeRole(COMPLIANCE_ROLE, ownerAddress)
 
@@ -7788,10 +7580,6 @@ describe('ERC3643 Token', function () {
             })
 
             it('GIVEN DayMonthLimits enabled WHEN transfer exceeds daily limit THEN reverts with compliance error', async () => {
-                const signers = await ethers.getSigners()
-                const bob = signers[2] as unknown as Signer
-                const bobAddress = await bob.getAddress()
-
                 // Daily limit is 1000n (from beforeEach)
                 // Alice has 20000n tokens (from beforeEach)
                 const excessAmount = 1001n // Exceeds daily limit of 1000n

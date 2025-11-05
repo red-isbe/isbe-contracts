@@ -1,11 +1,11 @@
 import { ethers } from 'hardhat'
-import { Signer, ContractFactory } from 'ethers'
+import { Signer, ContractFactory, Log, EventLog } from 'ethers'
 import {
     ERC20SnapshotFacet,
     ERC20BurnableFacet,
-    ERC20CappedFacet,
-    ERC20ControllerFacet,
+    ERC203643ControllerFacet,
     ERC20Facet,
+    ERC203643CappedFacet,
     AssetEventTrackerTestWrapper,
     HashTimestampTestWrapper,
     MockTimestampFacet,
@@ -21,16 +21,16 @@ import {
 } from '../../typechain-types'
 import {
     OWNABLE_RESOLVER_KEY,
+    ERC20_RESOLVER_KEY,
     ERC20_SNAPSHOT_RESOLVER_KEY,
     ERC20_BURNABLE_RESOLVER_KEY,
-    ERC20_CAPPED_RESOLVER_KEY,
-    ERC20_CONTROLLER_RESOLVER_KEY,
-    ERC20_RESOLVER_KEY,
-    ASSET_EVENT_TRACKER_RESOLVER_KEY,
+    ERC203643_CAPPED_RESOLVER_KEY,
+    ERC203643_CONTROLLER_RESOLVER_KEY,
     HASH_TIMESTAMP_RESOLVER_KEY,
     MOCK_TIMESTAMP_RESOLVER_KEY,
     ACCESS_CONTROL_RESOLVER_KEY,
     ACCESS_CONTROL_DID_RESOLVER_KEY,
+    ASSET_EVENT_TRACKER_RESOLVER_KEY,
     PAUSE_RESOLVER_KEY,
     ISBE_CUT_RESOLVER_KEY,
     ISBE_LOUPE_RESOLVER_KEY,
@@ -52,14 +52,11 @@ async function deployBusinessLogicFromFactory(
     }
 
     const businessAddress = deployTx.logs.filter(
-        (log) =>
+        (log: EventLog | Log) =>
+            'topics' in log &&
             log.topics[0] ===
-            '0xe50cdcfd1b693a28ae23bc9a7b0614b649a9caaa7164a4aa2e8161ab6c8cd7a4'
-    )[0] as {
-        args: {
-            businessAddress: string
-        }
-    }
+                '0xe50cdcfd1b693a28ae23bc9a7b0614b649a9caaa7164a4aa2e8161ab6c8cd7a4'
+    )[0] as EventLog
     return contractFactory.attach(businessAddress.args.businessAddress)
 }
 
@@ -91,10 +88,11 @@ export async function deployERC20UseCasesFacets(
         await ethers.getContractFactory('ERC20SnapshotFacet')
     const ERC20BurnableFacetFactory =
         await ethers.getContractFactory('ERC20BurnableFacet')
-    const ERC20CappedFacetFactory =
-        await ethers.getContractFactory('ERC20CappedFacet')
-    const ERC20ControllerFacetFactory = await ethers.getContractFactory(
-        'ERC20ControllerFacet'
+    const ERC203643CappedFacetFactory = await ethers.getContractFactory(
+        'ERC203643CappedFacet'
+    )
+    const ERC203643ControllerFacetFactory = await ethers.getContractFactory(
+        'ERC203643ControllerFacet'
     )
     const ERC20FacetFactory = await ethers.getContractFactory('ERC20Facet')
     const AssetEventTrackerTestWrapperFactory = await ethers.getContractFactory(
@@ -150,15 +148,15 @@ export async function deployERC20UseCasesFacets(
         ERC20_BURNABLE_RESOLVER_KEY,
         ERC20BurnableFacetFactory
     )
-    const erc20CappedFacet = await deployBusinessLogicFromFactory(
+    const erc203643CappedFacet = await deployBusinessLogicFromFactory(
         isbeFactory,
-        ERC20_CAPPED_RESOLVER_KEY,
-        ERC20CappedFacetFactory
+        ERC203643_CAPPED_RESOLVER_KEY,
+        ERC203643CappedFacetFactory
     )
-    const erc20ControllerFacet = await deployBusinessLogicFromFactory(
+    const erc203643ControllerFacet = await deployBusinessLogicFromFactory(
         isbeFactory,
-        ERC20_CONTROLLER_RESOLVER_KEY,
-        ERC20ControllerFacetFactory
+        ERC203643_CONTROLLER_RESOLVER_KEY,
+        ERC203643ControllerFacetFactory
     )
     const erc20Facet = await deployBusinessLogicFromFactory(
         isbeFactory,
@@ -195,11 +193,11 @@ export async function deployERC20UseCasesFacets(
             version: 1,
         },
         {
-            businessId: ERC20_CAPPED_RESOLVER_KEY,
+            businessId: ERC203643_CAPPED_RESOLVER_KEY,
             version: 1,
         },
         {
-            businessId: ERC20_CONTROLLER_RESOLVER_KEY,
+            businessId: ERC203643_CONTROLLER_RESOLVER_KEY,
             version: 1,
         },
         {
@@ -238,12 +236,12 @@ export async function deployERC20UseCasesFacets(
     const erc20Burnable = ERC20BurnableFacetFactory.attach(
         proxy
     ) as ERC20BurnableFacet
-    const erc20Capped = ERC20CappedFacetFactory.attach(
+    const erc203643Capped = ERC203643CappedFacetFactory.attach(
         proxy
-    ) as ERC20CappedFacet
-    const erc20Controller = ERC20ControllerFacetFactory.attach(
+    ) as ERC203643CappedFacet
+    const erc203643Controller = ERC203643ControllerFacetFactory.attach(
         proxy
-    ) as ERC20ControllerFacet
+    ) as ERC203643ControllerFacet
     const erc20 = ERC20FacetFactory.attach(proxy) as ERC20Facet
 
     const pause = ISBEPauseFacetFactory.attach(proxy) as ISBEPauseFacet
@@ -273,8 +271,8 @@ export async function deployERC20UseCasesFacets(
         erc20,
         erc20Snapshot,
         erc20Burnable,
-        erc20Capped,
-        erc20Controller,
+        erc203643Capped,
+        erc203643Controller,
         pause,
         accessControl,
         ownable,
@@ -284,9 +282,9 @@ export async function deployERC20UseCasesFacets(
         erc20Facet,
         erc20SnapshotFacet,
         erc20BurnableFacet,
-        erc20CappedFacet,
-        erc20ControllerFacet,
         pauseFacet,
+        erc203643CappedFacet,
+        erc203643ControllerFacet,
         accessControlFacet,
         ownableFacet,
         assetEventTrackerFacet,

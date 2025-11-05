@@ -3,9 +3,12 @@ import { ethers } from 'hardhat'
 import { Signer, HDNodeWallet } from 'ethers'
 import {
     ERC20,
+    ERC20Facet,
     ERC20Snapshot,
+    ERC20Burnable,
     ERC203643Capped,
     ERC203643Controller,
+    AccessControl,
 } from '../typechain-types'
 import {
     CAP_ROLE,
@@ -20,6 +23,7 @@ import { deployGovernance } from './fixtures/governance'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { EllipticType } from './types/identity'
 import { config } from 'hardhat'
+
 describe('ERC20', function () {
     const decimals = 2
     const name = 'ISBE stable token'
@@ -45,27 +49,56 @@ describe('ERC20', function () {
         ownerAddress = await owner.getAddress()
         otherAccountAddress = await otherAccount.getAddress()
 
-        const result = await deployGovernance(owner)
+        const gov = await deployGovernance(owner)
 
-        const contracts = {
-            erc20: result.erc20,
-            erc20Snapshot: result.erc20Snapshot,
-            erc20Burnable: result.erc20Burnable,
-            erc20Capped: result.erc20Capped,
-            erc20Controller: result.erc20Controller,
-            accessControl: result.accessControl,
-            erc20Facet: result.erc20Facet,
+        // Get proxy address and attach typed contracts
+        const proxyAddress = gov.useCaseProxy!
+        const erc20 = (await ethers.getContractAt(
+            'ERC20Facet',
+            proxyAddress
+        )) as ERC20
+        const erc20Snapshot = (await ethers.getContractAt(
+            'ERC20SnapshotFacet',
+            proxyAddress
+        )) as ERC20Snapshot
+        const erc20Burnable = (await ethers.getContractAt(
+            'ERC20BurnableFacet',
+            proxyAddress
+        )) as ERC20Burnable
+        const erc203643Capped = (await ethers.getContractAt(
+            'ERC203643CappedFacet',
+            proxyAddress
+        )) as ERC203643Capped
+        const erc203643Controller = (await ethers.getContractAt(
+            'ERC203643ControllerFacet',
+            proxyAddress
+        )) as ERC203643Controller
+        const accessControl = (await ethers.getContractAt(
+            'AccessControlFacet',
+            proxyAddress
+        )) as AccessControl
+        const erc20Facet = (await ethers.getContractAt(
+            'ERC20Facet',
+            proxyAddress
+        )) as ERC20Facet
+
+        expect(await erc20Facet.businessIdIntrospection()).to.equal(
+            ERC20_RESOLVER_KEY
+        )
+
+        return {
+            erc20,
+            erc20Snapshot,
+            erc20Burnable,
+            erc203643Capped,
+            erc203643Controller,
+            accessControl,
+            erc20Facet,
             owner,
             ownerAddress,
             otherAccount,
             otherAccountAddress,
         }
-
-        expect(await result.erc20Facet.businessIdIntrospection()).to.equal(
-            ERC20_RESOLVER_KEY
-        )
-
-        return contracts
     }
 
     async function deployInitializedFixture() {
@@ -77,7 +110,7 @@ describe('ERC20', function () {
             'ERC203643CappedFacet'
         )
 
-        const businessIds = [ERC20_RESOLVER_KEY, ERC20_CAPPED_RESOLVER_KEY]
+        const businessIds = [ERC20_RESOLVER_KEY, ERC203643_CAPPED_RESOLVER_KEY]
         const data = [
             ERC20Factory.interface.encodeFunctionData('initializeErc20', [
                 name,
@@ -100,18 +133,49 @@ describe('ERC20', function () {
             data
         )
 
-        expect(await result.erc20Facet.businessIdIntrospection()).to.equal(
+        // Get proxy address and attach typed contracts
+        const proxyAddress = result.useCaseProxy!
+        const erc20 = (await ethers.getContractAt(
+            'ERC20Facet',
+            proxyAddress
+        )) as ERC20
+        const erc20Snapshot = (await ethers.getContractAt(
+            'ERC20SnapshotFacet',
+            proxyAddress
+        )) as ERC20Snapshot
+        const erc20Burnable = (await ethers.getContractAt(
+            'ERC20BurnableFacet',
+            proxyAddress
+        )) as ERC20Burnable
+        const erc203643Capped = (await ethers.getContractAt(
+            'ERC203643CappedFacet',
+            proxyAddress
+        )) as ERC203643Capped
+        const erc203643Controller = (await ethers.getContractAt(
+            'ERC203643ControllerFacet',
+            proxyAddress
+        )) as ERC203643Controller
+        const accessControl = (await ethers.getContractAt(
+            'AccessControlFacet',
+            proxyAddress
+        )) as AccessControl
+        const erc20Facet = (await ethers.getContractAt(
+            'ERC20Facet',
+            proxyAddress
+        )) as ERC20Facet
+
+        expect(await erc20Facet.businessIdIntrospection()).to.equal(
             ERC20_RESOLVER_KEY
         )
 
         return {
-            erc20: result.erc20,
-            erc20Snapshot: result.erc20Snapshot,
-            erc20Burnable: result.erc20Burnable,
-            erc20Capped: result.erc20Capped,
-            erc20Controller: result.erc20Controller,
-            accessControl: result.accessControl,
-            erc20Facet: result.erc20Facet,
+            erc20,
+            erc20Snapshot,
+            erc20Burnable,
+            erc203643Capped,
+            erc203643Controller,
+            accessControl,
+            erc20Facet,
             owner: ownerSigner,
             ownerAddress,
             otherAccount: otherAccountSigner,
@@ -125,10 +189,11 @@ describe('ERC20', function () {
         const otherAccountAddress = await otherAccountSigner.getAddress()
 
         const ERC20Factory = await ethers.getContractFactory('ERC20Facet')
-        const CappedFactory =
-            await ethers.getContractFactory('ERC20CappedFacet')
+        const CappedFactory = await ethers.getContractFactory(
+            'erc203643CappedFacet'
+        )
 
-        const businessIds = [ERC20_RESOLVER_KEY, ERC20_CAPPED_RESOLVER_KEY]
+        const businessIds = [ERC20_RESOLVER_KEY, ERC203643_CAPPED_RESOLVER_KEY]
         const data = [
             ERC20Factory.interface.encodeFunctionData('initializeErc20', [
                 name,
@@ -149,27 +214,49 @@ describe('ERC20', function () {
             data
         )
 
-        erc20 = result.erc20
-        erc20Snapshot = result.erc20Snapshot
-        erc20Burnable = result.erc20Burnable
-        erc203643Capped = result.erc203643Capped
-        erc203643Controller = result.erc203643Controller
+        // Get proxy address and attach typed contracts
+        const proxyAddress = result.useCaseProxy!
+        const erc20 = (await ethers.getContractAt(
+            'ERC20Facet',
+            proxyAddress
+        )) as ERC20
+        const erc20Snapshot = (await ethers.getContractAt(
+            'ERC20SnapshotFacet',
+            proxyAddress
+        )) as ERC20Snapshot
+        const erc20Burnable = (await ethers.getContractAt(
+            'ERC20BurnableFacet',
+            proxyAddress
+        )) as ERC20Burnable
+        const erc203643Capped = (await ethers.getContractAt(
+            'ERC203643CappedFacet',
+            proxyAddress
+        )) as ERC203643Capped
+        const erc203643Controller = (await ethers.getContractAt(
+            'ERC203643ControllerFacet',
+            proxyAddress
+        )) as ERC203643Controller
+        const accessControl = (await ethers.getContractAt(
+            'AccessControlFacet',
+            proxyAddress
+        )) as AccessControl
+        const erc20Facet = (await ethers.getContractAt(
+            'ERC20Facet',
+            proxyAddress
+        )) as ERC20Facet
 
-        accessControl = result.accessControl
-        erc20Facet = result.erc20Facet
-
-        expect(await result.erc20Facet.businessIdIntrospection()).to.equal(
+        expect(await erc20Facet.businessIdIntrospection()).to.equal(
             ERC20_RESOLVER_KEY
         )
 
         return {
-            erc20: result.erc20,
-            erc20Snapshot: result.erc20Snapshot,
-            erc20Burnable: result.erc20Burnable,
-            erc20Capped: result.erc20Capped,
-            erc20Controller: result.erc20Controller,
-            accessControl: result.accessControl,
-            erc20Facet: result.erc20Facet,
+            erc20,
+            erc20Snapshot,
+            erc20Burnable,
+            erc203643Capped,
+            erc203643Controller,
+            accessControl,
+            erc20Facet,
             owner: ownerSigner,
             ownerAddress,
             otherAccount: otherAccountSigner,
@@ -183,10 +270,11 @@ describe('ERC20', function () {
         const otherAccountAddress = await otherAccountSigner.getAddress()
 
         const ERC20Factory = await ethers.getContractFactory('ERC20Facet')
-        const CappedFactory =
-            await ethers.getContractFactory('ERC20CappedFacet')
+        const CappedFactory = await ethers.getContractFactory(
+            'erc203643CappedFacet'
+        )
 
-        const businessIds = [ERC20_RESOLVER_KEY, ERC20_CAPPED_RESOLVER_KEY]
+        const businessIds = [ERC20_RESOLVER_KEY, ERC203643_CAPPED_RESOLVER_KEY]
         const data = [
             ERC20Factory.interface.encodeFunctionData('initializeErc20', [
                 name,
@@ -207,24 +295,55 @@ describe('ERC20', function () {
             data
         )
 
-        expect(await result.erc20Facet.businessIdIntrospection()).to.equal(
+        // Get proxy address and attach typed contracts
+        const proxyAddress = result.useCaseProxy!
+        const erc20 = (await ethers.getContractAt(
+            'ERC20Facet',
+            proxyAddress
+        )) as ERC20
+        const erc20Snapshot = (await ethers.getContractAt(
+            'ERC20SnapshotFacet',
+            proxyAddress
+        )) as ERC20Snapshot
+        const erc20Burnable = (await ethers.getContractAt(
+            'ERC20BurnableFacet',
+            proxyAddress
+        )) as ERC20Burnable
+        const erc203643Capped = (await ethers.getContractAt(
+            'ERC203643CappedFacet',
+            proxyAddress
+        )) as ERC203643Capped
+        const erc203643Controller = (await ethers.getContractAt(
+            'ERC203643ControllerFacet',
+            proxyAddress
+        )) as ERC203643Controller
+        const accessControl = (await ethers.getContractAt(
+            'AccessControlFacet',
+            proxyAddress
+        )) as AccessControl
+        const erc20Facet = (await ethers.getContractAt(
+            'ERC20Facet',
+            proxyAddress
+        )) as ERC20Facet
+
+        expect(await erc20Facet.businessIdIntrospection()).to.equal(
             ERC20_RESOLVER_KEY
         )
 
         // Grant necessary roles
-        await result.accessControl.grantRole(MINTER_ROLE, ownerAddress)
-        await result.accessControl.grantRole(CAP_ROLE, ownerAddress)
-        await result.accessControl.grantRole(SNAPSHOT_ROLE, ownerAddress)
-        await result.accessControl.grantRole(CONTROLLER_ROLE, ownerAddress)
+        await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+        await accessControl.grantRole(CAP_ROLE, ownerAddress)
+        await accessControl.grantRole(SNAPSHOT_ROLE, ownerAddress)
+        await accessControl.grantRole(CONTROLLER_ROLE, ownerAddress)
 
         return {
-            erc20: result.erc20,
-            erc20Snapshot: result.erc20Snapshot,
-            erc20Burnable: result.erc20Burnable,
-            erc20Capped: result.erc20Capped,
-            erc20Controller: result.erc20Controller,
-            accessControl: result.accessControl,
-            erc20Facet: result.erc20Facet,
+            erc20,
+            erc20Snapshot,
+            erc20Burnable,
+            erc203643Capped,
+            erc203643Controller,
+            accessControl,
+            erc20Facet,
             owner: ownerSigner,
             ownerAddress,
             otherAccount: otherAccountSigner,
@@ -235,7 +354,9 @@ describe('ERC20', function () {
     beforeEach(async function () {
         const contracts = await loadFixture(deployFixture)
         erc20 = contracts.erc20
-        erc20Capped = contracts.erc20Capped
+        erc203643Capped = contracts.erc203643Capped
+        erc203643Controller = contracts.erc203643Controller
+        accessControl = contracts.accessControl
         erc20Facet = contracts.erc20Facet
         owner = contracts.owner
         ownerAddress = contracts.ownerAddress
@@ -288,14 +409,12 @@ describe('ERC20', function () {
         })
 
         it('GIVEN an ERC20 WHEN initializing with empty name THEN it fails', async () => {
-            await deploy()
             await expect(
                 erc20.initializeErc20('', symbol, decimals)
             ).to.be.revertedWithCustomError(erc20, 'EmptyString')
         })
 
         it('GIVEN an ERC20 WHEN initializing with empty symbol THEN it fails', async () => {
-            await deploy()
             await expect(
                 erc20.initializeErc20(name, '', decimals)
             ).to.be.revertedWithCustomError(erc20, 'EmptyString')
@@ -467,11 +586,13 @@ describe('ERC20', function () {
         })
 
         it('GIVEN an initialized ERC20 WHEN mint over cap THEN it fails', async () => {
-            await deploy(true)
-            expect(await erc203643Capped.cap()).to.equal(1000)
+            const pausedContracts = await loadFixture(deployPausedFixture)
+            const cappedContract =
+                pausedContracts.erc203643Capped as ERC203643Capped
+            expect(await cappedContract.cap()).to.equal(1000)
             await expect(
-                erc203643Capped.mint(ownerAddress, 1001)
-            ).revertedWithCustomError(erc203643Capped, 'CapExceeded')
+                cappedContract.mint(ownerAddress, 1001)
+            ).revertedWithCustomError(cappedContract, 'CapExceeded')
         })
 
         it('GIVEN an initialized ERC20 WHEN setting cap below total supply THEN it fails', async () => {
@@ -582,9 +703,15 @@ describe('ERC20', function () {
         })
 
         it('GIVEN an ERC20 WHEN it is prepared THEN a burn can be made', async () => {
-            const contracts = await loadFixture(deployWithTokensFixture)
-            await expect(contracts.erc20Burnable.burn(100))
-                .to.emit(contracts.erc20Burnable, 'Transfer')
+            const contracts = await loadFixture(deployPreparedTokensFixture)
+            const erc20Burnable = contracts.erc20Burnable as ERC20Burnable
+            const erc203643Capped = contracts.erc203643Capped as ERC203643Capped
+
+            // Mint some tokens first
+            await erc203643Capped.mint(contracts.ownerAddress, 100)
+
+            await expect(erc20Burnable.burn(100))
+                .to.emit(erc20Burnable, 'Transfer')
                 .withArgs(contracts.ownerAddress, ethers.ZeroAddress, 100)
 
             expect(await contracts.erc20.totalSupply()).to.be.equal(0)
@@ -605,9 +732,13 @@ describe('ERC20', function () {
 
             if (init_pause) return contracts
 
-            await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+            const erc203643Capped = contracts.erc203643Capped as ERC203643Capped
             await erc203643Capped.mint(otherAccountAddress, 50)
-            await erc20.connect(otherAccount).approve(ownerAddress, 100)
+            await contracts.erc20
+                .connect(otherAccount)
+                .approve(ownerAddress, 100)
+
+            return contracts
         }
 
         it('GIVEN an ERC20 initialized WHEN try to use address(0) THEN it fails', async () => {
@@ -1116,7 +1247,7 @@ describe('ERC20', function () {
         let addressAccountAddress: string
         let useCaseAccessControlDid: IAccessControlDid
         let erc20Mixed: ERC20
-        let erc20CappedMixed: ERC20Capped
+        let erc203643CappedMixed: erc203643Capped
         let accessControlMixed: unknown
 
         function walletOfFirstSigner(): HDNodeWallet {
@@ -1141,10 +1272,14 @@ describe('ERC20', function () {
 
             // Deploy ERC20 with initialization
             const ERC20Factory = await ethers.getContractFactory('ERC20Facet')
-            const CappedFactory =
-                await ethers.getContractFactory('ERC20CappedFacet')
+            const CappedFactory = await ethers.getContractFactory(
+                'erc203643CappedFacet'
+            )
 
-            const businessIds = [ERC20_RESOLVER_KEY, ERC20_CAPPED_RESOLVER_KEY]
+            const businessIds = [
+                ERC20_RESOLVER_KEY,
+                ERC203643_CAPPED_RESOLVER_KEY,
+            ]
             const data = [
                 ERC20Factory.interface.encodeFunctionData('initializeErc20', [
                     name,
@@ -1239,7 +1374,7 @@ describe('ERC20', function () {
 
             return {
                 erc20: govResult.erc20,
-                erc20Capped: govResult.erc20Capped,
+                erc203643Capped: govResult.erc203643Capped,
                 erc20Snapshot: govResult.erc20Snapshot,
                 accessControl: govResult.accessControl,
                 useCaseAccessControlDid,
@@ -1254,7 +1389,7 @@ describe('ERC20', function () {
         beforeEach(async function () {
             const contracts = await loadFixture(deployMixedFixture)
             erc20Mixed = contracts.erc20
-            erc20CappedMixed = contracts.erc20Capped
+            erc203643CappedMixed = contracts.erc203643Capped
             accessControlMixed = contracts.accessControl
             useCaseAccessControlDid = contracts.useCaseAccessControlDid
             didWallet = contracts.didWallet
@@ -1265,10 +1400,10 @@ describe('ERC20', function () {
 
         it('GIVEN MINTER_ROLE granted to address and DID WHEN both mint tokens THEN both succeed', async function () {
             // Address mints
-            const connectedErc20CappedAddress =
-                erc20CappedMixed.connect(addressAccount)
+            const connectederc203643CappedAddress =
+                erc203643CappedMixed.connect(addressAccount)
             await expect(
-                connectedErc20CappedAddress.mint(addressAccountAddress, 100)
+                connectederc203643CappedAddress.mint(addressAccountAddress, 100)
             )
                 .to.emit(erc20Mixed, 'Transfer')
                 .withArgs(ethers.ZeroAddress, addressAccountAddress, 100)
@@ -1278,8 +1413,11 @@ describe('ERC20', function () {
                 didWallet.privateKey,
                 ethers.provider
             )
-            const connectedErc20CappedDid = erc20CappedMixed.connect(didSigner)
-            await expect(connectedErc20CappedDid.mint(didWallet.address, 200))
+            const connectederc203643CappedDid =
+                erc203643CappedMixed.connect(didSigner)
+            await expect(
+                connectederc203643CappedDid.mint(didWallet.address, 200)
+            )
                 .to.emit(erc20Mixed, 'Transfer')
                 .withArgs(ethers.ZeroAddress, didWallet.address, 200)
 
@@ -1305,12 +1443,13 @@ describe('ERC20', function () {
                 didWallet.privateKey,
                 ethers.provider
             )
-            const connectedErc20CappedDid = erc20CappedMixed.connect(didSigner)
-            await expect(connectedErc20CappedDid.setCap(2000))
-                .to.emit(erc20CappedMixed, 'CapSet')
+            const connectederc203643CappedDid =
+                erc203643CappedMixed.connect(didSigner)
+            await expect(connectederc203643CappedDid.setCap(2000))
+                .to.emit(erc203643CappedMixed, 'CapSet')
                 .withArgs(didWallet.address, 2000)
 
-            expect(await erc20CappedMixed.cap()).to.equal(2000)
+            expect(await erc203643CappedMixed.cap()).to.equal(2000)
         })
 
         it('GIVEN role revoked from DID WHEN DID wallet executes THEN fails', async function () {
@@ -1322,9 +1461,10 @@ describe('ERC20', function () {
                 didWallet.privateKey,
                 ethers.provider
             )
-            const connectedErc20CappedDid = erc20CappedMixed.connect(didSigner)
+            const connectederc203643CappedDid =
+                erc203643CappedMixed.connect(didSigner)
             await expect(
-                connectedErc20CappedDid.mint(didWallet.address, 100)
+                connectederc203643CappedDid.mint(didWallet.address, 100)
             ).to.be.revertedWithCustomError(
                 accessControlMixed,
                 'AccountHasNoRole'
@@ -1339,10 +1479,10 @@ describe('ERC20', function () {
             )
 
             // Address should fail
-            const connectedErc20CappedAddress =
-                erc20CappedMixed.connect(addressAccount)
+            const connectederc203643CappedAddress =
+                erc203643CappedMixed.connect(addressAccount)
             await expect(
-                connectedErc20CappedAddress.mint(addressAccountAddress, 100)
+                connectederc203643CappedAddress.mint(addressAccountAddress, 100)
             ).to.be.revertedWithCustomError(
                 accessControlMixed,
                 'AccountHasNoRole'
@@ -1353,9 +1493,10 @@ describe('ERC20', function () {
                 didWallet.privateKey,
                 ethers.provider
             )
-            const connectedErc20CappedDid = erc20CappedMixed.connect(didSigner)
+            const connectederc203643CappedDid =
+                erc203643CappedMixed.connect(didSigner)
             await expect(
-                connectedErc20CappedDid.mint(didWallet.address, 100)
+                connectederc203643CappedDid.mint(didWallet.address, 100)
             ).to.emit(erc20Mixed, 'Transfer')
         })
 
