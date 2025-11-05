@@ -55,10 +55,18 @@ describe('ERC3643 Token', function () {
     // COMMON FIXTURES
     // ====================================================================
     async function deployFixture() {
-        const [ownerSigner, aliceSigner, bobSigner] = await ethers.getSigners()
-        const ownerAddress = await ownerSigner.getAddress()
-        const aliceAddress = await aliceSigner.getAddress()
-        const bobAddress = await bobSigner.getAddress()
+        const [
+            ownerSigner,
+            aliceSigner,
+            bobSigner,
+            charlieSigner,
+            davidSigner,
+        ] = await ethers.getSigners()
+        ownerAddress = await ownerSigner.getAddress()
+        aliceAddress = await aliceSigner.getAddress()
+        bobAddress = await bobSigner.getAddress()
+        charlieAddress = await charlieSigner.getAddress()
+        davidAddress = await davidSigner.getAddress()
 
         const gov = await deployGovernance(
             ownerSigner,
@@ -90,6 +98,8 @@ describe('ERC3643 Token', function () {
             owner: ownerSigner,
             alice: aliceSigner,
             bob: bobSigner,
+            charlie: charlieSigner,
+            david: davidSigner,
             ownerAddress,
             aliceAddress,
             bobAddress,
