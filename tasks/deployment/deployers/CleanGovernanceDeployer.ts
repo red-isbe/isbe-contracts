@@ -3,6 +3,7 @@ import { GovernanceConfig } from '../types/DeploymentTypes'
 import { ISignatureProvider } from '../providers/ISignatureProvider'
 import { getIsbeFactory } from '../../../scripts/utils/getIsbeFactory'
 import {
+    BESU_NODE_MANAGER_ROLE,
     BUSINESS_LOGIC_DEPLOYER_ROLE,
     CLIENT_FILTERING_ROLE,
     DEFAULT_ADMIN_ROLE,
@@ -99,6 +100,7 @@ export class CleanGovernanceDeployer {
             'EnsRegistryFacet',
             'TimeStampingRegistryFacet',
             'ClientFilteringFacet',
+            'BesuNodeManagerFacet',
         ]
 
         const facetAddresses: string[] = []
@@ -175,6 +177,10 @@ export class CleanGovernanceDeployer {
                 },
                 {
                     role: TIMESTAMPING_REGISTRY_ROLE,
+                    members: [accountAddress],
+                },
+                {
+                    role: BESU_NODE_MANAGER_ROLE,
                     members: [accountAddress],
                 },
             ],
