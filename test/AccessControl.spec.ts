@@ -3,7 +3,7 @@ import { Signer } from 'ethers'
 import { ethers } from 'hardhat'
 import {
     AccessControl,
-    AccessControlFacet,
+    AccessControlGovernanceFacet,
     IsbeTransparentProxy,
     IsbeTransparentProxy__factory,
     IAccessControlDid,
@@ -27,9 +27,9 @@ describe('Access Control', function () {
     let account_2: Signer
     let adminAccountAddress: string
     let account_2Address: string
-    let accessControlFacet: AccessControlFacet
+    let accessControlFacet: AccessControlGovernanceFacet
     let accessControl: AccessControl
-    let accessControlGovernance: AccessControl
+    let accessControlGovernance: AccessControlGovernanceFacet
     let transparentProxyFactory: IsbeTransparentProxy__factory
 
     async function deployFixture() {
@@ -90,9 +90,9 @@ describe('Access Control', function () {
             account_2: account2Signer,
             adminAccountAddress: adminAddress,
             account_2Address: account2Address,
-            accessControl: result.accessControl,
-            accessControlGovernance: result.accessControlGovernance,
-            accessControlFacet: result.accessControlFacet,
+            accessControl: result.governanceAccessControl,
+            accessControlGovernance: result.accessControlGovernance!,
+            accessControlFacet: result.accessControlFacet!,
             transparentProxyFactory: transparentFactory,
             didRegistry: result.didRegistry,
             mockTimestamp: result.mockTimestamp,
@@ -128,7 +128,7 @@ describe('Access Control', function () {
 
         return {
             ...contracts,
-            accessControl: result.accessControl,
+            accessControl: result.governanceAccessControl,
             accessControlGovernance: result.accessControlGovernance,
             accessControlFacet: result.accessControlFacet,
         }

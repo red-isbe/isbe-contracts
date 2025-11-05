@@ -414,7 +414,9 @@ export async function deployGovernance(
             governanceAddress,
             owner
         )) as AccessControl,
-        accessControlFacet: accessControlGovernanceFacet,
+        accessControlFacet: AccessControlGovernanceFacetFactory.attach(
+            governanceAddress
+        ).connect(owner) as AccessControlGovernanceFacet,
 
         // DID Registry
         didDocumentDetailedFacet,
