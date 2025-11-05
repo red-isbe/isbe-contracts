@@ -27,31 +27,27 @@ export class CleanGovernanceDeployer {
         private signatureProvider: ISignatureProvider
     ) {}
 
-    async deploy(config: GovernanceConfig, provider: ISignatureProvider) {
+    async deploy(config: GovernanceConfig) {
         console.log(' Deploying governance system...')
-        console.log(`    Using ${provider.getCurveType()} signatures`)
+        console.log(` Using ${this.signatureProvider.getCurveType()} signatures`)
 
         try {
-            const accountAddress = await this.resolveAccountAddress(
-                config,
-                provider
-            )
-            console.log(`    ISBE Governance account: ${accountAddress}`)
+            const accountAddress = await this.resolveAccountAddress(config)
+            console.log(`ISBE Governance account: ${accountAddress}`)
 
             const factoryAddress = await this.deployFactory(
                 accountAddress,
-                config,
-                provider
+                config
             )
-            console.log(`    Factory address: ${factoryAddress}`)
+            console.log(`Factory address: ${factoryAddress}`)
 
             await this.validateDeployment(factoryAddress)
 
             // Get factory instance for return
-            const signer = await provider.getSigner()
+            const signer = await this.signatureProvider.getSigner()
             const factory = await getIsbeFactory(factoryAddress, signer)
 
-            console.log('   ✅ Governance system successfully deployed')
+            console.log('✅ Governance system successfully deployed')
 
             return {
                 address: factoryAddress,
@@ -60,25 +56,23 @@ export class CleanGovernanceDeployer {
                 config,
             }
         } catch (error) {
-            console.error('   ❌ Error deploying governance:', error instanceof Error ? error.message : String(error))
+            console.error('❌ Error deploying governance:', error instanceof Error ? error.message : String(error))
             throw error
         }
     }
 
     private async resolveAccountAddress(
-        config: GovernanceConfig,
-        provider: ISignatureProvider
+        config: GovernanceConfig
     ): Promise<string> {
-        return config.accountAddress || (await provider.getAddress())
+        return config.accountAddress || (await this.signatureProvider.getAddress())
     }
 
     private async deployFactory(
         accountAddress: string,
-        config: GovernanceConfig,
-        provider: ISignatureProvider
+        config: GovernanceConfig
     ): Promise<string> {
         console.log(
-            `   🔧 Deploying ISBE factory with ${provider.getCurveType()}...`
+            `  Deploying ISBE factory with ${this.signatureProvider.getCurveType()}...`
         )
 
         // Deploy all facets first
@@ -112,7 +106,7 @@ export class CleanGovernanceDeployer {
             const artifact = await this.hre.artifacts.readArtifact(facetName)
 
             // Deploy using signature provider (handles curve-specific logic)
-            const facetAddress = await provider.deployContract(
+            const facetAddress = await this.signatureProvider.deployContract(
                 facetName,
                 artifact.bytecode
             )
@@ -127,7 +121,7 @@ export class CleanGovernanceDeployer {
                 throw new Error(`Failed to deploy ${facetName}: No code at address ${facetAddress}`)
             }
 
-            console.log(` ✅ ${facetName} deployed at ${facetAddress}`)
+            console.log(`✅ ${facetName} deployed at ${facetAddress}`)
             facetAddresses.push(facetAddress)
         }
 
@@ -138,9 +132,9 @@ export class CleanGovernanceDeployer {
             )
         }
 
-        console.log(`   ✅ All ${facetAddresses.length} facets deployed successfully`)
+        console.log(`✅ All ${facetAddresses.length} facets deployed successfully`)
 
-        console.log('    Deploying diamond proxy...')
+        console.log('Deploying diamond proxy...')
 
         // Now deploy the diamond proxy with facets
         const proxyArtifact = await this.hre.artifacts.readArtifact(
@@ -211,7 +205,7 @@ export class CleanGovernanceDeployer {
         const constructorArgs = [facetAddresses, diamondArgs]
 
         // Deploy diamond proxy using signature provider
-        const factoryAddress = await provider.deployContract(
+        const factoryAddress = await this.signatureProvider.deployContract(
             'EIP2535AccessControl',
             proxyArtifact.bytecode,
             constructorArgs,
