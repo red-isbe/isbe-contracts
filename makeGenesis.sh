@@ -100,6 +100,32 @@ else
   echo "⏩ Skipping genesis generation (--skip-gen)"
 fi
 
+# ADAPT GENESIS TO LOCAL ENVIRONMENT
+echo "🔧 Adapting genesis to local environment..."
+if ! jq empty "$OUTPUT_FILE" >/dev/null 2>&1; then
+  echo "❌ $OUTPUT_FILE no contiene JSON válido" >&2
+  exit 1
+fi
+
+OUT_DIR="$BESU_DIR/config"
+OUT_FILE="$OUT_DIR/qbftConfigFile.json"
+TMP_FILE="$(mktemp)"
+jq -n --slurpfile g "$OUTPUT_FILE" '{
+  genesis: $g[0],
+  blockchain: {
+    nodes: {
+      generate: true,
+      count: 4,
+      besuVersion: "latest",
+      ip: "172.16.240"
+    }
+  }
+}' > "$TMP_FILE"
+
+mv "$TMP_FILE" "$OUT_FILE"
+echo "✅ Generated: $OUT_FILE"
+
+
 # Step 2: Start Besu node network
 if [ "$SKIP_BESU_STARTUP" = false ]; then
   echo "******************************************************************************************"

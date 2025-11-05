@@ -99,7 +99,7 @@ async function main() {
 
     const deployTx = {
         nonce: nonce,
-        gasPrice: 0n,
+        gasPrice: hre.config.networks[hre.network.name].gasPrice,
         gasLimit: 5000000n, // Generous gas limit
         to: null, // Contract creation
         value: 0n,

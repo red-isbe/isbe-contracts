@@ -144,7 +144,7 @@ export class Secp256r1DeploymentUtils {
         // Create raw transaction
         const transaction = {
             nonce: nonce,
-            gasPrice: BigInt(0),
+            gasPrice: hre.config.networks[hre.network.name].gasPrice,
             gasLimit: BigInt(5000000), // High gas limit for complex operations
             to: contractAddress,
             value: BigInt(0),
@@ -211,7 +211,7 @@ export class Secp256r1DeploymentUtils {
         // Create raw transaction for contract deployment
         const transaction = {
             nonce: nonce,
-            gasPrice: BigInt(0),
+            gasPrice: hre.config.networks[hre.network.name].gasPrice,
             gasLimit: BigInt(5000000),
             to: null, // Deployment
             value: BigInt(0),

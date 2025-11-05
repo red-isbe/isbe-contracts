@@ -36,7 +36,7 @@ async function main() {
 
         const transferTx = {
             nonce: nonce,
-            gasPrice: ethers.parseUnits('1', 'wei'),
+            gasPrice: hre.config.networks[hre.network.name].gasPrice,
             gasLimit: 21000n,
             to: '0xbebd29124435700f87a3821dc95eea8ab95fcb1b', // Genesis funded address
             value: ethers.parseUnits('1', 'ether'),
@@ -69,7 +69,7 @@ async function main() {
 
         const deployTx = {
             nonce: nonce + 1,
-            gasPrice: ethers.parseUnits('1', 'wei'),
+            gasPrice: hre.config.networks[hre.network.name].gasPrice,
             gasLimit: 500000n, // Higher gas limit for deployment
             to: undefined, // Contract deployment
             value: 0n,
@@ -120,7 +120,7 @@ async function main() {
 
             const setTx = {
                 nonce: nonce + 2,
-                gasPrice: ethers.parseUnits('1', 'wei'),
+                gasPrice: hre.config.networks[hre.network.name].gasPrice,
                 gasLimit: 50000n, // Gas limit for contract call
                 to: deployReceipt.contractAddress,
                 value: 0n,

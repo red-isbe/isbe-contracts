@@ -80,7 +80,7 @@ export async function deployIsbeFactorySecp256r1(
         // Create deployment transaction
         const deployTx = {
             nonce: nonce,
-            gasPrice: 0n,
+            gasPrice: hre.config.networks[hre.network.name].gasPrice,
             gasLimit: 5000000n,
             to: undefined, // Contract deployment
             value: 0n,
@@ -209,7 +209,7 @@ export async function deployIsbeFactorySecp256r1(
 
     const proxyDeployTx = {
         nonce: proxyNonce,
-        gasPrice: 0n,
+        gasPrice: hre.config.networks[hre.network.name].gasPrice,
         gasLimit: 5000000n,
         to: undefined,
         value: 0n,

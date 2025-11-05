@@ -112,10 +112,14 @@ export async function extractCurve(
     }
     const data: JSONGenesis = JSON.parse(raw)
 
-    const ecCurve = data.genesis?.config?.ecCurve
-    const ellipticCurve = data.genesis?.config?.ellipticCurve
+    const ecCurve =
+        data.genesis?.config?.ecCurve ?? data.config?.ecCurve ?? 'secp256k1'
+    const ellipticCurve =
+        data.genesis?.config?.ellipticCurve ??
+        data.config?.ellipticCurve ??
+        'secp256k1'
 
-    if (!ecCurve || !ellipticCurve || ecCurve !== ellipticCurve) {
+    if (ecCurve !== ellipticCurve) {
         throw new Error(
             "❌ Wrong genesis template format: 'ecCurve' and 'ellipticCurve' sections are missing or not matching."
         )
