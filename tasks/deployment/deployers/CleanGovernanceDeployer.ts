@@ -28,22 +28,22 @@ export class CleanGovernanceDeployer {
     ) {}
 
     async deploy(config: GovernanceConfig, provider: ISignatureProvider) {
-        console.log('🏛️ Deploying governance system...')
-        console.log(`   🔐 Using ${provider.getCurveType()} signatures`)
+        console.log(' Deploying governance system...')
+        console.log(`    Using ${provider.getCurveType()} signatures`)
 
         try {
             const accountAddress = await this.resolveAccountAddress(
                 config,
                 provider
             )
-            console.log(`   🔐 ISBE Governance account: ${accountAddress}`)
+            console.log(`    ISBE Governance account: ${accountAddress}`)
 
             const factoryAddress = await this.deployFactory(
                 accountAddress,
                 config,
                 provider
             )
-            console.log(`   📍 Factory address: ${factoryAddress}`)
+            console.log(`    Factory address: ${factoryAddress}`)
 
             await this.validateDeployment(factoryAddress)
 
@@ -60,7 +60,7 @@ export class CleanGovernanceDeployer {
                 config,
             }
         } catch (error) {
-            console.error('   ❌ Error deploying governance:', error.message)
+            console.error('   ❌ Error deploying governance:', error instanceof Error ? error.message : String(error))
             throw error
         }
     }
@@ -106,7 +106,7 @@ export class CleanGovernanceDeployer {
         const facetAddresses: string[] = []
 
         for (const facetName of facetDeployments) {
-            console.log(`   📦 Deploying ${facetName}...`)
+            console.log(`  Deploying ${facetName}...`)
 
             // Get contract artifact
             const artifact = await this.hre.artifacts.readArtifact(facetName)
@@ -117,10 +117,30 @@ export class CleanGovernanceDeployer {
                 artifact.bytecode
             )
 
+            // Validate facet deployment
+            if (!facetAddress || facetAddress === this.hre.ethers.ZeroAddress) {
+                throw new Error(`Failed to deploy ${facetName}: Invalid address`)
+            }
+
+            const facetCode = await this.hre.ethers.provider.getCode(facetAddress)
+            if (facetCode === '0x') {
+                throw new Error(`Failed to deploy ${facetName}: No code at address ${facetAddress}`)
+            }
+
+            console.log(` ✅ ${facetName} deployed at ${facetAddress}`)
             facetAddresses.push(facetAddress)
         }
 
-        console.log('   💎 Deploying diamond proxy...')
+        // Final validation: ensure we have all facets
+        if (facetAddresses.length !== facetDeployments.length) {
+            throw new Error(
+                `Facet deployment mismatch: expected ${facetDeployments.length}, got ${facetAddresses.length}`
+            )
+        }
+
+        console.log(`   ✅ All ${facetAddresses.length} facets deployed successfully`)
+
+        console.log('    Deploying diamond proxy...')
 
         // Now deploy the diamond proxy with facets
         const proxyArtifact = await this.hre.artifacts.readArtifact(
