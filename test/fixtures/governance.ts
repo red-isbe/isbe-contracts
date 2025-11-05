@@ -62,7 +62,6 @@ import {
     BESU_NODE_MANAGER_ROLE,
     CONFIGURATION_ID_ERC20,
     CONFIGURATION_ID_ERC721,
-    CONFIGURATION_ID_ERC3643,
     CONFIGURATION_ID_ENS_REGISTRY,
     CONFIGURATION_ID_DID_REGISTRY,
     CONFIGURATION_ID_CLIENT_FILTERING,
@@ -353,19 +352,6 @@ export async function deployGovernance(
                     init_BusinessId_UseCase,
                     init_CallData_UseCase
                 )
-            case CONFIGURATION_ID_ERC3643: {
-                const { deployERC3643UseCasesFacets } = await import(
-                    './erc3643'
-                )
-                return await deployERC3643UseCasesFacets(
-                    isbeFactory,
-                    ISBEPauseFacetFactory,
-                    rbacsUseCase,
-                    init_pause,
-                    init_BusinessId_UseCase,
-                    init_CallData_UseCase
-                )
-            }
             case CONFIGURATION_ID_ENS_REGISTRY:
             case CONFIGURATION_ID_DID_REGISTRY:
             case CONFIGURATION_ID_CLIENT_FILTERING:
@@ -409,14 +395,12 @@ export async function deployGovernance(
         ) as MockTimestampFacet,
 
         // Access Control (for tests that don't use a use case)
-        governanceAccessControl: (await ethers.getContractAt(
+        accessControl: (await ethers.getContractAt(
             'AccessControl',
             governanceAddress,
             owner
         )) as AccessControl,
-        accessControlFacet: AccessControlGovernanceFacetFactory.attach(
-            governanceAddress
-        ).connect(owner) as AccessControlGovernanceFacet,
+        accessControlFacet: accessControlGovernanceFacet,
 
         // DID Registry
         didDocumentDetailedFacet,
