@@ -1,11 +1,11 @@
 import { ethers } from 'hardhat'
-import { Signer, ContractFactory, Log, EventLog } from 'ethers'
+import { Signer, ContractFactory } from 'ethers'
 import {
     ERC20SnapshotFacet,
     ERC20BurnableFacet,
+    ERC203643CappedFacet,
     ERC203643ControllerFacet,
     ERC20Facet,
-    ERC203643CappedFacet,
     AssetEventTrackerTestWrapper,
     HashTimestampTestWrapper,
     MockTimestampFacet,
@@ -21,16 +21,16 @@ import {
 } from '../../typechain-types'
 import {
     OWNABLE_RESOLVER_KEY,
-    ERC20_RESOLVER_KEY,
     ERC20_SNAPSHOT_RESOLVER_KEY,
     ERC20_BURNABLE_RESOLVER_KEY,
     ERC203643_CAPPED_RESOLVER_KEY,
     ERC203643_CONTROLLER_RESOLVER_KEY,
+    ERC20_RESOLVER_KEY,
+    ASSET_EVENT_TRACKER_RESOLVER_KEY,
     HASH_TIMESTAMP_RESOLVER_KEY,
     MOCK_TIMESTAMP_RESOLVER_KEY,
     ACCESS_CONTROL_RESOLVER_KEY,
     ACCESS_CONTROL_DID_RESOLVER_KEY,
-    ASSET_EVENT_TRACKER_RESOLVER_KEY,
     PAUSE_RESOLVER_KEY,
     ISBE_CUT_RESOLVER_KEY,
     ISBE_LOUPE_RESOLVER_KEY,
@@ -52,11 +52,14 @@ async function deployBusinessLogicFromFactory(
     }
 
     const businessAddress = deployTx.logs.filter(
-        (log: EventLog | Log) =>
-            'topics' in log &&
+        (log) =>
             log.topics[0] ===
-                '0xe50cdcfd1b693a28ae23bc9a7b0614b649a9caaa7164a4aa2e8161ab6c8cd7a4'
-    )[0] as EventLog
+            '0xe50cdcfd1b693a28ae23bc9a7b0614b649a9caaa7164a4aa2e8161ab6c8cd7a4'
+    )[0] as {
+        args: {
+            businessAddress: string
+        }
+    }
     return contractFactory.attach(businessAddress.args.businessAddress)
 }
 
@@ -282,9 +285,9 @@ export async function deployERC20UseCasesFacets(
         erc20Facet,
         erc20SnapshotFacet,
         erc20BurnableFacet,
-        pauseFacet,
         erc203643CappedFacet,
         erc203643ControllerFacet,
+        pauseFacet,
         accessControlFacet,
         ownableFacet,
         assetEventTrackerFacet,
