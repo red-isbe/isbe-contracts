@@ -54,6 +54,7 @@
             - [Building Custom Configuration IDs](#building-custom-configuration-ids)
         - [Use Case Deployment](#use-case-deployment)
             - [Configuration-Only Approach](#configuration-only-approach)
+        - [Genesis generation](#genesis-generation-for-governance-diamond)
     - [🔍 Verification and Monitoring](#-verification-and-monitoring)
         - [Deployment Verification](#deployment-verification)
         - [Governance Analysis](#governance-analysis)
@@ -768,6 +769,21 @@ npx hardhat deployUseCaseTo --config-id <id> --salt <salt> --network <network>
 # Get configuration by proxy
 npx hardhat getConfigurationByProxy --proxy <address> --network <network>
 ```
+
+### Genesis generation for Governance Diamond
+
+**Generate genesis and perform all checks (main use case)**
+
+```bash
+./makeGenesis.sh \
+    --template-file <template-location>  \
+    --output-file  <generated-file-location> \
+    --do-validation \
+    --do-besu-startup
+    --besu-dir <isbe-besu-local-deployer_repo-dir>
+```
+
+Additional information: [Genesis generation](docs/genesis-generator.md)
 
 #### Configuration-Only Approach
 

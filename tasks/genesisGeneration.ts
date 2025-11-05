@@ -20,7 +20,7 @@ import { CleanGovernanceDeployer } from './deployment/deployers/CleanGovernanceD
 import { CleanBusinessLogicDeployer } from './deployment/deployers/CleanBusinessLogicDeployer'
 import { DeploymentConfig } from './deployment/config/DeploymentConfig'
 import { Signer } from 'ethers'
-//import { CleanUseCaseDeployer } from './deployment/deployers/CleanUseCaseDeployer'
+import { CleanUseCaseDeployer } from './deployment/deployers/CleanUseCaseDeployer'
 
 const REGISTRY_FILENAME = 'isbe-contract-registry.json'
 
@@ -269,19 +269,19 @@ task(
             `✅ Business logics deployed successfully.   Total: ${governanceResult.length}----------------------------------------------------------`
         )
 
-        // console.log(' deploy usecase ......')
+        console.log(' deploy usecase ......')
 
-        // const useCaseDeployer = new CleanUseCaseDeployer(hre, signatureProvider)
+        const useCaseDeployer = new CleanUseCaseDeployer(hre, signatureProvider)
 
-        // const useCases = await useCaseDeployer.deployAll(
-        //     config.useCases,
-        //     gobernanceaddress,
-        //     governanceResult
-        // )
+        const useCases = await useCaseDeployer.deployAll(
+            config.useCases,
+            gobernanceaddress,
+            governanceResult
+        )
 
-        // console.log(
-        //     `✅ Use cases deployed successfully.   Total: ${useCases.length}----------------------------------------------------------`
-        // )
+        console.log(
+            `✅ Use cases deployed successfully.   Total: ${useCases.length}----------------------------------------------------------`
+        )
 
         console.log(
             '✅ All alidations (Done).----------------------------------------------------------'
