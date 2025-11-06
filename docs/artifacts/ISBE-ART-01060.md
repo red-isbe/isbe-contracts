@@ -35,12 +35,13 @@ El proceso unificado de generación y test se encuentra codificado en el script:
 ![Proceso unificado de generación y test](../diagrams/genesis-makeGenesis.png)
 
 - **4.2. Trazabilidad:**
-  Este artefacto está alineado con el punto 3.5.2 Contrato Factory del documento Arquitectura de referencia de ISBE_definitivo.pdf.
+
+    Este artefacto está alineado con el punto 3.5.2 Contrato Factory del documento Arquitectura de referencia de ISBE_definitivo.pdf.
 
 - **4.3. Descripción funcional detallada:**
   Este proceso se ha realizado de forma genérica, de tal manera que pueda afrontar la generación del genesis ante cualquier tipo de despliegue por complejo que sea (y este es el caso del Diamante de Gobernanza). Se han considerado los siguientes escenarios:
     - **Despliegue básico**: Despliegue a partir de una EOA
-    - **Despliegue con llamada a otros contratos:** En caso de que la EOA llame a otros contratos mediante OPCODES: CALL, DELEGATECALL, STATICCALL, el proceso extrea adecuadamente los slots modificados y asiciarlos correctamente al contrato en cuestión
+    - **Despliegue con llamada a otros contratos:** En caso de que la EOA llame a otros contratos mediante OPCODES: CALL, DELEGATECALL, STATICCALL, el proceso extrae adecuadamente los slots modificados y asociarlos correctamente al contrato en cuestión
     - **Llamada al Diamante de gobernanza con despliegue:** En este caso no es una transacción de despliegue, sino una llamada estándar que realiza uno o varios despliegues de contratos (OPCODE: CREATE y CREATE2). En este caso los slots también son asociados adecuadamente a cada contrato.
 
     Indicar que todos los flujos anteriores se pueden anidar y que el proceso de extracción gestiona estas circunstancias de forma adecuada.
@@ -102,8 +103,6 @@ Para determinar a qué contrato se asocia la creación de cada slot, es necesari
 
 - **5.1. Componentes del artefacto:**
 
-    Lista de elementos clave producidos: código, scripts, configuraciones, manuales.
-
     Básicamente se ha realizado:
     - Proceso unificado: makeGenesis.sh
         - Generación
@@ -124,8 +123,8 @@ Para determinar a qué contrato se asocia la creación de cada slot, es necesari
     | genesis:generate | Task de hardhat que realiza la generación del genensis | ./tasks/genesisGeneration.ts |
     | genesis:validar | Task de hardhat que realiza la validación del genensis | ./tasks/genesisGeneration.ts |
     | Genesis Generator scripts | Conjunto de scripts para generar y validar la generación del génesis | ./scripts/genesisGenerator |
-    En especial
-    **Slot Extractor**, ubicado en ./script/genesisGenerator, contiene un conjunto de funciones destinadas a extraer la estructura de slots y de código desde la red de Hardhat. **Esta es la funcionalidad core de este proceso**
+
+    En especial: **Slot Extractor**, ubicado en ./script/genesisGenerator, contiene un conjunto de funciones destinadas a extraer la estructura de slots y de código desde la red de Hardhat. **Esta es la funcionalidad core de este proceso**
 
 - **5.3. Frameworks, librerías o tecnologías acordadas:**
 
@@ -139,11 +138,13 @@ Para determinar a qué contrato se asocia la creación de cada slot, es necesari
 
 - **5.4. Buenas prácticas aplicables:**
 
-    **Seguridad:** Dado que es un proceso interno y que, por tanto, no va a ser usado por el usuario final, la seguridad no ha sido un aspecto relevante. Este proceso será lanzado por mantenedores de la red con un alto nivel de permisos y con una dilatada experiencia en esta tecnología.  
-     **Rendimiento:** La extracción de la información de la cadena de bloques de Hardhat es un proceso intensivo que requiere grandes cantidades de memoria y se dilata en el tiempo. Este punto queda fuera del alcance de este proyecto ya que se invoca una funcionalidad de Hardhat sobre la cual este proyecto no tiene control. Dado que preocupa más la calidad del proceso que su rendimiento, se ha priorizado la primera.
+    **Seguridad:** Dado que se trata de un proceso interno que no será utilizado por el usuario final, la seguridad no ha sido un requisito prioritario. Este proceso será ejecutado únicamente por los mantenedores de la red, quienes cuentan con permisos elevados y amplia experiencia en esta tecnología.
+
+    **Rendimiento:** La extracción de la información de la cadena de bloques de Hardhat es un proceso intensivo que requiere grandes cantidades de memoria y se dilata en el tiempo. Este punto queda fuera del alcance de este proyecto ya que se invoca una funcionalidad de Hardhat sobre la cual este proyecto no tiene control. Dado que preocupa más la calidad del proceso que su rendimiento, se ha priorizado la primera.
+
     **Mantenibilidad:** Se ha mantenido un alto nivel de calidad en el código minimizando en lo posible la aparición de deuda técnica. No obstante, en el futuro se puede mejorar ciertos aspectos de la documentación y la salida de trazas.
-    Seguridad, rendimiento, mantenibilidad.
-    **Calidad:** Dado que se trata del bloque génesis y de que un problema en éste tiene consecuencias muy graves; todo el énfasis que se pueda poner en la calidad es poco. Se ha liberado un código que se auto chequea masivamente. Dentro de la propia extracción se han incluido puntos de check que, de fallar, se aborta la ejecución y se muestra información exhaustiva de los parametros internos: depth, Frame, stack, opcode, previousDepth. Todo ello para asegurar que el genesis resultante no contiene errores.
+
+    **Calidad:** Al tratarse del bloque génesis, cualquier error puede tener consecuencias muy graves. Por ello, se ha puesto un fuerte énfasis en la calidad del proceso. El código liberado realiza auto-verificaciones intensivas: durante la extracción se ejecutan múltiples puntos de control que, en caso de fallo, abortan inmediatamente la ejecución y muestran información detallada (depth, frame, stack, opcode, previousDepth). Esto garantiza que el génesis generado sea coherente y sin errores.
 
 - **5.5. Criterios de validación del desarrollo:**
 
@@ -151,21 +152,21 @@ Para determinar a qué contrato se asocia la creación de cada slot, es necesari
 
     ### Test del resultado
 
-    El proceso unificado instala el bloque génesis generado en un Besu local y lo lanza. Hecho esto, se lanzan las pruebas para validar que el génesis es correcto usando genesis:validate. Estas pruebas no bloquean la ejecución, pero permiten comprobar a quien ejecuta este proceso si se muestra algún error. En este caso se lanzan dos tipos de prueba:
+    El proceso unificado instala el bloque génesis generado en un Besu local y lo lanza. Hecho esto, se lanzan las pruebas para validar que el génesis es correcto usando genesis:validate. Estas pruebas permiten comprobar a quien ejecuta este proceso si aparece algún error. En este caso se lanzan dos tipos de prueba:
     - Pruebas sobre el diamante de gobernanza orientadas a chequear que la información es correcta: Obtención de Facets asociadas al diamante, pause y unpause, listado, revocación y otorgamiento de rol...
-    - Despliegue completo de las facetas de los casos de uso
-    - Inicialmente se incluía el despliegue de los casos de uso, pero se desechó porque el proceso requería 50 minutos para su ejecución (100 en total 50 para la k1 y 50 para la r1) y el resultado no aportaba lo suficiente.
+    - Despliegue completo de las facetas de los casos de uso. Se considera que si no aparece ningún error en este punto, el bloque genesis se ha generado correctamente.
+    - Inicialmente se incluía el despliegue de los casos de uso, pero se desechó porque el proceso requería 50 minutos para su ejecución (100 en total 50 para la k1 y 50 para la r1) y el resultado no era especialmente relevante.
 
     ### Auditoría sobre el código
 
     El proceso de generación del bloque incluye una serie de autocheckeos que validan el resultado de cada operación y abortan la ejecución si la condición no se cumple. Estas validaciones ralentizan la ejecución y requieren más recursos para su ejecución, si bien, se considera un pequeño precio a pagar para garantizar la exactitud del proceso.
 
-    En este sentido, resulta relevante comentar dos conceptos relativos al debugging. No es lo mismo **donde se produce el error** que **donde se detecta el error**. Como es obvio, cuanto más lejos estén el uno del otro más compleja es la detección del error. El caso que nos ocupa requiere la revisión de todos los opcodes de una transacción, más de 87.000 en algún caso, lo que requiere más de 87.000 iteraciones. Si el problema se detecta 5000 iteraciones después la detección del error es inviable. Para agravar la situación, se manejan hashes y direcciones; datos que para un ser humano carecen de valor semántico (Ejemplo: ¿la dirección 0x099fee6796655b509a43482a3fe03471ae34eb65 es la correcta?)
+    En este sentido, resulta relevante comentar dos conceptos relativos al debugging. No es lo mismo **donde se produce el error** que **donde se detecta el error**. Como es obvio, cuanto más lejos estén el uno del otro más compleja es su detección. El caso que nos ocupa requiere la revisión de todos los opcodes de una transacción, más de 87.000 en algún caso, lo que requiere más de 87.000 iteraciones. Si el problema se detecta 5000 iteraciones después, la detección del error es inviable. Para agravar la situación, se manejan hashes y direcciones; datos que para un ser humano carecen de valor semántico.
 
-    Por todo ello, se han incluido una serie de puntos de chequeo en el propio código:
+    Por todo ello, se han incluido una serie de puntos de chequeo en el propio código (si se da cualquiera de estas cricnstancias, el proceso aborta):
     - **TX Inexistente** Verifica que la transacción existe. Debe existir ya que se han extraido de Hardhat, salvo que haya algún error en el código
     - **Receipt inexistente** Verifica que el receipt de la transacción existe
-    - **Transacción sin destino ni creación** Debe ser creación y por tanto el valor de **contractAddress** debe ser no nulo o tener **to**, lo que denota una transacción de invocación. Si no esta presente un u otro el proceso se aborta.
+    - **Transacción sin destino ni creación** Puede ser un despliegue y por tanto el valor de **contractAddress** debe ser no nulo o tener **to**, lo que denota una transacción de invocación. Si no esta presente un u otro el proceso se aborta.
     - **Stack no disponible:** La traza debe incluir pila. Si no es así lo más habitual es que se haya deshabilitado la extracción de traza del tracer.
     - **Memoria no disponible:** La traza debe incluir memoria.Si no es así lo más habitual es que se haya deshabilitado la extracción de la memoria del tracer.
     - **Profundidad inválida:** depth debe ser ≥ 1. Esto nunca debería suceder. Si sucede es por la existencia de un error y se aborta de inmediato
@@ -173,10 +174,10 @@ Para determinar a qué contrato se asocia la creación de cada slot, es necesari
     - **DELEGATECALL/CALLCODE a contrato desconocido:** El mismo caso que el anterior
     - **STATICCALL a contrato desconocido:** El mismo caso que el anterior
     - **CREATE con nonce desconocido:** El creador debe estar inicializado. Cuando se crea un contrato desde otro, el primer contrato debe existir en el registro de contratos. El nonce de ese cotrato se usa para precalcular la dirección del contrato.
-    - **CREATE2 con nonce desconocido:** El creador debe estar en el registro de contratos. En este caso el nonce no se usa. **El nonce debe ser incrementado aunque no se use**
+    - **CREATE2 con nonce desconocido:** El creador debe estar en el registro de contratos. En este caso, si bien el nonce no se usa, debe ser incrementado
     - **Entrada a mayor profundidad desde opcode no permitido:** Solo CALL / DELEGATECALL / STATICCALL / CALLCODE / CREATE / CREATE2 pueden aumentar depth. Si se detecta otro OPCODE que aumente depth y que el proceso no sepa gestionar, el proceso se para.
     - **Salida sin owner almacenado:** En todo frame debe existir un owner del frame, si no es así existe un error en el código y se aborta.
-    - **Salida de Frame anterior al mismo owner no permitida:** Al salir de un frame a otro, el contract owner debe recuperarse del frame anterior si no es así, existe un error en el código. En el caso de DELEGATECALL/CALLCODE esto no es así, el contract owner no cambia.
+    - **Salida de Frame anterior al mismo owner no permitida:** Al salir de un frame a otro, el contract owner debe recuperarse del frame anterior y debe ser distinto del actual;si no es así, existe un error en el código. En el caso de DELEGATECALL/CALLCODE esto no es así, el contract owner no cambia.
     - **Dirección devuelta en CREATE/CREATE2 incorrecta:** Debe coincidir con la precalculada. Los OPCODES CREATE Y CREATE2 no proporcionan la dirección del contrato sobre el cual operan, como sucede con CALL, DELEGATECALL y STATICCALL. Gestionar a posteriori la asignación del contract owner a cada SSTORE es muy complejo. Por ello, tanto en CREATE como en CREATE2 se precalculan las direcciones usando las reglas de la EVM. Al salir del frame y por tanto del constructor, la pila contiene la dirección devuelta. Esta dirección devuelta es comparada con la generada. Si no coinciden es que hay un error en el código.
     - **SSTORE en contrato no registrado:** El contrato debe existir en resultStorage recuperado del tracer de Hardhat.En caso contrario existe un error.
     - **SSTORE sin aparición en diff de storage:** El slot debe estar presente en el resultStorage recuperado del tracer de Hardhat.En caso contrario existe un error.
