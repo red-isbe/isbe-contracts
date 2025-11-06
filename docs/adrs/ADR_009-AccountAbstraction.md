@@ -21,11 +21,13 @@ Smart Accounts address these limitations and represent the next evolution of blo
 The EIP-4337 standard (also known as Account Abstraction or AA) defines the architecture and set of contracts that enable Smart Accounts without requiring changes to Ethereum’s core protocol. This makes it possible to adopt Smart Accounts in existing projects using standard tooling and infrastructure.
 This standard introduces several key components that work together:
 
-- UserOperation – A new data structure describing an action a user wants to perform.
-- Bundler – An off-chain service that collects UserOperations and submits them in batches.
-- EntryPoint – An on-chain smart contract that validates and executes bundled operations.
-- Paymaster – An optional contract that sponsors gas fees or enables token-based gas payments.
-- Aggregator – An optional contract and off-chain service that verifies aggregated signatures for multiple users to save gas.
+- **UserOperation** – A new data structure describing an action a user wants to perform.
+- **Bundler** – An off-chain service that collects UserOperations and submits them in batches.
+- **EntryPoint** – An on-chain smart contract that validates and executes bundled operations.
+- **Paymaster** – An optional contract that sponsors gas fees or enables token-based gas payments.
+- **Aggregator** – An optional contract and off-chain service that verifies aggregated signatures for multiple users to save gas.
+
+![image](../diagrams/AccountAbstraction/AccountAbstraction.png)
 
 This ADR defines the minimal requirements for supporting Account Abstraction through EIP-4337 in ISBE’s project, focusing on a simple, secure, and extensible Smart Account design.
 
