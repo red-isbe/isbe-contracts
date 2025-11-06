@@ -17,8 +17,10 @@ DRAFT
 ## Context
 
 Traditionally, transactions on Ethereum could only be initiated by Externally Owned Accounts (EOAs), meaning that only the holder of a wallet’s private key could operate within the network. This design introduces a major security and usability challenge: if a private key is lost, the account is unrecoverable, and if it’s stolen, the attacker gains full control over all assets. These limitations make onboarding and secure wallet management difficult for end-users, motivating the adoption of Smart Accounts in our ecosystem.
-Smart Accounts address these limitations and represent the next evolution of blockchain wallet technology. They enable accounts to operate under programmable logic rather than being strictly bound to a single private key.
-The EIP-4337 standard (also known as Account Abstraction or AA) defines the architecture and set of contracts that enable Smart Accounts without requiring changes to Ethereum’s core protocol. This makes it possible to adopt Smart Accounts in existing projects using standard tooling and infrastructure.
+
+**Smart Accounts** address these limitations and represent the next evolution of blockchain wallet technology. They enable accounts to operate under programmable logic rather than being strictly bound to a single private key.
+
+The **[EIP-4337](https://eips.ethereum.org/EIPS/eip-4337) standard** (also known as Account Abstraction or AA) defines the architecture and set of contracts that enable Smart Accounts without requiring changes to Ethereum’s core protocol. This makes it possible to adopt Smart Accounts in existing projects using standard tooling and infrastructure.
 This standard introduces several key components that work together:
 
 - **UserOperation** – A new data structure describing an action a user wants to perform.
@@ -33,8 +35,10 @@ This ADR defines the minimal requirements for supporting Account Abstraction thr
 
 ## Proposal
 
-To ensure compliance with [EIP-4337](https://eips.ethereum.org/EIPS/eip-4337), we will adopt the official [Account Abstraction reference repository](https://github.com/eth-infinitism/account-abstraction) as a project dependency. This approach allows ISBE to reuse audited interfaces and base contracts while adapting their implementation to our own architecture and security requirements.
+To ensure compliance with EIP-4337, we will adopt the official [Account Abstraction reference repository](https://github.com/eth-infinitism/account-abstraction) as a project dependency. This approach allows ISBE to reuse audited interfaces and base contracts while adapting their implementation to our own architecture and security requirements.
+
 The goal of this proposal is to define and implement the core components required for a minimal Account Abstraction setup, following the standard and ensuring compatibility with existing bundler infrastructure.
+
 The initial implementation will include the following components:
 
 - EntryPoint – central contract that supports all core functionalities required by EIP-4337.
@@ -42,6 +46,7 @@ The initial implementation will include the following components:
 - Minimal Smart Account – basic account implementation providing signature validation and execution logic.
 
 Since the Aggregator role and its implementation are not yet widely adopted and are not mandatory for compliance with EIP-4337, they are kept out of scope for this ADR.
+
 The following subsections describe the implementation approach for each of the core components in detail.
 
 > - All contracts will follow the development guidelines described [here](https://github.com/alastria/isbe-contracts/blob/main/docs/Development-guidelines.md#general-guidelines).
@@ -111,7 +116,9 @@ This minimal implementation serves as the foundation for validating the full Acc
 ### Minimal Smart Account
 
 The proposed Smart Account implementation serves as the foundation for Account Abstraction in the project, implementing only the core mechanisms required for interoperability with the EntryPoint.
+
 This minimal design prioritizes simplicity, auditability, and compliance with the EIP-4337 standard while leaving room for future modular extensions.
+
 For this initial version, we will implement a Minimal Smart Account that:
 
 - Defines ownership and authorization based on a single signer model.
@@ -127,7 +134,7 @@ For this initial version, we will implement a Minimal Smart Account that:
 > The following features are out of scope for the initial implementation and will be addressed in future iterations:
 >
 > - Multisignature or session key support.
-> - Modular validation and plugin systems (e.g., [EIP-6900](https://eips.ethereum.org/EIPS/eip-6900)).
+> - Modular validation and plugin systems (e.g., [ERC-6900](https://eips.ethereum.org/EIPS/eip-6900)).
 > - Social recovery or guardian mechanisms.
 > - Advanced signature schemes or aggregator integrations.
 >
@@ -155,13 +162,13 @@ Implement support for signature aggregation ([ERC-7766](https://eips.ethereum.or
 
 Implement isValidSignature(bytes32,bytes) ([ERC-1271](https://eips.ethereum.org/EIPS/eip-1271)) so dapps that expect smart-walletsignatures (e.g., permit flows, off-chain attestations, WalletConnect integrations)recognize the account as a valid signer. This does not change the 4337 validation path,but improves dapp compatibility. Can be implemented natively or as a validator module in afuture modular design.
 
-### EIP-6492 (Signatures for not-yet-deployed accounts)
+### ERC-6492 (Signatures for not-yet-deployed accounts)
 
 Support the [ERC-6492](https://eips.ethereum.org/EIPS/eip-6492) “envelope” to verify signatures from counterfactual accounts duringoff-chain flows and gasless onboarding. Requires coordination with the account factory(deployment data) and relayer/bundler. Limit accepted factories/bytecode hashes for safety.
 
 ### Modular Smart Accounts
 
-Introduce a modular architecture based on [EIP-6900](https://eips.ethereum.org/EIPS/eip-6900) to allow Smart Accounts to dynamically register and manage validation and execution modules. This would support use cases such as multisig, social recovery, and custom authorization flows.
+Introduce a modular architecture based on [ERC-6900](https://eips.ethereum.org/EIPS/eip-6900) to allow Smart Accounts to dynamically register and manage validation and execution modules. This would support use cases such as multisig, social recovery, and custom authorization flows.
 
 > [ERC-7579](https://eips.ethereum.org/EIPS/eip-7579) may be taken as a reference for defining the structure and behavior of modular Smart Accounts.
 
@@ -173,5 +180,3 @@ Extend the Basic Paymaster with advanced sponsorship policies, including:
 - Whitelist or rule-based sponsorships.
 - Rate limits and quota management.
 - Dynamic gas pricing and refund strategies.
-
-These improvements will build upon the stable foundation defined in this ADR, ensuring forward compatibility with the EntryPoint and bundler standards while progressively increasing usability, security, and composability.
