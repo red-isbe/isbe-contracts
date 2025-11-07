@@ -134,8 +134,7 @@ export class CleanDeploymentOrchestrator {
         this.timer.startStep('Governance Deployment')
 
         result.governance = await this.governanceDeployer.deploy(
-            this.config.governance,
-            this.signatureProvider
+            this.config.governance
         )
         result.summary.completedSteps++
 

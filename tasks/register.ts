@@ -85,3 +85,19 @@ import './client/isFilterRegistered'
 
 import './utils/buildConfigurationId'
 import './genesisGeneration'
+
+// Besu Node Manager
+import './client/besuNodeManager/getTotalValidators'
+import './client/besuNodeManager/getPaginatedValidators'
+import './client/besuNodeManager/getValidatorState'
+import './client/besuNodeManager/isValidator'
+
+import './client/besuNodeManager/getTotalExecutionNodes'
+import './client/besuNodeManager/getPaginatedExecutionNodes'
+import './client/besuNodeManager/getExecutionNodeState'
+import './client/besuNodeManager/isExecutionNode'
+
+import './client/besuNodeManager/getTotalBootNodes'
+import './client/besuNodeManager/getPaginatedBootNodes'
+import './client/besuNodeManager/getBootNodeState'
+import './client/besuNodeManager/isBootNode'

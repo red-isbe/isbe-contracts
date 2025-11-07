@@ -54,7 +54,7 @@ export function getNetworkConfigs(): NetworksConfig {
         // Local test network (secp256k1)
         localhost: {
             url: LOCALHOST_URL,
-            chainId: 31337,
+            chainId: 2222,
             accounts,
             gasPrice: 0,
             gas: 10_000_0000,
@@ -112,8 +112,8 @@ export function getNetworkConfigs(): NetworksConfig {
             chainId: 2222,
             accounts: secp256r1PrivateKeys,
             gasPrice: 0,
-            gas: 80_000_000,
-            blockGasLimit: 90_000_000,
+            gas: 20_000_000,
+            blockGasLimit: 0x1e84800, // 32,000,000
             curve: 'secp256r1',
             secp256r1Accounts,
         } as NetworkConfigWithCurve,
