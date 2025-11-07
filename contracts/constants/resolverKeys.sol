@@ -139,4 +139,7 @@ bytes32 constant _TIMESTAMPING_REGISTRY_RESOLVER_KEY = 0xc96c356b7532d6eba398b97
 // keccak256('BESU_NODE_MANAGER')
 bytes32 constant _BESU_NODE_MANAGER_RESOLVER_KEY = 0xed251ea052ffafa4903db889a3309600adf2ac15456e02760c1221ea3792c1ca;
 
+// keccak256('isbe.contracts.anchoring.core.resolver.key');
+bytes32 constant _ANCHORING_CORE_RESOLVER_KEY = 0x3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d;
+
 // solhint-enable max-line-length

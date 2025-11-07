@@ -178,6 +178,12 @@ function getFromSet(struct EnumerableSet.Bytes32Set _set, uint256 _pageIndex, ui
 function getFromSet(struct EnumerableSet.AddressSet _set, uint256 _pageIndex, uint256 _pageLength) internal view returns (address[] items_)
 ```
 
+### getFromSet
+
+```solidity
+function getFromSet(struct EnumerableSet.UintSet _set, uint256 _pageIndex, uint256 _pageLength) internal view returns (uint256[] items_)
+```
+
 ### getSize
 
 ```solidity

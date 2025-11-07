@@ -15,6 +15,8 @@ import {
     ISBE_ROLE,
     PROXY_DEPLOYER_ROLE,
     TIMESTAMPING_REGISTRY_ROLE,
+    ANCHORER_ROLE,
+    METADATA_MANAGER_ROLE,
 } from '../../../utils/constants'
 
 /**
@@ -29,7 +31,9 @@ export class CleanGovernanceDeployer {
 
     async deploy(config: GovernanceConfig) {
         console.log(' Deploying governance system...')
-        console.log(` Using ${this.signatureProvider.getCurveType()} signatures`)
+        console.log(
+            ` Using ${this.signatureProvider.getCurveType()} signatures`
+        )
 
         try {
             const accountAddress = await this.resolveAccountAddress(config)
@@ -56,7 +60,10 @@ export class CleanGovernanceDeployer {
                 config,
             }
         } catch (error) {
-            console.error('❌ Error deploying governance:', error instanceof Error ? error.message : String(error))
+            console.error(
+                '❌ Error deploying governance:',
+                error instanceof Error ? error.message : String(error)
+            )
             throw error
         }
     }
@@ -64,7 +71,9 @@ export class CleanGovernanceDeployer {
     private async resolveAccountAddress(
         config: GovernanceConfig
     ): Promise<string> {
-        return config.accountAddress || (await this.signatureProvider.getAddress())
+        return (
+            config.accountAddress || (await this.signatureProvider.getAddress())
+        )
     }
 
     private async deployFactory(
@@ -95,6 +104,7 @@ export class CleanGovernanceDeployer {
             'TimeStampingRegistryFacet',
             'ClientFilteringFacet',
             'BesuNodeManagerFacet',
+            'AnchoringCoreFacet',
         ]
 
         const facetAddresses: string[] = []
@@ -113,12 +123,17 @@ export class CleanGovernanceDeployer {
 
             // Validate facet deployment
             if (!facetAddress || facetAddress === this.hre.ethers.ZeroAddress) {
-                throw new Error(`Failed to deploy ${facetName}: Invalid address`)
+                throw new Error(
+                    `Failed to deploy ${facetName}: Invalid address`
+                )
             }
 
-            const facetCode = await this.hre.ethers.provider.getCode(facetAddress)
+            const facetCode =
+                await this.hre.ethers.provider.getCode(facetAddress)
             if (facetCode === '0x') {
-                throw new Error(`Failed to deploy ${facetName}: No code at address ${facetAddress}`)
+                throw new Error(
+                    `Failed to deploy ${facetName}: No code at address ${facetAddress}`
+                )
             }
 
             console.log(`✅ ${facetName} deployed at ${facetAddress}`)
@@ -132,7 +147,9 @@ export class CleanGovernanceDeployer {
             )
         }
 
-        console.log(`✅ All ${facetAddresses.length} facets deployed successfully`)
+        console.log(
+            `✅ All ${facetAddresses.length} facets deployed successfully`
+        )
 
         console.log('Deploying diamond proxy...')
 
@@ -175,6 +192,14 @@ export class CleanGovernanceDeployer {
                 },
                 {
                     role: GOVERNANCE_MANAGER_ROLE,
+                    members: [accountAddress],
+                },
+                {
+                    role: ANCHORER_ROLE,
+                    members: [accountAddress],
+                },
+                {
+                    role: METADATA_MANAGER_ROLE,
                     members: [accountAddress],
                 },
                 {
