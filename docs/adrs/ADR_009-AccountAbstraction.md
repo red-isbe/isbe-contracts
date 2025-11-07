@@ -8,6 +8,7 @@
     1. [Entry Point](#entrypoint)
     2. [Paymaster](#paymaster)
     3. [Minimal Smart Account](#minimal-smart-account)
+    4. [Minimal Smart Account Factory](#minimal-smart-account-factory)
 4. [Future Improvements](#future-improvements)
 
 ## Status
@@ -48,8 +49,7 @@ The initial implementation will include the following components:
 
 Since the Aggregator role and its implementation are not yet widely adopted and are not mandatory for compliance with EIP-4337, they are kept out of scope for this ADR.
 
-To ensure single-instance management and controlled access to critical components, both the EntryPoint and AccountFactory will be **integrated within ISBE’s Governance Facets**.
-Their configuration, deployment, and lifecycle management under the Governance Diamond Proxy are out of scope for this ADR and will be detailed separately in a dedicated one.
+> To ensure single-instance management and controlled access to critical components, both the EntryPoint and AccountFactory will be **integrated within ISBE’s Governance Facets**. Their configuration, deployment, and lifecycle management under the Governance Diamond Proxy are out of scope for this ADR and will be detailed separately in a dedicated one.
 
 The following subsections describe the implementation approach for each of the core components in detail.
 
