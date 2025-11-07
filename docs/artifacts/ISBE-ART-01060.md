@@ -2,15 +2,15 @@
 
 ## **1. Identificación del Artefacto**
 
-| Campo                     | Valor                                                    |
-| ------------------------- | -------------------------------------------------------- |
-| **Nombre del artefacto**  | ISBE-ART-01060 — Proceso de generación de bloque génesis |
-| **Origen**                | isbe-contracts: makeGenesis.sh, task/genesisGenerator.ts |
-| **Estado**                | En desarrollo (Pendiente de validar)                     |
-| **Versión del documento** | _1.0_                                                    |
-| **Fecha**                 | _2025-11-06_                                             |
-| **Repositorio**           | https://github.com/alastria/isbe-contracts               |
-| **Commit**                | 1ea1358ff38bf518af12e170f32cc7bf286925a7                 |
+| Campo                     | Valor                                                       |
+| ------------------------- | ----------------------------------------------------------- |
+| **Nombre del artefacto**  | ISBE-ART-01060 — Proceso de generación de bloque génesis    |
+| **Origen**                | isbe-contracts: Necesario para poder arrancar cualquier red |
+| **Estado**                | En desarrollo (Pendiente de validar)                        |
+| **Versión del documento** | _1.0_                                                       |
+| **Fecha**                 | _2025-11-06_                                                |
+| **Repositorio**           | https://github.com/alastria/isbe-contracts                  |
+| **Commit**                | 1ea1358ff38bf518af12e170f32cc7bf286925a7                    |
 
 ## **2. Propósito del Artefacto**
 
@@ -41,7 +41,7 @@ El proceso unificado de generación y test se encuentra codificado en el script:
 - **4.3. Descripción funcional detallada:**
   Este proceso se ha realizado de forma genérica, de tal manera que pueda afrontar la generación del genesis ante cualquier tipo de despliegue por complejo que sea (y este es el caso del Diamante de Gobernanza). Se han considerado los siguientes escenarios:
     - **Despliegue básico**: Despliegue a partir de una EOA
-    - **Despliegue con llamada a otros contratos:** En caso de que la EOA llame a otros contratos mediante OPCODES: CALL, DELEGATECALL, STATICCALL, el proceso extrae adecuadamente los slots modificados y asociarlos correctamente al contrato en cuestión
+    - **Despliegue con llamada a otros contratos:** En caso de que la EOA llame a otros contratos mediante OPCODES: CALL, DELEGATECALL, STATICCALL, el proceso extrae adecuadamente los slots modificados y los asocia correctamente al contrato en cuestión
     - **Llamada al Diamante de gobernanza con despliegue:** En este caso no es una transacción de despliegue, sino una llamada estándar que realiza uno o varios despliegues de contratos (OPCODE: CREATE y CREATE2). En este caso los slots también son asociados adecuadamente a cada contrato.
 
     Indicar que todos los flujos anteriores se pueden anidar y que el proceso de extracción gestiona estas circunstancias de forma adecuada.
@@ -161,9 +161,9 @@ Para determinar a qué contrato se asocia la creación de cada slot, es necesari
 
     El proceso de generación del bloque incluye una serie de autocheckeos que validan el resultado de cada operación y abortan la ejecución si la condición no se cumple. Estas validaciones ralentizan la ejecución y requieren más recursos para su ejecución, si bien, se considera un pequeño precio a pagar para garantizar la exactitud del proceso.
 
-    En este sentido, resulta relevante comentar dos conceptos relativos al debugging. No es lo mismo **donde se produce el error** que **donde se detecta el error**. Como es obvio, cuanto más lejos estén el uno del otro más compleja es su detección. El caso que nos ocupa requiere la revisión de todos los opcodes de una transacción, más de 87.000 en algún caso, lo que requiere más de 87.000 iteraciones. Si el problema se detecta 5000 iteraciones después, la detección del error es inviable. Para agravar la situación, se manejan hashes y direcciones; datos que para un ser humano carecen de valor semántico.
+    En este sentido, resulta relevante comentar dos conceptos relativos al debugging. No es lo mismo **donde se produce el error** que **donde se detecta el error**. Como es obvio, cuanto más lejos estén el uno del otro más compleja es su detección. El caso que nos ocupa requiere la revisión de todos los opcodes de una transacción, más de 87.000 en algún caso, lo que requiere más de 87.000 iteraciones. Si el problema se detecta 5000 iteraciones después, la localización del error es inviable. Para agravar la situación, se manejan hashes y direcciones; datos que para un ser humano carecen de valor semántico.
 
-    Por todo ello, se han incluido una serie de puntos de chequeo en el propio código (si se da cualquiera de estas cricnstancias, el proceso aborta):
+    Por todo ello, se han incluido una serie de puntos de chequeo en el propio código (si se da cualquiera de estas circunstancias, el proceso aborta):
     - **TX Inexistente** Verifica que la transacción existe. Debe existir ya que se han extraido de Hardhat, salvo que haya algún error en el código
     - **Receipt inexistente** Verifica que el receipt de la transacción existe
     - **Transacción sin destino ni creación** Puede ser un despliegue y por tanto el valor de **contractAddress** debe ser no nulo o tener **to**, lo que denota una transacción de invocación. Si no esta presente un u otro el proceso se aborta.
@@ -192,7 +192,9 @@ Para determinar a qué contrato se asocia la creación de cada slot, es necesari
     - Un mensaje
 
 - **5.6. Alineación con requisitos legales (GDPR, NIS2, etc.)**
-  No aplica.
+
+    No aplica.
+
 - **5.7. Dependencias técnicas o de infraestructura:**
 
     Para la generación, únicamente el repositorio de Hardhat es necesario. Si se desea ejecutar las pruebas, es necesario contar con el despliegue del entorno local de Besu.
@@ -205,12 +207,13 @@ Para determinar a qué contrato se asocia la creación de cada slot, es necesari
     - Añadir más documentación dentro del código
 
 - **5.9. Limitaciones por versiones, licencias o configuraciones.**
-  No aplica
+
+    No aplica
 
 ## **6. Reglas de Control y Actualización**
 
 - **Política de gestión de versiones para la fase de definición y desarrollo:** El desarrollo, salvo error, no debe ser modificado. No obstante, la generación de nuevos genesis está supeditada a cambios en el diamante de gobernanza.
-- **Indicar si es actualizable tras la entrega, por quién y bajo qué condiciones.** El proceso se puede actualizar. El genesis generado, que se encuentra en una red desplegado, no se puede modificar.
+- **Indicar si es actualizable tras la entrega, por quién y bajo qué condiciones.** El proceso se puede actualizar. El genesis generado, que se encuentra desplegado en una red, no se puede modificar.
 - **Frecuencia de revisión o actualizaciones planificadas.** El proceso no tiene planificados eventos de actualización a corto plazo. La generación del génesis se realizará cada vez que se realicen cambios relevantes en el diamante de gobernanza.
 - **Herramienta de control de cambios:** Se usa el repositorio de ISBE en Github, más en concreto el repositorio [isbe-contracts](https://github.com/alastria/isbe-contracts/tree/feat/129-genesis-gobernance-diamond)
 
