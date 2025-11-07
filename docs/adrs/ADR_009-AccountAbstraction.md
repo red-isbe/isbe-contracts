@@ -42,10 +42,14 @@ The goal of this proposal is to define and implement the core components require
 The initial implementation will include the following components:
 
 - EntryPoint – central contract that supports all core functionalities required by EIP-4337.
-- Paymaster – minimal Paymaster implementation that sponsors all UserOperations unconditionally
+- Paymaster – minimal Paymaster implementation that sponsors all UserOperations unconditionally.
 - Minimal Smart Account – basic account implementation providing signature validation and execution logic.
+- Minimal Smart Account Factory - custom factory to deploy our new Minimal Smart Account on a programatic way.
 
 Since the Aggregator role and its implementation are not yet widely adopted and are not mandatory for compliance with EIP-4337, they are kept out of scope for this ADR.
+
+To ensure single-instance management and controlled access to critical components, both the EntryPoint and AccountFactory will be **integrated within ISBE’s Governance Facets**.
+Their configuration, deployment, and lifecycle management under the Governance Diamond Proxy are out of scope for this ADR and will be detailed separately in a dedicated one.
 
 The following subsections describe the implementation approach for each of the core components in detail.
 
@@ -149,6 +153,28 @@ For this initial version, we will implement a Minimal Smart Account that:
 - MinimalAccountFacet - required facet to be included into the corresponding diamond proxy, extending MinimalAccount and IEIP2535Introspection contracts.
 
 ![image](../diagrams/AccountAbstraction/AccountAbstraction-MinimalAccount.png)
+
+### Minimal Smart Account Factory
+
+In the Account Abstraction architecture, Account Factories are responsible for deploying Smart Accounts deterministically when they do not yet exist. They are primarily used by the EntryPoint during validation of a UserOperation that references a non-deployed account.
+
+Factories typically use the `CREATE2` opcode to deploy Smart Accounts at predictable, counterfactual addresses—allowing users to know their account address before it exists on-chain.
+
+This enables features such as gasless onboarding, off-chain signing, and sponsored account creation
+
+Our **MinimalSmartAccountFactory** will be responsible for deploying instances of the Minimal Smart Account used in this ADR. Its design will follow these principles:
+
+- **Single responsibility**: only deploys MinimalSmartAccount contracts.
+
+- **Deterministic deployment**: uses the `CREATE2` opcode for precomputed addresses.
+
+- **Proxy-based architecture**: inherits from `ProxyFactory` to deploy Smart Accounts as Diamond Proxies, configured with the corresponding Minimal Smart Account business logic facet.
+
+- **Access control**: only authorized components (e.g., EntryPoint, governance contracts) can trigger deployments.
+
+- **Interoperability**: ensures compatibility with the EntryPoint’s createAccount mechanism defined in EIP-4337.
+
+This factory acts as the controlled on-chain mechanism for Smart Account instantiation, guaranteeing that all deployed accounts conform to ISBE’s standardized implementation and can be securely managed through governance.
 
 ## Future improvements
 
