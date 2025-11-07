@@ -253,7 +253,7 @@ const normalize32 = (hex: string): Hex =>
  *     - On CREATE        → compute child address via getCreateAddress(from, nonce)
  *     - On CREATE2       → compute child address via salt + keccak(initcode)
  *     - On SSTORE        → attribute the slot to the **current frame's owner**
- *  4) Deduplicate results and return `Map<string, Set<string>>` (both hex strings). Bear in minf that a contract could not have any slot
+ *  4) Deduplicate results and return `Map<string, Set<string>>` (both hex strings). Bear in mind that a contract could not have any slot
  *
  * Notes:
  *  - We compute CREATE/CREATE2 addresses **at ENTER time** so that SSTOREs in constructors
@@ -266,6 +266,7 @@ const normalize32 = (hex: string): Hex =>
  *  Known limitations:
  *  - This function assumes no SSTORE occurs in a STATICCALL context or any nested context. If so the will be processed as if they were in a CALL context.
  *  - This function assumes no REVERT occurs. If a revert occurs, all SSTOREs will be processed as if they were successful. Code must be tested.
+ *  In both cases this is not a critical issue as the purpose of this function is to identify which slots are modified, not their values.
  *
  * @param hre     Hardhat runtime environment (used for provider & code lookups).
  * @param txHash  Hash of the transaction to trace.
@@ -297,10 +298,20 @@ export async function collectStorageSlotsByContract(
     // ) as Hex | undefined // tx.to -> contract call or EOA->EOA
     let rootOwnerRaw: Hex
     if (receipt.contractAddress) {
-        console.log('TX IS A CONTRACT CREATION: ' + receipt.contractAddress)
+        console.log(
+            'TX IS A CONTRACT CREATION: ' +
+                receipt.contractAddress +
+                ' gas used ' +
+                receipt.gasUsed?.toString()
+        )
         rootOwnerRaw = receipt.contractAddress // Contract creation
     } else if (tx.to) {
-        console.log('TX IS A CALL TO: ' + tx.to)
+        console.log(
+            'TX IS A CALL TO: ' +
+                tx.to +
+                ' gas used ' +
+                receipt.gasUsed?.toString()
+        )
         rootOwnerRaw = tx.to
     } else {
         throw new Error(
@@ -320,7 +331,9 @@ export async function collectStorageSlotsByContract(
     //    - stack: to read opcode parameters (e.g., SSTORE slot, CALL target)
     //    - memory: to reconstruct initcode for CREATE2 (offset/size windows)
     //    - storage diffs per step are unnecessary, but it is used for double check and debugging purposes
-    process.stdout.write('\x1b[31mRequesting TX trace from Hardhat...\x1b[0m\r')
+    process.stdout.write(
+        '\x1b[31mRequesting TX trace from Hardhat (could take several minutes. Please be patient.)...\x1b[0m\r'
+    )
     const trace = await provider.send('debug_traceTransaction', [
         txHash,
         {
@@ -330,7 +343,7 @@ export async function collectStorageSlotsByContract(
         },
     ])
     process.stdout.write(
-        `                                                                         \r`
+        `                                                                                                                            \r`
     )
     //const callCode=(await provider.send('eth_getTransactionByHash', [txHash]))?.input??"0x";
     // console.log("-------------------------------------------------------------------");
