@@ -15,7 +15,7 @@ import {
     CONFIGURATION_ID_ERC3643,
 } from '../utils/constants'
 import {
-    IERC3643,
+    IToken3643,
     AccessControl,
     ERC20Facet,
     ISBEPauseFacet,
@@ -38,7 +38,7 @@ describe('ERC3643 Token', function () {
     let bobAddress: string
     let charlieAddress: string
     let davidAddress: string
-    let erc3643: IERC3643
+    let erc3643: IToken3643
     let accessControl: AccessControl
     let erc20Facet: ERC20Facet
     let pauseFacet: ISBEPauseFacet
@@ -48,7 +48,6 @@ describe('ERC3643 Token', function () {
     const tokenName = 'My3643'
     const tokenSymbol = 'MYX'
     const tokenDecimals = 18
-    const version = '3.0.0'
     const emptyString = ''
 
     // ====================================================================
@@ -78,9 +77,9 @@ describe('ERC3643 Token', function () {
 
         // Attach all facets to the proxy using getContractAt
         const erc3643 = (await ethers.getContractAt(
-            'IERC3643',
+            'IToken3643',
             proxyAddress
-        )) as IERC3643
+        )) as IToken3643
         const accessControl = (await ethers.getContractAt(
             'AccessControlFacet',
             proxyAddress
@@ -134,199 +133,91 @@ describe('ERC3643 Token', function () {
     // METADATA MODULE
     // ====================================================================
     describe('ERC3643 Metadata', () => {
-        // --------------------------------------------------------------------
-        // when ERC20 not initialized
-        // --------------------------------------------------------------------
-        describe('when ERC20 not initialized', () => {
-            beforeEach(async () => {
-                const fixture = async () => {
-                    await accessControl
-                        .connect(owner)
-                        .grantRole(METADATA_ROLE, ownerAddress)
-                }
-                await loadFixture(fixture)
+        beforeEach(async () => {
+            const fixture = async () => {
+                await accessControl
+                    .connect(owner)
+                    .grantRole(METADATA_ROLE, ownerAddress)
+                await erc20Facet
+                    .connect(owner)
+                    .initializeErc20(tokenName, tokenSymbol, tokenDecimals)
+
+                expect(await erc20Facet.name()).to.equal(tokenName)
+                expect(await erc20Facet.symbol()).to.equal(tokenSymbol)
+                expect(await erc20Facet.decimals()).to.equal(tokenDecimals)
+            }
+            await loadFixture(fixture)
+        })
+
+        describe('setName', () => {
+            it('GIVEN no TOKEN_OWNER_ROLE WHEN setName THEN reverts', async () => {
+                await accessControl
+                    .connect(owner)
+                    .revokeRole(METADATA_ROLE, ownerAddress)
+                await expect(erc3643.connect(owner).setName('Nope')).to.be
+                    .reverted
             })
 
-            describe('InitializeERC3643Metadata', () => {
-                it('GIVEN ERC20 not initialized WHEN initializeERC3643Metadata with empty version THEN reverts', async () => {
-                    await expect(
-                        erc3643
-                            .connect(owner)
-                            .initializeERC3643Metadata(emptyString)
-                    ).to.be.reverted
-                })
+            it('GIVEN contract paused WHEN setName THEN reverts', async () => {
+                await accessControl
+                    .connect(owner)
+                    .grantRole(PAUSER_ROLE, ownerAddress)
+                await pauseFacet.connect(owner).pause()
+                await expect(erc3643.connect(owner).setName('Paused')).to.be
+                    .reverted
+            })
 
-                it('GIVEN metadata already initialized WHEN initializeERC3643Metadata again THEN reverts', async () => {
-                    await erc3643
-                        .connect(owner)
-                        .initializeERC3643Metadata(version)
-                    await expect(
-                        erc3643
-                            .connect(owner)
-                            .initializeERC3643Metadata(version)
-                    ).to.be.reverted
-                })
+            it('GIVEN initialized metadata WHEN setName with empty string THEN reverts', async () => {
+                await expect(erc3643.connect(owner).setName(emptyString)).to.be
+                    .reverted
+            })
 
-                it('GIVEN ERC20 not initialized WHEN initializeERC3643Metadata THEN emits UpdatedTokenInformation with empty values', async () => {
-                    expect(await erc20Facet.name()).to.equal('')
-                    expect(await erc20Facet.symbol()).to.equal('')
-                    expect(await erc20Facet.decimals()).to.equal(0)
+            it('GIVEN initialized metadata WHEN setName with valid value THEN updates name and emits UpdatedTokenInformation', async () => {
+                const newName = 'New3643'
+                const s = await erc20Facet.symbol()
+                const d = await erc20Facet.decimals()
 
-                    await expect(
-                        erc3643
-                            .connect(owner)
-                            .initializeERC3643Metadata(version)
-                    )
-                        .to.emit(erc3643, 'UpdatedTokenInformation')
-                        .withArgs('', '', 0, version)
+                await expect(erc3643.connect(owner).setName(newName))
+                    .to.emit(erc3643, 'UpdatedTokenInformation')
+                    .withArgs(newName, s, d)
 
-                    expect(await erc3643.version()).to.equal(version)
-                })
+                expect(await erc20Facet.name()).to.equal(newName)
             })
         })
 
-        // --------------------------------------------------------------------
-        // when ERC20 is initialized
-        // --------------------------------------------------------------------
-        describe('when ERC20 is initialized', () => {
-            beforeEach(async () => {
-                const fixture = async () => {
-                    await accessControl
-                        .connect(owner)
-                        .grantRole(METADATA_ROLE, ownerAddress)
-                    await erc20Facet
-                        .connect(owner)
-                        .initializeErc20(tokenName, tokenSymbol, tokenDecimals)
-
-                    expect(await erc20Facet.name()).to.equal(tokenName)
-                    expect(await erc20Facet.symbol()).to.equal(tokenSymbol)
-                    expect(await erc20Facet.decimals()).to.equal(tokenDecimals)
-                    // NOTE: Do not initialize ERC3643Metadata here - let each test block decide
-                }
-                await loadFixture(fixture)
+        describe('setSymbol', () => {
+            it('GIVEN no TOKEN_OWNER_ROLE WHEN setSymbol THEN reverts', async () => {
+                await accessControl
+                    .connect(owner)
+                    .revokeRole(METADATA_ROLE, ownerAddress)
+                await expect(erc3643.connect(owner).setSymbol('NOPE')).to.be
+                    .reverted
             })
 
-            describe('InitializeERC3643Metadata', () => {
-                it('GIVEN ERC20 initialized WHEN initializeERC3643Metadata with empty version THEN reverts', async () => {
-                    await expect(
-                        erc3643
-                            .connect(owner)
-                            .initializeERC3643Metadata(emptyString)
-                    ).to.be.reverted
-                })
-
-                it('GIVEN ERC20 initialized WHEN initializeERC3643Metadata THEN emits UpdatedTokenInformation with ERC20 values', async () => {
-                    const n = await erc20Facet.name()
-                    const s = await erc20Facet.symbol()
-                    const d = await erc20Facet.decimals()
-
-                    await expect(
-                        erc3643
-                            .connect(owner)
-                            .initializeERC3643Metadata(version)
-                    )
-                        .to.emit(erc3643, 'UpdatedTokenInformation')
-                        .withArgs(n, s, d, version)
-                })
+            it('GIVEN contract paused WHEN setSymbol THEN reverts', async () => {
+                await accessControl
+                    .connect(owner)
+                    .grantRole(PAUSER_ROLE, ownerAddress)
+                await pauseFacet.connect(owner).pause()
+                await expect(erc3643.connect(owner).setSymbol('ZZZ')).to.be
+                    .reverted
             })
 
-            describe('setName', () => {
-                beforeEach(async () => {
-                    const fixture = async () => {
-                        await erc3643
-                            .connect(owner)
-                            .initializeERC3643Metadata(version)
-                    }
-                    await loadFixture(fixture)
-                })
-
-                it('GIVEN no TOKEN_OWNER_ROLE WHEN setName THEN reverts', async () => {
-                    await accessControl
-                        .connect(owner)
-                        .revokeRole(METADATA_ROLE, ownerAddress)
-                    await expect(erc3643.connect(owner).setName('Nope')).to.be
-                        .reverted
-                })
-
-                it('GIVEN contract paused WHEN setName THEN reverts', async () => {
-                    await accessControl
-                        .connect(owner)
-                        .grantRole(PAUSER_ROLE, ownerAddress)
-                    await pauseFacet.connect(owner).pause()
-                    await expect(erc3643.connect(owner).setName('Paused')).to.be
-                        .reverted
-                })
-
-                it('GIVEN initialized metadata WHEN setName with empty string THEN reverts', async () => {
-                    await expect(erc3643.connect(owner).setName(emptyString)).to
-                        .be.reverted
-                })
-
-                it('GIVEN initialized metadata WHEN setName with valid value THEN updates name and emits UpdatedTokenInformation', async () => {
-                    const newName = 'New3643'
-                    const s = await erc20Facet.symbol()
-                    const d = await erc20Facet.decimals()
-
-                    await expect(erc3643.connect(owner).setName(newName))
-                        .to.emit(erc3643, 'UpdatedTokenInformation')
-                        .withArgs(newName, s, d, await erc3643.version())
-
-                    expect(await erc20Facet.name()).to.equal(newName)
-                })
+            it('GIVEN initialized metadata WHEN setSymbol with empty string THEN reverts', async () => {
+                await expect(erc3643.connect(owner).setSymbol(emptyString)).to
+                    .be.reverted
             })
 
-            describe('setSymbol', () => {
-                beforeEach(async () => {
-                    const fixture = async () => {
-                        await erc3643
-                            .connect(owner)
-                            .initializeERC3643Metadata(version)
-                    }
-                    await loadFixture(fixture)
-                })
+            it('GIVEN initialized metadata WHEN setSymbol with valid value THEN updates symbol and emits UpdatedTokenInformation', async () => {
+                const newSymbol = 'NMYX'
+                const n = await erc20Facet.name()
+                const d = await erc20Facet.decimals()
 
-                it('GIVEN no TOKEN_OWNER_ROLE WHEN setSymbol THEN reverts', async () => {
-                    await accessControl
-                        .connect(owner)
-                        .revokeRole(METADATA_ROLE, ownerAddress)
-                    await expect(erc3643.connect(owner).setSymbol('NOPE')).to.be
-                        .reverted
-                })
+                await expect(erc3643.connect(owner).setSymbol(newSymbol))
+                    .to.emit(erc3643, 'UpdatedTokenInformation')
+                    .withArgs(n, newSymbol, d)
 
-                it('GIVEN contract paused WHEN setSymbol THEN reverts', async () => {
-                    await accessControl
-                        .connect(owner)
-                        .grantRole(PAUSER_ROLE, ownerAddress)
-                    await pauseFacet.connect(owner).pause()
-                    await expect(erc3643.connect(owner).setSymbol('ZZZ')).to.be
-                        .reverted
-                })
-
-                it('GIVEN initialized metadata WHEN setSymbol with empty string THEN reverts', async () => {
-                    await expect(erc3643.connect(owner).setSymbol(emptyString))
-                        .to.be.reverted
-                })
-
-                it('GIVEN initialized metadata WHEN setSymbol with valid value THEN updates symbol and emits UpdatedTokenInformation', async () => {
-                    const newSymbol = 'NMYX'
-                    const n = await erc20Facet.name()
-                    const d = await erc20Facet.decimals()
-
-                    await expect(erc3643.connect(owner).setSymbol(newSymbol))
-                        .to.emit(erc3643, 'UpdatedTokenInformation')
-                        .withArgs(n, newSymbol, d, await erc3643.version())
-
-                    expect(await erc20Facet.symbol()).to.equal(newSymbol)
-                })
-            })
-
-            describe('getters', () => {
-                it('GIVEN initialized metadata WHEN call getters THEN return stored values', async () => {
-                    await erc3643
-                        .connect(owner)
-                        .initializeERC3643Metadata(version)
-                    expect(await erc3643.version()).to.equal(version)
-                })
+                expect(await erc20Facet.symbol()).to.equal(newSymbol)
             })
         })
     })
@@ -1183,11 +1074,6 @@ describe('ERC3643 Token', function () {
                                 tokenSymbol,
                                 tokenDecimals
                             )
-
-                        // Initialize ERC3643 modules
-                        await erc3643
-                            .connect(owner)
-                            .initializeERC3643Metadata(version)
 
                         // Get controller and capped interfaces
                         erc3643Controller = (await ethers.getContractAt(
@@ -2280,11 +2166,6 @@ describe('ERC3643 Token', function () {
                                     tokenDecimals
                                 )
 
-                            // Initialize ERC3643 modules
-                            await erc3643
-                                .connect(owner)
-                                .initializeERC3643Metadata(version)
-
                             // Get controller and capped interfaces
                             erc3643Controller = (await ethers.getContractAt(
                                 'IERC203643Controller',
@@ -2391,11 +2272,6 @@ describe('ERC3643 Token', function () {
                                     tokenSymbol,
                                     tokenDecimals
                                 )
-
-                            // Initialize ERC3643 modules
-                            await erc3643
-                                .connect(owner)
-                                .initializeERC3643Metadata(version)
 
                             // Get controller and capped interfaces
                             erc3643Controller = (await ethers.getContractAt(
@@ -2538,11 +2414,6 @@ describe('ERC3643 Token', function () {
                                 tokenSymbol,
                                 tokenDecimals
                             )
-
-                        // Initialize ERC3643 modules
-                        await erc3643
-                            .connect(owner)
-                            .initializeERC3643Metadata(version)
 
                         // Get controller and capped interfaces
                         erc3643Controller = (await ethers.getContractAt(
@@ -2967,11 +2838,6 @@ describe('ERC3643 Token', function () {
                                 tokenDecimals
                             )
 
-                        // Initialize ERC3643 modules
-                        await erc3643
-                            .connect(owner)
-                            .initializeERC3643Metadata(version)
-
                         // Get controller and capped interfaces
                         erc3643Controller = (await ethers.getContractAt(
                             'IERC203643Controller',
@@ -3154,10 +3020,6 @@ describe('ERC3643 Token', function () {
                                 tokenDecimals
                             )
 
-                        // Initialize ERC3643 modules
-                        await erc3643
-                            .connect(owner)
-                            .initializeERC3643Metadata(version)
                         await erc3643.connect(owner)
                         // Get capped and controller interfaces
                         erc3643Capped = (await ethers.getContractAt(
@@ -3650,11 +3512,6 @@ describe('ERC3643 Token', function () {
                                 tokenDecimals
                             )
 
-                        // Initialize ERC3643 Metadata
-                        await erc3643
-                            .connect(owner)
-                            .initializeERC3643Metadata(version)
-
                         // Get facet interfaces
                         erc3643Capped = (await ethers.getContractAt(
                             'IERC203643Capped',
@@ -4084,9 +3941,6 @@ describe('ERC3643 Token', function () {
                             )
 
                         // Initialize ERC3643 modules (this puts us in ERC3643 mode)
-                        await erc3643
-                            .connect(owner)
-                            .initializeERC3643Metadata(version)
                         await erc3643.connect(owner)
 
                         // Get capped interface and initialize cap
@@ -4169,9 +4023,6 @@ describe('ERC3643 Token', function () {
                             )
 
                         // Initialize ERC3643 modules (this puts us in ERC3643 mode)
-                        await erc3643
-                            .connect(owner)
-                            .initializeERC3643Metadata(version)
                         await erc3643.connect(owner)
 
                         // Get capped interface and initialize cap
@@ -4218,9 +4069,6 @@ describe('ERC3643 Token', function () {
                             )
 
                         // Initialize ERC3643 modules
-                        await erc3643
-                            .connect(owner)
-                            .initializeERC3643Metadata(version)
                         await erc3643.connect(owner)
 
                         // Get capped interface and initialize cap
@@ -4652,11 +4500,6 @@ describe('ERC3643 Token', function () {
                     await erc20Facet
                         .connect(owner)
                         .initializeErc20(tokenName, tokenSymbol, tokenDecimals)
-
-                    // Initialize ERC3643 Metadata
-                    await erc3643
-                        .connect(owner)
-                        .initializeERC3643Metadata(version)
 
                     // Get facet interfaces
                     erc3643Capped = (await ethers.getContractAt(
@@ -5148,11 +4991,6 @@ describe('ERC3643 Token', function () {
                                 tokenDecimals
                             )
 
-                        // Initialize ERC3643 Metadata
-                        await erc3643
-                            .connect(owner)
-                            .initializeERC3643Metadata(version)
-
                         // Get interfaces
                         erc3643Capped = (await ethers.getContractAt(
                             'IERC203643Capped',
@@ -5493,11 +5331,6 @@ describe('ERC3643 Token', function () {
                     await erc20Facet
                         .connect(owner)
                         .initializeErc20(tokenName, tokenSymbol, tokenDecimals)
-
-                    // Initialize ERC3643 Metadata
-                    await erc3643
-                        .connect(owner)
-                        .initializeERC3643Metadata(version)
 
                     // Get interfaces
                     erc3643Capped = (await ethers.getContractAt(
@@ -5922,9 +5755,6 @@ describe('ERC3643 Token', function () {
                 await erc20Facet
                     .connect(owner)
                     .initializeErc20(tokenName, tokenSymbol, tokenDecimals)
-
-                // Initialize ERC3643 Metadata
-                await erc3643.connect(owner).initializeERC3643Metadata(version)
 
                 // Get compliance interface
                 complianceFacet = (await ethers.getContractAt(
@@ -6497,9 +6327,6 @@ describe('ERC3643 Token', function () {
                     .connect(owner)
                     .initializeErc20(tokenName, tokenSymbol, tokenDecimals)
 
-                // Initialize ERC3643 Metadata
-                await erc3643.connect(owner).initializeERC3643Metadata(version)
-
                 // Get facet interfaces
                 maxBalanceFacet = (await ethers.getContractAt(
                     'ERC3643ComplianceMaxBalanceFacet',
@@ -6965,9 +6792,6 @@ describe('ERC3643 Token', function () {
                 await erc20Facet
                     .connect(owner)
                     .initializeErc20(tokenName, tokenSymbol, tokenDecimals)
-
-                // Initialize ERC3643 Metadata
-                await erc3643.connect(owner).initializeERC3643Metadata(version)
 
                 // Get DayMonthLimits compliance interface
                 complianceDMLimFacet = (await ethers.getContractAt(

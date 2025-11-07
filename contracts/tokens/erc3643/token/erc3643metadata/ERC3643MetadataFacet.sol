@@ -29,11 +29,9 @@ contract ERC3643MetadataFacet is ERC3643Metadata, IEIP2535Introspection {
         override
         returns (bytes4[] memory selectors_)
     {
-        uint256 selectorsLength = 4;
+        uint256 selectorsLength = 2;
         selectors_ = new bytes4[](selectorsLength);
-        selectors_[--selectorsLength] = this.initializeERC3643Metadata.selector;
         selectors_[--selectorsLength] = this.setName.selector;
         selectors_[--selectorsLength] = this.setSymbol.selector;
-        selectors_[--selectorsLength] = this.version.selector;
     }
 }

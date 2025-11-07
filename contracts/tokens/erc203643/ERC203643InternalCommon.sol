@@ -6,7 +6,6 @@ pragma solidity ^0.8.28;
 // =======================
 
 import {ERC203643CappedInternal} from './erc203643capped/ERC203643CappedInternal.sol';
-import {ERC3643MetadataInternal} from '../erc3643/token/erc3643metadata/ERC3643MetadataInternal.sol';
 import {ERC3643FreezeInternal} from '../erc3643/token/erc3643freeze/ERC3643FreezeInternal.sol';
 import {ERC20SnapshotInternal} from '../erc20/extensions/snapshot/ERC20SnapshotInternal.sol';
 import {ERC3643ComplianceInternal} from '../erc3643/compliance/ERC3643ComplianceInternal.sol';
@@ -24,7 +23,6 @@ import {IERC3643Freeze} from '../erc3643/token/erc3643freeze/IERC3643Freeze.sol'
 abstract contract ERC203643InternalCommon is
     ERC20SnapshotInternal,
     ERC203643CappedInternal,
-    ERC3643MetadataInternal,
     ERC3643FreezeInternal,
     ERC3643ComplianceInternal
 {

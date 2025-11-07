@@ -14,36 +14,6 @@ import {_METADATA_ROLE} from '../../../../constants/roles.sol';
  */
 abstract contract ERC3643Metadata is IERC3643Metadata, ERC203643InternalCommon {
     /**
-     * @dev Disables further initializations for this facet using its resolver key.
-     */
-    constructor() {
-        _disableInitializers(_ERC3643_METADATA_RESOLVER_KEY);
-    }
-
-    /**
-     * @notice Initializes the metadata fields of the token.
-     * @dev Can only be called once via the initializer modifier.
-     *      Emits a {UpdatedTokenInformation} event.
-     * @param _newVersion The initial version string. Must be non-empty.
-     */
-    function initializeERC3643Metadata(
-        string memory _newVersion
-    )
-        external
-        override
-        initializer(_ERC3643_METADATA_RESOLVER_KEY)
-        emptyString(_newVersion)
-    {
-        _initialize(_newVersion);
-        emit UpdatedTokenInformation(
-            _name(),
-            _symbol(),
-            _decimals(),
-            _newVersion
-        );
-    }
-
-    /**
      * @notice Updates the token name.
      * @dev Restricted to metadata role. Requires non-empty input and unpaused state.
      *      Updates the ERC20 name storage and emits regulatory compliance event.
@@ -67,12 +37,7 @@ abstract contract ERC3643Metadata is IERC3643Metadata, ERC203643InternalCommon {
         whenNotPaused
     {
         _setName(_newName);
-        emit UpdatedTokenInformation(
-            _newName,
-            _symbol(),
-            _decimals(),
-            _version()
-        );
+        emit UpdatedTokenInformation(_newName, _symbol(), _decimals());
     }
 
     /**
@@ -99,23 +64,7 @@ abstract contract ERC3643Metadata is IERC3643Metadata, ERC203643InternalCommon {
         whenNotPaused
     {
         _setSymbol(_newSymbol);
-        emit UpdatedTokenInformation(
-            _name(),
-            _newSymbol,
-            _decimals(),
-            _version()
-        );
-    }
-
-    /**
-     * @notice Returns the current version string of the token.
-     * @return string The ERC3643/TREX version string (e.g., "4.0.0").
-     *
-     * Note: Version follows semantic versioning and indicates the
-     * ERC3643 protocol version implemented by this token.
-     */
-    function version() external view override returns (string memory) {
-        return _version();
+        emit UpdatedTokenInformation(_name(), _newSymbol, _decimals());
     }
 
     /**

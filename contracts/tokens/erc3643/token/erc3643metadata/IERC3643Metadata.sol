@@ -17,13 +17,11 @@ interface IERC3643Metadata {
      *  `_newName` is the name of the token
      *  `_newSymbol` is the symbol of the token
      *  `_newDecimals` is the decimals of the token
-     *  `_newVersion` is the version of the token, current version is 3.0
      */
     event UpdatedTokenInformation(
         string indexed _newName,
         string indexed _newSymbol,
-        uint8 _newDecimals,
-        string _newVersion
+        uint8 _newDecimals
     );
 
     /**
@@ -41,18 +39,4 @@ interface IERC3643Metadata {
      *  emits a `UpdatedTokenInformation` event
      */
     function setSymbol(string calldata _symbol) external;
-
-    /**
-     * @notice Initializes the ERC-3643 metadata fields of the token.
-     * @dev Sets the initial onchain identity and version string.
-     *      Emits a {UpdatedTokenInformation} event.
-     * @param _newVersion The initial version string of the token. Must be non-empty.
-     */
-    function initializeERC3643Metadata(string memory _newVersion) external;
-
-    /**
-     * @dev Returns the TREX version of the token.
-     * current version is 3.0.0
-     */
-    function version() external view returns (string memory);
 }
