@@ -1464,25 +1464,6 @@ describe('ERC3643 Token', function () {
                         expect(
                             await erc20Facet.balanceOf(aliceAddress)
                         ).to.equal(initialBalance - burnAmount)
-
-                        /**
-                         * COVERAGE NOTE: Line 110 ELSE branch (ERC203643InternalCommon.sol)
-                         * 
-                         * Line 110: if (_hasRole(_CONTROLLER_ROLE, msg.sender)) { ... } // ELSE branch NOT covered
-                         * 
-                         * WHY THIS BRANCH IS UNREACHABLE:
-                         * 
-                         * In ERC3643 mode, burn operations can ONLY be performed through forceBurn(),
-                         * which requires CONTROLLER_ROLE. There is no public burn() or burnFrom() in ERC3643.
-                         * 
-                         * The _handleBurnOperation() function is called from _beforeTokenTransfer when _to == address(0).
-                         * Since the only way to trigger a burn in ERC3643 is through forceBurn() (which requires
-                         * CONTROLLER_ROLE), the ELSE branch (burn without CONTROLLER_ROLE) is IMPOSSIBLE to reach.
-                         * 
-                         * This is by design: ERC3643 restricts burn operations to authorized controllers only.
-                         * 
-                         * Coverage: Line 110 ELSE is unreachable by design in ERC3643 mode.
-                         */
                     })
                 })
 
@@ -3981,6 +3962,24 @@ describe('ERC3643 Token', function () {
             // --------------------------------------------------------------------
             // Burn Operations Restriction in ERC3643 Mode
             // --------------------------------------------------------------------
+            /**
+             * COVERAGE NOTE: Line 110 ELSE branch (ERC203643InternalCommon.sol)
+             * 
+             * Line 110: if (_hasRole(_CONTROLLER_ROLE, msg.sender)) { ... } // ELSE branch NOT covered
+             * 
+             * WHY THIS BRANCH IS UNREACHABLE:
+             * 
+             * In ERC3643 mode, burn operations can ONLY be performed through forceBurn(),
+             * which requires CONTROLLER_ROLE. There is no public burn() or burnFrom() in ERC3643.
+             * 
+             * The _handleBurnOperation() function is called from _beforeTokenTransfer when _to == address(0).
+             * Since the only way to trigger a burn in ERC3643 is through forceBurn() (which requires
+             * CONTROLLER_ROLE), the ELSE branch (burn without CONTROLLER_ROLE) is IMPOSSIBLE to reach.
+             * 
+             * This is by design: ERC3643 restricts burn operations to authorized controllers only.
+             * 
+             * Coverage: Line 110 ELSE is unreachable by design in ERC3643 mode.
+             */
             describe('Burn Operations Restriction', () => {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 let erc20Burnable: any
