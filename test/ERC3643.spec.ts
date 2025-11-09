@@ -7699,6 +7699,44 @@ describe('ERC3643 Token', function () {
                 await expect(
                     erc20Facet.connect(alice).transfer(bobAddress, excessAmount)
                 ).to.be.reverted
+
+                /**
+                 * COVERAGE NOTE: Missing Branch Coverage (Lines 89 & 92)
+                 * 
+                 * Location: ERC3643ComplianceDMLimInternal.sol
+                 * - Line 89: if ((counter.dailyCount + _amount) <= _getDailyLimit()) { ... } // ELSE branch NOT covered
+                 * - Line 92: if ((counter.monthlyCount + _amount) <= _getMonthlyLimit()) { ... } // ELSE branch NOT covered
+                 * 
+                 * WHY THESE BRANCHES ARE UNREACHABLE:
+                 * 
+                 * These ELSE branches are DEFENSIVE CODE that protects against inconsistent state.
+                 * They are NOT reachable in normal operation because:
+                 * 
+                 * 1. Flow: _complianceCheckOnDayMonthLimits() executes FIRST (checks if transfer is valid)
+                 *    -> If check passes, _transferActionOnDayMonthLimits() executes AFTER (updates counters)
+                 * 
+                 * 2. Both functions execute in the SAME TRANSACTION with the SAME block.timestamp
+                 * 
+                 * 3. If compliance check passes: (counter + amount <= limit) is TRUE
+                 *    -> Then in _transferActionOnDayMonthLimits, the same condition is TRUE (counters unchanged)
+                 *    -> ELSE branch NEVER executes
+                 * 
+                 * 4. The ONLY way ELSE would execute:
+                 *    - Compliance check passes with (counter + amount <= limit)
+                 *    - BETWEEN check and update, the limit is REDUCED or counter is INCREASED
+                 *    - This is IMPOSSIBLE in a single atomic transaction
+                 * 
+                 * 5. Even with time-based resets:
+                 *    - Both functions use _isDayFinished() with same block.timestamp
+                 *    - If day finished: counters reset to 0 in BOTH functions consistently
+                 *    - No race condition possible
+                 * 
+                 * CONCLUSION:
+                 * These ELSE branches are DEFENSIVE SAFETY NETS for theoretical bugs or state corruption.
+                 * They represent good coding practice but are NOT testable in realistic scenarios.
+                 * 
+                 * Coverage: 88.89% branches (defensive ELSE not covered by design)
+                 */
             })
         })
     })
