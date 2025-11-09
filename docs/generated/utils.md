@@ -199,6 +199,23 @@ value is zero. Used for quantity and amount validation_
 | ------ | ------- | -------------------------------------------------- |
 | \_uint | uint256 | The uint256 value to validate for non-zero content |
 
+### \_checkBytes32ArrayIsNotZero
+
+```solidity
+function _checkBytes32ArrayIsNotZero(bytes32[] _array) internal pure
+```
+
+Validates that all elements in a bytes32 array are non-zero
+
+_Internal validation function that iterates through the array and checks
+each element is not empty. Use multiple times for multiple arrays_
+
+#### Parameters
+
+| Name    | Type      | Description                   |
+| ------- | --------- | ----------------------------- |
+| \_array | bytes32[] | The bytes32 array to validate |
+
 ### \_checkEmptyBytes
 
 ```solidity

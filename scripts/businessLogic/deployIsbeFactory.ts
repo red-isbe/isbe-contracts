@@ -37,6 +37,8 @@ import {
     AccessControlDidFacet__factory,
     BesuNodeManagerFacet,
     BesuNodeManagerFacet__factory,
+    AnchoringCoreFacet,
+    AnchoringCoreFacet__factory,
 } from '../../typechain-types'
 import {
     BUSINESS_LOGIC_DEPLOYER_ROLE,
@@ -51,6 +53,8 @@ import {
     CLIENT_FILTERING_ROLE,
     TIMESTAMPING_REGISTRY_ROLE,
     BESU_NODE_MANAGER_ROLE,
+    ANCHORER_ROLE,
+    METADATA_MANAGER_ROLE,
 } from '../../utils/constants'
 
 let AccessControlFacetFactory: AccessControlGovernanceFacet__factory
@@ -73,6 +77,7 @@ let TimeStampingRegistryFacetFactory: TimeStampingRegistryFacet__factory
 let ClientFilteringFacetFactory: ClientFilteringFacet__factory
 let BesuNodeManagerFacetFactory: BesuNodeManagerFacet__factory
 
+let AnchoringCoreFacetFactory: AnchoringCoreFacet__factory
 let diamondProxy: EIP2535AccessControl
 let businessLogicFactoryFacet: BusinessLogicFactoryFacet
 let proxyFactoryFacet: ProxyFactoryFacet
@@ -92,6 +97,7 @@ let ensRegistryFacet: EnsRegistryFacet
 let timeStampingRegistryFacet: TimeStampingRegistryFacet
 let clientFilteringFacet: ClientFilteringFacet
 let besuNodeManagerFacet: BesuNodeManagerFacet
+let anchoringCoreFacet: AnchoringCoreFacet
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function deployInitial(ethers: any) {
@@ -146,6 +152,8 @@ async function deployInitial(ethers: any) {
     BesuNodeManagerFacetFactory = await ethers.getContractFactory(
         'BesuNodeManagerFacet'
     )
+    AnchoringCoreFacetFactory =
+        await ethers.getContractFactory('AnchoringCoreFacet')
 
     // Add explicit gas limit to fix Internal error with non-validator nodes
     const deployOptions = { gasLimit: 25_000_000 }
@@ -178,6 +186,7 @@ async function deployInitial(ethers: any) {
         await ClientFilteringFacetFactory.deploy(deployOptions)
     besuNodeManagerFacet =
         await BesuNodeManagerFacetFactory.deploy(deployOptions)
+    anchoringCoreFacet = await AnchoringCoreFacetFactory.deploy()
 
     await businessLogicFactoryFacet.waitForDeployment()
     await proxyFactoryFacet.waitForDeployment()
@@ -197,6 +206,7 @@ async function deployInitial(ethers: any) {
     await timeStampingRegistryFacet.waitForDeployment()
     await clientFilteringFacet.waitForDeployment()
     await besuNodeManagerFacet.waitForDeployment()
+    await anchoringCoreFacet.waitForDeployment()
 }
 
 export async function deployIsbeFactory(
@@ -227,6 +237,7 @@ export async function deployIsbeFactory(
         await timeStampingRegistryFacet.getAddress(),
         await clientFilteringFacet.getAddress(),
         await besuNodeManagerFacet.getAddress(),
+        await anchoringCoreFacet.getAddress(),
     ]
     diamondProxy = await EIP2535AccessControlFactory.deploy(
         facetAddresses,
@@ -278,6 +289,14 @@ export async function deployIsbeFactory(
                 },
                 {
                     role: BESU_NODE_MANAGER_ROLE,
+                    members: [accountAddress],
+                },
+                {
+                    role: ANCHORER_ROLE,
+                    members: [accountAddress],
+                },
+                {
+                    role: METADATA_MANAGER_ROLE,
                     members: [accountAddress],
                 },
             ],

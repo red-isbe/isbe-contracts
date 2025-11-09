@@ -14,6 +14,7 @@
 - [core](core.md)
 - [factory](factory.md)
 - [factory/accessControl](factory/accessControl.md)
+- [factory/anchoring](factory/anchoring.md)
 - [factory/businesslogic](factory/businesslogic.md)
 - [factory/configurationmanagement](factory/configurationmanagement.md)
 - [factory/globalisbepause](factory/globalisbepause.md)

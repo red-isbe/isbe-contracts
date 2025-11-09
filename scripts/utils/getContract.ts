@@ -1,4 +1,4 @@
-import { Signer, type ContractRunner } from 'ethers'
+import { type ContractRunner, Signer } from 'ethers'
 import { isValidBytesAndLength } from './validation'
 
 type Factory<T> = {
@@ -13,7 +13,5 @@ export async function getContract<T>(
     if (!isValidBytesAndLength(address, 20))
         throw new Error('Invalid contract address format : ' + address)
 
-    const factory = await factoryType.connect(address, signer)
-
-    return factory
+    return factoryType.connect(address, signer)
 }

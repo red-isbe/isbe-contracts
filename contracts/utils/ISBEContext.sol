@@ -121,6 +121,24 @@ abstract contract ISBEContext is Context {
     }
 
     /**
+     * @notice Validates that all elements in a bytes32 array are non-zero
+     * @dev Internal validation function that iterates through the array and checks
+     *      each element is not empty. Use multiple times for multiple arrays
+     * @param _array The bytes32 array to validate
+     */
+    function _checkBytes32ArrayIsNotZero(
+        bytes32[] memory _array
+    ) internal pure {
+        uint256 length = _array.length;
+        for (uint256 i; i < length; ) {
+            _checkBytes32IsNotZero(_array[i]);
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    /**
      * @notice Validates that the provided bytes array is not empty
      * @dev Internal validation function that reverts with EmptyBytes error if the
      *      array length is zero. Used for data payload validation

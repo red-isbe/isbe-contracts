@@ -89,7 +89,7 @@ export class Secp256r1SignatureProvider implements ISignatureProvider {
         const deployTx = {
             nonce: nonce,
             gasPrice: 0n,
-            gasLimit: 80_000_000n,
+            gasLimit: 20_000_000n,
             to: undefined, // Contract deployment
             value: 0n,
             data: deployData,
