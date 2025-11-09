@@ -548,6 +548,147 @@ describe('ERC20', function () {
         })
     })
 
+    describe('BatchMint', () => {
+        it('GIVEN an initialized ERC20 WHEN non MINTER tries batchMint THEN it fails', async () => {
+            const contracts = await loadFixture(deployInitializedFixture)
+
+            await expect(
+                contracts.erc20Capped.batchMint([contracts.ownerAddress], [100])
+            ).to.be.revertedWithCustomError(
+                contracts.accessControl,
+                'AccountHasNoRole'
+            )
+        })
+
+        it('GIVEN an initialized ERC20 WHEN batchMint on paused token THEN it fails', async () => {
+            const contracts = await loadFixture(deployPausedFixture)
+
+            await expect(
+                contracts.erc20Capped.batchMint([contracts.ownerAddress], [100])
+            ).to.be.revertedWithCustomError(contracts.erc20, 'IsPaused')
+        })
+
+        it('GIVEN an initialized ERC20 WHEN arrays have different lengths THEN it fails', async () => {
+            const contracts = await loadFixture(deployPreparedTokensFixture)
+
+            await expect(
+                contracts.erc20Capped.batchMint(
+                    [contracts.ownerAddress, contracts.otherAccountAddress],
+                    [100]
+                )
+            ).to.be.revertedWithCustomError(contracts.erc20, 'NotSameLengthArray')
+        })
+
+        it('GIVEN an initialized ERC20 WHEN batchMint exceeds cap THEN it fails', async () => {
+            const contracts = await loadFixture(deployPreparedTokensFixture)
+
+            await expect(
+                contracts.erc20Capped.batchMint(
+                    [contracts.ownerAddress, contracts.otherAccountAddress],
+                    [600, 600]
+                )
+            ).to.be.revertedWithCustomError(contracts.erc20Capped, 'CapExceeded')
+        })
+
+        it('GIVEN an ERC20 WHEN it is prepared THEN batchMint with empty arrays succeeds', async () => {
+            const contracts = await loadFixture(deployPreparedTokensFixture)
+            const initialSupply = await contracts.erc20.totalSupply()
+
+            await expect(contracts.erc20Capped.batchMint([], []))
+                .to.not.be.reverted
+
+            expect(await contracts.erc20.totalSupply()).to.equal(initialSupply)
+        })
+
+        it('GIVEN an ERC20 WHEN it is prepared THEN batchMint to multiple addresses succeeds', async () => {
+            const contracts = await loadFixture(deployPreparedTokensFixture)
+            const recipients = [
+                contracts.ownerAddress,
+                contracts.otherAccountAddress,
+            ]
+            const amounts = [100, 200]
+
+            await expect(contracts.erc20Capped.batchMint(recipients, amounts))
+                .to.emit(contracts.erc20, 'Transfer')
+                .withArgs(ethers.ZeroAddress, recipients[0], amounts[0])
+                .to.emit(contracts.erc20, 'Transfer')
+                .withArgs(ethers.ZeroAddress, recipients[1], amounts[1])
+
+            expect(await contracts.erc20.totalSupply()).to.equal(300)
+            expect(
+                await contracts.erc20.balanceOf(contracts.ownerAddress)
+            ).to.equal(100)
+            expect(
+                await contracts.erc20.balanceOf(contracts.otherAccountAddress)
+            ).to.equal(200)
+        })
+
+        it('GIVEN an ERC20 WHEN batchMint to single address THEN it succeeds', async () => {
+            const contracts = await loadFixture(deployPreparedTokensFixture)
+
+            await expect(
+                contracts.erc20Capped.batchMint([contracts.ownerAddress], [150])
+            )
+                .to.emit(contracts.erc20, 'Transfer')
+                .withArgs(ethers.ZeroAddress, contracts.ownerAddress, 150)
+
+            expect(await contracts.erc20.totalSupply()).to.equal(150)
+            expect(
+                await contracts.erc20.balanceOf(contracts.ownerAddress)
+            ).to.equal(150)
+        })
+
+        it('GIVEN an ERC20 WHEN batchMint with exact cap THEN it succeeds', async () => {
+            const contracts = await loadFixture(deployPreparedTokensFixture)
+
+            await expect(
+                contracts.erc20Capped.batchMint(
+                    [contracts.ownerAddress, contracts.otherAccountAddress],
+                    [400, 600]
+                )
+            )
+                .to.emit(contracts.erc20, 'Transfer')
+                .withArgs(ethers.ZeroAddress, contracts.ownerAddress, 400)
+                .to.emit(contracts.erc20, 'Transfer')
+                .withArgs(ethers.ZeroAddress, contracts.otherAccountAddress, 600)
+
+            expect(await contracts.erc20.totalSupply()).to.equal(1000)
+            expect(await contracts.erc20Capped.cap()).to.equal(1000)
+        })
+
+        it('GIVEN an ERC20 WHEN batchMint with zero amounts THEN it succeeds', async () => {
+            const contracts = await loadFixture(deployPreparedTokensFixture)
+
+            await expect(
+                contracts.erc20Capped.batchMint(
+                    [contracts.ownerAddress],
+                    [0]
+                )
+            )
+                .to.emit(contracts.erc20, 'Transfer')
+                .withArgs(ethers.ZeroAddress, contracts.ownerAddress, 0)
+
+            expect(await contracts.erc20.totalSupply()).to.equal(0)
+        })
+
+        it('GIVEN an ERC20 WHEN batchMint after partial supply THEN it respects remaining cap', async () => {
+            const contracts = await loadFixture(deployPreparedTokensFixture)
+
+            // Mint 300 first
+            await contracts.erc20Capped.mint(contracts.ownerAddress, 300)
+
+            // Batch mint remaining 700
+            await expect(
+                contracts.erc20Capped.batchMint(
+                    [contracts.ownerAddress, contracts.otherAccountAddress],
+                    [400, 300]
+                )
+            ).to.not.be.reverted
+
+            expect(await contracts.erc20.totalSupply()).to.equal(1000)
+        })
+    })
+
     describe('Burn', () => {
         async function deployWithTokensFixture() {
             const contracts = await deployPreparedTokensFixture()
