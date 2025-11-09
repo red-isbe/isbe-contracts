@@ -1438,6 +1438,52 @@ describe('ERC3643 Token', function () {
                             await erc20Facet.balanceOf(aliceAddress)
                         ).to.equal(totalBalance - burnAmount)
                     })
+
+                    it('GIVEN caller has CONTROLLER + COMPLIANCE roles WHEN forceBurn THEN bypasses compliance hooks (line 114 ELSE)', async () => {
+                        // Grant COMPLIANCE_ROLE in addition to CONTROLLER_ROLE
+                        const COMPLIANCE_ROLE = ethers.id('COMPLIANCE_ROLE')
+                        await accessControl
+                            .connect(owner)
+                            .grantRole(COMPLIANCE_ROLE, ownerAddress)
+
+                        const burnAmount = 100n
+                        const initialBalance = await erc20Facet.balanceOf(
+                            aliceAddress
+                        )
+
+                        // This covers line 114 ELSE: if (!_hasRole(_COMPLIANCE_ROLE, msg.sender))
+                        // Since owner has COMPLIANCE_ROLE, the compliance hooks are bypassed
+                        await expect(
+                            erc3643Controller
+                                .connect(owner)
+                                .forceBurn(aliceAddress, burnAmount)
+                        )
+                            .to.emit(erc3643Controller, 'ForceBurn')
+                            .withArgs(ownerAddress, aliceAddress, burnAmount)
+
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(initialBalance - burnAmount)
+
+                        /**
+                         * COVERAGE NOTE: Line 110 ELSE branch (ERC203643InternalCommon.sol)
+                         * 
+                         * Line 110: if (_hasRole(_CONTROLLER_ROLE, msg.sender)) { ... } // ELSE branch NOT covered
+                         * 
+                         * WHY THIS BRANCH IS UNREACHABLE:
+                         * 
+                         * In ERC3643 mode, burn operations can ONLY be performed through forceBurn(),
+                         * which requires CONTROLLER_ROLE. There is no public burn() or burnFrom() in ERC3643.
+                         * 
+                         * The _handleBurnOperation() function is called from _beforeTokenTransfer when _to == address(0).
+                         * Since the only way to trigger a burn in ERC3643 is through forceBurn() (which requires
+                         * CONTROLLER_ROLE), the ELSE branch (burn without CONTROLLER_ROLE) is IMPOSSIBLE to reach.
+                         * 
+                         * This is by design: ERC3643 restricts burn operations to authorized controllers only.
+                         * 
+                         * Coverage: Line 110 ELSE is unreachable by design in ERC3643 mode.
+                         */
+                    })
                 })
 
                 describe('batchForceBurn', () => {
@@ -3427,6 +3473,21 @@ describe('ERC3643 Token', function () {
                     it('GIVEN zero cap WHEN setCap THEN reverts', async () => {
                         await expect(erc3643Capped.connect(owner).setCap(0n)).to
                             .be.reverted
+                    })
+
+                    it('GIVEN contract paused WHEN setCap THEN reverts', async () => {
+                        await accessControl
+                            .connect(owner)
+                            .grantRole(PAUSER_ROLE, ownerAddress)
+                        await pauseFacet.connect(owner).pause()
+
+                        // Attempt to set cap while paused
+                        await expect(
+                            erc3643Capped.connect(owner).setCap(15000n)
+                        ).to.be.reverted
+
+                        // Unpause for cleanup
+                        await pauseFacet.connect(owner).unpause()
                     })
 
                     it('GIVEN cap increased WHEN mint up to new cap THEN succeeds', async () => {
