@@ -872,6 +872,144 @@ describe('ERC20', function () {
         )
     })
 
+    describe('BatchTransfer', () => {
+        const prepare = async (init_pause: boolean = false) => {
+            const contracts = init_pause
+                ? await loadFixture(deployPausedFixture)
+                : await loadFixture(deployPreparedTokensFixture)
+
+            if (init_pause) return contracts
+
+            await contracts.erc20Capped.mint(contracts.ownerAddress, 300)
+            return contracts
+        }
+
+        it('GIVEN an ERC20 initialized WHEN try to use address(0) in recipients THEN it fails', async () => {
+            const contracts = await prepare()
+            await expect(
+                contracts.erc20.batchTransfer(
+                    [ethers.ZeroAddress, contracts.otherAccountAddress],
+                    [50, 50]
+                )
+            ).to.be.revertedWithCustomError(contracts.erc20, 'AddressZero')
+        })
+
+        it('GIVEN an ERC20 initialized WHEN arrays have different lengths THEN it fails', async () => {
+            const contracts = await prepare()
+            await expect(
+                contracts.erc20.batchTransfer(
+                    [contracts.otherAccountAddress],
+                    [50, 100]
+                )
+            ).to.be.revertedWithCustomError(contracts.erc20, 'NotSameLengthArray')
+        })
+
+        it('GIVEN an ERC20 initialized WHEN try to batch transfer without enough balance THEN it fails', async () => {
+            const contracts = await prepare()
+            await expect(
+                contracts.erc20.batchTransfer(
+                    [contracts.otherAccountAddress, contracts.ownerAddress],
+                    [200, 200]
+                )
+            ).to.be.revertedWithCustomError(
+                contracts.erc20,
+                'TransferAmountExceedsBalance'
+            )
+        })
+
+        it('GIVEN an ERC20 initialized WHEN try to batch transfer from a paused token THEN it fails', async () => {
+            const contracts = await loadFixture(deployPausedFixture)
+
+            await expect(
+                contracts.erc20.batchTransfer([contracts.ownerAddress], [0])
+            ).to.be.revertedWithCustomError(contracts.erc20, 'IsPaused')
+        })
+
+        it('GIVEN an ERC20 WHEN it is prepared THEN a batch transfer can be made', async () => {
+            const contracts = await prepare()
+            const recipients = [
+                contracts.otherAccountAddress,
+                contracts.ownerAddress,
+            ]
+            const amounts = [100, 50]
+
+            await expect(contracts.erc20.batchTransfer(recipients, amounts))
+                .to.emit(contracts.erc20, 'Transfer')
+                .withArgs(contracts.ownerAddress, recipients[0], amounts[0])
+                .to.emit(contracts.erc20, 'Transfer')
+                .withArgs(contracts.ownerAddress, recipients[1], amounts[1])
+
+            expect(await contracts.erc20.totalSupply()).to.be.equal(300)
+            expect(
+                await contracts.erc20.balanceOf(contracts.ownerAddress)
+            ).to.be.equal(200)
+            expect(
+                await contracts.erc20.balanceOf(contracts.otherAccountAddress)
+            ).to.be.equal(100)
+        })
+
+        it('GIVEN an ERC20 WHEN batch transfer with empty arrays THEN it succeeds without transfers', async () => {
+            const contracts = await prepare()
+            await expect(contracts.erc20.batchTransfer([], []))
+                .to.not.be.reverted
+
+            expect(await contracts.erc20.totalSupply()).to.be.equal(300)
+            expect(
+                await contracts.erc20.balanceOf(contracts.ownerAddress)
+            ).to.be.equal(300)
+        })
+
+        it('GIVEN an ERC20 WHEN batch transfer to single recipient THEN it succeeds', async () => {
+            const contracts = await prepare()
+            await expect(
+                contracts.erc20.batchTransfer(
+                    [contracts.otherAccountAddress],
+                    [150]
+                )
+            )
+                .to.emit(contracts.erc20, 'Transfer')
+                .withArgs(
+                    contracts.ownerAddress,
+                    contracts.otherAccountAddress,
+                    150
+                )
+
+            expect(await contracts.erc20.totalSupply()).to.be.equal(300)
+            expect(
+                await contracts.erc20.balanceOf(contracts.ownerAddress)
+            ).to.be.equal(150)
+            expect(
+                await contracts.erc20.balanceOf(contracts.otherAccountAddress)
+            ).to.be.equal(150)
+        })
+
+        it('GIVEN an ERC20 WHEN batch transfer with exact balance THEN it succeeds', async () => {
+            const contracts = await prepare()
+            await expect(
+                contracts.erc20.batchTransfer(
+                    [contracts.otherAccountAddress, contracts.ownerAddress],
+                    [200, 100]
+                )
+            )
+                .to.emit(contracts.erc20, 'Transfer')
+                .withArgs(
+                    contracts.ownerAddress,
+                    contracts.otherAccountAddress,
+                    200
+                )
+                .to.emit(contracts.erc20, 'Transfer')
+                .withArgs(contracts.ownerAddress, contracts.ownerAddress, 100)
+
+            expect(await contracts.erc20.totalSupply()).to.be.equal(300)
+            expect(
+                await contracts.erc20.balanceOf(contracts.ownerAddress)
+            ).to.be.equal(100)
+            expect(
+                await contracts.erc20.balanceOf(contracts.otherAccountAddress)
+            ).to.be.equal(200)
+        })
+    })
+
     describe('Snapshot', () => {
         const prepare = async (init_pause: boolean = false) => {
             const contracts = init_pause
