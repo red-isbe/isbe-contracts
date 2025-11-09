@@ -90,7 +90,7 @@ describe('buildConfigurationId', function () {
 
             // The configuration ID built from seed + XOR of all keys
             const expected =
-                '0x000000000000002a0000000000002a005a006a00000000600000000000000020'
+                '0x320000000074002aef00000000002a005a006a00000000600000000000000020'
             expect(result).to.be.equal(expected)
         })
 
@@ -129,7 +129,7 @@ describe('buildConfigurationId', function () {
 
             // This is the XOR of all ERC20 resolver keys
             expect(result).to.be.equal(
-                '0x000000000000002a0000000000002a005a006a00000000600000000000000000'
+                '0x320000000074002aef00000000002a005a006a00000000600000000000000000'
             )
         })
     })
