@@ -4044,6 +4044,283 @@ describe('ERC3643 Token', function () {
             })
 
             // --------------------------------------------------------------------
+            // Allowance Operations in ERC3643 Mode
+            // --------------------------------------------------------------------
+            describe('Allowance Operations', () => {
+                let erc3643Capped: IERC203643Capped
+
+                beforeEach(async () => {
+                    const fixture = async () => {
+                        // Grant necessary roles
+                        await accessControl
+                            .connect(owner)
+                            .grantRole(MINTER_ROLE, ownerAddress)
+
+                        // Initialize ERC20
+                        await erc20Facet
+                            .connect(owner)
+                            .initializeErc20(
+                                tokenName,
+                                tokenSymbol,
+                                tokenDecimals
+                            )
+
+                        // Initialize ERC3643 modules
+                        await erc3643.connect(owner)
+
+                        // Get capped interface and initialize cap
+                        erc3643Capped = (await ethers.getContractAt(
+                            'IERC203643Capped',
+                            proxyAddress
+                        )) as IERC203643Capped
+
+                        await erc3643Capped.connect(owner).initializeCap(10000n)
+
+                        // Mint tokens to alice for testing
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(aliceAddress, 5000n)
+                    }
+                    await loadFixture(fixture)
+                })
+
+                describe('allowance', () => {
+                    it('GIVEN ERC3643 mode WHEN checking allowance THEN returns correct value', async () => {
+                        // Initially allowance should be 0
+                        expect(
+                            await erc20Facet.allowance(
+                                aliceAddress,
+                                bobAddress
+                            )
+                        ).to.equal(0)
+
+                        // After approval
+                        await erc20Facet.connect(alice).approve(bobAddress, 1000n)
+
+                        expect(
+                            await erc20Facet.allowance(
+                                aliceAddress,
+                                bobAddress
+                            )
+                        ).to.equal(1000n)
+                    })
+
+                    it('GIVEN ERC3643 mode WHEN checking allowance for different spenders THEN returns independent values', async () => {
+                        await erc20Facet.connect(alice).approve(bobAddress, 1000n)
+                        await erc20Facet
+                            .connect(alice)
+                            .approve(charlieAddress, 2000n)
+
+                        expect(
+                            await erc20Facet.allowance(
+                                aliceAddress,
+                                bobAddress
+                            )
+                        ).to.equal(1000n)
+                        expect(
+                            await erc20Facet.allowance(
+                                aliceAddress,
+                                charlieAddress
+                            )
+                        ).to.equal(2000n)
+                    })
+                })
+
+                describe('increaseAllowance', () => {
+                    it('GIVEN ERC3643 mode WHEN increaseAllowance THEN increases and emits Approval', async () => {
+                        await expect(
+                            erc20Facet
+                                .connect(alice)
+                                .increaseAllowance(bobAddress, 1000n)
+                        )
+                            .to.emit(erc20Facet, 'Approval')
+                            .withArgs(aliceAddress, bobAddress, 1000n)
+
+                        expect(
+                            await erc20Facet.allowance(
+                                aliceAddress,
+                                bobAddress
+                            )
+                        ).to.equal(1000n)
+                    })
+
+                    it('GIVEN existing allowance WHEN increaseAllowance THEN adds to existing value', async () => {
+                        // Set initial allowance
+                        await erc20Facet.connect(alice).approve(bobAddress, 500n)
+
+                        // Increase allowance
+                        await expect(
+                            erc20Facet
+                                .connect(alice)
+                                .increaseAllowance(bobAddress, 300n)
+                        )
+                            .to.emit(erc20Facet, 'Approval')
+                            .withArgs(aliceAddress, bobAddress, 800n)
+
+                        expect(
+                            await erc20Facet.allowance(
+                                aliceAddress,
+                                bobAddress
+                            )
+                        ).to.equal(800n)
+                    })
+
+                    it('GIVEN zero allowance WHEN increaseAllowance THEN sets new allowance', async () => {
+                        expect(
+                            await erc20Facet.allowance(
+                                aliceAddress,
+                                bobAddress
+                            )
+                        ).to.equal(0)
+
+                        await erc20Facet
+                            .connect(alice)
+                            .increaseAllowance(bobAddress, 1500n)
+
+                        expect(
+                            await erc20Facet.allowance(
+                                aliceAddress,
+                                bobAddress
+                            )
+                        ).to.equal(1500n)
+                    })
+
+                    it('GIVEN contract paused WHEN increaseAllowance THEN reverts', async () => {
+                        // Grant PAUSER_ROLE and pause contract
+                        await accessControl
+                            .connect(owner)
+                            .grantRole(PAUSER_ROLE, ownerAddress)
+                        await pauseFacet.connect(owner).pause()
+
+                        await expect(
+                            erc20Facet
+                                .connect(alice)
+                                .increaseAllowance(bobAddress, 1000n)
+                        ).to.be.reverted
+                    })
+                })
+
+                describe('decreaseAllowance', () => {
+                    beforeEach(async () => {
+                        const fixture = async () => {
+                            // Set up initial allowance
+                            await erc20Facet
+                                .connect(alice)
+                                .approve(bobAddress, 1000n)
+                        }
+                        await loadFixture(fixture)
+                    })
+
+                    it('GIVEN existing allowance WHEN decreaseAllowance THEN decreases and emits Approval', async () => {
+                        await expect(
+                            erc20Facet
+                                .connect(alice)
+                                .decreaseAllowance(bobAddress, 300n)
+                        )
+                            .to.emit(erc20Facet, 'Approval')
+                            .withArgs(aliceAddress, bobAddress, 700n)
+
+                        expect(
+                            await erc20Facet.allowance(
+                                aliceAddress,
+                                bobAddress
+                            )
+                        ).to.equal(700n)
+                    })
+
+                    it('GIVEN allowance WHEN decreaseAllowance to zero THEN sets allowance to zero', async () => {
+                        await expect(
+                            erc20Facet
+                                .connect(alice)
+                                .decreaseAllowance(bobAddress, 1000n)
+                        )
+                            .to.emit(erc20Facet, 'Approval')
+                            .withArgs(aliceAddress, bobAddress, 0n)
+
+                        expect(
+                            await erc20Facet.allowance(
+                                aliceAddress,
+                                bobAddress
+                            )
+                        ).to.equal(0)
+                    })
+
+                    it('GIVEN allowance WHEN decreaseAllowance exceeds current allowance THEN reverts', async () => {
+                        await expect(
+                            erc20Facet
+                                .connect(alice)
+                                .decreaseAllowance(bobAddress, 1001n)
+                        ).to.be.revertedWithCustomError(
+                            erc20Facet,
+                            'DecreasedAllowanceBellowZero'
+                        )
+                    })
+
+                    it('GIVEN zero allowance WHEN decreaseAllowance THEN reverts', async () => {
+                        // Use charlie who has no allowance
+                        await expect(
+                            erc20Facet
+                                .connect(alice)
+                                .decreaseAllowance(charlieAddress, 1n)
+                        ).to.be.revertedWithCustomError(
+                            erc20Facet,
+                            'DecreasedAllowanceBellowZero'
+                        )
+                    })
+
+                    it('GIVEN contract paused WHEN decreaseAllowance THEN reverts', async () => {
+                        // Grant PAUSER_ROLE and pause contract
+                        await accessControl
+                            .connect(owner)
+                            .grantRole(PAUSER_ROLE, ownerAddress)
+                        await pauseFacet.connect(owner).pause()
+
+                        await expect(
+                            erc20Facet
+                                .connect(alice)
+                                .decreaseAllowance(bobAddress, 100n)
+                        ).to.be.reverted
+                    })
+
+                    it('GIVEN multiple decreases WHEN total stays within allowance THEN all succeed', async () => {
+                        // First decrease
+                        await erc20Facet
+                            .connect(alice)
+                            .decreaseAllowance(bobAddress, 300n)
+                        expect(
+                            await erc20Facet.allowance(
+                                aliceAddress,
+                                bobAddress
+                            )
+                        ).to.equal(700n)
+
+                        // Second decrease
+                        await erc20Facet
+                            .connect(alice)
+                            .decreaseAllowance(bobAddress, 400n)
+                        expect(
+                            await erc20Facet.allowance(
+                                aliceAddress,
+                                bobAddress
+                            )
+                        ).to.equal(300n)
+
+                        // Third decrease
+                        await erc20Facet
+                            .connect(alice)
+                            .decreaseAllowance(bobAddress, 300n)
+                        expect(
+                            await erc20Facet.allowance(
+                                aliceAddress,
+                                bobAddress
+                            )
+                        ).to.equal(0)
+                    })
+                })
+            })
+            
+
+            // --------------------------------------------------------------------
             // Transfer Operations in ERC3643 Mode
             // --------------------------------------------------------------------
             describe('Transfer Operations', () => {
