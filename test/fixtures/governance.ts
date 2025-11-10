@@ -45,6 +45,8 @@ import {
     TimeStampingRegistryFacet,
     BesuNodeManagerFacet,
     BesuNodeManagerFacetTestWrapper__factory,
+    AnchoringCoreFacet__factory,
+    AnchoringCoreFacet,
 } from '../../typechain-types'
 import {
     DEFAULT_ADMIN_ROLE,
@@ -69,6 +71,8 @@ import {
     CONFIGURATION_ID_PROXY_TESTS,
     CONFIGURATION_ID_KNOWN_DID_TEST,
     CONFIGURATION_ID_BESU_NODE_MANAGER,
+    ANCHORER_ROLE,
+    METADATA_MANAGER_ROLE,
 } from '../../utils/constants'
 import { getIsbeFactory } from '../../scripts/utils/getIsbeFactory'
 import {
@@ -96,6 +100,7 @@ let ClientFilteringFacetFactory: ClientFilteringFacet__factory
 let TimeStampingRegistryFacetFactory: TimeStampingRegistryTestWrapper__factory
 let MockTimestampFacetFactory: MockTimestampFacet__factory
 let BesuNodeManagerFacetFactory: BesuNodeManagerFacetTestWrapper__factory
+let AnchoringCoreFacetFactory: AnchoringCoreFacet__factory
 let isbeFactory: IIsbeFactory
 
 export async function deployGovernance(
@@ -147,6 +152,8 @@ export async function deployGovernance(
         { role: CLIENT_FILTERING_ROLE, members: [ownerAddress] },
         { role: TIMESTAMPING_REGISTRY_ROLE, members: [ownerAddress] },
         { role: BESU_NODE_MANAGER_ROLE, members: [ownerAddress] },
+        { role: ANCHORER_ROLE, members: [ownerAddress] },
+        { role: METADATA_MANAGER_ROLE, members: [ownerAddress] },
     ]
 
     BusinessLogicFactoryFacetFactory = await ethers.getContractFactory(
@@ -195,6 +202,8 @@ export async function deployGovernance(
     BesuNodeManagerFacetFactory = await ethers.getContractFactory(
         'BesuNodeManagerFacetTestWrapper'
     )
+    AnchoringCoreFacetFactory =
+        await ethers.getContractFactory('AnchoringCoreFacet')
     MockTimestampFacetFactory =
         await ethers.getContractFactory('MockTimestampFacet')
 
@@ -258,6 +267,8 @@ export async function deployGovernance(
         await TimeStampingRegistryFacetFactory.deploy()
     const besuNodeManagerFacet: BesuNodeManagerFacet =
         await BesuNodeManagerFacetFactory.deploy()
+    const anchoringCoreFacet: AnchoringCoreFacet =
+        await AnchoringCoreFacetFactory.deploy()
     const mockTimestampFacet: MockTimestampFacet =
         await MockTimestampFacetFactory.deploy()
 
@@ -270,6 +281,7 @@ export async function deployGovernance(
     await clientFilteringFacet.waitForDeployment()
     await timeStampingRegistryFacet.waitForDeployment()
     await besuNodeManagerFacet.waitForDeployment()
+    await anchoringCoreFacet.waitForDeployment()
 
     const governanceFacets = [
         await businessLogicFactoryFacet.getAddress(),
@@ -290,6 +302,7 @@ export async function deployGovernance(
         await clientFilteringFacet.getAddress(),
         await timeStampingRegistryFacet.getAddress(),
         await besuNodeManagerFacet.getAddress(),
+        await anchoringCoreFacet.getAddress(),
         await mockTimestampFacet.getAddress(),
     ]
 
@@ -434,6 +447,12 @@ export async function deployGovernance(
         besuNodeManager: BesuNodeManagerFacetFactory.attach(
             governanceAddress
         ) as BesuNodeManagerFacet,
+
+        // Anchoring Core
+        anchoringCoreFacet,
+        anchoringCore: AnchoringCoreFacetFactory.attach(
+            governanceAddress
+        ) as AnchoringCoreFacet,
 
         // Use case deployment (spread all properties)
         ...(useCaseDeployment || {}),

@@ -121,4 +121,7 @@ bytes32 constant _BOOTNODE_MANAGER_STORAGE_POSITION = 0x1c4ee151048963a5447e26f7
 // keccak256('com.isbe.besu.node.manager.executionnode.storage')
 bytes32 constant _EXECUTION_NODE_MANAGER_STORAGE_POSITION = 0x4a29f4fc2ef7acd6d55f40906cc864109900b56cf3108f89b0f6a07015cee858;
 
+// keccak256('isbe.contracts.anchoring.storage');
+bytes32 constant _ANCHORING_STORAGE_POSITION = 0x5910b7bacf413fc0f7947b11aa2cd75d48d701f58d393ed250a9e4e0f39b5187;
+
 // solhint-enable max-line-length

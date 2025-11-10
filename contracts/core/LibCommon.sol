@@ -6,6 +6,7 @@ import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet
 library LibCommon {
     using EnumerableSet for EnumerableSet.Bytes32Set;
     using EnumerableSet for EnumerableSet.AddressSet;
+    using EnumerableSet for EnumerableSet.UintSet;
 
     function getFromSet(
         EnumerableSet.Bytes32Set storage _set,
@@ -34,6 +35,28 @@ library LibCommon {
 
         for (uint256 i = 0; i < items_.length; i++) {
             items_[i] = _set.at(start + i);
+        }
+    }
+
+    function getFromSet(
+        EnumerableSet.UintSet storage _set,
+        uint256 _pageIndex,
+        uint256 _pageLength
+    ) internal view returns (uint256[] memory items_) {
+        (uint256 current, uint256 end) = getStartAndEnd(
+            _pageIndex,
+            _pageLength
+        );
+        uint256 size = getSize(current, end, _set.length());
+
+        items_ = new uint256[](size);
+
+        for (uint256 i; i < size; ) {
+            items_[i] = _set.at(current);
+            unchecked {
+                ++i;
+                ++current;
+            }
         }
     }
 

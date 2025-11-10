@@ -59,6 +59,12 @@ export const CLIENT_FILTERING_ROLE =
 export const BESU_NODE_MANAGER_ROLE =
     '0xb041d3ca73c73e8e0c7f8c77caf5bd3268e3aaca676b32484b3da5b75deb85fe'
 
+export const ANCHORER_ROLE =
+    '0x8f0b8c4e3e1e3e8a5c8c9c8f8e7c8c1a3e3e3f8c8e8c8f8e7c8c1a3e3e3f8c8e'
+
+export const METADATA_MANAGER_ROLE =
+    '0x9a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b'
+
 export const DEFAULT_ADMIN_ROLE =
     '0x0000000000000000000000000000000000000000000000000000000000000000'
 
@@ -133,8 +139,6 @@ export const DID_REGISTRY_QUERY_RESOLVER_KEY =
     '0x5fb7bbf7185d00a34fa9c782b90e076f7b5d9e337febead788d0b980b59aa53b'
 export const CLIENT_FILTERING_RESOLVER_KEY =
     '0x9d459b48dcede9ec86807b1af972b62ab0b2b0237e2187da45c02c25f3aeb016'
-export const TIMESTAMPING_AUTHORITY_RESOLVER_KEY =
-    '0xda6508bcd15e890a1a277261247e52547340cc6ca267c3fde8a1408f32af2a9f'
 export const TIMESTAMPING_REGISTRY_RESOLVER_KEY =
     '0xc96c356b7532d6eba398b97f362b68829d7392627c879e8ba5909c4810ca7ad5'
 // keccak256('isbe.contracts.known.did.test.wrapper.resolver.key')
@@ -157,6 +161,10 @@ export const ENS_PUBKEY_RESOLVER_RESOLVER_KEY =
     '0x1c46b1cdbebdf5f3d15aae4a89c2a8fca0d9eff35f1f040b17caebc1726f8260'
 export const ENS_PUBLIC_RESOLVER_RESOLVER_KEY =
     '0x01286e867987641a8805e8007327a88f6ebe0d80426ec755c0f86f57d5913c61'
+
+// Anchoring Resolver Keys
+export const ANCHORING_CORE_RESOLVER_KEY =
+    '0x3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d'
 
 // ERC721 Resolver Keys
 export const ERC721_RESOLVER_KEY =
@@ -210,3 +218,19 @@ export const ASSERTION_RELATIONSHIP = 'assertionMethod'
 export const KEY_AGREEMENT_RELATIONSHIP = 'keyAgreement'
 export const CAPABILITY_INVOCATION_RELATIONSHIP = 'capabilityInvocation'
 export const CAPABILITY_DELEGATION_RELATIONSHIP = 'capabilityDelegation'
+
+// Anchoring uses EIP-155 Chain IDs for cross-chain block certification
+
+// ISBE networks
+export const BARE_CHAIN = 10962
+export const DEV_CHAIN = 11073
+export const ARSYS_CHAIN = 2024
+export const KEPLER_CHAIN = 1003
+
+// External chains
+export const POLYGON_CHAIN = 137
+export const ETHEREUM_MAINNET = 1
+export const OPTIMISM_CHAIN = 10
+
+// Hardhat local network
+export const HARDHAT_CHAIN = 31337

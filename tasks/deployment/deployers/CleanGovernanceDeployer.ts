@@ -15,6 +15,8 @@ import {
     ISBE_ROLE,
     PROXY_DEPLOYER_ROLE,
     TIMESTAMPING_REGISTRY_ROLE,
+    ANCHORER_ROLE,
+    METADATA_MANAGER_ROLE,
 } from '../../../utils/constants'
 
 /**
@@ -102,6 +104,7 @@ export class CleanGovernanceDeployer {
             'TimeStampingRegistryFacet',
             'ClientFilteringFacet',
             'BesuNodeManagerFacet',
+            'AnchoringCoreFacet',
         ]
 
         const facetAddresses: string[] = []
@@ -189,6 +192,14 @@ export class CleanGovernanceDeployer {
                 },
                 {
                     role: GOVERNANCE_MANAGER_ROLE,
+                    members: [accountAddress],
+                },
+                {
+                    role: ANCHORER_ROLE,
+                    members: [accountAddress],
+                },
+                {
+                    role: METADATA_MANAGER_ROLE,
                     members: [accountAddress],
                 },
                 {
