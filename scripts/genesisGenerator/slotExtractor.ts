@@ -301,7 +301,7 @@ export async function collectStorageSlotsByContract(
         console.log(
             'TX IS A CONTRACT CREATION: ' +
                 receipt.contractAddress +
-                ' gas used ' +
+                ' - gas used ' +
                 receipt.gasUsed?.toString()
         )
         rootOwnerRaw = receipt.contractAddress // Contract creation
@@ -309,7 +309,7 @@ export async function collectStorageSlotsByContract(
         console.log(
             'TX IS A CALL TO: ' +
                 tx.to +
-                ' gas used ' +
+                ' - gas used ' +
                 receipt.gasUsed?.toString()
         )
         rootOwnerRaw = tx.to
