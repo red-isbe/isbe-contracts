@@ -95,7 +95,11 @@ if [ "$SKIP_GEN" = false ]; then
   if [ "$GENERATE_REGISTER" = true ]; then
     EXEC_CHAIN="$EXEC_CHAIN --generateregister"
   fi
+  start=$(date +%s) 
   NODE_OPTIONS="--max-old-space-size=24576" $EXEC_CHAIN
+  end=$(date +%s)
+  elapsed=$(( end - start ))
+  echo "✅ Generated: $OUTPUT_FILE in ${elapsed} seconds"
 else
   echo "⏩ Skipping genesis generation (--skip-gen)"
 fi

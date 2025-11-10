@@ -339,7 +339,7 @@ export async function collectStorageSlotsByContract(
         {
             disableStack: false, // Opcode parameters and return values
             disableMemory: false, // For CREATE2 initcode reconstruction
-            disableStorage: false, // We don't need per-step storage diffs as THEY HAVE NO INFORMATION REGARDING CONTRACT OWNERSHIP. Used for audiring purposes only
+            disableStorage: true, // We don't need per-step storage diffs as THEY HAVE NO INFORMATION REGARDING CONTRACT OWNERSHIP. Used for audiring purposes only
         },
     ])
     process.stdout.write(
@@ -410,7 +410,7 @@ export async function collectStorageSlotsByContract(
                 `Step ${count} has invalid depth ${depth}. ${JSON.stringify(step)}`
             )
         }
-        const storage = step.storage
+        //const storage = step.storage
 
         if (depth > previousDepth) {
             //entered in a deeper depth (it happens when a call, delegatecall, staticcall, create or create2 is done)
@@ -663,18 +663,18 @@ export async function collectStorageSlotsByContract(
             }
             storageOwner.add(slot)
             sstoreCount++
-            if (!Object.prototype.hasOwnProperty.call(storage ?? {}, slot)) {
-                // Internal error, should never happen as storage tracing is enabled
-                errorInfo(
-                    st,
-                    previousDepth,
-                    depth,
-                    op,
-                    frames,
-                    resultStorage,
-                    `ERROR: SSTORE SLOT [${slot}] MUST BE IN STORAGE {${JSON.stringify(storage)}} (tracer must enable storage))`
-                )
-            }
+            // if (!Object.prototype.hasOwnProperty.call(storage ?? {}, slot)) {
+            //     // Internal error, should never happen as storage tracing is enabled
+            //     errorInfo(
+            //         st,
+            //         previousDepth,
+            //         depth,
+            //         op,
+            //         frames,
+            //         resultStorage,
+            //         `ERROR: SSTORE SLOT [${slot}] MUST BE IN STORAGE {${JSON.stringify(storage)}} (tracer must enable storage))`
+            //     )
+            // }
         }
 
         previousDepth = depth
