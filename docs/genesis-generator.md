@@ -11,6 +11,13 @@ It includes two guides:
 
 ## USER MANUAL
 
+If it is the first time you use this repo, you need to install all packages and compile all contracts
+
+```bash
+npm i
+npm run compile
+```
+
 The purpose of this section is to provide a guide for exploiting the functionalities related to the generation of the ISBE genesis. The entry point to this tool's functionalities is the makeGenesis.sh script. This script performs all the necessary steps to generate, test, and debug the genesis block generation process. The following diagram provides an overview of this process:
 
 ![makeGenesis.sh](./diagrams/genesis-makeGenesis.png)
