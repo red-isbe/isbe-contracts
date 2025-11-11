@@ -245,3 +245,20 @@ export const ERC203643_CAPPED_RESOLVER_KEY =
     '0x1f3e5d6c7b8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f60718293a4b5c6d7e8'
 export const ERC203643_CONTROLLER_RESOLVER_KEY =
     '0x9b1f4e8c6d7a5b4c3e2f1a0b9c8d7e6f5a4b3c2d1e0f9e8d7c6b5a4b3c2d1e0f'
+// Anchoring Resolver Keys
+export const ANCHORING_CORE_RESOLVER_KEY =
+    '0x3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d'
+// Anchoring uses EIP-155 Chain IDs for cross-chain block certification
+// ISBE networks
+export const BARE_CHAIN = 10962
+export const DEV_CHAIN = 11073
+export const ARSYS_CHAIN = 2024
+export const KEPLER_CHAIN = 1003
+
+// External chains
+export const POLYGON_CHAIN = 137
+export const ETHEREUM_MAINNET = 1
+export const OPTIMISM_CHAIN = 10
+
+// Hardhat local network
+export const HARDHAT_CHAIN = 31337
