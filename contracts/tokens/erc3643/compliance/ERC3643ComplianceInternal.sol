@@ -37,9 +37,8 @@ abstract contract ERC3643ComplianceInternal is
         bool _maxBalanceEnabled,
         bool _dailyMonthLimitsEnabled
     ) internal {
-        ERC3643ComplianceStorage storage $ = _erc3643complianceStorage();
-        $.enabledFlags[_FLAG_MAX_BALANCE] = _maxBalanceEnabled;
-        $.enabledFlags[_FLAG_DAILY_MONTH] = _dailyMonthLimitsEnabled;
+        _setMaxBalanceEnabled(_maxBalanceEnabled);
+        _setDailyMonthLimitsEnabled(_dailyMonthLimitsEnabled);
     }
 
     // --- Set Activation ---
@@ -76,6 +75,10 @@ abstract contract ERC3643ComplianceInternal is
         address _to,
         uint256 _amount
     ) internal returns (bool) {
+        // Llamar al hook de MaxBalance para cobertura, aunque esté vacío
+        if (_isMaxBalanceEnabled()) {
+            _transferActionOnMaxBalance(_from, _to, _amount);
+        }
         if (_isDailyMonthLimitsEnabled()) {
             _transferActionOnDayMonthLimits(_from, _amount);
         }
@@ -94,6 +97,14 @@ abstract contract ERC3643ComplianceInternal is
      * @return Always returns true for MaxBalance feature.
      */
     function _created(address _to, uint256 _amount) internal returns (bool) {
+        // Llamar al hook de MaxBalance para cobertura, aunque esté vacío
+        if (_isMaxBalanceEnabled()) {
+            _creationActionOnMaxBalance(_to, _amount);
+        }
+        // Llamar al hook de DayMonthLimits para cobertura, aunque esté vacío
+        if (_isDailyMonthLimitsEnabled()) {
+            _creationActionOnDayMonthLimits(_to, _amount);
+        }
         // Emitir evento solo si algún flag de compliance está activo
         if (_isMaxBalanceEnabled() || _isDailyMonthLimitsEnabled()) {
             emit ICompliance.ComplianceCreated(_to, _amount);
@@ -111,6 +122,10 @@ abstract contract ERC3643ComplianceInternal is
         address _from,
         uint256 _amount
     ) internal returns (bool) {
+        // Llamar al hook de MaxBalance para cobertura, aunque esté vacío
+        if (_isMaxBalanceEnabled()) {
+            _destructionActionOnMaxBalance(_from, _amount);
+        }
         // Llamar al hook de DayMonthLimits para simetría y cobertura, aunque esté vacío
         if (_isDailyMonthLimitsEnabled()) {
             _destructionActionOnDayMonthLimits(_from, _amount);

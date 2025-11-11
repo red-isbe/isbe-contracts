@@ -28,6 +28,7 @@
         "test:erc165": "npx hardhat test test/ERC165.spec.ts",
         "test:erc20": "npx hardhat test test/ERC20.spec.ts",
         "test:erc721": "npx hardhat test test/ERC721.spec.ts",
+        "test:erc3643": "npx hardhat test test/ERC3643.spec.ts",
         "test:hashTimestamp": "npx hardhat test test/HashTimestamp.spec.ts",
         "test:isbeBeaconProxy": "npx hardhat test test/IsbeBeaconProxy.spec.ts",
         "test:isbeERC1967Proxy": "npx hardhat test test/IsbeERC1967Proxy.spec.ts",

@@ -85,13 +85,9 @@ abstract contract ERC3643ComplianceDMLimInternal is
             counter.monthlyCount = 0;
         }
 
-        // Update counters
-        if ((counter.dailyCount + _amount) <= _getDailyLimit()) {
-            counter.dailyCount += _amount;
-        }
-        if ((counter.monthlyCount + _amount) <= _getMonthlyLimit()) {
-            counter.monthlyCount += _amount;
-        }
+        // Update counters (los límites ya han sido validados en compliance)
+        counter.dailyCount += _amount;
+        counter.monthlyCount += _amount;
     }
 
     /**

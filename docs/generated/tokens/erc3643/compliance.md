@@ -192,12 +192,11 @@ It is intended to be used by external contracts that handle authorization and ev
 
 ### ERC3643ComplianceStorage
 
-_Storage structure for ERC-3643 MaxBalance feature activation._
+_Storage structure for ERC-3643 compliance feature activation (extensible via mapping)._
 
 ```solidity
 struct ERC3643ComplianceStorage {
-    bool maxBalanceEnabled;
-    bool dailyMonthLimitsEnabled;
+    mapping(bytes32 => bool) enabledFlags;
 }
 ```
 

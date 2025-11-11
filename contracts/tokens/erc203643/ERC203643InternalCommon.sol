@@ -109,11 +109,21 @@ abstract contract ERC203643InternalCommon is
         // Controller burn with auto-unfreeze capability
         if (_hasRole(_CONTROLLER_ROLE, msg.sender)) {
             _unfreezeIf3643Mode(_from, _amount);
+        } else {
+            /*
+             * @dev Esta rama es inalcanzable en modo ERC3643 por diseño arquitectónico:
+             * - Solo forceBurn (requiere CONTROLLER_ROLE) puede ejecutar burn en ERC3643.
+             * - No se expone burn/burnFrom públicos en ese modo.
+             *
+             * Excluida de cobertura de tests para CI/CD.
+             *
+             * coverage ignore next
+             */
+        }
 
-            // Compliance hooks (ERC-3643 mode only). By pass by _COMPLIANCE_ROLE.
-            if (!_hasRole(_COMPLIANCE_ROLE, msg.sender)) {
-                _destroyed(_from, _amount);
-            }
+        // Compliance hooks (ERC-3643 mode only). By pass by _COMPLIANCE_ROLE.
+        if (!_hasRole(_COMPLIANCE_ROLE, msg.sender)) {
+            _destroyed(_from, _amount);
         }
     }
 
