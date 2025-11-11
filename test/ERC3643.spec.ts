@@ -7800,4 +7800,185 @@ describe('ERC3643 Token', function () {
             })
         })
     })
+
+    // ====================================================================
+    // COVERAGE-ONLY TESTS (ARTIFICIAL)
+    // ====================================================================
+    /**
+     * ⚠️ WARNING: ARTIFICIAL TESTS FOR COVERAGE ONLY ⚠️
+     * 
+     * This section contains tests that exist SOLELY to achieve 100% branch coverage
+     * by executing intentionally empty hook functions. These tests do NOT validate
+     * functional behavior or business logic.
+     * 
+     * DO NOT use this section as a reference for functional testing patterns.
+     * 
+     * Separated from functional tests to maintain architectural purity.
+     * 
+     * COVERAGE NOTE: Empty Hooks in Compliance System
+     * 
+     * These tests exist SOLELY to achieve 100% branch coverage by calling
+     * intentionally empty hook functions in the compliance system:
+     * 
+     * - _creationActionOnMaxBalance() (empty by design)
+     * - _destructionActionOnMaxBalance() (empty by design)
+     * - _creationActionOnDayMonthLimits() (empty by design)
+     * - _destructionActionOnDayMonthLimits() (empty by design)
+     * 
+     * WHY THESE HOOKS ARE EMPTY:
+     * - MaxBalance: Only needs PRE-checks (compliance validation), no POST-actions
+     * - DayMonthLimits: Only tracks TRANSFERS, not mint/burn operations
+     * 
+     * These tests do NOT validate functional behavior (hooks do nothing).
+     * They only ensure Istanbul coverage tool registers these branches as executed.
+     * 
+     * Target Lines: ERC3643ComplianceInternal.sol lines 127, 131, 135
+     */
+    describe('ERC3643 Empty Hooks Coverage', () => {
+        let complianceFacet: ERC3643ComplianceFacet
+        let maxBalanceFacet: ERC3643ComplianceMaxBalanceFacet
+        let complianceDMLimFacet: ERC3643ComplianceDMLimFacet
+        let erc3643Capped: IERC203643Capped
+        let erc3643Controller: IERC203643Controller
+
+        beforeEach(async () => {
+            const fixture = async () => {
+                // Grant necessary roles
+                await accessControl
+                    .connect(owner)
+                    .grantRole(MINTER_ROLE, ownerAddress)
+                await accessControl
+                    .connect(owner)
+                    .grantRole(CONTROLLER_ROLE, ownerAddress)
+
+                // Initialize ERC20
+                await erc20Facet
+                    .connect(owner)
+                    .initializeErc20(tokenName, tokenSymbol, tokenDecimals)
+
+                // Get facet interfaces
+                complianceFacet = (await ethers.getContractAt(
+                    'ERC3643ComplianceFacet',
+                    proxyAddress
+                )) as ERC3643ComplianceFacet
+
+                maxBalanceFacet = (await ethers.getContractAt(
+                    'ERC3643ComplianceMaxBalanceFacet',
+                    proxyAddress
+                )) as ERC3643ComplianceMaxBalanceFacet
+
+                complianceDMLimFacet = (await ethers.getContractAt(
+                    'ERC3643ComplianceDMLimFacet',
+                    proxyAddress
+                )) as ERC3643ComplianceDMLimFacet
+
+                erc3643Capped = (await ethers.getContractAt(
+                    'IERC203643Capped',
+                    proxyAddress
+                )) as IERC203643Capped
+
+                erc3643Controller = (await ethers.getContractAt(
+                    'IERC203643Controller',
+                    proxyAddress
+                )) as IERC203643Controller
+
+                // Initialize cap
+                await erc3643Capped.connect(owner).initializeCap(100000n)
+
+                // Initialize compliance with BOTH features enabled
+                await complianceFacet
+                    .connect(owner)
+                    .initializeERC3643Compliance(true, true)
+
+                // Initialize MaxBalance feature
+                await maxBalanceFacet
+                    .connect(owner)
+                    .initializeERC3643ComplianceMaxBalance(10000n)
+
+                // Initialize DayMonthLimits feature
+                await complianceDMLimFacet
+                    .connect(owner)
+                    .initializeERC3643ComplianceDMLim(1000n, 5000n)
+            }
+            await loadFixture(fixture)
+        })
+
+        // ----------------------------------------------------------------
+        // MaxBalance Empty Hooks
+        // ----------------------------------------------------------------
+        describe('MaxBalance Empty Hooks', () => {
+            it('[COVERAGE] GIVEN MaxBalance enabled WHEN mint THEN calls empty _creationActionOnMaxBalance', async () => {
+                // Mint tokens (this will call _created -> _creationActionOnMaxBalance)
+                await erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
+
+                // Verify mint succeeded (hook is empty, so no side effects to check)
+                expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(1000n)
+            })
+
+            it('[COVERAGE] GIVEN MaxBalance enabled WHEN forceBurn THEN calls empty _destructionActionOnMaxBalance', async () => {
+                // Mint tokens first
+                await erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
+
+                // Burn tokens (this will call _destroyed -> _destructionActionOnMaxBalance)
+                await erc3643Controller
+                    .connect(owner)
+                    .forceBurn(aliceAddress, 500n)
+
+                // Verify burn succeeded (hook is empty, so no side effects to check)
+                expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(500n)
+            })
+        })
+
+        // ----------------------------------------------------------------
+        // DayMonthLimits Empty Hooks
+        // ----------------------------------------------------------------
+        describe('DayMonthLimits Empty Hooks', () => {
+            it('[COVERAGE] GIVEN DayMonthLimits enabled WHEN mint THEN calls empty _creationActionOnDayMonthLimits', async () => {
+                // Mint tokens (this will call _created -> _creationActionOnDayMonthLimits)
+                await erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
+
+                // Verify mint succeeded (hook is empty, so no side effects to check)
+                expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(1000n)
+            })
+
+            it('[COVERAGE] GIVEN DayMonthLimits enabled WHEN forceBurn THEN calls empty _destructionActionOnDayMonthLimits', async () => {
+                // Mint tokens first
+                await erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
+
+                // Burn tokens (this will call _destroyed -> _destructionActionOnDayMonthLimits)
+                await erc3643Controller
+                    .connect(owner)
+                    .forceBurn(aliceAddress, 500n)
+
+                // Verify burn succeeded (hook is empty, so no side effects to check)
+                expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(500n)
+            })
+        })
+
+        // ----------------------------------------------------------------
+        // Combined Features Empty Hooks
+        // ----------------------------------------------------------------
+        describe('Combined Features Empty Hooks', () => {
+            it('[COVERAGE] GIVEN both features enabled WHEN mint THEN calls both empty creation hooks', async () => {
+                // Mint tokens (calls both _creationActionOnMaxBalance AND _creationActionOnDayMonthLimits)
+                await erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
+
+                // Verify mint succeeded
+                expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(1000n)
+            })
+
+            it('[COVERAGE] GIVEN both features enabled WHEN forceBurn THEN calls both empty destruction hooks', async () => {
+                // Mint tokens first
+                await erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
+
+                // Burn tokens (calls both _destructionActionOnMaxBalance AND _destructionActionOnDayMonthLimits)
+                await erc3643Controller
+                    .connect(owner)
+                    .forceBurn(aliceAddress, 500n)
+
+                // Verify burn succeeded
+                expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(500n)
+            })
+        })
+    })
 })
