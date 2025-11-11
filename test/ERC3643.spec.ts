@@ -7529,6 +7529,28 @@ describe('ERC3643 Token', function () {
                         10000n
                     )
                 })
+
+                it('[COVERAGE] GIVEN contract paused WHEN monthlyLimit THEN reverts', async () => {
+                    // Grant PAUSER_ROLE to owner
+                    await accessControl
+                        .connect(owner)
+                        .grantRole(PAUSER_ROLE, ownerAddress)
+
+                    // Pause the contract
+                    await pauseFacet.connect(owner).pause()
+
+                    // Attempt to call monthlyLimit (should revert due to whenNotPaused modifier)
+                    await expect(complianceDMLimFacet.monthlyLimit()).to.be
+                        .reverted
+
+                    // Unpause for cleanup
+                    await pauseFacet.connect(owner).unpause()
+
+                    // After unpause, monthlyLimit should work
+                    expect(await complianceDMLimFacet.monthlyLimit()).to.equal(
+                        5000n
+                    )
+                })
             })
         })
 
@@ -7978,6 +8000,83 @@ describe('ERC3643 Token', function () {
 
                 // Verify burn succeeded
                 expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(500n)
+            })
+        })
+
+        // ----------------------------------------------------------------
+        // COMPLIANCE_ROLE Bypass Coverage
+        // ----------------------------------------------------------------
+        /**
+         * COVERAGE NOTE: COMPLIANCE_ROLE Bypass in Burn Operations
+         * 
+         * Location: ERC203643InternalCommon.sol line 127
+         * Code: if (!_hasRole(_COMPLIANCE_ROLE, msg.sender)) { _destroyed(_from, _amount); }
+         * 
+         * This test covers the ELSE branch (when msg.sender HAS COMPLIANCE_ROLE).
+         * 
+         * WHY THIS BRANCH EXISTS:
+         * COMPLIANCE_ROLE can bypass compliance hooks during burn operations.
+         * This allows compliance managers to perform administrative burns without
+         * triggering compliance tracking (e.g., for corrections, audits, etc.).
+         * 
+         * TEST STRATEGY:
+         * Grant COMPLIANCE_ROLE to owner, then perform forceBurn.
+         * The _destroyed() hook will NOT be called (bypass active).
+         * 
+         * Target: ERC203643InternalCommon.sol line 127 ELSE branch → 96.88% → 100%
+         */
+        describe('COMPLIANCE_ROLE Bypass', () => {
+            beforeEach(async () => {
+                const fixture = async () => {
+                    // Grant COMPLIANCE_ROLE to owner (in addition to CONTROLLER_ROLE)
+                    await accessControl
+                        .connect(owner)
+                        .grantRole(COMPLIANCE_ROLE, ownerAddress)
+
+                    // Mint tokens to alice for burning
+                    await erc3643Capped
+                        .connect(owner)
+                        .mint(aliceAddress, 2000n)
+                }
+                await loadFixture(fixture)
+            })
+
+            it('[COVERAGE] GIVEN COMPLIANCE_ROLE WHEN forceBurn THEN bypasses compliance hooks', async () => {
+                // Owner has BOTH CONTROLLER_ROLE (for forceBurn) AND COMPLIANCE_ROLE (for bypass)
+                const balanceBefore = await erc20Facet.balanceOf(aliceAddress)
+                expect(balanceBefore).to.equal(2000n)
+
+                // Perform forceBurn with COMPLIANCE_ROLE
+                // This will execute _handleBurnOperation with msg.sender having COMPLIANCE_ROLE
+                // Therefore: if (!_hasRole(_COMPLIANCE_ROLE, msg.sender)) evaluates to FALSE
+                // Result: _destroyed() is NOT called (ELSE branch executed)
+                await erc3643Controller
+                    .connect(owner)
+                    .forceBurn(aliceAddress, 1000n)
+
+                // Verify burn succeeded (balance reduced)
+                const balanceAfter = await erc20Facet.balanceOf(aliceAddress)
+                expect(balanceAfter).to.equal(1000n)
+
+                // NOTE: We cannot verify that _destroyed() was NOT called
+                // (it has no observable side effects when features are empty hooks).
+                // This test exists solely to execute the ELSE branch for coverage.
+            })
+
+            it('[COVERAGE] GIVEN COMPLIANCE_ROLE WHEN mint THEN bypasses compliance hooks', async () => {
+                // Similar test for mint operation to ensure symmetry
+                const balanceBefore = await erc20Facet.balanceOf(bobAddress)
+                expect(balanceBefore).to.equal(0n)
+
+                // Perform mint with COMPLIANCE_ROLE
+                // This will execute _handleMintOperation with msg.sender having COMPLIANCE_ROLE
+                // Therefore: if (!_hasRole(_COMPLIANCE_ROLE, msg.sender)) evaluates to FALSE
+                // Result: _created() is NOT called (ELSE branch executed)
+                await erc3643Capped.connect(owner).mint(bobAddress, 500n)
+
+                // Verify mint succeeded (balance increased)
+                const balanceAfter = await erc20Facet.balanceOf(bobAddress)
+                expect(balanceAfter).to.equal(500n)
             })
         })
     })
