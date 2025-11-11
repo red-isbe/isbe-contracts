@@ -5,6 +5,10 @@ import {ERC3643ComplianceMaxBalInternal} from './erc3643compliancemaxbalance/ERC
 import {ERC3643ComplianceDMLimInternal} from './erc3643compliancedaymonthlimits/ERC3643ComplianceDMLimInternal.sol';
 import {_ERC3643_COMPLIANCE_STORAGE_POSITION} from '../../../constants/storagePositions.sol';
 import {ICompliance} from './ICompliance.sol'; // Importa la interfaz con los eventos
+import {
+    _FLAG_MAX_BALANCE,
+    _FLAG_DAILY_MONTH
+} from '../../../constants/values.sol';
 
 /**
  * @title ERC3643ComplianceInternal
@@ -17,10 +21,9 @@ abstract contract ERC3643ComplianceInternal is
     ERC3643ComplianceMaxBalInternal,
     ERC3643ComplianceDMLimInternal
 {
-    /// @dev Storage structure for ERC-3643 MaxBalance feature activation.
+    /// @dev Storage structure for ERC-3643 compliance feature activation (extensible via mapping).
     struct ERC3643ComplianceStorage {
-        bool maxBalanceEnabled;
-        bool dailyMonthLimitsEnabled;
+        mapping(bytes32 => bool) enabledFlags;
     }
 
     // --- Initialization ---
@@ -35,8 +38,8 @@ abstract contract ERC3643ComplianceInternal is
         bool _dailyMonthLimitsEnabled
     ) internal {
         ERC3643ComplianceStorage storage $ = _erc3643complianceStorage();
-        $.maxBalanceEnabled = _maxBalanceEnabled;
-        $.dailyMonthLimitsEnabled = _dailyMonthLimitsEnabled;
+        $.enabledFlags[_FLAG_MAX_BALANCE] = _maxBalanceEnabled;
+        $.enabledFlags[_FLAG_DAILY_MONTH] = _dailyMonthLimitsEnabled;
     }
 
     // --- Set Activation ---
@@ -47,7 +50,7 @@ abstract contract ERC3643ComplianceInternal is
      */
     function _setMaxBalanceEnabled(bool _enabled) internal {
         ERC3643ComplianceStorage storage $ = _erc3643complianceStorage();
-        $.maxBalanceEnabled = _enabled;
+        $.enabledFlags[_FLAG_MAX_BALANCE] = _enabled;
     }
 
     /**
@@ -56,7 +59,7 @@ abstract contract ERC3643ComplianceInternal is
      */
     function _setDailyMonthLimitsEnabled(bool _enabled) internal {
         ERC3643ComplianceStorage storage $ = _erc3643complianceStorage();
-        $.dailyMonthLimitsEnabled = _enabled;
+        $.enabledFlags[_FLAG_DAILY_MONTH] = _enabled;
     }
 
     // --- Compliance Hooks ---
@@ -77,7 +80,10 @@ abstract contract ERC3643ComplianceInternal is
             _transferActionOnDayMonthLimits(_from, _amount);
         }
 
-        emit ICompliance.ComplianceTransfer(_from, _to, _amount);
+        // Emitir evento solo si algún flag de compliance está activo
+        if (_isMaxBalanceEnabled() || _isDailyMonthLimitsEnabled()) {
+            emit ICompliance.ComplianceTransfer(_from, _to, _amount);
+        }
         return true;
     }
 
@@ -88,7 +94,10 @@ abstract contract ERC3643ComplianceInternal is
      * @return Always returns true for MaxBalance feature.
      */
     function _created(address _to, uint256 _amount) internal returns (bool) {
-        emit ICompliance.ComplianceCreated(_to, _amount);
+        // Emitir evento solo si algún flag de compliance está activo
+        if (_isMaxBalanceEnabled() || _isDailyMonthLimitsEnabled()) {
+            emit ICompliance.ComplianceCreated(_to, _amount);
+        }
         return true;
     }
 
@@ -102,7 +111,14 @@ abstract contract ERC3643ComplianceInternal is
         address _from,
         uint256 _amount
     ) internal returns (bool) {
-        emit ICompliance.ComplianceDestroyed(_from, _amount);
+        // Llamar al hook de DayMonthLimits para simetría y cobertura, aunque esté vacío
+        if (_isDailyMonthLimitsEnabled()) {
+            _destructionActionOnDayMonthLimits(_from, _amount);
+        }
+        // Emitir evento solo si algún flag de compliance está activo
+        if (_isMaxBalanceEnabled() || _isDailyMonthLimitsEnabled()) {
+            emit ICompliance.ComplianceDestroyed(_from, _amount);
+        }
         return true;
     }
 
@@ -143,7 +159,7 @@ abstract contract ERC3643ComplianceInternal is
      */
     function _isMaxBalanceEnabled() internal view returns (bool) {
         ERC3643ComplianceStorage storage $ = _erc3643complianceStorage();
-        return $.maxBalanceEnabled;
+        return $.enabledFlags[_FLAG_MAX_BALANCE];
     }
 
     /**
@@ -152,7 +168,7 @@ abstract contract ERC3643ComplianceInternal is
      */
     function _isDailyMonthLimitsEnabled() internal view returns (bool) {
         ERC3643ComplianceStorage storage $ = _erc3643complianceStorage();
-        return $.dailyMonthLimitsEnabled;
+        return $.enabledFlags[_FLAG_DAILY_MONTH];
     }
 
     // --- Storage Accessor ---
