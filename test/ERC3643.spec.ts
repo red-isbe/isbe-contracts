@@ -7555,10 +7555,6 @@ describe('ERC3643 Token', function () {
         })
 
         // ----------------------------------------------------------------
-        // Pause Integration
-        // ----------------------------------------------------------------
-
-        // ----------------------------------------------------------------
         // complianceCheckOnDayMonthLimits
         // ----------------------------------------------------------------
         describe('complianceCheckOnDayMonthLimits', () => {
@@ -7621,6 +7617,47 @@ describe('ERC3643 Token', function () {
         // ----------------------------------------------------------------
         // Pause Integration
         // ----------------------------------------------------------------
+        describe('Pause Integration', () => {
+            beforeEach(async () => {
+                const fixture = async () => {
+                    // Initialize DayMonthLimits
+                    await complianceDMLimFacet
+                        .connect(owner)
+                        .initializeERC3643ComplianceDMLim(1000n, 5000n)
+                }
+                await loadFixture(fixture)
+            })
+
+            it('GIVEN contract paused WHEN setDailyLimit THEN reverts', async () => {
+                await pauseFacet.connect(owner).pause()
+
+                await expect(
+                    complianceDMLimFacet.connect(owner).setDailyLimit(2000n)
+                ).to.be.reverted
+            })
+
+            it('GIVEN contract paused WHEN setMonthlyLimit THEN reverts', async () => {
+                await pauseFacet.connect(owner).pause()
+
+                await expect(
+                    complianceDMLimFacet.connect(owner).setMonthlyLimit(10000n)
+                ).to.be.reverted
+            })
+
+            it('GIVEN contract not paused WHEN setDailyLimit THEN succeeds', async () => {
+                await expect(
+                    complianceDMLimFacet.connect(owner).setDailyLimit(2000n)
+                ).to.not.be.reverted
+            })
+
+            it('GIVEN contract not paused WHEN setMonthlyLimit THEN succeeds', async () => {
+                await expect(
+                    complianceDMLimFacet.connect(owner).setMonthlyLimit(10000n)
+                ).to.not.be.reverted
+            })
+        })
+
+       
 
         // ----------------------------------------------------------------
         // Complex Scenarios
@@ -7781,44 +7818,98 @@ describe('ERC3643 Token', function () {
                 await expect(
                     erc20Facet.connect(alice).transfer(bobAddress, excessAmount)
                 ).to.be.reverted
+            })
 
-                /**
-                 * COVERAGE NOTE: Missing Branch Coverage (Lines 89 & 92)
-                 * 
-                 * Location: ERC3643ComplianceDMLimInternal.sol
-                 * - Line 89: if ((counter.dailyCount + _amount) <= _getDailyLimit()) { ... } // ELSE branch NOT covered
-                 * - Line 92: if ((counter.monthlyCount + _amount) <= _getMonthlyLimit()) { ... } // ELSE branch NOT covered
-                 * 
-                 * WHY THESE BRANCHES ARE UNREACHABLE:
-                 * 
-                 * These ELSE branches are DEFENSIVE CODE that protects against inconsistent state.
-                 * They are NOT reachable in normal operation because:
-                 * 
-                 * 1. Flow: _complianceCheckOnDayMonthLimits() executes FIRST (checks if transfer is valid)
-                 *    -> If check passes, _transferActionOnDayMonthLimits() executes AFTER (updates counters)
-                 * 
-                 * 2. Both functions execute in the SAME TRANSACTION with the SAME block.timestamp
-                 * 
-                 * 3. If compliance check passes: (counter + amount <= limit) is TRUE
-                 *    -> Then in _transferActionOnDayMonthLimits, the same condition is TRUE (counters unchanged)
-                 *    -> ELSE branch NEVER executes
-                 * 
-                 * 4. The ONLY way ELSE would execute:
-                 *    - Compliance check passes with (counter + amount <= limit)
-                 *    - BETWEEN check and update, the limit is REDUCED or counter is INCREASED
-                 *    - This is IMPOSSIBLE in a single atomic transaction
-                 * 
-                 * 5. Even with time-based resets:
-                 *    - Both functions use _isDayFinished() with same block.timestamp
-                 *    - If day finished: counters reset to 0 in BOTH functions consistently
-                 *    - No race condition possible
-                 * 
-                 * CONCLUSION:
-                 * These ELSE branches are DEFENSIVE SAFETY NETS for theoretical bugs or state corruption.
-                 * They represent good coding practice but are NOT testable in realistic scenarios.
-                 * 
-                 * Coverage: 88.89% branches (defensive ELSE not covered by design)
-                 */
+            // ----------------------------------------------------------------
+            // Edge Cases - Time-based Counter Resets
+            // ----------------------------------------------------------------
+            describe('Edge Cases - Time-based Counter Resets', () => {
+
+                beforeEach(async () => {
+                    const fixture = async () => {
+                        // Note: DayMonthLimits already initialized in parent beforeEach (1000n daily, 5000n monthly)
+                        // Note: Alice already has 20000n tokens from parent beforeEach
+                        
+                        // Mint tokens to bob for transfer tests
+                        await erc3643Capped
+                            .connect(owner)
+                            .mint(bobAddress, 20000n)
+                    }
+                    await loadFixture(fixture)
+                })
+
+                it('GIVEN mint operation WHEN complianceCheckOnDayMonthLimits with address(0) sender THEN returns true', async () => {
+                    // BRANCH 1: _from == address(0) (mint scenario)
+                    // Mint operations don't count against limits
+                    const isCompliant =
+                        await complianceDMLimFacet.complianceCheckOnDayMonthLimits(
+                            ZeroAddress,
+                            5000n
+                        )
+
+                    expect(isCompliant).to.be.true
+                })
+
+                it('GIVEN accumulated dailyCount WHEN transfer exceeds daily limit THEN returns false', async () => {
+                    // BRANCH 3: Day NOT finished + dailyCount accumulation exceeds limit
+                    // Simulate alice already transferred 600 today by doing an actual transfer
+                    await erc20Facet.connect(alice).transfer(bobAddress, 600n)
+
+                    // Now check if transferring 500 more would be compliant
+                    // dailyCount = 600 + 500 = 1100 > dailyLimit (1000)
+                    const isCompliant =
+                        await complianceDMLimFacet.complianceCheckOnDayMonthLimits(
+                            aliceAddress,
+                            500n
+                        )
+
+                    expect(isCompliant).to.be.false
+                })
+
+                it('GIVEN accumulated monthlyCount WHEN transfer exceeds monthly limit THEN returns false', async () => {
+                    // BRANCH 5: Day NOT finished + monthlyCount accumulation exceeds limit
+                    // Set daily limit very high to focus on monthly
+                    await complianceDMLimFacet.connect(owner).setDailyLimit(10000n)
+
+                    // Simulate alice already transferred 4500 this month
+                    await erc20Facet.connect(alice).transfer(bobAddress, 4500n)
+
+                    // Now check if transferring 1000 more would be compliant
+                    // monthlyCount = 4500 + 1000 = 5500 > monthlyLimit (5000)
+                    const isCompliant =
+                        await complianceDMLimFacet.complianceCheckOnDayMonthLimits(
+                            aliceAddress,
+                            1000n
+                        )
+
+                    expect(isCompliant).to.be.false
+                })
+
+                it('GIVEN day finished and month active WHEN transfer exceeds monthly THEN returns false', async () => {
+                    // BRANCH 6-7: Day finished + month NOT finished + exceeds monthly
+                    // Set daily limit to allow large transfers
+                    await complianceDMLimFacet.connect(owner).setDailyLimit(10000n)
+
+                    // Transfer 4500 (below monthly limit)
+                    await erc20Facet.connect(alice).transfer(bobAddress, 4500n)
+
+                    // Advance time by 1 day + 1 second (86400 + 1 = 86401 seconds)
+                    await ethers.provider.send('evm_increaseTime', [86401])
+                    await ethers.provider.send('evm_mine', [])
+
+                    // Now day is finished, but month is NOT finished
+                    // Check if transferring 1000 would be compliant
+                    // monthlyCount = 4500 + 1000 = 5500 > monthlyLimit (5000)
+                    const isCompliant =
+                        await complianceDMLimFacet.complianceCheckOnDayMonthLimits(
+                            aliceAddress,
+                            1000n
+                        )
+
+                    expect(isCompliant).to.be.false
+                })
+
+
             })
         })
     })
@@ -7872,6 +7963,9 @@ describe('ERC3643 Token', function () {
                 await accessControl
                     .connect(owner)
                     .grantRole(CONTROLLER_ROLE, ownerAddress)
+                await accessControl
+                    .connect(owner)
+                    .grantRole(COMPLIANCE_ROLE, ownerAddress)
 
                 // Initialize ERC20
                 await erc20Facet
@@ -7999,6 +8093,55 @@ describe('ERC3643 Token', function () {
                     .forceBurn(aliceAddress, 500n)
 
                 // Verify burn succeeded
+                expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(500n)
+            })
+        })
+
+        // ----------------------------------------------------------------
+        // No Compliance Features Enabled (ELSE branch coverage)
+        // ----------------------------------------------------------------
+        describe('No Compliance Features Enabled', () => {
+            beforeEach(async () => {
+                const fixture = async () => {
+                    // Disable BOTH compliance features to execute ELSE branches
+                    await complianceFacet
+                        .connect(owner)
+                        .setMaxBalanceEnabled(false)
+                    await complianceFacet
+                        .connect(owner)
+                        .setDailyMonthLimitsEnabled(false)
+                }
+                await loadFixture(fixture)
+            })
+
+            it('[COVERAGE] GIVEN no compliance features enabled WHEN mint THEN skips event emission (ELSE branch in _created)', async () => {
+                // Mint tokens - this will execute the ELSE branch in _created() line 109
+                // because both _isMaxBalanceEnabled() and _isDailyMonthLimitsEnabled() are false
+                await erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
+
+                // Verify mint succeeded (no ComplianceCreated event emitted)
+                expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(1000n)
+            })
+
+            it('[COVERAGE] GIVEN no compliance features enabled WHEN forceBurn THEN skips event emission (ELSE branch in _destroyed)', async () => {
+                // First enable compliance temporarily to mint tokens
+                await complianceFacet
+                    .connect(owner)
+                    .setMaxBalanceEnabled(true)
+                await erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
+                
+                // Disable compliance again
+                await complianceFacet
+                    .connect(owner)
+                    .setMaxBalanceEnabled(false)
+
+                // Burn tokens - this will execute the ELSE branch in _destroyed() line 137
+                // because both _isMaxBalanceEnabled() and _isDailyMonthLimitsEnabled() are false
+                await erc3643Controller
+                    .connect(owner)
+                    .forceBurn(aliceAddress, 500n)
+
+                // Verify burn succeeded (no ComplianceDestroyed event emitted)
                 expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(500n)
             })
         })
