@@ -94,7 +94,7 @@ This EntryPoint implementation provides the necessary foundation to validate and
 
 For the initial version, we will implement a Basic Paymaster that:
 
-- Sponsors all UserOperations unconditionally.
+- Sponsors all UserOperations that belongs to a whitlisted user.
 - Ensures gas costs are correctly accounted for and deducted from the Paymaster’s deposit held in the EntryPoint.
 - Locks collateral (stake) in the EntryPoint to prevent abuse and ensure Paymaster accountability.
 
