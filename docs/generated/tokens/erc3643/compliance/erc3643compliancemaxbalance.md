@@ -186,7 +186,8 @@ function _destructionActionOnMaxBalance(address _from, uint256 _amount) internal
 ```
 
 _Internal hook for post-burn operations for MaxBalance feature.
-Intentionally left empty for feature mapping._
+Intentionally left empty for feature mapping.
+Emits CoverageHookMaxBalance event to generate detectable bytecode for solidity-coverage._
 
 #### Parameters
 

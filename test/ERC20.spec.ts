@@ -276,13 +276,15 @@ describe('ERC20', function () {
         })
 
         it('GIVEN an ERC20 WHEN initialize with empty name THEN it fails', async () => {
-            await expect(erc20.initializeErc20('', symbol, decimals))
-                .to.be.revertedWithCustomError(erc20, 'EmptyString')
+            await expect(
+                erc20.initializeErc20('', symbol, decimals)
+            ).to.be.revertedWithCustomError(erc20, 'EmptyString')
         })
 
         it('GIVEN an ERC20 WHEN initialize with empty symbol THEN it fails', async () => {
-            await expect(erc20.initializeErc20(name, '', decimals))
-                .to.be.revertedWithCustomError(erc20, 'EmptyString')
+            await expect(
+                erc20.initializeErc20(name, '', decimals)
+            ).to.be.revertedWithCustomError(erc20, 'EmptyString')
         })
     })
 
@@ -586,7 +588,10 @@ describe('ERC20', function () {
                     [contracts.ownerAddress, contracts.otherAccountAddress],
                     [100]
                 )
-            ).to.be.revertedWithCustomError(contracts.erc20, 'NotSameLengthArray')
+            ).to.be.revertedWithCustomError(
+                contracts.erc20,
+                'NotSameLengthArray'
+            )
         })
 
         it('GIVEN an initialized ERC20 WHEN batchMint exceeds cap THEN it fails', async () => {
@@ -597,15 +602,18 @@ describe('ERC20', function () {
                     [contracts.ownerAddress, contracts.otherAccountAddress],
                     [600, 600]
                 )
-            ).to.be.revertedWithCustomError(contracts.erc20Capped, 'CapExceeded')
+            ).to.be.revertedWithCustomError(
+                contracts.erc20Capped,
+                'CapExceeded'
+            )
         })
 
         it('GIVEN an ERC20 WHEN it is prepared THEN batchMint with empty arrays succeeds', async () => {
             const contracts = await loadFixture(deployPreparedTokensFixture)
             const initialSupply = await contracts.erc20.totalSupply()
 
-            await expect(contracts.erc20Capped.batchMint([], []))
-                .to.not.be.reverted
+            await expect(contracts.erc20Capped.batchMint([], [])).to.not.be
+                .reverted
 
             expect(await contracts.erc20.totalSupply()).to.equal(initialSupply)
         })
@@ -660,7 +668,11 @@ describe('ERC20', function () {
                 .to.emit(contracts.erc20, 'Transfer')
                 .withArgs(ethers.ZeroAddress, contracts.ownerAddress, 400)
                 .to.emit(contracts.erc20, 'Transfer')
-                .withArgs(ethers.ZeroAddress, contracts.otherAccountAddress, 600)
+                .withArgs(
+                    ethers.ZeroAddress,
+                    contracts.otherAccountAddress,
+                    600
+                )
 
             expect(await contracts.erc20.totalSupply()).to.equal(1000)
             expect(await contracts.erc20Capped.cap()).to.equal(1000)
@@ -670,10 +682,7 @@ describe('ERC20', function () {
             const contracts = await loadFixture(deployPreparedTokensFixture)
 
             await expect(
-                contracts.erc20Capped.batchMint(
-                    [contracts.ownerAddress],
-                    [0]
-                )
+                contracts.erc20Capped.batchMint([contracts.ownerAddress], [0])
             )
                 .to.emit(contracts.erc20, 'Transfer')
                 .withArgs(ethers.ZeroAddress, contracts.ownerAddress, 0)
@@ -1052,7 +1061,10 @@ describe('ERC20', function () {
                     [contracts.otherAccountAddress],
                     [50, 100]
                 )
-            ).to.be.revertedWithCustomError(contracts.erc20, 'NotSameLengthArray')
+            ).to.be.revertedWithCustomError(
+                contracts.erc20,
+                'NotSameLengthArray'
+            )
         })
 
         it('GIVEN an ERC20 initialized WHEN try to batch transfer without enough balance THEN it fails', async () => {
@@ -1101,8 +1113,8 @@ describe('ERC20', function () {
 
         it('GIVEN an ERC20 WHEN batch transfer with empty arrays THEN it succeeds without transfers', async () => {
             const contracts = await prepare()
-            await expect(contracts.erc20.batchTransfer([], []))
-                .to.not.be.reverted
+            await expect(contracts.erc20.batchTransfer([], [])).to.not.be
+                .reverted
 
             expect(await contracts.erc20.totalSupply()).to.be.equal(300)
             expect(

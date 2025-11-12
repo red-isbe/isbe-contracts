@@ -12,8 +12,10 @@ import {IERC3643ComplianceHookEvents} from '../IERC3643ComplianceHookEvents.sol'
  *      Balances are read directly from ERC20Internal primitives.
  *      It is intended to be used by external contracts that handle authorization and event emission.
  */
-abstract contract ERC3643ComplianceMaxBalInternal is ERC20Internal, IERC3643ComplianceHookEvents {
-
+abstract contract ERC3643ComplianceMaxBalInternal is
+    ERC20Internal,
+    IERC3643ComplianceHookEvents
+{
     /// @dev Storage structure for ERC-3643 MaxBalance restriction.
     struct ERC3643ComplianceMaxBalanceStorage {
         uint256 maxBalance;

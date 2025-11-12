@@ -26,7 +26,6 @@ import {
     ERC3643ComplianceMaxBalanceFacet,
     ERC3643ComplianceDMLimFacet,
     IERC3643ComplianceHookEvents,
-    ERC3643ComplianceBurnTestWrapperFacet,
 } from '../typechain-types'
 
 describe('ERC3643 Token', function () {
@@ -1514,9 +1513,8 @@ describe('ERC3643 Token', function () {
                             .grantRole(COMPLIANCE_ROLE, ownerAddress)
 
                         const burnAmount = 100n
-                        const initialBalance = await erc20Facet.balanceOf(
-                            aliceAddress
-                        )
+                        const initialBalance =
+                            await erc20Facet.balanceOf(aliceAddress)
 
                         // This covers line 114 ELSE: if (!_hasRole(_COMPLIANCE_ROLE, msg.sender))
                         // Since owner has COMPLIANCE_ROLE, the compliance hooks are bypassed
@@ -1545,9 +1543,8 @@ describe('ERC3643 Token', function () {
                             .grantRole(COMPLIANCE_ROLE, bobAddress)
 
                         const burnAmount = 100n
-                        const initialBalance = await erc20Facet.balanceOf(
-                            aliceAddress
-                        )
+                        const initialBalance =
+                            await erc20Facet.balanceOf(aliceAddress)
 
                         // Call testComplianceBurn with COMPLIANCE_ROLE holder
                         // This executes the TRUE branch: if (hasComplianceRole) { return; }
@@ -4234,34 +4231,29 @@ describe('ERC3643 Token', function () {
                     it('GIVEN ERC3643 mode WHEN checking allowance THEN returns correct value', async () => {
                         // Initially allowance should be 0
                         expect(
-                            await erc20Facet.allowance(
-                                aliceAddress,
-                                bobAddress
-                            )
+                            await erc20Facet.allowance(aliceAddress, bobAddress)
                         ).to.equal(0)
 
                         // After approval
-                        await erc20Facet.connect(alice).approve(bobAddress, 1000n)
+                        await erc20Facet
+                            .connect(alice)
+                            .approve(bobAddress, 1000n)
 
                         expect(
-                            await erc20Facet.allowance(
-                                aliceAddress,
-                                bobAddress
-                            )
+                            await erc20Facet.allowance(aliceAddress, bobAddress)
                         ).to.equal(1000n)
                     })
 
                     it('GIVEN ERC3643 mode WHEN checking allowance for different spenders THEN returns independent values', async () => {
-                        await erc20Facet.connect(alice).approve(bobAddress, 1000n)
+                        await erc20Facet
+                            .connect(alice)
+                            .approve(bobAddress, 1000n)
                         await erc20Facet
                             .connect(alice)
                             .approve(charlieAddress, 2000n)
 
                         expect(
-                            await erc20Facet.allowance(
-                                aliceAddress,
-                                bobAddress
-                            )
+                            await erc20Facet.allowance(aliceAddress, bobAddress)
                         ).to.equal(1000n)
                         expect(
                             await erc20Facet.allowance(
@@ -4283,16 +4275,15 @@ describe('ERC3643 Token', function () {
                             .withArgs(aliceAddress, bobAddress, 1000n)
 
                         expect(
-                            await erc20Facet.allowance(
-                                aliceAddress,
-                                bobAddress
-                            )
+                            await erc20Facet.allowance(aliceAddress, bobAddress)
                         ).to.equal(1000n)
                     })
 
                     it('GIVEN existing allowance WHEN increaseAllowance THEN adds to existing value', async () => {
                         // Set initial allowance
-                        await erc20Facet.connect(alice).approve(bobAddress, 500n)
+                        await erc20Facet
+                            .connect(alice)
+                            .approve(bobAddress, 500n)
 
                         // Increase allowance
                         await expect(
@@ -4304,19 +4295,13 @@ describe('ERC3643 Token', function () {
                             .withArgs(aliceAddress, bobAddress, 800n)
 
                         expect(
-                            await erc20Facet.allowance(
-                                aliceAddress,
-                                bobAddress
-                            )
+                            await erc20Facet.allowance(aliceAddress, bobAddress)
                         ).to.equal(800n)
                     })
 
                     it('GIVEN zero allowance WHEN increaseAllowance THEN sets new allowance', async () => {
                         expect(
-                            await erc20Facet.allowance(
-                                aliceAddress,
-                                bobAddress
-                            )
+                            await erc20Facet.allowance(aliceAddress, bobAddress)
                         ).to.equal(0)
 
                         await erc20Facet
@@ -4324,10 +4309,7 @@ describe('ERC3643 Token', function () {
                             .increaseAllowance(bobAddress, 1500n)
 
                         expect(
-                            await erc20Facet.allowance(
-                                aliceAddress,
-                                bobAddress
-                            )
+                            await erc20Facet.allowance(aliceAddress, bobAddress)
                         ).to.equal(1500n)
                     })
 
@@ -4367,10 +4349,7 @@ describe('ERC3643 Token', function () {
                             .withArgs(aliceAddress, bobAddress, 700n)
 
                         expect(
-                            await erc20Facet.allowance(
-                                aliceAddress,
-                                bobAddress
-                            )
+                            await erc20Facet.allowance(aliceAddress, bobAddress)
                         ).to.equal(700n)
                     })
 
@@ -4384,10 +4363,7 @@ describe('ERC3643 Token', function () {
                             .withArgs(aliceAddress, bobAddress, 0n)
 
                         expect(
-                            await erc20Facet.allowance(
-                                aliceAddress,
-                                bobAddress
-                            )
+                            await erc20Facet.allowance(aliceAddress, bobAddress)
                         ).to.equal(0)
                     })
 
@@ -4434,10 +4410,7 @@ describe('ERC3643 Token', function () {
                             .connect(alice)
                             .decreaseAllowance(bobAddress, 300n)
                         expect(
-                            await erc20Facet.allowance(
-                                aliceAddress,
-                                bobAddress
-                            )
+                            await erc20Facet.allowance(aliceAddress, bobAddress)
                         ).to.equal(700n)
 
                         // Second decrease
@@ -4445,10 +4418,7 @@ describe('ERC3643 Token', function () {
                             .connect(alice)
                             .decreaseAllowance(bobAddress, 400n)
                         expect(
-                            await erc20Facet.allowance(
-                                aliceAddress,
-                                bobAddress
-                            )
+                            await erc20Facet.allowance(aliceAddress, bobAddress)
                         ).to.equal(300n)
 
                         // Third decrease
@@ -4456,15 +4426,11 @@ describe('ERC3643 Token', function () {
                             .connect(alice)
                             .decreaseAllowance(bobAddress, 300n)
                         expect(
-                            await erc20Facet.allowance(
-                                aliceAddress,
-                                bobAddress
-                            )
+                            await erc20Facet.allowance(aliceAddress, bobAddress)
                         ).to.equal(0)
                     })
                 })
             })
-            
 
             // --------------------------------------------------------------------
             // Transfer Operations in ERC3643 Mode
@@ -7079,7 +7045,7 @@ describe('ERC3643 Token', function () {
             })
         })
 
-         // ----------------------------------------------------------------
+        // ----------------------------------------------------------------
         // MaxBalance Hook Event Emission
         // ----------------------------------------------------------------
         describe('MaxBalance Hook Event Emission', () => {
@@ -7807,7 +7773,7 @@ describe('ERC3643 Token', function () {
             })
         })
 
-         // ----------------------------------------------------------------
+        // ----------------------------------------------------------------
         // DayMonthLimits Hook Event Emission
         // ----------------------------------------------------------------
         describe('DayMonthLimits Hook Event Emission', () => {
@@ -8036,12 +8002,11 @@ describe('ERC3643 Token', function () {
             // Edge Cases - Time-based Counter Resets
             // ----------------------------------------------------------------
             describe('Edge Cases - Time-based Counter Resets', () => {
-
                 beforeEach(async () => {
                     const fixture = async () => {
                         // Note: DayMonthLimits already initialized in parent beforeEach (1000n daily, 5000n monthly)
                         // Note: Alice already has 20000n tokens from parent beforeEach
-                        
+
                         // Mint tokens to bob for transfer tests
                         await erc3643Capped
                             .connect(owner)
@@ -8081,7 +8046,9 @@ describe('ERC3643 Token', function () {
                 it('GIVEN accumulated monthlyCount WHEN transfer exceeds monthly limit THEN returns false', async () => {
                     // BRANCH 5: Day NOT finished + monthlyCount accumulation exceeds limit
                     // Set daily limit very high to focus on monthly
-                    await complianceDMLimFacet.connect(owner).setDailyLimit(10000n)
+                    await complianceDMLimFacet
+                        .connect(owner)
+                        .setDailyLimit(10000n)
 
                     // Simulate alice already transferred 4500 this month
                     await erc20Facet.connect(alice).transfer(bobAddress, 4500n)
@@ -8100,7 +8067,9 @@ describe('ERC3643 Token', function () {
                 it('GIVEN day finished and month active WHEN transfer exceeds monthly THEN returns false', async () => {
                     // BRANCH 6-7: Day finished + month NOT finished + exceeds monthly
                     // Set daily limit to allow large transfers
-                    await complianceDMLimFacet.connect(owner).setDailyLimit(10000n)
+                    await complianceDMLimFacet
+                        .connect(owner)
+                        .setDailyLimit(10000n)
 
                     // Transfer 4500 (below monthly limit)
                     await erc20Facet.connect(alice).transfer(bobAddress, 4500n)
@@ -8120,8 +8089,6 @@ describe('ERC3643 Token', function () {
 
                     expect(isCompliant).to.be.false
                 })
-
-
             })
         })
     })
@@ -8132,7 +8099,7 @@ describe('ERC3643 Token', function () {
     /**
      * Coverage-focused tests for hooks triggered when BOTH MaxBalance AND DayMonthLimits are enabled.
      * These tests verify that empty hook functions execute and generate coverage via event emission.
-     * 
+     *
      * Isolated from functional tests to prevent fixture contamination.
      */
     describe('Combined Compliance Hooks Coverage', () => {
@@ -8145,12 +8112,18 @@ describe('ERC3643 Token', function () {
         beforeEach(async () => {
             const fixture = async () => {
                 // Grant roles
-                await accessControl.connect(owner).grantRole(MINTER_ROLE, ownerAddress)
-                await accessControl.connect(owner).grantRole(CONTROLLER_ROLE, ownerAddress)
+                await accessControl
+                    .connect(owner)
+                    .grantRole(MINTER_ROLE, ownerAddress)
+                await accessControl
+                    .connect(owner)
+                    .grantRole(CONTROLLER_ROLE, ownerAddress)
 
                 // Revoke COMPLIANCE_ROLE from owner to ensure hooks are executed
                 // (COMPLIANCE_ROLE bypasses compliance hooks per ERC203643InternalCommon.sol line 127)
-                await accessControl.connect(owner).revokeRole(COMPLIANCE_ROLE, ownerAddress)
+                await accessControl
+                    .connect(owner)
+                    .revokeRole(COMPLIANCE_ROLE, ownerAddress)
 
                 // Get facet interfaces
                 const complianceFacet = (await ethers.getContractAt(
@@ -8185,13 +8158,19 @@ describe('ERC3643 Token', function () {
                 )) as IERC3643ComplianceHookEvents
 
                 // Initialize compliance with BOTH features enabled
-                await complianceFacet.connect(owner).initializeERC3643Compliance(true, true)
+                await complianceFacet
+                    .connect(owner)
+                    .initializeERC3643Compliance(true, true)
 
                 // Initialize MaxBalance feature
-                await maxBalanceFacet.connect(owner).initializeERC3643ComplianceMaxBalance(10000n)
+                await maxBalanceFacet
+                    .connect(owner)
+                    .initializeERC3643ComplianceMaxBalance(10000n)
 
                 // Initialize DayMonthLimits feature
-                await complianceDMLimFacet.connect(owner).initializeERC3643ComplianceDMLim(1000n, 5000n)
+                await complianceDMLimFacet
+                    .connect(owner)
+                    .initializeERC3643ComplianceDMLim(1000n, 5000n)
 
                 // Initialize cap
                 const cappedFacet = (await ethers.getContractAt(
@@ -8208,7 +8187,9 @@ describe('ERC3643 Token', function () {
             await erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
 
             // Burn tokens (calls both _destructionActionOnMaxBalance AND _destructionActionOnDayMonthLimits)
-            const tx = await erc3643Controller.connect(owner).forceBurn(aliceAddress, 500n)
+            const tx = await erc3643Controller
+                .connect(owner)
+                .forceBurn(aliceAddress, 500n)
 
             // Verify both coverage hook events were emitted
             await expect(tx)

@@ -13,8 +13,6 @@ interface IERC3643ComplianceMaxBal {
      */
     event MaxBalanceSet(uint256 _maxBalance);
 
-
-
     /**
      * @notice Error emitted when a transfer would exceed the max balance.
      * @param to The address of the receiver.

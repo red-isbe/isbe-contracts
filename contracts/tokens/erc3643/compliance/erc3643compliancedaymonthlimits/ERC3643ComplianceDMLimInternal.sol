@@ -12,9 +12,9 @@ import {IERC3643ComplianceHookEvents} from '../IERC3643ComplianceHookEvents.sol'
  *      It is intended to be used by external contracts that handle authorization and event emission.
  */
 abstract contract ERC3643ComplianceDMLimInternal is
-    DidDocumentDetailedInternal, IERC3643ComplianceHookEvents
+    DidDocumentDetailedInternal,
+    IERC3643ComplianceHookEvents
 {
-
     /// @dev Storage structure for ERC-3643 daily/monthly limits.
     struct ERC3643ComplianceDMLimStorage {
         uint256 dailyLimit;
@@ -102,7 +102,7 @@ abstract contract ERC3643ComplianceDMLimInternal is
         address _to,
         uint256 _amount
     ) internal {
-          // Emit event to ensure coverage tools can detect execution
+        // Emit event to ensure coverage tools can detect execution
         // LOG opcode is non-optimizable and always generates bytecode
         emit CoverageHookDayMonthLimits(_to, _amount);
     }

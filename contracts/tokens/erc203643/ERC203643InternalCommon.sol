@@ -79,15 +79,14 @@ abstract contract ERC203643InternalCommon is
 
         // Compliance hooks (ERC-3643 mode only). By pass by _COMPLIANCE_ROLE.
         if (_hasRole(_COMPLIANCE_ROLE, msg.sender)) {
-         return; // Coverage tracking: explicit handling to ensure instrumentation detection
+            return; // Coverage tracking: explicit handling to ensure instrumentation detection
         } else {
-                require(
+            require(
                 _canTransfer(_from, _to, _amount),
                 ICompliance.MintViolatesComplianceRules()
             );
             _created(_to, _amount);
         }
-           
     }
 
     // =======================
@@ -108,18 +107,18 @@ abstract contract ERC203643InternalCommon is
 
         uint256 balance = _balanceOf(_from);
         require(balance >= _amount, IERC20Isbe.BurnAmountExceedsBalance());
-        
+
         _unfreezeIf3643Mode(_from, _amount);
 
         // Compliance hooks (ERC-3643 mode only). By pass by _COMPLIANCE_ROLE.
         bool hasComplianceRole = _hasRole(_COMPLIANCE_ROLE, msg.sender);
-        
+
         if (hasComplianceRole) {
-           // Compliance role bypasses the _destroyed hook
-           // This is intentional for compliance contract operations
-           return;
+            // Compliance role bypasses the _destroyed hook
+            // This is intentional for compliance contract operations
+            return;
         }
-        
+
         // Normal path: call _destroyed for compliance validation
         _destroyed(_from, _amount);
     }
@@ -192,14 +191,11 @@ abstract contract ERC203643InternalCommon is
         uint256 freeBalance = _calculateFreeBalance(_from);
         if (freeBalance >= _amount) {
             return; // Coverage tracking: explicit handling to ensure instrumentation detection
-        
         } else {
-                uint256 tokensToUnfreeze = _amount - freeBalance;
+            uint256 tokensToUnfreeze = _amount - freeBalance;
             _unfreezePartialTokens(_from, tokensToUnfreeze);
             emit IERC3643Freeze.TokensUnfrozen(_from, tokensToUnfreeze);
-
         }
-    
     }
 
     // =======================

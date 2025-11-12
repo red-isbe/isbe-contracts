@@ -219,9 +219,8 @@ export async function deployERC3643UseCasesFacets(
     const ERC3643ComplianceDMLimFacetFactory = await ethers.getContractFactory(
         'ERC3643ComplianceDMLimFacet'
     )
-    const ERC3643ComplianceBurnTestWrapperFacetFactory = await ethers.getContractFactory(
-        'ERC3643ComplianceBurnTestWrapperFacet'
-    )
+    const ERC3643ComplianceBurnTestWrapperFacetFactory =
+        await ethers.getContractFactory('ERC3643ComplianceBurnTestWrapperFacet')
 
     // Helper function to deploy business logic from factory
     async function deployBusinessLogicFromFactoryLocal(
@@ -320,7 +319,10 @@ export async function deployERC3643UseCasesFacets(
         { businessId: ERC3643_COMPLIANCE_RESOLVER_KEY, version: 1 },
         { businessId: ERC3643_COMPLIANCE_MAXBALANCE_RESOLVER_KEY, version: 1 },
         { businessId: ERC3643_COMPLIANCE_DMLIM_RESOLVER_KEY, version: 1 },
-        { businessId: ERC3643_COMPLIANCE_BURN_TEST_WRAPPER_RESOLVER_KEY, version: 1 },
+        {
+            businessId: ERC3643_COMPLIANCE_BURN_TEST_WRAPPER_RESOLVER_KEY,
+            version: 1,
+        },
     ])
 
     // Deploy use case

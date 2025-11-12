@@ -11,7 +11,7 @@ import {ERC3643ComplianceBurnTestWrapper} from './ERC3643ComplianceBurnTestWrapp
 contract ERC3643ComplianceBurnTestWrapperFacet is
     ERC3643ComplianceBurnTestWrapper
 {
-     function interfacesIntrospection()
+    function interfacesIntrospection()
         external
         pure
         returns (bytes4[] memory interfaces_)
@@ -22,7 +22,6 @@ contract ERC3643ComplianceBurnTestWrapperFacet is
     function businessIdIntrospection()
         external
         pure
-        
         returns (bytes32 businessId_)
     {
         businessId_ = _ERC3643_COMPLIANCE_BURN_TEST_WRAPPER_RESOLVER_KEY;
@@ -31,12 +30,10 @@ contract ERC3643ComplianceBurnTestWrapperFacet is
     function selectorsIntrospection()
         external
         pure
-        
         returns (bytes4[] memory selectors_)
     {
         uint256 selectorsLength = 1;
         selectors_ = new bytes4[](selectorsLength);
         selectors_[--selectorsLength] = this.testComplianceBurn.selector;
-
     }
 }

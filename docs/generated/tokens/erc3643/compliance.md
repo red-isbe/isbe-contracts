@@ -541,3 +541,49 @@ Returns true if all compliance checks pass, false otherwise._
 | Name | Type | Description                                         |
 | ---- | ---- | --------------------------------------------------- |
 | [0]  | bool | True if the transfer is compliant, false otherwise. |
+
+---
+
+## IERC3643ComplianceHookEvents
+
+Interface containing compliance hook events for testing and monitoring.
+
+_This interface allows external contracts and tests to listen for hook execution events
+emitted from internal compliance contracts. These events are primarily used for
+coverage tracking and integration testing._
+
+### CoverageHookMaxBalance
+
+```solidity
+event CoverageHookMaxBalance(address account, uint256 amount)
+```
+
+Emitted when the MaxBalance destruction hook is executed.
+
+_This event is emitted for coverage purposes to ensure the destruction hook
+execution path is tracked by coverage tools (generates detectable bytecode via LOG opcode)._
+
+#### Parameters
+
+| Name    | Type    | Description                                   |
+| ------- | ------- | --------------------------------------------- |
+| account | address | The account whose tokens are being destroyed. |
+| amount  | uint256 | The amount of tokens being destroyed.         |
+
+### CoverageHookDayMonthLimits
+
+```solidity
+event CoverageHookDayMonthLimits(address account, uint256 amount)
+```
+
+Emitted when the DayMonthLimits destruction hook is executed.
+
+_This event is emitted for coverage purposes to ensure the destruction hook
+execution path is tracked by coverage tools (generates detectable bytecode via LOG opcode)._
+
+#### Parameters
+
+| Name    | Type    | Description                                   |
+| ------- | ------- | --------------------------------------------- |
+| account | address | The account whose tokens are being destroyed. |
+| amount  | uint256 | The amount of tokens being destroyed.         |

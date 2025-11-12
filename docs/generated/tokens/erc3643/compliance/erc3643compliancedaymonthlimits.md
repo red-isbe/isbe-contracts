@@ -299,7 +299,8 @@ function _destructionActionOnDayMonthLimits(address _from, uint256 _amount) inte
 ```
 
 _Internal hook for post-burn operations for DayMonthLimits feature.
-Intentionally left empty for feature mapping._
+Intentionally left empty for feature mapping.
+Emits CoverageHookDayMonthLimits event to generate detectable bytecode for solidity-coverage._
 
 #### Parameters
 
