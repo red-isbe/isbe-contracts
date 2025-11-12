@@ -23,16 +23,6 @@ export const NETWORK_DEFINITIONS: Record<Network, NetworkDefinition> = {
         curve: CurveType.SECP256K1,
         description: 'Local Hardhat network',
     },
-    [Network.LOCALHOST]: {
-        name: Network.LOCALHOST,
-        chainId: 2222,
-        url: process.env.LOCALHOST_URL || 'http://172.16.240.30:8545',
-        curve: CurveType.SECP256K1,
-        description: 'Local Besu network',
-        gasPrice: 0,
-        gas: 100000000,
-        blockGasLimit: 30000000,
-    },
     [Network.DEV]: {
         name: Network.MVP,
         chainId: 2023,

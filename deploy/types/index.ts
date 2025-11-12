@@ -11,7 +11,6 @@
 export enum Network {
     // secp256k1 networks
     HARDHAT = 'hardhat',
-    LOCALHOST = 'localhost',
     MVP = 'mvp',
     ARSYS = 'arsys',
     KEPLER = 'kepler',

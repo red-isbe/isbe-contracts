@@ -66,7 +66,7 @@ Provider para redes Ethereum estándar (MVP, Arsys, Kepler, etc.)
 
 **Redes soportadas:**
 - hardhat (31337)
-- localhost (2222)
+- dev (11073)
 - mvp (2023)
 - arsys (2024)
 - kepler (1003)

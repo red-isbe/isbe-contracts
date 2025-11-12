@@ -53,7 +53,7 @@ npx hardhat deploy:full --network dev --preset minimal --log-level verbose
 npx hardhat node
 
 # Terminal 2: Desplegar
-npx hardhat deploy:full --network localhost --preset minimal
+npx hardhat deploy:full --network hardhat --preset minimal
 ```
 
 ##  ¿Qué Hace?
@@ -107,9 +107,9 @@ ACCOUNT_PRIVATE_KEY=0x...
 ### Error de red
 
 ```bash
-# Probar primero en localhost
+# Probar primero en hardhat
 npx hardhat node  # Terminal 1
-npx hardhat deploy:full --network localhost --preset minimal  # Terminal 2
+npx hardhat deploy:full --network hardhat --preset minimal  # Terminal 2
 ```
 
 ##  Documentación
@@ -158,7 +158,7 @@ npx hardhat deploy:full --network dev --preset minimal --log-level verbose
 
 **O para testing local:**
 ```bash
-npx hardhat deploy:full --network localhost --preset minimal
+npx hardhat deploy:full --network hardhat --preset minimal
 ```
 
 ---

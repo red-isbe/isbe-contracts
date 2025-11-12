@@ -113,7 +113,7 @@ npx hardhat deploy:selective --network mvp --selective-config my-config.json
 
 | Opción | Valores | Descripción |
 |--------|---------|-------------|
-| `--network` | `hardhat`, `localhost`, `mvp`, `arsys`, `kepler`, `customR1Network`, `bare` | Red de despliegue |
+| `--network` | `hardhat`,`dev` `mvp`, `arsys`, `kepler`, `customR1Network`, `bare` | Red de despliegue |
 | `--preset` | `minimal`, `essentials`, `complete` | Preset de use cases |
 | `--log-level` | `minimal`, `normal`, `verbose`, `debug` | Nivel de logging |
 | `--precommit` | flag | Ejecutar validaciones completas |
@@ -179,7 +179,7 @@ Despliega instancias de proxies (use cases) usando las configuraciones registrad
 | Red | Chain ID | Descripción |
 |-----|----------|-------------|
 | `hardhat` | 31337 | Red local Hardhat |
-| `localhost` | 2222 | Red local Besu |
+| `dev` | 11073 | Red dev Besu |
 | `mvp` | 2023 | ISBE MVP |
 | `arsys` | 2024 | ISBE Arsys |
 | `kepler` | 1003 | IoBuilders Kepler |
@@ -213,7 +213,7 @@ npx hardhat deploy:full \
 ```bash
 # Solo governance para configurar la red
 npx hardhat deploy:governance \
-  --network localhost \
+  --network hardhat \
   --log-level verbose
 ```
 
@@ -242,7 +242,7 @@ npx hardhat deploy:full \
 ```bash
 # Generar genesis con governance pre-desplegado
 npx hardhat deploy:genesis \
-  --network localhost \
+  --network hardhat \
   --template bare \
   --output genesis-bare.json
 ```
@@ -272,7 +272,7 @@ npm run deploy:validate
 # Despliegue completo por red
 npm run deploy:full:dev        # Red dev
 npm run deploy:full:mvp        # Red mvp
-npm run deploy:full:local      # Red localhost
+npm run deploy:full:local      # Red hardhat
 
 # Governance por red
 npm run deploy:governance:dev  # Red dev

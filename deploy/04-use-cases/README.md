@@ -18,7 +18,7 @@ Configuraciones básicas para testing rápido:
 
 **Uso:**
 ```bash
-npx hardhat deploy:full --network localhost --preset minimal
+npx hardhat deploy:full --network hardhat --preset minimal
 ```
 
 ### Essentials (~30 use cases)
