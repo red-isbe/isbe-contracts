@@ -11,10 +11,12 @@ import {IERC3643} from './token/IERC3643.sol';
  *      extendiendo la funcionalidad estándar ERC-20 con capacidades regulatorias y de identidad.
  *
  * El interfaz hereda de:
- * - IERC3643: funcionalidades modulares de ERC-3643 (identidad, recuperación, congelación, pausa, operaciones por lotes, metadatos extendidos, etc.)
+ * - IERC3643: funcionalidades modulares de ERC-3643 (identidad, recuperación, congelación, 
+ * pausa, operaciones por lotes, metadatos extendidos, etc.)
  * - ICompliance: reglas y lógica de cumplimiento regulatorio.
  *
- * Este interfaz debe ser implementado por tokens de seguridad que requieran cumplimiento normativo y gestión avanzada de identidad.
+ * Este interfaz debe ser implementado por tokens de seguridad que requieran cumplimiento 
+ * normativo y gestión avanzada de identidad.
  */
 
 // solhint-disable-next-line no-empty-blocks
