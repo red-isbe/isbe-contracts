@@ -67,6 +67,18 @@
         "docgen": "npx hardhat docgen && npx ts-node scripts/post-docgen.ts",
         "genesis:generate": "npx hardhat genesis:generate",
         "deployAll": "npx hardhat deployAllClean --nodeployusecases",
+        "deploy:full": "npx hardhat deploy:full",
+        "deploy:full:dev": "npx hardhat deploy:full --network dev",
+        "deploy:full:mvp": "npx hardhat deploy:full --network mvp",
+        "deploy:full:local": "npx hardhat deploy:full --network hardhat",
+        "deploy:governance": "npx hardhat deploy:governance",
+        "deploy:governance:dev": "npx hardhat deploy:governance --network dev",
+        "deploy:governance:mvp": "npx hardhat deploy:governance --network mvp",
+        "deploy:selective": "npx hardhat deploy:selective",
+        "deploy:selective:erc20": "npx hardhat deploy:selective --categories erc20",
+        "deploy:selective:erc721": "npx hardhat deploy:selective --categories erc721",
+        "deploy:selective:utility": "npx hardhat deploy:selective --categories utility",
+        "deploy:validate": "npx hardhat deploy:validate",
         "toc:generate": "npx ts-node scripts/generate-toc.ts"
     },
     "repository": {

@@ -94,7 +94,7 @@ export class Secp256k1SignatureProvider implements ISignatureProvider {
     isCompatibleWith(hre: HardhatRuntimeEnvironment): boolean {
         const networkConfig = hre.config.networks[
             hre.network.name
-        ] as NetworkConfigWithCurve
+        ] as unknown as NetworkConfigWithCurve
 
         // Compatible with networks that don't specify a curve (defaults to secp256k1)
         // or explicitly specify secp256k1

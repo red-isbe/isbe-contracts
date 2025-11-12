@@ -135,6 +135,11 @@ async function deployWithCleanOrchestrator(
         console.log(`   • Signature curve: ${providerInfo.curve}`)
         console.log('')
 
+        // Set deployment options
+        const deploymentOptions = {
+            skipUseCases: taskArgs.noDeployUseCases === true,
+        }
+
         // Run the clean orchestrated deployment
         const deploymentResult = await orchestrator.deploy(deploymentOptions)
 

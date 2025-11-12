@@ -18,6 +18,10 @@ import { getNetworkConfigs, ConfigManager, logger } from './config'
 // Register all tasks with Hardhat CLI in a single import
 // This replaces the many individual task imports with a consolidated approach
 import './tasks/register'
+
+// Register new deploy system commands
+import './deploy/register'
+
 import { EthGasReporterConfig } from 'hardhat-gas-reporter/dist/src/types'
 
 // Initialize configuration management
