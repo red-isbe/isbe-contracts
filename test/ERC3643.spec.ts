@@ -26,6 +26,7 @@ import {
     ERC3643ComplianceMaxBalanceFacet,
     ERC3643ComplianceDMLimFacet,
     IERC3643ComplianceHookEvents,
+    ERC3643ComplianceBurnTestWrapperFacet,
 } from '../typechain-types'
 
 describe('ERC3643 Token', function () {
@@ -1293,6 +1294,44 @@ describe('ERC3643 Token', function () {
                             transferAmount
                         )
                     })
+
+                    it('GIVEN some frozen tokens WHEN forceTransfer with amount less than free balance THEN succeeds without unfreeze', async () => {
+                        // Freeze 300 tokens, leaving 700 free
+                        const frozenAmount = 300n
+                        const freeBalance = totalBalance - frozenAmount
+                        await erc3643
+                            .connect(owner)
+                            .freezePartialTokens(aliceAddress, frozenAmount)
+
+                        // Transfer amount less than free balance (no unfreeze needed)
+                        const transferAmount = 500n // Less than 700 free
+                        expect(transferAmount).to.be.lessThan(freeBalance)
+
+                        await expect(
+                            erc3643Controller
+                                .connect(owner)
+                                .forceTransfer(
+                                    aliceAddress,
+                                    bobAddress,
+                                    transferAmount
+                                )
+                        )
+                            .to.emit(erc3643Controller, 'ForceTransfer')
+                            .withArgs(
+                                ownerAddress,
+                                aliceAddress,
+                                bobAddress,
+                                transferAmount
+                            )
+                            .and.to.not.emit(erc3643, 'TokensUnfrozen') // No unfreeze needed
+
+                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                            transferAmount
+                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(totalBalance - transferAmount)
+                    })
                 })
 
                 describe('forceBurn', () => {
@@ -1441,6 +1480,32 @@ describe('ERC3643 Token', function () {
                         ).to.equal(totalBalance - burnAmount)
                     })
 
+                    it('GIVEN some frozen tokens WHEN forceBurn with amount less than free balance THEN succeeds without unfreeze', async () => {
+                        // Freeze 300 tokens, leaving 700 free
+                        const frozenAmount = 300n
+                        const freeBalance = totalBalance - frozenAmount
+                        await erc3643
+                            .connect(owner)
+                            .freezePartialTokens(aliceAddress, frozenAmount)
+
+                        // Burn amount less than free balance (no unfreeze needed)
+                        const burnAmount = 500n // Less than 700 free
+                        expect(burnAmount).to.be.lessThan(freeBalance)
+
+                        await expect(
+                            erc3643Controller
+                                .connect(owner)
+                                .forceBurn(aliceAddress, burnAmount)
+                        )
+                            .to.emit(erc3643Controller, 'ForceBurn')
+                            .withArgs(ownerAddress, aliceAddress, burnAmount)
+                            .and.to.not.emit(erc3643, 'TokensUnfrozen') // No unfreeze needed
+
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(totalBalance - burnAmount)
+                    })
+
                     it('GIVEN caller has CONTROLLER + COMPLIANCE roles WHEN forceBurn THEN bypasses compliance hooks (line 114 ELSE)', async () => {
                         // Grant COMPLIANCE_ROLE in addition to CONTROLLER_ROLE
                         const COMPLIANCE_ROLE = ethers.id('COMPLIANCE_ROLE')
@@ -1462,6 +1527,42 @@ describe('ERC3643 Token', function () {
                         )
                             .to.emit(erc3643Controller, 'ForceBurn')
                             .withArgs(ownerAddress, aliceAddress, burnAmount)
+
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(initialBalance - burnAmount)
+                    })
+
+                    it('GIVEN COMPLIANCE_ROLE holder WHEN testComplianceBurn THEN bypasses _destroyed hook (line 115 TRUE branch)', async () => {
+                        // Get test wrapper instance
+                        const testWrapper = await ethers.getContractAt(
+                            'ERC3643ComplianceBurnTestWrapperFacet',
+                            proxyAddress
+                        )
+
+                        await accessControl
+                            .connect(owner)
+                            .grantRole(COMPLIANCE_ROLE, bobAddress)
+
+                        const burnAmount = 100n
+                        const initialBalance = await erc20Facet.balanceOf(
+                            aliceAddress
+                        )
+
+                        // Call testComplianceBurn with COMPLIANCE_ROLE holder
+                        // This executes the TRUE branch: if (hasComplianceRole) { return; }
+                        // The _destroyed hook is bypassed
+                        await expect(
+                            testWrapper
+                                .connect(bob)
+                                .testComplianceBurn(aliceAddress, burnAmount)
+                        )
+                            .to.emit(erc20Facet, 'Transfer')
+                            .withArgs(
+                                aliceAddress,
+                                ethers.ZeroAddress,
+                                burnAmount
+                            )
 
                         expect(
                             await erc20Facet.balanceOf(aliceAddress)

@@ -31,6 +31,7 @@ import {
     ERC3643_COMPLIANCE_RESOLVER_KEY,
     ERC3643_COMPLIANCE_MAXBALANCE_RESOLVER_KEY,
     ERC3643_COMPLIANCE_DMLIM_RESOLVER_KEY,
+    ERC3643_COMPLIANCE_BURN_TEST_WRAPPER_RESOLVER_KEY,
     CONFIGURATION_ID_ERC3643,
     CONFIGURATION_ID_PROXY_TESTS,
 } from '../../utils/constants'
@@ -218,6 +219,9 @@ export async function deployERC3643UseCasesFacets(
     const ERC3643ComplianceDMLimFacetFactory = await ethers.getContractFactory(
         'ERC3643ComplianceDMLimFacet'
     )
+    const ERC3643ComplianceBurnTestWrapperFacetFactory = await ethers.getContractFactory(
+        'ERC3643ComplianceBurnTestWrapperFacet'
+    )
 
     // Helper function to deploy business logic from factory
     async function deployBusinessLogicFromFactoryLocal(
@@ -300,6 +304,10 @@ export async function deployERC3643UseCasesFacets(
         ERC3643_COMPLIANCE_DMLIM_RESOLVER_KEY,
         ERC3643ComplianceDMLimFacetFactory
     )
+    await deployBusinessLogicFromFactoryLocal(
+        ERC3643_COMPLIANCE_BURN_TEST_WRAPPER_RESOLVER_KEY,
+        ERC3643ComplianceBurnTestWrapperFacetFactory
+    )
 
     // Set configuration for ERC3643
     await isbeFactory.setConfiguration(CONFIGURATION_ID_ERC3643, [
@@ -312,6 +320,7 @@ export async function deployERC3643UseCasesFacets(
         { businessId: ERC3643_COMPLIANCE_RESOLVER_KEY, version: 1 },
         { businessId: ERC3643_COMPLIANCE_MAXBALANCE_RESOLVER_KEY, version: 1 },
         { businessId: ERC3643_COMPLIANCE_DMLIM_RESOLVER_KEY, version: 1 },
+        { businessId: ERC3643_COMPLIANCE_BURN_TEST_WRAPPER_RESOLVER_KEY, version: 1 },
     ])
 
     // Deploy use case
@@ -358,6 +367,8 @@ export async function deployERC3643UseCasesFacets(
     const erc3643ComplianceDMLim = ERC3643ComplianceDMLimFacetFactory.attach(
         proxy
     ) as ERC3643ComplianceDMLimFacet
+    const erc3643ComplianceBurnTestWrapper =
+        ERC3643ComplianceBurnTestWrapperFacetFactory.attach(proxy)
 
     return {
         proxy,
@@ -372,5 +383,6 @@ export async function deployERC3643UseCasesFacets(
         erc3643Compliance,
         erc3643ComplianceMaxBalance,
         erc3643ComplianceDMLim,
+        erc3643ComplianceBurnTestWrapper,
     }
 }

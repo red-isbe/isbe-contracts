@@ -78,13 +78,16 @@ abstract contract ERC203643InternalCommon is
         _updateTotalSupplySnapshot();
 
         // Compliance hooks (ERC-3643 mode only). By pass by _COMPLIANCE_ROLE.
-        if (!_hasRole(_COMPLIANCE_ROLE, msg.sender)) {
-            require(
+        if (_hasRole(_COMPLIANCE_ROLE, msg.sender)) {
+         return; // Coverage tracking: explicit handling to ensure instrumentation detection
+        } else {
+                require(
                 _canTransfer(_from, _to, _amount),
                 ICompliance.MintViolatesComplianceRules()
             );
             _created(_to, _amount);
         }
+           
     }
 
     // =======================
@@ -108,24 +111,17 @@ abstract contract ERC203643InternalCommon is
         
         _unfreezeIf3643Mode(_from, _amount);
 
-        // if (_hasRole(_CONTROLLER_ROLE, msg.sender)) {
-           
-        // } else {
-        //     /*
-        //      * @dev Esta rama es inalcanzable en modo ERC3643 por diseño arquitectónico:
-        //      * - Solo forceBurn (requiere CONTROLLER_ROLE) puede ejecutar burn en ERC3643.
-        //      * - No se expone burn/burnFrom públicos en ese modo.
-        //      *
-        //      * Excluida de cobertura de tests para CI/CD.
-        //      *
-        //      * coverage ignore next
-        //      */
-        // }
-
         // Compliance hooks (ERC-3643 mode only). By pass by _COMPLIANCE_ROLE.
-        if (!_hasRole(_COMPLIANCE_ROLE, msg.sender)) {
-            _destroyed(_from, _amount);
+        bool hasComplianceRole = _hasRole(_COMPLIANCE_ROLE, msg.sender);
+        
+        if (hasComplianceRole) {
+           // Compliance role bypasses the _destroyed hook
+           // This is intentional for compliance contract operations
+           return;
         }
+        
+        // Normal path: call _destroyed for compliance validation
+        _destroyed(_from, _amount);
     }
 
     // =======================
@@ -194,11 +190,16 @@ abstract contract ERC203643InternalCommon is
      */
     function _unfreezeIf3643Mode(address _from, uint256 _amount) internal {
         uint256 freeBalance = _calculateFreeBalance(_from);
-        if (freeBalance < _amount) {
-            uint256 tokensToUnfreeze = _amount - freeBalance;
+        if (freeBalance >= _amount) {
+            return; // Coverage tracking: explicit handling to ensure instrumentation detection
+        
+        } else {
+                uint256 tokensToUnfreeze = _amount - freeBalance;
             _unfreezePartialTokens(_from, tokensToUnfreeze);
             emit IERC3643Freeze.TokensUnfrozen(_from, tokensToUnfreeze);
+
         }
+    
     }
 
     // =======================

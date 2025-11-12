@@ -274,6 +274,16 @@ describe('ERC20', function () {
                     '0x2428f215905ecd05cc26794e218b9fad455e6ae2ca828b2f1c1903e8770265ad'
                 )
         })
+
+        it('GIVEN an ERC20 WHEN initialize with empty name THEN it fails', async () => {
+            await expect(erc20.initializeErc20('', symbol, decimals))
+                .to.be.revertedWithCustomError(erc20, 'EmptyString')
+        })
+
+        it('GIVEN an ERC20 WHEN initialize with empty symbol THEN it fails', async () => {
+            await expect(erc20.initializeErc20(name, '', decimals))
+                .to.be.revertedWithCustomError(erc20, 'EmptyString')
+        })
     })
 
     describe('Allowance', () => {

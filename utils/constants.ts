@@ -240,6 +240,9 @@ export const ERC3643_COMPLIANCE_MAXBALANCE_RESOLVER_KEY =
     '0x439f087ef8d9d8d02c3b2d39c55c55a73b329d5b0d78ab0e81eb0e55343cdd9d'
 export const ERC3643_COMPLIANCE_DMLIM_RESOLVER_KEY =
     '0x228279b8c9f85cc60c2a3f60cf0371583eaf4d08a3bb4b04cbeb47711165d29e'
+// keccak256('isbe.contracts.erc3643.compliance.burn.test.wrapper.resolver.key')
+export const ERC3643_COMPLIANCE_BURN_TEST_WRAPPER_RESOLVER_KEY =
+    '0xaaf9ad10bea505259a452e787c83e1b61c922a7ce0d5557c8cd384686ad98ff3'
 // use in ERC20 Capped and Controller as well
 export const ERC203643_CAPPED_RESOLVER_KEY =
     '0x1f3e5d6c7b8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f60718293a4b5c6d7e8'
