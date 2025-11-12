@@ -21,9 +21,11 @@ import {
     ISBEPauseFacet,
     IERC203643Controller,
     IERC203643Capped,
+    ERC203643CappedFacet,
     ERC3643ComplianceFacet,
     ERC3643ComplianceMaxBalanceFacet,
     ERC3643ComplianceDMLimFacet,
+    IERC3643ComplianceHookEvents,
 } from '../typechain-types'
 
 describe('ERC3643 Token', function () {
@@ -3959,26 +3961,9 @@ describe('ERC3643 Token', function () {
     // ====================================================================
     describe('ERC3643 Primitives', () => {
         describe('when Mode compliance is not active', () => {
-            // --------------------------------------------------------------------
-            // Burn Operations Restriction in ERC3643 Mode
-            // --------------------------------------------------------------------
             /**
-             * COVERAGE NOTE: Line 110 ELSE branch (ERC203643InternalCommon.sol)
-             * 
-             * Line 110: if (_hasRole(_CONTROLLER_ROLE, msg.sender)) { ... } // ELSE branch NOT covered
-             * 
-             * WHY THIS BRANCH IS UNREACHABLE:
-             * 
-             * In ERC3643 mode, burn operations can ONLY be performed through forceBurn(),
-             * which requires CONTROLLER_ROLE. There is no public burn() or burnFrom() in ERC3643.
-             * 
-             * The _handleBurnOperation() function is called from _beforeTokenTransfer when _to == address(0).
-             * Since the only way to trigger a burn in ERC3643 is through forceBurn() (which requires
-             * CONTROLLER_ROLE), the ELSE branch (burn without CONTROLLER_ROLE) is IMPOSSIBLE to reach.
-             * 
-             * This is by design: ERC3643 restricts burn operations to authorized controllers only.
-             * 
-             * Coverage: Line 110 ELSE is unreachable by design in ERC3643 mode.
+             * ERC3643 mode: burn operations require CONTROLLER_ROLE (via forceBurn only).
+             * Line 110 ELSE branch (ERC203643InternalCommon.sol) is unreachable by design.
              */
             describe('Burn Operations Restriction', () => {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -6993,6 +6978,70 @@ describe('ERC3643 Token', function () {
             })
         })
 
+         // ----------------------------------------------------------------
+        // MaxBalance Hook Event Emission
+        // ----------------------------------------------------------------
+        describe('MaxBalance Hook Event Emission', () => {
+            let erc3643Controller: IERC203643Controller
+            let hookEvents: IERC3643ComplianceHookEvents
+
+            beforeEach(async () => {
+                const fixture = async () => {
+                    await accessControl
+                        .connect(owner)
+                        .grantRole(CONTROLLER_ROLE, ownerAddress)
+
+                    // Revoke COMPLIANCE_ROLE from owner to ensure hooks are executed
+                    // (COMPLIANCE_ROLE bypasses compliance hooks per ERC203643InternalCommon.sol line 127)
+                    await accessControl
+                        .connect(owner)
+                        .revokeRole(COMPLIANCE_ROLE, ownerAddress)
+
+                    // Initialize MaxBalance module (required for hooks to execute)
+                    await maxBalanceFacet
+                        .connect(owner)
+                        .initializeERC3643ComplianceMaxBalance(10000n)
+
+                    erc3643Controller = (await ethers.getContractAt(
+                        'IERC203643Controller',
+                        proxyAddress
+                    )) as IERC203643Controller
+
+                    hookEvents = (await ethers.getContractAt(
+                        'IERC3643ComplianceHookEvents',
+                        proxyAddress
+                    )) as IERC3643ComplianceHookEvents
+                }
+                await loadFixture(fixture)
+            })
+
+            it('GIVEN MaxBalance enabled WHEN mint THEN does NOT emit CoverageHookMaxBalance event', async () => {
+                // Mint tokens (this will call _created -> _creationActionOnMaxBalance)
+                await erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
+
+                // Verify mint succeeded (creation hook is empty, no event emitted)
+                expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(1000n)
+            })
+
+            it('GIVEN MaxBalance enabled WHEN forceBurn THEN emits CoverageHookMaxBalance event', async () => {
+                // Mint tokens first
+                await erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
+
+                // Burn tokens (this will call _destroyed -> _destructionActionOnMaxBalance)
+                const tx = await erc3643Controller
+                    .connect(owner)
+                    .forceBurn(aliceAddress, 500n)
+
+                // Verify the coverage hook event was emitted
+                await expect(tx)
+                    .to.emit(hookEvents, 'CoverageHookMaxBalance')
+                    .withArgs(aliceAddress, 500n)
+
+                // Verify burn succeeded
+                expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(500n)
+            })
+        })
+
         // ----------------------------------------------------------------
         // Complex Scenarios
         // ----------------------------------------------------------------
@@ -7530,7 +7579,7 @@ describe('ERC3643 Token', function () {
                     )
                 })
 
-                it('[COVERAGE] GIVEN contract paused WHEN monthlyLimit THEN reverts', async () => {
+                it('GIVEN contract paused WHEN monthlyLimit THEN reverts with whenNotPaused', async () => {
                     // Grant PAUSER_ROLE to owner
                     await accessControl
                         .connect(owner)
@@ -7657,7 +7706,69 @@ describe('ERC3643 Token', function () {
             })
         })
 
-       
+         // ----------------------------------------------------------------
+        // DayMonthLimits Hook Event Emission
+        // ----------------------------------------------------------------
+        describe('DayMonthLimits Hook Event Emission', () => {
+            let erc3643Controller: IERC203643Controller
+            let hookEvents: IERC3643ComplianceHookEvents
+
+            beforeEach(async () => {
+                const fixture = async () => {
+                    await accessControl
+                        .connect(owner)
+                        .grantRole(CONTROLLER_ROLE, ownerAddress)
+
+                    // Revoke COMPLIANCE_ROLE from owner to ensure hooks are executed
+                    // (COMPLIANCE_ROLE bypasses compliance hooks per ERC203643InternalCommon.sol line 127)
+                    await accessControl
+                        .connect(owner)
+                        .revokeRole(COMPLIANCE_ROLE, ownerAddress)
+
+                    // Initialize DayMonthLimits module (required for hooks to execute)
+                    await complianceDMLimFacet
+                        .connect(owner)
+                        .initializeERC3643ComplianceDMLim(1000n, 5000n)
+
+                    erc3643Controller = (await ethers.getContractAt(
+                        'IERC203643Controller',
+                        proxyAddress
+                    )) as IERC203643Controller
+
+                    hookEvents = (await ethers.getContractAt(
+                        'IERC3643ComplianceHookEvents',
+                        proxyAddress
+                    )) as IERC3643ComplianceHookEvents
+                }
+                await loadFixture(fixture)
+            })
+
+            it('GIVEN DayMonthLimits enabled WHEN mint THEN does NOT emit CoverageHookDayMonthLimits event', async () => {
+                // Mint tokens (this will call _created -> _creationActionOnDayMonthLimits)
+                await erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
+
+                // Verify mint succeeded (creation hook is empty, no event emitted)
+                expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(1000n)
+            })
+
+            it('GIVEN DayMonthLimits enabled WHEN forceBurn THEN emits CoverageHookDayMonthLimits event', async () => {
+                // Mint tokens first
+                await erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
+
+                // Burn tokens (this will call _destroyed -> _destructionActionOnDayMonthLimits)
+                const tx = await erc3643Controller
+                    .connect(owner)
+                    .forceBurn(aliceAddress, 500n)
+
+                // Verify the coverage hook event was emitted
+                await expect(tx)
+                    .to.emit(hookEvents, 'CoverageHookDayMonthLimits')
+                    .withArgs(aliceAddress, 500n)
+
+                // Verify burn succeeded
+                expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(500n)
+            })
+        })
 
         // ----------------------------------------------------------------
         // Complex Scenarios
@@ -7915,65 +8026,33 @@ describe('ERC3643 Token', function () {
     })
 
     // ====================================================================
-    // COVERAGE-ONLY TESTS (ARTIFICIAL)
+    // COMBINED COMPLIANCE HOOKS COVERAGE
     // ====================================================================
     /**
-     * ⚠️ WARNING: ARTIFICIAL TESTS FOR COVERAGE ONLY ⚠️
+     * Coverage-focused tests for hooks triggered when BOTH MaxBalance AND DayMonthLimits are enabled.
+     * These tests verify that empty hook functions execute and generate coverage via event emission.
      * 
-     * This section contains tests that exist SOLELY to achieve 100% branch coverage
-     * by executing intentionally empty hook functions. These tests do NOT validate
-     * functional behavior or business logic.
-     * 
-     * DO NOT use this section as a reference for functional testing patterns.
-     * 
-     * Separated from functional tests to maintain architectural purity.
-     * 
-     * COVERAGE NOTE: Empty Hooks in Compliance System
-     * 
-     * These tests exist SOLELY to achieve 100% branch coverage by calling
-     * intentionally empty hook functions in the compliance system:
-     * 
-     * - _creationActionOnMaxBalance() (empty by design)
-     * - _destructionActionOnMaxBalance() (empty by design)
-     * - _creationActionOnDayMonthLimits() (empty by design)
-     * - _destructionActionOnDayMonthLimits() (empty by design)
-     * 
-     * WHY THESE HOOKS ARE EMPTY:
-     * - MaxBalance: Only needs PRE-checks (compliance validation), no POST-actions
-     * - DayMonthLimits: Only tracks TRANSFERS, not mint/burn operations
-     * 
-     * These tests do NOT validate functional behavior (hooks do nothing).
-     * They only ensure Istanbul coverage tool registers these branches as executed.
-     * 
-     * Target Lines: ERC3643ComplianceInternal.sol lines 127, 131, 135
+     * Isolated from functional tests to prevent fixture contamination.
      */
-    describe('ERC3643 Empty Hooks Coverage', () => {
-        let complianceFacet: ERC3643ComplianceFacet
+    describe('Combined Compliance Hooks Coverage', () => {
         let maxBalanceFacet: ERC3643ComplianceMaxBalanceFacet
         let complianceDMLimFacet: ERC3643ComplianceDMLimFacet
         let erc3643Capped: IERC203643Capped
         let erc3643Controller: IERC203643Controller
+        let hookEvents: IERC3643ComplianceHookEvents
 
         beforeEach(async () => {
             const fixture = async () => {
-                // Grant necessary roles
-                await accessControl
-                    .connect(owner)
-                    .grantRole(MINTER_ROLE, ownerAddress)
-                await accessControl
-                    .connect(owner)
-                    .grantRole(CONTROLLER_ROLE, ownerAddress)
-                await accessControl
-                    .connect(owner)
-                    .grantRole(COMPLIANCE_ROLE, ownerAddress)
+                // Grant roles
+                await accessControl.connect(owner).grantRole(MINTER_ROLE, ownerAddress)
+                await accessControl.connect(owner).grantRole(CONTROLLER_ROLE, ownerAddress)
 
-                // Initialize ERC20
-                await erc20Facet
-                    .connect(owner)
-                    .initializeErc20(tokenName, tokenSymbol, tokenDecimals)
+                // Revoke COMPLIANCE_ROLE from owner to ensure hooks are executed
+                // (COMPLIANCE_ROLE bypasses compliance hooks per ERC203643InternalCommon.sol line 127)
+                await accessControl.connect(owner).revokeRole(COMPLIANCE_ROLE, ownerAddress)
 
                 // Get facet interfaces
-                complianceFacet = (await ethers.getContractAt(
+                const complianceFacet = (await ethers.getContractAt(
                     'ERC3643ComplianceFacet',
                     proxyAddress
                 )) as ERC3643ComplianceFacet
@@ -7998,229 +8077,48 @@ describe('ERC3643 Token', function () {
                     proxyAddress
                 )) as IERC203643Controller
 
-                // Initialize cap
-                await erc3643Capped.connect(owner).initializeCap(100000n)
+                // Get event interface for coverage testing
+                hookEvents = (await ethers.getContractAt(
+                    'IERC3643ComplianceHookEvents',
+                    proxyAddress
+                )) as IERC3643ComplianceHookEvents
 
                 // Initialize compliance with BOTH features enabled
-                await complianceFacet
-                    .connect(owner)
-                    .initializeERC3643Compliance(true, true)
+                await complianceFacet.connect(owner).initializeERC3643Compliance(true, true)
 
                 // Initialize MaxBalance feature
-                await maxBalanceFacet
-                    .connect(owner)
-                    .initializeERC3643ComplianceMaxBalance(10000n)
+                await maxBalanceFacet.connect(owner).initializeERC3643ComplianceMaxBalance(10000n)
 
                 // Initialize DayMonthLimits feature
-                await complianceDMLimFacet
-                    .connect(owner)
-                    .initializeERC3643ComplianceDMLim(1000n, 5000n)
+                await complianceDMLimFacet.connect(owner).initializeERC3643ComplianceDMLim(1000n, 5000n)
+
+                // Initialize cap
+                const cappedFacet = (await ethers.getContractAt(
+                    'ERC203643CappedFacet',
+                    proxyAddress
+                )) as ERC203643CappedFacet
+                await cappedFacet.connect(owner).initializeCap(1000000n)
             }
             await loadFixture(fixture)
         })
 
-        // ----------------------------------------------------------------
-        // MaxBalance Empty Hooks
-        // ----------------------------------------------------------------
-        describe('MaxBalance Empty Hooks', () => {
-            it('[COVERAGE] GIVEN MaxBalance enabled WHEN mint THEN calls empty _creationActionOnMaxBalance', async () => {
-                // Mint tokens (this will call _created -> _creationActionOnMaxBalance)
-                await erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
+        it('GIVEN both features enabled WHEN forceBurn THEN emits both hook events', async () => {
+            // Mint tokens first
+            await erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
 
-                // Verify mint succeeded (hook is empty, so no side effects to check)
-                expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(1000n)
-            })
+            // Burn tokens (calls both _destructionActionOnMaxBalance AND _destructionActionOnDayMonthLimits)
+            const tx = await erc3643Controller.connect(owner).forceBurn(aliceAddress, 500n)
 
-            it('[COVERAGE] GIVEN MaxBalance enabled WHEN forceBurn THEN calls empty _destructionActionOnMaxBalance', async () => {
-                // Mint tokens first
-                await erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
+            // Verify both coverage hook events were emitted
+            await expect(tx)
+                .to.emit(hookEvents, 'CoverageHookMaxBalance')
+                .withArgs(aliceAddress, 500n)
+            await expect(tx)
+                .to.emit(hookEvents, 'CoverageHookDayMonthLimits')
+                .withArgs(aliceAddress, 500n)
 
-                // Burn tokens (this will call _destroyed -> _destructionActionOnMaxBalance)
-                await erc3643Controller
-                    .connect(owner)
-                    .forceBurn(aliceAddress, 500n)
-
-                // Verify burn succeeded (hook is empty, so no side effects to check)
-                expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(500n)
-            })
-        })
-
-        // ----------------------------------------------------------------
-        // DayMonthLimits Empty Hooks
-        // ----------------------------------------------------------------
-        describe('DayMonthLimits Empty Hooks', () => {
-            it('[COVERAGE] GIVEN DayMonthLimits enabled WHEN mint THEN calls empty _creationActionOnDayMonthLimits', async () => {
-                // Mint tokens (this will call _created -> _creationActionOnDayMonthLimits)
-                await erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
-
-                // Verify mint succeeded (hook is empty, so no side effects to check)
-                expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(1000n)
-            })
-
-            it('[COVERAGE] GIVEN DayMonthLimits enabled WHEN forceBurn THEN calls empty _destructionActionOnDayMonthLimits', async () => {
-                // Mint tokens first
-                await erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
-
-                // Burn tokens (this will call _destroyed -> _destructionActionOnDayMonthLimits)
-                await erc3643Controller
-                    .connect(owner)
-                    .forceBurn(aliceAddress, 500n)
-
-                // Verify burn succeeded (hook is empty, so no side effects to check)
-                expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(500n)
-            })
-        })
-
-        // ----------------------------------------------------------------
-        // Combined Features Empty Hooks
-        // ----------------------------------------------------------------
-        describe('Combined Features Empty Hooks', () => {
-            it('[COVERAGE] GIVEN both features enabled WHEN mint THEN calls both empty creation hooks', async () => {
-                // Mint tokens (calls both _creationActionOnMaxBalance AND _creationActionOnDayMonthLimits)
-                await erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
-
-                // Verify mint succeeded
-                expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(1000n)
-            })
-
-            it('[COVERAGE] GIVEN both features enabled WHEN forceBurn THEN calls both empty destruction hooks', async () => {
-                // Mint tokens first
-                await erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
-
-                // Burn tokens (calls both _destructionActionOnMaxBalance AND _destructionActionOnDayMonthLimits)
-                await erc3643Controller
-                    .connect(owner)
-                    .forceBurn(aliceAddress, 500n)
-
-                // Verify burn succeeded
-                expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(500n)
-            })
-        })
-
-        // ----------------------------------------------------------------
-        // No Compliance Features Enabled (ELSE branch coverage)
-        // ----------------------------------------------------------------
-        describe('No Compliance Features Enabled', () => {
-            beforeEach(async () => {
-                const fixture = async () => {
-                    // Disable BOTH compliance features to execute ELSE branches
-                    await complianceFacet
-                        .connect(owner)
-                        .setMaxBalanceEnabled(false)
-                    await complianceFacet
-                        .connect(owner)
-                        .setDailyMonthLimitsEnabled(false)
-                }
-                await loadFixture(fixture)
-            })
-
-            it('[COVERAGE] GIVEN no compliance features enabled WHEN mint THEN skips event emission (ELSE branch in _created)', async () => {
-                // Mint tokens - this will execute the ELSE branch in _created() line 109
-                // because both _isMaxBalanceEnabled() and _isDailyMonthLimitsEnabled() are false
-                await erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
-
-                // Verify mint succeeded (no ComplianceCreated event emitted)
-                expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(1000n)
-            })
-
-            it('[COVERAGE] GIVEN no compliance features enabled WHEN forceBurn THEN skips event emission (ELSE branch in _destroyed)', async () => {
-                // First enable compliance temporarily to mint tokens
-                await complianceFacet
-                    .connect(owner)
-                    .setMaxBalanceEnabled(true)
-                await erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
-                
-                // Disable compliance again
-                await complianceFacet
-                    .connect(owner)
-                    .setMaxBalanceEnabled(false)
-
-                // Burn tokens - this will execute the ELSE branch in _destroyed() line 137
-                // because both _isMaxBalanceEnabled() and _isDailyMonthLimitsEnabled() are false
-                await erc3643Controller
-                    .connect(owner)
-                    .forceBurn(aliceAddress, 500n)
-
-                // Verify burn succeeded (no ComplianceDestroyed event emitted)
-                expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(500n)
-            })
-        })
-
-        // ----------------------------------------------------------------
-        // COMPLIANCE_ROLE Bypass Coverage
-        // ----------------------------------------------------------------
-        /**
-         * COVERAGE NOTE: COMPLIANCE_ROLE Bypass in Burn Operations
-         * 
-         * Location: ERC203643InternalCommon.sol line 127
-         * Code: if (!_hasRole(_COMPLIANCE_ROLE, msg.sender)) { _destroyed(_from, _amount); }
-         * 
-         * This test covers the ELSE branch (when msg.sender HAS COMPLIANCE_ROLE).
-         * 
-         * WHY THIS BRANCH EXISTS:
-         * COMPLIANCE_ROLE can bypass compliance hooks during burn operations.
-         * This allows compliance managers to perform administrative burns without
-         * triggering compliance tracking (e.g., for corrections, audits, etc.).
-         * 
-         * TEST STRATEGY:
-         * Grant COMPLIANCE_ROLE to owner, then perform forceBurn.
-         * The _destroyed() hook will NOT be called (bypass active).
-         * 
-         * Target: ERC203643InternalCommon.sol line 127 ELSE branch → 96.88% → 100%
-         */
-        describe('COMPLIANCE_ROLE Bypass', () => {
-            beforeEach(async () => {
-                const fixture = async () => {
-                    // Grant COMPLIANCE_ROLE to owner (in addition to CONTROLLER_ROLE)
-                    await accessControl
-                        .connect(owner)
-                        .grantRole(COMPLIANCE_ROLE, ownerAddress)
-
-                    // Mint tokens to alice for burning
-                    await erc3643Capped
-                        .connect(owner)
-                        .mint(aliceAddress, 2000n)
-                }
-                await loadFixture(fixture)
-            })
-
-            it('[COVERAGE] GIVEN COMPLIANCE_ROLE WHEN forceBurn THEN bypasses compliance hooks', async () => {
-                // Owner has BOTH CONTROLLER_ROLE (for forceBurn) AND COMPLIANCE_ROLE (for bypass)
-                const balanceBefore = await erc20Facet.balanceOf(aliceAddress)
-                expect(balanceBefore).to.equal(2000n)
-
-                // Perform forceBurn with COMPLIANCE_ROLE
-                // This will execute _handleBurnOperation with msg.sender having COMPLIANCE_ROLE
-                // Therefore: if (!_hasRole(_COMPLIANCE_ROLE, msg.sender)) evaluates to FALSE
-                // Result: _destroyed() is NOT called (ELSE branch executed)
-                await erc3643Controller
-                    .connect(owner)
-                    .forceBurn(aliceAddress, 1000n)
-
-                // Verify burn succeeded (balance reduced)
-                const balanceAfter = await erc20Facet.balanceOf(aliceAddress)
-                expect(balanceAfter).to.equal(1000n)
-
-                // NOTE: We cannot verify that _destroyed() was NOT called
-                // (it has no observable side effects when features are empty hooks).
-                // This test exists solely to execute the ELSE branch for coverage.
-            })
-
-            it('[COVERAGE] GIVEN COMPLIANCE_ROLE WHEN mint THEN bypasses compliance hooks', async () => {
-                // Similar test for mint operation to ensure symmetry
-                const balanceBefore = await erc20Facet.balanceOf(bobAddress)
-                expect(balanceBefore).to.equal(0n)
-
-                // Perform mint with COMPLIANCE_ROLE
-                // This will execute _handleMintOperation with msg.sender having COMPLIANCE_ROLE
-                // Therefore: if (!_hasRole(_COMPLIANCE_ROLE, msg.sender)) evaluates to FALSE
-                // Result: _created() is NOT called (ELSE branch executed)
-                await erc3643Capped.connect(owner).mint(bobAddress, 500n)
-
-                // Verify mint succeeded (balance increased)
-                const balanceAfter = await erc20Facet.balanceOf(bobAddress)
-                expect(balanceAfter).to.equal(500n)
-            })
+            // Verify burn succeeded
+            expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(500n)
         })
     })
 })

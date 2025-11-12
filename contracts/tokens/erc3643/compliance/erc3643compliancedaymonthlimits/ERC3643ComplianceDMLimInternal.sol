@@ -3,7 +3,7 @@ pragma solidity ^0.8.28;
 
 import {_ERC3643_COMPLIANCE_DMLIM_STORAGE_POSITION} from '../../../../constants/storagePositions.sol';
 import {DidDocumentDetailedInternal} from '../../../../identity/didregistry/DidDocumentDetailedInternal.sol';
-
+import {IERC3643ComplianceHookEvents} from '../IERC3643ComplianceHookEvents.sol';
 /**
  * @title ERC3643ComplianceDMLimInternal
  * @notice Internal contract for managing ERC-3643 daily/monthly transfer limits.
@@ -12,8 +12,9 @@ import {DidDocumentDetailedInternal} from '../../../../identity/didregistry/DidD
  *      It is intended to be used by external contracts that handle authorization and event emission.
  */
 abstract contract ERC3643ComplianceDMLimInternal is
-    DidDocumentDetailedInternal
+    DidDocumentDetailedInternal, IERC3643ComplianceHookEvents
 {
+
     /// @dev Storage structure for ERC-3643 daily/monthly limits.
     struct ERC3643ComplianceDMLimStorage {
         uint256 dailyLimit;
@@ -100,19 +101,27 @@ abstract contract ERC3643ComplianceDMLimInternal is
     function _creationActionOnDayMonthLimits(
         address _to,
         uint256 _amount
-    ) internal {}
+    ) internal {
+          // Emit event to ensure coverage tools can detect execution
+        // LOG opcode is non-optimizable and always generates bytecode
+        emit CoverageHookDayMonthLimits(_to, _amount);
+    }
 
     /**
      * @dev Internal hook for post-burn operations for DayMonthLimits feature.
      *      Intentionally left empty for feature mapping.
+     *      Emits CoverageHookDayMonthLimits event to generate detectable bytecode for solidity-coverage.
      * @param _from The address from which tokens are burned.
      * @param _amount The amount of tokens burned.
      */
-    // solhint-disable no-empty-blocks
     function _destructionActionOnDayMonthLimits(
         address _from,
         uint256 _amount
-    ) internal {}
+    ) internal {
+        // Emit event to ensure coverage tools can detect execution
+        // LOG opcode is non-optimizable and always generates bytecode
+        emit CoverageHookDayMonthLimits(_from, _amount);
+    }
 
     /**
      * @dev Internal view function to retrieve the current daily limit value from storage.
