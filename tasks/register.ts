@@ -84,6 +84,7 @@ import './client/getFiltersByPage'
 import './client/isFilterRegistered'
 
 import './utils/buildConfigurationId'
+import './genesisGeneration'
 
 // Besu Node Manager
 import './client/besuNodeManager/getTotalValidators'

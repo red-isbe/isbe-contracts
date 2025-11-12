@@ -65,6 +65,7 @@
         "slither": "npm run slither:summary && npm run slither:storageLayout && npm run slither:inheritance && npm run slither:analysis",
         "slither:analysis:local": "slither . -solc-remaps @=node_modules/@ | tee slither-output.txt && node scripts/check-slither.js",
         "docgen": "npx hardhat docgen && npx ts-node scripts/post-docgen.ts",
+        "genesis:generate": "npx hardhat genesis:generate",
         "deployAll": "npx hardhat deployAllClean --nodeployusecases",
         "toc:generate": "npx ts-node scripts/generate-toc.ts"
     },

@@ -18,6 +18,13 @@ import {
 } from '../../utils/constants'
 import { EventLog } from 'ethers'
 
+const registryFile: string | undefined = process.env.REGISTRY_LOCATION
+if (registryFile) {
+    console.log(
+        `********************************     Using registry file: ${registryFile}`
+    )
+}
+
 describe('ProxyFactory', function () {
     let admin: Signer
     let adminAddress: string

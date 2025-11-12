@@ -68,7 +68,7 @@ export class DeploymentValidator {
     private async validateGovernance(
         governance: DeployedGovernance
     ): Promise<Partial<ValidationResult>> {
-        console.log('      🏛️ Validating governance...')
+        console.log('      🏛️ Validating governance... ' + governance.address)
 
         try {
             // Verify that the factory exists and has code
