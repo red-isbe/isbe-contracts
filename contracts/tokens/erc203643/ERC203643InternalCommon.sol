@@ -78,7 +78,7 @@ abstract contract ERC203643InternalCommon is
         _updateTotalSupplySnapshot();
 
         // Compliance hooks (ERC-3643 mode only). By pass by _COMPLIANCE_ROLE.
-        if (_hasRole(_COMPLIANCE_ROLE, msg.sender)) {
+        if (_hasRole(_COMPLIANCE_ROLE, _msgSender())) {
             return; // Coverage tracking: explicit handling to ensure instrumentation detection
         } else {
             require(
@@ -111,7 +111,7 @@ abstract contract ERC203643InternalCommon is
         _unfreezeIf3643Mode(_from, _amount);
 
         // Compliance hooks (ERC-3643 mode only). By pass by _COMPLIANCE_ROLE.
-        bool hasComplianceRole = _hasRole(_COMPLIANCE_ROLE, msg.sender);
+        bool hasComplianceRole = _hasRole(_COMPLIANCE_ROLE, _msgSender());
 
         if (hasComplianceRole) {
             // Compliance role bypasses the _destroyed hook
@@ -148,7 +148,7 @@ abstract contract ERC203643InternalCommon is
         require(balance >= _amount, IERC20Isbe.TransferAmountExceedsBalance());
 
         // Compliance hooks (ERC-3643 mode only). By pass by _COMPLIANCE_ROLE.
-        if (!_hasRole(_COMPLIANCE_ROLE, msg.sender)) {
+        if (!_hasRole(_COMPLIANCE_ROLE, _msgSender())) {
             require(
                 _canTransfer(_from, _to, _amount),
                 ICompliance.TransferViolatesComplianceRules()
@@ -158,8 +158,8 @@ abstract contract ERC203643InternalCommon is
 
         // Forced transfer logic for controller/recovery roles
         if (
-            _hasRole(_CONTROLLER_ROLE, msg.sender) ||
-            _hasRole(_RECOVERY_ROLE, msg.sender)
+            _hasRole(_CONTROLLER_ROLE, _msgSender()) ||
+            _hasRole(_RECOVERY_ROLE, _msgSender())
         ) {
             _unfreezeIf3643Mode(_from, _amount);
         } else {

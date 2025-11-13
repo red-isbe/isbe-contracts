@@ -30,7 +30,7 @@ abstract contract ERC3643Freeze is IERC3643Freeze, ERC203643InternalCommon {
         bool _freeze
     ) external override onlyRole(_FREEZE_ROLE) whenNotPaused {
         _setAddressFrozen(_userAddress, _freeze);
-        emit AddressFrozen(_userAddress, _freeze, msg.sender);
+        emit AddressFrozen(_userAddress, _freeze, _msgSender());
     }
 
     /**
@@ -102,7 +102,7 @@ abstract contract ERC3643Freeze is IERC3643Freeze, ERC203643InternalCommon {
         uint256 length = userAddressesLength;
         for (uint256 i; i < length; ) {
             _setAddressFrozen(_userAddresses[i], _freeze[i]);
-            emit AddressFrozen(_userAddresses[i], _freeze[i], msg.sender);
+            emit AddressFrozen(_userAddresses[i], _freeze[i], _msgSender());
             unchecked {
                 ++i;
             }
