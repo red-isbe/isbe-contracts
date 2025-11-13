@@ -8,6 +8,7 @@ start=$(date +%s)
 BESU_DIR="../isbe-besu-local-deployer"
 TEMPLATE_FILE="#"
 OUTPUT_FILE="#"
+GOBERNANCE_ADDRESS="#"
 
 EXEC_BESU="bash install.sh -b"
 
@@ -49,19 +50,24 @@ while [[ $# -gt 0 ]]; do
       GENERATE_REGISTER=true
       shift
       ;;
+    --gobernance-address)
+      GOBERNANCE_ADDRESS="$2"
+      shift 2
+      ;;
     *)
       if [ $1 != --help ]; then
         echo "⚠️  Unknown argument: $1"
       fi
       echo ""
       echo "Usage:"
-      echo "  --skip-gen              Skip the genesis generation process."
-      echo "  --do-besu-startup       Run the Besu startup procedure."
-      echo "  --do-validation          Execute post-start validation steps."
-      echo "  --besu-dir <path>       Specify the directory containing the Besu build."
-      echo "  --template-file <file>  Specify the genesis template JSON file to use. (MANDATORY)"
-      echo "  --output-file <file>    Specify the generated output JSON file. (MANDATORY if not skipping genesis)"
-      echo "  --do-generate-register     Generate contract register JSON. (Default: false)"
+      echo "  --skip-gen                      Skip the genesis generation process."
+      echo "  --do-besu-startup               Run the Besu startup procedure."
+      echo "  --do-validation                 Execute post-start validation steps."
+      echo "  --besu-dir <path>               Specify the directory containing the Besu build."
+      echo "  --template-file <file>          Specify the genesis template JSON file to use. (MANDATORY)"
+      echo "  --output-file <file>            Specify the generated output JSON file. (MANDATORY if not skipping genesis)"
+      echo "  --do-generate-register          Generate contract register JSON. (Default: false)"
+      echo "  --gobernance-address <address>  Specify the governance contract address."
       echo ""
       echo "Example:"
       echo "  ./script.sh --skip-gen --do-besu-startup --besu-dir ./besu/"
@@ -78,6 +84,11 @@ echo "📁 BESU_DIR set to: $BESU_DIR"
 echo "   (use --besu-dir <path> to override)"
 echo ""
 
+if [ "$GOBERNANCE_ADDRESS" = "#" ]; then
+  echo "📁 No Gobernance address specified."
+  exit 1
+fi
+
 if [ "$TEMPLATE_FILE" = "#" ]; then
   echo "📁 Wrong template file specified."
   exit 1
@@ -91,7 +102,7 @@ fi
 # Step 1: Genesis generation
 if [ "$SKIP_GEN" = false ]; then
   echo "🔧 Generating genesis..."
-  EXEC_CHAIN="npx hardhat genesis:generate --templatefile "$TEMPLATE_FILE" --outputfile "$OUTPUT_FILE""
+  EXEC_CHAIN="npx hardhat genesis:generate --templatefile "$TEMPLATE_FILE" --outputfile "$OUTPUT_FILE" --governanceaddress "$GOBERNANCE_ADDRESS""
   if [ "$GENERATE_REGISTER" = true ]; then
     EXEC_CHAIN="$EXEC_CHAIN --generateregister"
   fi

@@ -65,6 +65,7 @@ task(
     .addParam('templatefile', 'Template JSON file to use')
     .addParam('outputfile', 'Generated Output JSON file')
     .addFlag('generateregister', 'Generate contract register JSON')
+    .addParam('governanceaddress')
     .setAction(async (taskArgs, hre) => {
         try {
             const contractRegistry = new ContractRegistry()
@@ -76,6 +77,16 @@ task(
                 '---------------------------------------------------------------------'
             )
             hre.network.name = 'hardhat'
+
+            const governanceaddress = taskArgs.governanceaddress
+            if (
+                !governanceaddress ||
+                !/^0x[a-fA-F0-9]{40}$/.test(governanceaddress)
+            ) {
+                throw new Error(
+                    'Invalid Gobernance Address' + governanceaddress
+                )
+            }
 
             const genesisTemplateFile = taskArgs.templatefile
 
@@ -117,7 +128,11 @@ task(
 
             console.log('🚀 Genesis generation...')
             let slotStructure: GenesisAlloc = await retrieveSlotStructure(hre)
-            slotStructure = await matchContractNames(hre, slotStructure)
+            slotStructure = await matchContractNames(
+                hre,
+                slotStructure,
+                governanceaddress
+            )
             console.log(
                 '✅ Slot structure retrieved.----------------------------------------------------------'
             )
