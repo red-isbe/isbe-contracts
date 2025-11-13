@@ -36,7 +36,7 @@ export class BytecodeExtractor {
         } catch (error) {
             console.error(
                 `Error extracting bytecode for ${contractName}:`,
-                error.message
+                error instanceof Error ? error.message : String(error)
             )
             throw error
         }
@@ -66,7 +66,7 @@ export class BytecodeExtractor {
     extractAllFromDirectory(artifactPath: string): Record<string, string> {
         const artifacts: Record<string, string> = {}
         const fullPath = path.join(process.cwd(), 'artifacts', artifactPath)
-
+        console.log(`fullpath ----------> `, fullPath);
         try {
             if (!fs.existsSync(fullPath)) {
                 throw new Error(`Directory not found: ${fullPath}`)
@@ -96,7 +96,7 @@ export class BytecodeExtractor {
                             } catch (error) {
                                 console.warn(
                                     `Could not extract bytecode for ${contractName}:`,
-                                    error.message
+                                    error instanceof Error ? error.message : String(error)
                                 )
                             }
                         }
@@ -106,7 +106,7 @@ export class BytecodeExtractor {
         } catch (error) {
             console.error(
                 `Error extracting artifacts from directory ${artifactPath}:`,
-                error.message
+                error instanceof Error ? error.message : String(error)
             )
             throw error
         }

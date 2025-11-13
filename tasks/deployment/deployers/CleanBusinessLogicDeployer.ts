@@ -144,20 +144,28 @@ export class CleanBusinessLogicDeployer {
             const { deployBusinessLogicSecp256r1 } = await import(
                 '../../../scripts/businessLogic/deployBusinessLogicSecp256r1'
             )
-            businessLogic = await deployBusinessLogicSecp256r1(
+            const deployedLogic = await deployBusinessLogicSecp256r1(
                 this.hre,
                 config.key,
                 bytecode,
                 factoryAddress
             )
+            businessLogic = {
+                ...deployedLogic,
+                version: deployedLogic.version.toString()
+            }
         } else {
             // Use standard deployment for secp256k1 networks
-            businessLogic = await deployBusinessLogic(
+            const deployedLogic = await deployBusinessLogic(
                 config.key,
                 bytecode,
                 factoryAddress,
                 this.signatureProvider
             )
+            businessLogic = {
+                ...deployedLogic,
+                version: deployedLogic.version.toString()
+            }
         }
 
         // Validate deployment using signer

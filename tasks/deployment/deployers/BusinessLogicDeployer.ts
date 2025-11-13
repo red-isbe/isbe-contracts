@@ -151,21 +151,31 @@ export class BusinessLogicDeployer {
             const { deployBusinessLogicSecp256r1 } = await import(
                 '../../../scripts/businessLogic/deployBusinessLogicSecp256r1'
             )
-            businessLogic = await deployBusinessLogicSecp256r1(
+            const secp256r1Result = await deployBusinessLogicSecp256r1(
                 this.hre,
                 config.key,
                 bytecode,
                 factoryAddress
             )
+            businessLogic = {
+                businessAddress: secp256r1Result.businessAddress,
+                businessId: secp256r1Result.businessId,
+                version: secp256r1Result.version.toString()
+            }
         } else {
             console.log('      🔧 Using standard deployment...')
             // Use standard deployment for secp256k1 networks
-            businessLogic = await deployBusinessLogic(
+            const standardResult = await deployBusinessLogic(
                 config.key,
                 bytecode,
                 factoryAddress,
-                signer
+                signer as unknown as ISignatureProvider    
             )
+            businessLogic = {
+                businessAddress: standardResult.businessAddress,
+                businessId: standardResult.businessId,
+                version: standardResult.version.toString()
+            }
         }
 
         const businessLogics = await getBusinessLogics(factoryAddress, signer)
