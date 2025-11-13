@@ -13,111 +13,159 @@ hide empty members
 package "Core" {
     class Initializable <<(A,#228b22) abstract contract>>
     class Common <<(A,#228b22) abstract contract>>
+    class DidDocumentDetailedInternal <<(A,#228b22) abstract contract>>
+    class VRelationshipsInternal <<(A,#228b22) abstract contract>>
     class LibCommon << (L,#FF7700) library >>
     class ISBEContext <<(A,#228b22) abstract contract>>
-    class AccessControlInternal <<(A,#228b22) abstract contract>> #lightblue
-    class PauseInternalCommon <<(A,#228b22) abstract contract>> #FFDEAD
-    class OwnableInternal <<(A,#228b22) abstract contract>> #lightgreen
+    class AccessControlInternal <<(A,#228b22) abstract contract>> 
+    class PauseInternalCommon <<(A,#228b22) abstract contract>> 
+    class OwnableInternal <<(A,#228b22) abstract contract>> 
     class ERC165Internal <<(A,#228b22) abstract contract>>
     class Context <<(A,#228b22) abstract contract>>
 
+    DidDocumentDetailedInternal --|> Common
+    DidDocumentDetailedInternal --|> VRelationshipsInternal 
     Common --|> Initializable
     Common --|> ERC165Internal
     Common --|> AccessControlInternal
     Common --|> OwnableInternal
     Common --|> PauseInternalCommon
+    VRelationshipsInternal--|> ISBEContext
     PauseInternalCommon --|> ISBEContext
     OwnableInternal --|> ISBEContext
     ISBEContext --|> Context
     AccessControlInternal --|> LibCommon
 }
 
-' === ERC721 ===
-package "ERC721" {
-    class IERC721 <<(I,#FFD700) interface>> #FFFFE0
-    class IERC721Metadata <<(I,#FFD700) interface>> #FFFFE0
-    class IERC721Isbe <<(I,#FFD700) interface>> #FFFFE0  
-    class ERC721Internal <<(A,#228B22) abstract contract>> #FFFFE0
-    class ERC721InternalCommon <<(A,#228B22) abstract contract>> #FFFFE0
-    class ERC721 <<(A,#228B22) contract>> #FFFFE0
-    class ERC721Facet <<(C,#1E90FF) contract>> #FFFFE0
 
-    ERC721 --|> IERC721Isbe
-    IERC721Isbe--|> IERC721
-    IERC721Isbe--|> IERC721Metadata
-    ERC721 --|> ERC721InternalCommon
-    ERC721Internal --|> Common
-    ERC721Facet --|> ERC721
 
-    class IERC721Burnable <<(I,#FFD700) interface>> #FFFFE0
-    class ERC721Burnable <<(A,#228B22) contract>> #FFFFE0
-    class ERC721BurnableFacet <<(C,#1E90FF) contract>> #FFFFE0
 
-    ERC721BurnableFacet --|> ERC721Burnable
-    ERC721Burnable --|> IERC721Burnable
-    ERC721Burnable --|> ERC721InternalCommon
-
-    class IERC721Controller <<(I,#FFD700) interface>> #FFFFE0
-    class ERC721Controller <<(A,#228B22) contract>> #FFFFE0
-    class ERC721ControllerFacet <<(C,#1E90FF) contract>> #FFFFE0
-
-    ERC721ControllerFacet --|> ERC721Controller
-    ERC721Controller --|> IERC721Controller
-    ERC721Controller --|> ERC721InternalCommon
-
-    class IERC721Capped <<(I,#FFD700) interface>> #FFFFE0
-    class ERC721CappedInternal <<(A,#228B22) abstract contract>> #FFFFE0
-    class ERC721Capped <<(A,#228B22) abstract contract>> #FFFFE0
-    class ERC721CappedFacet <<(C,#1E90FF) contract>> #FFFFE0
- 
-    ERC721CappedFacet --|> ERC721Capped
-    ERC721Capped --|> IERC721Capped
-    ERC721Capped --|> ERC721InternalCommon
-    ERC721InternalCommon --|> ERC721CappedInternal
-    ERC721CappedInternal --|> ERC721Internal
-
-    class IERC721Snapshot <<(I,#FFD700) interface>> #FFFFE0
-    class ERC721SnapshotInternal <<(A,#228B22) abstract contract>> #FFFFE0
-    class ERC721Snapshot <<(A,#228B22) abstract contract>> #FFFFE0
-    class ERC721SnapshotFacet <<(C,#1E90FF) contract>> #FFFFE0
+' === ERC20 and ERC3643 ===
+package "ERC20 and ERC3643" {
+    class IERC20 <<(I,#FFD700) interface>> #FFB6C1
+    class IERC20Metadata <<(I,#FFD700) interface>> #FFB6C1
+    class IERC20Isbe <<(I,#FFD700) interface>> #FFB6C1
+    class IERC20Burnable <<(I,#FFD700) interface>> #FFB6C1
+    class IERC20Snapshot <<(I,#FFD700) interface>> #FFB6C1
+    class IERC203643Capped <<(I,#FFD700) interface>> #FFFF99
+    class IERC203643Controller <<(I,#FFD700) interface>> #FFFF99
     
-    ERC721SnapshotFacet --|> ERC721Snapshot
-    ERC721Snapshot --|> IERC721Snapshot
-    ERC721Snapshot --|> ERC721InternalCommon
-    ERC721InternalCommon --|> ERC721SnapshotInternal
-    ERC721SnapshotInternal --|> ERC721Internal
 
-    class IERC721Enumerable <<(I,#FFD700) interface>> #FFFFE0
-    class ERC721EnumerableInternal <<(A,#228B22) abstract contract>> #FFFFE0
-    class ERC721Enumerable <<(A,#228B22) abstract contract>> #FFFFE0
-    class ERC721EnumerableFacet <<(C,#1E90FF) contract>> #FFFFE0
+    class ERC20 <<(A,#228B22) abstract contract>> #FFB6C1
+    class ERC20Facet <<(C,#1E90FF) contract>> #FFB6C1
+    class ERC20Internal <<(A,#228B22) abstract contract>> #FFB6C1
 
-    ERC721EnumerableFacet --|> ERC721Enumerable
-    ERC721Enumerable --|> IERC721Enumerable
-    ERC721Enumerable --|> ERC721InternalCommon
-    ERC721InternalCommon --|> ERC721EnumerableInternal
-    ERC721EnumerableInternal --|> ERC721Internal
+    class ERC20Burnable <<(A,#228B22) abstract contract>> #FFB6C1
+    class ERC20BurnableFacet <<(C,#1E90FF) contract>> #FFB6C1
 
-    class IERC721Royalty <<(I,#FFD700) interface>> #FFFFE0
-    class ERC721RoyaltyInternal <<(A,#228B22) abstract contract>> #FFFFE0
-    class ERC721Royalty <<(A,#228B22) abstract contract>> #FFFFE0
-    class ERC721RoyaltyFacet <<(C,#1E90FF) contract>> #FFFFE0
+    class ERC20Snapshot <<(A,#228B22) abstract contract>> #FFB6C1
+    class ERC20SnapshotFacet <<(C,#1E90FF) contract>> #FFB6C1
+    class ERC20SnapshotInternal <<(A,#228B22) abstract contract>> #FFB6C1
+
+    class ERC203643Capped <<(A,#228B22) abstract contract>> #FFFF99
+    class ERC203643CappedFacet <<(C,#1E90FF) contract>> #FFFF99
+    class ERC203643CappedInternal <<(A,#228B22) abstract contract>> #FFFF99
+
+    class ERC203643Controller <<(A,#228B22) abstract contract>> #FFFF99
+    class ERC203643ControllerFacet <<(C,#1E90FF) contract>> #FFFF99
+
     
-    ERC721RoyaltyFacet --|> ERC721Royalty
-    ERC721Royalty --|> IERC721Royalty
-    ERC721Royalty --|> ERC721InternalCommon
-    ERC721InternalCommon --|> ERC721RoyaltyInternal
-    ERC721RoyaltyInternal --|> ERC721Internal
 
-    class IERC721Consecutive <<(I,#FFD700) interface>> #FFFFE0
-    class ERC721ConsecutiveInternal <<(A,#228B22) abstract contract>> #FFFFE0
-    class ERC721Consecutive <<(A,#228B22) abstract contract>> #FFFFE0
-    class ERC721ConsecutiveFacet <<(C,#1E90FF) contract>> #FFFFE0
+    ERC20 --|> IERC20Isbe
+    IERC20Isbe --|> IERC20
+    IERC20Isbe --|> IERC20Metadata
+    
+  
+    ERC20Internal --|> DidDocumentDetailedInternal 
+    ERC20Facet --|> ERC20
 
-    ERC721ConsecutiveFacet --|> ERC721Consecutive
-    ERC721Consecutive --|> IERC721Consecutive
-    ERC721Consecutive --|> ERC721InternalCommon
-    ERC721InternalCommon --|> ERC721ConsecutiveInternal
-    ERC721ConsecutiveInternal --|> ERC721Internal
+    ERC20Burnable --|> IERC20Burnable
+    ERC20BurnableFacet --|> ERC20Burnable
+
+    ERC203643Capped --|> IERC203643Capped
+    ERC203643CappedFacet --|> ERC203643Capped
+    ERC203643CappedInternal --|> ERC20Internal
+
+    ERC203643Controller --|> IERC203643Controller
+    ERC203643ControllerFacet --|> ERC203643Controller
+
+    ERC20Snapshot --|> IERC20Snapshot
+    ERC20SnapshotFacet --|> ERC20Snapshot
+    ERC20SnapshotInternal --|> ERC20Internal
+
+
+
+    ' --- Metadata ---
+    class IERC3643Metadata <<(I,#FFD700) interface>> #E6E6FA
+    class ERC3643Metadata <<(A,#228B22) abstract contract>> #E6E6FA
+    class ERC3643MetadataFacet <<(C,#1E90FF) contract>> #E6E6FA
+
+    ERC3643MetadataFacet --|> ERC3643Metadata 
+    ERC3643Metadata --|> IERC3643Metadata   
+
+    ' --- Freeze ---
+    class IERC3643Freeze <<(I,#FFD700) interface>> #E6E6FA
+    class ERC3643FreezeInternal <<(A,#228B22) abstract contract>> #E6E6FA
+    class ERC3643Freeze <<(A,#228B22) abstract contract>> #E6E6FA
+    class ERC3643FreezeFacet <<(C,#1E90FF) contract>> #E6E6FA
+
+    ERC3643FreezeFacet --|> ERC3643Freeze
+    ERC3643Freeze --|> IERC3643Freeze  
+    ERC3643FreezeInternal --|> DidDocumentDetailedInternal 
+
+    ' --- Compliance---
+    class ICompliance <<(I,#FFD700) interface>> #77DD77
+    class ERC3643ComplianceInternal <<(A,#228B22) abstract contract>> #77DD77
+    class ERC3643Compliance <<(A,#228B22) abstract contract>> #77DD77
+    class ERC3643ComplianceFacet <<(C,#1E90FF) contract>> #77DD77
+    
+    ERC3643ComplianceFacet --|> ERC3643Compliance
+    ERC3643Compliance --|> ICompliance   
+
+    ' --- Compliance Max Balance---
+    class IERC3643ComplianceMaxBalance <<(I,#FFD700) interface>> #77DD77
+    class ERC3643ComplianceMaxBalanceInternal <<(A,#228B22) abstract contract>> #77DD77
+    class ERC3643ComplianceMaxBalance <<(A,#228B22) abstract contract>> #77DD77
+    class ERC3643ComplianceMaxBalanceFacet <<(C,#1E90FF) contract>> #77DD77
+    
+    ERC3643ComplianceMaxBalanceFacet --|> ERC3643ComplianceMaxBalance
+    ERC3643ComplianceMaxBalance --|> IERC3643ComplianceMaxBalance 
+    ERC3643ComplianceMaxBalanceInternal --|> ERC20Internal
+
+    ERC3643ComplianceInternal --|> ERC3643ComplianceMaxBalanceInternal 
+
+   ' --- DM Limit---
+    class IERC3643ComplianceDMLim<<(I,#FFD700) interface>> #77DD77
+    class ERC3643ComplianceDMLimInternal<<(A,#228B22) abstract contract>> #77DD77
+    class ERC3643ComplianceDMLim<<(A,#228B22) abstract contract>> #77DD77
+    class ERC3643ComplianceDMLimFacet<<(C,#1E90FF) contract>> #77DD77
+    
+    ERC3643ComplianceDMLimFacet--|> ERC3643ComplianceDMLim
+    ERC3643ComplianceDMLim--|> IERC3643ComplianceDMLim
+    ERC3643ComplianceDMLimInternal--|> DidDocumentDetailedInternal
+
+    ERC3643ComplianceInternal --|> ERC3643ComplianceDMLimInternal
+    
+
+    ' --- ERC203643 Internal Common ---
+    class ERC203643InternalCommon <<(A,#228B22) abstract contract>> #FFFF99
+    ERC203643InternalCommon --|> ERC20SnapshotInternal
+    ERC203643InternalCommon --|> ERC203643CappedInternal
+    ERC203643InternalCommon --|> ERC3643FreezeInternal
+    ERC203643InternalCommon --|> ERC3643ComplianceInternal
+
+
+    ERC3643Metadata --|> ERC203643InternalCommon
+    ERC3643Freeze --|> ERC203643InternalCommon
+    ERC20 --|> ERC203643InternalCommon
+    ERC20Burnable --|> ERC203643InternalCommon
+    ERC203643Capped --|> ERC203643InternalCommon
+    ERC203643Controller --|> ERC203643InternalCommon
+    ERC20Snapshot --|> ERC203643InternalCommon
+    ERC3643Compliance --|> ERC203643InternalCommon
+    ERC3643ComplianceMaxBalance --|> ERC203643InternalCommon
+    ERC3643ComplianceDMLim --|> ERC203643InternalCommon
+
+
 }
 @enduml
