@@ -31,7 +31,6 @@ while [[ $# -gt 0 ]]; do
       ;;
     --do-validation)
       SKIP_VALIDATION=false
-      GENERATE_REGISTER=true
       shift
       ;;
     --besu-dir)
@@ -117,27 +116,28 @@ fi
 
 # ADAPT GENESIS TO LOCAL ENVIRONMENT
 echo "🔧 Adapting genesis to local environment..."
-if ! jq empty "$OUTPUT_FILE" >/dev/null 2>&1; then
-  echo "❌ $OUTPUT_FILE no contiene JSON válido" >&2
-  exit 1
+if jq empty "$OUTPUT_FILE" >/dev/null 2>&1; then
+  OUT_DIR="$BESU_DIR/config"
+  OUT_FILE="$OUT_DIR/qbftConfigFile.json"
+  TMP_FILE="$(mktemp)"
+
+  jq -n --slurpfile g "$OUTPUT_FILE" '{
+    genesis: $g[0],
+    blockchain: {
+      nodes: {
+        generate: true,
+        count: 4,
+        besuVersion: "latest",
+        ip: "172.16.240"
+      }
+    }
+  }' > "$TMP_FILE"
+  mv "$TMP_FILE" "$OUT_FILE"
+else
+  echo "$OUTPUT_FILE is not valid JSON" >&2
+  echo "Skipping adaptation of genesis to local environment."
 fi
 
-OUT_DIR="$BESU_DIR/config"
-OUT_FILE="$OUT_DIR/qbftConfigFile.json"
-TMP_FILE="$(mktemp)"
-jq -n --slurpfile g "$OUTPUT_FILE" '{
-  genesis: $g[0],
-  blockchain: {
-    nodes: {
-      generate: true,
-      count: 4,
-      besuVersion: "latest",
-      ip: "172.16.240"
-    }
-  }
-}' > "$TMP_FILE"
-
-mv "$TMP_FILE" "$OUT_FILE"
 echo "✅ Generated: $OUT_FILE"
 
 
@@ -155,7 +155,7 @@ fi
 
 # Step 3: Validate genesis
 if [ "$SKIP_VALIDATION" = false ]; then
-  npx hardhat genesis:validate --network NO_NETWORK --templatefile "$TEMPLATE_FILE" --outputfile "$OUTPUT_FILE"
+  npx hardhat genesis:validate --network NO_NETWORK --templatefile "$TEMPLATE_FILE" --governanceaddress "$GOBERNANCE_ADDRESS" 
   echo "✅ Genesis validation completed."
 fi
 

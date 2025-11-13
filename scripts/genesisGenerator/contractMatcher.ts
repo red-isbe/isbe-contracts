@@ -124,10 +124,11 @@ export async function matchContractNames(
         ([, e]) => e.contractName === ISBE_GOVERNANCE_CONTRACT_NAME
     )
 
-    if (!found)
+    if (!found) {
         throw new Error(
             `❌ Governance contract (${ISBE_GOVERNANCE_CONTRACT_NAME}) not found in genesis allocation. Perhaps contract name has been changed?`
         )
+    }
 
     const [address, entry] = found
 
@@ -136,15 +137,6 @@ export async function matchContractNames(
     )
     alloc.set(governanceaddress, entry)
     alloc.delete(address) //Entry is maintained as it us by GOVERNANCE_CONTRACT_NAME address
-
-    console.log(
-        '******************************************************************************'
-    )
-    console.log(`Resulting Governance contract`)
-    console.log(alloc)
-    console.log(
-        '******************************************************************************'
-    )
 
     return alloc
 }
