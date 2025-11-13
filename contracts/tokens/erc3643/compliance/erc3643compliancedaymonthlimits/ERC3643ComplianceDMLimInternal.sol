@@ -3,7 +3,7 @@ pragma solidity ^0.8.28;
 
 import {_ERC3643_COMPLIANCE_DMLIM_STORAGE_POSITION} from '../../../../constants/storagePositions.sol';
 import {DidDocumentDetailedInternal} from '../../../../identity/didregistry/DidDocumentDetailedInternal.sol';
-import {IERC3643ComplianceHookEvents} from '../IERC3643ComplianceHookEvents.sol';
+import {IERC3643ComplianceDMLim} from './IERC3643ComplianceDMLim.sol';
 /**
  * @title ERC3643ComplianceDMLimInternal
  * @notice Internal contract for managing ERC-3643 daily/monthly transfer limits.
@@ -12,8 +12,7 @@ import {IERC3643ComplianceHookEvents} from '../IERC3643ComplianceHookEvents.sol'
  *      It is intended to be used by external contracts that handle authorization and event emission.
  */
 abstract contract ERC3643ComplianceDMLimInternal is
-    DidDocumentDetailedInternal,
-    IERC3643ComplianceHookEvents
+    DidDocumentDetailedInternal
 {
     /// @dev Storage structure for ERC-3643 daily/monthly limits.
     struct ERC3643ComplianceDMLimStorage {
@@ -67,6 +66,7 @@ abstract contract ERC3643ComplianceDMLimInternal is
     /**
      * @dev Internal hook for post-transfer operations for DayMonthLimits feature.
      *      Updates daily and monthly counters.
+     *      Emits DayMonthLimitsTransferHook event.
      * @param _from The address of the sender.
      * @param _amount The amount of tokens transferred.
      */
@@ -89,11 +89,14 @@ abstract contract ERC3643ComplianceDMLimInternal is
         // Update counters (los límites ya han sido validados en compliance)
         counter.dailyCount += _amount;
         counter.monthlyCount += _amount;
+
+        emit IERC3643ComplianceDMLim.DayMonthLimitsTransferHook(_from, _amount);
     }
 
     /**
      * @dev Internal hook for post-mint operations for DayMonthLimits feature.
      *      Intentionally left empty for feature mapping.
+     *      Emits DayMonthLimitsCreationHook event.
      * @param _to The address receiving minted tokens.
      * @param _amount The amount of tokens minted.
      */
@@ -102,15 +105,13 @@ abstract contract ERC3643ComplianceDMLimInternal is
         address _to,
         uint256 _amount
     ) internal {
-        // Emit event to ensure coverage tools can detect execution
-        // LOG opcode is non-optimizable and always generates bytecode
-        emit CoverageHookDayMonthLimits(_to, _amount);
+        emit IERC3643ComplianceDMLim.DayMonthLimitsCreationHook(_to, _amount);
     }
 
     /**
      * @dev Internal hook for post-burn operations for DayMonthLimits feature.
      *      Intentionally left empty for feature mapping.
-     *      Emits CoverageHookDayMonthLimits event to generate detectable bytecode for solidity-coverage.
+     *      Emits DayMonthLimitsDestructionHook event.
      * @param _from The address from which tokens are burned.
      * @param _amount The amount of tokens burned.
      */
@@ -118,9 +119,10 @@ abstract contract ERC3643ComplianceDMLimInternal is
         address _from,
         uint256 _amount
     ) internal {
-        // Emit event to ensure coverage tools can detect execution
-        // LOG opcode is non-optimizable and always generates bytecode
-        emit CoverageHookDayMonthLimits(_from, _amount);
+        emit IERC3643ComplianceDMLim.DayMonthLimitsDestructionHook(
+            _from,
+            _amount
+        );
     }
 
     /**

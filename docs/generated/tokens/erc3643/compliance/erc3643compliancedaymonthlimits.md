@@ -267,7 +267,8 @@ function _transferActionOnDayMonthLimits(address _from, uint256 _amount) interna
 ```
 
 _Internal hook for post-transfer operations for DayMonthLimits feature.
-Updates daily and monthly counters._
+Updates daily and monthly counters.
+Emits DayMonthLimitsTransferHook event._
 
 #### Parameters
 
@@ -283,7 +284,8 @@ function _creationActionOnDayMonthLimits(address _to, uint256 _amount) internal
 ```
 
 _Internal hook for post-mint operations for DayMonthLimits feature.
-Intentionally left empty for feature mapping._
+Intentionally left empty for feature mapping.
+Emits DayMonthLimitsCreationHook event._
 
 #### Parameters
 
@@ -300,7 +302,7 @@ function _destructionActionOnDayMonthLimits(address _from, uint256 _amount) inte
 
 _Internal hook for post-burn operations for DayMonthLimits feature.
 Intentionally left empty for feature mapping.
-Emits CoverageHookDayMonthLimits event to generate detectable bytecode for solidity-coverage._
+Emits DayMonthLimitsDestructionHook event._
 
 #### Parameters
 
@@ -425,6 +427,51 @@ _Internal view function to check if the month has finished for an address._
 Interface for ERC-3643 compliance feature: Daily/Month transfer limits.
 
 _Allows setting limits, checking compliance, and lifecycle hooks for transfers, minting, and burning._
+
+### DayMonthLimitsTransferHook
+
+```solidity
+event DayMonthLimitsTransferHook(address from, uint256 amount)
+```
+
+Emitted when a transfer is checked against the daily/monthly limits restriction.
+
+#### Parameters
+
+| Name   | Type    | Description                             |
+| ------ | ------- | --------------------------------------- |
+| from   | address | The address sending tokens.             |
+| amount | uint256 | The amount of tokens being transferred. |
+
+### DayMonthLimitsCreationHook
+
+```solidity
+event DayMonthLimitsCreationHook(address to, uint256 amount)
+```
+
+Emitted when tokens are created and checked against the daily/monthly limits restriction.
+
+#### Parameters
+
+| Name   | Type    | Description                                     |
+| ------ | ------- | ----------------------------------------------- |
+| to     | address | The address receiving the newly created tokens. |
+| amount | uint256 | The amount of tokens created.                   |
+
+### DayMonthLimitsDestructionHook
+
+```solidity
+event DayMonthLimitsDestructionHook(address from, uint256 amount)
+```
+
+Emitted when tokens are destroyed and checked against the daily/monthly limits restriction.
+
+#### Parameters
+
+| Name   | Type    | Description                                  |
+| ------ | ------- | -------------------------------------------- |
+| from   | address | The address from which tokens are destroyed. |
+| amount | uint256 | The amount of tokens destroyed.              |
 
 ### DayMonthLimitsSet
 

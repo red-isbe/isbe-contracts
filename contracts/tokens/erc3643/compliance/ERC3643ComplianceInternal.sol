@@ -77,7 +77,7 @@ abstract contract ERC3643ComplianceInternal is
     ) internal returns (bool) {
         // Llamar al hook de MaxBalance para cobertura, aunque esté vacío
         if (_isMaxBalanceEnabled()) {
-            _transferActionOnMaxBalance(_from, _to, _amount);
+            _transferActionOnMaxBalance(_from, _amount);
         }
         if (_isDailyMonthLimitsEnabled()) {
             _transferActionOnDayMonthLimits(_from, _amount);

@@ -149,18 +149,18 @@ _Internal function to update the max balance value in storage._
 ### \_transferActionOnMaxBalance
 
 ```solidity
-function _transferActionOnMaxBalance(address _from, address _to, uint256 _amount) internal
+function _transferActionOnMaxBalance(address _from, uint256 _amount) internal
 ```
 
 _Internal hook for post-transfer operations for MaxBalance feature.
-Intentionally left empty for feature mapping._
+Intentionally left empty for feature mapping.
+Emits MaxBalanceTransferHook event._
 
 #### Parameters
 
 | Name     | Type    | Description                       |
 | -------- | ------- | --------------------------------- |
 | \_from   | address | The address of the sender.        |
-| \_to     | address | The address of the receiver.      |
 | \_amount | uint256 | The amount of tokens transferred. |
 
 ### \_creationActionOnMaxBalance
@@ -170,7 +170,8 @@ function _creationActionOnMaxBalance(address _to, uint256 _amount) internal
 ```
 
 _Internal hook for post-mint operations for MaxBalance feature.
-Intentionally left empty for feature mapping._
+Intentionally left empty for feature mapping.
+Emits MaxBalanceCreationHook event._
 
 #### Parameters
 
@@ -187,7 +188,7 @@ function _destructionActionOnMaxBalance(address _from, uint256 _amount) internal
 
 _Internal hook for post-burn operations for MaxBalance feature.
 Intentionally left empty for feature mapping.
-Emits CoverageHookMaxBalance event to generate detectable bytecode for solidity-coverage._
+Emits MaxBalanceDestructionHook event._
 
 #### Parameters
 
@@ -253,6 +254,51 @@ Emitted when the max balance is updated.
 | Name         | Type    | Description                |
 | ------------ | ------- | -------------------------- |
 | \_maxBalance | uint256 | The new max balance value. |
+
+### MaxBalanceTransferHook
+
+```solidity
+event MaxBalanceTransferHook(address from, uint256 amount)
+```
+
+Emitted when a transfer is checked against the max balance restriction.
+
+#### Parameters
+
+| Name   | Type    | Description                             |
+| ------ | ------- | --------------------------------------- |
+| from   | address | The address sending tokens.             |
+| amount | uint256 | The amount of tokens being transferred. |
+
+### MaxBalanceCreationHook
+
+```solidity
+event MaxBalanceCreationHook(address to, uint256 amount)
+```
+
+Emitted when tokens are created and checked against the max balance restriction.
+
+#### Parameters
+
+| Name   | Type    | Description                                     |
+| ------ | ------- | ----------------------------------------------- |
+| to     | address | The address receiving the newly created tokens. |
+| amount | uint256 | The amount of tokens created.                   |
+
+### MaxBalanceDestructionHook
+
+```solidity
+event MaxBalanceDestructionHook(address from, uint256 amount)
+```
+
+Emitted when tokens are destroyed and checked against the max balance restriction.
+
+#### Parameters
+
+| Name   | Type    | Description                                  |
+| ------ | ------- | -------------------------------------------- |
+| from   | address | The address from which tokens are destroyed. |
+| amount | uint256 | The amount of tokens destroyed.              |
 
 ### MaxBalanceExceeded
 

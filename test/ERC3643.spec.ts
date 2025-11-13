@@ -25,7 +25,6 @@ import {
     ERC3643ComplianceFacet,
     ERC3643ComplianceMaxBalanceFacet,
     ERC3643ComplianceDMLimFacet,
-    IERC3643ComplianceHookEvents,
 } from '../typechain-types'
 
 describe('ERC3643 Token', function () {
@@ -7050,7 +7049,6 @@ describe('ERC3643 Token', function () {
         // ----------------------------------------------------------------
         describe('MaxBalance Hook Event Emission', () => {
             let erc3643Controller: IERC203643Controller
-            let hookEvents: IERC3643ComplianceHookEvents
 
             beforeEach(async () => {
                 const fixture = async () => {
@@ -7073,24 +7071,45 @@ describe('ERC3643 Token', function () {
                         'IERC203643Controller',
                         proxyAddress
                     )) as IERC203643Controller
-
-                    hookEvents = (await ethers.getContractAt(
-                        'IERC3643ComplianceHookEvents',
-                        proxyAddress
-                    )) as IERC3643ComplianceHookEvents
                 }
                 await loadFixture(fixture)
             })
 
-            it('GIVEN MaxBalance enabled WHEN mint THEN does NOT emit CoverageHookMaxBalance event', async () => {
+            it('GIVEN MaxBalance enabled WHEN mint THEN does emit MaxBalanceCreationHook event', async () => {
                 // Mint tokens (this will call _created -> _creationActionOnMaxBalance)
-                await erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
+                const tx = await erc3643Capped
+                    .connect(owner)
+                    .mint(aliceAddress, 1000n)
 
                 // Verify mint succeeded (creation hook is empty, no event emitted)
                 expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(1000n)
+
+                // Verify the coverage hook event was emitted
+                await expect(tx)
+                    .to.emit(maxBalanceFacet, 'MaxBalanceCreationHook')
+                    .withArgs(aliceAddress, 1000n)
             })
 
-            it('GIVEN MaxBalance enabled WHEN forceBurn THEN emits CoverageHookMaxBalance event', async () => {
+            it('GIVEN MaxBalance enabled WHEN transfer THEN emits MaxBalanceTransferHook event', async () => {
+                // Mint tokens to alice
+                await erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
+
+                // Transfer tokens from alice to bob using ERC20 facet
+                const tx = await erc20Facet
+                    .connect(alice)
+                    .transfer(bobAddress, 500n)
+
+                // Verify the coverage hook event was emitted
+                await expect(tx)
+                    .to.emit(maxBalanceFacet, 'MaxBalanceTransferHook')
+                    .withArgs(aliceAddress, 500n)
+
+                // Verify balances
+                expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(500n)
+                expect(await erc20Facet.balanceOf(bobAddress)).to.equal(500n)
+            })
+
+            it('GIVEN MaxBalance enabled WHEN forceBurn THEN emits MaxBalanceDestructionHook event', async () => {
                 // Mint tokens first
                 await erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
 
@@ -7101,7 +7120,7 @@ describe('ERC3643 Token', function () {
 
                 // Verify the coverage hook event was emitted
                 await expect(tx)
-                    .to.emit(hookEvents, 'CoverageHookMaxBalance')
+                    .to.emit(maxBalanceFacet, 'MaxBalanceDestructionHook')
                     .withArgs(aliceAddress, 500n)
 
                 // Verify burn succeeded
@@ -7778,7 +7797,6 @@ describe('ERC3643 Token', function () {
         // ----------------------------------------------------------------
         describe('DayMonthLimits Hook Event Emission', () => {
             let erc3643Controller: IERC203643Controller
-            let hookEvents: IERC3643ComplianceHookEvents
 
             beforeEach(async () => {
                 const fixture = async () => {
@@ -7801,24 +7819,51 @@ describe('ERC3643 Token', function () {
                         'IERC203643Controller',
                         proxyAddress
                     )) as IERC203643Controller
-
-                    hookEvents = (await ethers.getContractAt(
-                        'IERC3643ComplianceHookEvents',
-                        proxyAddress
-                    )) as IERC3643ComplianceHookEvents
                 }
                 await loadFixture(fixture)
             })
 
-            it('GIVEN DayMonthLimits enabled WHEN mint THEN does NOT emit CoverageHookDayMonthLimits event', async () => {
+            it('GIVEN DayMonthLimits enabled WHEN mint THEN does emit DayMonthLimitsCreationHook event', async () => {
                 // Mint tokens (this will call _created -> _creationActionOnDayMonthLimits)
-                await erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
+                const tx = await erc3643Capped
+                    .connect(owner)
+                    .mint(aliceAddress, 1000n)
 
-                // Verify mint succeeded (creation hook is empty, no event emitted)
+                // Verify mint succeeded
                 expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(1000n)
+
+                // Verify the coverage hook event was emitted
+                await expect(tx)
+                    .to.emit(complianceDMLimFacet, 'DayMonthLimitsCreationHook')
+                    .withArgs(aliceAddress, 1000n)
             })
 
-            it('GIVEN DayMonthLimits enabled WHEN forceBurn THEN emits CoverageHookDayMonthLimits event', async () => {
+            it('GIVEN DayMonthLimits enabled WHEN transfer THEN emits DayMonthLimitsTransferHook event', async () => {
+                // Mint tokens to alice
+                await erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
+
+                // Transfer tokens from alice to bob using ERC20 facet
+                const tx = await erc20Facet
+                    .connect(alice)
+                    .transfer(bobAddress, 500n)
+
+                // Debug: log addresses
+
+                console.log('aliceAddress', aliceAddress)
+
+                console.log('bobAddress', bobAddress)
+
+                // Verify the coverage hook event was emitted
+                await expect(tx)
+                    .to.emit(complianceDMLimFacet, 'DayMonthLimitsTransferHook')
+                    .withArgs(aliceAddress, 500n)
+
+                // Verify balances
+                expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(500n)
+                expect(await erc20Facet.balanceOf(bobAddress)).to.equal(500n)
+            })
+
+            it('GIVEN DayMonthLimits enabled WHEN forceBurn THEN emits DayMonthLimitsDestructionHook event', async () => {
                 // Mint tokens first
                 await erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
 
@@ -7829,7 +7874,10 @@ describe('ERC3643 Token', function () {
 
                 // Verify the coverage hook event was emitted
                 await expect(tx)
-                    .to.emit(hookEvents, 'CoverageHookDayMonthLimits')
+                    .to.emit(
+                        complianceDMLimFacet,
+                        'DayMonthLimitsDestructionHook'
+                    )
                     .withArgs(aliceAddress, 500n)
 
                 // Verify burn succeeded
@@ -8107,7 +8155,6 @@ describe('ERC3643 Token', function () {
         let complianceDMLimFacet: ERC3643ComplianceDMLimFacet
         let erc3643Capped: IERC203643Capped
         let erc3643Controller: IERC203643Controller
-        let hookEvents: IERC3643ComplianceHookEvents
 
         beforeEach(async () => {
             const fixture = async () => {
@@ -8151,12 +8198,6 @@ describe('ERC3643 Token', function () {
                     proxyAddress
                 )) as IERC203643Controller
 
-                // Get event interface for coverage testing
-                hookEvents = (await ethers.getContractAt(
-                    'IERC3643ComplianceHookEvents',
-                    proxyAddress
-                )) as IERC3643ComplianceHookEvents
-
                 // Initialize compliance with BOTH features enabled
                 await complianceFacet
                     .connect(owner)
@@ -8193,14 +8234,54 @@ describe('ERC3643 Token', function () {
 
             // Verify both coverage hook events were emitted
             await expect(tx)
-                .to.emit(hookEvents, 'CoverageHookMaxBalance')
+                .to.emit(maxBalanceFacet, 'MaxBalanceDestructionHook')
                 .withArgs(aliceAddress, 500n)
             await expect(tx)
-                .to.emit(hookEvents, 'CoverageHookDayMonthLimits')
+                .to.emit(complianceDMLimFacet, 'DayMonthLimitsDestructionHook')
                 .withArgs(aliceAddress, 500n)
 
             // Verify burn succeeded
             expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(500n)
+        })
+
+        it('GIVEN both features enabled WHEN mint THEN emits both creation hook events', async () => {
+            // Mint tokens (calls both _creationActionOnMaxBalance AND _creationActionOnDayMonthLimits)
+            const tx = await erc3643Capped
+                .connect(owner)
+                .mint(aliceAddress, 1000n)
+
+            // Verify both coverage hook events were emitted
+            await expect(tx)
+                .to.emit(maxBalanceFacet, 'MaxBalanceCreationHook')
+                .withArgs(aliceAddress, 1000n)
+            await expect(tx)
+                .to.emit(complianceDMLimFacet, 'DayMonthLimitsCreationHook')
+                .withArgs(aliceAddress, 1000n)
+
+            // Verify mint succeeded
+            expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(1000n)
+        })
+
+        it('GIVEN both features enabled WHEN transfer THEN emits both transfer hook events', async () => {
+            // Mint tokens to alice
+            await erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
+
+            // Transfer tokens from alice to bob using ERC20 facet
+            const tx = await erc20Facet
+                .connect(alice)
+                .transfer(bobAddress, 500n)
+
+            // Verify both coverage hook events were emitted
+            await expect(tx)
+                .to.emit(maxBalanceFacet, 'MaxBalanceTransferHook')
+                .withArgs(aliceAddress, 500n)
+            await expect(tx)
+                .to.emit(complianceDMLimFacet, 'DayMonthLimitsTransferHook')
+                .withArgs(aliceAddress, 500n)
+
+            // Verify balances
+            expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(500n)
+            expect(await erc20Facet.balanceOf(bobAddress)).to.equal(500n)
         })
     })
 })

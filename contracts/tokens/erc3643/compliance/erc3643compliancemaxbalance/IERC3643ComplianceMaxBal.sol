@@ -14,6 +14,27 @@ interface IERC3643ComplianceMaxBal {
     event MaxBalanceSet(uint256 _maxBalance);
 
     /**
+     * @notice Emitted when a transfer is checked against the max balance restriction.
+     * @param from The address sending tokens.
+     * @param amount The amount of tokens being transferred.
+     */
+    event MaxBalanceTransferHook(address indexed from, uint256 amount);
+
+    /**
+     * @notice Emitted when tokens are created and checked against the max balance restriction.
+     * @param to The address receiving the newly created tokens.
+     * @param amount The amount of tokens created.
+     */
+    event MaxBalanceCreationHook(address indexed to, uint256 amount);
+
+    /**
+     * @notice Emitted when tokens are destroyed and checked against the max balance restriction.
+     * @param from The address from which tokens are destroyed.
+     * @param amount The amount of tokens destroyed.
+     */
+    event MaxBalanceDestructionHook(address indexed from, uint256 amount);
+
+    /**
      * @notice Error emitted when a transfer would exceed the max balance.
      * @param to The address of the receiver.
      * @param attemptedBalance The balance that would be exceeded.

@@ -3,7 +3,7 @@ pragma solidity ^0.8.28;
 
 import {ERC20Internal} from '../../../erc20/ERC20Internal.sol';
 import {_ERC3643_COMPLIANCE_MAXBALANCE_STORAGE_POSITION} from '../../../../constants/storagePositions.sol';
-import {IERC3643ComplianceHookEvents} from '../IERC3643ComplianceHookEvents.sol';
+import {IERC3643ComplianceMaxBal} from './IERC3643ComplianceMaxBal.sol';
 /**
  * @title ERC3643ComplianceMaxBalanceInternal
  * @notice Internal contract for managing ERC-3643 MaxBalance restriction.
@@ -12,10 +12,7 @@ import {IERC3643ComplianceHookEvents} from '../IERC3643ComplianceHookEvents.sol'
  *      Balances are read directly from ERC20Internal primitives.
  *      It is intended to be used by external contracts that handle authorization and event emission.
  */
-abstract contract ERC3643ComplianceMaxBalInternal is
-    ERC20Internal,
-    IERC3643ComplianceHookEvents
-{
+abstract contract ERC3643ComplianceMaxBalInternal is ERC20Internal {
     /// @dev Storage structure for ERC-3643 MaxBalance restriction.
     struct ERC3643ComplianceMaxBalanceStorage {
         uint256 maxBalance;
@@ -43,20 +40,22 @@ abstract contract ERC3643ComplianceMaxBalInternal is
     /**
      * @dev Internal hook for post-transfer operations for MaxBalance feature.
      *      Intentionally left empty for feature mapping.
+     *      Emits MaxBalanceTransferHook event.
      * @param _from The address of the sender.
-     * @param _to The address of the receiver.
      * @param _amount The amount of tokens transferred.
      */
     // solhint-disable no-empty-blocks
     function _transferActionOnMaxBalance(
         address _from,
-        address _to,
         uint256 _amount
-    ) internal {}
+    ) internal {
+        emit IERC3643ComplianceMaxBal.MaxBalanceTransferHook(_from, _amount);
+    }
 
     /**
      * @dev Internal hook for post-mint operations for MaxBalance feature.
      *      Intentionally left empty for feature mapping.
+     *      Emits MaxBalanceCreationHook event.
      * @param _to The address receiving minted tokens.
      * @param _amount The amount of tokens minted.
      */
@@ -65,14 +64,12 @@ abstract contract ERC3643ComplianceMaxBalInternal is
         address _to,
         uint256 _amount
     ) internal {
-        // Emit event to ensure coverage tools can detect execution
-        // LOG opcode is non-optimizable and always generates bytecode
-        emit CoverageHookMaxBalance(_to, _amount);
+        emit IERC3643ComplianceMaxBal.MaxBalanceCreationHook(_to, _amount);
     }
     /**
      * @dev Internal hook for post-burn operations for MaxBalance feature.
      *      Intentionally left empty for feature mapping.
-     *      Emits CoverageHookMaxBalance event to generate detectable bytecode for solidity-coverage.
+     *      Emits MaxBalanceDestructionHook event.
      * @param _from The address from which tokens are burned.
      * @param _amount The amount of tokens burned.
      */
@@ -80,9 +77,7 @@ abstract contract ERC3643ComplianceMaxBalInternal is
         address _from,
         uint256 _amount
     ) internal {
-        // Emit event to ensure coverage tools can detect execution
-        // LOG opcode is non-optimizable and always generates bytecode
-        emit CoverageHookMaxBalance(_from, _amount);
+        emit IERC3643ComplianceMaxBal.MaxBalanceDestructionHook(_from, _amount);
     }
 
     /**

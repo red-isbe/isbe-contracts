@@ -8,6 +8,26 @@ pragma solidity ^0.8.28;
  */
 interface IERC3643ComplianceDMLim {
     /**
+     * @notice Emitted when a transfer is checked against the daily/monthly limits restriction.
+     * @param from The address sending tokens.
+     * @param amount The amount of tokens being transferred.
+     */
+    event DayMonthLimitsTransferHook(address indexed from, uint256 amount);
+
+    /**
+     * @notice Emitted when tokens are created and checked against the daily/monthly limits restriction.
+     * @param to The address receiving the newly created tokens.
+     * @param amount The amount of tokens created.
+     */
+    event DayMonthLimitsCreationHook(address indexed to, uint256 amount);
+
+    /**
+     * @notice Emitted when tokens are destroyed and checked against the daily/monthly limits restriction.
+     * @param from The address from which tokens are destroyed.
+     * @param amount The amount of tokens destroyed.
+     */
+    event DayMonthLimitsDestructionHook(address indexed from, uint256 amount);
+    /**
      * @notice Emitted when daily or monthly limits are updated.
      * @param _dailyLimit The new daily transfer limit.
      * @param _monthlyLimit The new monthly transfer limit.
