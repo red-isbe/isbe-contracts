@@ -161,4 +161,8 @@ bytes32 constant _ANCHORING_STORAGE_POSITION = 0x5910b7bacf413fc0f7947b11aa2cd75
 // keccak256('isbe.contracts.whitelist.basic.storage');
 bytes32 constant _BASIC_WHITELIST_STORAGE_POSITION = 0x8c3a8a9f4e7b5d6c9a2b1e0f3d4a5c6e7b8d9a0c1e2f3a4b5c6d7e8f9a0b1c2d;
 
+// Account Abstraction - Paymaster
+// keccak256('isbe.contracts.account.abstraction.paymaster.storage');
+bytes32 constant _AA_PAYMASTER_STORAGE_POSITION = 0x4fab91a41a5013666e2b9940ee824519fb86884f9be1b2025ae4547b1b9c617a;
+
 // solhint-enable max-line-length

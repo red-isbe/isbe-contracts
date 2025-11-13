@@ -177,4 +177,7 @@ bytes32 constant _NETWORK_DIRECTORY_RESOLVER_KEY = 0xa02352a617fa557d3bef91c39fb
 // keccak256('isbe.contracts.whitelist.basic.resolver.key');
 bytes32 constant _BASIC_WHITELIST_RESOLVER_KEY = 0x7d9f8a6b5c4e3d2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f;
 
+// keccak256('isbe.contracts.account.abstraction.paymaster.paymaster.key');
+bytes32 constant _AA_PAYMASTER_PAYMASTER_KEY = 0x3b133fbb2a5301959c9d14293df1370f4f47c0bc94efc5443e10584be097309d;
+
 // solhint-enable max-line-length
