@@ -96,7 +96,9 @@ task(
                 return await deployWithCleanOrchestrator(taskArgs, hre)
             }
         } catch (error) {
-            console.error('❌ Error during clean deployment:', error.message)
+            const errorMessage =
+                error instanceof Error ? error.message : String(error)
+            console.error('❌ Error during clean deployment:', errorMessage)
             throw error
         }
     })
@@ -136,7 +138,7 @@ async function deployWithCleanOrchestrator(
         console.log('')
 
         // Run the clean orchestrated deployment
-        const deploymentResult = await orchestrator.deploy(deploymentOptions)
+        const deploymentResult = await orchestrator.deploy()
 
         // Run pre-commit validations if requested
         if (taskArgs.precommit) {
@@ -168,7 +170,9 @@ async function deployWithCleanOrchestrator(
 
         return deploymentResult
     } catch (error) {
-        console.error('❌ Error during clean deployment:', error.message)
+        const errorMessage =
+            error instanceof Error ? error.message : String(error)
+        console.error('❌ Error during clean deployment:', errorMessage)
         throw error
     }
 }
@@ -243,7 +247,9 @@ async function deployWithLegacyOrchestrator(
 
         return deploymentResult
     } catch (error) {
-        console.error('❌ Error during legacy deployment:', error.message)
+        const errorMessage =
+            error instanceof Error ? error.message : String(error)
+        console.error('❌ Error during legacy deployment:', errorMessage)
         throw error
     }
 }
@@ -279,7 +285,9 @@ function displaySignatureProviderInfo(hre: HardhatRuntimeEnvironment): void {
             `   • secp256r1 support: ${isSecp256r1Supported ? '✅' : '❌'}`
         )
     } catch (error) {
-        console.log(`   ❌ Error analyzing providers: ${error.message}`)
+        const errorMessage =
+            error instanceof Error ? error.message : String(error)
+        console.log(`   ❌ Error analyzing providers: ${errorMessage}`)
     }
 }
 
@@ -352,9 +360,7 @@ function displayFinalSummary(
             `   • Deployed use cases: ${deploymentResult.useCases.filter((uc) => uc.success).length}/${deploymentResult.useCases.length}`
         )
     }
-    console.log(
-        `   • Network: ${deploymentResult.summary.networkName || 'unknown'}`
-    )
+    console.log(`   • Network: ${networkName || 'unknown'}`)
 }
 
 /**
