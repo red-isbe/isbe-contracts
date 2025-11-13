@@ -18,6 +18,7 @@ import { getNetworkConfigs, ConfigManager, logger } from './config'
 // Register all tasks with Hardhat CLI in a single import
 // This replaces the many individual task imports with a consolidated approach
 import './tasks/register'
+import { EthGasReporterConfig } from 'hardhat-gas-reporter/dist/src/types'
 
 // Initialize configuration management
 const configManager = ConfigManager.getInstance()
@@ -52,6 +53,9 @@ logger.summary('Configuration Summary', {
 // Get network configurations from unified config
 const networkConfigs = getNetworkConfigs()
 
+// const ACCOUNTS = (
+//     process.env.ACCOUNTS ?? randomBytes(32).toString('hex')
+// ).split(',')
 const config: HardhatUserConfig = {
     solidity: {
         version: '0.8.28',
@@ -96,7 +100,7 @@ const config: HardhatUserConfig = {
         outputFile: 'docs/generated/gas-usage-summary.md',
         noColors: true,
         currency: 'EUR',
-    },
+    } as Partial<EthGasReporterConfig>,
 }
 
 export default config

@@ -117,12 +117,6 @@ async function deployWithCleanOrchestrator(
         // Create clean orchestrator (automatically detects and uses appropriate provider)
         const orchestrator = new CleanDeploymentOrchestrator(hre, config)
 
-        // Set deployment options
-        const deploymentOptions = {
-            skipUseCases: taskArgs.noDeployUseCases === true,
-        }
-
-        console.log('\\n📋 CLEAN DEPLOYMENT CONFIGURATION:')
         console.log(
             `   • Business logics to deploy: ${config.businessLogics.length}`
         )

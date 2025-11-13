@@ -12,10 +12,7 @@ import {
     ISBE_ROLE,
     PROXY_DEPLOYER_ROLE,
     TIMESTAMPING_REGISTRY_ROLE,
-    BESU_NODE_MANAGER_ROLE,
-    ANCHORER_ROLE,
-    METADATA_MANAGER_ROLE,
-} from '../../test/constants'
+} from '../../utils/constants'
 
 /**
  * secp256r1-compatible deployment function that uses raw transactions
@@ -84,7 +81,7 @@ export async function deployIsbeFactorySecp256r1(
         // Create deployment transaction
         const deployTx = {
             nonce: nonce,
-            gasPrice: 0n,
+            gasPrice: hre.config.networks[hre.network.name].gasPrice,
             gasLimit: 5000000n,
             to: undefined, // Contract deployment
             value: 0n,
@@ -221,7 +218,7 @@ export async function deployIsbeFactorySecp256r1(
 
     const proxyDeployTx = {
         nonce: proxyNonce,
-        gasPrice: 0n,
+        gasPrice: hre.config.networks[hre.network.name].gasPrice,
         gasLimit: 5000000n,
         to: undefined,
         value: 0n,

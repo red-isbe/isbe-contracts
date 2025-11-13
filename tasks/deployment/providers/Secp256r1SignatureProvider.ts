@@ -88,7 +88,7 @@ export class Secp256r1SignatureProvider implements ISignatureProvider {
         // Create deployment transaction
         const deployTx = {
             nonce: nonce,
-            gasPrice: 0n,
+            gasPrice: hre.config.networks[hre.network.name].gasPrice,
             gasLimit: 20_000_000n,
             to: undefined, // Contract deployment
             value: 0n,
@@ -131,7 +131,9 @@ export class Secp256r1SignatureProvider implements ISignatureProvider {
                 (await this.hre.ethers.provider.getTransactionCount(
                     await this.getAddress()
                 )),
-            gasPrice: transaction.gasPrice || 0n,
+            gasPrice:
+                transaction.gasPrice ||
+                hre.config.networks[hre.network.name].gasPrice,
             gasLimit: transaction.gasLimit || 5000000n,
             to: transaction.to,
             value: transaction.value || 0n,
