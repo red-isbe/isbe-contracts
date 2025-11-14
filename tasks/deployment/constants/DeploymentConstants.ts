@@ -3,9 +3,11 @@ import { ENS_DEFINITIONS, ENS_USE_CASE_CONFIGS } from './ens'
 import { UTILITY_DEFINITIONS, UTILITY_USE_CASE_CONFIGS } from './utility'
 import { ERC20_DEFINITIONS } from './token/erc20'
 import { ERC721_DEFINITIONS } from './token/erc721'
+import { ERC3643_DEFINITIONS } from './erc3643'
 // Import token use case configurations
 import { ERC20_USE_CASE_CONFIGS } from './erc20'
 import { ERC721_USE_CASE_CONFIGS } from './token/erc721_configurations'
+import { ERC3643_USE_CASE_CONFIGS } from './token/erc3643_configurations'
 
 // Export core constants
 export { DEFAULT_VERSION } from './version'
@@ -17,6 +19,7 @@ export * from './resolverKeys'
 // Export token configurations
 export * from './erc20'
 export * from './erc721'
+export * from './erc3643'
 
 // Export feature definitions
 export * from './ens'
@@ -66,6 +69,9 @@ export const DEFAULT_USE_CASE_CONFIGURATIONS = [
 
     // Complete configuration (all 4 extensions)
     ERC20_USE_CASE_CONFIGS.COMPLETE,
+
+    // ERC3643 Security Token
+    ERC3643_USE_CASE_CONFIGS.SECURITY_TOKEN,
 
     // ERC721 use cases - Base and Single Extensions
     ERC721_USE_CASE_CONFIGS.BASE,
@@ -285,4 +291,5 @@ export const BUSINESS_LOGIC_DEFINITIONS = [
     ...ENS_DEFINITIONS,
     ...ERC20_DEFINITIONS,
     ...ERC721_DEFINITIONS,
+    ...ERC3643_DEFINITIONS,
 ]

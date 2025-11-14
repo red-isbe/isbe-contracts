@@ -16,7 +16,7 @@ export interface ConfigurationIds {
     [key: string]: string
 }
 
-export type TokenType = 'erc20' | 'erc721'
+export type TokenType = 'erc20' | 'erc721' | 'erc3643'
 
 export interface RbacConfig {
     role: string
