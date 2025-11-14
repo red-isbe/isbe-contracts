@@ -1,5 +1,9 @@
 import { TokenConfiguration } from '../types'
-import { ERC20_RESOLVER_KEYS, ERC3643_RESOLVER_KEYS } from '../resolverKeys'
+import {
+    ERC20_RESOLVER_KEYS,
+    ERC20_ERC3643_SHARED_RESOLVER_KEYS,
+    ERC3643_RESOLVER_KEYS,
+} from '../resolverKeys'
 import { CONFIGURATION_IDS } from '../configurationIds'
 import {
     createTokenConfig,
@@ -64,8 +68,8 @@ export const ERC3643_USE_CASE_CONFIGS = {
 
             // ERC20 Extensions for Security Tokens
             ERC20_RESOLVER_KEYS.SNAPSHOT, // Dividends & voting snapshots
-            ERC20_RESOLVER_KEYS.CAPPED, // Supply cap (regulatory)
-            ERC20_RESOLVER_KEYS.CONTROLLER, // Transfer control
+            ERC20_ERC3643_SHARED_RESOLVER_KEYS.CAPPED, // Supply cap (regulatory)
+            ERC20_ERC3643_SHARED_RESOLVER_KEYS.CONTROLLER, // Transfer control
 
             // ERC3643 Token Features
             ERC3643_RESOLVER_KEYS.METADATA, // onchainID + version

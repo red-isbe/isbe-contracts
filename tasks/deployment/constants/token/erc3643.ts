@@ -1,5 +1,5 @@
-import { ERC3643_RESOLVER_KEYS } from './resolverKeys'
-import { ARTIFACT_PATHS, CONTRACT_NAMES } from './configurationIds'
+import { ERC3643_RESOLVER_KEYS } from '../resolverKeys'
+import { ARTIFACT_PATHS, CONTRACT_NAMES } from '../configurationIds'
 
 export const ERC3643_DEFINITIONS = [
     {

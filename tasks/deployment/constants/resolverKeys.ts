@@ -31,6 +31,13 @@ export const ERC20_RESOLVER_KEYS: ResolverKeys = {
         '0xed76d446b6029b8a177fda4fc38162d9dc0dc29ab636541fd6e75ae60fe17151',
 }
 
+// ERC20/ERC3643 shared facets (used by both standards)
+export const ERC20_ERC3643_SHARED_RESOLVER_KEYS: ResolverKeys = {
+    CAPPED: '0x1f3e5d6c7b8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f60718293a4b5c6d7e8',
+    CONTROLLER:
+        '0x9b1f4e8c6d7a5b4c3e2f1a0b9c8d7e6f5a4b3c2d1e0f9e8d7c6b5a4b3c2d1e0f',
+}
+
 // ERC721 facets
 export const ERC721_RESOLVER_KEYS: ResolverKeys = {
     ERC721: '0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413',

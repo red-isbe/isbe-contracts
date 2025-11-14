@@ -107,8 +107,11 @@ export function buildConfigurationId(
             logInitialConfiguration(seed, resolverKeys)
         }
 
+        // Sort resolver keys for deterministic results (required by ADR-003)
+        const orderedKeys = [...resolverKeys].sort()
+
         // Process resolver keys
-        const result = resolverKeys.reduce((acc, resolverKey) => {
+        const result = orderedKeys.reduce((acc, resolverKey) => {
             try {
                 const keyBigInt = BigInt(resolverKey)
                 const position = calculatePosition(
@@ -124,8 +127,9 @@ export function buildConfigurationId(
 
                 return acc ^ mask
             } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : String(error)
                 throw new Error(
-                    `Failed to process resolver key ${resolverKey}: ${error.message}`
+                    `Failed to process resolver key ${resolverKey}: ${errorMessage}`
                 )
             }
         }, seedBigInt)
@@ -139,14 +143,15 @@ export function buildConfigurationId(
             logger.config('Final Result:', {
                 configurationId: hexResult,
                 length: hexResult.length,
-                resolverKeysProcessed: resolverKeys.length,
+                resolverKeysProcessed: orderedKeys.length,
             })
             logger.info('')
         }
 
         return hexResult
     } catch (error) {
-        logger.error(`Failed to build configuration ID: ${error.message}`)
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        logger.error(`Failed to build configuration ID: ${errorMessage}`)
         throw error
     }
 
@@ -167,7 +172,8 @@ function calculatePosition(
         }
         return resolverKey % positionDivisor
     } catch (error) {
-        throw new Error(`Failed to calculate position: ${error.message}`)
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        throw new Error(`Failed to calculate position: ${errorMessage}`)
     }
 }
 
@@ -199,8 +205,9 @@ function extractByteAtPosition(resolverKey: string, position: bigint): string {
             (CONSTANTS.TOTAL_BYTES - 1 - positionNumber) * CONSTANTS.BYTE_LENGTH
         return hexString.substring(byteIndex, byteIndex + CONSTANTS.BYTE_LENGTH)
     } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error)
         throw new Error(
-            `Failed to extract byte at position ${position}: ${error.message}`
+            `Failed to extract byte at position ${position}: ${errorMessage}`
         )
     }
 }
@@ -232,7 +239,8 @@ function createMask(position: bigint, byteValue: string): bigint {
 
         return BigInt(hexString)
     } catch (error) {
-        throw new Error(`Failed to create mask: ${error.message}`)
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        throw new Error(`Failed to create mask: ${errorMessage}`)
     }
 }
 
