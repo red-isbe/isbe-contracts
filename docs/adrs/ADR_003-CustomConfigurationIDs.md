@@ -270,6 +270,8 @@ graph TD
 - **32-byte Output**: Always returns 32-byte (64 hex character) string
 - **Configurable**: Position divisor can be adjusted (default: 32)
 
+> **IMPORTANT REQUIREMENT**: Resolver keys MUST be sorted lexicographically before processing to ensure deterministic output. Since XOR operations are order-dependent, different input orders will produce different Configuration IDs even with the same set of facets. Both deployment scripts (`tasks/deployment/utils/configurationUtils.ts`) and utility scripts (`scripts/utils/buildConfigurationId.ts`) implement this sorting to guarantee consistency.
+
 **Example Calculation**:
 
 ```
