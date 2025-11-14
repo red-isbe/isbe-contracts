@@ -871,6 +871,7 @@ npx hardhat deployAllClean --network localhost --config-file erc3643-security-to
 ```
 
 **Includes:**
+
 - ERC20 base functionality
 - Snapshot (dividends & voting)
 - Capped supply (regulatory limits)

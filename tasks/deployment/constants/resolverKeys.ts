@@ -92,8 +92,7 @@ export const BESU_NODE_MANAGER_RESOLVER_KEYS: ResolverKeys = {
 export const ERC3643_RESOLVER_KEYS: ResolverKeys = {
     METADATA:
         '0x8bffaf1ebc4070155b40757cd1d588dd59fcab63cd7007ebf7755f7f60a0c1e1',
-    FREEZE:
-        '0xb4f0898a6b06b69baf87b46c4c2932dc9b05f07368e9b14ceee64d5d44e8f273',
+    FREEZE: '0xb4f0898a6b06b69baf87b46c4c2932dc9b05f07368e9b14ceee64d5d44e8f273',
     RECOVERY:
         '0x2f59403873a4d80c3817c2b3cf0c1d5105a6c508c118b0c8b9c38582c4068b8f',
     COMPLIANCE:

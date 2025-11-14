@@ -129,7 +129,8 @@ function generateSecurityTokenConfig(): ERC3643Configuration {
                 },
                 {
                     name: 'Capped Supply',
-                    description: 'Maximum supply limit for regulatory compliance',
+                    description:
+                        'Maximum supply limit for regulatory compliance',
                 },
                 {
                     name: 'Controller',
@@ -145,7 +146,8 @@ function generateSecurityTokenConfig(): ERC3643Configuration {
                 },
                 {
                     name: 'Freeze',
-                    description: 'Address and partial token freezing capabilities',
+                    description:
+                        'Address and partial token freezing capabilities',
                 },
                 {
                     name: 'Recovery',
@@ -228,19 +230,25 @@ const outputPath = join(sdkConfigDir, 'erc3643-configuration.json')
 
 try {
     writeFileSync(outputPath, JSON.stringify(output, null, 2))
-    console.log('✅ ERC3643 Security Token configuration generated successfully!\n')
+    console.log(
+        '✅ ERC3643 Security Token configuration generated successfully!\n'
+    )
     console.log('📋 Configuration Details:')
     console.log(`   Name:             ${config.name}`)
     console.log(`   Seed:             ${config.seed}`)
     console.log(`   Configuration ID: ${config.configurationId}`)
     console.log(`   Total Facets:     ${config.facets.length}`)
-    console.log(`   Resolver Keys:    ${Object.values(config.resolverKeys).flat().length}`)
+    console.log(
+        `   Resolver Keys:    ${Object.values(config.resolverKeys).flat().length}`
+    )
     console.log(`   Output File:      ${outputPath}\n`)
     console.log('💡 This configuration includes:')
     console.log('   - ERC20 base functionality')
     console.log('   - Snapshot, Capped, Controller extensions')
     console.log('   - Complete ERC3643 compliance stack')
-    console.log('   - All 6 ERC3643 facets (Metadata, Freeze, Recovery, Compliance)')
+    console.log(
+        '   - All 6 ERC3643 facets (Metadata, Freeze, Recovery, Compliance)'
+    )
 } catch (error) {
     console.error('❌ Error writing configuration file:', error)
     process.exit(1)

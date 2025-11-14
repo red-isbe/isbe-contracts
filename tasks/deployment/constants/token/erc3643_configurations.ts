@@ -5,17 +5,14 @@ import {
     ERC3643_RESOLVER_KEYS,
 } from '../resolverKeys'
 import { CONFIGURATION_IDS } from '../configurationIds'
-import {
-    createTokenConfig,
-    generateTokenConfiguration,
-} from '../configHelpers'
+import { createTokenConfig, generateTokenConfiguration } from '../configHelpers'
 
 /**
  * Helper function to create ERC3643 Security Token configuration
- * 
+ *
  * ERC3643 extends ERC20 with regulatory compliance features.
  * The base seed uses ERC20 as foundation, then applies ERC3643 seed.
- * 
+ *
  * @param keys - Array of resolver keys (will be sorted for determinism)
  * @returns TokenConfiguration with sorted keys and generated configuration ID
  */
@@ -29,11 +26,11 @@ function createERC3643Config(keys: string[]): TokenConfiguration {
 
 /**
  * ERC3643 Security Token Use Case Configurations
- * 
+ *
  * ERC3643 is a complete standard for regulatory-compliant security tokens.
  * Unlike ERC20/ERC721, we provide a single comprehensive configuration
  * as security tokens require all compliance features to meet regulations.
- * 
+ *
  * Configuration: SECURITY_TOKEN
  * - Includes all mandatory ERC20 base functionality
  * - Adds regulatory extensions (Snapshot, Capped, Controller)
@@ -42,7 +39,7 @@ function createERC3643Config(keys: string[]): TokenConfiguration {
 export const ERC3643_USE_CASE_CONFIGS = {
     /**
      * SECURITY_TOKEN - Complete ERC3643 compliant security token
-     * 
+     *
      * Components:
      * 1. ERC20 Base: Standard token functionality
      * 2. ERC20 Extensions:
@@ -57,7 +54,7 @@ export const ERC3643_USE_CASE_CONFIGS = {
      *    - Base Compliance: Transfer validation
      *    - Max Balance: Per-address balance limits
      *    - Daily/Monthly Limits: Temporal transfer restrictions
-     * 
+     *
      * Resolver keys are sorted lexicographically for deterministic
      * Configuration ID generation (ADR-003 Position-Based XOR algorithm)
      */
