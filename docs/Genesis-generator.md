@@ -37,7 +37,7 @@ Usage:
 
 
 Example:
-  ./script.sh --skip-gen --do-besu-startup --besu-dir ./besu/
+  ./script.sh --skip-gen --do-besu-startup --besu-dir ./besu/ --gobernance-address 0x00000000000000000000000000000000000015BE
 
 Description:
   This script orchestrates the Besu genesis setup.
@@ -51,7 +51,9 @@ The parameters **--template-file and --output-file** are mandatory. The first sp
 
 By default, a Contract Registry file is not generated. This JSON-file contains an index for locating a contract address using the contract name. This function can be activated by adding **--do-generate-register** flag. It is relevant to point out that if --do-validation flag is enabled, Contract Registry will be generated even if --do-generate-register is not enabled. The reason is because this file is needed for validation process as it is required to obtain the addresses for contracts
 
-**IMPORTANT:** This process changes Governance Contract Address as specified in --gobernance-address parameter
+**IMPORTANT:** This process changes Governance Contract Address as specified in --gobernance-address parameter. Currently, for the Governance Diamond, the address is:
+
+**0x00000000000000000000000000000000000015BE**.
 
 **IMPORTANT:** First alloc address will be considered as ISBE Admin. Please, make sure the first alloc corresponds to it.
 
@@ -94,7 +96,10 @@ This subprocess performs tests and deployments on the local besu network deploye
 **Generate genesis only:**
 
 ```bash
-./makeGenesis.sh --template-file <template-location>  --output-file <generated-file-location> --gobernance-address <governance-address>
+./makeGenesis.sh \
+  --template-file <template-location>  \
+  --output-file <generated-file-location> \
+  --gobernance-address <governance-address>
 ```
 
 **Generate genesis and perform all checks**
