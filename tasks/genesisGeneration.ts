@@ -228,7 +228,7 @@ task(
                     gobernanceaddress
             )
         } else if (!/^0x[a-fA-F0-9]{40}$/.test(gobernanceaddress)) {
-            console.error('Invalid Gobernance Proxy Address')
+            console.error('Invalid Governance Proxy Address')
             return
         }
         console.log(`📄 Using Gobernance Proxy Address: ${gobernanceaddress}`)
