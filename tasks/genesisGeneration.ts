@@ -65,6 +65,7 @@ task(
     .addParam('templatefile', 'Template JSON file to use')
     .addParam('outputfile', 'Generated Output JSON file')
     .addFlag('generateregister', 'Generate contract register JSON')
+    .addParam('governanceaddress')
     .setAction(async (taskArgs, hre) => {
         try {
             const contractRegistry = new ContractRegistry()
@@ -76,6 +77,16 @@ task(
                 '---------------------------------------------------------------------'
             )
             hre.network.name = 'hardhat'
+
+            const governanceaddress = taskArgs.governanceaddress
+            if (
+                !governanceaddress ||
+                !/^0x[a-fA-F0-9]{40}$/.test(governanceaddress)
+            ) {
+                throw new Error(
+                    'Invalid Gobernance Address' + governanceaddress
+                )
+            }
 
             const genesisTemplateFile = taskArgs.templatefile
 
@@ -117,7 +128,11 @@ task(
 
             console.log('🚀 Genesis generation...')
             let slotStructure: GenesisAlloc = await retrieveSlotStructure(hre)
-            slotStructure = await matchContractNames(hre, slotStructure)
+            slotStructure = await matchContractNames(
+                hre,
+                slotStructure,
+                governanceaddress
+            )
             console.log(
                 '✅ Slot structure retrieved.----------------------------------------------------------'
             )
@@ -168,9 +183,8 @@ task(
     'genesis:validate',
     'Validate genesis by extracting storage slots from deployment transactions in Hardhat network'
 )
-    .addOptionalParam('gobernanceaddress', 'Gobernance Address')
     .addParam('templatefile', 'Template JSON file to use')
-    .addParam('outputfile', 'Generated Output JSON file')
+    .addParam('governanceaddress', 'Governance Contract Address')
     .setAction(async (taskArgs, hre) => {
         console.info(
             '---------------------------------------------------------------------'
@@ -179,8 +193,6 @@ task(
         console.info(
             '---------------------------------------------------------------------'
         )
-
-        const outputFile = taskArgs.outputfile
 
         const genesisTemplateFile = taskArgs.templatefile
         const curve: string = await extractCurve(genesisTemplateFile)
@@ -213,25 +225,14 @@ task(
         }
         console.log(`Using network url: ${url}`)
 
-        let gobernanceaddress = taskArgs.gobernanceaddress
-        if (!gobernanceaddress) {
-            const registryFile =
-                path.dirname(outputFile) + '/' + REGISTRY_FILENAME
-            console.log(`📄 Using registry file: ${registryFile}`)
-            const contractRegistry = new ContractRegistry()
-            contractRegistry.retrieveContractRegistry(registryFile)
-            gobernanceaddress = contractRegistry.getAddress(
-                'EIP2535AccessControl'
+        const governanceaddress = taskArgs.governanceaddress
+        if (!/^0x[a-fA-F0-9]{40}$/.test(governanceaddress)) {
+            console.error(
+                'Invalid Gobernance Proxy Address: ' + governanceaddress
             )
-            console.log(
-                '✅ EIP2535AccessControl retrieved from registry: ' +
-                    gobernanceaddress
-            )
-        } else if (!/^0x[a-fA-F0-9]{40}$/.test(gobernanceaddress)) {
-            console.error('Invalid Gobernance Proxy Address')
             return
         }
-        console.log(`📄 Using Gobernance Proxy Address: ${gobernanceaddress}`)
+        console.log(`📄 Using Gobernance Proxy Address: ${governanceaddress}`)
 
         while (!(await jsonRpcCall(url))) {
             process.stdout.write(
@@ -243,7 +244,7 @@ task(
             `Waiting for network ${hre.network.name} to be available [OK]           `
         )
 
-        await validateGenesis(hre, gobernanceaddress)
+        await validateGenesis(hre, governanceaddress)
 
         console.log(' deploy usecase facets......')
 
@@ -263,7 +264,7 @@ task(
         const governanceResult: DeployedBusinessLogic[] =
             await businessLogicDeployer.deployAll(
                 config.businessLogics,
-                gobernanceaddress
+                governanceaddress
             )
         console.log(
             `✅ Business logics deployed successfully.   Total: ${governanceResult.length}----------------------------------------------------------`
