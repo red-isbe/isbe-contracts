@@ -862,6 +862,24 @@ npx hardhat deployAllClean --network localhost --config-file minimal.json
 npx hardhat deployAllClean --network localhost --config-file custom.json
 ```
 
+### ERC3643 Security Token Deployment
+
+Deploy ERC3643 compliant security tokens with full regulatory compliance:
+
+```bash
+npx hardhat deployAllClean --network localhost --config-file erc3643-security-token.json
+```
+
+**Includes:**
+- ERC20 base functionality
+- Snapshot (dividends & voting)
+- Capped supply (regulatory limits)
+- Controller (forced transfers)
+- ERC3643 Metadata (onchainID)
+- Freeze capabilities
+- Token recovery
+- Compliance engine (max balance, daily/monthly limits)
+
 **Benefits:**
 
 - ⏱️ **Time Reduction**: ~3 minutes vs ~45 minutes (93% faster)
