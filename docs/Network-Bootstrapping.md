@@ -14,7 +14,7 @@ The task has two parameters:
 
 ```bash
 npx hardhat genesis:bootstrap \
-    --governanceaddress 0x00000000000000000000000000000000000015BE
+    --governanceaddress 0x00000000000000000000000000000000000015BE \
     --network genesis_validation_network_k1
 ```
 
