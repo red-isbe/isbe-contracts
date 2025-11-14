@@ -259,7 +259,7 @@ async function validateFilters(
     console.log(`Current filters length: ${filtersLength}`)
 
     const filterId =
-        '0x112dd723577b76611d03a5df6740ef34e4adf801a94538796f066cda9100e158'
+        '0x112dd723577b76611d03a5df6740ef34e4adf801a94538796f066cda9100e159'
     const signature = '0x12345678'
     const transactionHash =
         '0x112dd723577b76611d03a5df6740ef34e4adf801a94538796f066cda9100e157'
@@ -295,11 +295,11 @@ export async function validateGenesis(
     console.log(
         `\n\n=== VALIDATING GENESIS DEPLOYMENT ===================================\n`
     )
-    await validateFilters(hre, businessAddress)
     await validateFacests(hre, businessAddress)
     await validateBusinesLogic(hre, businessAddress)
     await validateRoles(hre, businessAddress)
     await validatePausable(hre, businessAddress)
+    await validateFilters(hre, businessAddress)
     console.log(
         `\n\n=== GENESIS VALIDATION COMPLETED ===================================`
     )

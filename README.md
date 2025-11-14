@@ -784,7 +784,7 @@ npx hardhat getConfigurationByProxy --proxy <address> --network <network>
     --besu-dir <isbe-besu-local-deployer_repo-dir>
 ```
 
-Additional information: [Genesis generation](docs/genesis-generator.md)
+Additional information: [Genesis generation](docs/Genesis-generator.md)
 
 ### Network bootstrapping
 
