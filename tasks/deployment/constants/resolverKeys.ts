@@ -81,6 +81,22 @@ export const BESU_NODE_MANAGER_RESOLVER_KEYS: ResolverKeys = {
         '0xed251ea052ffafa4903db889a3309600adf2ac15456e02760c1221ea3792c1ca',
 }
 
+// ERC3643 Security Token facets
+export const ERC3643_RESOLVER_KEYS: ResolverKeys = {
+    METADATA:
+        '0x8bffaf1ebc4070155b40757cd1d588dd59fcab63cd7007ebf7755f7f60a0c1e1',
+    FREEZE:
+        '0xb4f0898a6b06b69baf87b46c4c2932dc9b05f07368e9b14ceee64d5d44e8f273',
+    RECOVERY:
+        '0x2f59403873a4d80c3817c2b3cf0c1d5105a6c508c118b0c8b9c38582c4068b8f',
+    COMPLIANCE:
+        '0x8a5420a9e83a88b62e9b707d311e9dbf53149c09464f3c1c33d0b8d85f7ca10b',
+    COMPLIANCE_MAXBALANCE:
+        '0x439f087ef8d9d8d02c3b2d39c55c55a73b329d5b0d78ab0e81eb0e55343cdd9d',
+    COMPLIANCE_DMLIM:
+        '0x228279b8c9f85cc60c2a3f60cf0371583eaf4d08a3bb4b04cbeb47711165d29e',
+}
+
 // ENS facets
 export const ENS_RESOLVER_KEYS: ResolverKeys = {
     REGISTRY:
