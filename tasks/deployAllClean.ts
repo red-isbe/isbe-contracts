@@ -136,7 +136,7 @@ async function deployWithCleanOrchestrator(
         console.log('')
 
         // Run the clean orchestrated deployment
-        const deploymentResult = await orchestrator.deploy(deploymentOptions)
+        const deploymentResult = await orchestrator.deploy()
 
         // Run pre-commit validations if requested
         if (taskArgs.precommit) {

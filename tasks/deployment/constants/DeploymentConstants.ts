@@ -3,7 +3,10 @@ import { ENS_DEFINITIONS, ENS_USE_CASE_CONFIGS } from './ens'
 import { UTILITY_DEFINITIONS, UTILITY_USE_CASE_CONFIGS } from './utility'
 import { ERC20_DEFINITIONS } from './token/erc20'
 import { ERC721_DEFINITIONS } from './token/erc721'
-import { ERC3643_DEFINITIONS } from './token/erc3643'
+import {
+    ERC3643_DEFINITIONS,
+    ERC203643_SHARED_DEFINITIONS,
+} from './token/erc3643'
 // Import token use case configurations
 import { ERC20_USE_CASE_CONFIGS } from './erc20'
 import { ERC721_USE_CASE_CONFIGS } from './token/erc721_configurations'
@@ -290,6 +293,7 @@ export const BUSINESS_LOGIC_DEFINITIONS = [
     ...UTILITY_DEFINITIONS,
     ...ENS_DEFINITIONS,
     ...ERC20_DEFINITIONS,
+    ...ERC203643_SHARED_DEFINITIONS, // Shared facets between ERC20 and ERC3643
     ...ERC721_DEFINITIONS,
     ...ERC3643_DEFINITIONS,
 ]

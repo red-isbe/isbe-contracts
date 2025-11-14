@@ -1,5 +1,8 @@
 import { TokenConfiguration } from './types'
-import { ERC20_RESOLVER_KEYS } from './resolverKeys'
+import {
+    ERC20_RESOLVER_KEYS,
+    ERC20_ERC3643_SHARED_RESOLVER_KEYS,
+} from './resolverKeys'
 import { CONFIGURATION_IDS } from './configurationIds'
 import {
     createTokenConfig,
@@ -27,8 +30,8 @@ const extensions = {
     base: [ERC20_RESOLVER_KEYS.ERC20],
     snapshot: [ERC20_RESOLVER_KEYS.SNAPSHOT],
     burnable: [ERC20_RESOLVER_KEYS.BURNABLE],
-    capped: [ERC20_RESOLVER_KEYS.CAPPED],
-    controller: [ERC20_RESOLVER_KEYS.CONTROLLER],
+    capped: [ERC20_ERC3643_SHARED_RESOLVER_KEYS.CAPPED],
+    controller: [ERC20_ERC3643_SHARED_RESOLVER_KEYS.CONTROLLER],
 }
 
 // Generate configurations

@@ -1,6 +1,6 @@
 export { ERC20_DEFINITIONS } from './erc20'
 export { ERC721_DEFINITIONS } from './erc721'
-export { ERC3643_DEFINITIONS } from './erc3643'
+export { ERC3643_DEFINITIONS, ERC203643_SHARED_DEFINITIONS } from './erc3643'
 
 export const TOKEN_DEFINITIONS = [
     ...(import('./erc20').then(
