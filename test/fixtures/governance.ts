@@ -79,6 +79,7 @@ import {
     ANCHORER_ROLE,
     METADATA_MANAGER_ROLE,
     CONFIGURATION_ID_NETWORK_DIRECTORY,
+    CONFIGURATION_AA_PAYMASTER,
 } from '../../utils/constants'
 import { getIsbeFactory } from '../../scripts/utils/getIsbeFactory'
 import {
@@ -400,6 +401,7 @@ export async function deployGovernance(
             case CONFIGURATION_ID_BESU_NODE_MANAGER:
             case CONFIGURATION_ID_NETWORK_DIRECTORY:
             case CONFIGURATION_ACCOUNT_ABSTRACTION_SMART_ACCOUNT:
+            case CONFIGURATION_AA_PAYMASTER:
                 break
             default:
                 throw new Error(`Unknown configuration id ${configurationId}`)

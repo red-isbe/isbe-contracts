@@ -32,7 +32,6 @@ abstract contract Paymaster is IBasePaymaster, PaymasterInternal {
         addressIsNotZero(address(_entryPoint))
         initializer(_AA_PAYMASTER_PAYMASTER_KEY)
     {
-        _validateEntryPointInterface(_entryPoint);
         _initializePaymaster(_entryPoint);
         emit PaymasterInitialized(address(_entryPoint));
     }
@@ -42,7 +41,8 @@ abstract contract Paymaster is IBasePaymaster, PaymasterInternal {
      * @dev Restricted by {onlyOwner}. Emits {EntryPointUpdated}.
      * @param entryPoint The new EntryPoint contract to store.
      */
-    function setEntryPoint(IEntryPoint entryPoint) public onlyOwner {
+    // TODO AA: make onlyOwner or Role
+    function setEntryPoint(IEntryPoint entryPoint) public whenNotPaused {
         _setEntryPoint(entryPoint);
         emit EntryPointUpdated(address(entryPoint));
     }
@@ -70,14 +70,31 @@ abstract contract Paymaster is IBasePaymaster, PaymasterInternal {
         PackedUserOperation calldata userOp,
         bytes32 userOpHash,
         uint256 maxCost
-    ) external override returns (bytes memory context, uint256 validationData) {
-        return _validatePaymasterUserOp(userOp, userOpHash, maxCost);
+    )
+        external
+        view
+        virtual
+        override
+        whenNotPaused
+        returns (bytes memory context, uint256 validationData)
+    {
+        _requireFromEntryPoint();
+        (context, validationData) = _validatePaymasterUserOp(
+            userOp,
+            userOpHash,
+            maxCost
+        );
     }
 
     /**
      * @notice Handles settlement after the user operation executes.
      * @dev Requires EntryPoint caller. Forwards to internal handler. See
      *      IPaymaster for mode semantics and fee parameters.
+     *      If you pause while there are already included UserOps in-flight
+     *      that will later call postOp, you risk:
+     *          - postOp reverting because contract is paused.
+     *          - EntryPoint treating that as a misbehaving Paymaster.
+     *      So, this method should NEVER revert.
      * @param mode The post-operation mode describing execution outcome.
      * @param context The opaque data returned by validatePaymasterUserOp.
      * @param actualGasCost The gas cost accrued so far, excluding this call.
@@ -88,7 +105,7 @@ abstract contract Paymaster is IBasePaymaster, PaymasterInternal {
         bytes calldata context,
         uint256 actualGasCost,
         uint256 actualUserOpFeePerGas
-    ) external override {
+    ) external virtual override {
         _requireFromEntryPoint();
         _postOp(mode, context, actualGasCost, actualUserOpFeePerGas);
     }
@@ -99,7 +116,10 @@ abstract contract Paymaster is IBasePaymaster, PaymasterInternal {
      *      SHOULD restrict this operation to authorised roles.
      * @param user The account permitted to have operations sponsored.
      */
-    function whitelist(address user) external override {
+    // TODO AA: make onlyOwner or Role
+    function whitelist(
+        address user
+    ) external override whenNotPaused addressIsNotZero(user) {
         _whitelist(user);
         emit UserWhiteListed(user);
     }
@@ -110,7 +130,8 @@ abstract contract Paymaster is IBasePaymaster, PaymasterInternal {
      *      SHOULD restrict this operation to authorised roles.
      * @param user The account no longer permitted for sponsorship.
      */
-    function unwhitelist(address user) external override {
+    // TODO AA: make onlyOwner or Role
+    function unwhitelist(address user) external override whenNotPaused {
         _unwhitelist(user);
         emit UserUnwhiteListed(user);
     }
@@ -132,7 +153,8 @@ abstract contract Paymaster is IBasePaymaster, PaymasterInternal {
      * @dev Payable. Forwards value to EntryPoint. Emits {AmountDeposited}.
      *      Implementations MAY restrict callers through access control.
      */
-    function deposit() external payable override {
+    // TODO AA: make onlyOwner or Role
+    function deposit() external payable override whenNotPaused {
         _deposit(msg.value);
         emit AmountDeposited(msg.value);
     }
@@ -152,10 +174,11 @@ abstract contract Paymaster is IBasePaymaster, PaymasterInternal {
      * @param withdrawAddress The payable recipient address.
      * @param amount The amount of wei to withdraw.
      */
+    // TODO AA: make onlyOwner or Role
     function withdrawTo(
         address payable withdrawAddress,
         uint256 amount
-    ) external override onlyOwner {
+    ) external override whenNotPaused {
         _withdrawTo(withdrawAddress, amount);
         emit AmountWithdrawn(withdrawAddress, amount);
     }
@@ -166,9 +189,10 @@ abstract contract Paymaster is IBasePaymaster, PaymasterInternal {
      *      increase. Emits {StakeAdded}.
      * @param unstakeDelaySec The enforced unstake delay in seconds.
      */
+    // TODO AA: make onlyOwner or Role
     function addStake(
         uint32 unstakeDelaySec
-    ) external payable override onlyOwner {
+    ) external payable override whenNotPaused {
         _addStake(unstakeDelaySec, msg.value);
         emit StakeAdded(msg.value, unstakeDelaySec);
     }
@@ -178,7 +202,8 @@ abstract contract Paymaster is IBasePaymaster, PaymasterInternal {
      * @dev Restricted by {onlyOwner}. The paymaster cannot serve while
      *      unlocked. Emits {StakedUnlocked}.
      */
-    function unlockStake() external override onlyOwner {
+    // TODO AA: make onlyOwner or Role
+    function unlockStake() external override whenNotPaused {
         _unlockStake();
         emit StakedUnlocked();
     }
@@ -189,9 +214,10 @@ abstract contract Paymaster is IBasePaymaster, PaymasterInternal {
      *      delay per EntryPoint rules. Emits {StakeWithdrawn}.
      * @param withdrawAddress The recipient of the withdrawn stake.
      */
+    // TODO AA: make onlyOwner or Role
     function withdrawStake(
         address payable withdrawAddress
-    ) external override onlyOwner {
+    ) external override whenNotPaused {
         _withdrawStake(withdrawAddress);
         emit StakeWithdrawn(withdrawAddress);
     }

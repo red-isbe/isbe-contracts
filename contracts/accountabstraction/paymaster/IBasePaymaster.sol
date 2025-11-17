@@ -74,6 +74,30 @@ interface IBasePaymaster is IPaymaster {
     event EntryPointUpdated(address entryPoint);
 
     /**
+     * @notice Emitted after a user operation is processed and sponsored by the paymaster.
+     * @dev Indicates the settlement outcome of a sponsored operation, including whether
+     *      it succeeded or reverted, along with the total gas cost paid by the paymaster.
+     *      Useful for accounting, analytics, and off-chain monitoring of sponsored activity.
+     * @param userOpSender The sender address of the user operation that was sponsored.
+     * @param mode The post-operation mode indicating success or failure of execution.
+     * @param actualGasCost The total gas cost incurred and paid by the paymaster.
+     */
+    event SponsoredUserOperation(
+        address indexed userOpSender,
+        PostOpMode mode,
+        uint256 actualGasCost
+    );
+
+    /**
+     * @notice Emitted when a post-operation callback fails and triggers a revert recovery.
+     * @dev This event signals that the EntryPoint invoked postOp but the call reverted,
+     *      causing the EntryPoint to execute its internal cleanup process. No funds are
+     *      refunded to the paymaster in this case.
+     * @param userOpSender The sender address of the user operation that caused the revert.
+     */
+    event PostOpReverted(address indexed userOpSender);
+
+    /**
      * @notice Thrown when a restricted function is invoked by an unauthorised caller.
      * @dev SHOULD be used to protect EntryPoint-only functions such as validation
      *      or post-operation hooks.

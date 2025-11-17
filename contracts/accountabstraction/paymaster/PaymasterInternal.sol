@@ -33,10 +33,6 @@ abstract contract PaymasterInternal is DidDocumentDetailedInternal {
         mapping(address => bool) whitelist;
     }
 
-    // -------------------------------------------------------------------------
-    // Configuration and interface checks
-    // -------------------------------------------------------------------------
-
     /**
      * @notice Verifies the provided EntryPoint implements the expected interface.
      * @dev Reverts with EntryPointInterfaceMismatch defined in IPaymaster when the
@@ -69,6 +65,7 @@ abstract contract PaymasterInternal is DidDocumentDetailedInternal {
      * @param _entryPoint The EntryPoint to store.
      */
     function _setEntryPoint(IEntryPoint _entryPoint) internal {
+        _validateEntryPointInterface(_entryPoint);
         _paymasterStorage().entryPoint = _entryPoint;
     }
 
@@ -80,26 +77,18 @@ abstract contract PaymasterInternal is DidDocumentDetailedInternal {
         entryPoint_ = _paymasterStorage().entryPoint;
     }
 
-    // -------------------------------------------------------------------------
-    // Access restriction helpers
-    // -------------------------------------------------------------------------
-
     /**
      * @notice Ensures the caller is the configured EntryPoint.
      * @dev Reverts with NotEntryPoint(_sender) when invoked by unauthorised
      *      callers. Should guard all EntryPoint-only hooks.
      */
-    function _requireFromEntryPoint() internal virtual {
+    function _requireFromEntryPoint() internal view virtual {
         address _sender = _msgSender();
         require(
             _sender == address(_paymasterStorage().entryPoint),
             IBasePaymaster.NotEntryPoint(_sender)
         );
     }
-
-    // -------------------------------------------------------------------------
-    // Whitelist management
-    // -------------------------------------------------------------------------
 
     /**
      * @notice Adds a user account to the whitelist.
@@ -130,10 +119,6 @@ abstract contract PaymasterInternal is DidDocumentDetailedInternal {
     ) internal view returns (bool isAllowed) {
         return _paymasterStorage().whitelist[_user];
     }
-
-    // -------------------------------------------------------------------------
-    // Deposit and staking proxy operations
-    // -------------------------------------------------------------------------
 
     /**
      * @notice Deposits Ether into EntryPoint on behalf of this paymaster.
@@ -194,10 +179,6 @@ abstract contract PaymasterInternal is DidDocumentDetailedInternal {
         _paymasterStorage().entryPoint.withdrawStake(withdrawAddress);
     }
 
-    // -------------------------------------------------------------------------
-    // ERC-4337 validation and post-operation hooks
-    // -------------------------------------------------------------------------
-
     /**
      * @notice Validates a user operation against the whitelist policy.
      * @dev Caller MUST be EntryPoint. Ignores userOpHash and maxCost in this
@@ -213,16 +194,15 @@ abstract contract PaymasterInternal is DidDocumentDetailedInternal {
         PackedUserOperation calldata userOp,
         bytes32 userOpHash,
         uint256 maxCost
-    ) internal virtual returns (bytes memory context, uint256 validationData) {
-        _requireFromEntryPoint();
-
+    ) internal view returns (bytes memory context, uint256 validationData) {
         // silence unused warnings for this minimal policy
         (userOpHash, maxCost);
 
         address user = userOp.sender;
-        context = hex'';
 
-        if (_isWhitelisted(user)) {
+        context = abi.encode(user);
+
+        if (_isWhitelisted(user) && _getDeposit() >= maxCost) {
             validationData = SIG_VALIDATION_SUCCESS;
             return (context, validationData);
         } else {
@@ -233,8 +213,8 @@ abstract contract PaymasterInternal is DidDocumentDetailedInternal {
 
     /**
      * @notice Post-operation handler to complete settlement logic.
-     * @dev Subclasses MUST override when validate returns a non-empty context.
-     *      Caller MUST be EntryPoint. Default implementation always reverts.
+     * @dev Simply logs the outcome of the UserOperation handled (sponsored)
+     *      by the Paymaster.
      * @param mode The post-op mode describing execution outcome.
      * @param context The opaque data returned by validatePaymasterUserOp.
      * @param actualGasCost The gas cost accrued so far, excluding this call.
@@ -245,14 +225,20 @@ abstract contract PaymasterInternal is DidDocumentDetailedInternal {
         bytes calldata context,
         uint256 actualGasCost,
         uint256 actualUserOpFeePerGas
-    ) internal virtual {
-        (mode, context, actualGasCost, actualUserOpFeePerGas);
-        revert('must override');
-    }
+    ) internal {
+        (address userOpSender) = abi.decode(context, (address));
+        (context, actualGasCost, actualUserOpFeePerGas);
+        if (mode == IPaymaster.PostOpMode.postOpReverted) {
+            emit IBasePaymaster.PostOpReverted(userOpSender);
+            return;
+        }
 
-    // -------------------------------------------------------------------------
-    // Storage access
-    // -------------------------------------------------------------------------
+        emit IBasePaymaster.SponsoredUserOperation(
+            userOpSender,
+            mode,
+            actualGasCost
+        );
+    }
 
     /**
      * @notice Accesses the paymaster storage at a fixed slot.
