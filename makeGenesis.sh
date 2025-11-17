@@ -16,7 +16,6 @@ EXEC_BESU="bash install.sh -b"
 SKIP_GEN=false
 SKIP_BESU_STARTUP=true
 SKIP_VALIDATION=true
-GENERATE_REGISTER=false
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -45,10 +44,6 @@ while [[ $# -gt 0 ]]; do
       OUTPUT_FILE="$2"
       shift 2
       ;;
-    --do-generate-register)
-      GENERATE_REGISTER=true
-      shift
-      ;;
     --gobernance-address)
       GOBERNANCE_ADDRESS="$2"
       shift 2
@@ -65,7 +60,6 @@ while [[ $# -gt 0 ]]; do
       echo "  --besu-dir <path>               Specify the directory containing the Besu build."
       echo "  --template-file <file>          Specify the genesis template JSON file to use. (MANDATORY)"
       echo "  --output-file <file>            Specify the generated output JSON file. (MANDATORY if not skipping genesis)"
-      echo "  --do-generate-register          Generate contract register JSON. (Default: false)"
       echo "  --gobernance-address <address>  Specify the governance contract address."
       echo ""
       echo "Example:"
@@ -102,9 +96,6 @@ fi
 if [ "$SKIP_GEN" = false ]; then
   echo "🔧 Generating genesis..."
   EXEC_CHAIN="npx hardhat genesis:generate --templatefile "$TEMPLATE_FILE" --outputfile "$OUTPUT_FILE" --governanceaddress "$GOBERNANCE_ADDRESS""
-  if [ "$GENERATE_REGISTER" = true ]; then
-    EXEC_CHAIN="$EXEC_CHAIN --generateregister"
-  fi
   start=$(date +%s) 
   NODE_OPTIONS="--max-old-space-size=24576" $EXEC_CHAIN
   end=$(date +%s)
