@@ -29,6 +29,7 @@ abstract contract Paymaster is IBasePaymaster, PaymasterInternal {
         IEntryPoint _entryPoint
     )
         external
+        onlyOwner
         addressIsNotZero(address(_entryPoint))
         initializer(_AA_PAYMASTER_PAYMASTER_KEY)
     {
@@ -41,8 +42,9 @@ abstract contract Paymaster is IBasePaymaster, PaymasterInternal {
      * @dev Restricted by {onlyOwner}. Emits {EntryPointUpdated}.
      * @param entryPoint The new EntryPoint contract to store.
      */
-    // TODO AA: make onlyOwner or Role
-    function setEntryPoint(IEntryPoint entryPoint) public whenNotPaused {
+    function setEntryPoint(
+        IEntryPoint entryPoint
+    ) public onlyOwner whenNotPaused {
         _setEntryPoint(entryPoint);
         emit EntryPointUpdated(address(entryPoint));
     }
@@ -116,10 +118,9 @@ abstract contract Paymaster is IBasePaymaster, PaymasterInternal {
      *      SHOULD restrict this operation to authorised roles.
      * @param user The account permitted to have operations sponsored.
      */
-    // TODO AA: make onlyOwner or Role
     function whitelist(
         address user
-    ) external override whenNotPaused addressIsNotZero(user) {
+    ) external override onlyOwner whenNotPaused addressIsNotZero(user) {
         _whitelist(user);
         emit UserWhiteListed(user);
     }
@@ -130,8 +131,9 @@ abstract contract Paymaster is IBasePaymaster, PaymasterInternal {
      *      SHOULD restrict this operation to authorised roles.
      * @param user The account no longer permitted for sponsorship.
      */
-    // TODO AA: make onlyOwner or Role
-    function unwhitelist(address user) external override whenNotPaused {
+    function unwhitelist(
+        address user
+    ) external override onlyOwner whenNotPaused {
         _unwhitelist(user);
         emit UserUnwhiteListed(user);
     }
@@ -153,8 +155,7 @@ abstract contract Paymaster is IBasePaymaster, PaymasterInternal {
      * @dev Payable. Forwards value to EntryPoint. Emits {AmountDeposited}.
      *      Implementations MAY restrict callers through access control.
      */
-    // TODO AA: make onlyOwner or Role
-    function deposit() external payable override whenNotPaused {
+    function deposit() external payable override onlyOwner whenNotPaused {
         _deposit(msg.value);
         emit AmountDeposited(msg.value);
     }
@@ -174,11 +175,10 @@ abstract contract Paymaster is IBasePaymaster, PaymasterInternal {
      * @param withdrawAddress The payable recipient address.
      * @param amount The amount of wei to withdraw.
      */
-    // TODO AA: make onlyOwner or Role
     function withdrawTo(
         address payable withdrawAddress,
         uint256 amount
-    ) external override whenNotPaused {
+    ) external override onlyOwner whenNotPaused {
         _withdrawTo(withdrawAddress, amount);
         emit AmountWithdrawn(withdrawAddress, amount);
     }
@@ -189,10 +189,9 @@ abstract contract Paymaster is IBasePaymaster, PaymasterInternal {
      *      increase. Emits {StakeAdded}.
      * @param unstakeDelaySec The enforced unstake delay in seconds.
      */
-    // TODO AA: make onlyOwner or Role
     function addStake(
         uint32 unstakeDelaySec
-    ) external payable override whenNotPaused {
+    ) external payable override onlyOwner whenNotPaused {
         _addStake(unstakeDelaySec, msg.value);
         emit StakeAdded(msg.value, unstakeDelaySec);
     }
@@ -202,8 +201,7 @@ abstract contract Paymaster is IBasePaymaster, PaymasterInternal {
      * @dev Restricted by {onlyOwner}. The paymaster cannot serve while
      *      unlocked. Emits {StakedUnlocked}.
      */
-    // TODO AA: make onlyOwner or Role
-    function unlockStake() external override whenNotPaused {
+    function unlockStake() external override onlyOwner whenNotPaused {
         _unlockStake();
         emit StakedUnlocked();
     }
@@ -214,10 +212,9 @@ abstract contract Paymaster is IBasePaymaster, PaymasterInternal {
      *      delay per EntryPoint rules. Emits {StakeWithdrawn}.
      * @param withdrawAddress The recipient of the withdrawn stake.
      */
-    // TODO AA: make onlyOwner or Role
     function withdrawStake(
         address payable withdrawAddress
-    ) external override whenNotPaused {
+    ) external override onlyOwner whenNotPaused {
         _withdrawStake(withdrawAddress);
         emit StakeWithdrawn(withdrawAddress);
     }

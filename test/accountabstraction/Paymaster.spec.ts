@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
-import { ZeroAddress, AbiCoder } from 'ethers'
+import { Signer, ZeroAddress, AbiCoder } from 'ethers'
 import {
     MockEntryPoint,
     Paymaster,
@@ -20,12 +20,14 @@ const SIG_VALIDATION_SUCCESS = 0n
 const SIG_VALIDATION_FAILED = 1n
 
 describe('Account Abstraction Paymaster', () => {
+    let adminAccountAddress: string
+    let account_2: Signer
+    let account_2Address: string
+
     let governance: string
     let entryPoint: MockEntryPoint
     let paymaster: Paymaster
     let pause: ISBEPauseFacet
-    let adminAccount: string
-    let account_2Address: string
 
     const pack128 = (hi: bigint, lo: bigint) =>
         ethers.toBeHex((hi << 128n) | lo, 32)
@@ -121,7 +123,8 @@ describe('Account Abstraction Paymaster', () => {
         entryPoint = contracts.entryPoint
         paymaster = contracts.paymaster
         pause = contracts.pause
-        adminAccount = contracts.adminAccount.address
+        adminAccountAddress = contracts.adminAccountAddress
+        account_2 = contracts.account_2
         account_2Address = contracts.account_2Address
     })
 
@@ -198,7 +201,67 @@ describe('Account Abstraction Paymaster', () => {
         })
     })
 
-    describe('Unauthorized', () => {})
+    describe('Unauthorized', () => {
+        it('GIVEN Paymaster deployed WHEN initialize THEN success', async () => {
+            await expect(
+                paymaster.connect(account_2).initializePaymaster(entryPoint)
+            )
+                .to.be.revertedWithCustomError(paymaster, 'AccountIsNotOwner')
+                .withArgs(account_2Address)
+        })
+
+        it('GIVEN Paymaster deployed WHEN setEntryPoint THEN success', async () => {
+            await expect(paymaster.connect(account_2).setEntryPoint(entryPoint))
+                .to.be.revertedWithCustomError(paymaster, 'AccountIsNotOwner')
+                .withArgs(account_2Address)
+        })
+
+        it('GIVEN Paymaster deployed WHEN whitelist THEN success', async () => {
+            await expect(paymaster.connect(account_2).whitelist(entryPoint))
+                .to.be.revertedWithCustomError(paymaster, 'AccountIsNotOwner')
+                .withArgs(account_2Address)
+        })
+
+        it('GIVEN Paymaster deployed WHEN unwhitelist THEN success', async () => {
+            await expect(paymaster.connect(account_2).unwhitelist(entryPoint))
+                .to.be.revertedWithCustomError(paymaster, 'AccountIsNotOwner')
+                .withArgs(account_2Address)
+        })
+
+        it('GIVEN Paymaster deployed WHEN deposit THEN success', async () => {
+            await expect(paymaster.connect(account_2).deposit({ value: 10n }))
+                .to.be.revertedWithCustomError(paymaster, 'AccountIsNotOwner')
+                .withArgs(account_2Address)
+        })
+
+        it('GIVEN Paymaster deployed WHEN withdrawTo THEN success', async () => {
+            await expect(
+                paymaster.connect(account_2).withdrawTo(entryPoint, 10n)
+            )
+                .to.be.revertedWithCustomError(paymaster, 'AccountIsNotOwner')
+                .withArgs(account_2Address)
+        })
+
+        it('GIVEN Paymaster deployed WHEN addStake THEN success', async () => {
+            await expect(
+                paymaster.connect(account_2).addStake(100n, { value: 100n })
+            )
+                .to.be.revertedWithCustomError(paymaster, 'AccountIsNotOwner')
+                .withArgs(account_2Address)
+        })
+
+        it('GIVEN Paymaster deployed WHEN unlockStake THEN success', async () => {
+            await expect(paymaster.connect(account_2).unlockStake())
+                .to.be.revertedWithCustomError(paymaster, 'AccountIsNotOwner')
+                .withArgs(account_2Address)
+        })
+
+        it('GIVEN Paymaster deployed WHEN withdrawStake THEN success', async () => {
+            await expect(paymaster.connect(account_2).withdrawStake(account_2))
+                .to.be.revertedWithCustomError(paymaster, 'AccountIsNotOwner')
+                .withArgs(account_2Address)
+        })
+    })
 
     describe('AddressZero error', () => {
         it('GIVEN Paymaster deployed WHEN try to initialize with zero address THEN it fails', async () => {
@@ -255,7 +318,7 @@ describe('Account Abstraction Paymaster', () => {
                 paymaster.validatePaymasterUserOp(userOp, userOpHash, maxCost)
             )
                 .to.be.revertedWithCustomError(paymaster, 'NotEntryPoint')
-                .withArgs(adminAccount)
+                .withArgs(adminAccountAddress)
         })
 
         it('GIVEN Paymaster deployed WHEN postOp not called by EntryPont THEN it fails', async () => {
@@ -272,7 +335,7 @@ describe('Account Abstraction Paymaster', () => {
                 )
             )
                 .to.be.revertedWithCustomError(paymaster, 'NotEntryPoint')
-                .withArgs(adminAccount)
+                .withArgs(adminAccountAddress)
         })
     })
 

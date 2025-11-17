@@ -5,6 +5,8 @@ import {
     ISBEPauseFacet,
     ISBEPauseFacet__factory,
     IIsbeFactory,
+    PaymasterFacet__factory,
+    OwnableFacet,
 } from '../../typechain-types'
 import {
     ACCESS_CONTROL_RESOLVER_KEY,
@@ -14,6 +16,7 @@ import {
     ISBE_LOUPE_RESOLVER_KEY,
     AA_PAYMASTER_PAYMASTER_KEY,
     CONFIGURATION_AA_PAYMASTER,
+    OWNABLE_RESOLVER_KEY,
 } from '../../utils/constants'
 import { getEvent } from '../../scripts/utils/getEvent'
 import { Paymaster } from 'typechain-types/contracts/accountabstraction/paymaster'
@@ -60,6 +63,7 @@ export async function deployPaymasterUseCaseFacets(
     const AccessControlDidFacetFactory = await ethers.getContractFactory(
         'AccessControlDidFacet'
     )
+    const OwnableFacetFactory = await ethers.getContractFactory('OwnableFacet')
     const PaymasterFacetFactory =
         await ethers.getContractFactory('PaymasterFacet')
 
@@ -88,6 +92,11 @@ export async function deployPaymasterUseCaseFacets(
         PAUSE_RESOLVER_KEY,
         ISBEPauseFacetFactory
     )
+    const ownableFacet = await deployBusinessLogicFromFactory(
+        isbeFactory,
+        OWNABLE_RESOLVER_KEY,
+        OwnableFacetFactory
+    )
 
     const paymasterFacet = await deployBusinessLogicFromFactory(
         isbeFactory,
@@ -96,6 +105,10 @@ export async function deployPaymasterUseCaseFacets(
     )
 
     await isbeFactory.setConfiguration(CONFIGURATION_AA_PAYMASTER, [
+        {
+            businessId: OWNABLE_RESOLVER_KEY,
+            version: 1,
+        },
         {
             businessId: AA_PAYMASTER_PAYMASTER_KEY,
             version: 1,
@@ -114,11 +127,15 @@ export async function deployPaymasterUseCaseFacets(
     const deployedEvent = await getEvent('UseCaseDeployed', tx, isbeFactory)
     const { proxy } = deployedEvent.args
 
-    const paymaster = PaymasterFacetFactory.attach(proxy) as Paymaster
+    const paymaster = PaymasterFacet__factory.connect(proxy, owner) as Paymaster
     const pause = ISBEPauseFacetFactory.attach(proxy) as ISBEPauseFacet
     const accessControl = AccessControlFacetFactory.attach(
         proxy
     ) as AccessControlFacet
+
+    const ownable = OwnableFacetFactory.attach(proxy) as OwnableFacet
+
+    await ownable.initializeOwnable(owner)
 
     return {
         paymaster,
@@ -130,5 +147,7 @@ export async function deployPaymasterUseCaseFacets(
         isbeCutFacet,
         isbeLoupeFacet,
         proxy,
+        ownable,
+        ownableFacet,
     }
 }
