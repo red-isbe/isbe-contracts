@@ -84,9 +84,10 @@ El módulo ERC‑3643 Security Token en ISBE sigue un diseño modular basado en 
 
 ##### 1. **ERC3643MetadataFacet** - Metadatos regulatorios
 
-- **Propósito**: Gestión de identidad onchain y versión del token
-- **Funciones clave**: `onchainID()`, `version()`, `setOnchainID()`, `setName()`, `setSymbol()`
+- **Propósito**: Gestión de metadatos básicos del token (nombre y símbolo)
+- **Funciones clave**: `setName()`, `setSymbol()`
 - **Ubicación**: `contracts/tokens/erc3643/token/erc3643metadata/`
+- **Nota**: La identidad onchain se gestiona a través del sistema DID integrado en el control de acceso
 
 ##### 2. **ERC3643FreezeFacet** - Control de congelación
 
@@ -126,8 +127,8 @@ El módulo ERC‑3643 Security Token en ISBE sigue un diseño modular basado en 
 
 ##### 8. **ERC203643ControllerFacet** - Control de transferencias (compartido con ERC20)
 
-- **Propósito**: Transferencias forzadas por autoridad regulatoria
-- **Funciones clave**: `controllerTransfer()`, `controllerRedeem()`
+- **Propósito**: Transferencias y quemas forzadas por autoridad regulatoria
+- **Funciones clave**: `forceTransfer()`, `forceBurn()`
 - **Ubicación**: `contracts/tokens/erc203643/controller/`
 
 #### Arquitectura de compliance hooks:
@@ -199,9 +200,8 @@ Para trazabilidad fina, cada función está vinculada con casos de uso específi
 ```solidity
 interface IERC3643 {
     // ========== METADATA ==========
-    function onchainID() external view returns (address);
-    function version() external view returns (string memory);
-    function setOnchainID(address _onchainID) external;
+    function setName(string calldata _name) external;
+    function setSymbol(string calldata _symbol) external;
 
     // ========== FREEZE ==========
     function freezePartialTokens(
@@ -221,8 +221,7 @@ interface IERC3643 {
     // ========== RECOVERY ==========
     function recoveryAddress(
         address _lostWallet,
-        address _newWallet,
-        address _investorOnchainID
+        address _newWallet
     ) external returns (bool);
 
     // ========== COMPLIANCE ==========
@@ -255,18 +254,15 @@ interface IERC3643 {
     function cap() external view returns (uint256);
 
     // ========== CONTROLLER (Shared) ==========
-    function controllerTransfer(
+    function forceTransfer(
         address _from,
         address _to,
-        uint256 _value,
-        bytes calldata _data,
-        bytes calldata _operatorData
-    ) external;
-    function controllerRedeem(
-        address _tokenHolder,
-        uint256 _value,
-        bytes calldata _data,
-        bytes calldata _operatorData
+        uint256 _amount
+    ) external returns (bool);
+    
+    function forceBurn(
+        address _from,
+        uint256 _amount
     ) external;
 }
 ```
@@ -303,11 +299,10 @@ bytes4 constant ERC203643_CONTROLLER_INTERFACE_ID = 0x7b4e9f3a;
 
 #### 5.2.1. Módulo Metadata
 
-| Función                                   | Selector   | Descripción                    | Permisos            |
-| ----------------------------------------- | ---------- | ------------------------------ | ------------------- |
-| initializeERC3643Metadata(address,string) | 0x2428f215 | Inicializa metadatos del token | Solo inicialización |
-| setName(string)                           | 0xc47f0027 | Actualiza nombre del token     | METADATA_ROLE       |
-| setSymbol(string)                         | 0xb84c8246 | Actualiza símbolo del token    | METADATA_ROLE       |
+| Función         | Selector   | Descripción                 | Permisos      |
+| --------------- | ---------- | --------------------------- | ------------- |
+| setName(string) | 0xc47f0027 | Actualiza nombre del token  | METADATA_ROLE |
+| setSymbol(string) | 0xb84c8246 | Actualiza símbolo del token | METADATA_ROLE |
 
 #### 5.2.2. Módulo Freeze
 
@@ -321,9 +316,9 @@ bytes4 constant ERC203643_CONTROLLER_INTERFACE_ID = 0x7b4e9f3a;
 
 #### 5.2.3. Módulo Recovery
 
-| Función                                  | Selector   | Descripción                       | Permisos      |
-| ---------------------------------------- | ---------- | --------------------------------- | ------------- |
-| recoveryAddress(address,address,address) | 0x4f3d8e2a | Recupera tokens de cuenta perdida | RECOVERY_ROLE |
+| Función                          | Selector   | Descripción                       | Permisos      |
+| -------------------------------- | ---------- | --------------------------------- | ------------- |
+| recoveryAddress(address,address) | 0x4f3d8e2a | Recupera tokens de cuenta perdida | RECOVERY_ROLE |
 
 #### 5.2.4. Módulo Compliance (Base)
 
@@ -360,86 +355,114 @@ bytes4 constant ERC203643_CONTROLLER_INTERFACE_ID = 0x7b4e9f3a;
 
 #### 5.2.8. Módulo Controller (Compartido)
 
-| Función                                                 | Selector   | Descripción           | Permisos        |
-| ------------------------------------------------------- | ---------- | --------------------- | --------------- |
-| controllerTransfer(address,address,uint256,bytes,bytes) | 0x8e1a55fc | Transferencia forzada | CONTROLLER_ROLE |
-| controllerRedeem(address,uint256,bytes,bytes)           | 0x9acd72f3 | Quema forzada         | CONTROLLER_ROLE |
+| Función                        | Selector   | Descripción           | Permisos        |
+| ------------------------------ | ---------- | --------------------- | --------------- |
+| forceTransfer(address,address,uint256) | 0x8e1a55fc | Transferencia forzada | CONTROLLER_ROLE |
+| forceBurn(address,uint256)     | 0x9acd72f3 | Quema forzada         | CONTROLLER_ROLE |
 
 ### 5.3. Eventos por módulo
 
 #### 5.3.1. Metadata Events
 
-```javascript
+```solidity
 event UpdatedTokenInformation(
     string indexed name,
     string indexed symbol,
-    uint8 indexed decimals,
-    string version,
-    address onchainID
+    uint8 indexed decimals
 );
-```
 
 #### 5.3.2. Freeze Events
 
-```javascript
-event TokensFrozen(address indexed addr, uint256 amount);event TokensUnfrozen(address indexed addr, uint256 amount);event AddressFrozen(address indexed addr, bool indexed isFrozen, address indexed owner);
+```solidity
+event TokensFrozen(address indexed addr, uint256 amount);
+event TokensUnfrozen(address indexed addr, uint256 amount);
+event AddressFrozen(address indexed addr, bool indexed isFrozen, address indexed owner);
 ```
 
 #### 5.3.3. Recovery Events
 
-```javascript
-event RecoverySuccess(address indexed lostWallet, address indexed newWallet, address indexed investorOnchainID);event AddressFrozen(address indexed addr, bool indexed isFrozen, address indexed owner);
+```solidity
+event RecoverySuccess(
+    address indexed lostWallet,
+    address indexed newWallet
+);
 ```
 
 #### 5.3.4. Compliance Events
 
-```javascript
-event ComplianceAdded(address indexed compliance);event ComplianceBound(address indexed compliance);
+```solidity
+event ComplianceAdded(address indexed compliance);
+event ComplianceBound(address indexed compliance);
 ```
 
 #### 5.3.5. Compliance Max Balance Events
 
-```javascript
-event MaxBalanceSet(uint256 maxBalance);
+```solidity
+event MaxBalanceSet(uint256 maxBalance);
 ```
 
 #### 5.3.6. Compliance DMLim Events
 
-```javascript
-event DailyLimitUpdated(uint256 newLimit);event MonthlyLimitUpdated(uint256 newLimit);
+```solidity
+event DailyLimitUpdated(uint256 newLimit);
+event MonthlyLimitUpdated(uint256 newLimit);
 ```
 
 #### 5.3.7. Controller Events
 
-```javascript
-event ControllerTransfer(address controller, address indexed from, address indexed to, uint256 value, bytes data, bytes operatorData);event ControllerRedemption(address controller, address indexed tokenHolder, uint256 value, bytes data, bytes operatorData);
+```solidity
+event ForceTransfer(
+    address indexed operator,
+    address indexed from,
+    address indexed to,
+    uint256 amount
+);
+
+event ForceBurn(
+    address indexed operator,
+    address indexed from,
+    uint256 amount
+);
 ```
 
 ### 5.4. Errores personalizados
+### 5.4. Errores personalizados
 
-```javascript
-// Errores de Metadataerror 
-EmptyString();error ContractIsAlreadyInitialized();
-// Errores de Freezeerror 
-InsufficientUnfrozenBalance();
-error AmountExceedsFrozenTokens();error AccountIsFrozen(address account);
-// Errores de Recoveryerror 
-InvalidRecoveryOperation();error RecoveryNotAuthorized();
-// Errores de Complianceerror 
-ComplianceCheckFailed();error TransferNotCompliant(address from, address to, uint256 amount);
-// Errores de Max Balanceerror 
-MaxBalanceExceeded(address account, uint256 currentBalance, uint256 maxAllowed);
-// Errores de Day/Month Limitserror 
-DailyLimitExceeded(address account, uint256 amount, uint256 limit);error MonthlyLimitExceeded(address account, uint256 amount, uint256 limit);
-// Errores de Caperror 
-CapExceeded(uint256 attemptedSupply, uint256 cap);
-// Errores de Controllererror 
-ControllerOperationFailed();
-// Errores generaleserror 
-AccountHasNoRole(address account, bytes32 role);error IsPaused();
+```solidity
+// Errores de Metadata
+error EmptyString();
+error ContractIsAlreadyInitialized();
+
+// Errores de Freeze
+error InsufficientUnfrozenBalance();
+error AmountExceedsFrozenTokens();
+error AccountIsFrozen(address account);
+
+// Errores de Recovery
+error InvalidRecoveryOperation();
+error RecoveryNotAuthorized();
+
+// Errores de Compliance
+error ComplianceCheckFailed();
+error TransferNotCompliant(address from, address to, uint256 amount);
+
+// Errores de Max Balance
+error MaxBalanceExceeded(address account, uint256 currentBalance, uint256 maxAllowed);
+
+// Errores de Day/Month Limits
+error DailyLimitExceeded(address account, uint256 amount, uint256 limit);
+error MonthlyLimitExceeded(address account, uint256 amount, uint256 limit);
+
+// Errores de Cap
+error CapExceeded(uint256 attemptedSupply, uint256 cap);
+
+// Errores de Controller
+error ControllerOperationFailed();
+
+// Errores generales
+error AccountHasNoRole(address account, bytes32 role);
+error IsPaused();
 ```
-
-## 6. Arquitectura de Roles y Seguridad
 
 ### 6.1. Sistema de roles granular
 
@@ -448,11 +471,11 @@ AccountHasNoRole(address account, bytes32 role);error IsPaused();
 | Rol                | Descripción                | Funciones permitidas                                               |
 | ------------------ | -------------------------- | ------------------------------------------------------------------ |
 | DEFAULT_ADMIN_ROLE | Administrador supremo      | Gestión de todos los roles                                         |
-| METADATA_ROLE      | Gestor de metadatos        | setName(), setSymbol(), setOnchainID()                             |
+| METADATA_ROLE      | Gestor de metadatos        | setName(), setSymbol()                                             |
 | FREEZE_ROLE        | Controlador de congelación | freezePartialTokens(), unfreezePartialTokens(), setAddressFrozen() |
 | RECOVERY_ROLE      | Agente de recuperación     | recoveryAddress()                                                  |
 | COMPLIANCE_ROLE    | Gestor de compliance       | setMaxBalance(), setDailyLimit(), setMonthlyLimit()                |
-| CONTROLLER_ROLE    | Controlador regulatorio    | controllerTransfer(), controllerRedeem()                           |
+| CONTROLLER_ROLE    | Controlador regulatorio    | forceTransfer(), forceBurn()                                       |
 | PAUSER_ROLE        | Pausador de emergencia     | Activar/desactivar pausa global                                    |
 
 ## 7. Despliegue y Configuración
@@ -502,7 +525,7 @@ AccountHasNoRole(address account, bytes32 role);error IsPaused();
 
 | Requisito eIDAS2              | Implementación ISBE       | Módulo               |
 | ----------------------------- | ------------------------- | -------------------- |
-| Identidad verificable         | onchainID()               | ERC3643MetadataFacet |
+| Identidad verificable         | Sistema DID integrado     | AccessControlFacet   |
 | Trazabilidad de transacciones | Eventos completos         | Todos los módulos    |
 | Control de acceso             | Sistema de roles granular | AccessControlFacet   |
 | Auditoría completa            | Logs inmutables on-chain  | Blockchain nativa    |
@@ -520,7 +543,7 @@ AccountHasNoRole(address account, bytes32 role);error IsPaused();
 
 | Requisito RGPD          | Implementación ISBE            | Módulo                   |
 | ----------------------- | ------------------------------ | ------------------------ |
-| Derecho al olvido       | controllerRedeem()             | ERC203643ControllerFacet |
+| Derecho al olvido       | forceBurn()                    | ERC203643ControllerFacet |
 | Limitación de finalidad | Compliance rules               | ERC3643ComplianceFacet   |
 | Minimización de datos   | Solo datos necesarios on-chain | Arquitectura             |
 | Seguridad de datos      | Roles + validaciones           | Sistema completo         |
