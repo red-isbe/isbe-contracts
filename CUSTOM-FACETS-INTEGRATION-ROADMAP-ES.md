@@ -676,32 +676,30 @@ testIntegration("0xPROXY...ADDRESS");
 
 #### Paso 3.5: Actualizar Documentación del Cliente
 
-Documentar la integración:
+Documentar la integración en un archivo README:
 
-```markdown
-# Integración de Faceta Personalizada
+**Ejemplo de documentación:**
 
-## Faceta: CustomFacet
+- **Faceta**: CustomFacet
 - **Dirección**: 0xABCD...1234
 - **Business ID**: 0xef12...5678
 - **Red**: isbe-mainnet
 - **Integrada el**: 2024-01-15
 
-## Funciones Disponibles
+**Funciones Disponibles:**
 - `initializeXxx(string name, uint256 counter)` - Inicializar faceta
 - `publicOperation(uint256 id) returns (string)` - Ejecutar operación
 - `customFunction() view returns (uint256)` - Ver datos personalizados
 
-## Ejemplo de Uso
+**Ejemplo de Uso:**
 ```javascript
 const proxy = await ethers.getContractAt("CustomFacet", proxyAddress);
 const result = await proxy.publicOperation(1);
 ```
 
-## Transacción de Integración
+**Transacción de Integración:**
 - TX Hash: 0xTX...HASH
 - Bloque: 123456
-```
 
 ## Ejemplo Concreto: Faceta Personalizada ERC721 TokenURI
 
