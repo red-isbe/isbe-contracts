@@ -87,6 +87,8 @@ export const ARTIFACT_PATHS = {
     // BesuNodeManager facets
     BESU_NODE_MANAGER:
         'contracts/client/besuNodeManager/BesuNodeManagerFacet.sol',
+    // Network resources facets
+    NETWORK_CATALOG: 'contracts/networkresources/NetworkDirectoryFacet.sol',
 } as const
 
 export const CONTRACT_NAMES = {
@@ -135,4 +137,6 @@ export const CONTRACT_NAMES = {
     TIMESTAMPING_REGISTRY: 'TimeStampingRegistryFacet',
     // BesuNodeManager facets
     BESU_NODE_MANAGER: 'BesuNodeManagerFacet',
+    // Network resources facets
+    NETWORK_CATALOG: 'NetworkDirectoryFacet',
 } as const

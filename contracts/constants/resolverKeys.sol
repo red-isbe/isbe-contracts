@@ -142,4 +142,7 @@ bytes32 constant _BESU_NODE_MANAGER_RESOLVER_KEY = 0xed251ea052ffafa4903db889a33
 // keccak256('isbe.contracts.anchoring.core.resolver.key');
 bytes32 constant _ANCHORING_CORE_RESOLVER_KEY = 0x3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d;
 
+// keccak256('isbe.contracts.network.directory.resolver.key')
+bytes32 constant _NETWORK_DIRECTORY_RESOLVER_KEY = 0xa02352a617fa557d3bef91c39fbe51f1ffb7d8f551ceafd425722840430d2969;
+
 // solhint-enable max-line-length
