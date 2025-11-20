@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 import {ENS} from './ENS.sol';
 import {EnsRegistryInternal} from './EnsRegistryInternal.sol';
 import {_ENS_REGISTRY_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
+import {_ENS_REGISTRY_FACET_VERSION} from '../../../constants/facetVersions.sol';
 
 /**
  * @title ENS Registry External Interface
@@ -25,7 +26,7 @@ abstract contract EnsRegistry is ENS, EnsRegistryInternal {
         external
         override
         addressIsNotZero(_ownerRootNode)
-        initializer(_ENS_REGISTRY_RESOLVER_KEY)
+        initializer(_ENS_REGISTRY_RESOLVER_KEY, _ENS_REGISTRY_FACET_VERSION)
     {
         _createRootNode(bytes32(0), _ownerRootNode);
         emit EnsRegistryInitialised(_ownerRootNode);

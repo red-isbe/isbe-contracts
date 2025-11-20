@@ -47,6 +47,8 @@ import {
     BesuNodeManagerFacetTestWrapper__factory,
     AnchoringCoreFacet__factory,
     AnchoringCoreFacet,
+    NetworkDirectoryFacet,
+    NetworkDirectoryFacet__factory,
 } from '../../typechain-types'
 import {
     DEFAULT_ADMIN_ROLE,
@@ -62,6 +64,7 @@ import {
     CLIENT_FILTERING_ROLE,
     TIMESTAMPING_REGISTRY_ROLE,
     BESU_NODE_MANAGER_ROLE,
+    NETWORK_DIRECTORY_ROLE,
     CONFIGURATION_ID_ERC20,
     CONFIGURATION_ID_ERC721,
     CONFIGURATION_ID_ERC3643,
@@ -74,6 +77,7 @@ import {
     CONFIGURATION_ID_BESU_NODE_MANAGER,
     ANCHORER_ROLE,
     METADATA_MANAGER_ROLE,
+    CONFIGURATION_ID_NETWORK_DIRECTORY,
 } from '../../utils/constants'
 import { getIsbeFactory } from '../../scripts/utils/getIsbeFactory'
 import {
@@ -102,6 +106,7 @@ let TimeStampingRegistryFacetFactory: TimeStampingRegistryTestWrapper__factory
 let MockTimestampFacetFactory: MockTimestampFacet__factory
 let BesuNodeManagerFacetFactory: BesuNodeManagerFacetTestWrapper__factory
 let AnchoringCoreFacetFactory: AnchoringCoreFacet__factory
+let NetworkDirectoryFacetFactory: NetworkDirectoryFacet__factory
 let isbeFactory: IIsbeFactory
 
 export async function deployGovernance(
@@ -155,6 +160,7 @@ export async function deployGovernance(
         { role: BESU_NODE_MANAGER_ROLE, members: [ownerAddress] },
         { role: ANCHORER_ROLE, members: [ownerAddress] },
         { role: METADATA_MANAGER_ROLE, members: [ownerAddress] },
+        { role: NETWORK_DIRECTORY_ROLE, members: [ownerAddress] },
     ]
 
     BusinessLogicFactoryFacetFactory = await ethers.getContractFactory(
@@ -205,6 +211,9 @@ export async function deployGovernance(
     )
     AnchoringCoreFacetFactory =
         await ethers.getContractFactory('AnchoringCoreFacet')
+    NetworkDirectoryFacetFactory = await ethers.getContractFactory(
+        'NetworkDirectoryFacet'
+    )
     MockTimestampFacetFactory =
         await ethers.getContractFactory('MockTimestampFacet')
 
@@ -270,6 +279,8 @@ export async function deployGovernance(
         await BesuNodeManagerFacetFactory.deploy()
     const anchoringCoreFacet: AnchoringCoreFacet =
         await AnchoringCoreFacetFactory.deploy()
+    const networkDirectoryFacet: NetworkDirectoryFacet =
+        await NetworkDirectoryFacetFactory.deploy()
     const mockTimestampFacet: MockTimestampFacet =
         await MockTimestampFacetFactory.deploy()
 
@@ -283,6 +294,7 @@ export async function deployGovernance(
     await timeStampingRegistryFacet.waitForDeployment()
     await besuNodeManagerFacet.waitForDeployment()
     await anchoringCoreFacet.waitForDeployment()
+    await networkDirectoryFacet.waitForDeployment()
 
     const governanceFacets = [
         await businessLogicFactoryFacet.getAddress(),
@@ -304,6 +316,7 @@ export async function deployGovernance(
         await timeStampingRegistryFacet.getAddress(),
         await besuNodeManagerFacet.getAddress(),
         await anchoringCoreFacet.getAddress(),
+        await networkDirectoryFacet.getAddress(),
         await mockTimestampFacet.getAddress(),
     ]
 
@@ -384,6 +397,7 @@ export async function deployGovernance(
             case CONFIGURATION_ID_CLIENT_FILTERING:
             case CONFIGURATION_ID_TIMESTAMPING_REGISTRY:
             case CONFIGURATION_ID_BESU_NODE_MANAGER:
+            case CONFIGURATION_ID_NETWORK_DIRECTORY:
                 break
             default:
                 throw new Error(`Unknown configuration id ${configurationId}`)
@@ -392,6 +406,16 @@ export async function deployGovernance(
 
     const useCaseDeployment = await deployUseCase()
     const governanceAddress = await isbeFactory.getAddress()
+    const accessControlInstance = (await ethers.getContractAt(
+        'AccessControl',
+        governanceAddress,
+        owner
+    )) as AccessControl
+    const accessControlFromUseCase = (
+        useCaseDeployment as {
+            accessControl?: AccessControl
+        }
+    )?.accessControl
 
     return {
         // Governance core
@@ -420,14 +444,6 @@ export async function deployGovernance(
         mockTimestamp: MockTimestampFacetFactory.attach(
             governanceAddress
         ) as MockTimestampFacet,
-
-        // Access Control (for tests that don't use a use case)
-        accessControl: (await ethers.getContractAt(
-            'AccessControl',
-            governanceAddress,
-            owner
-        )) as AccessControl,
-        accessControlFacet: accessControlGovernanceFacet,
 
         // DID Registry
         didDocumentDetailedFacet,
@@ -468,8 +484,14 @@ export async function deployGovernance(
             governanceAddress
         ) as AnchoringCoreFacet,
 
+        // Network Catalog
+        networkDirectoryFacet,
+
         // Use case deployment (spread all properties)
         ...(useCaseDeployment || {}),
+        // Access Control (for tests that don't use a use case)
+        accessControl: accessControlFromUseCase ?? accessControlInstance,
+        accessControlFacet: accessControlGovernanceFacet,
         useCaseProxy: useCaseDeployment?.proxy,
     }
 }

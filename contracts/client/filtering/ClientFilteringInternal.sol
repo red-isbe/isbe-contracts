@@ -23,6 +23,11 @@ abstract contract ClientFilteringInternal is DidDocumentDetailedInternal {
         _;
     }
 
+    modifier filterExists(bytes32 _filterId) {
+        _checkFilterExists(_filterId);
+        _;
+    }
+
     function _registerFilter(
         IClientFiltering.Filter calldata _newState
     ) internal virtual {
@@ -30,6 +35,23 @@ abstract contract ClientFilteringInternal is DidDocumentDetailedInternal {
         $.filterIdPosition[_newState.filterId] = $.clientFilters.length;
         $.clientFilters.push(_newState);
         $.exists[_newState.filterId] = true;
+    }
+
+    function _updateFilter(
+        IClientFiltering.Filter calldata _newState
+    ) internal virtual {
+        ClientFilteringStorage storage $ = _clientFilteringStorage();
+        uint256 position = $.filterIdPosition[_newState.filterId];
+        IClientFiltering.Filter storage stored = $.clientFilters[position];
+
+        stored.filterType = _newState.filterType;
+        stored.transactionHash = _newState.transactionHash;
+        stored.contractAddress = _newState.contractAddress;
+        stored.signature = _newState.signature;
+        stored.jsonRpcMethod = _newState.jsonRpcMethod;
+        stored.initialBlock = _newState.initialBlock;
+        stored.endBlock = _newState.endBlock;
+        stored.disabled = _newState.disabled;
     }
 
     function _getFiltersLength() internal view returns (uint256) {
@@ -71,6 +93,13 @@ abstract contract ClientFilteringInternal is DidDocumentDetailedInternal {
         );
     }
 
+    function _checkFilterExists(bytes32 _filterId) private view {
+        require(
+            _isFilterRegistered(_filterId),
+            IClientFiltering.FilterNotFound(_filterId)
+        );
+    }
+
     function _validateFilter(
         IClientFiltering.Filter calldata _filter
     ) private pure {
@@ -84,7 +113,8 @@ abstract contract ClientFilteringInternal is DidDocumentDetailedInternal {
                 _filter.signature,
                 _filter.jsonRpcMethod,
                 _filter.initialBlock,
-                _filter.endBlock
+                _filter.endBlock,
+                _filter.disabled
             )
         );
     }

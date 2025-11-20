@@ -1,0 +1,87 @@
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.28;
+
+import {_NETWORK_DIRECTORY_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
+import {INetworkDirectory} from './INetworkDirectory.sol';
+import {NetworkDirectory} from './NetworkDirectory.sol';
+import {IEIP2535Introspection} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+
+/**
+ * @title NetworkDirectoryFacet
+ * @notice Diamond facet implementing network catalog functionality with EIP-2535 introspection
+ * @dev This contract serves as a diamond facet for the network catalog system.
+ *      It combines the NetworkDirectory functionality with EIP-2535 introspection capabilities
+ *      to support diamond proxy pattern deployment and management.
+ * @author ISBE Development Team
+ */
+contract NetworkDirectoryFacet is NetworkDirectory, IEIP2535Introspection {
+    /**
+     * @notice Returns the interfaces implemented by this facet
+     * @dev Used for EIP-165 interface detection in diamond proxies
+     * @return interfaces_ Array of interface IDs implemented by this facet
+     */
+    function interfacesIntrospection()
+        external
+        pure
+        returns (bytes4[] memory interfaces_)
+    {
+        return _implementedInterfaces();
+    }
+
+    /**
+     * @notice Returns the business identifier for this facet
+     * @dev Used for facet identification and resolution in diamond architecture
+     * @return businessId_ The unique business identifier for network catalog functionality
+     */
+    function businessIdIntrospection()
+        external
+        pure
+        override
+        returns (bytes32 businessId_)
+    {
+        businessId_ = _NETWORK_DIRECTORY_RESOLVER_KEY;
+    }
+
+    /**
+     * @notice Returns all function selectors implemented by this facet
+     * @dev Used by diamond proxy for function routing and facet management
+     * @return selectors_ Array of 4-byte function selectors implemented by this facet
+     */
+    function selectorsIntrospection()
+        external
+        pure
+        override
+        returns (bytes4[] memory selectors_)
+    {
+        uint256 selectorsLength = 13;
+        selectors_ = new bytes4[](selectorsLength);
+        selectors_[--selectorsLength] = this.createNetwork.selector;
+        selectors_[--selectorsLength] = this.updateNetwork.selector;
+        selectors_[--selectorsLength] = this.deleteNetwork.selector;
+        selectors_[--selectorsLength] = this.getNetwork.selector;
+        selectors_[--selectorsLength] = this.getAllNetworks.selector;
+        selectors_[--selectorsLength] = this.getNetworksByAlgorithm.selector;
+        selectors_[--selectorsLength] = this.getNetworksPaginated.selector;
+        selectors_[--selectorsLength] = this.getNetworksCount.selector;
+        selectors_[--selectorsLength] = this.setResource.selector;
+        selectors_[--selectorsLength] = this.deleteResource.selector;
+        selectors_[--selectorsLength] = this.getResourceKeys.selector;
+        selectors_[--selectorsLength] = this.getResourceKeysPaginated.selector;
+        selectors_[--selectorsLength] = this.getResourceCount.selector;
+    }
+
+    /**
+     * @notice Returns the interfaces implemented by this contract
+     * @dev Internal function used by interfacesIntrospection for EIP-165 support
+     * @return interfaces_ Array containing the INetworkDirectory interface ID
+     */
+    function _implementedInterfaces()
+        internal
+        pure
+        override
+        returns (bytes4[] memory interfaces_)
+    {
+        interfaces_ = new bytes4[](1);
+        interfaces_[0] = type(INetworkDirectory).interfaceId;
+    }
+}

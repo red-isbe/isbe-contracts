@@ -2,6 +2,7 @@
 pragma solidity ^0.8.28;
 
 import {_ERC3643_COMPLIANCE_MAXBALANCE_RESOLVER_KEY} from '../../../../constants/resolverKeys.sol';
+import {_ERC3643_COMPLIANCE_MAXBALANCE_FACET_VERSION} from '../../../../constants/facetVersions.sol';
 import {ERC203643InternalCommon} from '../../../erc203643/ERC203643InternalCommon.sol';
 import {IERC3643ComplianceMaxBal} from './IERC3643ComplianceMaxBal.sol';
 import {_COMPLIANCE_ROLE} from '../../../../constants/roles.sol';
@@ -33,7 +34,10 @@ abstract contract ERC3643ComplianceMaxBal is
     )
         external
         override
-        initializer(_ERC3643_COMPLIANCE_MAXBALANCE_RESOLVER_KEY)
+        initializer(
+            _ERC3643_COMPLIANCE_MAXBALANCE_RESOLVER_KEY,
+            _ERC3643_COMPLIANCE_MAXBALANCE_FACET_VERSION
+        )
     {
         _initializeMaxBalance(_maxBalance);
         emit MaxBalanceSet(_maxBalance);

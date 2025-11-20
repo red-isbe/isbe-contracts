@@ -1,4 +1,4 @@
-# ADR_010: Whitelist Implementation via Facet Architecture vs Role-Based Access Control
+# ADR_011: Whitelist Implementation via Facet Architecture vs Role-Based Access Control
 
 ## Tabla de contenidos
 
@@ -481,13 +481,12 @@ contracts/tokens/whitelist/basic/        # ← Extensión transversal
 ```solidity
 // BasicWhitelistInternal.sol
 struct BasicWhitelistStorage {
-    mapping(address => bool) whitelisted;             // Estado de whitelist
-    bool enabled;                                     // Flag global enable/disable
+    mapping(address => bool) whitelisted; // Estado de whitelist
+    bool enabled; // Flag global enable/disable
 }
 
 // Definido en contracts/constants/storagePositions.sol
-bytes32 constant _BASIC_WHITELIST_STORAGE_POSITION =
-    0x8c3a8a9f7d6e5c4b3a2d1f0e9b8a7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b;
+bytes32 constant _BASIC_WHITELIST_STORAGE_POSITION = 0x8c3a8a9f7d6e5c4b3a2d1f0e9b8a7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b;
 ```
 
 **Garantías de seguridad:**
@@ -517,12 +516,15 @@ interface IBasicWhitelist {
     function removeFromWhitelist(address _account) external;
     function enableWhitelist() external;
     function disableWhitelist() external;
-    function isWhitelisted(address _account) external view returns (bool isWhitelisted_);
+    function isWhitelisted(
+        address _account
+    ) external view returns (bool isWhitelisted_);
     function isWhitelistEnabled() external view returns (bool enabled_);
 }
 ```
 
 **Notas:**
+
 - **NO implementado en v1:** `addToWhitelistBatch`, `addToWhitelistWithExpiry`, `getWhitelistedCount`, `getWhitelistedAddresses`
 - Estas funciones están identificadas como **v2 opcional** para futuras extensiones.
 
@@ -531,8 +533,8 @@ interface IBasicWhitelist {
 **Modificación en `ERC203643InternalCommon.sol` (YA IMPLEMENTADO):**
 
 ```solidity
-import {BasicWhitelistInternal} from '../whitelist/basic/BasicWhitelistInternal.sol';
-import {IBasicWhitelist} from '../whitelist/basic/IBasicWhitelist.sol';
+import { BasicWhitelistInternal } from '../whitelist/basic/BasicWhitelistInternal.sol';
+import { IBasicWhitelist } from '../whitelist/basic/IBasicWhitelist.sol';
 
 abstract contract ERC203643InternalCommon is
     ERC20SnapshotInternal,
@@ -568,6 +570,7 @@ abstract contract ERC203643InternalCommon is
 ```
 
 **Nota:** El check de whitelist se ejecuta en mint y transfer mediante `_isWhitelisted(_to)` que valida:
+
 1. Si whitelist está deshabilitada: permite todo
 2. Si whitelist está habilitada: solo permite direcciones whitelisted
 
@@ -617,7 +620,8 @@ abstract contract ERC203643InternalCommon is
             description: 'BasicWhitelistFacet',
             key: WHITELIST_RESOLVER_KEYS.BASIC_WHITELIST,
             contractName: 'BasicWhitelistFacet',
-            artifactPath: 'contracts/tokens/whitelist/basic/BasicWhitelistFacet.sol',
+            artifactPath:
+                'contracts/tokens/whitelist/basic/BasicWhitelistFacet.sol',
         },
     ]
     ```
@@ -753,7 +757,7 @@ Tokens no-security pueden añadir whitelist si lo requieren (ej: NFT de galería
 ```javascript
 // Emisor añade inversores aprobados (uno por uno en v1)
 for (const investor of ['0xInvestor1...', '0xInvestor2...']) {
-    await securityToken.addToWhitelist(investor);
+    await securityToken.addToWhitelist(investor)
 }
 
 // Transfer permitido
@@ -771,15 +775,15 @@ await securityToken.transfer('0xRandomAddress...', ethers.parseEther('1000')) //
 
 ```javascript
 // Deshabilitar whitelist (permite transferencias a cualquier dirección)
-await securityToken.disableWhitelist();
+await securityToken.disableWhitelist()
 
 // Distribución masiva sin restricciones
 for (const recipient of massDistribution) {
-    await securityToken.transfer(recipient, amount);
+    await securityToken.transfer(recipient, amount)
 }
 
 // Re-habilitar whitelist
-await securityToken.enableWhitelist();
+await securityToken.enableWhitelist()
 ```
 
 ### Caso 3: Auditoría de Compliance
@@ -790,18 +794,19 @@ await securityToken.enableWhitelist();
 
 ```javascript
 // Verificar si una dirección está whitelisted
-const isInvestor1Whitelisted = await securityToken.isWhitelisted('0xInvestor1...');
-console.log('Investor1 whitelisted:', isInvestor1Whitelisted); // true
+const isInvestor1Whitelisted =
+    await securityToken.isWhitelisted('0xInvestor1...')
+console.log('Investor1 whitelisted:', isInvestor1Whitelisted) // true
 
 // Verificar estado del whitelist
-const enabled = await securityToken.isWhitelistEnabled();
-console.log('Whitelist enabled:', enabled); // true
+const enabled = await securityToken.isWhitelistEnabled()
+console.log('Whitelist enabled:', enabled) // true
 
 // Para auditorías de lista completa, se requiere indexar eventos AddedToWhitelist/RemovedFromWhitelist
-const filter = securityToken.filters.AddedToWhitelist();
-const events = await securityToken.queryFilter(filter);
-const whitelistedAddresses = events.map(e => e.args.account);
-console.log('Total whitelisted:', whitelistedAddresses.length);
+const filter = securityToken.filters.AddedToWhitelist()
+const events = await securityToken.queryFilter(filter)
+const whitelistedAddresses = events.map((e) => e.args.account)
+console.log('Total whitelisted:', whitelistedAddresses.length)
 ```
 
 **Nota:** Enumeration completa (`getWhitelistedAddresses`, `getWhitelistedCount`) está identificada como feature v2.

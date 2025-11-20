@@ -80,6 +80,12 @@ Diamond facet providing introspection capabilities for ISBE proxies
 
 _Implements Diamond Loupe functions for EIP-2535 compliance with ERC-165 support_
 
+### constructor
+
+```solidity
+constructor() public
+```
+
 ### facets
 
 ```solidity
@@ -150,11 +156,46 @@ _If facet is not found return address(0)._
 | -------------- | ------- | ------------------ |
 | facetAddress\_ | address | The facet address. |
 
+### facetVersion
+
+```solidity
+function facetVersion(bytes32 _facetKey) external view returns (uint256 version_)
+```
+
+Retrieves the version of a specific facet key.
+
+#### Parameters
+
+| Name       | Type    | Description                                             |
+| ---------- | ------- | ------------------------------------------------------- |
+| \_facetKey | bytes32 | The target facet key for which to retrieve the version. |
+
+#### Return Values
+
+| Name      | Type    | Description                                         |
+| --------- | ------- | --------------------------------------------------- |
+| version\_ | uint256 | The initialized version of the specified facet key. |
+
 ### supportsInterface
 
 ```solidity
 function supportsInterface(bytes4 _interfaceId) external view virtual returns (bool)
 ```
+
+Checks if a contract supports an interface.
+Returns false for forbidden interfaces, otherwise checks using ERC-165 method.
+
+#### Parameters
+
+| Name          | Type   | Description                                   |
+| ------------- | ------ | --------------------------------------------- |
+| \_interfaceId | bytes4 | The target interface ID to check support for. |
+
+#### Return Values
+
+| Name | Type | Description                                                               |
+| ---- | ---- | ------------------------------------------------------------------------- |
+| [0]  | bool | True if the contract supports the provided interface ID, otherwise false. |
 
 ### interfacesIntrospection
 

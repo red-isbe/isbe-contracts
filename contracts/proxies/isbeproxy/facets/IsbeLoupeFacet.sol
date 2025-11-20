@@ -7,6 +7,7 @@ import {IEIP2535Introspection} from '../../eip2535/interfaces/IEIP2535Introspect
 import {IDiamondLoupe} from '../../eip2535/interfaces/IDiamondLoupe.sol';
 import {IERC165} from '@openzeppelin/contracts/utils/introspection/IERC165.sol';
 import {ERC165Internal} from '../../../core/ERC165Internal.sol';
+import {Initializable} from '../../../core/Initializable.sol';
 
 /**
  * @title IsbeLoupeFacet
@@ -19,8 +20,13 @@ contract IsbeLoupeFacet is
     IDiamondLoupe,
     IsbeProxyInternal,
     ERC165Internal,
+    Initializable,
     IEIP2535Introspection
 {
+    constructor() {
+        _disableInitializers(_ISBE_LOUPE_RESOLVER_KEY);
+    }
+
     // Diamond Loupe Functions
     ////////////////////////////////////////////////////////////////////
     /// These functions are expected to be called frequently by tools.
@@ -65,6 +71,23 @@ contract IsbeLoupeFacet is
         facetAddress_ = _facetAddress(_functionSelector);
     }
 
+    /**
+     * @notice Retrieves the version of a specific facet key.
+     * @param _facetKey The target facet key for which to retrieve the version.
+     * @return version_ The initialized version of the specified facet key.
+     */
+    function facetVersion(
+        bytes32 _facetKey
+    ) external view returns (uint256 version_) {
+        version_ = _getInitializedVersion(_facetKey);
+    }
+
+    /**
+     * @notice Checks if a contract supports an interface.
+     *         Returns false for forbidden interfaces, otherwise checks using ERC-165 method.
+     * @param _interfaceId The target interface ID to check support for.
+     * @return True if the contract supports the provided interface ID, otherwise false.
+     */
     function supportsInterface(
         bytes4 _interfaceId
     ) external view virtual override returns (bool) {
@@ -98,13 +121,14 @@ contract IsbeLoupeFacet is
         override
         returns (bytes4[] memory selectors_)
     {
-        uint256 selectorsLength = 5;
+        uint256 selectorsLength = 6;
         selectors_ = new bytes4[](selectorsLength);
         selectors_[--selectorsLength] = this.facets.selector;
         selectors_[--selectorsLength] = this.facetFunctionSelectors.selector;
         selectors_[--selectorsLength] = this.facetAddresses.selector;
         selectors_[--selectorsLength] = this.facetAddress.selector;
         selectors_[--selectorsLength] = this.supportsInterface.selector;
+        selectors_[--selectorsLength] = this.facetVersion.selector;
     }
 
     function _implementedInterfaces()

@@ -14,6 +14,7 @@ import {
     ISBE_PAUSER_ROLE,
     ISBE_ROLE,
     PROXY_DEPLOYER_ROLE,
+    NETWORK_DIRECTORY_ROLE,
     TIMESTAMPING_REGISTRY_ROLE,
     ANCHORER_ROLE,
     METADATA_MANAGER_ROLE,
@@ -103,6 +104,7 @@ export class CleanGovernanceDeployer {
             'EnsRegistryFacet',
             'TimeStampingRegistryFacet',
             'ClientFilteringFacet',
+            'NetworkDirectoryFacet',
             'BesuNodeManagerFacet',
             'AnchoringCoreFacet',
         ]
@@ -216,6 +218,10 @@ export class CleanGovernanceDeployer {
                 },
                 {
                     role: TIMESTAMPING_REGISTRY_ROLE,
+                    members: [accountAddress],
+                },
+                {
+                    role: NETWORK_DIRECTORY_ROLE,
                     members: [accountAddress],
                 },
                 {

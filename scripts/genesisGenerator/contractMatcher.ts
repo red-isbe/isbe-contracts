@@ -2,6 +2,8 @@ import type { HardhatRuntimeEnvironment, Artifact } from 'hardhat/types'
 import { GenesisAlloc } from './slotExtractor'
 import { id as keccak256 } from 'ethers'
 
+const ISBE_GOVERNANCE_CONTRACT_NAME: string = 'EIP2535AccessControl'
+
 type contractData = {
     contractCode?: Map<string, string> // address -> bytecode
     selectorIndex?: Map<string, string> // selector -> address
@@ -95,7 +97,8 @@ export async function buildFunctionSelectorIndex(
  */
 export async function matchContractNames(
     hre: HardhatRuntimeEnvironment,
-    alloc: GenesisAlloc // Map<string, GenesisAllocEntry>
+    alloc: GenesisAlloc, // Map<string, GenesisAllocEntry>
+    governanceaddress: string
 ): Promise<GenesisAlloc> {
     const exactIndex = await buildExactBytecodeIndex(hre)
 
@@ -116,6 +119,24 @@ export async function matchContractNames(
             alloc.set(addr, entry)
         }
     }
+
+    const found = Array.from(alloc.entries()).find(
+        ([, e]) => e.contractName === ISBE_GOVERNANCE_CONTRACT_NAME
+    )
+
+    if (!found) {
+        throw new Error(
+            `❌ Governance contract (${ISBE_GOVERNANCE_CONTRACT_NAME}) not found in genesis allocation. Perhaps contract name has been changed?`
+        )
+    }
+
+    const [address, entry] = found
+
+    console.log(
+        `✅ Governance contract found at address ${address} changing to address ${governanceaddress}`
+    )
+    alloc.set(governanceaddress, entry)
+    alloc.delete(address) //Entry is maintained as it us by GOVERNANCE_CONTRACT_NAME address
 
     return alloc
 }

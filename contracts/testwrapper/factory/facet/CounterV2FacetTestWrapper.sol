@@ -4,6 +4,8 @@ pragma solidity ^0.8.28;
 import {IEIP2535Introspection} from '../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 import {_RESOLVER_KEY, CounterFacetInternal} from './CounterFacetInternal.sol';
 import {_DEFAULT_ADMIN_ROLE} from '../../../constants/roles.sol';
+import {_INITIALIZABLE_STORAGE_POSITION} from '../../../constants/storagePositions.sol';
+uint256 constant _COUNTER_FACET_VERSION = 2;
 
 contract CounterV2FacetTestWrapper is
     CounterFacetInternal,
@@ -15,15 +17,50 @@ contract CounterV2FacetTestWrapper is
 
     function initializeCounter(
         uint256 _startingValue
-    ) external initializer(_RESOLVER_KEY) {
-        CounterStorage storage $ = _counterStorage();
-        $.counter = _startingValue;
+    ) external initializer(_RESOLVER_KEY, _COUNTER_FACET_VERSION) {
+        _counterStorage().counter = _startingValue;
+    }
+
+    function badInitializer() external initializer(_RESOLVER_KEY, 0) {
+        _counterStorage().counter = type(uint256).max;
+    }
+
+    function reinitializeCounter(
+        uint256 _restartingValue
+    )
+        external
+        reinitializer(_RESOLVER_KEY, _COUNTER_FACET_VERSION)
+        onlyRole(_DEFAULT_ADMIN_ROLE)
+    {
+        _counterStorage().counter = _restartingValue;
     }
 
     function increment(
         uint256 _amount
-    ) external whenNotPaused onlyRole(_DEFAULT_ADMIN_ROLE) {
+    )
+        external
+        whenNotPaused
+        onlyRole(_DEFAULT_ADMIN_ROLE)
+        onlyBeforeVersion(_RESOLVER_KEY, _COUNTER_FACET_VERSION)
+    {
         _counterStorage().counter += _amount;
+    }
+
+    function decrement(
+        uint256 _amount
+    )
+        external
+        whenNotPaused
+        onlyRole(_DEFAULT_ADMIN_ROLE)
+        onlyAfterVersion(_RESOLVER_KEY, _COUNTER_FACET_VERSION)
+    {
+        _counterStorage().counter -= _amount;
+    }
+
+    function setVersion(
+        uint256 version
+    ) external whenNotPaused onlyRole(_DEFAULT_ADMIN_ROLE) {
+        _initStorage().initialized[_RESOLVER_KEY] = version;
     }
 
     function counter() external view returns (uint256) {
@@ -53,11 +90,15 @@ contract CounterV2FacetTestWrapper is
         override
         returns (bytes4[] memory selectors_)
     {
-        uint256 selectorsLength = 3;
+        uint256 selectorsLength = 7;
         selectors_ = new bytes4[](selectorsLength);
         selectors_[--selectorsLength] = this.initializeCounter.selector;
+        selectors_[--selectorsLength] = this.badInitializer.selector;
+        selectors_[--selectorsLength] = this.reinitializeCounter.selector;
         selectors_[--selectorsLength] = this.increment.selector;
         selectors_[--selectorsLength] = this.counter.selector;
+        selectors_[--selectorsLength] = this.decrement.selector;
+        selectors_[--selectorsLength] = this.setVersion.selector;
     }
 
     function _implementedInterfaces()
@@ -67,6 +108,25 @@ contract CounterV2FacetTestWrapper is
         override
         returns (bytes4[] memory interfaces_)
     {
-        return new bytes4[](0);
+        interfaces_ = new bytes4[](1);
+        interfaces_[0] = type(IEIP2535Introspection).interfaceId;
+    }
+
+    /**
+     * @dev Returns the storage pointer for InitializableStorage.
+     * @return storage_ The storage struct at the designated position
+     */
+    function _initStorage()
+        private
+        pure
+        returns (InitializableStorage storage storage_)
+    {
+        bytes32 position = _INITIALIZABLE_STORAGE_POSITION;
+        // slither-disable-start assembly
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            storage_.slot := position
+        }
+        // slither-disable-end assembly
     }
 }

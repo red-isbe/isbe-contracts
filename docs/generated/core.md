@@ -109,58 +109,258 @@ function _implementedInterfaces() internal pure virtual returns (bytes4[] interf
 
 ## Initializable
 
-Provides a mechanism to ensure an initialisation function is executed only once per facet.
+Provides a versioned mechanism to ensure initialisation functions are executed properly per facet.
 
-_This abstract contract manages the initialisation state of contracts, particularly for facets
-within a diamond proxy pattern. It employs a unique key (`_facetKey`) to track whether a specific
-part of the contract has been initialised, thereby preventing re-entrancy and unauthorised
-re-initialisation. The core logic is handled by the `initializer` modifier, which safeguards
-functions to ensure they run only a single time. It also includes a function to permanently
-disable initialisers, a critical security measure for implementation contracts in a proxy setup._
+\_This abstract contract manages the initialisation state of contracts with version control,
+particularly for facets within a diamond proxy pattern. It employs a unique key (`_facetKey`)
+combined with version tracking to manage initialisation state across contract upgrades.
+
+Key features:
+
+- Version-based initialisation tracking
+- Support for contract reinitialisation during upgrades
+- Version-gated function access control
+- Prevention of re-entrancy and unauthorised re-initialisation
+
+The contract provides three main modifiers:
+
+- `initializer`: For initial deployment (can only be called once per version)
+- `reinitializer`: For contract upgrades (allows migration to new versions)
+- `onlyFromVersion`: For version-dependent access control\_
 
 ### InitializableStorage
 
+_Storage structure for tracking initialisation versions per facet._
+
 ```solidity
 struct InitializableStorage {
-    mapping(bytes32 => bool) initialized;
+    mapping(bytes32 => uint256) initialized;
 }
 ```
 
 ### Initialized
 
 ```solidity
-event Initialized(bytes32 facet)
+event Initialized(bytes32 facetKey, uint256 version)
 ```
 
-_Triggered when the facet has been initialized or reinitialized._
+_Emitted when a facet is initialised for the first time._
+
+#### Parameters
+
+| Name     | Type    | Description                         |
+| -------- | ------- | ----------------------------------- |
+| facetKey | bytes32 | The unique identifier for the facet |
+| version  | uint256 | The version that was initialised    |
+
+### Reinitialized
+
+```solidity
+event Reinitialized(bytes32 facetKey, uint256 previousVersion, uint256 newVersion)
+```
+
+_Emitted when a facet is reinitialised to a new version._
+
+#### Parameters
+
+| Name            | Type    | Description                            |
+| --------------- | ------- | -------------------------------------- |
+| facetKey        | bytes32 | The unique identifier for the facet    |
+| previousVersion | uint256 | The version before reinitialisation    |
+| newVersion      | uint256 | The new version after reinitialisation |
 
 ### ContractIsAlreadyInitialized
 
 ```solidity
-error ContractIsAlreadyInitialized(bytes32 facet)
+error ContractIsAlreadyInitialized(bytes32 facetKey, uint256 currentVersion, uint256 attemptedVersion)
 ```
+
+_Error thrown when attempting to initialise an already initialised facet._
+
+#### Parameters
+
+| Name             | Type    | Description                              |
+| ---------------- | ------- | ---------------------------------------- |
+| facetKey         | bytes32 | The facet that is already initialised    |
+| currentVersion   | uint256 | The current version of the facet         |
+| attemptedVersion | uint256 | The version that was attempted to be set |
+
+### InvalidReinitializerVersion
+
+```solidity
+error InvalidReinitializerVersion(bytes32 facetKey, uint256 currentVersion, uint256 attemptedVersion)
+```
+
+_Error thrown when attempting to reinitialise with an invalid version._
+
+#### Parameters
+
+| Name             | Type    | Description                      |
+| ---------------- | ------- | -------------------------------- |
+| facetKey         | bytes32 | The facet being reinitialised    |
+| currentVersion   | uint256 | The current version of the facet |
+| attemptedVersion | uint256 | The version that was attempted   |
+
+### InsufficientVersion
+
+```solidity
+error InsufficientVersion(bytes32 facetKey, uint256 currentVersion, uint256 requiredVersion)
+```
+
+_Error thrown when attempting to call a function before required version._
+
+#### Parameters
+
+| Name            | Type    | Description                      |
+| --------------- | ------- | -------------------------------- |
+| facetKey        | bytes32 | The facet being accessed         |
+| currentVersion  | uint256 | The current version of the facet |
+| requiredVersion | uint256 | The minimum version required     |
+
+### InvalidVersionZero
+
+```solidity
+error InvalidVersionZero()
+```
+
+_Error thrown when attempting to use version 0 (reserved for uninitialised state)._
 
 ### initializer
 
 ```solidity
-modifier initializer(bytes32 _facetKey)
+modifier initializer(bytes32 _facetKey, uint256 _version)
 ```
 
-_Modifier to protect an initialization function so that it can only be invoked by functions with the
-{initializer} and {reinitializer} modifiers, directly or indirectly._
+\_Modifier to protect an initialisation function so that it can only be invoked once
+on a fresh, never-before-initialised contract.
+
+**CRITICAL:** This modifier can ONLY be used when the stored version is 0 (never initialised).
+After the first successful call, the stored version will be set to `_version`, and this
+modifier will always revert on subsequent calls.
+
+Use this for:
+
+- Initial contract deployment
+- Fresh proxy initialization
+
+DO NOT use this for:
+
+- Contract upgrades (use `reinitializer` instead)
+- Subsequent initializations after deployment
+
+Emits an {Initialized} event upon successful initialisation.
+
+Example:
+
+````solidity
+// Initial deployment: stored version = 0
+function initialize(bytes32 data)
+    external
+    initializer(FACET_KEY, 1) // ✅ Works: 0 → 1
+{
+    // Initialize state
+}
+
+// Second call will always fail
+function initialize(bytes32 data)
+    external
+    initializer(FACET_KEY, 2) // ❌ Fails: version is now 1, not 0
+{
+    // This will revert with ContractIsAlreadyInitialized
+}
+```_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _facetKey | bytes32 | The unique identifier for the facet being initialised |
+| _version | uint256 | The version being initialised (must be > 0) Requirements: - The stored version MUST be exactly 0 (never initialised before) - Version parameter must be greater than 0 - After execution, stored version will be set to `_version` |
+
+### reinitializer
+
+```solidity
+modifier reinitializer(bytes32 _facetKey, uint256 _version)
+````
+
+_Modifier to allow reinitialisation of a contract during upgrades.
+This enables contracts to be upgraded with new state variables or logic._
+
+#### Parameters
+
+| Name       | Type    | Description                                                                                                                                                                                                                     |
+| ---------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| \_facetKey | bytes32 | The unique identifier for the facet being reinitialised                                                                                                                                                                         |
+| \_version  | uint256 | The new version being set (must be > current version) Requirements: - The new version must be greater than the current version - Version must be greater than 0 Emits a {Reinitialized} event upon successful reinitialisation. |
+
+### onlyAfterVersion
+
+```solidity
+modifier onlyAfterVersion(bytes32 _facetKey, uint256 _minVersion)
+```
+
+_Modifier to restrict function access to contracts initialised to at least
+the specified version. This enables version-dependent feature gating._
+
+#### Parameters
+
+| Name         | Type    | Description                                                                                                               |
+| ------------ | ------- | ------------------------------------------------------------------------------------------------------------------------- |
+| \_facetKey   | bytes32 | The unique identifier for the facet                                                                                       |
+| \_minVersion | uint256 | The minimum version required to call this function Requirements: - The facet must be initialised to at least \_minVersion |
+
+### onlyBeforeVersion
+
+```solidity
+modifier onlyBeforeVersion(bytes32 _facetKey, uint256 _minVersion)
+```
+
+Restricts function access to contracts initialised to at most the specified version.
+
+_Used to deprecate features or restrict access in newer versions._
+
+#### Parameters
+
+| Name         | Type    | Description                              |
+| ------------ | ------- | ---------------------------------------- |
+| \_facetKey   | bytes32 | The unique identifier for the facet.     |
+| \_minVersion | uint256 | The maximum allowed version (inclusive). |
 
 ### \_disableInitializers
 
 ```solidity
-function _disableInitializers(bytes32 _facetKey) internal virtual
+function _disableInitializers(bytes32 _facetKey) internal
 ```
 
-\_Locks the contract, preventing any future reinitialization. This cannot be part of an initializer call.
-Calling this in the constructor of a contract will prevent that contract from being initialized or reinitialized
-to any version. It is recommended to use this to lock implementation contracts that are designed to be called
-through proxies.
+_Locks the contract, preventing any future initialisation or reinitialisation.
+This should be called in the constructor of implementation contracts to prevent
+them from being initialised directly (they should only be used through proxies)._
 
-Emits an {Initialized} event the first time it is successfully executed.\_
+#### Parameters
+
+| Name       | Type    | Description                                                                                                                                                                                                          |
+| ---------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| \_facetKey | bytes32 | The unique identifier for the facet to lock Note: This sets the version to type(uint256).max, effectively disabling all initialisation and reinitialisation attempts. Emits an {Initialized} event with max version. |
+
+### \_getInitializedVersion
+
+```solidity
+function _getInitializedVersion(bytes32 _facetKey) internal view returns (uint256)
+```
+
+_Returns the current initialised version for a facet._
+
+#### Parameters
+
+| Name       | Type    | Description                         |
+| ---------- | ------- | ----------------------------------- |
+| \_facetKey | bytes32 | The unique identifier for the facet |
+
+#### Return Values
+
+| Name | Type    | Description                                  |
+| ---- | ------- | -------------------------------------------- |
+| [0]  | uint256 | The current version (0 if never initialised) |
 
 ---
 

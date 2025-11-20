@@ -67,7 +67,7 @@ export function getNetworkConfigs(): NetworksConfig {
             url: DEV_URL,
             chainId: 11073,
             accounts,
-            gasPrice: 2000,
+            gasPrice: 2_000,
             gas: 20_000_000,
             blockGasLimit: 0x1e84800, // 32,000,000
             curve: 'secp256k1',

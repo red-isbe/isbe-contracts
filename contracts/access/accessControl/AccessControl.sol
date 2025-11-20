@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 import {Common} from '../../core/Common.sol';
 import {IAccessControlEoa} from './IAccessControlEoa.sol';
 import {_ACCESS_CONTROL_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
+import {_ACCESS_CONTROL_FACET_VERSION} from '../../constants/facetVersions.sol';
 
 /// @title AccessControl
 /// @author ISBE team
@@ -19,7 +20,10 @@ abstract contract AccessControl is IAccessControlEoa, Common {
     /// @param _rbacs Array of role-based access control configurations to initialize with
     function initializeAccessControl(
         IAccessControlEoa.Rbac[] memory _rbacs
-    ) external initializer(_ACCESS_CONTROL_RESOLVER_KEY) {
+    )
+        external
+        initializer(_ACCESS_CONTROL_RESOLVER_KEY, _ACCESS_CONTROL_FACET_VERSION)
+    {
         _initializeRbacs(_rbacs);
     }
 

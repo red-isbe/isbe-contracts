@@ -6,6 +6,7 @@ import {IERC20Isbe} from './IERC20Isbe.sol';
 import {_ERC20_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {IERC20Metadata} from '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
+import {_ERC20_FACET_VERSION} from '../../constants/facetVersions.sol';
 
 /**
  * @title ERC20 Token Contract
@@ -34,7 +35,7 @@ abstract contract ERC20 is IERC20Isbe, ERC203643InternalCommon {
     )
         external
         override
-        initializer(_ERC20_RESOLVER_KEY)
+        initializer(_ERC20_RESOLVER_KEY, _ERC20_FACET_VERSION)
         emptyString(_newName)
         emptyString(_newSymbol)
     {

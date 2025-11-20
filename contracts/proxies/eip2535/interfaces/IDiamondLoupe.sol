@@ -59,4 +59,13 @@ interface IDiamondLoupe {
     function facetAddress(
         bytes4 _functionSelector
     ) external view returns (address facetAddress_);
+
+    /**
+     * @notice Retrieves the version of a specific facet key.
+     * @param _facetKey The target facet key for which to retrieve the version.
+     * @return version_ The initialized version of the specified facet key.
+     */
+    function facetVersion(
+        bytes32 _facetKey
+    ) external view returns (uint256 version_);
 }
