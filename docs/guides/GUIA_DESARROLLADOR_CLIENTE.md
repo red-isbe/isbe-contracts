@@ -298,7 +298,7 @@ Usted ya ha registrado su faceta personalizada con el ID `keccak256("cliente.mie
 
 ```javascript
 // Dirección del contrato BusinessLogicFactory de ISBE (pública)
-const factoryAddress = "0xFactoryAddress..."; 
+const factoryAddress = "0x00000...00015BE"; 
 const factory = await ethers.getContractAt("IBusinessLogicFactory", factoryAddress);
 
 // Su Custom-ID
