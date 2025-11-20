@@ -22,6 +22,12 @@ library UserOperationLib {
             'PackedUserOperation(address sender,uint256 nonce,bytes initCode,bytes callData,bytes32 accountGasLimits,uint256 preVerificationGas,bytes32 gasFees,bytes paymasterAndData)'
         );
 
+    // solhint-disable max-line-length
+    bytes32 internal constant PACKED_USEROP_TYPEHASH =
+        keccak256(
+            'PackedUserOperation(address sender,uint256 nonce,bytes initCode,bytes callData,bytes32 accountGasLimits,uint256 preVerificationGas,bytes32 gasFees,bytes paymasterAndData)'
+        );
+
     /**
      * Relayer/block builder might submit the TX with higher priorityFee,
      * but the user should not pay above what he signed for.

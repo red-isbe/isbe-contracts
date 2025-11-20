@@ -2,6 +2,11 @@
 pragma solidity ^0.8.28;
 /* solhint-disable avoid-low-level-calls */
 /* solhint-disable no-inline-assembly */
+/* solhint-disable ordering */
+/* solhint-disable private-vars-leading-underscore */
+/* solhint-disable immutable-vars-naming */
+/* solhint-disable no-empty-blocks */
+/* solhint-disable max-line-length */
 
 import '@account-abstraction/contracts/interfaces/IAccount.sol';
 import '@account-abstraction/contracts/interfaces/IAccountExecute.sol';

@@ -151,39 +151,10 @@ interface IPaymaster {
     ) external;
 
     /**
-     * @notice Adds a user address to the whitelist.
-     * @dev Access control is application-defined; implementations SHOULD
-     *      restrict this to authorised operators or owners.
-     * @param user The account to permit for sponsorship.
-     */
-    function whitelist(address user) external;
-
-    /**
-     * @notice Removes a user address from the whitelist.
-     * @dev Access control is application-defined; implementations SHOULD
-     *      restrict this to authorised operators or owners.
-     * @param user The account to revoke from sponsorship.
-     */
-    function unwhitelist(address user) external;
-
-    /**
-     * @notice Reports whether a user is currently whitelisted.
-     * @param user The account to query.
-     * @return isAllowed True if the account is whitelisted, false otherwise.
-     */
-    function isWhitelisted(address user) external view returns (bool isAllowed);
-
-    /**
      * @notice Deposits native funds to cover sponsored gas costs.
      * @dev Funds are held for EntryPoint settlement. Ether MUST be sent.
      */
     function deposit() external payable;
-
-    /**
-     * @notice Returns the current deposit balance available for gas.
-     * @return The amount of wei held for sponsorship.
-     */
-    function getDeposit() external view returns (uint256);
 
     /**
      * @notice Withdraws deposit funds to a recipient.
@@ -216,4 +187,33 @@ interface IPaymaster {
      * @param withdrawAddress The payable recipient of the withdrawn stake.
      */
     function withdrawStake(address payable withdrawAddress) external;
+
+    /**
+     * @notice Adds a user address to the whitelist.
+     * @dev Access control is application-defined; implementations SHOULD
+     *      restrict this to authorised operators or owners.
+     * @param user The account to permit for sponsorship.
+     */
+    function whitelist(address user) external;
+
+    /**
+     * @notice Removes a user address from the whitelist.
+     * @dev Access control is application-defined; implementations SHOULD
+     *      restrict this to authorised operators or owners.
+     * @param user The account to revoke from sponsorship.
+     */
+    function unwhitelist(address user) external;
+
+    /**
+     * @notice Reports whether a user is currently whitelisted.
+     * @param user The account to query.
+     * @return isAllowed True if the account is whitelisted, false otherwise.
+     */
+    function isWhitelisted(address user) external view returns (bool isAllowed);
+
+    /**
+     * @notice Returns the current deposit balance available for gas.
+     * @return The amount of wei held for sponsorship.
+     */
+    function getDeposit() external view returns (uint256);
 }

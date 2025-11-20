@@ -70,27 +70,6 @@ abstract contract PaymasterInternal is DidDocumentDetailedInternal {
     }
 
     /**
-     * @notice Returns the configured EntryPoint reference.
-     * @return entryPoint_ The stored EntryPoint instance.
-     */
-    function _getEntryPoint() internal view returns (IEntryPoint entryPoint_) {
-        entryPoint_ = _paymasterStorage().entryPoint;
-    }
-
-    /**
-     * @notice Ensures the caller is the configured EntryPoint.
-     * @dev Reverts with NotEntryPoint(_sender) when invoked by unauthorised
-     *      callers. Should guard all EntryPoint-only hooks.
-     */
-    function _requireFromEntryPoint() internal view virtual {
-        address _sender = _msgSender();
-        require(
-            _sender == address(_paymasterStorage().entryPoint),
-            IBasePaymaster.NotEntryPoint(_sender)
-        );
-    }
-
-    /**
      * @notice Adds a user account to the whitelist.
      * @dev Idempotent. No event is emitted by this internal helper.
      * @param _user The account permitted for sponsorship.
@@ -106,18 +85,6 @@ abstract contract PaymasterInternal is DidDocumentDetailedInternal {
      */
     function _unwhitelist(address _user) internal {
         _paymasterStorage().whitelist[_user] = false;
-    }
-
-    /**
-     * @notice Reports whether a user account is whitelisted.
-     * @dev Reads internal storage only.
-     * @param _user The account to check.
-     * @return isAllowed True if whitelisted, false otherwise.
-     */
-    function _isWhitelisted(
-        address _user
-    ) internal view returns (bool isAllowed) {
-        return _paymasterStorage().whitelist[_user];
     }
 
     /**
@@ -155,14 +122,6 @@ abstract contract PaymasterInternal is DidDocumentDetailedInternal {
     }
 
     /**
-     * @notice Returns the current deposit balance recorded in EntryPoint.
-     * @return The amount of wei available for sponsorship.
-     */
-    function _getDeposit() internal view returns (uint256) {
-        return _paymasterStorage().entryPoint.balanceOf(address(this));
-    }
-
-    /**
      * @notice Initiates stake unlock; paymaster cannot serve while unlocked.
      * @dev Add stake again before serving new requests.
      */
@@ -177,6 +136,43 @@ abstract contract PaymasterInternal is DidDocumentDetailedInternal {
      */
     function _withdrawStake(address payable withdrawAddress) internal {
         _paymasterStorage().entryPoint.withdrawStake(withdrawAddress);
+    }
+
+    /**
+     * @notice Post-operation handler to complete settlement logic.
+     * @dev Simply logs the outcome of the UserOperation handled (sponsored)
+     *      by the Paymaster.
+     * @param mode The post-op mode describing execution outcome.
+     * @param context The opaque data returned by validatePaymasterUserOp.
+     * @param actualGasCost The gas cost accrued so far, excluding this call.
+     * @param actualUserOpFeePerGas The effective per-gas fee for the UserOp.
+     */
+    function _postOp(
+        IPaymaster.PostOpMode mode,
+        bytes calldata context,
+        uint256 actualGasCost,
+        uint256 actualUserOpFeePerGas
+    ) internal {
+        (address userOpSender) = abi.decode(context, (address));
+        (context, actualGasCost, actualUserOpFeePerGas);
+        if (mode == IPaymaster.PostOpMode.postOpReverted) {
+            emit IBasePaymaster.PostOpReverted(userOpSender);
+            return;
+        }
+
+        emit IBasePaymaster.SponsoredUserOperation(
+            userOpSender,
+            mode,
+            actualGasCost
+        );
+    }
+
+    /**
+     * @notice Returns the current deposit balance recorded in EntryPoint.
+     * @return The amount of wei available for sponsorship.
+     */
+    function _getDeposit() internal view returns (uint256) {
+        return _paymasterStorage().entryPoint.balanceOf(address(this));
     }
 
     /**
@@ -212,32 +208,36 @@ abstract contract PaymasterInternal is DidDocumentDetailedInternal {
     }
 
     /**
-     * @notice Post-operation handler to complete settlement logic.
-     * @dev Simply logs the outcome of the UserOperation handled (sponsored)
-     *      by the Paymaster.
-     * @param mode The post-op mode describing execution outcome.
-     * @param context The opaque data returned by validatePaymasterUserOp.
-     * @param actualGasCost The gas cost accrued so far, excluding this call.
-     * @param actualUserOpFeePerGas The effective per-gas fee for the UserOp.
+     * @notice Returns the configured EntryPoint reference.
+     * @return entryPoint_ The stored EntryPoint instance.
      */
-    function _postOp(
-        IPaymaster.PostOpMode mode,
-        bytes calldata context,
-        uint256 actualGasCost,
-        uint256 actualUserOpFeePerGas
-    ) internal {
-        (address userOpSender) = abi.decode(context, (address));
-        (context, actualGasCost, actualUserOpFeePerGas);
-        if (mode == IPaymaster.PostOpMode.postOpReverted) {
-            emit IBasePaymaster.PostOpReverted(userOpSender);
-            return;
-        }
+    function _getEntryPoint() internal view returns (IEntryPoint entryPoint_) {
+        entryPoint_ = _paymasterStorage().entryPoint;
+    }
 
-        emit IBasePaymaster.SponsoredUserOperation(
-            userOpSender,
-            mode,
-            actualGasCost
+    /**
+     * @notice Ensures the caller is the configured EntryPoint.
+     * @dev Reverts with NotEntryPoint(_sender) when invoked by unauthorised
+     *      callers. Should guard all EntryPoint-only hooks.
+     */
+    function _requireFromEntryPoint() internal view virtual {
+        address _sender = _msgSender();
+        require(
+            _sender == address(_paymasterStorage().entryPoint),
+            IBasePaymaster.NotEntryPoint(_sender)
         );
+    }
+
+    /**
+     * @notice Reports whether a user account is whitelisted.
+     * @dev Reads internal storage only.
+     * @param _user The account to check.
+     * @return isAllowed True if whitelisted, false otherwise.
+     */
+    function _isWhitelisted(
+        address _user
+    ) internal view returns (bool isAllowed) {
+        return _paymasterStorage().whitelist[_user];
     }
 
     /**
@@ -250,10 +250,11 @@ abstract contract PaymasterInternal is DidDocumentDetailedInternal {
         pure
         returns (PaymasterStorage storage storage_)
     {
+        bytes32 position = _AA_PAYMASTER_STORAGE_POSITION;
         // slither-disable-start assembly
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            storage_.slot := _AA_PAYMASTER_STORAGE_POSITION
+            storage_.slot := position
         }
         // slither-disable-end assembly
     }

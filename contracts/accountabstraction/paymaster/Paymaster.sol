@@ -38,57 +38,6 @@ abstract contract Paymaster is IBasePaymaster, PaymasterInternal {
     }
 
     /**
-     * @notice Updates the EntryPoint reference.
-     * @dev Restricted by {onlyOwner}. Emits {EntryPointUpdated}.
-     * @param entryPoint The new EntryPoint contract to store.
-     */
-    function setEntryPoint(
-        IEntryPoint entryPoint
-    ) public onlyOwner whenNotPaused {
-        _setEntryPoint(entryPoint);
-        emit EntryPointUpdated(address(entryPoint));
-    }
-
-    /**
-     * @notice Returns the configured EntryPoint reference.
-     * @dev View helper; does not perform external calls.
-     * @return entryPoint_ The stored EntryPoint instance.
-     */
-    function getEntryPoint() public view returns (IEntryPoint entryPoint_) {
-        entryPoint_ = _getEntryPoint();
-    }
-
-    /**
-     * @notice Validates whether the paymaster agrees to sponsor a user operation.
-     * @dev Forwards to internal policy. MUST be called by EntryPoint. See
-     *      IPaymaster for return encoding and timing semantics.
-     * @param userOp The packed user operation received from EntryPoint.
-     * @param userOpHash The hash computed by EntryPoint for this operation.
-     * @param maxCost The upper bound of potential cost for this operation.
-     * @return context Opaque data forwarded to {postOp}; empty if unused.
-     * @return validationData Encoded validity flags per ERC-4337 rules.
-     */
-    function validatePaymasterUserOp(
-        PackedUserOperation calldata userOp,
-        bytes32 userOpHash,
-        uint256 maxCost
-    )
-        external
-        view
-        virtual
-        override
-        whenNotPaused
-        returns (bytes memory context, uint256 validationData)
-    {
-        _requireFromEntryPoint();
-        (context, validationData) = _validatePaymasterUserOp(
-            userOp,
-            userOpHash,
-            maxCost
-        );
-    }
-
-    /**
      * @notice Handles settlement after the user operation executes.
      * @dev Requires EntryPoint caller. Forwards to internal handler. See
      *      IPaymaster for mode semantics and fee parameters.
@@ -110,6 +59,16 @@ abstract contract Paymaster is IBasePaymaster, PaymasterInternal {
     ) external virtual override {
         _requireFromEntryPoint();
         _postOp(mode, context, actualGasCost, actualUserOpFeePerGas);
+    }
+
+    /**
+     * @notice Deposits Ether for gas sponsorship via EntryPoint.
+     * @dev Payable. Forwards value to EntryPoint. Emits {AmountDeposited}.
+     *      Implementations MAY restrict callers through access control.
+     */
+    function deposit() external payable override onlyOwner whenNotPaused {
+        _deposit(msg.value);
+        emit AmountDeposited(msg.value);
     }
 
     /**
@@ -136,37 +95,6 @@ abstract contract Paymaster is IBasePaymaster, PaymasterInternal {
     ) external override onlyOwner whenNotPaused {
         _unwhitelist(user);
         emit UserUnwhiteListed(user);
-    }
-
-    /**
-     * @notice Reports whether a user account is whitelisted.
-     * @dev Pure view over internal storage; no external calls.
-     * @param _user The account to check for whitelist status.
-     * @return isAllowed True if the account is whitelisted, false otherwise.
-     */
-    function isWhitelisted(
-        address _user
-    ) external view override returns (bool isAllowed) {
-        isAllowed = _isWhitelisted(_user);
-    }
-
-    /**
-     * @notice Deposits Ether for gas sponsorship via EntryPoint.
-     * @dev Payable. Forwards value to EntryPoint. Emits {AmountDeposited}.
-     *      Implementations MAY restrict callers through access control.
-     */
-    function deposit() external payable override onlyOwner whenNotPaused {
-        _deposit(msg.value);
-        emit AmountDeposited(msg.value);
-    }
-
-    /**
-     * @notice Returns the current deposit balance held in EntryPoint.
-     * @dev View proxy to EntryPoint balance for this paymaster.
-     * @return The amount of wei available for sponsorship.
-     */
-    function getDeposit() external view override returns (uint256) {
-        return _getDeposit();
     }
 
     /**
@@ -217,6 +145,78 @@ abstract contract Paymaster is IBasePaymaster, PaymasterInternal {
     ) external override onlyOwner whenNotPaused {
         _withdrawStake(withdrawAddress);
         emit StakeWithdrawn(withdrawAddress);
+    }
+
+    /**
+     * @notice Reports whether a user account is whitelisted.
+     * @dev Pure view over internal storage; no external calls.
+     * @param _user The account to check for whitelist status.
+     * @return isAllowed True if the account is whitelisted, false otherwise.
+     */
+    function isWhitelisted(
+        address _user
+    ) external view override returns (bool isAllowed) {
+        isAllowed = _isWhitelisted(_user);
+    }
+
+    /**
+     * @notice Returns the current deposit balance held in EntryPoint.
+     * @dev View proxy to EntryPoint balance for this paymaster.
+     * @return The amount of wei available for sponsorship.
+     */
+    function getDeposit() external view override returns (uint256) {
+        return _getDeposit();
+    }
+
+    /**
+     * @notice Validates whether the paymaster agrees to sponsor a user operation.
+     * @dev Forwards to internal policy. MUST be called by EntryPoint. See
+     *      IPaymaster for return encoding and timing semantics.
+     * @param userOp The packed user operation received from EntryPoint.
+     * @param userOpHash The hash computed by EntryPoint for this operation.
+     * @param maxCost The upper bound of potential cost for this operation.
+     * @return context Opaque data forwarded to {postOp}; empty if unused.
+     * @return validationData Encoded validity flags per ERC-4337 rules.
+     */
+    function validatePaymasterUserOp(
+        PackedUserOperation calldata userOp,
+        bytes32 userOpHash,
+        uint256 maxCost
+    )
+        external
+        view
+        virtual
+        override
+        whenNotPaused
+        returns (bytes memory context, uint256 validationData)
+    {
+        _requireFromEntryPoint();
+        (context, validationData) = _validatePaymasterUserOp(
+            userOp,
+            userOpHash,
+            maxCost
+        );
+    }
+
+    /**
+     * @notice Updates the EntryPoint reference.
+     * @dev Restricted by {onlyOwner}. Emits {EntryPointUpdated}.
+     * @param entryPoint The new EntryPoint contract to store.
+     */
+    function setEntryPoint(
+        IEntryPoint entryPoint
+    ) public onlyOwner whenNotPaused {
+        _setEntryPoint(entryPoint);
+        emit EntryPointUpdated(address(entryPoint));
+    }
+
+    /**
+     * @notice Returns the configured EntryPoint reference.
+     * @dev View helper; does not perform external calls.
+     * @return entryPoint_ The stored EntryPoint instance.
+     */
+    function getEntryPoint() public view returns (IEntryPoint entryPoint_) {
+        entryPoint_ = _getEntryPoint();
     }
 
     /**

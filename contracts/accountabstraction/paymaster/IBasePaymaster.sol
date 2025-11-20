@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {PackedUserOperation} from '@account-abstraction/contracts/interfaces/PackedUserOperation.sol';
 import {IEntryPoint} from '@account-abstraction/contracts/interfaces/IEntryPoint.sol';
 import {IPaymaster} from '@account-abstraction/contracts/interfaces/IPaymaster.sol';
 
@@ -122,39 +121,11 @@ interface IBasePaymaster is IPaymaster {
     function initializePaymaster(IEntryPoint _entryPoint) external;
 
     /**
-     * @notice Adds a user account to the whitelist for sponsored transactions.
-     * @dev Implementations SHOULD restrict access to authorised administrators.
-     * @param user The address of the account to whitelist.
-     */
-    function whitelist(address user) external;
-
-    /**
-     * @notice Removes a user account from the whitelist.
-     * @dev Implementations SHOULD restrict access to authorised administrators.
-     * @param user The address of the account to remove from the whitelist.
-     */
-    function unwhitelist(address user) external;
-
-    /**
-     * @notice Reports whether a user account is currently whitelisted.
-     * @param user The account to check.
-     * @return isAllowed True if the account is whitelisted, false otherwise.
-     */
-    function isWhitelisted(address user) external view returns (bool isAllowed);
-
-    /**
      * @notice Deposits native funds used to pay gas on behalf of sponsored users.
      * @dev Ether MUST be sent with the call. Deposits are held by the EntryPoint.
      *      Access control MAY be applied to prevent accidental funding.
      */
     function deposit() external payable;
-
-    /**
-     * @notice Returns the current deposit balance available for gas sponsorship.
-     * @dev Mirrors the balance tracked in the EntryPoint contract.
-     * @return The amount of wei currently available for sponsorship.
-     */
-    function getDeposit() external view returns (uint256);
 
     /**
      * @notice Withdraws funds from the paymaster deposit.
@@ -189,4 +160,32 @@ interface IBasePaymaster is IPaymaster {
      * @param withdrawAddress The payable recipient of the withdrawn stake.
      */
     function withdrawStake(address payable withdrawAddress) external;
+
+    /**
+     * @notice Adds a user account to the whitelist for sponsored transactions.
+     * @dev Implementations SHOULD restrict access to authorised administrators.
+     * @param user The address of the account to whitelist.
+     */
+    function whitelist(address user) external;
+
+    /**
+     * @notice Removes a user account from the whitelist.
+     * @dev Implementations SHOULD restrict access to authorised administrators.
+     * @param user The address of the account to remove from the whitelist.
+     */
+    function unwhitelist(address user) external;
+
+    /**
+     * @notice Reports whether a user account is currently whitelisted.
+     * @param user The account to check.
+     * @return isAllowed True if the account is whitelisted, false otherwise.
+     */
+    function isWhitelisted(address user) external view returns (bool isAllowed);
+
+    /**
+     * @notice Returns the current deposit balance available for gas sponsorship.
+     * @dev Mirrors the balance tracked in the EntryPoint contract.
+     * @return The amount of wei currently available for sponsorship.
+     */
+    function getDeposit() external view returns (uint256);
 }
