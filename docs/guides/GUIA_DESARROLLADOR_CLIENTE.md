@@ -51,10 +51,19 @@ interface IMiFuncionalidad {
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
+import {DidDocumentDetailedInternal} from "../../identity/didregistry/DidDocumentDetailedInternal.sol";
+
 // Defina una constante única. Use keccak256 con un string único para su proyecto.
 bytes32 constant _MI_FUNCIONALIDAD_STORAGE_POSITION = keccak256("cliente.storage.MiFuncionalidad");
 
-abstract contract MiFuncionalidadInternal {
+/**
+ * IMPORTANTE: Heredar de DidDocumentDetailedInternal le da acceso a:
+ * - modifier onlyRole(bytes32 _role): Control de acceso basado en roles
+ * - modifier whenNotPaused: Respeta la pausa global de ISBE
+ * - modifier initializer(bytes32 _key): Sistema de inicialización
+ * - function _msgSender(): Contexto de llamada correcto
+ */
+abstract contract MiFuncionalidadInternal is DidDocumentDetailedInternal {
     struct MiFuncionalidadStorage {
         string dato;
         uint256 valor;
@@ -95,20 +104,18 @@ pragma solidity ^0.8.28;
 import {MiFuncionalidadInternal} from "./MiFuncionalidadInternal.sol";
 import {IMiFuncionalidad} from "./IMiFuncionalidad.sol";
 
-// Clave única para el inicializador.
+// Clave única para el inicializador (CRÍTICO: debe ser único en toda la red)
 bytes32 constant _MI_FUNCIONALIDAD_RESOLVER_KEY = keccak256("cliente.resolver.MiFuncionalidad");
 
 abstract contract MiFuncionalidad is IMiFuncionalidad, MiFuncionalidadInternal {
     
-    // Constructor para deshabilitar inicializadores en el contrato de implementación
+    // Constructor: Bloquea la inicialización del contrato de lógica
     constructor() {
-        // Nota: _disableInitializers es una función que debe importar de sus utilidades o implementar
-        // Si no dispone de ella, asegúrese de que el contrato no se pueda inicializar directamente.
+        _disableInitializers(_MI_FUNCIONALIDAD_RESOLVER_KEY);
     }
 
     // Función de inicialización protegida
-    function inicializarMiFuncionalidad(uint256 valor) external override {
-        // Aquí debería ir un modificador 'initializer(_MI_FUNCIONALIDAD_RESOLVER_KEY)'
+    function inicializarMiFuncionalidad(uint256 valor) external override initializer(_MI_FUNCIONALIDAD_RESOLVER_KEY) {
         _inicializarInterno(valor);
         emit MiFuncionalidadInicializada(valor);
     }
@@ -117,16 +124,21 @@ abstract contract MiFuncionalidad is IMiFuncionalidad, MiFuncionalidadInternal {
         return _obtenerDatoInterno();
     }
 
-    function actualizarDato(string memory nuevoDato) external override {
-        // Puede añadir modificadores de acceso aquí (ej: onlyRole)
+    function actualizarDato(string memory nuevoDato) external override whenNotPaused {
+        // Puede añadir modificadores de acceso aquí (ej: onlyRole(keccak256("MI_ROLE")))
         _actualizarDatoInterno(nuevoDato);
         emit DatosActualizados(nuevoDato);
     }
     
-    // Función auxiliar para la introspección
+    // Función auxiliar para la introspección ERC165
     function _implementedInterfaces() internal pure virtual returns (bytes4[] memory interfaces_) {
         interfaces_ = new bytes4[](1);
         interfaces_[0] = type(IMiFuncionalidad).interfaceId;
+    }
+
+    // CRÍTICO: Implementar supportsInterface para compatibilidad ERC165
+    function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
+        return interfaceId == type(IMiFuncionalidad).interfaceId;
     }
 }
 ```
@@ -182,7 +194,10 @@ interface IERC721CustomURI {
 
 ### 2. Internal (Storage)
 ```solidity
-abstract contract ERC721CustomURIInternal {
+import {DidDocumentDetailedInternal} from "../../identity/didregistry/DidDocumentDetailedInternal.sol";
+import {ERC721Internal} from "../../tokens/erc721/ERC721Internal.sol";
+
+abstract contract ERC721CustomURIInternal is DidDocumentDetailedInternal, ERC721Internal {
     bytes32 constant _STORAGE_POSITION = keccak256("cliente.erc721.custom.uri");
     
     struct CustomURIStorage {
@@ -195,17 +210,64 @@ abstract contract ERC721CustomURIInternal {
     }
 
     function _setTokenURI(uint256 tokenId, string memory uri) internal {
+        // Validar que el token existe (heredado de ERC721Internal)
+        _requireOwned(tokenId);
         _customURIStorage().tokenURIs[tokenId] = uri;
     }
 
     function _tokenURI(uint256 tokenId) internal view returns (string memory) {
+        _requireOwned(tokenId);
         return _customURIStorage().tokenURIs[tokenId];
     }
 }
 ```
 
-### 3. Lógica y Faceta
-Implemente la lógica heredando de `ERC721CustomURIInternal` y cree la Faceta exponiendo `tokenURI` y `setTokenURI` en `selectorsIntrospection`.
+### 3. Lógica (`ERC721CustomURI.sol`)
+```solidity
+import {IERC721CustomURI} from "./IERC721CustomURI.sol";
+import {ERC721CustomURIInternal} from "./ERC721CustomURIInternal.sol";
+
+bytes32 constant _ERC721_CUSTOM_URI_RESOLVER_KEY = keccak256("cliente.erc721.customUri");
+
+abstract contract ERC721CustomURI is IERC721CustomURI, ERC721CustomURIInternal {
+    constructor() {
+        _disableInitializers(_ERC721_CUSTOM_URI_RESOLVER_KEY);
+    }
+
+    function tokenURI(uint256 tokenId) external view override returns (string memory) {
+        return _tokenURI(tokenId);
+    }
+
+    function setTokenURI(uint256 tokenId, string memory tokenURI_) external override whenNotPaused {
+        _setTokenURI(tokenId, tokenURI_);
+    }
+}
+```
+
+### 4. Faceta (`ERC721CustomURIFacet.sol`)
+```solidity
+import {ERC721CustomURI} from "./ERC721CustomURI.sol";
+import {IEIP2535Introspection} from "../../proxies/eip2535/interfaces/IEIP2535Introspection.sol";
+
+contract ERC721CustomURIFacet is ERC721CustomURI, IEIP2535Introspection {
+    function businessIdIntrospection() external pure override returns (bytes32) {
+        return keccak256("cliente.erc721.customUri");
+    }
+
+    function selectorsIntrospection() external pure override returns (bytes4[] memory) {
+        bytes4[] memory selectors = new bytes4[](2);
+        selectors[0] = this.tokenURI.selector;
+        selectors[1] = this.setTokenURI.selector;
+        return selectors;
+    }
+
+    function interfacesIntrospection() external pure override returns (bytes4[] memory) {
+        bytes4[] memory interfaces = new bytes4[](1);
+        interfaces[0] = type(IERC721CustomURI).interfaceId;
+        return interfaces;
+    }
+}
+```
 
 ---
 
@@ -242,16 +304,29 @@ const factory = await ethers.getContractAt("IBusinessLogicFactory", factoryAddre
 // Su Custom-ID
 const customId = ethers.id("cliente.miempresa.customUri"); 
 
-// Consultar la dirección de la última versión
-const facetAddress = await factory.getBusinessLogicAddress(customId, 1); // Versión 1
-console.log("Dirección de la faceta:", facetAddress);
+// Obtener todas las versiones desplegadas
+const versions = await factory.getBusinessLogicVersions(customId);
+console.log(`Versiones disponibles: ${versions.length}`);
+
+// Usar la última versión (posición 0 es la más reciente)
+const facetAddress = versions[0];
+console.log("Dirección de la faceta (última versión):", facetAddress);
+
+// O si necesita una versión específica:
+// const facetAddress = await factory.getBusinessLogicAddress(customId, 1); // Versión 1
 ```
 
-#### Paso 3: Ejecutar Diamond Cut
+#### Paso 3: Integración (Ejecución del Diamond Cut)
 
-ISBE administra su proxy, deberá solicitar la activación a través de los canales de soporte o el Portal, y **ISBE** ejecutará la transacción por usted.
+> **Modelo de Gobernanza de ISBE:**
+> En ISBE, **todos los proxies son gestionados por la administración**. Los clientes **no ejecutan** `diamondCut` directamente.
+> 
+> **Proceso:**
+> 1. El cliente solicita la activación de su faceta personalizada (vía Portal o soporte).
+> 2. ISBE valida la solicitud y ejecuta el `diamondCut` en el proxy del cliente.
+> 3. El cliente recibe confirmación de que su faceta está activa.
 
-A continuación se muestra el código:
+A continuación se muestra el código técnico que ISBE ejecuta internamente (solo para referencia técnica):
 
 ```javascript
 const proxy = await ethers.getContractAt("IDiamondCut", "0xMyProxyAddress");
