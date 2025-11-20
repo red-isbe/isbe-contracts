@@ -123,6 +123,9 @@ describe('IsbeProxy', function () {
             expect(
                 await isbeLoupeFacet.facetFunctionSelectors(facet.facetAddress)
             ).to.be.deep.equal(selectors)
+
+            expect(await isbeLoupeFacet.facetVersion(businessId)).to.not.be
+                .undefined
             for (const selector of selectors) {
                 expect(await isbeLoupeFacet.facetAddress(selector)).to.be.equal(
                     facet.facetAddress

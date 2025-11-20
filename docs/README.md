@@ -3,6 +3,7 @@
 ## Architecture Documentation
 
 - [Governance Layer Architecture](Gobernance-Layer-Architecture.md)
+- [Initializable rules summary](./initializable-rules-summary.md)
 
 ## Development Guidelines
 

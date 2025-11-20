@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 import {IOwnable} from './IOwnable.sol';
 import {Common} from '../../core/Common.sol';
 import {_OWNABLE_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
+import {_OWNABLE_FACET_VERSION} from '../../constants/facetVersions.sol';
 
 /// @title Ownable
 /// @notice Implements ownership mechanisms
@@ -19,7 +20,11 @@ abstract contract OwnableBase is IOwnable, Common {
     /// @param _admin The initial owner address
     function initializeOwnable(
         address _admin
-    ) external initializer(_OWNABLE_RESOLVER_KEY) addressIsNotZero(_admin) {
+    )
+        external
+        initializer(_OWNABLE_RESOLVER_KEY, _OWNABLE_FACET_VERSION)
+        addressIsNotZero(_admin)
+    {
         _transferOwnership(_admin);
         emit OwnershipTransferred(_msgSender(), _admin);
     }

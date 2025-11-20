@@ -126,7 +126,7 @@ describe('BusinessLogicFactory', function () {
             )
         })
 
-        it('GIVEN an EIP2535 proxy with BusinessLogicFactory WHEN deploy with empty bode THEN it fails', async () => {
+        it('GIVEN an EIP2535 proxy with BusinessLogicFactory WHEN deploy with empty body THEN it fails', async () => {
             await expect(
                 businessLogicFactory.deploy(
                     BUSINESS_LOGIC_FACTORY_RESOLVER_KEY,

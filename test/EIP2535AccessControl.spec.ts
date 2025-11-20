@@ -1258,8 +1258,8 @@ describe('EIP2535AccessControlProxy', function () {
                     DiamondLoupeFacetFactory.attach(
                         await diamondProxy.getAddress()
                     )
-                // IDiamondLoupe interface ID is 0x48e2b093
-                expect(await diamondLoupe.supportsInterface('0x48e2b093')).to.be
+                // IDiamondLoupe interface ID is 0xa7142f14
+                expect(await diamondLoupe.supportsInterface('0xa7142f14')).to.be
                     .true
             })
 

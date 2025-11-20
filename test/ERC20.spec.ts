@@ -234,9 +234,7 @@ describe('ERC20', function () {
                     erc20,
                     'ContractIsAlreadyInitialized'
                 )
-                .withArgs(
-                    '0x2428f215905ecd05cc26794e218b9fad455e6ae2ca828b2f1c1903e8770265ad'
-                )
+                .withArgs(ERC20_RESOLVER_KEY, ethers.MaxUint256, 1)
         })
 
         it('GIVEN an ERC20 WHEN it is deployed THEN name, symbol and decimals can be retrieved', async () => {
@@ -266,9 +264,7 @@ describe('ERC20', function () {
                     initializedErc20,
                     'ContractIsAlreadyInitialized'
                 )
-                .withArgs(
-                    '0x2428f215905ecd05cc26794e218b9fad455e6ae2ca828b2f1c1903e8770265ad'
-                )
+                .withArgs(ERC20_RESOLVER_KEY, 1, 1)
         })
     })
 
@@ -429,9 +425,7 @@ describe('ERC20', function () {
                     erc20,
                     'ContractIsAlreadyInitialized'
                 )
-                .withArgs(
-                    '0x94ece6781e9aebbdab29d2bbc0301c80b7bcb1194c5c3efc08e3d35c7f6d741b'
-                )
+                .withArgs(ERC20_CAPPED_RESOLVER_KEY, 1, 1)
 
             expect(await erc20Capped.cap()).to.equal(1000)
         })

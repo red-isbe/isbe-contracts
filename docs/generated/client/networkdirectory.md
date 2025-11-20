@@ -459,7 +459,8 @@ function getAllNetworks() external view returns (struct NetworkData[] networks)
 
 Retrieves all networks registered in the catalog
 
-_Returns complete network information including resources for all networks. Returns empty array if no networks exist._
+_Returns complete network information including resources for all networks. Returns empty array
+if no networks exist._
 
 #### Return Values
 
@@ -540,7 +541,8 @@ function getResourceKeys(uint256 chainId) external view returns (bytes32[] resou
 
 Lists all resource identifiers for a specific network
 
-_Returns array of resourceIds that have been set for the network. Returns empty array for non-existent networks or networks without resources._
+_Returns array of resourceIds that have been set for the network. Returns empty array for non-existent
+networks or networks without resources._
 
 #### Parameters
 
@@ -590,7 +592,8 @@ function getResourceCount(uint256 chainId) external view returns (uint256 count)
 
 Gets the total count of resources for a specific network
 
-_Efficient way to determine resource pagination parameters without loading data. Returns 0 for non-existent networks or networks without resources._
+_Efficient way to determine resource pagination parameters without loading data.
+npReturns 0 for non-existent networks or networks without resources._
 
 #### Parameters
 

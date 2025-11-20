@@ -5,6 +5,7 @@ import {IDidDocumentDetailed} from './interfaces/IDidDocumentDetailed.sol';
 import {_DID_DOCUMENT_DETAILED_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
 import {DidControllerInternal} from './DidControllerInternal.sol';
 import {_DID_REGISTRY_ROLE} from '../../constants/roles.sol';
+import {_DID_DOCUMENT_DETAILED_FACET_VERSION} from '../../constants/facetVersions.sol';
 
 /**
  * @title Decentralised Identity Document Management System
@@ -19,11 +20,19 @@ abstract contract DidDocumentDetailed is
     DidControllerInternal,
     IDidDocumentDetailed
 {
+    /// @notice Constructor that disables the initializer
+    constructor() {
+        _disableInitializers(_DID_DOCUMENT_DETAILED_RESOLVER_KEY);
+    }
+
     function initializeDiDRegistry(
         EllipticType _ellipticType
     )
         external
-        initializer(_DID_DOCUMENT_DETAILED_RESOLVER_KEY)
+        initializer(
+            _DID_DOCUMENT_DETAILED_RESOLVER_KEY,
+            _DID_DOCUMENT_DETAILED_FACET_VERSION
+        )
         validateEllipticType(_ellipticType)
     {
         _setEllipticType(_ellipticType);

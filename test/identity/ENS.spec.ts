@@ -356,7 +356,7 @@ describe('ENS Registry', () => {
                     ensRegistryFacet,
                     'ContractIsAlreadyInitialized'
                 )
-                .withArgs(ENS_REGISTRY_RESOLVER_KEY)
+                .withArgs(ENS_REGISTRY_RESOLVER_KEY, 1, 1)
         })
         it('GIVEN ENS Registry deployed WHEN try to initialize THEN success', async () => {
             expect(await ensRegistry.initialiseEnsRegistry(adminAccountAddress))
