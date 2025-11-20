@@ -60,7 +60,13 @@ abstract contract BasicWhitelist is IBasicWhitelist, BasicWhitelistInternal {
      */
     function removeFromWhitelist(
         address _account
-    ) external override whenNotPaused onlyRole(_WHITELIST_MANAGER_ROLE) {
+    )
+        external
+        override
+        whenNotPaused
+        onlyRole(_WHITELIST_MANAGER_ROLE)
+        addressIsNotZero(_account)
+    {
         _removeFromWhitelist(_account);
     }
 

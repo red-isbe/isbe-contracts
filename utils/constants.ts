@@ -65,6 +65,9 @@ export const ANCHORER_ROLE =
 export const METADATA_MANAGER_ROLE =
     '0x9a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b'
 
+export const WHITELIST_MANAGER_ROLE =
+    '0x5c9b4a6c3e8d7f2a1b9c8d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a1b0c9d8e7f6a'
+
 export const DEFAULT_ADMIN_ROLE =
     '0x0000000000000000000000000000000000000000000000000000000000000000'
 
@@ -192,6 +195,10 @@ export const ERC721_ROYALTY_RESOLVER_KEY =
     '0x93a54f9adbfdce1437a27b11fa135ad0c5624ec6bf9a2b133b77864668ddab76'
 export const ERC721_CONSECUTIVE_RESOLVER_KEY =
     '0xcf4be1ff2685a826673d7398ca9747ab887769b9a9bbd181ec73d38a01329cd4'
+
+// Whitelist Resolver Keys
+export const BASIC_WHITELIST_RESOLVER_KEY =
+    '0x7d9f8a6b5c4e3d2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f'
 
 // Configuration ID Constants
 export const CONFIGURATION_ID_ERC20 =

@@ -12,6 +12,7 @@ import {
     ERC3643ComplianceFacet,
     ERC3643ComplianceMaxBalanceFacet,
     ERC3643ComplianceDMLimFacet,
+    BasicWhitelistFacet,
     IIsbeFactory,
     ISBEPauseFacet__factory,
     AccessControlDidFacet,
@@ -32,6 +33,7 @@ import {
     ERC3643_COMPLIANCE_MAXBALANCE_RESOLVER_KEY,
     ERC3643_COMPLIANCE_DMLIM_RESOLVER_KEY,
     ERC3643_COMPLIANCE_BURN_TEST_WRAPPER_RESOLVER_KEY,
+    BASIC_WHITELIST_RESOLVER_KEY,
     CONFIGURATION_ID_ERC3643,
     CONFIGURATION_ID_PROXY_TESTS,
 } from '../../utils/constants'
@@ -221,6 +223,9 @@ export async function deployERC3643UseCasesFacets(
     )
     const ERC3643ComplianceBurnTestWrapperFacetFactory =
         await ethers.getContractFactory('ERC3643ComplianceBurnTestWrapperFacet')
+    const BasicWhitelistFacetFactory = await ethers.getContractFactory(
+        'BasicWhitelistFacet'
+    )
 
     // Helper function to deploy business logic from factory
     async function deployBusinessLogicFromFactoryLocal(
@@ -307,6 +312,10 @@ export async function deployERC3643UseCasesFacets(
         ERC3643_COMPLIANCE_BURN_TEST_WRAPPER_RESOLVER_KEY,
         ERC3643ComplianceBurnTestWrapperFacetFactory
     )
+    await deployBusinessLogicFromFactoryLocal(
+        BASIC_WHITELIST_RESOLVER_KEY,
+        BasicWhitelistFacetFactory
+    )
 
     // Set configuration for ERC3643
     await isbeFactory.setConfiguration(CONFIGURATION_ID_ERC3643, [
@@ -323,6 +332,7 @@ export async function deployERC3643UseCasesFacets(
             businessId: ERC3643_COMPLIANCE_BURN_TEST_WRAPPER_RESOLVER_KEY,
             version: 1,
         },
+        { businessId: BASIC_WHITELIST_RESOLVER_KEY, version: 1 },
     ])
 
     // Deploy use case
@@ -371,6 +381,9 @@ export async function deployERC3643UseCasesFacets(
     ) as ERC3643ComplianceDMLimFacet
     const erc3643ComplianceBurnTestWrapper =
         ERC3643ComplianceBurnTestWrapperFacetFactory.attach(proxy)
+    const basicWhitelist = BasicWhitelistFacetFactory.attach(
+        proxy
+    ) as BasicWhitelistFacet
 
     return {
         proxy,
@@ -386,5 +399,6 @@ export async function deployERC3643UseCasesFacets(
         erc3643ComplianceMaxBalance,
         erc3643ComplianceDMLim,
         erc3643ComplianceBurnTestWrapper,
+        basicWhitelist,
     }
 }
