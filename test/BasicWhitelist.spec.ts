@@ -171,7 +171,7 @@ describe('BasicWhitelist', function () {
                     basicWhitelistFacet,
                     'ContractIsAlreadyInitialized'
                 )
-                .withArgs(BASIC_WHITELIST_RESOLVER_KEY)
+                .withArgs(BASIC_WHITELIST_RESOLVER_KEY, 1, 1)
         })
     })
 
