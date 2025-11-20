@@ -1,4 +1,4 @@
-# Project bootstraping
+# Project bootstrapping
 
 This document aims to describe the project bootstrapping process required for all use cases intended to be deployed on the ISBE network. All use cases must be structured as a project, following the guidelines outlined below.
 

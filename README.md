@@ -55,6 +55,7 @@
         - [Use Case Deployment](#use-case-deployment)
             - [Configuration-Only Approach](#configuration-only-approach)
         - [Genesis generation](#genesis-generation-for-governance-diamond)
+        - [Network bootstrapping](#Network-bootstrapping)
     - [🔍 Verification and Monitoring](#-verification-and-monitoring)
         - [Deployment Verification](#deployment-verification)
         - [Governance Analysis](#governance-analysis)
@@ -784,6 +785,20 @@ npx hardhat getConfigurationByProxy --proxy <address> --network <network>
 ```
 
 Additional information: [Genesis generation](docs/Genesis-generator.md)
+
+### Network bootstrapping
+
+Deploy usecase facets and usecase contract on a network with Governance Diamond deployed.
+
+Main use:
+
+```bash
+npx hardhat genesis:bootstrap \
+    --governanceaddress 0x00000000000000000000000000000000000015BE
+    --network <network as specified in hardhat config networks>
+```
+
+Additional information: [Network Bootstrapping](docs/Network-Bootstrapping.md)
 
 #### Configuration-Only Approach
 

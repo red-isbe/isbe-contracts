@@ -84,7 +84,6 @@ import './client/getFiltersByPage'
 import './client/isFilterRegistered'
 
 import './utils/buildConfigurationId'
-import './genesisGeneration'
 
 // Besu Node Manager
 import './client/besuNodeManager/getTotalValidators'
@@ -101,3 +100,7 @@ import './client/besuNodeManager/getTotalBootNodes'
 import './client/besuNodeManager/getPaginatedBootNodes'
 import './client/besuNodeManager/getBootNodeState'
 import './client/besuNodeManager/isBootNode'
+
+// Genesis
+import './genesisGeneration'
+import './bootstapping'
