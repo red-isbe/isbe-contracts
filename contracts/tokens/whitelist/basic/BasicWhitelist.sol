@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 import {BasicWhitelistInternal} from './BasicWhitelistInternal.sol';
 import {IBasicWhitelist} from './IBasicWhitelist.sol';
 import {_BASIC_WHITELIST_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
+import {_BASIC_WHITELIST_FACET_VERSION} from '../../../constants/facetVersions.sol';
 import {_WHITELIST_MANAGER_ROLE} from '../../../constants/roles.sol';
 
 /**
@@ -31,7 +32,14 @@ abstract contract BasicWhitelist is IBasicWhitelist, BasicWhitelistInternal {
      */
     function initializeBasicWhitelist(
         bool _enabled
-    ) external override initializer(_BASIC_WHITELIST_RESOLVER_KEY) {
+    )
+        external
+        override
+        initializer(
+            _BASIC_WHITELIST_RESOLVER_KEY,
+            _BASIC_WHITELIST_FACET_VERSION
+        )
+    {
         _initialize(_enabled);
         emit WhitelistInitialized(_enabled);
     }

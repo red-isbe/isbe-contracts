@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 import {ERC203643InternalCommon} from '../ERC203643InternalCommon.sol';
 import {IERC203643Capped} from './IERC203643Capped.sol';
 import {_ERC203643_CAPPED_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
+import {_ERC203643_CAPPED_FACET_VERSION} from '../../../constants/facetVersions.sol';
 import {_CAP_ROLE, _MINTER_ROLE} from '../../../constants/roles.sol';
 
 /// @title ERC203643Capped
@@ -25,7 +26,10 @@ abstract contract ERC203643Capped is IERC203643Capped, ERC203643InternalCommon {
         uint256 _newCap
     )
         external
-        initializer(_ERC203643_CAPPED_RESOLVER_KEY)
+        initializer(
+            _ERC203643_CAPPED_RESOLVER_KEY,
+            _ERC203643_CAPPED_FACET_VERSION
+        )
         checkNewCap(_newCap)
     {
         _setCap(_newCap);

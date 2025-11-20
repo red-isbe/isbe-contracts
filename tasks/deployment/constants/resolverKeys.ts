@@ -88,6 +88,12 @@ export const BESU_NODE_MANAGER_RESOLVER_KEYS: ResolverKeys = {
         '0xed251ea052ffafa4903db889a3309600adf2ac15456e02760c1221ea3792c1ca',
 }
 
+// Network resources facets
+export const NETWORK_RESOLVER_KEYS: ResolverKeys = {
+    NETWORK_CATALOG:
+        '0x17a2f0004227d8948b0a9dfe41e92bca9785ffa344bc4443c88f2df3d2f8ee87',
+}
+
 // ERC3643 Security Token facets
 export const ERC3643_RESOLVER_KEYS: ResolverKeys = {
     METADATA:

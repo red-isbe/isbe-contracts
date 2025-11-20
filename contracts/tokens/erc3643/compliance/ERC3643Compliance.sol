@@ -2,6 +2,7 @@
 pragma solidity ^0.8.28;
 
 import {_ERC3643_COMPLIANCE_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
+import {_ERC3643_COMPLIANCE_FACET_VERSION} from '../../../constants/facetVersions.sol';
 import {_COMPLIANCE_ROLE} from '../../../constants/roles.sol';
 import {ICompliance} from './ICompliance.sol';
 import {ERC203643InternalCommon} from '../../erc203643/ERC203643InternalCommon.sol';
@@ -31,7 +32,14 @@ abstract contract ERC3643Compliance is ICompliance, ERC203643InternalCommon {
     function initializeERC3643Compliance(
         bool _maxBalanceEnabled,
         bool _dailyMonthLimitsEnabled
-    ) external override initializer(_ERC3643_COMPLIANCE_RESOLVER_KEY) {
+    )
+        external
+        override
+        initializer(
+            _ERC3643_COMPLIANCE_RESOLVER_KEY,
+            _ERC3643_COMPLIANCE_FACET_VERSION
+        )
+    {
         _initialize(_maxBalanceEnabled, _dailyMonthLimitsEnabled);
         emit ComplianceFeatureToggled('MaxBalance', _maxBalanceEnabled);
         emit ComplianceFeatureToggled(

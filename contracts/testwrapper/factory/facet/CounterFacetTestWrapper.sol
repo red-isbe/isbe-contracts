@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 import {IEIP2535Introspection} from '../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 import {_RESOLVER_KEY, CounterFacetInternal} from './CounterFacetInternal.sol';
 import {_DEFAULT_ADMIN_ROLE} from '../../../constants/roles.sol';
+uint256 constant _COUNTER_FACET_VERSION = 1;
 
 contract CounterFacetTestWrapper is
     CounterFacetInternal,
@@ -15,9 +16,12 @@ contract CounterFacetTestWrapper is
 
     function initializeCounter(
         uint256 _startingValue
-    ) external initializer(_RESOLVER_KEY) {
-        CounterStorage storage $ = _counterStorage();
-        $.counter = _startingValue;
+    ) external initializer(_RESOLVER_KEY, _COUNTER_FACET_VERSION) {
+        _counterStorage().counter = _startingValue;
+    }
+
+    function badInitializer() external initializer(_RESOLVER_KEY, 0) {
+        _counterStorage().counter = type(uint256).max;
     }
 
     function increment() external whenNotPaused onlyRole(_DEFAULT_ADMIN_ROLE) {
@@ -51,9 +55,10 @@ contract CounterFacetTestWrapper is
         override
         returns (bytes4[] memory selectors_)
     {
-        uint256 selectorsLength = 3;
+        uint256 selectorsLength = 4;
         selectors_ = new bytes4[](selectorsLength);
         selectors_[--selectorsLength] = this.initializeCounter.selector;
+        selectors_[--selectorsLength] = this.badInitializer.selector;
         selectors_[--selectorsLength] = this.increment.selector;
         selectors_[--selectorsLength] = this.counter.selector;
     }
@@ -65,6 +70,7 @@ contract CounterFacetTestWrapper is
         override
         returns (bytes4[] memory interfaces_)
     {
-        return new bytes4[](0);
+        interfaces_ = new bytes4[](1);
+        interfaces_[0] = type(IEIP2535Introspection).interfaceId;
     }
 }

@@ -19,6 +19,23 @@ upon successful registration_
 | -------- | ------------------------------ | --------------------------------------------------------------------------------------------------------- |
 | \_filter | struct IClientFiltering.Filter | Complete filter configuration structure containing all necessary parameters for the specified filter type |
 
+### updateFilter
+
+```solidity
+function updateFilter(struct IClientFiltering.Filter _filter) external
+```
+
+Updates an existing filter configuration with new parameters
+
+_Validates filter parameters against the specified FilterType and updates
+the filter configuration. Emits FilterUpdated event upon successful update_
+
+#### Parameters
+
+| Name     | Type                           | Description                            |
+| -------- | ------------------------------ | -------------------------------------- |
+| \_filter | struct IClientFiltering.Filter | Updated filter configuration structure |
+
 ### getFiltersLength
 
 ```solidity
@@ -169,10 +186,22 @@ modifier validateFilter(struct IClientFiltering.Filter _filter)
 modifier onlyUniqueFilterId(bytes32 _filterId)
 ```
 
+### filterExists
+
+```solidity
+modifier filterExists(bytes32 _filterId)
+```
+
 ### \_registerFilter
 
 ```solidity
 function _registerFilter(struct IClientFiltering.Filter _newState) internal virtual
+```
+
+### \_updateFilter
+
+```solidity
+function _updateFilter(struct IClientFiltering.Filter _newState) internal virtual
 ```
 
 ### \_getFiltersLength
@@ -244,13 +273,14 @@ struct Filter {
   bytes32 jsonRpcMethod;
   uint256 initialBlock;
   uint256 endBlock;
+  bool disabled;
 }
 ```
 
 ### FilterRegistered
 
 ```solidity
-event FilterRegistered(bytes32 filterId, enum IClientFiltering.FilterType filterType, bytes32 transactionHash, address contractAddress, bytes4 signature, bytes32 jsonRpcMethod, uint256 initialBlock, uint256 endBlock)
+event FilterRegistered(bytes32 filterId, enum IClientFiltering.FilterType filterType, bytes32 transactionHash, address contractAddress, bytes4 signature, bytes32 jsonRpcMethod, uint256 initialBlock, uint256 endBlock, bool disabled)
 ```
 
 Emitted when a new filter is successfully registered in the system
@@ -267,11 +297,34 @@ Emitted when a new filter is successfully registered in the system
 | jsonRpcMethod   | bytes32                          | JSON-RPC method criteria (if applicable to filter type)    |
 | initialBlock    | uint256                          | Starting block number for the filter's active range        |
 | endBlock        | uint256                          | Ending block number for the filter's active range          |
+| disabled        | bool                             | Flag indicating if the filter is disabled                  |
+
+### FilterUpdated
+
+```solidity
+event FilterUpdated(bytes32 filterId, enum IClientFiltering.FilterType filterType, bytes32 transactionHash, address contractAddress, bytes4 signature, bytes32 jsonRpcMethod, uint256 initialBlock, uint256 endBlock, bool disabled)
+```
+
+Emitted when an existing filter is updated in the system
+
+#### Parameters
+
+| Name            | Type                             | Description                                          |
+| --------------- | -------------------------------- | ---------------------------------------------------- |
+| filterId        | bytes32                          | Unique identifier of the updated filter              |
+| filterType      | enum IClientFiltering.FilterType | Updated filter type from FilterType enumeration      |
+| transactionHash | bytes32                          | Updated transaction hash criteria (if applicable)    |
+| contractAddress | address                          | Updated contract address criteria (if applicable)    |
+| signature       | bytes4                           | Updated function signature criteria (if applicable)  |
+| jsonRpcMethod   | bytes32                          | Updated JSON-RPC method criteria (if applicable)     |
+| initialBlock    | uint256                          | Updated starting block number for the filter's range |
+| endBlock        | uint256                          | Updated ending block number for the filter's range   |
+| disabled        | bool                             | Updated flag indicating if the filter is disabled    |
 
 ### InvalidFilter
 
 ```solidity
-error InvalidFilter(bytes32 filterId, enum IClientFiltering.FilterType filterType, bytes32 transactionHash, address contractAddress, bytes4 signature, bytes32 jsonRpcMethod, uint256 initialBlock, uint256 endBlock)
+error InvalidFilter(bytes32 filterId, enum IClientFiltering.FilterType filterType, bytes32 transactionHash, address contractAddress, bytes4 signature, bytes32 jsonRpcMethod, uint256 initialBlock, uint256 endBlock, bool disabled)
 ```
 
 Thrown when attempting to register a filter with invalid parameters or
@@ -292,6 +345,7 @@ are populated based on the selected FilterType_
 | jsonRpcMethod   | bytes32                          | JSON-RPC method parameter provided           |
 | initialBlock    | uint256                          | Initial block parameter provided             |
 | endBlock        | uint256                          | End block parameter provided                 |
+| disabled        | bool                             | Disabled flag parameter provided             |
 
 ### FilterIdExists
 
@@ -311,6 +365,20 @@ filter configurations_
 | -------- | ------- | --------------------------------------------------------- |
 | filterId | bytes32 | The duplicate filter identifier that caused the collision |
 
+### FilterNotFound
+
+```solidity
+error FilterNotFound(bytes32 filterId)
+```
+
+Thrown when attempting to access or modify a filter that does not exist
+
+#### Parameters
+
+| Name     | Type    | Description                        |
+| -------- | ------- | ---------------------------------- |
+| filterId | bytes32 | The non-existent filter identifier |
+
 ### registerFilter
 
 ```solidity
@@ -329,6 +397,23 @@ upon successful registration_
 | Name     | Type                           | Description                                                                                               |
 | -------- | ------------------------------ | --------------------------------------------------------------------------------------------------------- |
 | \_filter | struct IClientFiltering.Filter | Complete filter configuration structure containing all necessary parameters for the specified filter type |
+
+### updateFilter
+
+```solidity
+function updateFilter(struct IClientFiltering.Filter _filter) external
+```
+
+Updates an existing filter configuration with new parameters
+
+_Validates filter parameters against the specified FilterType and updates
+the filter configuration. Emits FilterUpdated event upon successful update_
+
+#### Parameters
+
+| Name     | Type                           | Description                            |
+| -------- | ------------------------------ | -------------------------------------- |
+| \_filter | struct IClientFiltering.Filter | Updated filter configuration structure |
 
 ### getFiltersLength
 

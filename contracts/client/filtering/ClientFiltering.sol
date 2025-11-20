@@ -18,18 +18,42 @@ abstract contract ClientFiltering is IClientFiltering, ClientFilteringInternal {
         onlyRole(_CLIENT_FILTERING_ROLE)
     {
         _registerFilter(_filter);
-        {
-            emit FilterRegistered(
-                _filter.filterId,
-                _filter.filterType,
-                _filter.transactionHash,
-                _filter.contractAddress,
-                _filter.signature,
-                _filter.jsonRpcMethod,
-                _filter.initialBlock,
-                _filter.endBlock
-            );
-        }
+        emit FilterRegistered(
+            _filter.filterId,
+            _filter.filterType,
+            _filter.transactionHash,
+            _filter.contractAddress,
+            _filter.signature,
+            _filter.jsonRpcMethod,
+            _filter.initialBlock,
+            _filter.endBlock,
+            _filter.disabled
+        );
+    }
+
+    function updateFilter(
+        Filter calldata _filter
+    )
+        external
+        override
+        bytes32IsNotZero(_filter.filterId)
+        validateFilter(_filter)
+        filterExists(_filter.filterId)
+        whenNotPaused
+        onlyRole(_CLIENT_FILTERING_ROLE)
+    {
+        _updateFilter(_filter);
+        emit FilterUpdated(
+            _filter.filterId,
+            _filter.filterType,
+            _filter.transactionHash,
+            _filter.contractAddress,
+            _filter.signature,
+            _filter.jsonRpcMethod,
+            _filter.initialBlock,
+            _filter.endBlock,
+            _filter.disabled
+        );
     }
 
     function getFiltersLength() external view override returns (uint256) {

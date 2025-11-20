@@ -1,4 +1,3 @@
-import path from 'path'
 import { task } from 'hardhat/config'
 import {
     buildGenesisWithAlloc,
@@ -6,23 +5,15 @@ import {
     matchContractNames,
     retrieveSlotStructure,
     validateGenesis,
-    ContractRegistry,
     extractISBEAdminAddress,
     extractCurve,
+    BootstrapIsbenetwork,
 } from '../scripts/genesisGenerator'
 import { HttpNetworkConfig } from 'hardhat/types'
-import {
-    DeployedBusinessLogic,
-    GovernanceConfig,
-} from './deployment/types/DeploymentTypes'
+import { GovernanceConfig } from './deployment/types/DeploymentTypes'
 import { SignatureProviderFactory } from './deployment/providers/SignatureProviderFactory'
 import { CleanGovernanceDeployer } from './deployment/deployers/CleanGovernanceDeployer'
-import { CleanBusinessLogicDeployer } from './deployment/deployers/CleanBusinessLogicDeployer'
-import { DeploymentConfig } from './deployment/config/DeploymentConfig'
-import { Signer } from 'ethers'
 //import { CleanUseCaseDeployer } from './deployment/deployers/CleanUseCaseDeployer'
-
-const REGISTRY_FILENAME = 'isbe-contract-registry.json'
 
 async function sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms))
@@ -64,10 +55,9 @@ task(
 )
     .addParam('templatefile', 'Template JSON file to use')
     .addParam('outputfile', 'Generated Output JSON file')
-    .addFlag('generateregister', 'Generate contract register JSON')
+    .addParam('governanceaddress')
     .setAction(async (taskArgs, hre) => {
         try {
-            const contractRegistry = new ContractRegistry()
             console.info(
                 '---------------------------------------------------------------------'
             )
@@ -77,19 +67,22 @@ task(
             )
             hre.network.name = 'hardhat'
 
+            const governanceaddress = taskArgs.governanceaddress
+            if (
+                !governanceaddress ||
+                !/^0x[a-fA-F0-9]{40}$/.test(governanceaddress)
+            ) {
+                throw new Error(
+                    'Invalid Gobernance Address' + governanceaddress
+                )
+            }
+
             const genesisTemplateFile = taskArgs.templatefile
 
             const outputFile = taskArgs.outputfile
 
-            const isGenerateRegisterActive = taskArgs.generateregister
-            const registryFile =
-                path.dirname(outputFile) + '/' + REGISTRY_FILENAME
             console.log(`📄 Using template file: ${genesisTemplateFile}`)
             console.log(`📄 Using output file: ${outputFile}`)
-            console.log(`📄 Using registry file: ${registryFile}`)
-            console.log(
-                `📄 Generate register: ${isGenerateRegisterActive ? 'ENABLED' : 'DISABLED'}`
-            )
 
             const isbeAdmin = await extractISBEAdminAddress(genesisTemplateFile)
             console.log(
@@ -107,17 +100,19 @@ task(
             )
 
             console.log('🚀 Deploying governance factory...')
-            const governanceResult = await cleanGovernanceDeployer.deploy(
-                governanceConfig,
-                signatureProvider
-            )
+            const governanceResult =
+                await cleanGovernanceDeployer.deploy(governanceConfig)
             console.log(
                 `✅ Governance factory deployed at: ${governanceResult.address}`
             )
 
             console.log('🚀 Genesis generation...')
             let slotStructure: GenesisAlloc = await retrieveSlotStructure(hre)
-            slotStructure = await matchContractNames(hre, slotStructure)
+            slotStructure = await matchContractNames(
+                hre,
+                slotStructure,
+                governanceaddress
+            )
             console.log(
                 '✅ Slot structure retrieved.----------------------------------------------------------'
             )
@@ -128,18 +123,6 @@ task(
             )
             console.log(
                 '✅ Genesis file generated successfully.-----------------------------------------------'
-            )
-
-            if (isGenerateRegisterActive) {
-                console.log('🚀 Generating contract registry...')
-                contractRegistry.dumpRegistry(slotStructure, registryFile)
-                console.log(
-                    '✅ Contract registry retrieved from HRE.----------------------------------------------------------'
-                )
-            }
-
-            console.log(
-                '✅ Contract registry generated----------------------------------------------------------'
             )
 
             const tableData = Array.from(slotStructure.entries()).map(
@@ -168,9 +151,8 @@ task(
     'genesis:validate',
     'Validate genesis by extracting storage slots from deployment transactions in Hardhat network'
 )
-    .addOptionalParam('gobernanceaddress', 'Gobernance Address')
     .addParam('templatefile', 'Template JSON file to use')
-    .addParam('outputfile', 'Generated Output JSON file')
+    .addParam('governanceaddress', 'Governance Contract Address')
     .setAction(async (taskArgs, hre) => {
         console.info(
             '---------------------------------------------------------------------'
@@ -179,8 +161,6 @@ task(
         console.info(
             '---------------------------------------------------------------------'
         )
-
-        const outputFile = taskArgs.outputfile
 
         const genesisTemplateFile = taskArgs.templatefile
         const curve: string = await extractCurve(genesisTemplateFile)
@@ -213,25 +193,14 @@ task(
         }
         console.log(`Using network url: ${url}`)
 
-        let gobernanceaddress = taskArgs.gobernanceaddress
-        if (!gobernanceaddress) {
-            const registryFile =
-                path.dirname(outputFile) + '/' + REGISTRY_FILENAME
-            console.log(`📄 Using registry file: ${registryFile}`)
-            const contractRegistry = new ContractRegistry()
-            contractRegistry.retrieveContractRegistry(registryFile)
-            gobernanceaddress = contractRegistry.getAddress(
-                'EIP2535AccessControl'
+        const governanceaddress = taskArgs.governanceaddress
+        if (!/^0x[a-fA-F0-9]{40}$/.test(governanceaddress)) {
+            console.error(
+                'Invalid Gobernance Proxy Address: ' + governanceaddress
             )
-            console.log(
-                '✅ EIP2535AccessControl retrieved from registry: ' +
-                    gobernanceaddress
-            )
-        } else if (!/^0x[a-fA-F0-9]{40}$/.test(gobernanceaddress)) {
-            console.error('Invalid Gobernance Proxy Address')
             return
         }
-        console.log(`📄 Using Gobernance Proxy Address: ${gobernanceaddress}`)
+        console.log(`📄 Using Gobernance Proxy Address: ${governanceaddress}`)
 
         while (!(await jsonRpcCall(url))) {
             process.stdout.write(
@@ -243,45 +212,18 @@ task(
             `Waiting for network ${hre.network.name} to be available [OK]           `
         )
 
-        await validateGenesis(hre, gobernanceaddress)
+        await validateGenesis(hre, governanceaddress)
 
         console.log(' deploy usecase facets......')
 
-        const signatureProvider = SignatureProviderFactory.create(hre)
-
-        const isbeAdmin: Signer = await signatureProvider.getSigner()
-        const isbeAdminAddress = await isbeAdmin.getAddress()
-        console.log(`ISBE Admin Address: ${isbeAdminAddress}`)
-
-        const businessLogicDeployer = new CleanBusinessLogicDeployer(
+        const bootstrap: BootstrapIsbenetwork = new BootstrapIsbenetwork(
             hre,
-            signatureProvider
+            governanceaddress
         )
 
-        const config = DeploymentConfig.getDefaultConfig()
-
-        const governanceResult: DeployedBusinessLogic[] =
-            await businessLogicDeployer.deployAll(
-                config.businessLogics,
-                gobernanceaddress
-            )
-        console.log(
-            `✅ Business logics deployed successfully.   Total: ${governanceResult.length}----------------------------------------------------------`
-        )
-
-        //       console.log(' deploy usecase ......')
-
-        //       const useCaseDeployer = new CleanUseCaseDeployer(hre, signatureProvider)
-
-        //       const useCases = await useCaseDeployer.deployAll(
-        //           config.useCases,
-        //           gobernanceaddress,
-        //           governanceResult
-        //       )
-
-        //       console.log(
-        //           `✅ Use cases deployed successfully.   Total: ${useCases.length}----------------------------------------------------------`
-        //       )
+        console.log('🚀 Bootstrapping usecases facets only...')
+        await bootstrap.facetBootstrap()
+        console.log('✅ Usecase facets deployed successfully.')
 
         console.log(
             '✅ All alidations (Done).----------------------------------------------------------'

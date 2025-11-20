@@ -5,6 +5,7 @@ import {ENS} from '../../ensregistry/ENS.sol';
 import {IEnsResolver} from './IEnsResolver.sol';
 import {EnsResolverInternal} from './EnsResolverInternal.sol';
 import {_ENS_RESOLVER_RESOLVER_KEY} from '../../../../constants/resolverKeys.sol';
+import {_ENS_RESOLVER_FACET_VERSION} from '../../../../constants/facetVersions.sol';
 
 /**
  * @title ENS Resolver External Interface
@@ -27,7 +28,7 @@ abstract contract EnsResolver is IEnsResolver, EnsResolverInternal {
         external
         override
         addressIsNotZero(address(_ens))
-        initializer(_ENS_RESOLVER_RESOLVER_KEY)
+        initializer(_ENS_RESOLVER_RESOLVER_KEY, _ENS_RESOLVER_FACET_VERSION)
     {
         _initializeEnsResolver(_ens);
         emit PublicResolverInitialized(address(_ens));

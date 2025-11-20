@@ -37,8 +37,8 @@ export async function deployBusinessLogic(
         )
     }
 
-    // For secp256k1, use the standard contract interface
     const signer = await signatureProvider.getSigner()
+    // For secp256k1, use the standard contract interface
     const businessLogicFactory = await getIsbeFactory(factory, signer)
 
     console.log('📡 Sending deployBusinessLogic transaction...')

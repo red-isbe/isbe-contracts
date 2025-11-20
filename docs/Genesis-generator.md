@@ -26,16 +26,18 @@ The purpose of this section is to provide a guide for exploiting the functionali
 ./makeGenesis.sh --help
 
 Usage:
-  --skip-gen              Skip the genesis generation process.
-  --do-besu-startup       Run the Besu startup procedure.
-  --do-validation          Execute post-start validation steps.
-  --besu-dir <path>       Specify the directory containing the Besu build.
-  --template-file <file>  Specify the genesis template JSON file to use. (MANDATORY)
-  --output-file <file>    Specify the generated output JSON file. (MANDATORY if not skipping genesis)
-  --do-generate-register     Generate contract register JSON. (Default: false)
+  --skip-gen                       Skip the genesis generation process.
+  --do-besu-startup                Run the Besu startup procedure.
+  --do-validation                  Execute post-start validation steps.
+  --besu-dir <path>                Specify the directory containing the Besu build.
+  --template-file <file>           Specify the genesis template JSON file to use. (MANDATORY)
+  --output-file <file>             Specify the generated output JSON file. (MANDATORY if not skipping genesis)
+  --do-generate-register           Generate contract register JSON. (Default: false)
+  --gobernance-address <address>   Specify the governance contract address. (MANDATORY)
+
 
 Example:
-  ./script.sh --skip-gen --do-besu-startup --besu-dir ./besu/
+  ./script.sh --skip-gen --do-besu-startup --besu-dir ./besu/ --gobernance-address 0x00000000000000000000000000000000000015BE
 
 Description:
   This script orchestrates the Besu genesis setup.
@@ -49,6 +51,10 @@ The parameters **--template-file and --output-file** are mandatory. The first sp
 
 By default, a Contract Registry file is not generated. This JSON-file contains an index for locating a contract address using the contract name. This function can be activated by adding **--do-generate-register** flag. It is relevant to point out that if --do-validation flag is enabled, Contract Registry will be generated even if --do-generate-register is not enabled. The reason is because this file is needed for validation process as it is required to obtain the addresses for contracts
 
+**IMPORTANT:** This process changes Governance Contract Address as specified in --gobernance-address parameter. Currently, for the Governance Diamond, the address is:
+
+**0x00000000000000000000000000000000000015BE**.
+
 **IMPORTANT:** First alloc address will be considered as ISBE Admin. Please, make sure the first alloc corresponds to it.
 
 **IMPORTANT:** The Genesis generation process requires large amounts of memory (tested with 32GB) and may take several minutes. Therefore, remain calm and do not panic if it gets stuck for several minutes at this point:
@@ -57,7 +63,7 @@ By default, a Contract Registry file is not generated. This JSON-file contains a
 Analyzing transaction 0xd98ccc4be2dc7a0850e145ec2626e57e174de41a73ba09bdf6b47204f9562b14 ...
 TX IS A CONTRACT CREATION: 0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE
 Root owner (depth=1) is 0x9a9f2ccfde556a7e9ff0848998aa4a0cfd8863ae
-Requesting TX trace from Hardhat...       <-------------------------------- This line
+Requesting TX trace from Hardhat (could take several minutes. Please be patient.)...       <-------------------------------- This line
 ``
 
 ### BESU DEPLOYER
@@ -90,7 +96,10 @@ This subprocess performs tests and deployments on the local besu network deploye
 **Generate genesis only:**
 
 ```bash
-./makeGenesis.sh --template-file <template-location>  --output-file <generated-file-location>
+./makeGenesis.sh \
+  --template-file /Users/marcosserradilla/dev/workspace/io.builders/isbe/isbe-genesis-files/DEV/bare/genesis-bare-dev-GEN.json  \
+  --output-file /genesis-bare-dev-GEN.json \
+  --gobernance-address 0x00000000000000000000000000000000000015BE
 ```
 
 **Generate genesis and perform all checks**
@@ -101,7 +110,8 @@ This subprocess performs tests and deployments on the local besu network deploye
     --output-file  <generated-file-location> \
     --do-validation \
     --do-besu-startup
-    --besu-dir <isbe-besu-local-deployer_repo-dir>
+    --besu-dir <isbe-besu-local-deployer_repo-dir> \
+    --gobernance-address <governance-address>
 ```
 
 **Check previously generated genesis**
@@ -113,6 +123,7 @@ In this case genesis is already installed in besu-local-deployer
     --do-validation \
     --do-besu-startup
     --besu-dir <isbe-besu-local-deployer_repo-dir>
+    --gobernance-address <governance-address>
     --skip-gen
 ```
 

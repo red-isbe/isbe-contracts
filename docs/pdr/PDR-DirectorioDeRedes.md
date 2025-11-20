@@ -37,7 +37,7 @@ Todas las operaciones deben quedar registradas mediante **eventos on-chain** que
 
 ### Incluye
 
-- Implementación del contrato inteligente `NetworkCatalog` en Solidity.
+- Implementación del contrato inteligente `NetworkDirectory` en Solidity.
 - Definición del modelo de datos y estructura `Network`.
 - Gestión de **recursos genéricos** por red (`Resource { bytes32 key; string resource; }`).
 - Validaciones de unicidad (`chainId`) y control de permisos (owner).
@@ -54,7 +54,7 @@ Todas las operaciones deben quedar registradas mediante **eventos on-chain** que
 
 ## 4) Decisión
 
-Se implementará un **único contrato** denominado `NetworkCatalog` que utilizará un mapping basado en `chainId (uint256)` para garantizar unicidad.
+Se implementará un **único contrato** denominado `NetworkDirectory` que utilizará un mapping basado en `chainId (uint256)` para garantizar unicidad.
 
 Adoptar un modelo **genérico de recursos** por red para maximizar flexibilidad y minimizar cambios de esquema:
 
@@ -190,7 +190,7 @@ Resource {
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-interface INetworkCatalog {
+interface INetworkDirectory {
     enum Stage {
         DEV,
         PRE,
