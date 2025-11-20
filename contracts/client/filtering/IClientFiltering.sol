@@ -44,7 +44,9 @@ interface IClientFiltering {
      * type)
      * @param initialBlock Starting block number for the filter's temporal range
      * @param endBlock Ending block number for the filter's temporal range
+     * @param disabled Flag to indicate if the filter is disabled
      */
+    // solhint-disable-next-line gas-struct-packing
     struct Filter {
         bytes32 filterId;
         IClientFiltering.FilterType filterType;
@@ -54,6 +56,7 @@ interface IClientFiltering {
         bytes32 jsonRpcMethod;
         uint256 initialBlock;
         uint256 endBlock;
+        bool disabled;
     }
 
     /**
@@ -66,6 +69,7 @@ interface IClientFiltering {
      * @param jsonRpcMethod JSON-RPC method criteria (if applicable to filter type)
      * @param initialBlock Starting block number for the filter's active range
      * @param endBlock Ending block number for the filter's active range
+     * @param disabled Flag indicating if the filter is disabled
      */
     event FilterRegistered(
         bytes32 filterId,
@@ -75,7 +79,32 @@ interface IClientFiltering {
         bytes4 signature,
         bytes32 jsonRpcMethod,
         uint256 initialBlock,
-        uint256 endBlock
+        uint256 endBlock,
+        bool disabled
+    );
+
+    /**
+     * @notice Emitted when an existing filter is updated in the system
+     * @param filterId Unique identifier of the updated filter
+     * @param filterType Updated filter type from FilterType enumeration
+     * @param transactionHash Updated transaction hash criteria (if applicable)
+     * @param contractAddress Updated contract address criteria (if applicable)
+     * @param signature Updated function signature criteria (if applicable)
+     * @param jsonRpcMethod Updated JSON-RPC method criteria (if applicable)
+     * @param initialBlock Updated starting block number for the filter's range
+     * @param endBlock Updated ending block number for the filter's range
+     * @param disabled Updated flag indicating if the filter is disabled
+     */
+    event FilterUpdated(
+        bytes32 filterId,
+        IClientFiltering.FilterType filterType,
+        bytes32 transactionHash,
+        address contractAddress,
+        bytes4 signature,
+        bytes32 jsonRpcMethod,
+        uint256 initialBlock,
+        uint256 endBlock,
+        bool disabled
     );
 
     /**
@@ -91,6 +120,7 @@ interface IClientFiltering {
      * @param jsonRpcMethod JSON-RPC method parameter provided
      * @param initialBlock Initial block parameter provided
      * @param endBlock End block parameter provided
+     * @param disabled Disabled flag parameter provided
      */
     error InvalidFilter(
         bytes32 filterId,
@@ -100,7 +130,8 @@ interface IClientFiltering {
         bytes4 signature,
         bytes32 jsonRpcMethod,
         uint256 initialBlock,
-        uint256 endBlock
+        uint256 endBlock,
+        bool disabled
     );
 
     /**
@@ -113,6 +144,12 @@ interface IClientFiltering {
     error FilterIdExists(bytes32 filterId);
 
     /**
+     * @notice Thrown when attempting to access or modify a filter that does not exist
+     * @param filterId The non-existent filter identifier
+     */
+    error FilterNotFound(bytes32 filterId);
+
+    /**
      * @notice Registers a new filter configuration for client-side blockchain
      * transaction filtering
      * @dev Validates filter parameters against the specified FilterType and ensures
@@ -122,6 +159,14 @@ interface IClientFiltering {
      * parameters for the specified filter type
      */
     function registerFilter(Filter calldata _filter) external;
+
+    /**
+     * @notice Updates an existing filter configuration with new parameters
+     * @dev Validates filter parameters against the specified FilterType and updates
+     * the filter configuration. Emits FilterUpdated event upon successful update
+     * @param _filter Updated filter configuration structure
+     */
+    function updateFilter(Filter calldata _filter) external;
 
     /**
      * @notice Retrieves the total number of filters currently registered in the system

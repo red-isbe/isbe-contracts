@@ -97,9 +97,9 @@ This subprocess performs tests and deployments on the local besu network deploye
 
 ```bash
 ./makeGenesis.sh \
-  --template-file <template-location>  \
-  --output-file <generated-file-location> \
-  --gobernance-address <governance-address>
+  --template-file /Users/marcosserradilla/dev/workspace/io.builders/isbe/isbe-genesis-files/DEV/bare/genesis-bare-dev-GEN.json  \
+  --output-file /genesis-bare-dev-GEN.json \
+  --gobernance-address 0x00000000000000000000000000000000000015BE
 ```
 
 **Generate genesis and perform all checks**

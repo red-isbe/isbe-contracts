@@ -30,9 +30,10 @@ contract ClientFilteringFacet is ClientFiltering, IEIP2535Introspection {
         override
         returns (bytes4[] memory selectors_)
     {
-        uint256 selectorsLength = 4;
+        uint256 selectorsLength = 5;
         selectors_ = new bytes4[](selectorsLength);
         selectors_[--selectorsLength] = this.registerFilter.selector;
+        selectors_[--selectorsLength] = this.updateFilter.selector;
         selectors_[--selectorsLength] = this.getFiltersLength.selector;
         selectors_[--selectorsLength] = this.getFiltersByPage.selector;
         selectors_[--selectorsLength] = this.isFilterRegistered.selector;
