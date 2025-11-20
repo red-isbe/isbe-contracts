@@ -18,6 +18,7 @@ import {
     IDidRegistry__factory,
     IIsbeFactory,
     AccessControlDidFacet,
+    BasicWhitelistFacet,
 } from '../../typechain-types'
 import {
     OWNABLE_RESOLVER_KEY,
@@ -34,6 +35,7 @@ import {
     PAUSE_RESOLVER_KEY,
     ISBE_CUT_RESOLVER_KEY,
     ISBE_LOUPE_RESOLVER_KEY,
+    BASIC_WHITELIST_RESOLVER_KEY,
     CONFIGURATION_ID_ERC20,
     CONFIGURATION_ID_PROXY_TESTS,
 } from '../../utils/constants'
@@ -55,7 +57,7 @@ async function deployBusinessLogicFromFactory(
         (log) =>
             log.topics[0] ===
             '0xe50cdcfd1b693a28ae23bc9a7b0614b649a9caaa7164a4aa2e8161ab6c8cd7a4'
-    )[0] as {
+    )[0] as unknown as {
         args: {
             businessAddress: string
         }
@@ -98,6 +100,9 @@ export async function deployERC20UseCasesFacets(
         'ERC203643ControllerFacet'
     )
     const ERC20FacetFactory = await ethers.getContractFactory('ERC20Facet')
+    const BasicWhitelistFacetFactory = await ethers.getContractFactory(
+        'BasicWhitelistFacet'
+    )
     const AssetEventTrackerTestWrapperFactory = await ethers.getContractFactory(
         'AssetEventTrackerTestWrapper'
     )
@@ -166,6 +171,11 @@ export async function deployERC20UseCasesFacets(
         ERC20_RESOLVER_KEY,
         ERC20FacetFactory
     )
+    const basicWhitelistFacet = await deployBusinessLogicFromFactory(
+        isbeFactory,
+        BASIC_WHITELIST_RESOLVER_KEY,
+        BasicWhitelistFacetFactory
+    )
     const assetEventTrackerFacet = await deployBusinessLogicFromFactory(
         isbeFactory,
         ASSET_EVENT_TRACKER_RESOLVER_KEY,
@@ -208,6 +218,10 @@ export async function deployERC20UseCasesFacets(
             version: 1,
         },
         {
+            businessId: BASIC_WHITELIST_RESOLVER_KEY,
+            version: 1,
+        },
+        {
             businessId: ASSET_EVENT_TRACKER_RESOLVER_KEY,
             version: 1,
         },
@@ -247,6 +261,10 @@ export async function deployERC20UseCasesFacets(
     ) as ERC203643ControllerFacet
     const erc20 = ERC20FacetFactory.attach(proxy) as ERC20Facet
 
+    const basicWhitelist = BasicWhitelistFacetFactory.attach(
+        proxy
+    ) as BasicWhitelistFacet
+
     const pause = ISBEPauseFacetFactory.attach(proxy) as ISBEPauseFacet
 
     const accessControl = AccessControlFacetFactory.attach(
@@ -276,6 +294,7 @@ export async function deployERC20UseCasesFacets(
         erc20Burnable,
         erc203643Capped,
         erc203643Controller,
+        basicWhitelist,
         pause,
         accessControl,
         ownable,
@@ -287,6 +306,7 @@ export async function deployERC20UseCasesFacets(
         erc20BurnableFacet,
         erc203643CappedFacet,
         erc203643ControllerFacet,
+        basicWhitelistFacet,
         pauseFacet,
         accessControlFacet,
         ownableFacet,
