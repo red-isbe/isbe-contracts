@@ -60,6 +60,10 @@ export const ARTIFACT_PATHS = {
     ERC3643_COMPLIANCE_DMLIM:
         'contracts/tokens/erc3643/compliance/erc3643compliancedaymonthlimits/ERC3643ComplianceDMLimFacet.sol',
 
+    // Whitelist extension (transversal - shared by ERC20, ERC721, ERC3643)
+    BASIC_WHITELIST:
+        'contracts/tokens/whitelist/basic/BasicWhitelistFacet.sol',
+
     // ERC721 facets
     ERC721: 'contracts/tokens/erc721/ERC721Facet.sol',
     ERC721_BURNABLE:
@@ -132,6 +136,9 @@ export const CONTRACT_NAMES = {
     ERC3643_COMPLIANCE: 'ERC3643ComplianceFacet',
     ERC3643_COMPLIANCE_MAXBAL: 'ERC3643ComplianceMaxBalanceFacet',
     ERC3643_COMPLIANCE_DMLIM: 'ERC3643ComplianceDMLimFacet',
+
+    // Whitelist extension (transversal - shared by ERC20, ERC721, ERC3643)
+    BASIC_WHITELIST: 'BasicWhitelistFacet',
 
     // ERC721 facets
     ERC721: 'ERC721Facet',

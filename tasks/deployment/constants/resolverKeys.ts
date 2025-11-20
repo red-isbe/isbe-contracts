@@ -103,6 +103,12 @@ export const ERC3643_RESOLVER_KEYS: ResolverKeys = {
         '0x228279b8c9f85cc60c2a3f60cf0371583eaf4d08a3bb4b04cbeb47711165d29e',
 }
 
+// Whitelist extension (transversal - shared by ERC20, ERC721, ERC3643)
+export const WHITELIST_RESOLVER_KEYS: ResolverKeys = {
+    BASIC_WHITELIST:
+        '0x7d9f8a6b5c4e3d2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f',
+}
+
 // ENS facets
 export const ENS_RESOLVER_KEYS: ResolverKeys = {
     REGISTRY:

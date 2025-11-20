@@ -259,11 +259,8 @@ interface IERC3643 {
         address _to,
         uint256 _amount
     ) external returns (bool);
-    
-    function forceBurn(
-        address _from,
-        uint256 _amount
-    ) external;
+
+    function forceBurn(address _from, uint256 _amount) external;
 }
 ```
 
@@ -299,9 +296,9 @@ bytes4 constant ERC203643_CONTROLLER_INTERFACE_ID = 0x7b4e9f3a;
 
 #### 5.2.1. Módulo Metadata
 
-| Función         | Selector   | Descripción                 | Permisos      |
-| --------------- | ---------- | --------------------------- | ------------- |
-| setName(string) | 0xc47f0027 | Actualiza nombre del token  | METADATA_ROLE |
+| Función           | Selector   | Descripción                 | Permisos      |
+| ----------------- | ---------- | --------------------------- | ------------- |
+| setName(string)   | 0xc47f0027 | Actualiza nombre del token  | METADATA_ROLE |
 | setSymbol(string) | 0xb84c8246 | Actualiza símbolo del token | METADATA_ROLE |
 
 #### 5.2.2. Módulo Freeze
@@ -355,16 +352,16 @@ bytes4 constant ERC203643_CONTROLLER_INTERFACE_ID = 0x7b4e9f3a;
 
 #### 5.2.8. Módulo Controller (Compartido)
 
-| Función                        | Selector   | Descripción           | Permisos        |
-| ------------------------------ | ---------- | --------------------- | --------------- |
+| Función                                | Selector   | Descripción           | Permisos        |
+| -------------------------------------- | ---------- | --------------------- | --------------- |
 | forceTransfer(address,address,uint256) | 0x8e1a55fc | Transferencia forzada | CONTROLLER_ROLE |
-| forceBurn(address,uint256)     | 0x9acd72f3 | Quema forzada         | CONTROLLER_ROLE |
+| forceBurn(address,uint256)             | 0x9acd72f3 | Quema forzada         | CONTROLLER_ROLE |
 
 ### 5.3. Eventos por módulo
 
 #### 5.3.1. Metadata Events
 
-```solidity
+````solidity
 event UpdatedTokenInformation(
     string indexed name,
     string indexed symbol,
@@ -377,15 +374,12 @@ event UpdatedTokenInformation(
 event TokensFrozen(address indexed addr, uint256 amount);
 event TokensUnfrozen(address indexed addr, uint256 amount);
 event AddressFrozen(address indexed addr, bool indexed isFrozen, address indexed owner);
-```
+````
 
 #### 5.3.3. Recovery Events
 
 ```solidity
-event RecoverySuccess(
-    address indexed lostWallet,
-    address indexed newWallet
-);
+event RecoverySuccess(address indexed lostWallet, address indexed newWallet);
 ```
 
 #### 5.3.4. Compliance Events
@@ -418,14 +412,11 @@ event ForceTransfer(
     uint256 amount
 );
 
-event ForceBurn(
-    address indexed operator,
-    address indexed from,
-    uint256 amount
-);
+event ForceBurn(address indexed operator, address indexed from, uint256 amount);
 ```
 
 ### 5.4. Errores personalizados
+
 ### 5.4. Errores personalizados
 
 ```solidity
@@ -447,7 +438,11 @@ error ComplianceCheckFailed();
 error TransferNotCompliant(address from, address to, uint256 amount);
 
 // Errores de Max Balance
-error MaxBalanceExceeded(address account, uint256 currentBalance, uint256 maxAllowed);
+error MaxBalanceExceeded(
+    address account,
+    uint256 currentBalance,
+    uint256 maxAllowed
+);
 
 // Errores de Day/Month Limits
 error DailyLimitExceeded(address account, uint256 amount, uint256 limit);
@@ -523,12 +518,12 @@ error IsPaused();
 
 **eIDAS2 (Reglamento de Identidad Digital Europea)**
 
-| Requisito eIDAS2              | Implementación ISBE       | Módulo               |
-| ----------------------------- | ------------------------- | -------------------- |
-| Identidad verificable         | Sistema DID integrado     | AccessControlFacet   |
-| Trazabilidad de transacciones | Eventos completos         | Todos los módulos    |
-| Control de acceso             | Sistema de roles granular | AccessControlFacet   |
-| Auditoría completa            | Logs inmutables on-chain  | Blockchain nativa    |
+| Requisito eIDAS2              | Implementación ISBE       | Módulo             |
+| ----------------------------- | ------------------------- | ------------------ |
+| Identidad verificable         | Sistema DID integrado     | AccessControlFacet |
+| Trazabilidad de transacciones | Eventos completos         | Todos los módulos  |
+| Control de acceso             | Sistema de roles granular | AccessControlFacet |
+| Auditoría completa            | Logs inmutables on-chain  | Blockchain nativa  |
 
 **NIS2 (Directiva de Seguridad de Redes)**
 
