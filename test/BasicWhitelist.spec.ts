@@ -9,7 +9,6 @@ import {
     ISBEPauseFacet,
 } from '../typechain-types'
 import {
-    DEFAULT_ADMIN_ROLE,
     WHITELIST_MANAGER_ROLE,
     PAUSER_ROLE,
     BASIC_WHITELIST_RESOLVER_KEY,
@@ -33,7 +32,6 @@ describe('BasicWhitelist', function () {
     let basicWhitelistFacet: BasicWhitelistFacet
     let accessControl: AccessControl
     let pauseFacet: ISBEPauseFacet
-    let proxyAddress: string
 
     // ====================================================================
     // FIXTURES
@@ -46,9 +44,9 @@ describe('BasicWhitelist', function () {
             bobSigner,
             charlieSigner,
         ] = await ethers.getSigners()
-        
-         ownerAddress = await ownerSigner.getAddress()
-         whitelistManagerAddress = await whitelistManagerSigner.getAddress()
+
+        ownerAddress = await ownerSigner.getAddress()
+        whitelistManagerAddress = await whitelistManagerSigner.getAddress()
         aliceAddress = await aliceSigner.getAddress()
         bobAddress = await bobSigner.getAddress()
         charlieAddress = await charlieSigner.getAddress()
@@ -91,8 +89,8 @@ describe('BasicWhitelist', function () {
             owner: ownerSigner,
             whitelistManager: whitelistManagerSigner,
             alice: aliceSigner,
-            bob: bobSigner,
-            charlie: charlieSigner,
+            bob,
+            charlie,
             ownerAddress,
             whitelistManagerAddress,
             aliceAddress,
@@ -101,7 +99,6 @@ describe('BasicWhitelist', function () {
             basicWhitelistFacet: whitelist,
             accessControl: access,
             pauseFacet: pause,
-            proxyAddress: proxy,
         }
     }
 
@@ -120,7 +117,6 @@ describe('BasicWhitelist', function () {
         basicWhitelistFacet = contracts.basicWhitelistFacet
         accessControl = contracts.accessControl
         pauseFacet = contracts.pauseFacet
-        proxyAddress = contracts.proxyAddress
     })
 
     // ====================================================================
@@ -132,9 +128,9 @@ describe('BasicWhitelist', function () {
                 .connect(owner)
                 .initializeBasicWhitelist(true)
 
-            expect(
-                await basicWhitelistFacet.isWhitelistEnabled()
-            ).to.be.equal(true)
+            expect(await basicWhitelistFacet.isWhitelistEnabled()).to.be.equal(
+                true
+            )
         })
 
         it('Should initialize whitelist with disabled state', async function () {
@@ -142,9 +138,9 @@ describe('BasicWhitelist', function () {
                 .connect(owner)
                 .initializeBasicWhitelist(false)
 
-            expect(
-                await basicWhitelistFacet.isWhitelistEnabled()
-            ).to.be.equal(false)
+            expect(await basicWhitelistFacet.isWhitelistEnabled()).to.be.equal(
+                false
+            )
         })
 
         it('Should emit WhitelistInitialized event', async function () {
@@ -185,11 +181,9 @@ describe('BasicWhitelist', function () {
                 .initializeBasicWhitelist(true)
         })
 
-           it('Should revert when caller does not have WHITELIST_MANAGER_ROLE', async function () {
+        it('Should revert when caller does not have WHITELIST_MANAGER_ROLE', async function () {
             await expect(
-                basicWhitelistFacet
-                    .connect(alice)
-                    .addToWhitelist(bobAddress)
+                basicWhitelistFacet.connect(alice).addToWhitelist(bobAddress)
             )
                 .to.be.revertedWithCustomError(
                     basicWhitelistFacet,
@@ -203,23 +197,17 @@ describe('BasicWhitelist', function () {
                 basicWhitelistFacet
                     .connect(whitelistManager)
                     .addToWhitelist(ZeroAddress)
-            ).to.be.revertedWithCustomError(
-                basicWhitelistFacet,
-                'AddressZero'
-            )
+            ).to.be.revertedWithCustomError(basicWhitelistFacet, 'AddressZero')
         })
 
         it('Should revert when contract is paused', async function () {
-            await pauseFacet.connect(owner).pause();
+            await pauseFacet.connect(owner).pause()
 
             await expect(
                 basicWhitelistFacet
                     .connect(whitelistManager)
                     .addToWhitelist(aliceAddress)
-            ).to.be.revertedWithCustomError(
-                basicWhitelistFacet,
-                'IsPaused'
-            )
+            ).to.be.revertedWithCustomError(basicWhitelistFacet, 'IsPaused')
         })
 
         it('Should add multiple different addresses', async function () {
@@ -280,8 +268,6 @@ describe('BasicWhitelist', function () {
                 )
                 .withArgs(aliceAddress)
         })
-
-     
     })
 
     // ====================================================================
@@ -292,10 +278,9 @@ describe('BasicWhitelist', function () {
             await basicWhitelistFacet
                 .connect(owner)
                 .initializeBasicWhitelist(true)
-                   await basicWhitelistFacet
+            await basicWhitelistFacet
                 .connect(whitelistManager)
                 .addToWhitelist(aliceAddress)
-
         })
 
         it('Should remove address from whitelist with WHITELIST_MANAGER_ROLE', async function () {
@@ -316,6 +301,14 @@ describe('BasicWhitelist', function () {
             )
                 .to.emit(basicWhitelistFacet, 'RemovedFromWhitelist')
                 .withArgs(aliceAddress)
+        })
+
+        it('Should revert when removing zero address', async function () {
+            await expect(
+                basicWhitelistFacet
+                    .connect(whitelistManager)
+                    .removeFromWhitelist(ethers.ZeroAddress)
+            ).to.be.revertedWithCustomError(basicWhitelistFacet, 'AddressZero')
         })
 
         it('Should revert when removing address that is not whitelisted', async function () {
@@ -345,16 +338,13 @@ describe('BasicWhitelist', function () {
         })
 
         it('Should revert when contract is paused', async function () {
-            await pauseFacet.connect(owner).pause();
+            await pauseFacet.connect(owner).pause()
 
             await expect(
                 basicWhitelistFacet
                     .connect(whitelistManager)
                     .removeFromWhitelist(aliceAddress)
-            ).to.be.revertedWithCustomError(
-                basicWhitelistFacet,
-                'IsPaused'
-            )
+            ).to.be.revertedWithCustomError(basicWhitelistFacet, 'IsPaused')
         })
 
         it('Should allow re-adding after removal', async function () {
@@ -386,9 +376,9 @@ describe('BasicWhitelist', function () {
                 .connect(whitelistManager)
                 .disableWhitelist()
 
-            expect(
-                await basicWhitelistFacet.isWhitelistEnabled()
-            ).to.be.equal(false)
+            expect(await basicWhitelistFacet.isWhitelistEnabled()).to.be.equal(
+                false
+            )
         })
 
         it('Should enable whitelist with WHITELIST_MANAGER_ROLE', async function () {
@@ -399,16 +389,14 @@ describe('BasicWhitelist', function () {
                 .connect(whitelistManager)
                 .enableWhitelist()
 
-            expect(
-                await basicWhitelistFacet.isWhitelistEnabled()
-            ).to.be.equal(true)
+            expect(await basicWhitelistFacet.isWhitelistEnabled()).to.be.equal(
+                true
+            )
         })
 
         it('Should emit WhitelistStatusChanged event on disable', async function () {
             await expect(
-                basicWhitelistFacet
-                    .connect(whitelistManager)
-                    .disableWhitelist()
+                basicWhitelistFacet.connect(whitelistManager).disableWhitelist()
             )
                 .to.emit(basicWhitelistFacet, 'WhitelistStatusChanged')
                 .withArgs(false)
@@ -420,18 +408,14 @@ describe('BasicWhitelist', function () {
                 .disableWhitelist()
 
             await expect(
-                basicWhitelistFacet
-                    .connect(whitelistManager)
-                    .enableWhitelist()
+                basicWhitelistFacet.connect(whitelistManager).enableWhitelist()
             )
                 .to.emit(basicWhitelistFacet, 'WhitelistStatusChanged')
                 .withArgs(true)
         })
 
         it('Should revert when non-manager tries to disable', async function () {
-            await expect(
-                basicWhitelistFacet.connect(alice).disableWhitelist()
-            )
+            await expect(basicWhitelistFacet.connect(alice).disableWhitelist())
                 .to.be.revertedWithCustomError(
                     basicWhitelistFacet,
                     'AccountHasNoRole'
@@ -453,32 +437,22 @@ describe('BasicWhitelist', function () {
         })
 
         it('Should revert when contract is paused (disable)', async function () {
-            await pauseFacet.connect(owner).pause();
+            await pauseFacet.connect(owner).pause()
 
             await expect(
-                basicWhitelistFacet
-                    .connect(whitelistManager)
-                    .disableWhitelist()
-            ).to.be.revertedWithCustomError(
-                basicWhitelistFacet,
-                'IsPaused'
-            )
+                basicWhitelistFacet.connect(whitelistManager).disableWhitelist()
+            ).to.be.revertedWithCustomError(basicWhitelistFacet, 'IsPaused')
         })
 
         it('Should revert when contract is paused (enable)', async function () {
             await basicWhitelistFacet
                 .connect(whitelistManager)
                 .disableWhitelist()
-            await pauseFacet.connect(owner).pause();
+            await pauseFacet.connect(owner).pause()
 
             await expect(
-                basicWhitelistFacet
-                    .connect(whitelistManager)
-                    .enableWhitelist()
-            ).to.be.revertedWithCustomError(
-                basicWhitelistFacet,
-                'IsPaused'
-            )
+                basicWhitelistFacet.connect(whitelistManager).enableWhitelist()
+            ).to.be.revertedWithCustomError(basicWhitelistFacet, 'IsPaused')
         })
     })
 
@@ -490,7 +464,6 @@ describe('BasicWhitelist', function () {
             await basicWhitelistFacet
                 .connect(owner)
                 .initializeBasicWhitelist(true)
-            
         })
 
         it('Should return true for whitelisted address when enabled', async function () {
@@ -589,9 +562,7 @@ describe('BasicWhitelist', function () {
                 .connect(owner)
                 .grantRole(WHITELIST_MANAGER_ROLE, aliceAddress)
 
-            await basicWhitelistFacet
-                .connect(alice)
-                .addToWhitelist(bobAddress)
+            await basicWhitelistFacet.connect(alice).addToWhitelist(bobAddress)
 
             expect(
                 await basicWhitelistFacet.isWhitelisted(bobAddress)
@@ -627,43 +598,34 @@ describe('BasicWhitelist', function () {
         })
 
         it('Should block all state-changing operations when paused', async function () {
-            await pauseFacet.connect(owner).pause();
+            await pauseFacet.connect(owner).pause()
 
             await expect(
                 basicWhitelistFacet
                     .connect(whitelistManager)
                     .addToWhitelist(charlieAddress)
-            ).to.be.revertedWithCustomError(
-                basicWhitelistFacet,
-                'IsPaused'
-            )
+            ).to.be.revertedWithCustomError(basicWhitelistFacet, 'IsPaused')
 
             await expect(
-                basicWhitelistFacet
-                    .connect(whitelistManager)
-                    .disableWhitelist()
-            ).to.be.revertedWithCustomError(
-                basicWhitelistFacet,
-                'IsPaused'
-            )
+                basicWhitelistFacet.connect(whitelistManager).disableWhitelist()
+            ).to.be.revertedWithCustomError(basicWhitelistFacet, 'IsPaused')
         })
 
         it('Should allow view functions when paused', async function () {
-
-            await pauseFacet.connect(owner).pause();
+            await pauseFacet.connect(owner).pause()
 
             // View functions should work even when paused
             expect(
                 await basicWhitelistFacet.isWhitelisted(charlieAddress)
             ).to.be.equal(false)
-            expect(
-                await basicWhitelistFacet.isWhitelistEnabled()
-            ).to.be.equal(true)
+            expect(await basicWhitelistFacet.isWhitelistEnabled()).to.be.equal(
+                true
+            )
         })
 
         it('Should resume operations after unpause', async function () {
-            await pauseFacet.connect(owner).pause();
-            await pauseFacet.connect(owner).unpause();
+            await pauseFacet.connect(owner).pause()
+            await pauseFacet.connect(owner).unpause()
 
             expect(
                 await basicWhitelistFacet.isWhitelisted(aliceAddress)
@@ -688,9 +650,7 @@ describe('BasicWhitelist', function () {
         it('Should handle enable when already enabled', async function () {
             // Initial state is enabled
             await expect(
-                basicWhitelistFacet
-                    .connect(whitelistManager)
-                    .enableWhitelist()
+                basicWhitelistFacet.connect(whitelistManager).enableWhitelist()
             )
                 .to.emit(basicWhitelistFacet, 'WhitelistStatusChanged')
                 .withArgs(true)
@@ -702,16 +662,13 @@ describe('BasicWhitelist', function () {
                 .disableWhitelist()
 
             await expect(
-                basicWhitelistFacet
-                    .connect(whitelistManager)
-                    .disableWhitelist()
+                basicWhitelistFacet.connect(whitelistManager).disableWhitelist()
             )
                 .to.emit(basicWhitelistFacet, 'WhitelistStatusChanged')
                 .withArgs(false)
         })
 
         it('Should maintain whitelist state across enable/disable cycles', async function () {
-       
             // Disable and re-enable
             await basicWhitelistFacet
                 .connect(whitelistManager)
@@ -720,7 +677,6 @@ describe('BasicWhitelist', function () {
                 .connect(whitelistManager)
                 .enableWhitelist()
 
-        
             expect(
                 await basicWhitelistFacet.isWhitelisted(aliceAddress)
             ).to.be.equal(false)

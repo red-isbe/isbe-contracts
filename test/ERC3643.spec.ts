@@ -4211,11 +4211,15 @@ describe('ERC3643 Token', function () {
 
                         // Try to mint without whitelisting recipient
                         await expect(
-                            erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
-                        ).to.be.revertedWithCustomError(
-                            basicWhitelist,
-                            'RecipientNotWhitelisted'
-                        ).withArgs(aliceAddress)
+                            erc3643Capped
+                                .connect(owner)
+                                .mint(aliceAddress, 1000n)
+                        )
+                            .to.be.revertedWithCustomError(
+                                basicWhitelist,
+                                'RecipientNotWhitelisted'
+                            )
+                            .withArgs(aliceAddress)
                     })
 
                     it('GIVEN whitelist enabled and recipient whitelisted WHEN mint THEN succeeds', async () => {
@@ -4227,38 +4231,45 @@ describe('ERC3643 Token', function () {
 
                         // Mint should succeed
                         await expect(
-                            erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
+                            erc3643Capped
+                                .connect(owner)
+                                .mint(aliceAddress, 1000n)
                         )
                             .to.emit(erc20Facet, 'Transfer')
                             .withArgs(ZeroAddress, aliceAddress, 1000n)
 
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            1000n
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(1000n)
                     })
 
                     it('GIVEN whitelist disabled WHEN mint THEN succeeds regardless of whitelist status', async () => {
                         // Disable whitelist if it's enabled
                         if (await basicWhitelist.isWhitelistEnabled()) {
-                            await basicWhitelist.connect(owner).disableWhitelist()
-                        } 
-                        
-                        // Verify whitelist is disabled, alice is whitelisted
-                        expect(await basicWhitelist.isWhitelistEnabled()).to.be.false
+                            await basicWhitelist
+                                .connect(owner)
+                                .disableWhitelist()
+                        }
 
-                        expect(await basicWhitelist.isWhitelisted(aliceAddress)).to.be
-                            .true
+                        // Verify whitelist is disabled, alice is whitelisted
+                        expect(await basicWhitelist.isWhitelistEnabled()).to.be
+                            .false
+
+                        expect(await basicWhitelist.isWhitelisted(aliceAddress))
+                            .to.be.true
 
                         // Mint should succeed
                         await expect(
-                            erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
+                            erc3643Capped
+                                .connect(owner)
+                                .mint(aliceAddress, 1000n)
                         )
                             .to.emit(erc20Facet, 'Transfer')
                             .withArgs(ZeroAddress, aliceAddress, 1000n)
 
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            1000n
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(1000n)
                     })
 
                     it('GIVEN recipient was whitelisted then removed WHEN mint THEN reverts', async () => {
@@ -4273,11 +4284,15 @@ describe('ERC3643 Token', function () {
 
                         // Mint should fail
                         await expect(
-                            erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
-                        ).to.be.revertedWithCustomError(
-                            basicWhitelist,
-                            'RecipientNotWhitelisted'
-                        ).withArgs(aliceAddress)
+                            erc3643Capped
+                                .connect(owner)
+                                .mint(aliceAddress, 1000n)
+                        )
+                            .to.be.revertedWithCustomError(
+                                basicWhitelist,
+                                'RecipientNotWhitelisted'
+                            )
+                            .withArgs(aliceAddress)
                     })
 
                     it('GIVEN recipient removed then re-added to whitelist WHEN mint THEN succeeds', async () => {
@@ -4295,14 +4310,16 @@ describe('ERC3643 Token', function () {
 
                         // Mint should succeed
                         await expect(
-                            erc3643Capped.connect(owner).mint(aliceAddress, 1000n)
+                            erc3643Capped
+                                .connect(owner)
+                                .mint(aliceAddress, 1000n)
                         )
                             .to.emit(erc20Facet, 'Transfer')
                             .withArgs(ZeroAddress, aliceAddress, 1000n)
 
-                        expect(await erc20Facet.balanceOf(aliceAddress)).to.equal(
-                            1000n
-                        )
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(1000n)
                     })
                 })
             })
@@ -4707,10 +4724,12 @@ describe('ERC3643 Token', function () {
                         // Try to transfer without whitelisting recipient
                         await expect(
                             erc20Facet.connect(alice).transfer(bobAddress, 100n)
-                        ).to.be.revertedWithCustomError(
-                            basicWhitelist,
-                            'RecipientNotWhitelisted'
-                        ).withArgs(bobAddress)
+                        )
+                            .to.be.revertedWithCustomError(
+                                basicWhitelist,
+                                'RecipientNotWhitelisted'
+                            )
+                            .withArgs(bobAddress)
                     })
 
                     it('GIVEN whitelist enabled and recipient whitelisted WHEN transfer THEN succeeds', async () => {
@@ -4738,9 +4757,12 @@ describe('ERC3643 Token', function () {
                     it('GIVEN whitelist disabled WHEN transfer THEN succeeds regardless of whitelist status', async () => {
                         // Disable whitelist if it's enabled
                         if (await basicWhitelist.isWhitelistEnabled()) {
-                            await basicWhitelist.connect(owner).disableWhitelist()
+                            await basicWhitelist
+                                .connect(owner)
+                                .disableWhitelist()
                         }
-                        expect(await basicWhitelist.isWhitelistEnabled()).to.be.false
+                        expect(await basicWhitelist.isWhitelistEnabled()).to.be
+                            .false
 
                         // Transfer should succeed
                         await expect(
@@ -4770,10 +4792,12 @@ describe('ERC3643 Token', function () {
                         // Transfer should fail
                         await expect(
                             erc20Facet.connect(alice).transfer(bobAddress, 100n)
-                        ).to.be.revertedWithCustomError(
-                            basicWhitelist,
-                            'RecipientNotWhitelisted'
-                        ).withArgs(bobAddress)
+                        )
+                            .to.be.revertedWithCustomError(
+                                basicWhitelist,
+                                'RecipientNotWhitelisted'
+                            )
+                            .withArgs(bobAddress)
                     })
 
                     it('GIVEN recipient removed then re-added to whitelist WHEN transfer THEN succeeds', async () => {
@@ -4807,11 +4831,15 @@ describe('ERC3643 Token', function () {
                     it('GIVEN whitelist enabled after transfer WHEN transfer again THEN reverts if recipient not whitelisted', async () => {
                         // Disable whitelist if it's enabled
                         if (await basicWhitelist.isWhitelistEnabled()) {
-                            await basicWhitelist.connect(owner).disableWhitelist()
+                            await basicWhitelist
+                                .connect(owner)
+                                .disableWhitelist()
                         }
-                        
+
                         // Initial transfer succeeds (whitelist disabled)
-                        await erc20Facet.connect(alice).transfer(bobAddress, 100n)
+                        await erc20Facet
+                            .connect(alice)
+                            .transfer(bobAddress, 100n)
                         expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
                             100n
                         )
@@ -4821,11 +4849,15 @@ describe('ERC3643 Token', function () {
 
                         // Second transfer should fail (charlie not whitelisted)
                         await expect(
-                            erc20Facet.connect(alice).transfer(charlieAddress, 100n)
-                        ).to.be.revertedWithCustomError(
-                            basicWhitelist,
-                            'RecipientNotWhitelisted'
-                        ).withArgs(charlieAddress)
+                            erc20Facet
+                                .connect(alice)
+                                .transfer(charlieAddress, 100n)
+                        )
+                            .to.be.revertedWithCustomError(
+                                basicWhitelist,
+                                'RecipientNotWhitelisted'
+                            )
+                            .withArgs(charlieAddress)
                     })
                 })
 
