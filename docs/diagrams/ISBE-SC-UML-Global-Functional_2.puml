@@ -154,6 +154,7 @@ package "ERC20 and ERC3643" {
 
     BasicWhitelistFacet --|> BasicWhitelist
     BasicWhitelist --|> IBasicWhitelist  
+    BasicWhitelist --|> BasicWhitelistInternal
     BasicWhitelistInternal --|> DidDocumentDetailedInternal 
     
 
@@ -176,7 +177,7 @@ package "ERC20 and ERC3643" {
     ERC3643Compliance --|> ERC203643InternalCommon
     ERC3643ComplianceMaxBalance --|> ERC203643InternalCommon
     ERC3643ComplianceDMLim --|> ERC203643InternalCommon
-    BasicWhitelist --|> ERC203643InternalCommon
+    
 
 
 }

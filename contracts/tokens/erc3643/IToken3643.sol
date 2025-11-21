@@ -3,6 +3,7 @@ pragma solidity ^0.8.28;
 
 import {ICompliance} from './compliance/ICompliance.sol';
 import {IERC3643} from './token/IERC3643.sol';
+import {IBasicWhitelist} from '../whitelist/basic/IBasicWhitelist.sol';
 
 /**
  * @title IToken3643
@@ -20,4 +21,4 @@ import {IERC3643} from './token/IERC3643.sol';
  */
 
 // solhint-disable-next-line no-empty-blocks
-interface IToken3643 is IERC3643, ICompliance {}
+interface IToken3643 is IERC3643, ICompliance, IBasicWhitelist {}

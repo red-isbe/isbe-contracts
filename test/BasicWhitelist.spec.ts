@@ -9,7 +9,7 @@ import {
     ISBEPauseFacet,
 } from '../typechain-types'
 import {
-    WHITELIST_MANAGER_ROLE,
+    WHITELIST_ROLE,
     PAUSER_ROLE,
     BASIC_WHITELIST_RESOLVER_KEY,
     CONFIGURATION_ID_ERC3643,
@@ -56,7 +56,7 @@ describe('BasicWhitelist', function () {
             ownerSigner,
             [
                 {
-                    role: WHITELIST_MANAGER_ROLE,
+                    role: WHITELIST_ROLE,
                     members: [whitelistManagerAddress],
                 },
                 {
@@ -181,7 +181,7 @@ describe('BasicWhitelist', function () {
                 .initializeBasicWhitelist(true)
         })
 
-        it('Should revert when caller does not have WHITELIST_MANAGER_ROLE', async function () {
+        it('Should revert when caller does not have WHITELIST_ROLE', async function () {
             await expect(
                 basicWhitelistFacet.connect(alice).addToWhitelist(bobAddress)
             )
@@ -189,7 +189,7 @@ describe('BasicWhitelist', function () {
                     basicWhitelistFacet,
                     'AccountHasNoRole'
                 )
-                .withArgs(aliceAddress, WHITELIST_MANAGER_ROLE)
+                .withArgs(aliceAddress, WHITELIST_ROLE)
         })
 
         it('Should revert when adding zero address', async function () {
@@ -232,7 +232,7 @@ describe('BasicWhitelist', function () {
             ).to.be.equal(true)
         })
 
-        it('Should add address to whitelist with WHITELIST_MANAGER_ROLE', async function () {
+        it('Should add address to whitelist with WHITELIST_ROLE', async function () {
             await basicWhitelistFacet
                 .connect(whitelistManager)
                 .addToWhitelist(aliceAddress)
@@ -283,7 +283,7 @@ describe('BasicWhitelist', function () {
                 .addToWhitelist(aliceAddress)
         })
 
-        it('Should remove address from whitelist with WHITELIST_MANAGER_ROLE', async function () {
+        it('Should remove address from whitelist with WHITELIST_ROLE', async function () {
             await basicWhitelistFacet
                 .connect(whitelistManager)
                 .removeFromWhitelist(aliceAddress)
@@ -324,7 +324,7 @@ describe('BasicWhitelist', function () {
                 .withArgs(bobAddress)
         })
 
-        it('Should revert when caller does not have WHITELIST_MANAGER_ROLE', async function () {
+        it('Should revert when caller does not have WHITELIST_ROLE', async function () {
             await expect(
                 basicWhitelistFacet
                     .connect(alice)
@@ -334,7 +334,7 @@ describe('BasicWhitelist', function () {
                     basicWhitelistFacet,
                     'AccountHasNoRole'
                 )
-                .withArgs(aliceAddress, WHITELIST_MANAGER_ROLE)
+                .withArgs(aliceAddress, WHITELIST_ROLE)
         })
 
         it('Should revert when contract is paused', async function () {
@@ -371,7 +371,7 @@ describe('BasicWhitelist', function () {
                 .initializeBasicWhitelist(true)
         })
 
-        it('Should disable whitelist with WHITELIST_MANAGER_ROLE', async function () {
+        it('Should disable whitelist with WHITELIST_ROLE', async function () {
             await basicWhitelistFacet
                 .connect(whitelistManager)
                 .disableWhitelist()
@@ -381,7 +381,7 @@ describe('BasicWhitelist', function () {
             )
         })
 
-        it('Should enable whitelist with WHITELIST_MANAGER_ROLE', async function () {
+        it('Should enable whitelist with WHITELIST_ROLE', async function () {
             await basicWhitelistFacet
                 .connect(whitelistManager)
                 .disableWhitelist()
@@ -420,7 +420,7 @@ describe('BasicWhitelist', function () {
                     basicWhitelistFacet,
                     'AccountHasNoRole'
                 )
-                .withArgs(aliceAddress, WHITELIST_MANAGER_ROLE)
+                .withArgs(aliceAddress, WHITELIST_ROLE)
         })
 
         it('Should revert when non-manager tries to enable', async function () {
@@ -433,7 +433,7 @@ describe('BasicWhitelist', function () {
                     basicWhitelistFacet,
                     'AccountHasNoRole'
                 )
-                .withArgs(aliceAddress, WHITELIST_MANAGER_ROLE)
+                .withArgs(aliceAddress, WHITELIST_ROLE)
         })
 
         it('Should revert when contract is paused (disable)', async function () {
@@ -535,23 +535,23 @@ describe('BasicWhitelist', function () {
                 .initializeBasicWhitelist(true)
         })
 
-        it('Should verify WHITELIST_MANAGER_ROLE is correctly set', async function () {
+        it('Should verify WHITELIST_ROLE is correctly set', async function () {
             expect(
                 await accessControl.hasRole(
-                    WHITELIST_MANAGER_ROLE,
+                    WHITELIST_ROLE,
                     whitelistManagerAddress
                 )
             ).to.be.equal(true)
         })
 
-        it('Should allow owner to grant WHITELIST_MANAGER_ROLE', async function () {
+        it('Should allow owner to grant WHITELIST_ROLE', async function () {
             await accessControl
                 .connect(owner)
-                .grantRole(WHITELIST_MANAGER_ROLE, aliceAddress)
+                .grantRole(WHITELIST_ROLE, aliceAddress)
 
             expect(
                 await accessControl.hasRole(
-                    WHITELIST_MANAGER_ROLE,
+                    WHITELIST_ROLE,
                     aliceAddress
                 )
             ).to.be.equal(true)
@@ -560,7 +560,7 @@ describe('BasicWhitelist', function () {
         it('Should allow new manager to manage whitelist', async function () {
             await accessControl
                 .connect(owner)
-                .grantRole(WHITELIST_MANAGER_ROLE, aliceAddress)
+                .grantRole(WHITELIST_ROLE, aliceAddress)
 
             await basicWhitelistFacet.connect(alice).addToWhitelist(bobAddress)
 
@@ -569,10 +569,10 @@ describe('BasicWhitelist', function () {
             ).to.be.equal(true)
         })
 
-        it('Should revoke WHITELIST_MANAGER_ROLE', async function () {
+        it('Should revoke WHITELIST_ROLE', async function () {
             await accessControl
                 .connect(owner)
-                .revokeRole(WHITELIST_MANAGER_ROLE, whitelistManagerAddress)
+                .revokeRole(WHITELIST_ROLE, whitelistManagerAddress)
 
             await expect(
                 basicWhitelistFacet
@@ -583,7 +583,7 @@ describe('BasicWhitelist', function () {
                     basicWhitelistFacet,
                     'AccountHasNoRole'
                 )
-                .withArgs(whitelistManagerAddress, WHITELIST_MANAGER_ROLE)
+                .withArgs(whitelistManagerAddress, WHITELIST_ROLE)
         })
     })
 

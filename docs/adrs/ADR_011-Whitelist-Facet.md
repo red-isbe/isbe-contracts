@@ -608,7 +608,7 @@ abstract contract ERC203643InternalCommon is
     bytes32 constant _BASIC_WHITELIST_RESOLVER_KEY = 0x7d9f8a6b5c4e3d2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f;
 
     // contracts/constants/roles.sol
-    bytes32 constant _WHITELIST_MANAGER_ROLE = 0x5c9b4a6c3e8d7f2a1b9c8d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a1b0c9d8e7f6a;
+    bytes32 constant _WHITELIST_ROLE = 0xded7ba58b0451b60e5cc01e919d11ddff88fe87bbc51ec62070e38b0ff25d63a;
     ```
 
 2. Registrar en BusinessLogic definitions:

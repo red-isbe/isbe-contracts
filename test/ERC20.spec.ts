@@ -15,7 +15,7 @@ import {
     ERC20_RESOLVER_KEY,
     ERC203643_CAPPED_RESOLVER_KEY,
     DID_REGISTRY_ROLE,
-    WHITELIST_MANAGER_ROLE,
+    WHITELIST_ROLE,
 } from '../utils/constants'
 import { deployGovernance } from './fixtures/governance'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
@@ -563,7 +563,7 @@ describe('ERC20', function () {
                 )
 
                 await contracts.accessControl.grantRole(
-                    WHITELIST_MANAGER_ROLE,
+                    WHITELIST_ROLE,
                     contracts.ownerAddress
                 )
 
@@ -591,7 +591,7 @@ describe('ERC20', function () {
                 )
 
                 await contracts.accessControl.grantRole(
-                    WHITELIST_MANAGER_ROLE,
+                    WHITELIST_ROLE,
                     contracts.ownerAddress
                 )
 
@@ -623,7 +623,7 @@ describe('ERC20', function () {
                 )
 
                 await contracts.accessControl.grantRole(
-                    WHITELIST_MANAGER_ROLE,
+                    WHITELIST_ROLE,
                     contracts.ownerAddress
                 )
 
@@ -654,7 +654,7 @@ describe('ERC20', function () {
                 )
 
                 await contracts.accessControl.grantRole(
-                    WHITELIST_MANAGER_ROLE,
+                    WHITELIST_ROLE,
                     contracts.ownerAddress
                 )
 
@@ -688,7 +688,7 @@ describe('ERC20', function () {
                 )
 
                 await contracts.accessControl.grantRole(
-                    WHITELIST_MANAGER_ROLE,
+                    WHITELIST_ROLE,
                     contracts.ownerAddress
                 )
 
@@ -876,7 +876,7 @@ describe('ERC20', function () {
                 )
 
                 await contracts.accessControl.grantRole(
-                    WHITELIST_MANAGER_ROLE,
+                    WHITELIST_ROLE,
                     contracts.ownerAddress
                 )
 
@@ -904,7 +904,7 @@ describe('ERC20', function () {
                 )
 
                 await contracts.accessControl.grantRole(
-                    WHITELIST_MANAGER_ROLE,
+                    WHITELIST_ROLE,
                     contracts.ownerAddress
                 )
 
@@ -1120,7 +1120,7 @@ describe('ERC20', function () {
                 )
 
                 await contracts.accessControl.grantRole(
-                    WHITELIST_MANAGER_ROLE,
+                    WHITELIST_ROLE,
                     contracts.ownerAddress
                 )
 
@@ -1145,7 +1145,7 @@ describe('ERC20', function () {
                 )
 
                 await contracts.accessControl.grantRole(
-                    WHITELIST_MANAGER_ROLE,
+                    WHITELIST_ROLE,
                     contracts.ownerAddress
                 )
 
@@ -1174,7 +1174,7 @@ describe('ERC20', function () {
                 )
 
                 await contracts.accessControl.grantRole(
-                    WHITELIST_MANAGER_ROLE,
+                    WHITELIST_ROLE,
                     contracts.ownerAddress
                 )
 
@@ -1202,7 +1202,7 @@ describe('ERC20', function () {
                 )
 
                 await contracts.accessControl.grantRole(
-                    WHITELIST_MANAGER_ROLE,
+                    WHITELIST_ROLE,
                     contracts.ownerAddress
                 )
 
@@ -1233,7 +1233,7 @@ describe('ERC20', function () {
                 )
 
                 await contracts.accessControl.grantRole(
-                    WHITELIST_MANAGER_ROLE,
+                    WHITELIST_ROLE,
                     contracts.ownerAddress
                 )
 
@@ -1409,7 +1409,7 @@ describe('ERC20', function () {
                 )
 
                 await contracts.accessControl.grantRole(
-                    WHITELIST_MANAGER_ROLE,
+                    WHITELIST_ROLE,
                     contracts.ownerAddress
                 )
 
@@ -1445,7 +1445,7 @@ describe('ERC20', function () {
                 )
 
                 await contracts.accessControl.grantRole(
-                    WHITELIST_MANAGER_ROLE,
+                    WHITELIST_ROLE,
                     contracts.ownerAddress
                 )
 
@@ -1622,7 +1622,7 @@ describe('ERC20', function () {
                 )
 
                 await contracts.accessControl.grantRole(
-                    WHITELIST_MANAGER_ROLE,
+                    WHITELIST_ROLE,
                     contracts.ownerAddress
                 )
 
@@ -1650,7 +1650,7 @@ describe('ERC20', function () {
                 )
 
                 await contracts.accessControl.grantRole(
-                    WHITELIST_MANAGER_ROLE,
+                    WHITELIST_ROLE,
                     contracts.ownerAddress
                 )
 

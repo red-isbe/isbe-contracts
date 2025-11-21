@@ -60,27 +60,27 @@ interface IBasicWhitelist {
 
     /**
      * @notice Adds an address to the whitelist
-     * @dev Requires WHITELIST_MANAGER_ROLE
+     * @dev Requires WHITELIST_ROLE
      * @param _account The address to add to the whitelist
      */
     function addToWhitelist(address _account) external;
 
     /**
      * @notice Removes an address from the whitelist
-     * @dev Requires WHITELIST_MANAGER_ROLE
+     * @dev Requires WHITELIST_ROLE
      * @param _account The address to remove from the whitelist
      */
     function removeFromWhitelist(address _account) external;
 
     /**
      * @notice Enables the whitelist enforcement
-     * @dev Requires WHITELIST_MANAGER_ROLE
+     * @dev Requires WHITELIST_ROLE
      */
     function enableWhitelist() external;
 
     /**
      * @notice Disables the whitelist enforcement
-     * @dev Requires WHITELIST_MANAGER_ROLE
+     * @dev Requires WHITELIST_ROLE
      */
     function disableWhitelist() external;
 

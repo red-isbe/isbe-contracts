@@ -86,7 +86,7 @@ bytes32 constant _METADATA_MANAGER_ROLE = 0x9a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f
 // keccak256('isbe.contracts.role.network.directory');
 bytes32 constant _NETWORK_DIRECTORY_ROLE = 0xd9a7f0b03b752d9c44200ba27e635446a5cfcfec8a2720d6b06e3a170e5bc43b;
 
-// keccak256('isbe.contracts.role.whitelist.manager');
-bytes32 constant _WHITELIST_MANAGER_ROLE = 0x5c9b4a6c3e8d7f2a1b9c8d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a1b0c9d8e7f6a;
+// keccak256('isbe.contracts.role.whitelist');
+bytes32 constant _WHITELIST_ROLE = 0xded7ba58b0451b60e5cc01e919d11ddff88fe87bbc51ec62070e38b0ff25d63a;
 
 // solhint-enable max-line-length

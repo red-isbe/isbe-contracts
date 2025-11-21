@@ -5,7 +5,7 @@ import {BasicWhitelistInternal} from './BasicWhitelistInternal.sol';
 import {IBasicWhitelist} from './IBasicWhitelist.sol';
 import {_BASIC_WHITELIST_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
 import {_BASIC_WHITELIST_FACET_VERSION} from '../../../constants/facetVersions.sol';
-import {_WHITELIST_MANAGER_ROLE} from '../../../constants/roles.sol';
+import {_WHITELIST_ROLE} from '../../../constants/roles.sol';
 
 /**
  * @title BasicWhitelist
@@ -46,7 +46,7 @@ abstract contract BasicWhitelist is IBasicWhitelist, BasicWhitelistInternal {
 
     /**
      * @notice Adds an address to the whitelist
-     * @dev Requires WHITELIST_MANAGER_ROLE. Reverts if address is already whitelisted.
+     * @dev Requires WHITELIST_ROLE. Reverts if address is already whitelisted.
      * @param _account The address to add to the whitelist
      */
     function addToWhitelist(
@@ -55,7 +55,7 @@ abstract contract BasicWhitelist is IBasicWhitelist, BasicWhitelistInternal {
         external
         override
         whenNotPaused
-        onlyRole(_WHITELIST_MANAGER_ROLE)
+        onlyRole(_WHITELIST_ROLE)
         addressIsNotZero(_account)
     {
         _addToWhitelist(_account);
@@ -63,7 +63,7 @@ abstract contract BasicWhitelist is IBasicWhitelist, BasicWhitelistInternal {
 
     /**
      * @notice Removes an address from the whitelist
-     * @dev Requires WHITELIST_MANAGER_ROLE. Reverts if address is not whitelisted.
+     * @dev Requires WHITELIST_ROLE. Reverts if address is not whitelisted.
      * @param _account The address to remove from the whitelist
      */
     function removeFromWhitelist(
@@ -72,7 +72,7 @@ abstract contract BasicWhitelist is IBasicWhitelist, BasicWhitelistInternal {
         external
         override
         whenNotPaused
-        onlyRole(_WHITELIST_MANAGER_ROLE)
+        onlyRole(_WHITELIST_ROLE)
         addressIsNotZero(_account)
     {
         _removeFromWhitelist(_account);
@@ -80,26 +80,26 @@ abstract contract BasicWhitelist is IBasicWhitelist, BasicWhitelistInternal {
 
     /**
      * @notice Enables the whitelist enforcement
-     * @dev Requires WHITELIST_MANAGER_ROLE
+     * @dev Requires WHITELIST_ROLE
      */
     function enableWhitelist()
         external
         override
         whenNotPaused
-        onlyRole(_WHITELIST_MANAGER_ROLE)
+        onlyRole(_WHITELIST_ROLE)
     {
         _enableWhitelist();
     }
 
     /**
      * @notice Disables the whitelist enforcement
-     * @dev Requires WHITELIST_MANAGER_ROLE
+     * @dev Requires WHITELIST_ROLE
      */
     function disableWhitelist()
         external
         override
         whenNotPaused
-        onlyRole(_WHITELIST_MANAGER_ROLE)
+        onlyRole(_WHITELIST_ROLE)
     {
         _disableWhitelist();
     }
@@ -141,7 +141,8 @@ abstract contract BasicWhitelist is IBasicWhitelist, BasicWhitelistInternal {
         override
         returns (bytes4[] memory interfaces_)
     {
-        interfaces_ = new bytes4[](1);
+        uint256 interfacesLength = 1;
+        interfaces_ = new bytes4[](interfacesLength);
         interfaces_[0] = type(IBasicWhitelist).interfaceId;
     }
 }

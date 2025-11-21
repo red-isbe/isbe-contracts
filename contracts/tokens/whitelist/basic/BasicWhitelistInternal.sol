@@ -121,9 +121,11 @@ abstract contract BasicWhitelistInternal is DidDocumentDetailedInternal {
         returns (BasicWhitelistStorage storage $)
     {
         bytes32 position = _BASIC_WHITELIST_STORAGE_POSITION;
+        // slither-disable-start assembly
         // solhint-disable-next-line no-inline-assembly
         assembly {
             $.slot := position
         }
+        // slither-disable-end assembly
     }
 }
