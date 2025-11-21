@@ -96,18 +96,18 @@ package "ERC20 and ERC3643" {
 
 
     ' --- Metadata ---
-    class IERC3643Metadata <<(I,#FFD700) interface>> #E6E6FA
-    class ERC3643Metadata <<(A,#228B22) abstract contract>> #E6E6FA
-    class ERC3643MetadataFacet <<(C,#1E90FF) contract>> #E6E6FA
+    class IERC3643Metadata <<(I,#FFD700) interface>> #77DD77
+    class ERC3643Metadata <<(A,#228B22) abstract contract>> #77DD77
+    class ERC3643MetadataFacet <<(C,#1E90FF) contract>> #77DD77
 
     ERC3643MetadataFacet --|> ERC3643Metadata 
     ERC3643Metadata --|> IERC3643Metadata   
 
     ' --- Freeze ---
-    class IERC3643Freeze <<(I,#FFD700) interface>> #E6E6FA
-    class ERC3643FreezeInternal <<(A,#228B22) abstract contract>> #E6E6FA
-    class ERC3643Freeze <<(A,#228B22) abstract contract>> #E6E6FA
-    class ERC3643FreezeFacet <<(C,#1E90FF) contract>> #E6E6FA
+    class IERC3643Freeze <<(I,#FFD700) interface>> #77DD77
+    class ERC3643FreezeInternal <<(A,#228B22) abstract contract>> #77DD77
+    class ERC3643Freeze <<(A,#228B22) abstract contract>> #77DD77
+    class ERC3643FreezeFacet <<(C,#1E90FF) contract>> #77DD77
 
     ERC3643FreezeFacet --|> ERC3643Freeze
     ERC3643Freeze --|> IERC3643Freeze  
@@ -145,6 +145,16 @@ package "ERC20 and ERC3643" {
     ERC3643ComplianceDMLimInternal--|> DidDocumentDetailedInternal
 
     ERC3643ComplianceInternal --|> ERC3643ComplianceDMLimInternal
+
+    ' --- BasicWhitelist ---
+    class IBasicWhitelist <<(I,#FFD700) interface>> #E6E6FA
+    class BasicWhitelistInternal <<(A,#228B22) abstract contract>> #E6E6FA
+    class BasicWhitelist <<(A,#228B22) abstract contract>> #E6E6FA
+    class BasicWhitelistFacet <<(C,#1E90FF) contract>> #E6E6FA
+
+    BasicWhitelistFacet --|> BasicWhitelist
+    BasicWhitelist --|> IBasicWhitelist  
+    BasicWhitelistInternal --|> DidDocumentDetailedInternal 
     
 
     ' --- ERC203643 Internal Common ---
@@ -153,6 +163,7 @@ package "ERC20 and ERC3643" {
     ERC203643InternalCommon --|> ERC203643CappedInternal
     ERC203643InternalCommon --|> ERC3643FreezeInternal
     ERC203643InternalCommon --|> ERC3643ComplianceInternal
+    ERC203643InternalCommon --|> BasicWhitelistInternal
 
 
     ERC3643Metadata --|> ERC203643InternalCommon
@@ -165,6 +176,7 @@ package "ERC20 and ERC3643" {
     ERC3643Compliance --|> ERC203643InternalCommon
     ERC3643ComplianceMaxBalance --|> ERC203643InternalCommon
     ERC3643ComplianceDMLim --|> ERC203643InternalCommon
+    BasicWhitelist --|> ERC203643InternalCommon
 
 
 }
