@@ -106,15 +106,15 @@ Before using these scripts, ensure you have the following dependencies installed
 
 **Purpose**: Comprehensive script to initialize submodules, generate genesis blocks, and start a local Besu network.
 
-**NOTE**: This scripts invokes initSubmodules.sh
+**NOTE**: This script invokes initSubmodules.sh
 
-**IMPORTANT**: This module asumes:
+**IMPORTANT**: This module assumes:
 
 - The Governance Diamond is on address **0x00000000000000000000000000000000000015BE**
 - Genesis generated file must be present in
     - modules/isbe-genesis-files/DEV/bare/genesis-bare-dev-GEN.json
     - modules/isbe-genesis-files/DEV/case/genesis-case-dev-GEN.json
-- There must be present and correctly confgured at least these networs in [network config file](../config/networks.ts)
+- There must be present and correctly configured at least these networks in [network config file](../config/networks.ts):
     - genesis_validation_network_k1
     - genesis_validation_network_r1
 
@@ -221,7 +221,7 @@ Key environment variables used:
 
 - `NODE_OPTIONS`: Controls Node.js memory allocation
 - `NETWORK_TYPE`: Determines genesis template selection
-- `GOBERNANCE_ADDRESS`: Fixed governance contract address (`0x00000000000000000000000000000000000015BE`)
+- `GOVERNANCE_ADDRESS`: Fixed governance contract address (`0x00000000000000000000000000000000000015BE`)
 
 ## Module Dependencies
 
@@ -232,7 +232,7 @@ The project relies on two critical submodules:
 #### 1. isbe-genesis-files
 
 - **Repository**: `https://github.com/alastria/isbe-genesis-files`
-- **Branch**: `gen/ver0.9` **---->This is required as it has not been already merged. It will change in future**
+- **Branch**: `gen/ver0.9` _(Note: This specific branch is required as it has not been merged yet. This will change in the future)_
 - **Path**: `modules/isbe-genesis-files/`
 - **Purpose**: Contains genesis block templates and network configurations
 - **Structure**:
@@ -410,7 +410,7 @@ graph TD
 
 **Solutions**:
 
-Remove manually Besu configurarion and stop containers. In directory **modules/isbe-besu-local-deployer** launch **./clean.sh** (may require sudo capabilities)
+Remove Besu configuration manually and stop containers. In the **modules/isbe-besu-local-deployer** directory, run **./clean.sh** (may require sudo capabilities)
 
 Additional steps:
 

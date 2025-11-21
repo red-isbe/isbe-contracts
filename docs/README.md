@@ -18,6 +18,7 @@
 - [Deployment Logging Improvements](DEPLOYMENT_LOGGING_IMPROVEMENTS.md) 🆕
 - [TypeScript Code Improvements](TypeScript-Code-Improvements.md) 🆕 (includes test performance optimizations)
 - [Configuration Migration Guide](Configuration-Migration-Guide.md) 🆕
+- [Besu startup](./BesuStartup.md)
 
 ## Secp256R1 Documentation
 
