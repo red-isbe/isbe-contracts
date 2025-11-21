@@ -41,7 +41,7 @@ function addToWhitelist(address _account) external
 
 Adds an address to the whitelist
 
-_Requires WHITELIST_MANAGER_ROLE. Reverts if address is already whitelisted._
+_Requires WHITELIST_ROLE. Reverts if address is already whitelisted._
 
 #### Parameters
 
@@ -57,7 +57,7 @@ function removeFromWhitelist(address _account) external
 
 Removes an address from the whitelist
 
-_Requires WHITELIST_MANAGER_ROLE. Reverts if address is not whitelisted._
+_Requires WHITELIST_ROLE. Reverts if address is not whitelisted._
 
 #### Parameters
 
@@ -73,7 +73,7 @@ function enableWhitelist() external
 
 Enables the whitelist enforcement
 
-_Requires WHITELIST_MANAGER_ROLE_
+_Requires WHITELIST_ROLE_
 
 ### disableWhitelist
 
@@ -83,7 +83,7 @@ function disableWhitelist() external
 
 Disables the whitelist enforcement
 
-_Requires WHITELIST_MANAGER_ROLE_
+_Requires WHITELIST_ROLE_
 
 ### isWhitelisted
 
@@ -461,7 +461,7 @@ function addToWhitelist(address _account) external
 
 Adds an address to the whitelist
 
-_Requires WHITELIST_MANAGER_ROLE_
+_Requires WHITELIST_ROLE_
 
 #### Parameters
 
@@ -477,7 +477,7 @@ function removeFromWhitelist(address _account) external
 
 Removes an address from the whitelist
 
-_Requires WHITELIST_MANAGER_ROLE_
+_Requires WHITELIST_ROLE_
 
 #### Parameters
 
@@ -493,7 +493,7 @@ function enableWhitelist() external
 
 Enables the whitelist enforcement
 
-_Requires WHITELIST_MANAGER_ROLE_
+_Requires WHITELIST_ROLE_
 
 ### disableWhitelist
 
@@ -503,7 +503,7 @@ function disableWhitelist() external
 
 Disables the whitelist enforcement
 
-_Requires WHITELIST_MANAGER_ROLE_
+_Requires WHITELIST_ROLE_
 
 ### isWhitelisted
 

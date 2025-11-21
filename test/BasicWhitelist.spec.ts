@@ -550,10 +550,7 @@ describe('BasicWhitelist', function () {
                 .grantRole(WHITELIST_ROLE, aliceAddress)
 
             expect(
-                await accessControl.hasRole(
-                    WHITELIST_ROLE,
-                    aliceAddress
-                )
+                await accessControl.hasRole(WHITELIST_ROLE, aliceAddress)
             ).to.be.equal(true)
         })
 

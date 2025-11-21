@@ -25,7 +25,7 @@ import {
     ERC203643CappedFacet,
     ERC3643ComplianceFacet,
     ERC3643ComplianceMaxBalanceFacet,
-    ERC3643ComplianceDMLimFacet
+    ERC3643ComplianceDMLimFacet,
 } from '../typechain-types'
 
 describe('ERC3643 Token', function () {
@@ -4186,11 +4186,8 @@ describe('ERC3643 Token', function () {
                 })
 
                 describe('Whitelist Integration', () => {
-                    
-
                     beforeEach(async () => {
                         const fixture = async () => {
-                            
                             // Grant WHITELIST_ROLE to owner
                             await accessControl
                                 .connect(owner)
@@ -4240,17 +4237,14 @@ describe('ERC3643 Token', function () {
                     it('GIVEN whitelist disabled WHEN mint THEN succeeds regardless of whitelist status', async () => {
                         // Disable whitelist if it's enabled
                         if (await erc3643.isWhitelistEnabled()) {
-                            await erc3643
-                                .connect(owner)
-                                .disableWhitelist()
+                            await erc3643.connect(owner).disableWhitelist()
                         }
 
                         // Verify whitelist is disabled, alice is whitelisted
-                        expect(await erc3643.isWhitelistEnabled()).to.be
-                            .false
+                        expect(await erc3643.isWhitelistEnabled()).to.be.false
 
-                        expect(await erc3643.isWhitelisted(aliceAddress))
-                            .to.be.true
+                        expect(await erc3643.isWhitelisted(aliceAddress)).to.be
+                            .true
 
                         // Mint should succeed
                         await expect(
@@ -4693,10 +4687,8 @@ describe('ERC3643 Token', function () {
                 })
 
                 describe('Whitelist Integration', () => {
-                    
                     beforeEach(async () => {
                         const fixture = async () => {
-                            
                             // Grant WHITELIST_ROLE to owner
                             await accessControl
                                 .connect(owner)
@@ -4723,9 +4715,7 @@ describe('ERC3643 Token', function () {
                     it('GIVEN whitelist enabled and recipient whitelisted WHEN transfer THEN succeeds', async () => {
                         // Enable whitelist and add recipient
                         await erc3643.connect(owner).enableWhitelist()
-                        await erc3643
-                            .connect(owner)
-                            .addToWhitelist(bobAddress)
+                        await erc3643.connect(owner).addToWhitelist(bobAddress)
 
                         // Transfer should succeed (sender whitelist is not checked)
                         await expect(
@@ -4745,12 +4735,9 @@ describe('ERC3643 Token', function () {
                     it('GIVEN whitelist disabled WHEN transfer THEN succeeds regardless of whitelist status', async () => {
                         // Disable whitelist if it's enabled
                         if (await erc3643.isWhitelistEnabled()) {
-                            await erc3643
-                                .connect(owner)
-                                .disableWhitelist()
+                            await erc3643.connect(owner).disableWhitelist()
                         }
-                        expect(await erc3643.isWhitelistEnabled()).to.be
-                            .false
+                        expect(await erc3643.isWhitelistEnabled()).to.be.false
 
                         // Transfer should succeed
                         await expect(
@@ -4770,9 +4757,7 @@ describe('ERC3643 Token', function () {
                     it('GIVEN recipient whitelisted then removed WHEN transfer THEN reverts', async () => {
                         // Enable whitelist, add recipient, then remove
                         await erc3643.connect(owner).enableWhitelist()
-                        await erc3643
-                            .connect(owner)
-                            .addToWhitelist(bobAddress)
+                        await erc3643.connect(owner).addToWhitelist(bobAddress)
                         await erc3643
                             .connect(owner)
                             .removeFromWhitelist(bobAddress)
@@ -4791,15 +4776,11 @@ describe('ERC3643 Token', function () {
                     it('GIVEN recipient removed then re-added to whitelist WHEN transfer THEN succeeds', async () => {
                         // Enable whitelist, add recipient, remove, and re-add
                         await erc3643.connect(owner).enableWhitelist()
-                        await erc3643
-                            .connect(owner)
-                            .addToWhitelist(bobAddress)
+                        await erc3643.connect(owner).addToWhitelist(bobAddress)
                         await erc3643
                             .connect(owner)
                             .removeFromWhitelist(bobAddress)
-                        await erc3643
-                            .connect(owner)
-                            .addToWhitelist(bobAddress)
+                        await erc3643.connect(owner).addToWhitelist(bobAddress)
 
                         // Transfer should succeed
                         await expect(
@@ -4819,9 +4800,7 @@ describe('ERC3643 Token', function () {
                     it('GIVEN whitelist enabled after transfer WHEN transfer again THEN reverts if recipient not whitelisted', async () => {
                         // Disable whitelist if it's enabled
                         if (await erc3643.isWhitelistEnabled()) {
-                            await erc3643
-                                .connect(owner)
-                                .disableWhitelist()
+                            await erc3643.connect(owner).disableWhitelist()
                         }
 
                         // Initial transfer succeeds (whitelist disabled)
