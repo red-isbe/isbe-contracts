@@ -1,0 +1,7 @@
+[submodule "modules/isbe-genesis-files"]
+	path = modules/isbe-genesis-files
+	url = https://github.com/alastria/isbe-genesis-files
+	branch = gen/ver0.9
+[submodule "modules/isbe-besu-local-deployer"]
+	path = modules/isbe-besu-local-deployer
+	url = https://github.com/alastria/isbe-besu-local-deployer
