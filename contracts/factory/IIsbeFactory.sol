@@ -9,7 +9,8 @@ import {IGlobalIsbePause} from './globalisbepause/IGlobalIsbePause.sol';
 import {IProxyFactory} from './proxyfactory/IProxyFactory.sol';
 import {ITimeStampingRegistry} from '../client/tsr/ITimeStampingRegistry.sol';
 import {IClientFiltering} from '../client/filtering/IClientFiltering.sol';
-import {IAnchoringCore} from './anchoring/IAnchoringCore.sol';
+import {IAnchoringCore} from '../client/anchoring/IAnchoringCore.sol';
+import {INetworkDirectory} from '../client/networkdirectory/INetworkDirectory.sol';
 
 /**
  * @title ISBE Factory Interface
@@ -29,5 +30,6 @@ interface IIsbeFactory is
     IEnsResolver,
     IClientFiltering,
     ITimeStampingRegistry,
-    IAnchoringCore
+    IAnchoringCore,
+    INetworkDirectory
 {}

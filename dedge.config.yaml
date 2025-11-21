@@ -1,5 +1,4 @@
 version: v2
-
 config:
     contracts:
         evm:
@@ -16,12 +15,14 @@ config:
                 - 'test/'
     secrets:
         enabled: true
+        excluded-paths:
+            - 'contracts/constants'
+            - 'tasks/verification'
     iac:
         enabled: true
     dependencies:
         js:
             enabled: true
-
 tasks:
     install-dependencies:
         - npm install

@@ -34,7 +34,8 @@ describe('ClientFiltering', function () {
     }
     const randomizeFilter = (
         filterType: FilterType = FilterType.NONE,
-        index?: number
+        index?: number,
+        disabled = false
     ): IClientFiltering.FilterStruct => {
         const transactionHash = randomHx()
         const contractAddress = ethers.getAddress(randomHx(20))
@@ -66,6 +67,7 @@ describe('ClientFiltering', function () {
                     : ZeroHash,
             initialBlock,
             endBlock,
+            disabled,
         } as IClientFiltering.FilterStruct
     }
 
@@ -84,7 +86,7 @@ describe('ClientFiltering', function () {
         const adminAddress = await adminSigner.getAddress()
         const otherAddress = await otherSigner.getAddress()
 
-        const rbac = []
+        const rbac: { role: string; members: (string | Signer)[] }[] = []
 
         const gov = await deployGovernance(
             adminSigner,
@@ -92,20 +94,24 @@ describe('ClientFiltering', function () {
             CONFIGURATION_ID_CLIENT_FILTERING
         )
 
+        const clientFilteringFacetInstance =
+            gov.clientFilteringFacet as ClientFilteringFacet
+        const clientFilteringInstance = gov.clientFiltering as ClientFiltering
+
         expect(
-            await gov.clientFilteringFacet.businessIdIntrospection()
+            await clientFilteringFacetInstance.businessIdIntrospection()
         ).to.be.equal(CLIENT_FILTERING_RESOLVER_KEY)
         expect(
-            await gov.clientFilteringFacet.interfacesIntrospection()
-        ).to.be.deep.equal(['0x9ae60694'])
+            await clientFilteringFacetInstance.interfacesIntrospection()
+        ).to.be.deep.equal(['0x57e0e0a5'])
 
         return {
             admin: adminSigner,
             other: otherSigner,
             adminAddress,
             otherAddress,
-            clientFilteringFacet: gov.clientFilteringFacet,
-            clientFiltering: gov.clientFiltering,
+            clientFilteringFacet: clientFilteringFacetInstance,
+            clientFiltering: clientFilteringInstance,
             pauseFacet: gov.pauseGovernance,
         }
     }
@@ -149,7 +155,8 @@ describe('ClientFiltering', function () {
                             filter.signature,
                             filter.jsonRpcMethod,
                             filter.initialBlock,
-                            filter.endBlock
+                            filter.endBlock,
+                            filter.disabled
                         )
                 })
                 it('GIVEN deployed ClientFiltering WHEN try to insert TRANSACTION_HASH as filterType without hash THEN it fails', async () => {
@@ -167,7 +174,8 @@ describe('ClientFiltering', function () {
                             filter.signature,
                             filter.jsonRpcMethod,
                             filter.initialBlock,
-                            filter.endBlock
+                            filter.endBlock,
+                            filter.disabled
                         )
                 })
                 it('GIVEN deployed ClientFiltering WHEN try to insert CONTRACT as filterType without address THEN it fails', async () => {
@@ -185,7 +193,8 @@ describe('ClientFiltering', function () {
                             filter.signature,
                             filter.jsonRpcMethod,
                             filter.initialBlock,
-                            filter.endBlock
+                            filter.endBlock,
+                            filter.disabled
                         )
                 })
                 it('GIVEN deployed ClientFiltering WHEN try to insert CONTRACT_AND_SIGNATURE as filterType without address THEN it fails', async () => {
@@ -203,7 +212,8 @@ describe('ClientFiltering', function () {
                             filter.signature,
                             filter.jsonRpcMethod,
                             filter.initialBlock,
-                            filter.endBlock
+                            filter.endBlock,
+                            filter.disabled
                         )
                 })
                 it('GIVEN deployed ClientFiltering WHEN try to insert CONTRACT_AND_SIGNATURE as filterType without signature THEN it fails', async () => {
@@ -222,7 +232,8 @@ describe('ClientFiltering', function () {
                             filter.signature,
                             filter.jsonRpcMethod,
                             filter.initialBlock,
-                            filter.endBlock
+                            filter.endBlock,
+                            filter.disabled
                         )
                 })
                 it('GIVEN deployed ClientFiltering WHEN try to insert SIGNATURE as filterType without sig THEN it fails', async () => {
@@ -240,7 +251,8 @@ describe('ClientFiltering', function () {
                             filter.signature,
                             filter.jsonRpcMethod,
                             filter.initialBlock,
-                            filter.endBlock
+                            filter.endBlock,
+                            filter.disabled
                         )
                 })
                 it('GIVEN deployed ClientFiltering WHEN try to insert JSONRPC_METHOD as filterType without jsonRpcMethod THEN it fails', async () => {
@@ -258,7 +270,8 @@ describe('ClientFiltering', function () {
                             filter.signature,
                             filter.jsonRpcMethod,
                             filter.initialBlock,
-                            filter.endBlock
+                            filter.endBlock,
+                            filter.disabled
                         )
                 })
                 it('GIVEN deployed ClientFiltering WHEN try to insert filter with bad block numbers THEN it fails', async () => {
@@ -277,7 +290,8 @@ describe('ClientFiltering', function () {
                             filter.signature,
                             filter.jsonRpcMethod,
                             filter.initialBlock,
-                            filter.endBlock
+                            filter.endBlock,
+                            filter.disabled
                         )
                 })
             })
@@ -323,9 +337,113 @@ describe('ClientFiltering', function () {
                             filter.signature,
                             filter.jsonRpcMethod,
                             filter.initialBlock,
-                            filter.endBlock
+                            filter.endBlock,
+                            filter.disabled
                         )
                 })
+            })
+        })
+
+        describe('updateFilter', () => {
+            beforeEach(async () => {
+                filter = randomizeFilter(getRandomFilterType())
+                filter.endBlock = 0
+                await clientFiltering.registerFilter(filter)
+            })
+
+            it('GIVEN registered filter WHEN updateFilter is called with empty id THEN it fails', async () => {
+                const invalidFilter = { ...filter, filterId: ethers.ZeroHash }
+                await expect(
+                    clientFiltering.updateFilter(invalidFilter)
+                ).to.be.revertedWithCustomError(
+                    clientFilteringFacet,
+                    'EmptyBytes32'
+                )
+            })
+
+            it('GIVEN non existing filter WHEN updateFilter is called THEN it fails', async () => {
+                const unknownFilter = randomizeFilter(getRandomFilterType())
+                await expect(clientFiltering.updateFilter(unknownFilter))
+                    .to.be.revertedWithCustomError(
+                        clientFilteringFacet,
+                        'FilterNotFound'
+                    )
+                    .withArgs(unknownFilter.filterId)
+            })
+
+            it('GIVEN paused contract WHEN updateFilter is called THEN it fails', async () => {
+                await pauseFacet.pause()
+                await expect(
+                    clientFiltering.updateFilter(filter)
+                ).to.be.revertedWithCustomError(clientFiltering, 'IsPaused')
+            })
+
+            it('GIVEN caller without role WHEN updateFilter is called THEN it fails', async () => {
+                await expect(
+                    clientFiltering.connect(other).updateFilter(filter)
+                )
+                    .to.be.revertedWithCustomError(
+                        clientFiltering,
+                        'AccountHasNoRole'
+                    )
+                    .withArgs(otherAddress, CLIENT_FILTERING_ROLE)
+            })
+
+            it('GIVEN invalid filter data WHEN updateFilter is called THEN it fails', async () => {
+                const invalidFilter = {
+                    ...filter,
+                    filterType: FilterType.TRANSACTION_HASH,
+                    transactionHash: ZeroHash,
+                }
+
+                await expect(clientFiltering.updateFilter(invalidFilter))
+                    .to.be.revertedWithCustomError(
+                        clientFilteringFacet,
+                        'InvalidFilter'
+                    )
+                    .withArgs(
+                        invalidFilter.filterId,
+                        invalidFilter.filterType,
+                        invalidFilter.transactionHash,
+                        invalidFilter.contractAddress,
+                        invalidFilter.signature,
+                        invalidFilter.jsonRpcMethod,
+                        invalidFilter.initialBlock,
+                        invalidFilter.endBlock,
+                        invalidFilter.disabled
+                    )
+            })
+
+            it('GIVEN valid payload WHEN updateFilter toggles disabled flag THEN it succeeds', async () => {
+                const increasedEndBlock = BigInt(filter.initialBlock) + 100n
+                const updatedFilter = {
+                    ...filter,
+                    endBlock: increasedEndBlock,
+                    disabled: true,
+                }
+
+                await expect(clientFiltering.updateFilter(updatedFilter))
+                    .to.emit(clientFiltering, 'FilterUpdated')
+                    .withArgs(
+                        updatedFilter.filterId,
+                        updatedFilter.filterType,
+                        updatedFilter.transactionHash,
+                        updatedFilter.contractAddress,
+                        updatedFilter.signature,
+                        updatedFilter.jsonRpcMethod,
+                        updatedFilter.initialBlock,
+                        updatedFilter.endBlock,
+                        updatedFilter.disabled
+                    )
+
+                const storedFilters = (await clientFiltering.getFiltersByPage(
+                    1,
+                    1
+                )) as IClientFiltering.FilterStructOutput[]
+                expect(storedFilters[0].endBlock).to.equal(
+                    updatedFilter.endBlock
+                )
+                expect(storedFilters[0].disabled).to.equal(true)
             })
         })
 
@@ -335,7 +453,11 @@ describe('ClientFiltering', function () {
                 const clientFilteringInstance = contracts.clientFiltering
 
                 const mockFilters = Array.from({ length: 5 }, (_, index) =>
-                    randomizeFilter(getRandomFilterType(), index)
+                    randomizeFilter(
+                        getRandomFilterType(),
+                        index,
+                        index % 2 === 0
+                    )
                 )
 
                 // Register filters sequentially to maintain order
@@ -486,6 +608,10 @@ describe('ClientFiltering', function () {
                         actualFilter[7],
                         `Filter ${filterIndex} end block mismatch`
                     ).to.deep.equal(expectedFilter.endBlock)
+                    expect(
+                        actualFilter[8],
+                        `Filter ${filterIndex} disabled flag mismatch`
+                    ).to.deep.equal(expectedFilter.disabled)
                 })
             }
         })

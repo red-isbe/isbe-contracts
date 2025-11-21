@@ -3,7 +3,7 @@ import { task } from 'hardhat/config'
 import path from 'path'
 import { deployBusinessLogic } from '../../scripts/businessLogic/deployBusinessLogic'
 import fs from 'fs'
-import { getSigner } from '../../scripts/utils/getSigner'
+import { SignatureProviderFactory } from '../deployment/providers/SignatureProviderFactory'
 
 /**
  npx hardhat deployBusinessLogic --network localhost \
@@ -19,7 +19,7 @@ task('deployBusinessLogic', 'Deploys business logic contract')
     .setAction(async (taskArgs, hre) => {
         const { businessId, factory, bytecodePath } = taskArgs
 
-        const signer = await getSigner(hre)
+        const signatureProvider = SignatureProviderFactory.create(hre)
 
         const bytecodeContent = fs
             .readFileSync(path.resolve(bytecodePath), 'utf8')
@@ -31,7 +31,7 @@ task('deployBusinessLogic', 'Deploys business logic contract')
             businessId,
             bytecode,
             factory,
-            signer
+            signatureProvider
         )
 
         console.log('Deployment result:', result)

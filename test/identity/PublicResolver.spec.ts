@@ -318,7 +318,7 @@ describe('ENS Public Resolver', () => {
                     ensResolver,
                     'ContractIsAlreadyInitialized'
                 )
-                .withArgs(ENS_RESOLVER_RESOLVER_KEY)
+                .withArgs(ENS_RESOLVER_RESOLVER_KEY, 1, 1)
         })
 
         it('GIVEN PublicResolver deployed WHEN initialize THEN success', async () => {

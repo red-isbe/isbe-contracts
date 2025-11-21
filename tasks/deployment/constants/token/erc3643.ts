@@ -1,6 +1,7 @@
 import {
     ERC3643_RESOLVER_KEYS,
     ERC20_ERC3643_SHARED_RESOLVER_KEYS,
+    WHITELIST_RESOLVER_KEYS,
 } from '../resolverKeys'
 import { ARTIFACT_PATHS, CONTRACT_NAMES } from '../configurationIds'
 
@@ -62,5 +63,11 @@ export const ERC3643_DEFINITIONS = [
         key: ERC3643_RESOLVER_KEYS.COMPLIANCE_DMLIM,
         contractName: CONTRACT_NAMES.ERC3643_COMPLIANCE_DMLIM,
         artifactPath: ARTIFACT_PATHS.ERC3643_COMPLIANCE_DMLIM,
+    },
+    {
+        description: CONTRACT_NAMES.BASIC_WHITELIST,
+        key: WHITELIST_RESOLVER_KEYS.BASIC_WHITELIST,
+        contractName: CONTRACT_NAMES.BASIC_WHITELIST,
+        artifactPath: ARTIFACT_PATHS.BASIC_WHITELIST,
     },
 ]

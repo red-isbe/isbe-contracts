@@ -9,6 +9,8 @@ import {ERC203643CappedInternal} from './erc203643capped/ERC203643CappedInternal
 import {ERC3643FreezeInternal} from '../erc3643/token/erc3643freeze/ERC3643FreezeInternal.sol';
 import {ERC20SnapshotInternal} from '../erc20/extensions/snapshot/ERC20SnapshotInternal.sol';
 import {ERC3643ComplianceInternal} from '../erc3643/compliance/ERC3643ComplianceInternal.sol';
+import {BasicWhitelistInternal} from '../whitelist/basic/BasicWhitelistInternal.sol';
+import {IBasicWhitelist} from '../whitelist/basic/IBasicWhitelist.sol';
 import {ICompliance} from '../erc3643/compliance/ICompliance.sol';
 import {_CONTROLLER_ROLE} from '../../constants/roles.sol';
 import {_RECOVERY_ROLE} from '../../constants/roles.sol';
@@ -24,7 +26,8 @@ abstract contract ERC203643InternalCommon is
     ERC20SnapshotInternal,
     ERC203643CappedInternal,
     ERC3643FreezeInternal,
-    ERC3643ComplianceInternal
+    ERC3643ComplianceInternal,
+    BasicWhitelistInternal
 {
     // =======================
     // Transfer Hooks
@@ -74,6 +77,10 @@ abstract contract ERC203643InternalCommon is
         address _to,
         uint256 _amount
     ) internal {
+        require(
+            _isWhitelisted(_to),
+            IBasicWhitelist.RecipientNotWhitelisted(_to)
+        );
         _updateAccountSnapshot(_to);
         _updateTotalSupplySnapshot();
 
@@ -141,6 +148,10 @@ abstract contract ERC203643InternalCommon is
         address _to,
         uint256 _amount
     ) internal {
+        require(
+            _isWhitelisted(_to),
+            IBasicWhitelist.RecipientNotWhitelisted(_to)
+        );
         _updateAccountSnapshot(_from);
         _updateAccountSnapshot(_to);
 

@@ -88,6 +88,12 @@ export const BESU_NODE_MANAGER_RESOLVER_KEYS: ResolverKeys = {
         '0xed251ea052ffafa4903db889a3309600adf2ac15456e02760c1221ea3792c1ca',
 }
 
+// Network resources facets
+export const NETWORK_RESOLVER_KEYS: ResolverKeys = {
+    NETWORK_CATALOG:
+        '0x17a2f0004227d8948b0a9dfe41e92bca9785ffa344bc4443c88f2df3d2f8ee87',
+}
+
 // ERC3643 Security Token facets
 export const ERC3643_RESOLVER_KEYS: ResolverKeys = {
     METADATA:
@@ -101,6 +107,12 @@ export const ERC3643_RESOLVER_KEYS: ResolverKeys = {
         '0x439f087ef8d9d8d02c3b2d39c55c55a73b329d5b0d78ab0e81eb0e55343cdd9d',
     COMPLIANCE_DMLIM:
         '0x228279b8c9f85cc60c2a3f60cf0371583eaf4d08a3bb4b04cbeb47711165d29e',
+}
+
+// Whitelist extension (transversal - shared by ERC20, ERC721, ERC3643)
+export const WHITELIST_RESOLVER_KEYS: ResolverKeys = {
+    BASIC_WHITELIST:
+        '0x7d9f8a6b5c4e3d2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f',
 }
 
 // ENS facets

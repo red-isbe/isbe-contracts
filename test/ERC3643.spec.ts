@@ -12,6 +12,7 @@ import {
     CAP_ROLE,
     RECOVERY_ROLE,
     COMPLIANCE_ROLE,
+    WHITELIST_MANAGER_ROLE,
     CONFIGURATION_ID_ERC3643,
 } from '../utils/constants'
 import {
@@ -25,6 +26,7 @@ import {
     ERC3643ComplianceFacet,
     ERC3643ComplianceMaxBalanceFacet,
     ERC3643ComplianceDMLimFacet,
+    BasicWhitelistFacet,
 } from '../typechain-types'
 
 describe('ERC3643 Token', function () {
@@ -4183,6 +4185,143 @@ describe('ERC3643 Token', function () {
                         erc3643Capped.connect(owner).mint(ZeroAddress, 1000n)
                     ).to.be.reverted
                 })
+
+                describe('Whitelist Integration', () => {
+                    let basicWhitelist: BasicWhitelistFacet
+
+                    beforeEach(async () => {
+                        const fixture = async () => {
+                            // Get whitelist interface
+                            basicWhitelist = (await ethers.getContractAt(
+                                'BasicWhitelistFacet',
+                                proxyAddress
+                            )) as BasicWhitelistFacet
+
+                            // Grant WHITELIST_MANAGER_ROLE to owner
+                            await accessControl
+                                .connect(owner)
+                                .grantRole(WHITELIST_MANAGER_ROLE, ownerAddress)
+                        }
+                        await loadFixture(fixture)
+                    })
+
+                    it('GIVEN whitelist enabled and recipient not whitelisted WHEN mint THEN reverts', async () => {
+                        // Enable whitelist
+                        await basicWhitelist.connect(owner).enableWhitelist()
+
+                        // Try to mint without whitelisting recipient
+                        await expect(
+                            erc3643Capped
+                                .connect(owner)
+                                .mint(aliceAddress, 1000n)
+                        )
+                            .to.be.revertedWithCustomError(
+                                basicWhitelist,
+                                'RecipientNotWhitelisted'
+                            )
+                            .withArgs(aliceAddress)
+                    })
+
+                    it('GIVEN whitelist enabled and recipient whitelisted WHEN mint THEN succeeds', async () => {
+                        // Enable whitelist and add alice
+                        await basicWhitelist.connect(owner).enableWhitelist()
+                        await basicWhitelist
+                            .connect(owner)
+                            .addToWhitelist(aliceAddress)
+
+                        // Mint should succeed
+                        await expect(
+                            erc3643Capped
+                                .connect(owner)
+                                .mint(aliceAddress, 1000n)
+                        )
+                            .to.emit(erc20Facet, 'Transfer')
+                            .withArgs(ZeroAddress, aliceAddress, 1000n)
+
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(1000n)
+                    })
+
+                    it('GIVEN whitelist disabled WHEN mint THEN succeeds regardless of whitelist status', async () => {
+                        // Disable whitelist if it's enabled
+                        if (await basicWhitelist.isWhitelistEnabled()) {
+                            await basicWhitelist
+                                .connect(owner)
+                                .disableWhitelist()
+                        }
+
+                        // Verify whitelist is disabled, alice is whitelisted
+                        expect(await basicWhitelist.isWhitelistEnabled()).to.be
+                            .false
+
+                        expect(await basicWhitelist.isWhitelisted(aliceAddress))
+                            .to.be.true
+
+                        // Mint should succeed
+                        await expect(
+                            erc3643Capped
+                                .connect(owner)
+                                .mint(aliceAddress, 1000n)
+                        )
+                            .to.emit(erc20Facet, 'Transfer')
+                            .withArgs(ZeroAddress, aliceAddress, 1000n)
+
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(1000n)
+                    })
+
+                    it('GIVEN recipient was whitelisted then removed WHEN mint THEN reverts', async () => {
+                        // Enable whitelist, add alice, then remove
+                        await basicWhitelist.connect(owner).enableWhitelist()
+                        await basicWhitelist
+                            .connect(owner)
+                            .addToWhitelist(aliceAddress)
+                        await basicWhitelist
+                            .connect(owner)
+                            .removeFromWhitelist(aliceAddress)
+
+                        // Mint should fail
+                        await expect(
+                            erc3643Capped
+                                .connect(owner)
+                                .mint(aliceAddress, 1000n)
+                        )
+                            .to.be.revertedWithCustomError(
+                                basicWhitelist,
+                                'RecipientNotWhitelisted'
+                            )
+                            .withArgs(aliceAddress)
+                    })
+
+                    it('GIVEN recipient removed then re-added to whitelist WHEN mint THEN succeeds', async () => {
+                        // Enable whitelist, add alice, remove, then re-add
+                        await basicWhitelist.connect(owner).enableWhitelist()
+                        await basicWhitelist
+                            .connect(owner)
+                            .addToWhitelist(aliceAddress)
+                        await basicWhitelist
+                            .connect(owner)
+                            .removeFromWhitelist(aliceAddress)
+                        await basicWhitelist
+                            .connect(owner)
+                            .addToWhitelist(aliceAddress)
+
+                        // Mint should succeed
+                        await expect(
+                            erc3643Capped
+                                .connect(owner)
+                                .mint(aliceAddress, 1000n)
+                        )
+                            .to.emit(erc20Facet, 'Transfer')
+                            .withArgs(ZeroAddress, aliceAddress, 1000n)
+
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(1000n)
+                    })
+                })
             })
 
             // --------------------------------------------------------------------
@@ -4556,6 +4695,169 @@ describe('ERC3643 Token', function () {
                                 .connect(alice)
                                 .transfer(ZeroAddress, 100n)
                         ).to.be.reverted
+                    })
+                })
+
+                describe('Whitelist Integration', () => {
+                    let basicWhitelist: BasicWhitelistFacet
+
+                    beforeEach(async () => {
+                        const fixture = async () => {
+                            // Get whitelist interface
+                            basicWhitelist = (await ethers.getContractAt(
+                                'BasicWhitelistFacet',
+                                proxyAddress
+                            )) as BasicWhitelistFacet
+
+                            // Grant WHITELIST_MANAGER_ROLE to owner
+                            await accessControl
+                                .connect(owner)
+                                .grantRole(WHITELIST_MANAGER_ROLE, ownerAddress)
+                        }
+                        await loadFixture(fixture)
+                    })
+
+                    it('GIVEN whitelist enabled and recipient not whitelisted WHEN transfer THEN reverts', async () => {
+                        // Enable whitelist (alice already has tokens from beforeEach)
+                        await basicWhitelist.connect(owner).enableWhitelist()
+
+                        // Try to transfer without whitelisting recipient
+                        await expect(
+                            erc20Facet.connect(alice).transfer(bobAddress, 100n)
+                        )
+                            .to.be.revertedWithCustomError(
+                                basicWhitelist,
+                                'RecipientNotWhitelisted'
+                            )
+                            .withArgs(bobAddress)
+                    })
+
+                    it('GIVEN whitelist enabled and recipient whitelisted WHEN transfer THEN succeeds', async () => {
+                        // Enable whitelist and add recipient
+                        await basicWhitelist.connect(owner).enableWhitelist()
+                        await basicWhitelist
+                            .connect(owner)
+                            .addToWhitelist(bobAddress)
+
+                        // Transfer should succeed (sender whitelist is not checked)
+                        await expect(
+                            erc20Facet.connect(alice).transfer(bobAddress, 100n)
+                        )
+                            .to.emit(erc20Facet, 'Transfer')
+                            .withArgs(aliceAddress, bobAddress, 100n)
+
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(4900n)
+                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                            100n
+                        )
+                    })
+
+                    it('GIVEN whitelist disabled WHEN transfer THEN succeeds regardless of whitelist status', async () => {
+                        // Disable whitelist if it's enabled
+                        if (await basicWhitelist.isWhitelistEnabled()) {
+                            await basicWhitelist
+                                .connect(owner)
+                                .disableWhitelist()
+                        }
+                        expect(await basicWhitelist.isWhitelistEnabled()).to.be
+                            .false
+
+                        // Transfer should succeed
+                        await expect(
+                            erc20Facet.connect(alice).transfer(bobAddress, 100n)
+                        )
+                            .to.emit(erc20Facet, 'Transfer')
+                            .withArgs(aliceAddress, bobAddress, 100n)
+
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(4900n)
+                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                            100n
+                        )
+                    })
+
+                    it('GIVEN recipient whitelisted then removed WHEN transfer THEN reverts', async () => {
+                        // Enable whitelist, add recipient, then remove
+                        await basicWhitelist.connect(owner).enableWhitelist()
+                        await basicWhitelist
+                            .connect(owner)
+                            .addToWhitelist(bobAddress)
+                        await basicWhitelist
+                            .connect(owner)
+                            .removeFromWhitelist(bobAddress)
+
+                        // Transfer should fail
+                        await expect(
+                            erc20Facet.connect(alice).transfer(bobAddress, 100n)
+                        )
+                            .to.be.revertedWithCustomError(
+                                basicWhitelist,
+                                'RecipientNotWhitelisted'
+                            )
+                            .withArgs(bobAddress)
+                    })
+
+                    it('GIVEN recipient removed then re-added to whitelist WHEN transfer THEN succeeds', async () => {
+                        // Enable whitelist, add recipient, remove, and re-add
+                        await basicWhitelist.connect(owner).enableWhitelist()
+                        await basicWhitelist
+                            .connect(owner)
+                            .addToWhitelist(bobAddress)
+                        await basicWhitelist
+                            .connect(owner)
+                            .removeFromWhitelist(bobAddress)
+                        await basicWhitelist
+                            .connect(owner)
+                            .addToWhitelist(bobAddress)
+
+                        // Transfer should succeed
+                        await expect(
+                            erc20Facet.connect(alice).transfer(bobAddress, 100n)
+                        )
+                            .to.emit(erc20Facet, 'Transfer')
+                            .withArgs(aliceAddress, bobAddress, 100n)
+
+                        expect(
+                            await erc20Facet.balanceOf(aliceAddress)
+                        ).to.equal(4900n)
+                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                            100n
+                        )
+                    })
+
+                    it('GIVEN whitelist enabled after transfer WHEN transfer again THEN reverts if recipient not whitelisted', async () => {
+                        // Disable whitelist if it's enabled
+                        if (await basicWhitelist.isWhitelistEnabled()) {
+                            await basicWhitelist
+                                .connect(owner)
+                                .disableWhitelist()
+                        }
+
+                        // Initial transfer succeeds (whitelist disabled)
+                        await erc20Facet
+                            .connect(alice)
+                            .transfer(bobAddress, 100n)
+                        expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
+                            100n
+                        )
+
+                        // Enable whitelist
+                        await basicWhitelist.connect(owner).enableWhitelist()
+
+                        // Second transfer should fail (charlie not whitelisted)
+                        await expect(
+                            erc20Facet
+                                .connect(alice)
+                                .transfer(charlieAddress, 100n)
+                        )
+                            .to.be.revertedWithCustomError(
+                                basicWhitelist,
+                                'RecipientNotWhitelisted'
+                            )
+                            .withArgs(charlieAddress)
                     })
                 })
 

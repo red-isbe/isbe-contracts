@@ -133,6 +133,9 @@ bytes32 constant _CLIENT_FILTERING_STORAGE_POSITION = 0x2b5ee3d658648477f5de5bda
 // keccak256('isbe.contracts.client.timestamping.registry.storage');
 bytes32 constant _TIMESTAMPING_REGISTRY_STORAGE_POSITION = 0x7bea5e2e127c51f0457ca47f4b1697de117ab9d5dbb6d8653dd490ff43b32fb6;
 
+// keccak256('isbe.contracts.network.directory.storage');
+bytes32 constant _NETWORK_DIRECTORY_STORAGE_POSITION = 0x3a0420dd147d7cf5a565887fe2c7ea7e96d447cad78f400d62fac5802d1cec34;
+
 // BesuNodeManager - Core layer (shared enodes)
 // keccak256('com.isbe.besu.node.manager.core.storage')
 bytes32 constant _BESU_NODE_MANAGER_CORE_STORAGE_POSITION = 0x11ac89760e0337d7c2f84ee9741ea0ddac3e0d00723ece28a875d7acffbb14d1;
@@ -151,5 +154,8 @@ bytes32 constant _EXECUTION_NODE_MANAGER_STORAGE_POSITION = 0x4a29f4fc2ef7acd6d5
 
 // keccak256('isbe.contracts.anchoring.storage');
 bytes32 constant _ANCHORING_STORAGE_POSITION = 0x5910b7bacf413fc0f7947b11aa2cd75d48d701f58d393ed250a9e4e0f39b5187;
+
+// keccak256('isbe.contracts.whitelist.basic.storage');
+bytes32 constant _BASIC_WHITELIST_STORAGE_POSITION = 0x8c3a8a9f4e7b5d6c9a2b1e0f3d4a5c6e7b8d9a0c1e2f3a4b5c6d7e8f9a0b1c2d;
 
 // solhint-enable max-line-length

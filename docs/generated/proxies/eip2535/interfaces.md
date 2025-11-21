@@ -214,6 +214,26 @@ _If no facet supports the selector, the function will return the zero address (`
 | -------------- | ------- | ---------------------------------------------------------------------------------- |
 | facetAddress\_ | address | The address of the facet that supports the selector, or `address(0)` if not found. |
 
+### facetVersion
+
+```solidity
+function facetVersion(bytes32 _facetKey) external view returns (uint256 version_)
+```
+
+Retrieves the version of a specific facet key.
+
+#### Parameters
+
+| Name       | Type    | Description                                             |
+| ---------- | ------- | ------------------------------------------------------- |
+| \_facetKey | bytes32 | The target facet key for which to retrieve the version. |
+
+#### Return Values
+
+| Name      | Type    | Description                                         |
+| --------- | ------- | --------------------------------------------------- |
+| version\_ | uint256 | The initialized version of the specified facet key. |
+
 ---
 
 ## IEIP2535Introspection

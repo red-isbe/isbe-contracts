@@ -2,6 +2,7 @@
 pragma solidity ^0.8.28;
 
 import {_ERC3643_COMPLIANCE_DMLIM_RESOLVER_KEY} from '../../../../constants/resolverKeys.sol';
+import {_ERC3643_COMPLIANCE_DMLIM_FACET_VERSION} from '../../../../constants/facetVersions.sol';
 import {IERC3643ComplianceDMLim} from './IERC3643ComplianceDMLim.sol';
 import {ERC3643ComplianceDMLimInternal} from './ERC3643ComplianceDMLimInternal.sol';
 import {_COMPLIANCE_ROLE} from '../../../../constants/roles.sol';
@@ -32,7 +33,14 @@ abstract contract ERC3643ComplianceDMLim is
     function initializeERC3643ComplianceDMLim(
         uint256 _dailyLimit,
         uint256 _monthlyLimit
-    ) external override initializer(_ERC3643_COMPLIANCE_DMLIM_RESOLVER_KEY) {
+    )
+        external
+        override
+        initializer(
+            _ERC3643_COMPLIANCE_DMLIM_RESOLVER_KEY,
+            _ERC3643_COMPLIANCE_DMLIM_FACET_VERSION
+        )
+    {
         _initializeDMLim(_dailyLimit, _monthlyLimit);
         emit DayMonthLimitsSet(_dailyLimit, _monthlyLimit);
     }

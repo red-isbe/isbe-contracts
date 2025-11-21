@@ -6,4 +6,4 @@ export {
     extractCurve,
 } from './genesisBuilder'
 export { validateGenesis } from './genesisValidator'
-export { ContractRegistry } from './contractRegistry'
+export { BootstrapIsbenetwork } from './BootstrapIsbenetwork'

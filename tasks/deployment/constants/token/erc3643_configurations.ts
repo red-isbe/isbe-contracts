@@ -3,6 +3,7 @@ import {
     ERC20_RESOLVER_KEYS,
     ERC20_ERC3643_SHARED_RESOLVER_KEYS,
     ERC3643_RESOLVER_KEYS,
+    WHITELIST_RESOLVER_KEYS,
 } from '../resolverKeys'
 import { CONFIGURATION_IDS } from '../configurationIds'
 import { createTokenConfig, generateTokenConfiguration } from '../configHelpers'
@@ -77,6 +78,9 @@ export const ERC3643_USE_CASE_CONFIGS = {
             ERC3643_RESOLVER_KEYS.COMPLIANCE, // Base compliance
             ERC3643_RESOLVER_KEYS.COMPLIANCE_MAXBALANCE, // Balance limits
             ERC3643_RESOLVER_KEYS.COMPLIANCE_DMLIM, // Daily/monthly limits
+
+            // Transversal Extensions
+            WHITELIST_RESOLVER_KEYS.BASIC_WHITELIST, // Address whitelist
         ]),
         'erc3643',
         'Security Token (ERC3643 Full Compliance)'

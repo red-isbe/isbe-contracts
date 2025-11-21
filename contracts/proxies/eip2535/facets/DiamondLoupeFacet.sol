@@ -8,12 +8,13 @@ pragma solidity ^0.8.28;
 // The functions in DiamondLoupeFacet MUST be added to a diamond.
 // The EIP-2535 Diamond standard requires these functions.
 
-import {_DIAMOND_LOUPE_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
+import {Initializable} from '../../../core/Initializable.sol';
+import {EIP2535Internal} from '../EIP2535Internal.sol';
+import {ERC165Internal} from '../../../core/ERC165Internal.sol';
 import {IDiamondLoupe} from '../interfaces/IDiamondLoupe.sol';
 import {IEIP2535Introspection} from '../interfaces/IEIP2535Introspection.sol';
-import {EIP2535Internal} from '../EIP2535Internal.sol';
 import {IERC165} from '@openzeppelin/contracts/utils/introspection/IERC165.sol';
-import {ERC165Internal} from '../../../core/ERC165Internal.sol';
+import {_DIAMOND_LOUPE_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
 
 /**
  * @title Diamond Loupe Facet
@@ -29,9 +30,14 @@ contract DiamondLoupeFacet is
     IERC165,
     ERC165Internal,
     EIP2535Internal,
+    Initializable,
     IDiamondLoupe,
     IEIP2535Introspection
 {
+    constructor() {
+        _disableInitializers(_DIAMOND_LOUPE_RESOLVER_KEY);
+    }
+
     // Diamond Loupe Functions
     ////////////////////////////////////////////////////////////////////
     /// These functions are expected to be called frequently by tools.
@@ -76,6 +82,23 @@ contract DiamondLoupeFacet is
         facetAddress_ = _facetAddress(_functionSelector);
     }
 
+    /**
+     * @notice Retrieves the version of a specific facet key.
+     * @param _facetKey The target facet key for which to retrieve the version.
+     * @return version_ The initialized version of the specified facet key.
+     */
+    function facetVersion(
+        bytes32 _facetKey
+    ) external view returns (uint256 version_) {
+        version_ = _getInitializedVersion(_facetKey);
+    }
+
+    /**
+     * @notice Checks if a contract supports an interface.
+     *         Returns false for forbidden interfaces, otherwise checks using ERC-165 method.
+     * @param _interfaceId The target interface ID to check support for.
+     * @return True if the contract supports the provided interface ID, otherwise false.
+     */
     function supportsInterface(
         bytes4 _interfaceId
     ) external view virtual override returns (bool) {
@@ -108,13 +131,14 @@ contract DiamondLoupeFacet is
         override
         returns (bytes4[] memory selectors_)
     {
-        uint256 selectorsLength = 5;
+        uint256 selectorsLength = 6;
         selectors_ = new bytes4[](selectorsLength);
         selectors_[--selectorsLength] = this.facets.selector;
         selectors_[--selectorsLength] = this.facetFunctionSelectors.selector;
         selectors_[--selectorsLength] = this.facetAddresses.selector;
         selectors_[--selectorsLength] = this.facetAddress.selector;
         selectors_[--selectorsLength] = this.supportsInterface.selector;
+        selectors_[--selectorsLength] = this.facetVersion.selector;
     }
 
     function _implementedInterfaces()
