@@ -20,6 +20,17 @@ version = MAX → Disabled (type(uint256).max)
 
 **Rule:** Can ONLY be called when `storedVersion == 0`
 
+**Security recommendations**: Apply allways with onlyRole.
+
+Normally, the initialisation is part of the deployment and all the initialisers are executed in the same transaction.
+Edge case:
+
+1. A diamond is deployed and initialised during its deployment.
+2. A new facet is needed to be added in the deployed diamond.
+    1. That initialiser must be protected to prevent non-desired initialisations.
+
+**RECOMMENDATION**: Allways introduce initialiser in all facets and protect it with DEFAULT_ADMIN_ROLE.
+
 **Behaviour:**
 
 ```solidity
@@ -52,6 +63,8 @@ initializer(KEY, 10) // 1 → 10 ❌ Reverts (version != 0)
 **Purpose:** Contract upgrades
 
 **Rule:** Can ONLY be called when `version > storedVersion`
+
+**Security recommendations**: Apply allways with onlyRole.
 
 **Behaviour:**
 
@@ -93,7 +106,7 @@ reinitializer(KEY, 1)  // 0 → 1 ❌ Reverts (1 <= 0 is false, but 0 is special
 
 ### 3. `onlyAfterVersion(bytes32 facetKey, uint256 minVersion)`
 
-**Purpose:** Access control based on version
+**Purpose:** Access control based on a version
 
 **Rule:** Can ONLY be called when `storedVersion >= minVersion`
 
@@ -168,6 +181,17 @@ onlyBeforeVersion(KEY, 1) // 3 >= 1 ❌ Reverts
 | `version = N` | `onlyAfterVersion(KEY, M)` where `M > N`   | `version = N` | ❌ Revert                 |
 | `version = N` | `onlyBeforeVersion(KEY, M)` where `M >= N` | `version = N` | ✅ Success (no change)    |
 | `version = N` | `onlyBeforeVersion(KEY, M)` where `M < N`  | `version = N` | ❌ Revert                 |
+
+```mermaid
+stateDiagram
+[*] --> Uninitialized(v0)
+Uninitialized(v0) --> Initialized(v1): initialize with version 1 [1]
+Initialized(v1) --> Upgraded(v2): reinitializer with version 2 [2]
+Upgraded(v2) --> Upgraded(v3): reinitializer with version 3 [2]
+Upgraded(v3) --> Upgraded(vN): reinitializer with higher version [2]
+Upgraded(vN) --> Initialized(vN): onlyAfterVersion (version >= N) [2]
+Upgraded(vN) --> Upgraded(vN): onlyAfterVersion (version < N) [blocked] [2]
+```
 
 ---
 
