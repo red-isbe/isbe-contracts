@@ -4,6 +4,10 @@ set -euo pipefail
 # Submodule Initialization Script
 # Usage: ./scripts/init-submodules.sh
 
+CURRENT_DIR="$(pwd)"
+cd ..
+
+
 if [[ ! -f ".gitmodules" ]]; then
   echo "❌ Error: .gitmodules not found. Run this script from the repository root."
   exit 1
@@ -16,3 +20,5 @@ echo "📥 Initializing and updating submodules..."
 git submodule update --init --recursive
 
 echo "✅ Submodules successfully initialized."
+
+cd "$CURRENT_DIR"

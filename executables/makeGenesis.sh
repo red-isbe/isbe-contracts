@@ -1,11 +1,15 @@
 #!/bin/bash
 set -e  # Exit immediately if a command exits with a non-zero status
 
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT"
+
 # Timer start
 start=$(date +%s)
 
+CURRENT_DIR="$(pwd)"
 # Default values
-BESU_DIR="../isbe-besu-local-deployer"
+BESU_DIR="$REPO_ROOT/modules/isbe-besu-local-deployer"
 TEMPLATE_FILE="#"
 OUTPUT_FILE="#"
 GOBERNANCE_ADDRESS="#"
@@ -57,13 +61,13 @@ while [[ $# -gt 0 ]]; do
       echo "  --skip-gen                      Skip the genesis generation process."
       echo "  --do-besu-startup               Run the Besu startup procedure."
       echo "  --do-validation                 Execute post-start validation steps."
-      echo "  --besu-dir <path>               Specify the directory containing the Besu build."
-      echo "  --template-file <file>          Specify the genesis template JSON file to use. (MANDATORY)"
-      echo "  --output-file <file>            Specify the generated output JSON file. (MANDATORY if not skipping genesis)"
+      echo "  --besu-dir <path>               Specify the directory containing the Besu build. RELATIVE TO REPO DIR"
+      echo "  --template-file <file>          Specify the genesis template JSON file to use. RELATIVE TO REPO DIR (MANDATORY)"
+      echo "  --output-file <file>            Specify the generated output JSON file. RELATIVE TO REPO DIR (MANDATORY if not skipping genesis)"
       echo "  --gobernance-address <address>  Specify the governance contract address."
       echo ""
       echo "Example:"
-      echo "  ./script.sh --skip-gen --do-besu-startup --besu-dir ./besu/"
+      echo "  ./script.sh --skip-gen --do-besu-startup --besu-dir besu/"
       echo ""
       echo "Description:"
       echo "  This script orchestrates the Besu genesis setup. "
@@ -93,6 +97,7 @@ if [ "$OUTPUT_FILE" = "#" ] && [ "$SKIP_GEN" = false ]; then
 fi
 
 # Step 1: Genesis generation
+cd "$REPO_ROOT"
 if [ "$SKIP_GEN" = false ]; then
   echo "🔧 Generating genesis..."
   EXEC_CHAIN="npx hardhat genesis:generate --templatefile "$TEMPLATE_FILE" --outputfile "$OUTPUT_FILE" --governanceaddress "$GOBERNANCE_ADDRESS""
@@ -104,6 +109,8 @@ if [ "$SKIP_GEN" = false ]; then
 else
   echo "⏩ Skipping genesis generation (--skip-gen)"
 fi
+
+
 
 # ADAPT GENESIS TO LOCAL ENVIRONMENT
 echo "🔧 Adapting genesis to local environment..."
@@ -136,7 +143,6 @@ echo "✅ Generated: $OUT_FILE"
 if [ "$SKIP_BESU_STARTUP" = false ]; then
   echo "******************************************************************************************"
   echo "🚀 Starting Besu node network..."
-  CURRENT_DIR=$(pwd)
   cd "$BESU_DIR" || exit 1
   $EXEC_BESU
   cd "$CURRENT_DIR" || exit 1
@@ -154,3 +160,5 @@ end=$(date +%s)
 elapsed=$(( end - start ))
 
 echo "⏱️ Execution time: ${elapsed} seconds"
+
+cd "$CURRENT_DIR"
