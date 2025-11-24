@@ -238,22 +238,6 @@ _Emitted by the recoveryAddress function._
 | \_lostWallet | address | The address of the wallet that was lost.         |
 | \_newWallet  | address | The address of the wallet provided for recovery. |
 
-### InvalidLostWallet
-
-```solidity
-error InvalidLostWallet()
-```
-
-Thrown when the lost wallet address is zero.
-
-### InvalidNewWallet
-
-```solidity
-error InvalidNewWallet()
-```
-
-Thrown when the new wallet address is zero.
-
 ### SameWalletAddress
 
 ```solidity

@@ -10,6 +10,10 @@ _Inherits from IERC20Snapshot and ERC203643InternalCommon_
 function snapshot() external
 ```
 
+Creates a new snapshot of balances and total supply.
+
+_Triggers the `Snapshot` event with the newly generated snapshot ID._
+
 ### balanceOfAt
 
 ```solidity
@@ -241,6 +245,10 @@ _This is triggered when querying a nonexistent or invalid snapshot ID._
 ```solidity
 function snapshot() external
 ```
+
+Creates a new snapshot of balances and total supply.
+
+_Triggers the `Snapshot` event with the newly generated snapshot ID._
 
 ### balanceOfAt
 

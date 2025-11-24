@@ -35,18 +35,6 @@ interface IERC3643ComplianceMaxBal {
     event MaxBalanceDestructionHook(address indexed from, uint256 amount);
 
     /**
-     * @notice Error emitted when a transfer would exceed the max balance.
-     * @param to The address of the receiver.
-     * @param attemptedBalance The balance that would be exceeded.
-     * @param maxBalance The maximum allowed balance.
-     */
-    error MaxBalanceExceeded(
-        address to,
-        uint256 attemptedBalance,
-        uint256 maxBalance
-    );
-
-    /**
      * @notice Initializes the max balance restriction.
      * @dev Can only be called once via the initializer modifier.
      * @param _maxBalance The initial max balance value.

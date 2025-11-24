@@ -32,9 +32,7 @@ abstract contract ERC3643ComplianceMaxBalInternal is ERC20Internal {
      * @param _maxBalance The new max balance value to assign.
      */
     function _setMaxBalance(uint256 _maxBalance) internal {
-        ERC3643ComplianceMaxBalanceStorage
-            storage $ = _erc3643ComplianceMaxBalanceStorage();
-        $.maxBalance = _maxBalance;
+        _erc3643ComplianceMaxBalanceStorage().maxBalance = _maxBalance;
     }
 
     /**
@@ -99,8 +97,7 @@ abstract contract ERC3643ComplianceMaxBalInternal is ERC20Internal {
         address _to,
         uint256 _amount
     ) internal view returns (bool) {
-        uint256 _maxBalance = _getMaxBalance();
-        return (_balanceOf(_to) + _amount) <= _maxBalance;
+        return (_balanceOf(_to) + _amount) <= _getMaxBalance();
     }
 
     /**

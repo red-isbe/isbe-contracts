@@ -178,6 +178,27 @@ _Returns the function selectors exposed by this facet_
 
 ---
 
+## ERC203643ControllerInternal
+
+Implements unified force mechanism for both ERC20 and ERC3643 tokens
+
+_Inherits from IERC203643Controller and ERC203643InternalCommon
+Behavior adapts automatically based on token type through internal logic_
+
+### \_forceBurn
+
+```solidity
+function _forceBurn(address _from, uint256 _amount) internal
+```
+
+### \_forceTransfer
+
+```solidity
+function _forceTransfer(address _sender, address _from, address _to, uint256 _amount) internal returns (bool success)
+```
+
+---
+
 ## IERC203643Controller
 
 Interface for administrative control over ERC20 and ERC3643 tokens, allowing forced transfers and burns

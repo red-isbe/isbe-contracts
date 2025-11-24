@@ -20,16 +20,6 @@ interface IERC3643Recovery {
     );
 
     /**
-     * @notice Thrown when the lost wallet address is zero.
-     */
-    error InvalidLostWallet();
-
-    /**
-     * @notice Thrown when the new wallet address is zero.
-     */
-    error InvalidNewWallet();
-
-    /**
      * @notice Thrown when the lost wallet and new wallet are the same address.
      */
     error SameWalletAddress();

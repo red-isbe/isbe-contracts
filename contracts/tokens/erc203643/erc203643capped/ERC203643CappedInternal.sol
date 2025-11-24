@@ -28,8 +28,8 @@ abstract contract ERC203643CappedInternal is ERC20Internal {
      * @dev Modifier to validate a new cap value before setting it
      * @param _newCap The new cap value to validate
      */
-    modifier checkNewCap(uint256 _newCap) {
-        _checkNewCap(_newCap);
+    modifier validateNewCap(uint256 _newCap) {
+        _checkNewCapIsLessThanTotalSupply(_newCap);
         _;
     }
 
@@ -37,8 +37,8 @@ abstract contract ERC203643CappedInternal is ERC20Internal {
      * @dev Modifier to check that minting amount doesn't exceed the cap
      * @param _amount The amount to be minted
      */
-    modifier checkCap(uint256 _amount) {
-        _checkCap(_amount);
+    modifier validateCap(uint256 _amount) {
+        _checkCapExceeded(_amount);
         _;
     }
 
@@ -70,8 +70,10 @@ abstract contract ERC203643CappedInternal is ERC20Internal {
      * - {CapIsZero} if `_newCap` is zero
      * - {NewCapIsLessThanTotalSupply} if `_newCap` is less than current total supply
      */
-    function _checkNewCap(uint256 _newCap) internal view virtual {
-        require(_newCap > 0, IERC203643Capped.CapIsZero());
+    function _checkNewCapIsLessThanTotalSupply(
+        uint256 _newCap
+    ) internal view virtual {
+        _checkUintIsNotZero(_newCap);
 
         uint256 totalSupply = _totalSupply();
 
@@ -91,39 +93,9 @@ abstract contract ERC203643CappedInternal is ERC20Internal {
      * Reverts:
      * - {CapExceeded} if the operation would exceed the supply cap
      */
-    function _checkCap(uint256 _amount) internal view virtual {
+    function _checkCapExceeded(uint256 _amount) internal view {
         require(
             _totalSupply() + _amount <= _cap(),
-            IERC203643Capped.CapExceeded()
-        );
-    }
-
-    /**
-     * @dev Calculates the total amount from an array and validates it against the cap
-     * @param _amounts Array of amounts to sum
-     * @return totalAmount The total sum of all amounts in the array
-     *
-     * Requirements:
-     * - The total supply + total amount must not exceed the cap
-     *
-     * Reverts:
-     * - {CapExceeded} if the batch minting would exceed the supply cap
-     */
-    function _checkTotalAmount(
-        uint256[] calldata _amounts
-    ) internal view returns (uint256 totalAmount) {
-        // Calculate total amount for cap validation
-        uint256 amountsLength = _amounts.length;
-        for (uint256 i; i < amountsLength; ) {
-            unchecked {
-                totalAmount += _amounts[i];
-                ++i;
-            }
-        }
-
-        // Check cap for the entire batch
-        require(
-            _totalSupply() + totalAmount <= _cap(),
             IERC203643Capped.CapExceeded()
         );
     }

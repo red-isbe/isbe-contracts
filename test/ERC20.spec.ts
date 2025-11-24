@@ -430,7 +430,7 @@ describe('ERC20', function () {
         it('GIVEN an ERC20 WHEN initializeCap with Zero THEN it fails', async () => {
             await expect(
                 erc20Capped.initializeCap(0)
-            ).to.be.revertedWithCustomError(erc20Capped, 'CapIsZero')
+            ).to.be.revertedWithCustomError(erc20Capped, 'EmptyUint')
         })
 
         it('GIVEN an ERC20 WHEN cap is initialized THEN it can be retrieved', async () => {
@@ -578,7 +578,7 @@ describe('ERC20', function () {
                 )
                     .to.be.revertedWithCustomError(
                         basicWhitelist,
-                        'RecipientNotWhitelisted'
+                        'NotWhitelisted'
                     )
                     .withArgs(contracts.otherAccountAddress)
             })
@@ -675,7 +675,7 @@ describe('ERC20', function () {
                 )
                     .to.be.revertedWithCustomError(
                         basicWhitelist,
-                        'RecipientNotWhitelisted'
+                        'NotWhitelisted'
                     )
                     .withArgs(contracts.otherAccountAddress)
             })
@@ -748,10 +748,7 @@ describe('ERC20', function () {
                     [contracts.ownerAddress, contracts.otherAccountAddress],
                     [100]
                 )
-            ).to.be.revertedWithCustomError(
-                contracts.erc20,
-                'NotSameLengthArray'
-            )
+            ).to.be.revertedWithCustomError(contracts.erc20, 'NotSameLength')
         })
 
         it('GIVEN an initialized ERC20 WHEN batchMint exceeds cap THEN it fails', async () => {
@@ -891,7 +888,7 @@ describe('ERC20', function () {
                 )
                     .to.be.revertedWithCustomError(
                         basicWhitelist,
-                        'RecipientNotWhitelisted'
+                        'NotWhitelisted'
                     )
                     .withArgs(contracts.otherAccountAddress)
             })
@@ -1132,7 +1129,7 @@ describe('ERC20', function () {
                 )
                     .to.be.revertedWithCustomError(
                         basicWhitelist,
-                        'RecipientNotWhitelisted'
+                        'NotWhitelisted'
                     )
                     .withArgs(contracts.otherAccountAddress)
             })
@@ -1220,7 +1217,7 @@ describe('ERC20', function () {
                 )
                     .to.be.revertedWithCustomError(
                         basicWhitelist,
-                        'RecipientNotWhitelisted'
+                        'NotWhitelisted'
                     )
                     .withArgs(contracts.otherAccountAddress)
             })
@@ -1432,7 +1429,7 @@ describe('ERC20', function () {
                 )
                     .to.be.revertedWithCustomError(
                         basicWhitelist,
-                        'RecipientNotWhitelisted'
+                        'NotWhitelisted'
                     )
                     .withArgs(thirdAccountAddress)
             })
@@ -1502,10 +1499,7 @@ describe('ERC20', function () {
                     [contracts.otherAccountAddress],
                     [50, 100]
                 )
-            ).to.be.revertedWithCustomError(
-                contracts.erc20,
-                'NotSameLengthArray'
-            )
+            ).to.be.revertedWithCustomError(contracts.erc20, 'NotSameLength')
         })
 
         it('GIVEN an ERC20 initialized WHEN try to batch transfer without enough balance THEN it fails', async () => {
@@ -1637,7 +1631,7 @@ describe('ERC20', function () {
                 )
                     .to.be.revertedWithCustomError(
                         basicWhitelist,
-                        'RecipientNotWhitelisted'
+                        'NotWhitelisted'
                     )
                     .withArgs(contracts.otherAccountAddress)
             })

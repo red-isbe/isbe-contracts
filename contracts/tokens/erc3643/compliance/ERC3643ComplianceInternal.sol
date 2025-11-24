@@ -48,8 +48,7 @@ abstract contract ERC3643ComplianceInternal is
      * @param _enabled True to activate, false to deactivate.
      */
     function _setMaxBalanceEnabled(bool _enabled) internal {
-        ERC3643ComplianceStorage storage $ = _erc3643complianceStorage();
-        $.enabledFlags[_FLAG_MAX_BALANCE] = _enabled;
+        _erc3643complianceStorage().enabledFlags[_FLAG_MAX_BALANCE] = _enabled;
     }
 
     /**
@@ -57,8 +56,7 @@ abstract contract ERC3643ComplianceInternal is
      * @param _enabled True to activate, false to deactivate.
      */
     function _setDailyMonthLimitsEnabled(bool _enabled) internal {
-        ERC3643ComplianceStorage storage $ = _erc3643complianceStorage();
-        $.enabledFlags[_FLAG_DAILY_MONTH] = _enabled;
+        _erc3643complianceStorage().enabledFlags[_FLAG_DAILY_MONTH] = _enabled;
     }
 
     // --- Compliance Hooks ---
@@ -137,6 +135,24 @@ abstract contract ERC3643ComplianceInternal is
         return true;
     }
 
+    // --- Get  Activation ---
+
+    /**
+     * @dev Internal view function to check if MaxBalance feature is enabled.
+     * @return True if MaxBalance is enabled, false otherwise.
+     */
+    function _isMaxBalanceEnabled() internal view returns (bool) {
+        return _erc3643complianceStorage().enabledFlags[_FLAG_MAX_BALANCE];
+    }
+
+    /**
+     * @dev Internal view function to check if Daily/Monthly Limits feature is enabled.
+     * @return True if Daily/Monthly Limits are enabled, false otherwise.
+     */
+    function _isDailyMonthLimitsEnabled() internal view returns (bool) {
+        return _erc3643complianceStorage().enabledFlags[_FLAG_DAILY_MONTH];
+    }
+
     /**
      * @dev Internal view function to check compliance before a transfer.
      * Delegates to MaxBalance feature if enabled.
@@ -150,40 +166,27 @@ abstract contract ERC3643ComplianceInternal is
         address _to,
         uint256 _amount
     ) internal view returns (bool) {
-        if (
-            _isMaxBalanceEnabled() &&
-            !_complianceCheckOnMaxBalance(_to, _amount)
-        ) {
-            return false;
-        }
-        // DayMonthLimits only apply to transfers, not mints (when _from == address(0))
-        if (
-            _isDailyMonthLimitsEnabled() &&
-            !_complianceCheckOnDayMonthLimits(_from, _amount)
-        ) {
-            return false;
-        }
-        return true;
+        return
+            _isMaxBalanceCompliance(_to, _amount) &&
+            _isLimitCompliance(_from, _amount);
     }
 
-    // --- Get  Activation ---
-
-    /**
-     * @dev Internal view function to check if MaxBalance feature is enabled.
-     * @return True if MaxBalance is enabled, false otherwise.
-     */
-    function _isMaxBalanceEnabled() internal view returns (bool) {
-        ERC3643ComplianceStorage storage $ = _erc3643complianceStorage();
-        return $.enabledFlags[_FLAG_MAX_BALANCE];
+    function _isMaxBalanceCompliance(
+        address _to,
+        uint256 _amount
+    ) private view returns (bool) {
+        return
+            !_isMaxBalanceEnabled() ||
+            _complianceCheckOnMaxBalance(_to, _amount);
     }
 
-    /**
-     * @dev Internal view function to check if Daily/Monthly Limits feature is enabled.
-     * @return True if Daily/Monthly Limits are enabled, false otherwise.
-     */
-    function _isDailyMonthLimitsEnabled() internal view returns (bool) {
-        ERC3643ComplianceStorage storage $ = _erc3643complianceStorage();
-        return $.enabledFlags[_FLAG_DAILY_MONTH];
+    function _isLimitCompliance(
+        address _from,
+        uint256 _amount
+    ) private view returns (bool) {
+        return
+            !_isDailyMonthLimitsEnabled() ||
+            _complianceCheckOnDayMonthLimits(_from, _amount);
     }
 
     // --- Storage Accessor ---

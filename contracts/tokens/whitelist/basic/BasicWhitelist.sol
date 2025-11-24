@@ -57,8 +57,10 @@ abstract contract BasicWhitelist is IBasicWhitelist, BasicWhitelistInternal {
         whenNotPaused
         onlyRole(_WHITELIST_ROLE)
         addressIsNotZero(_account)
+        onlyNotWhitelisted(_account)
     {
         _addToWhitelist(_account);
+        emit IBasicWhitelist.AddedToWhitelist(_account);
     }
 
     /**
@@ -74,8 +76,10 @@ abstract contract BasicWhitelist is IBasicWhitelist, BasicWhitelistInternal {
         whenNotPaused
         onlyRole(_WHITELIST_ROLE)
         addressIsNotZero(_account)
+        onlyWhitelisted(_account)
     {
         _removeFromWhitelist(_account);
+        emit IBasicWhitelist.RemovedFromWhitelist(_account);
     }
 
     /**

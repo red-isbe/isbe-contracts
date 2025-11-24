@@ -1,18 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {ERC203643InternalCommon} from '../ERC203643InternalCommon.sol';
 import {IERC203643Controller} from './IERC203643Controller.sol';
+import {ERC203643ControllerInternal} from './ERC203643ControllerInternal.sol';
 import {_CONTROLLER_ROLE} from '../../../constants/roles.sol';
 
 /// @title ERC203643Controller
 /// @notice Implements unified force mechanism for both ERC20 and ERC3643 tokens
 /// @dev Inherits from IERC203643Controller and ERC203643InternalCommon
 ///      Behavior adapts automatically based on token type through internal logic
-abstract contract ERC203643Controller is
-    IERC203643Controller,
-    ERC203643InternalCommon
-{
+abstract contract ERC203643Controller is ERC203643ControllerInternal {
     /**
      * @notice Forces a transfer of tokens between two addresses
      * @dev Works for both ERC20 and ERC3643 tokens with automatic behavior adaptation.
@@ -39,9 +36,7 @@ abstract contract ERC203643Controller is
         onlyRole(_CONTROLLER_ROLE)
         returns (bool success)
     {
-        _transfer(_from, _to, _amount);
-        emit ForceTransfer(_msgSender(), _from, _to, _amount);
-        return true;
+        return _forceTransfer(_msgSender(), _from, _to, _amount);
     }
 
     /**
@@ -61,8 +56,7 @@ abstract contract ERC203643Controller is
         address _from,
         uint256 _amount
     ) external override whenNotPaused onlyRole(_CONTROLLER_ROLE) {
-        _burn(_from, _amount);
-        emit ForceBurn(_msgSender(), _from, _amount);
+        _forceBurn(_from, _amount);
     }
 
     /**
@@ -91,16 +85,9 @@ abstract contract ERC203643Controller is
         uint256[] calldata _amounts
     ) external override whenNotPaused onlyRole(_CONTROLLER_ROLE) {
         uint256 userAddressesLength = _userAddresses.length;
-        uint256 amountsLength = _amounts.length;
-        require(
-            userAddressesLength == amountsLength,
-            NotSameLengthArray(userAddressesLength, amountsLength)
-        );
-
-        uint256 length = userAddressesLength;
-        for (uint256 i; i < length; ) {
-            _burn(_userAddresses[i], _amounts[i]);
-            emit ForceBurn(_msgSender(), _userAddresses[i], _amounts[i]);
+        _checkSameLength(userAddressesLength, _amounts.length);
+        for (uint256 i; i < userAddressesLength; ) {
+            _forceBurn(_userAddresses[i], _amounts[i]);
             unchecked {
                 ++i;
             }
@@ -134,22 +121,12 @@ abstract contract ERC203643Controller is
         address[] calldata _toList,
         uint256[] calldata _amounts
     ) external override whenNotPaused onlyRole(_CONTROLLER_ROLE) {
-        uint256 toListLength = _toList.length;
-        uint256 amountsLength = _amounts.length;
-        require(
-            toListLength == amountsLength,
-            NotSameLengthArray(toListLength, amountsLength)
-        );
-
-        uint256 length = _fromList.length;
-        for (uint256 i; i < length; ) {
-            _transfer(_fromList[i], _toList[i], _amounts[i]);
-            emit ForceTransfer(
-                _msgSender(),
-                _fromList[i],
-                _toList[i],
-                _amounts[i]
-            );
+        uint256 fromListLength = _fromList.length;
+        _checkSameLength(fromListLength, _toList.length);
+        _checkSameLength(fromListLength, _amounts.length);
+        address sender = _msgSender();
+        for (uint256 i; i < fromListLength; ) {
+            _forceTransfer(sender, _fromList[i], _toList[i], _amounts[i]);
             unchecked {
                 ++i;
             }

@@ -24,12 +24,6 @@ interface IERC203643Capped {
     // --- Custom Errors ---
 
     /**
-     * @notice Thrown when an invalid token cap of zero is provided.
-     * @dev Ensures that the token supply cap must always be greater than zero.
-     */
-    error CapIsZero();
-
-    /**
      * @notice Thrown when an invalid token cap of less than the total supply is provided.
      * @dev Ensures that the token supply cap must always be greater than the total supply.
      */

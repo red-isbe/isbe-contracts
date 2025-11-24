@@ -538,6 +538,18 @@ _Calculates the total amount from an array and validates that the sender has suf
 | ----------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | totalAmount | uint256 | The total sum of all amounts in the array Requirements: - The sender must have a balance greater than or equal to the total amount Reverts: - {TransferAmountExceedsBalance} if sender has insufficient balance |
 
+### \_calculateTotalAmount
+
+```solidity
+function _calculateTotalAmount(uint256[] _amounts) internal pure returns (uint256 totalAmount_)
+```
+
+### \_checkTransferAmountExceedsBalance
+
+```solidity
+function _checkTransferAmountExceedsBalance(uint256 _balance, uint256 _totalAmount) internal pure
+```
+
 ---
 
 ## IERC20Isbe

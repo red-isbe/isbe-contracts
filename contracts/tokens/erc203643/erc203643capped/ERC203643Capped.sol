@@ -30,7 +30,7 @@ abstract contract ERC203643Capped is IERC203643Capped, ERC203643InternalCommon {
             _ERC203643_CAPPED_RESOLVER_KEY,
             _ERC203643_CAPPED_FACET_VERSION
         )
-        checkNewCap(_newCap)
+        validateNewCap(_newCap)
     {
         _setCap(_newCap);
         emit CapSet(_msgSender(), _newCap);
@@ -52,7 +52,7 @@ abstract contract ERC203643Capped is IERC203643Capped, ERC203643InternalCommon {
     function mint(
         address _to,
         uint256 _amount
-    ) external checkCap(_amount) whenNotPaused onlyRole(_MINTER_ROLE) {
+    ) external validateCap(_amount) whenNotPaused onlyRole(_MINTER_ROLE) {
         _mint(_to, _amount);
     }
 
@@ -88,18 +88,9 @@ abstract contract ERC203643Capped is IERC203643Capped, ERC203643InternalCommon {
         uint256[] calldata _amounts
     ) external override whenNotPaused onlyRole(_MINTER_ROLE) {
         uint256 toListLength = _toList.length;
-        uint256 amountsLength = _amounts.length;
-        require(
-            toListLength == amountsLength,
-            NotSameLengthArray(toListLength, amountsLength)
-        );
-
-        // Validate total amount against cap
-        _checkTotalAmount(_amounts);
-
-        // Perform individual mints
-        uint256 toListLengthCached = toListLength;
-        for (uint256 i; i < toListLengthCached; ) {
+        _checkSameLength(toListLength, _amounts.length);
+        _checkCapExceeded(_calculateTotalAmount(_amounts));
+        for (uint256 i; i < toListLength; ) {
             _mint(_toList[i], _amounts[i]);
             unchecked {
                 ++i;
@@ -115,7 +106,7 @@ abstract contract ERC203643Capped is IERC203643Capped, ERC203643InternalCommon {
      */
     function setCap(
         uint256 _newCap
-    ) external checkNewCap(_newCap) whenNotPaused onlyRole(_CAP_ROLE) {
+    ) external validateNewCap(_newCap) whenNotPaused onlyRole(_CAP_ROLE) {
         _setCap(_newCap);
         emit CapSet(_msgSender(), _newCap);
     }

@@ -264,7 +264,7 @@ describe('BasicWhitelist', function () {
             )
                 .to.be.revertedWithCustomError(
                     basicWhitelistFacet,
-                    'AddressAlreadyWhitelisted'
+                    'AlreadyWhitelisted'
                 )
                 .withArgs(aliceAddress)
         })
@@ -319,7 +319,7 @@ describe('BasicWhitelist', function () {
             )
                 .to.be.revertedWithCustomError(
                     basicWhitelistFacet,
-                    'AddressNotWhitelisted'
+                    'NotWhitelisted'
                 )
                 .withArgs(bobAddress)
         })
