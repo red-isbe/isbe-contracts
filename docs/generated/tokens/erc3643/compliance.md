@@ -307,29 +307,6 @@ _Internal hook called after tokens are burned._
 | ---- | ---- | ------------------------------------------- |
 | [0]  | bool | Always returns true for MaxBalance feature. |
 
-### \_canTransfer
-
-```solidity
-function _canTransfer(address _from, address _to, uint256 _amount) internal view returns (bool)
-```
-
-_Internal view function to check compliance before a transfer.
-Delegates to MaxBalance feature if enabled._
-
-#### Parameters
-
-| Name     | Type    | Description                       |
-| -------- | ------- | --------------------------------- |
-| \_from   | address | The address of the sender.        |
-| \_to     | address | The address of the receiver.      |
-| \_amount | uint256 | The amount of tokens to transfer. |
-
-#### Return Values
-
-| Name | Type | Description                                         |
-| ---- | ---- | --------------------------------------------------- |
-| [0]  | bool | True if the transfer is compliant, false otherwise. |
-
 ### \_isMaxBalanceEnabled
 
 ```solidity
@@ -357,6 +334,29 @@ _Internal view function to check if Daily/Monthly Limits feature is enabled._
 | Name | Type | Description                                                |
 | ---- | ---- | ---------------------------------------------------------- |
 | [0]  | bool | True if Daily/Monthly Limits are enabled, false otherwise. |
+
+### \_canTransfer
+
+```solidity
+function _canTransfer(address _from, address _to, uint256 _amount) internal view returns (bool)
+```
+
+_Internal view function to check compliance before a transfer.
+Delegates to MaxBalance feature if enabled._
+
+#### Parameters
+
+| Name     | Type    | Description                       |
+| -------- | ------- | --------------------------------- |
+| \_from   | address | The address of the sender.        |
+| \_to     | address | The address of the receiver.      |
+| \_amount | uint256 | The amount of tokens to transfer. |
+
+#### Return Values
+
+| Name | Type | Description                                         |
+| ---- | ---- | --------------------------------------------------- |
+| [0]  | bool | True if the transfer is compliant, false otherwise. |
 
 ---
 

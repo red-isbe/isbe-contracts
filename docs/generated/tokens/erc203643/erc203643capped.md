@@ -191,10 +191,10 @@ struct ERC203643CappedStorage {
 }
 ```
 
-### checkNewCap
+### validateNewCap
 
 ```solidity
-modifier checkNewCap(uint256 _newCap)
+modifier validateNewCap(uint256 _newCap)
 ```
 
 _Modifier to validate a new cap value before setting it_
@@ -205,10 +205,10 @@ _Modifier to validate a new cap value before setting it_
 | -------- | ------- | ----------------------------- |
 | \_newCap | uint256 | The new cap value to validate |
 
-### checkCap
+### validateCap
 
 ```solidity
-modifier checkCap(uint256 _amount)
+modifier validateCap(uint256 _amount)
 ```
 
 _Modifier to check that minting amount doesn't exceed the cap_
@@ -247,10 +247,10 @@ _Internal function to get the current supply cap_
 | ---- | ------- | ------------------------------ |
 | [0]  | uint256 | The current maximum supply cap |
 
-### \_checkNewCap
+### \_checkNewCapIsLessThanTotalSupply
 
 ```solidity
-function _checkNewCap(uint256 _newCap) internal view virtual
+function _checkNewCapIsLessThanTotalSupply(uint256 _newCap) internal view virtual
 ```
 
 _Internal function to validate a new cap value_
@@ -261,10 +261,10 @@ _Internal function to validate a new cap value_
 | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | \_newCap | uint256 | The new cap value to validate Requirements: - New cap must be greater than zero - New cap must be >= current total supply Reverts: - {CapIsZero} if `_newCap` is zero - {NewCapIsLessThanTotalSupply} if `_newCap` is less than current total supply |
 
-### \_checkCap
+### \_checkCapExceeded
 
 ```solidity
-function _checkCap(uint256 _amount) internal view virtual
+function _checkCapExceeded(uint256 _amount) internal view
 ```
 
 _Internal function to check that an amount doesn't exceed the cap when added to current supply_
@@ -274,26 +274,6 @@ _Internal function to check that an amount doesn't exceed the cap when added to 
 | Name     | Type    | Description                                                                                                                                                      |
 | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | \_amount | uint256 | The amount to check against the cap Requirements: - Current supply + amount must be <= cap Reverts: - {CapExceeded} if the operation would exceed the supply cap |
-
-### \_checkTotalAmount
-
-```solidity
-function _checkTotalAmount(uint256[] _amounts) internal view returns (uint256 totalAmount)
-```
-
-_Calculates the total amount from an array and validates it against the cap_
-
-#### Parameters
-
-| Name      | Type      | Description             |
-| --------- | --------- | ----------------------- |
-| \_amounts | uint256[] | Array of amounts to sum |
-
-#### Return Values
-
-| Name        | Type    | Description                                                                                                                                                                                 |
-| ----------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| totalAmount | uint256 | The total sum of all amounts in the array Requirements: - The total supply + total amount must not exceed the cap Reverts: - {CapExceeded} if the batch minting would exceed the supply cap |
 
 ---
 
@@ -323,16 +303,6 @@ _Should be triggered when `initializeCap` or `setCap` sets the supply cap._
 | -------- | ------- | ---------------------------------- |
 | operator | address | The account that set the cap.      |
 | newCap   | uint256 | The value of the token supply cap. |
-
-### CapIsZero
-
-```solidity
-error CapIsZero()
-```
-
-Thrown when an invalid token cap of zero is provided.
-
-_Ensures that the token supply cap must always be greater than zero._
 
 ### NewCapIsLessThanTotalSupply
 

@@ -535,10 +535,7 @@ describe('ERC3643 Token', function () {
                     erc3643
                         .connect(owner)
                         .batchSetAddressFrozen(addresses, freezeStates)
-                ).to.be.revertedWithCustomError(
-                    erc20Facet,
-                    'NotSameLengthArray'
-                )
+                ).to.be.revertedWithCustomError(erc20Facet, 'NotSameLength')
             })
 
             it('GIVEN empty arrays WHEN batchSetAddressFrozen THEN succeeds without operations', async () => {
@@ -701,10 +698,7 @@ describe('ERC3643 Token', function () {
                             [aliceAddress, bobAddress],
                             ['100']
                         )
-                ).to.be.revertedWithCustomError(
-                    erc20Facet,
-                    'NotSameLengthArray'
-                )
+                ).to.be.revertedWithCustomError(erc20Facet, 'NotSameLength')
             })
 
             it('GIVEN empty arrays WHEN batchFreezePartialTokens THEN succeeds without operations', async () => {
@@ -884,10 +878,7 @@ describe('ERC3643 Token', function () {
                             [aliceAddress, bobAddress],
                             ['100']
                         )
-                ).to.be.revertedWithCustomError(
-                    erc20Facet,
-                    'NotSameLengthArray'
-                )
+                ).to.be.revertedWithCustomError(erc20Facet, 'NotSameLength')
             })
 
             it('GIVEN empty arrays WHEN batchUnfreezePartialTokens THEN succeeds without operations', async () => {
@@ -1609,7 +1600,7 @@ describe('ERC3643 Token', function () {
                                 )
                         ).to.be.revertedWithCustomError(
                             erc20Facet,
-                            'NotSameLengthArray'
+                            'NotSameLength'
                         )
                     })
 
@@ -1887,7 +1878,7 @@ describe('ERC3643 Token', function () {
                                 )
                         ).to.be.revertedWithCustomError(
                             erc20Facet,
-                            'NotSameLengthArray'
+                            'NotSameLength'
                         )
                     })
 
@@ -1902,7 +1893,7 @@ describe('ERC3643 Token', function () {
                                 )
                         ).to.be.revertedWithCustomError(
                             erc20Facet,
-                            'NotSameLengthArray'
+                            'NotSameLength'
                         )
                     })
 
@@ -3345,7 +3336,7 @@ describe('ERC3643 Token', function () {
                                 .batchMint(addresses, amounts)
                         ).to.be.revertedWithCustomError(
                             erc20Facet,
-                            'NotSameLengthArray'
+                            'NotSameLength'
                         )
                     })
 
@@ -4208,7 +4199,7 @@ describe('ERC3643 Token', function () {
                         )
                             .to.be.revertedWithCustomError(
                                 erc3643,
-                                'RecipientNotWhitelisted'
+                                'NotWhitelisted'
                             )
                             .withArgs(aliceAddress)
                     })
@@ -4278,7 +4269,7 @@ describe('ERC3643 Token', function () {
                         )
                             .to.be.revertedWithCustomError(
                                 erc3643,
-                                'RecipientNotWhitelisted'
+                                'NotWhitelisted'
                             )
                             .withArgs(aliceAddress)
                     })
@@ -4707,7 +4698,7 @@ describe('ERC3643 Token', function () {
                         )
                             .to.be.revertedWithCustomError(
                                 erc3643,
-                                'RecipientNotWhitelisted'
+                                'NotWhitelisted'
                             )
                             .withArgs(bobAddress)
                     })
@@ -4768,7 +4759,7 @@ describe('ERC3643 Token', function () {
                         )
                             .to.be.revertedWithCustomError(
                                 erc3643,
-                                'RecipientNotWhitelisted'
+                                'NotWhitelisted'
                             )
                             .withArgs(bobAddress)
                     })
@@ -4822,7 +4813,7 @@ describe('ERC3643 Token', function () {
                         )
                             .to.be.revertedWithCustomError(
                                 erc3643,
-                                'RecipientNotWhitelisted'
+                                'NotWhitelisted'
                             )
                             .withArgs(charlieAddress)
                     })
@@ -4938,14 +4929,14 @@ describe('ERC3643 Token', function () {
                 })
 
                 describe('batchTransfer', () => {
-                    it('GIVEN ERC3643 mode WHEN arrays length mismatch THEN reverts with NotSameLengthArray', async () => {
+                    it('GIVEN ERC3643 mode WHEN arrays length mismatch THEN reverts with NotSameLength', async () => {
                         await expect(
                             erc20Facet
                                 .connect(alice)
                                 .batchTransfer([bobAddress], [100n, 200n])
                         ).to.be.revertedWithCustomError(
                             erc20Facet,
-                            'NotSameLengthArray'
+                            'NotSameLength'
                         )
                     })
 
@@ -5720,25 +5711,25 @@ describe('ERC3643 Token', function () {
                 })
 
                 describe('Input Validation', () => {
-                    it('GIVEN zero lost wallet WHEN recoveryAddress THEN reverts with InvalidLostWallet', async () => {
+                    it('GIVEN zero lost wallet WHEN recoveryAddress THEN reverts with AddressZero', async () => {
                         await expect(
                             erc3643
                                 .connect(owner)
                                 .recoveryAddress(ZeroAddress, bobAddress)
                         ).to.be.revertedWithCustomError(
-                            erc3643,
-                            'InvalidLostWallet'
+                            erc20Facet,
+                            'AddressZero'
                         )
                     })
 
-                    it('GIVEN zero new wallet WHEN recoveryAddress THEN reverts with InvalidNewWallet', async () => {
+                    it('GIVEN zero new wallet WHEN recoveryAddress THEN reverts with AddressZero', async () => {
                         await expect(
                             erc3643
                                 .connect(owner)
                                 .recoveryAddress(aliceAddress, ZeroAddress)
                         ).to.be.revertedWithCustomError(
-                            erc3643,
-                            'InvalidNewWallet'
+                            erc20Facet,
+                            'AddressZero'
                         )
                     })
 
@@ -8115,12 +8106,6 @@ describe('ERC3643 Token', function () {
                 const tx = await erc20Facet
                     .connect(alice)
                     .transfer(bobAddress, 500n)
-
-                // Debug: log addresses
-
-                console.log('aliceAddress', aliceAddress)
-
-                console.log('bobAddress', bobAddress)
 
                 // Verify the coverage hook event was emitted
                 await expect(tx)

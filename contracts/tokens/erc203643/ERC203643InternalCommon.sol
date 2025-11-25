@@ -44,19 +44,17 @@ abstract contract ERC203643InternalCommon is
         address _from,
         address _to,
         uint256 _amount
-    ) internal virtual override {
+    ) internal override {
         // Mint operation
         if (_from == address(0)) {
-            _handleMintOperation(_from, _to, _amount);
+            return _handleMintOperation(_to, _amount);
         }
         // Burn operation
-        else if (_to == address(0)) {
-            _handleBurnOperation(_from, _amount);
+        if (_to == address(0)) {
+            return _handleBurnOperation(_from, _amount);
         }
         // Transfer operation
-        else {
-            _handleTransferOperation(_from, _to, _amount);
-        }
+        _handleTransferOperation(_from, _to, _amount);
     }
 
     // =======================
@@ -65,35 +63,26 @@ abstract contract ERC203643InternalCommon is
 
     /**
      * @dev Handles mint operations, including snapshot updates and compliance checks.
-     * @param _from The address initiating the mint (always address(0)).
      * @param _to The address receiving the minted tokens.
      * @param _amount The amount of tokens being minted.
      *
      * In ERC-3643 mode, compliance hooks may restrict minting.
      * In ERC-20 mode, these hooks are inert and always pass.
      */
-    function _handleMintOperation(
-        address _from,
-        address _to,
-        uint256 _amount
-    ) internal {
-        require(
-            _isWhitelisted(_to),
-            IBasicWhitelist.RecipientNotWhitelisted(_to)
-        );
+    function _handleMintOperation(address _to, uint256 _amount) internal {
+        _checkNotWhitelisted(_to);
         _updateAccountSnapshot(_to);
         _updateTotalSupplySnapshot();
 
         // Compliance hooks (ERC-3643 mode only). By pass by _COMPLIANCE_ROLE.
         if (_hasRole(_COMPLIANCE_ROLE, _msgSender())) {
             return; // Coverage tracking: explicit handling to ensure instrumentation detection
-        } else {
-            require(
-                _canTransfer(_from, _to, _amount),
-                ICompliance.MintViolatesComplianceRules()
-            );
-            _created(_to, _amount);
         }
+        require(
+            _canTransfer(address(0), _to, _amount),
+            ICompliance.MintViolatesComplianceRules()
+        );
+        _created(_to, _amount);
     }
 
     // =======================
@@ -148,15 +137,11 @@ abstract contract ERC203643InternalCommon is
         address _to,
         uint256 _amount
     ) internal {
-        require(
-            _isWhitelisted(_to),
-            IBasicWhitelist.RecipientNotWhitelisted(_to)
-        );
+        require(_isWhitelisted(_to), IBasicWhitelist.NotWhitelisted(_to));
         _updateAccountSnapshot(_from);
         _updateAccountSnapshot(_to);
 
-        uint256 balance = _balanceOf(_from);
-        require(balance >= _amount, IERC20Isbe.TransferAmountExceedsBalance());
+        _checkTransferAmountExceedsBalance(_balanceOf(_from), _amount);
 
         // Compliance hooks (ERC-3643 mode only). By pass by _COMPLIANCE_ROLE.
         if (!_hasRole(_COMPLIANCE_ROLE, _msgSender())) {

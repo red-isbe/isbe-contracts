@@ -25,6 +25,16 @@ abstract contract BasicWhitelistInternal is DidDocumentDetailedInternal {
         bool enabled;
     }
 
+    modifier onlyWhitelisted(address _account) {
+        _checkNotWhitelisted(_account);
+        _;
+    }
+
+    modifier onlyNotWhitelisted(address _account) {
+        _checkAlreadyWhitelisted(_account);
+        _;
+    }
+
     /**
      * @notice Initializes the whitelist with an enabled/disabled state
      * @dev Internal function to be called during contract initialization
@@ -62,12 +72,7 @@ abstract contract BasicWhitelistInternal is DidDocumentDetailedInternal {
      * @param _account The address to add to the whitelist
      */
     function _addToWhitelist(address _account) internal {
-        BasicWhitelistStorage storage $ = _basicWhitelistStorage();
-        if ($.whitelisted[_account]) {
-            revert IBasicWhitelist.AddressAlreadyWhitelisted(_account);
-        }
-        $.whitelisted[_account] = true;
-        emit IBasicWhitelist.AddedToWhitelist(_account);
+        _basicWhitelistStorage().whitelisted[_account] = true;
     }
 
     /**
@@ -76,12 +81,7 @@ abstract contract BasicWhitelistInternal is DidDocumentDetailedInternal {
      * @param _account The address to remove from the whitelist
      */
     function _removeFromWhitelist(address _account) internal {
-        BasicWhitelistStorage storage $ = _basicWhitelistStorage();
-        if (!$.whitelisted[_account]) {
-            revert IBasicWhitelist.AddressNotWhitelisted(_account);
-        }
-        $.whitelisted[_account] = false;
-        emit IBasicWhitelist.RemovedFromWhitelist(_account);
+        _basicWhitelistStorage().whitelisted[_account] = false;
     }
 
     /**
@@ -108,6 +108,20 @@ abstract contract BasicWhitelistInternal is DidDocumentDetailedInternal {
      */
     function _isWhitelistEnabled() internal view returns (bool enabled_) {
         enabled_ = _basicWhitelistStorage().enabled;
+    }
+
+    function _checkNotWhitelisted(address _account) internal view {
+        require(
+            _isWhitelisted(_account),
+            IBasicWhitelist.NotWhitelisted(_account)
+        );
+    }
+
+    function _checkAlreadyWhitelisted(address _account) internal view {
+        require(
+            !_isWhitelisted(_account),
+            IBasicWhitelist.AlreadyWhitelisted(_account)
+        );
     }
 
     /**

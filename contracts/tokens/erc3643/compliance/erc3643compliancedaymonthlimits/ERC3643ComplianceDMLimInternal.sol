@@ -48,9 +48,7 @@ abstract contract ERC3643ComplianceDMLimInternal is
      * @param _dailyLimit The new daily limit value to assign.
      */
     function _setDailyLimit(uint256 _dailyLimit) internal {
-        ERC3643ComplianceDMLimStorage
-            storage $ = _erc3643ComplianceDMLimStorage();
-        $.dailyLimit = _dailyLimit;
+        _erc3643ComplianceDMLimStorage().dailyLimit = _dailyLimit;
     }
 
     /**
@@ -58,9 +56,7 @@ abstract contract ERC3643ComplianceDMLimInternal is
      * @param _monthlyLimit The new monthly limit value to assign.
      */
     function _setMonthlyLimit(uint256 _monthlyLimit) internal {
-        ERC3643ComplianceDMLimStorage
-            storage $ = _erc3643ComplianceDMLimStorage();
-        $.monthlyLimit = _monthlyLimit;
+        _erc3643ComplianceDMLimStorage().monthlyLimit = _monthlyLimit;
     }
 
     /**
@@ -74,21 +70,21 @@ abstract contract ERC3643ComplianceDMLimInternal is
         address _from,
         uint256 _amount
     ) internal {
-        TransferCounter storage counter = _getTransferCounter(_from);
+        TransferCounter storage transferCounter = _getTransferCounter(_from);
 
         // Reset timers if needed
         if (_isDayFinished(_from)) {
-            counter.dailyTimer = block.timestamp + 1 days;
-            counter.dailyCount = 0;
+            transferCounter.dailyTimer = _blockTimestamp() + 1 days;
+            transferCounter.dailyCount = 0;
         }
         if (_isMonthFinished(_from)) {
-            counter.monthlyTimer = block.timestamp + 30 days;
-            counter.monthlyCount = 0;
+            transferCounter.monthlyTimer = _blockTimestamp() + 30 days;
+            transferCounter.monthlyCount = 0;
         }
 
         // Update counters (los límites ya han sido validados en compliance)
-        counter.dailyCount += _amount;
-        counter.monthlyCount += _amount;
+        transferCounter.dailyCount += _amount;
+        transferCounter.monthlyCount += _amount;
 
         emit IERC3643ComplianceDMLim.DayMonthLimitsTransferHook(_from, _amount);
     }
@@ -149,9 +145,7 @@ abstract contract ERC3643ComplianceDMLimInternal is
     function _getTransferCounter(
         address _account
     ) internal view returns (TransferCounter storage counter) {
-        ERC3643ComplianceDMLimStorage
-            storage $ = _erc3643ComplianceDMLimStorage();
-        return $.usersCounters[_account];
+        return _erc3643ComplianceDMLimStorage().usersCounters[_account];
     }
 
     /**
@@ -164,38 +158,36 @@ abstract contract ERC3643ComplianceDMLimInternal is
         address _from,
         uint256 _value
     ) internal view returns (bool) {
-        if (_from != address(0)) {
-            TransferCounter storage counter = _getTransferCounter(_from);
+        if (_from == address(0)) return true;
 
-            uint256 _dailyLimit = _getDailyLimit();
-            uint256 _monthlyLimit = _getMonthlyLimit();
+        uint256 _dailyLimit = _getDailyLimit();
 
-            // Si el valor excede el daily limit, rechaza
-            if (_value > _dailyLimit) {
-                return false;
-            }
-
-            // Si el día no ha terminado, chequea los contadores diarios y mensuales
-            if (
-                !_isDayFinished(_from) &&
-                ((counter.dailyCount + _value > _dailyLimit) ||
-                    (counter.monthlyCount + _value > _monthlyLimit))
-            ) {
-                return false;
-            }
-
-            // Si el día ha terminado, chequea el contador mensual y si el mes ha terminado
-            if (
-                _isDayFinished(_from) &&
-                (_value + counter.monthlyCount > _monthlyLimit)
-            ) {
-                return _isMonthFinished(_from);
-            }
-
-            return true;
-        } else {
-            return true;
+        // If the value exceeds the daily limit, reject
+        if (_value > _dailyLimit) {
+            return false;
         }
+
+        TransferCounter storage transferCounter = _getTransferCounter(_from);
+        uint256 _monthlyLimit = _getMonthlyLimit();
+
+        // If the day has not finished, check the daily and monthly counters
+        if (
+            !_isDayFinished(_from) &&
+            ((transferCounter.dailyCount + _value > _dailyLimit) ||
+                (transferCounter.monthlyCount + _value > _monthlyLimit))
+        ) {
+            return false;
+        }
+
+        // If the day has finished, check the monthly counter and if the month has finished
+        if (
+            _isDayFinished(_from) &&
+            (_value + transferCounter.monthlyCount > _monthlyLimit)
+        ) {
+            return _isMonthFinished(_from);
+        }
+
+        return true;
     }
 
     /**
@@ -207,7 +199,7 @@ abstract contract ERC3643ComplianceDMLimInternal is
         return
             _erc3643ComplianceDMLimStorage()
                 .usersCounters[_account]
-                .dailyTimer <= block.timestamp;
+                .dailyTimer <= _blockTimestamp();
     }
 
     /**
@@ -219,7 +211,7 @@ abstract contract ERC3643ComplianceDMLimInternal is
         return
             _erc3643ComplianceDMLimStorage()
                 .usersCounters[_account]
-                .monthlyTimer <= block.timestamp;
+                .monthlyTimer <= _blockTimestamp();
     }
 
     /**

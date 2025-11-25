@@ -49,7 +49,8 @@ abstract contract ERC3643FreezeInternal is DidDocumentDetailedInternal {
         address _userAddress,
         uint256 _amount
     ) internal {
-        uint256 frozen = _erc3643FreezeStorage().frozenTokens[_userAddress];
+        ERC3643FreezeStorage storage $ = _erc3643FreezeStorage();
+        uint256 frozen = $.frozenTokens[_userAddress];
 
         require(
             frozen >= _amount,
@@ -60,7 +61,7 @@ abstract contract ERC3643FreezeInternal is DidDocumentDetailedInternal {
             )
         );
 
-        _erc3643FreezeStorage().frozenTokens[_userAddress] -= _amount;
+        $.frozenTokens[_userAddress] -= _amount;
     }
 
     /**

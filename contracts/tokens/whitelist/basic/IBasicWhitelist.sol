@@ -37,19 +37,13 @@ interface IBasicWhitelist {
      * @notice Error thrown when attempting to add an address that is already whitelisted
      * @param account The address that is already whitelisted
      */
-    error AddressAlreadyWhitelisted(address account);
+    error AlreadyWhitelisted(address account);
 
     /**
      * @notice Error thrown when attempting to remove an address that is not whitelisted
      * @param account The address that is not in the whitelist
      */
-    error AddressNotWhitelisted(address account);
-
-    /**
-     * @notice Error thrown when a transfer is attempted to a non-whitelisted address
-     * @param account The address that is not whitelisted
-     */
-    error RecipientNotWhitelisted(address account);
+    error NotWhitelisted(address account);
 
     /**
      * @notice Initializes the whitelist with an initial enabled/disabled state

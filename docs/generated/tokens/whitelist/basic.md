@@ -224,6 +224,18 @@ struct BasicWhitelistStorage {
 }
 ```
 
+### onlyWhitelisted
+
+```solidity
+modifier onlyWhitelisted(address _account)
+```
+
+### onlyNotWhitelisted
+
+```solidity
+modifier onlyNotWhitelisted(address _account)
+```
+
 ### \_initialize
 
 ```solidity
@@ -330,6 +342,18 @@ _Internal view function_
 | --------- | ---- | --------------------------------------------- |
 | enabled\_ | bool | True if whitelist is enabled, false otherwise |
 
+### \_checkNotWhitelisted
+
+```solidity
+function _checkNotWhitelisted(address _account) internal view
+```
+
+### \_checkAlreadyWhitelisted
+
+```solidity
+function _checkAlreadyWhitelisted(address _account) internal view
+```
+
 ---
 
 ## IBasicWhitelist
@@ -395,10 +419,10 @@ Emitted when an address is removed from the whitelist
 | ------- | ------- | ---------------------------- |
 | account | address | The address that was removed |
 
-### AddressAlreadyWhitelisted
+### AlreadyWhitelisted
 
 ```solidity
-error AddressAlreadyWhitelisted(address account)
+error AlreadyWhitelisted(address account)
 ```
 
 Error thrown when attempting to add an address that is already whitelisted
@@ -409,10 +433,10 @@ Error thrown when attempting to add an address that is already whitelisted
 | ------- | ------- | --------------------------------------- |
 | account | address | The address that is already whitelisted |
 
-### AddressNotWhitelisted
+### NotWhitelisted
 
 ```solidity
-error AddressNotWhitelisted(address account)
+error NotWhitelisted(address account)
 ```
 
 Error thrown when attempting to remove an address that is not whitelisted
@@ -422,20 +446,6 @@ Error thrown when attempting to remove an address that is not whitelisted
 | Name    | Type    | Description                              |
 | ------- | ------- | ---------------------------------------- |
 | account | address | The address that is not in the whitelist |
-
-### RecipientNotWhitelisted
-
-```solidity
-error RecipientNotWhitelisted(address account)
-```
-
-Error thrown when a transfer is attempted to a non-whitelisted address
-
-#### Parameters
-
-| Name    | Type    | Description                         |
-| ------- | ------- | ----------------------------------- |
-| account | address | The address that is not whitelisted |
 
 ### initializeBasicWhitelist
 

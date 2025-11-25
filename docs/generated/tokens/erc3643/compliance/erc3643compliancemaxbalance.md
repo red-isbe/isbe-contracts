@@ -300,22 +300,6 @@ Emitted when tokens are destroyed and checked against the max balance restrictio
 | from   | address | The address from which tokens are destroyed. |
 | amount | uint256 | The amount of tokens destroyed.              |
 
-### MaxBalanceExceeded
-
-```solidity
-error MaxBalanceExceeded(address to, uint256 attemptedBalance, uint256 maxBalance)
-```
-
-Error emitted when a transfer would exceed the max balance.
-
-#### Parameters
-
-| Name             | Type    | Description                         |
-| ---------------- | ------- | ----------------------------------- |
-| to               | address | The address of the receiver.        |
-| attemptedBalance | uint256 | The balance that would be exceeded. |
-| maxBalance       | uint256 | The maximum allowed balance.        |
-
 ### initializeERC3643ComplianceMaxBalance
 
 ```solidity

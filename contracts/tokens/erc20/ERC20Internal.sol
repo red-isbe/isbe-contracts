@@ -40,8 +40,7 @@ abstract contract ERC20Internal is DidDocumentDetailedInternal {
      * @param _newName The new name to assign to the token.
      */
     function _setName(string memory _newName) internal {
-        ERC20Storage storage $ = _erc20Storage();
-        $.name = _newName;
+        _erc20Storage().name = _newName;
     }
 
     /**
@@ -50,8 +49,7 @@ abstract contract ERC20Internal is DidDocumentDetailedInternal {
      * @param _newSymbol The new symbol to assign to the token.
      */
     function _setSymbol(string memory _newSymbol) internal {
-        ERC20Storage storage $ = _erc20Storage();
-        $.symbol = _newSymbol;
+        _erc20Storage().symbol = _newSymbol;
     }
 
     /**
@@ -74,10 +72,9 @@ abstract contract ERC20Internal is DidDocumentDetailedInternal {
         uint256 _amount
     ) internal virtual addressIsNotZero(_from) addressIsNotZero(_to) {
         _beforeTokenTransfer(_from, _to, _amount);
-        ERC20Storage storage $ = _erc20Storage();
-        uint256 fromBalance = $.balances[_from];
         unchecked {
-            $.balances[_from] = fromBalance - _amount;
+            ERC20Storage storage $ = _erc20Storage();
+            $.balances[_from] -= _amount;
             // Overflow not possible: the sum of all balances is capped by totalSupply, and the sum is preserved by
             // decrementing then incrementing.
             $.balances[_to] += _amount;
@@ -131,11 +128,9 @@ abstract contract ERC20Internal is DidDocumentDetailedInternal {
     ) internal virtual addressIsNotZero(_account) {
         _beforeTokenTransfer(_account, address(0), _amount);
 
-        ERC20Storage storage $ = _erc20Storage();
-        uint256 accountBalance = $.balances[_account];
-
         unchecked {
-            $.balances[_account] = accountBalance - _amount;
+            ERC20Storage storage $ = _erc20Storage();
+            $.balances[_account] -= _amount;
             // Overflow not possible: amount <= accountBalance <= totalSupply.
             $.totalSupply -= _amount;
         }
@@ -186,9 +181,11 @@ abstract contract ERC20Internal is DidDocumentDetailedInternal {
             currentAllowance >= _amount,
             IERC20Isbe.InsufficientAllowance()
         );
+        uint256 amount;
         unchecked {
-            _approve(_owner, _spender, currentAllowance - _amount);
+            amount = currentAllowance - _amount;
         }
+        _approve(_owner, _spender, amount);
     }
 
     // solhint-disable no-empty-blocks
@@ -276,18 +273,30 @@ abstract contract ERC20Internal is DidDocumentDetailedInternal {
         address _from,
         uint256[] calldata _amounts
     ) internal view returns (uint256 totalAmount) {
+        totalAmount = _calculateTotalAmount(_amounts);
+        _checkTransferAmountExceedsBalance(_balanceOf(_from), totalAmount);
+    }
+
+    function _calculateTotalAmount(
+        uint256[] calldata _amounts
+    ) internal pure returns (uint256 totalAmount_) {
         // Calculate total amount for balance validation
         uint256 amountsLength = _amounts.length;
         for (uint256 i; i < amountsLength; ) {
+            // preventing overflow issues
+            totalAmount_ += _amounts[i];
             unchecked {
-                totalAmount += _amounts[i];
                 ++i;
             }
         }
+    }
 
-        // Check sender has sufficient balance for entire batch
+    function _checkTransferAmountExceedsBalance(
+        uint256 _balance,
+        uint256 _totalAmount
+    ) internal pure {
         require(
-            _balanceOf(_from) >= totalAmount,
+            _balance >= _totalAmount,
             IERC20Isbe.TransferAmountExceedsBalance()
         );
     }

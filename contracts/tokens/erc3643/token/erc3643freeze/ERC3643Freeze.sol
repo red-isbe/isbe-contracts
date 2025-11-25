@@ -29,8 +29,7 @@ abstract contract ERC3643Freeze is IERC3643Freeze, ERC203643InternalCommon {
         address _userAddress,
         bool _freeze
     ) external override onlyRole(_FREEZE_ROLE) whenNotPaused {
-        _setAddressFrozen(_userAddress, _freeze);
-        emit AddressFrozen(_userAddress, _freeze, _msgSender());
+        _setAndEmitAddressFrozen(_msgSender(), _userAddress, _freeze);
     }
 
     /**
@@ -50,8 +49,7 @@ abstract contract ERC3643Freeze is IERC3643Freeze, ERC203643InternalCommon {
         address _userAddress,
         uint256 _amount
     ) external override onlyRole(_FREEZE_ROLE) whenNotPaused {
-        _freezePartialTokens(_userAddress, _amount);
-        emit TokensFrozen(_userAddress, _amount);
+        _freezeAndEmitPartialTokens(_userAddress, _amount);
     }
 
     /**
@@ -71,8 +69,7 @@ abstract contract ERC3643Freeze is IERC3643Freeze, ERC203643InternalCommon {
         address _userAddress,
         uint256 _amount
     ) external override onlyRole(_FREEZE_ROLE) whenNotPaused {
-        _unfreezePartialTokens(_userAddress, _amount);
-        emit TokensUnfrozen(_userAddress, _amount);
+        _unfreezeAndEmmitPartialTokens(_userAddress, _amount);
     }
 
     /**
@@ -93,16 +90,10 @@ abstract contract ERC3643Freeze is IERC3643Freeze, ERC203643InternalCommon {
         bool[] calldata _freeze
     ) external override onlyRole(_FREEZE_ROLE) whenNotPaused {
         uint256 userAddressesLength = _userAddresses.length;
-        uint256 freezeLength = _freeze.length;
-        require(
-            userAddressesLength == freezeLength,
-            NotSameLengthArray(userAddressesLength, freezeLength)
-        );
-
-        uint256 length = userAddressesLength;
-        for (uint256 i; i < length; ) {
-            _setAddressFrozen(_userAddresses[i], _freeze[i]);
-            emit AddressFrozen(_userAddresses[i], _freeze[i], _msgSender());
+        _checkSameLength(userAddressesLength, _freeze.length);
+        address sender = _msgSender();
+        for (uint256 i; i < userAddressesLength; ) {
+            _setAndEmitAddressFrozen(sender, _userAddresses[i], _freeze[i]);
             unchecked {
                 ++i;
             }
@@ -127,16 +118,9 @@ abstract contract ERC3643Freeze is IERC3643Freeze, ERC203643InternalCommon {
         uint256[] calldata _amounts
     ) external override onlyRole(_FREEZE_ROLE) whenNotPaused {
         uint256 userAddressesLength = _userAddresses.length;
-        uint256 amountsLength = _amounts.length;
-        require(
-            userAddressesLength == amountsLength,
-            NotSameLengthArray(userAddressesLength, amountsLength)
-        );
-
-        uint256 length = userAddressesLength;
-        for (uint256 i; i < length; ) {
-            _freezePartialTokens(_userAddresses[i], _amounts[i]);
-            emit TokensFrozen(_userAddresses[i], _amounts[i]);
+        _checkSameLength(userAddressesLength, _amounts.length);
+        for (uint256 i; i < userAddressesLength; ) {
+            _freezeAndEmitPartialTokens(_userAddresses[i], _amounts[i]);
             unchecked {
                 ++i;
             }
@@ -161,16 +145,9 @@ abstract contract ERC3643Freeze is IERC3643Freeze, ERC203643InternalCommon {
         uint256[] calldata _amounts
     ) external override onlyRole(_FREEZE_ROLE) whenNotPaused {
         uint256 userAddressesLength = _userAddresses.length;
-        uint256 amountsLength = _amounts.length;
-        require(
-            userAddressesLength == amountsLength,
-            NotSameLengthArray(userAddressesLength, amountsLength)
-        );
-
-        uint256 length = userAddressesLength;
-        for (uint256 i; i < length; ) {
-            _unfreezePartialTokens(_userAddresses[i], _amounts[i]);
-            emit TokensUnfrozen(_userAddresses[i], _amounts[i]);
+        _checkSameLength(userAddressesLength, _amounts.length);
+        for (uint256 i; i < userAddressesLength; ) {
+            _unfreezeAndEmmitPartialTokens(_userAddresses[i], _amounts[i]);
             unchecked {
                 ++i;
             }
@@ -220,5 +197,30 @@ abstract contract ERC3643Freeze is IERC3643Freeze, ERC203643InternalCommon {
         uint256 interfacesLength = 1;
         interfaces_ = new bytes4[](interfacesLength);
         interfaces_[--interfacesLength] = type(IERC3643Freeze).interfaceId;
+    }
+
+    function _setAndEmitAddressFrozen(
+        address _sender,
+        address _userAddress,
+        bool _freeze
+    ) private {
+        _setAddressFrozen(_userAddress, _freeze);
+        emit AddressFrozen(_userAddress, _freeze, _sender);
+    }
+
+    function _freezeAndEmitPartialTokens(
+        address _userAddress,
+        uint256 _amount
+    ) private {
+        _freezePartialTokens(_userAddress, _amount);
+        emit TokensFrozen(_userAddress, _amount);
+    }
+
+    function _unfreezeAndEmmitPartialTokens(
+        address _userAddress,
+        uint256 _amount
+    ) private {
+        _unfreezePartialTokens(_userAddress, _amount);
+        emit TokensUnfrozen(_userAddress, _amount);
     }
 }

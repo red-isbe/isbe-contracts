@@ -89,20 +89,12 @@ abstract contract ERC20 is IERC20Isbe, ERC203643InternalCommon {
         uint256[] calldata _amounts
     ) external override whenNotPaused {
         uint256 toListLength = _toList.length;
-        uint256 amountsLength = _amounts.length;
-        require(
-            toListLength == amountsLength,
-            NotSameLengthArray(toListLength, amountsLength)
-        );
-
+        _checkSameLength(toListLength, _amounts.length);
         address from = _msgSender();
-
         // Validate total amount and sender balance
         _checkTotalAmount(from, _amounts);
-
         // Perform individual transfers
-        uint256 length = toListLength;
-        for (uint256 i; i < length; ) {
+        for (uint256 i; i < toListLength; ) {
             _transfer(from, _toList[i], _amounts[i]);
             unchecked {
                 ++i;
@@ -171,7 +163,11 @@ abstract contract ERC20 is IERC20Isbe, ERC203643InternalCommon {
         uint256 _addedValue
     ) external whenNotPaused returns (bool) {
         address owner = _msgSender();
-        _approve(owner, _spender, _allowance(owner, _spender) + _addedValue);
+        uint256 amount;
+        unchecked {
+            amount = _allowance(owner, _spender) + _addedValue;
+        }
+        _approve(owner, _spender, amount);
         return true;
     }
 
@@ -199,9 +195,11 @@ abstract contract ERC20 is IERC20Isbe, ERC203643InternalCommon {
             currentAllowance >= _subtractedValue,
             IERC20Isbe.DecreasedAllowanceBellowZero()
         );
+        uint256 amount;
         unchecked {
-            _approve(owner, _spender, currentAllowance - _subtractedValue);
+            amount = currentAllowance - _subtractedValue;
         }
+        _approve(owner, _spender, amount);
 
         return true;
     }
