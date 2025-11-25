@@ -5,8 +5,7 @@ export class pkmanagement {
     private privateKeys: string[] = [];
 
     constructor(
-        private templateFileR1: string,
-        private templateFileK1: string,
+        private templateFile: string,
         privateKeyFile: string
     ) {
         console.log(`pkmanagement initialized with private key file: ${privateKeyFile}`);
@@ -71,16 +70,16 @@ export class pkmanagement {
             }
 
             // Check if template file exists
-            if (!fs.existsSync(this.templateFileK1)) {
-                throw new Error(`Template file not found: ${this.templateFileK1}\nPlease ensure the file exists and the path is correct.`);
+            if (!fs.existsSync(this.templateFile)) {
+                throw new Error(`Template file not found: ${this.templateFile}\nPlease ensure the file exists and the path is correct.`);
             }
 
             // Read template file
             let templateContent: string;
             try {
-                templateContent = fs.readFileSync(this.templateFileK1, 'utf-8');
+                templateContent = fs.readFileSync(this.templateFile, 'utf-8');
             } catch (error) {
-                throw new Error(`Failed to read template file ${this.templateFileK1}: ${error.message}`);
+                throw new Error(`Failed to read template file ${this.templateFile}: ${error.message}`);
             }
 
             // Parse JSON template
@@ -88,12 +87,12 @@ export class pkmanagement {
             try {
                 genesisTemplate = JSON.parse(templateContent);
             } catch (error) {
-                throw new Error(`Template file ${this.templateFileK1} is not valid JSON: ${error.message}\nPlease ensure the file contains valid JSON data.`);
+                throw new Error(`Template file ${this.templateFile} is not valid JSON: ${error.message}\nPlease ensure the file contains valid JSON data.`);
             }
 
             // Validate genesis template structure
             if (typeof genesisTemplate !== 'object' || genesisTemplate === null) {
-                throw new Error(`Template file ${this.templateFileK1} does not contain a valid genesis object.`);
+                throw new Error(`Template file ${this.templateFile} does not contain a valid genesis object.`);
             }
 
             // Replace the entire alloc with new addresses
@@ -183,16 +182,16 @@ export class pkmanagement {
             }
 
             // Check if template file exists
-            if (!fs.existsSync(this.templateFileR1)) {
-                throw new Error(`Template file not found: ${this.templateFileR1}\nPlease ensure the file exists and the path is correct.`);
+            if (!fs.existsSync(this.templateFile)) {
+                throw new Error(`Template file not found: ${this.templateFile}\nPlease ensure the file exists and the path is correct.`);
             }
 
             // Read template file
             let templateContent: string;
             try {
-                templateContent = fs.readFileSync(this.templateFileR1, 'utf-8');
+                templateContent = fs.readFileSync(this.templateFile, 'utf-8');
             } catch (error) {
-                throw new Error(`Failed to read template file ${this.templateFileR1}: ${error.message}`);
+                throw new Error(`Failed to read template file ${this.templateFile}: ${error.message}`);
             }
 
             // Parse JSON template
@@ -200,12 +199,12 @@ export class pkmanagement {
             try {
                 genesisTemplate = JSON.parse(templateContent);
             } catch (error) {
-                throw new Error(`Template file ${this.templateFileR1} is not valid JSON: ${error.message}\nPlease ensure the file contains valid JSON data.`);
+                throw new Error(`Template file ${this.templateFile} is not valid JSON: ${error.message}\nPlease ensure the file contains valid JSON data.`);
             }
 
             // Validate genesis template structure
             if (typeof genesisTemplate !== 'object' || genesisTemplate === null) {
-                throw new Error(`Template file ${this.templateFileR1} does not contain a valid genesis object.`);
+                throw new Error(`Template file ${this.templateFile} does not contain a valid genesis object.`);
             }
 
             // Replace the entire alloc with new addresses
@@ -228,6 +227,77 @@ export class pkmanagement {
 
         } catch (error) {
             console.error(`\n❌ Error generating R1 genesis file: ${error.message}\n`);
+            throw error;
+        }
+    }
+
+    async generate(outputFile: string, prefundAmount: bigint) {
+        console.log(`Generating genesis file: ${outputFile}`);
+
+        try {
+            // Check if template file exists
+            if (!fs.existsSync(this.templateFile)) {
+                throw new Error(`Template file not found: ${this.templateFile}\nPlease ensure the file exists and the path is correct.`);
+            }
+
+            // Read template file
+            let templateContent: string;
+            try {
+                templateContent = fs.readFileSync(this.templateFile, 'utf-8');
+            } catch (error) {
+                throw new Error(`Failed to read template file ${this.templateFile}: ${error.message}`);
+            }
+
+            // Parse JSON template
+            let genesisTemplate: any;
+            try {
+                genesisTemplate = JSON.parse(templateContent);
+            } catch (error) {
+                throw new Error(`Template file ${this.templateFile} is not valid JSON: ${error.message}\nPlease ensure the file contains valid JSON data.`);
+            }
+
+            // Validate genesis template structure
+            if (typeof genesisTemplate !== 'object' || genesisTemplate === null) {
+                throw new Error(`Template file ${this.templateFile} does not contain a valid genesis object.`);
+            }
+
+            // Check if config exists
+            if (!genesisTemplate.config) {
+                throw new Error(`Template file ${this.templateFile} does not contain a 'config' field.`);
+            }
+
+            // Extract ecCurve and ellipticCurve
+            const ecCurve = genesisTemplate.config.ecCurve;
+            const ellipticCurve = genesisTemplate.config.ellipticCurve;
+
+            // Validate that at least one field exists
+            if (!ecCurve && !ellipticCurve) {
+                throw new Error(`Template file ${this.templateFile} config must contain either 'ecCurve' or 'ellipticCurve' field.`);
+            }
+
+            // Validate that both fields match if both are present
+            if (ecCurve && ellipticCurve && ecCurve !== ellipticCurve) {
+                throw new Error(`Template file ${this.templateFile} config has mismatching values:\n  - ecCurve: ${ecCurve}\n  - ellipticCurve: ${ellipticCurve}\nBoth fields must be the same.`);
+            }
+
+            // Determine the curve type (prefer ecCurve if both exist and match)
+            const curveType = ecCurve || ellipticCurve;
+
+            // Validate curve type value
+            if (curveType !== 'secp256r1' && curveType !== 'secp256k1') {
+                throw new Error(`Invalid curve type '${curveType}' in template file ${this.templateFile}.\nSupported values are: 'secp256r1' or 'secp256k1'.`);
+            }
+
+            // Call appropriate generator based on curve type
+            console.log(`Detected curve type: ${curveType}`);
+            if (curveType === 'secp256r1') {
+                await this.generateR1(outputFile, prefundAmount);
+            } else {
+                this.generateK1(outputFile, prefundAmount);
+            }
+
+        } catch (error) {
+            console.error(`\n❌ Error generating genesis file: ${error.message}\n`);
             throw error;
         }
     }
