@@ -303,6 +303,86 @@ export class pkmanagement {
         console.log(`Generating genesis file: ${outputFile}`)
 
         try {
+            // Validate private keys array
+            if (this.privateKeys.length === 0) {
+                throw new Error(
+                    'No private keys available. Please ensure the private key file was loaded correctly.'
+                )
+            }
+
+            const r1Entries: Array<{
+                address: string
+                prefundAmount: bigint
+                description: string
+            }> = []
+
+            // Import secp256r1 utilities
+            let deriveEthereumAddress
+            try {
+                const utils = await import('../../utils/secp256r1Utils')
+                deriveEthereumAddress = utils.deriveEthereumAddress
+            } catch (error) {
+                throw new Error(
+                    `Failed to import secp256r1Utils: ${error.message}\nPlease ensure the secp256r1Utils module exists at '../../utils/secp256r1Utils'.`
+                )
+            }
+
+            // Import elliptic library
+            let EC
+            try {
+                // eslint-disable-next-line @typescript-eslint/no-require-imports
+                EC = require('elliptic').ec
+            } catch (error) {
+                throw new Error(
+                    `Failed to import elliptic library: ${error.message}\nPlease ensure 'elliptic' package is installed (npm install elliptic).`
+                )
+            }
+
+            // Generate addresses from private keys
+            for (let i = 0; i < this.privateKeys.length; i++) {
+                const privateKey = this.privateKeys[i]
+                try {
+                    const addressK1: string = computeAddress(privateKey)
+                    r1Entries.push({
+                        address: addressK1,
+                        prefundAmount,
+                        description: i == 0 ? 'ISBEADMIN' : '',
+                    })
+
+                    // Clean the private key (remove 0x prefix if present)
+                    const cleanPrivateKey = privateKey.startsWith('0x')
+                        ? privateKey.slice(2)
+                        : privateKey
+
+                    // Validate hex format
+                    if (!/^[0-9a-fA-F]+$/.test(cleanPrivateKey)) {
+                        throw new Error(
+                            'Private key contains invalid hexadecimal characters'
+                        )
+                    }
+
+                    // Create secp256r1 key pair
+                    const ec = new EC('p256')
+                    const keyPair = ec.keyFromPrivate(cleanPrivateKey, 'hex')
+                    const publicKey = keyPair.getPublic()
+                    const uncompressedPublicKey = publicKey.encode('hex', false)
+
+                    // Derive Ethereum-compatible address using secp256r1 public key
+                    const address = deriveEthereumAddress(uncompressedPublicKey)
+
+                    r1Entries.push({
+                        address: address,
+                        prefundAmount: prefundAmount,
+                        description: i == 0 ? 'ISBEADMIN' : '',
+                    })
+                } catch (error) {
+                    const keyPreview = `${privateKey.substring(0, 8)}...`
+                    throw new Error(
+                        `Failed to generate secp256r1 address for private key [${i}] (${keyPreview}): ${error.message}`
+                    )
+                }
+            }
+
             // Check if template file exists
             if (!fs.existsSync(this.templateFile)) {
                 throw new Error(
@@ -340,67 +420,37 @@ export class pkmanagement {
                 )
             }
 
-            // Check if config exists
-            if (!genesisTemplate.config) {
-                throw new Error(
-                    `Template file ${this.templateFile} does not contain a 'config' field.`
-                )
-            }
-
-            // Extract ecCurve and ellipticCurve
-
-            const ecCurve = genesisTemplate.config.ecCurve
-            const ellipticCurve = genesisTemplate.config.ellipticCurve
-
-            let curveType: string
-
-            // Caso 1: ninguno existe → default secp256k1
-            if (!ecCurve && !ellipticCurve) {
-                curveType = 'secp256k1'
-            }
-            // Caso 2: ecCurve = secp256k1 → ellipticCurve puede faltar o existir con el mismo valor
-            else if (ecCurve === 'secp256k1') {
-                if (ellipticCurve && ellipticCurve !== 'secp256k1') {
-                    throw new Error(
-                        `Template ${this.templateFile} has ecCurve="secp256k1" but ellipticCurve="${ellipticCurve}". If ellipticCurve is present, both must be "secp256k1".`
-                    )
+            // Replace the entire alloc with new addresses
+            genesisTemplate.alloc = {}
+            for (const entry of r1Entries) {
+                genesisTemplate.alloc[entry.address] = {
+                    balance: `0x${entry.prefundAmount.toString(16)}`,
+                    description: entry.description,
                 }
-                curveType = 'secp256k1'
-            }
-            // Caso 3: solo uno definido (ya no válido en este punto)
-            else if (!!ecCurve !== !!ellipticCurve) {
-                throw new Error(
-                    `Template ${this.templateFile} must define BOTH 'ecCurve' and 'ellipticCurve', or NONE of them (except ecCurve="secp256k1" case).`
-                )
-            }
-            // Caso 4: ambos definidos → deben ser iguales
-            else if (ecCurve !== ellipticCurve) {
-                throw new Error(
-                    `Template ${this.templateFile} has mismatched curves: ecCurve='${ecCurve}', ellipticCurve='${ellipticCurve}'.`
-                )
-            }
-            // Caso 5: ambos definidos e iguales
-            else {
-                curveType = ecCurve!
             }
 
-            // Validate curve type value
-            if (curveType !== 'secp256r1' && curveType !== 'secp256k1') {
-                throw new Error(
-                    `Invalid curve type '${curveType}' in template file ${this.templateFile}.\nSupported values are: 'secp256r1' or 'secp256k1'.`
+            // Save the modified genesis to output file
+            try {
+                fs.writeFileSync(
+                    outputFile,
+                    JSON.stringify(genesisTemplate, null, 2),
+                    'utf-8'
                 )
-            }
-
-            // Call appropriate generator based on curve type
-            console.log(`Detected curve type: ${curveType}`)
-            if (curveType === 'secp256r1') {
-                await this.generateR1(outputFile, prefundAmount)
-            } else {
-                this.generateK1(outputFile, prefundAmount)
+                console.log(
+                    `✅ R1 genesis file created successfully: ${outputFile}`
+                )
+                console.log(`   - Total addresses: ${r1Entries.length}`)
+                console.log(
+                    `   - Prefund amount per address: ${prefundAmount.toString()} wei`
+                )
+            } catch (error) {
+                throw new Error(
+                    `Failed to write output file ${outputFile}: ${error.message}\nPlease check write permissions and disk space.`
+                )
             }
         } catch (error) {
             console.error(
-                `\n❌ Error generating genesis file: ${error.message}\n`
+                `\n❌ Error generating R1 genesis file: ${error.message}\n`
             )
             throw error
         }

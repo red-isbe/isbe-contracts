@@ -85,26 +85,50 @@ task(
             console.log(`📄 Using output file: ${outputFile}`)
 
             const isbeAdmin = await extractISBEAdminAddress(genesisTemplateFile)
-            console.log(
-                `📄 ISBE Admin address extracted from first genesis entry: ${isbeAdmin}`
-            )
+            console.log(`📄 Extracted ISBE Admin address(es): ${isbeAdmin}`)
+            if (isbeAdmin[1] == '') {
+                console.log(
+                    `📄 ISBE Admin address extracted from first genesis entry: ${isbeAdmin}`
+                )
 
-            const governanceConfig: GovernanceConfig = {
-                accountAddress: isbeAdmin,
-                initData: '0x',
+                const governanceConfig: GovernanceConfig = {
+                    accountAddress: isbeAdmin[0],
+                    initData: '0x',
+                }
+                const signatureProvider = SignatureProviderFactory.create(hre)
+                const cleanGovernanceDeployer = new CleanGovernanceDeployer(
+                    hre,
+                    signatureProvider
+                )
+
+                console.log('🚀 Deploying governance factory...')
+                const governanceResult =
+                    await cleanGovernanceDeployer.deploy(governanceConfig)
+                console.log(
+                    `✅ Governance factory deployed at: ${governanceResult.address}`
+                )
+            } else {
+                console.log(
+                    `📄 ISBE Admin addresses extracted from genesis entries: ${isbeAdmin[0]} , ${isbeAdmin[1]}`
+                )
+                const governanceConfig: GovernanceConfig = {
+                    accountAddress: isbeAdmin[0],
+                    initData: '0x',
+                }
+                const signatureProvider = SignatureProviderFactory.create(hre)
+                const cleanGovernanceDeployer = new CleanGovernanceDeployer(
+                    hre,
+                    signatureProvider,
+                    isbeAdmin[1]
+                )
+
+                console.log('🚀 Deploying governance factory...')
+                const governanceResult =
+                    await cleanGovernanceDeployer.deploy(governanceConfig)
+                console.log(
+                    `✅ Governance factory deployed at: ${governanceResult.address}`
+                )
             }
-            const signatureProvider = SignatureProviderFactory.create(hre)
-            const cleanGovernanceDeployer = new CleanGovernanceDeployer(
-                hre,
-                signatureProvider
-            )
-
-            console.log('🚀 Deploying governance factory...')
-            const governanceResult =
-                await cleanGovernanceDeployer.deploy(governanceConfig)
-            console.log(
-                `✅ Governance factory deployed at: ${governanceResult.address}`
-            )
 
             console.log('🚀 Genesis generation...')
             let slotStructure: GenesisAlloc = await retrieveSlotStructure(hre)

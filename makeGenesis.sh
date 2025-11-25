@@ -9,7 +9,8 @@ BESU_DIR="../isbe-besu-local-deployer"
 TEMPLATE_FILE="#"
 OUTPUT_FILE="#"
 GOBERNANCE_ADDRESS="#"
-SECRET_FILE="#"
+SECRET_FILE="config/pks_local_env.txt"
+IS_LOCAL=false
 
 TEMPORARY_OUTPUT_FILE="genesis_temp.json"
 
@@ -24,10 +25,6 @@ CHANGE_ALLOC=false
 # Parse arguments
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --change-allocs)
-      CHANGE_ALLOC=true
-      shift
-      ;;
     --skip-gen)
       SKIP_GEN=true
       shift
@@ -52,10 +49,6 @@ while [[ $# -gt 0 ]]; do
       OUTPUT_FILE="$2"
       shift 2
       ;;
-    --secret-file)
-      SECRET_FILE="$2"
-      shift 2
-      ;;
     --gobernance-address)
       GOBERNANCE_ADDRESS="$2"
       shift 2
@@ -67,7 +60,6 @@ while [[ $# -gt 0 ]]; do
       echo ""
       echo "Usage:"
       echo "  --skip-gen                      Skip the genesis generation process."
-      echo "  --change-allocs                 Modify account allocations using the specified attached alloc file."
       echo "  --do-besu-startup               Run the Besu startup procedure."
       echo "  --do-validation                 Execute post-start validation steps."
       echo "  --besu-dir <path>               Specify the directory containing the Besu build."
@@ -86,9 +78,9 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [ "$CHANGE_ALLOC" = true ] &&  [ "$SECRET_FILE" = "#" ]; then
-  echo "⚠️  --change-allocs requires --secret-file <file> to be specified."
-  exit 1
+if jq -e '.version == "genesis-local-template"' "$TEMPLATE_FILE" >/dev/null 2>&1; then
+  echo "📁 Local genesis template detected."
+  IS_LOCAL=true
 fi
 
 echo "📁 BESU_DIR set to: $BESU_DIR"
@@ -106,11 +98,11 @@ if [ "$TEMPLATE_FILE" = "#" ]; then
 fi
 
 if [ "$OUTPUT_FILE" = "#" ] && [ "$SKIP_GEN" = false ]; then
-  echo "📁 Wrong template file specified."
+  echo "📁 Wrong output file specified."
   exit 1
 fi
 
-if [ "$CHANGE_ALLOC" = true ]; then
+if [ "$IS_LOCAL" = true ]; then
   echo "🔧 Modifying account allocations using: $TEMPLATE_FILE with secrests $SECRET_FILE"
   npx hardhat genesis:modifyAllocations --templatefile "$TEMPLATE_FILE" --outputfile "$TEMPORARY_OUTPUT_FILE" --pkfile "$SECRET_FILE"
   TEMPLATE_FILE="$TEMPORARY_OUTPUT_FILE"

@@ -27,7 +27,8 @@ import {
 export class CleanGovernanceDeployer {
     constructor(
         private hre: HardhatRuntimeEnvironment,
-        private signatureProvider: ISignatureProvider
+        private signatureProvider: ISignatureProvider,
+        private secondaryIsbeAdmin: string = ''
     ) {}
 
     async deploy(config: GovernanceConfig) {
@@ -42,7 +43,8 @@ export class CleanGovernanceDeployer {
 
             const factoryAddress = await this.deployFactory(
                 accountAddress,
-                config
+                config,
+                this.secondaryIsbeAdmin
             )
             console.log(`Factory address: ${factoryAddress}`)
 
@@ -79,7 +81,8 @@ export class CleanGovernanceDeployer {
 
     private async deployFactory(
         accountAddress: string,
-        config: GovernanceConfig
+        config: GovernanceConfig,
+        secondaryIsbeAdmin: string = ''
     ): Promise<string> {
         console.log(
             `  Deploying ISBE factory with ${this.signatureProvider.getCurveType()}...`
@@ -166,67 +169,73 @@ export class CleanGovernanceDeployer {
             'tuple(tuple(bytes32 role, address[] members)[] rbacs, address init, bytes initCalldata)',
         ]
 
+        const members = [accountAddress]
+        if (secondaryIsbeAdmin && secondaryIsbeAdmin != '') {
+            console.log(` Adding secondary ISBE Admin: ${secondaryIsbeAdmin}`)
+            members.push(secondaryIsbeAdmin)
+        }
+
         const diamondArgs = {
             rbacs: [
                 {
                     role: DEFAULT_ADMIN_ROLE,
-                    members: [accountAddress],
+                    members: members,
                 },
                 {
                     role: ISBE_ROLE,
-                    members: [accountAddress],
+                    members: members,
                 },
                 {
                     role: PROXY_DEPLOYER_ROLE,
-                    members: [accountAddress],
+                    members: members,
                 },
                 {
                     role: GOVERNANCE_CONFIGURATION_MANAGER_ROLE,
-                    members: [accountAddress],
+                    members: members,
                 },
                 {
                     role: BUSINESS_LOGIC_DEPLOYER_ROLE,
-                    members: [accountAddress],
+                    members: members,
                 },
                 {
                     role: ISBE_PAUSER_ROLE,
-                    members: [accountAddress],
+                    members: members,
                 },
                 {
                     role: GOVERNANCE_MANAGER_ROLE,
-                    members: [accountAddress],
+                    members: members,
                 },
                 {
                     role: ANCHORER_ROLE,
-                    members: [accountAddress],
+                    members: members,
                 },
                 {
                     role: METADATA_MANAGER_ROLE,
-                    members: [accountAddress],
+                    members: members,
                 },
                 {
                     role: DID_REGISTRY_ROLE,
-                    members: [accountAddress],
+                    members: members,
                 },
                 {
                     role: ENS_MANAGER_ROLE,
-                    members: [accountAddress],
+                    members: members,
                 },
                 {
                     role: CLIENT_FILTERING_ROLE,
-                    members: [accountAddress],
+                    members: members,
                 },
                 {
                     role: TIMESTAMPING_REGISTRY_ROLE,
-                    members: [accountAddress],
+                    members: members,
                 },
                 {
                     role: NETWORK_DIRECTORY_ROLE,
-                    members: [accountAddress],
+                    members: members,
                 },
                 {
                     role: BESU_NODE_MANAGER_ROLE,
-                    members: [accountAddress],
+                    members: members,
                 },
             ],
             init: this.hre.ethers.ZeroAddress,

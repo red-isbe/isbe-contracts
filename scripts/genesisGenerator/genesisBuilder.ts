@@ -77,7 +77,7 @@ export async function buildGenesisWithAlloc(
 
 export async function extractISBEAdminAddress(
     genesisTemplateFile: string
-): Promise<string> {
+): Promise<[string, string]> {
     const raw = await fs.readFile(genesisTemplateFile, 'utf8')
     if (!raw) {
         throw new Error(
@@ -86,19 +86,35 @@ export async function extractISBEAdminAddress(
     }
     const data: JSONGenesis = JSON.parse(raw)
 
-    console.log('Genesis data:', data.alloc) // Debugging line
-
+    //console.log('Genesis data:', data.alloc) // Debugging line
     const genesisAlloc = data.genesis ? data.genesis.alloc : data.alloc
-
     if (!genesisAlloc || Object.keys(genesisAlloc).length === 0) {
         throw new Error(
             "❌ Wrong genesis template format: 'alloc' section is missing or empty."
         )
     }
+    if (data.version === 'genesis-local-template') {
+        const isbeadmins: Array<string> = []
+        Object.keys(genesisAlloc).forEach((address) => {
+            const entry = genesisAlloc[address]
+            if (
+                entry.description &&
+                entry.description.toUpperCase() === 'ISBEADMIN'
+            ) {
+                isbeadmins.push(address)
+            }
+        })
+        if (isbeadmins.length != 2) {
+            throw new Error(
+                `❌ Wrong genesis template format: Expected 2 ISBEADMIN entries, found ${isbeadmins.length}.`
+            )
+        }
+        return [isbeadmins[0], isbeadmins[1]]
+    } else {
+        const isbeAdminAddress: string = Object.keys(genesisAlloc)[0] // Firs entry address us considered ISBE Admin
 
-    const isbeAdminAddress: string = Object.keys(genesisAlloc)[0] // Firs entry address us considered ISBE Admin
-
-    return isbeAdminAddress
+        return [isbeAdminAddress, '']
+    }
 }
 
 export async function extractCurve(
