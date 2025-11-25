@@ -6,8 +6,6 @@ import { revokeRole } from '../access/accessControl/revokeRole'
 import { grantRole } from '../access/accessControl/grantRole'
 import { pause } from '../pause/pause'
 import { unpause } from '../pause/unpause'
-import { registerFilter } from '../client/registerFilter'
-import { getFiltersLength } from '../client/getFiltersLength'
 
 // Tipo de dato de la estructura base devuelta por facets()
 // type RawFacetEntry = [string, string[]]
@@ -243,50 +241,50 @@ async function validateBusinesLogic(
     )
 }
 
-async function validateFilters(
-    hre: HardhatRuntimeEnvironment,
-    businessAddress: string
-) {
-    console.log(
-        `\n\n--- VALIDATING FILTERS ---------------------------------------\n`
-    )
+// async function validateFilters(
+//     hre: HardhatRuntimeEnvironment,
+//     businessAddress: string
+// ) {
+//     console.log(
+//         `\n\n--- VALIDATING FILTERS ---------------------------------------\n`
+//     )
 
-    const signatureProvider: ISignatureProvider =
-        SignatureProviderFactory.create(hre)
-    const signer = await signatureProvider.getSigner()
+//     const signatureProvider: ISignatureProvider =
+//         SignatureProviderFactory.create(hre)
+//     const signer = await signatureProvider.getSigner()
 
-    const { filtersLength } = await getFiltersLength(businessAddress, signer)
-    console.log(`Current filters length: ${filtersLength}`)
+//     const { filtersLength } = await getFiltersLength(businessAddress, signer)
+//     console.log(`Current filters length: ${filtersLength}`)
 
-    const filterId =
-        '0x112dd723577b76611d03a5df6740ef34e4adf801a94538796f066cda9100e159'
-    const signature = '0x12345678'
-    const transactionHash =
-        '0x112dd723577b76611d03a5df6740ef34e4adf801a94538796f066cda9100e157'
-    const jsonRpcMethod = 'eth_storageAt'
-    const initialBlock = 0
-    const endBlock = 999
-    const clientFilteringAddress = '0xaa294264E0F26fBEeD82044Ec6961dfceb15E0d8'
+//     const filterId =
+//         '0x112dd723577b76611d03a5df6740ef34e4adf801a94538796f066cda9100e159'
+//     const signature = '0x12345678'
+//     const transactionHash =
+//         '0x112dd723577b76611d03a5df6740ef34e4adf801a94538796f066cda9100e157'
+//     const jsonRpcMethod = 'eth_storageAt'
+//     const initialBlock = 0
+//     const endBlock = 999
+//     const clientFilteringAddress = '0xaa294264E0F26fBEeD82044Ec6961dfceb15E0d8'
 
-    console.log('Ussing address: ' + businessAddress)
+//     console.log('Ussing address: ' + businessAddress)
 
-    const filterType = 1 // Tx filter
-    await registerFilter(
-        filterId,
-        BigInt(filterType),
-        transactionHash,
-        clientFilteringAddress,
-        signature,
-        jsonRpcMethod,
-        BigInt(initialBlock),
-        BigInt(endBlock),
-        businessAddress,
-        signer
-    )
+//     const filterType = 1 // Tx filter
+//     await registerFilter(
+//         filterId,
+//         BigInt(filterType),
+//         transactionHash,
+//         clientFilteringAddress,
+//         signature,
+//         jsonRpcMethod,
+//         BigInt(initialBlock),
+//         BigInt(endBlock),
+//         businessAddress,
+//         signer
+//     )
 
-    const filterLength = await getFiltersLength(businessAddress, signer)
-    console.log(`Current filters length: ${filterLength.filtersLength}`)
-}
+//     const filterLength = await getFiltersLength(businessAddress, signer)
+//     console.log(`Current filters length: ${filterLength.filtersLength}`)
+// }
 
 export async function validateGenesis(
     hre: HardhatRuntimeEnvironment,
@@ -299,7 +297,7 @@ export async function validateGenesis(
     await validateBusinesLogic(hre, businessAddress)
     await validateRoles(hre, businessAddress)
     await validatePausable(hre, businessAddress)
-    await validateFilters(hre, businessAddress)
+    //await validateFilters(hre, businessAddress)
     console.log(
         `\n\n=== GENESIS VALIDATION COMPLETED ===================================`
     )

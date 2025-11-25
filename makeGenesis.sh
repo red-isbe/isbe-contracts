@@ -9,6 +9,9 @@ BESU_DIR="../isbe-besu-local-deployer"
 TEMPLATE_FILE="#"
 OUTPUT_FILE="#"
 GOBERNANCE_ADDRESS="#"
+SECRET_FILE="#"
+
+TEMPORARY_OUTPUT_FILE="genesis_temp.json"
 
 EXEC_BESU="bash install.sh -b"
 
@@ -16,10 +19,15 @@ EXEC_BESU="bash install.sh -b"
 SKIP_GEN=false
 SKIP_BESU_STARTUP=true
 SKIP_VALIDATION=true
+CHANGE_ALLOC=false
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
   case $1 in
+    --change-allocs)
+      CHANGE_ALLOC=true
+      shift
+      ;;
     --skip-gen)
       SKIP_GEN=true
       shift
@@ -44,6 +52,10 @@ while [[ $# -gt 0 ]]; do
       OUTPUT_FILE="$2"
       shift 2
       ;;
+    --secret-file)
+      SECRET_FILE="$2"
+      shift 2
+      ;;
     --gobernance-address)
       GOBERNANCE_ADDRESS="$2"
       shift 2
@@ -55,6 +67,7 @@ while [[ $# -gt 0 ]]; do
       echo ""
       echo "Usage:"
       echo "  --skip-gen                      Skip the genesis generation process."
+      echo "  --change-allocs                 Modify account allocations using the specified attached alloc file."
       echo "  --do-besu-startup               Run the Besu startup procedure."
       echo "  --do-validation                 Execute post-start validation steps."
       echo "  --besu-dir <path>               Specify the directory containing the Besu build."
@@ -73,6 +86,11 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+if [ "$CHANGE_ALLOC" = true ] &&  [ "$SECRET_FILE" = "#" ]; then
+  echo "⚠️  --change-allocs requires --secret-file <file> to be specified."
+  exit 1
+fi
+
 echo "📁 BESU_DIR set to: $BESU_DIR"
 echo "   (use --besu-dir <path> to override)"
 echo ""
@@ -90,6 +108,13 @@ fi
 if [ "$OUTPUT_FILE" = "#" ] && [ "$SKIP_GEN" = false ]; then
   echo "📁 Wrong template file specified."
   exit 1
+fi
+
+if [ "$CHANGE_ALLOC" = true ]; then
+  echo "🔧 Modifying account allocations using: $TEMPLATE_FILE with secrests $SECRET_FILE"
+  npx hardhat genesis:modifyAllocations --templatefile "$TEMPLATE_FILE" --outputfile "$TEMPORARY_OUTPUT_FILE" --pkfile "$SECRET_FILE"
+  TEMPLATE_FILE="$TEMPORARY_OUTPUT_FILE"
+  echo "✅ Account allocations modified in template file."
 fi
 
 # Step 1: Genesis generation
@@ -149,6 +174,8 @@ if [ "$SKIP_VALIDATION" = false ]; then
   npx hardhat genesis:validate --network NO_NETWORK --templatefile "$TEMPLATE_FILE" --governanceaddress "$GOBERNANCE_ADDRESS" 
   echo "✅ Genesis validation completed."
 fi
+
+rm -f "$TEMPORARY_OUTPUT_FILE"
 
 end=$(date +%s)
 elapsed=$(( end - start ))
