@@ -7,3 +7,4 @@ export {
 } from './genesisBuilder'
 export { validateGenesis } from './genesisValidator'
 export { BootstrapIsbenetwork } from './BootstrapIsbenetwork'
+export { pkmanagement } from './pkmanagement'
