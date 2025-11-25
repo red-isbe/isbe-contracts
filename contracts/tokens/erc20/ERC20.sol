@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {ERC20InternalCommon} from './extensions/ERC20InternalCommon.sol';
+import {ERC203643InternalCommon} from '../erc203643/ERC203643InternalCommon.sol';
 import {IERC20Isbe} from './IERC20Isbe.sol';
 import {_ERC20_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
@@ -16,7 +16,7 @@ import {_ERC20_FACET_VERSION} from '../../constants/facetVersions.sol';
  *      OpenZeppelin interfaces. It includes additional helper functions such as `increaseAllowance` and
  *      `decreaseAllowance` for more granular control over token allowances.
  */
-abstract contract ERC20 is IERC20Isbe, ERC20InternalCommon {
+abstract contract ERC20 is IERC20Isbe, ERC203643InternalCommon {
     /// @notice Constructor that assigns the deployer as the default admin
     constructor() {
         _disableInitializers(_ERC20_RESOLVER_KEY);
@@ -32,7 +32,13 @@ abstract contract ERC20 is IERC20Isbe, ERC20InternalCommon {
         string memory _newName,
         string memory _newSymbol,
         uint8 _newDecimals
-    ) external override initializer(_ERC20_RESOLVER_KEY, _ERC20_FACET_VERSION) {
+    )
+        external
+        override
+        initializer(_ERC20_RESOLVER_KEY, _ERC20_FACET_VERSION)
+        emptyString(_newName)
+        emptyString(_newSymbol)
+    {
         _initialize(_newName, _newSymbol, _newDecimals);
         emit Erc20Initialized(_newName, _newSymbol, _newDecimals);
     }
@@ -51,6 +57,49 @@ abstract contract ERC20 is IERC20Isbe, ERC20InternalCommon {
     ) external override whenNotPaused returns (bool) {
         _transfer(_msgSender(), _to, _amount);
         return true;
+    }
+
+    /**
+     * @notice Transfer tokens to multiple addresses in a single transaction (batch operation)
+     * @dev Transfers tokens from the caller's account to multiple recipients.
+     *
+     *      **ERC20 Mode:** Simple batch transfers without additional validations
+     *      **ERC3643 Mode:** Requires all recipients to be verified and sender/recipients not frozen
+     *
+     *      IMPORTANT: THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_toList.length` IS TOO HIGH,
+     *      USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
+     *
+     * @param _toList The addresses of the receivers (all must be verified for ERC3643)
+     * @param _amounts The number of tokens to transfer to each corresponding receiver
+     *
+     * Requirements:
+     * - Caller must have sufficient balance for the total amount
+     * - Arrays must have the same length
+     * - For ERC3643: all addresses in `_toList` must be verified in Identity Registry
+     * - For ERC3643: caller and all recipients must not be frozen
+     *
+     * Emits:
+     * - {Transfer} event for each transfer via internal transfer mechanism
+     *
+     * Reverts:
+     * - {TransferAmountExceedsBalance} if caller has insufficient balance
+     */
+    function batchTransfer(
+        address[] calldata _toList,
+        uint256[] calldata _amounts
+    ) external override whenNotPaused {
+        uint256 toListLength = _toList.length;
+        _checkSameLength(toListLength, _amounts.length);
+        address from = _msgSender();
+        // Validate total amount and sender balance
+        _checkTotalAmount(from, _amounts);
+        // Perform individual transfers
+        for (uint256 i; i < toListLength; ) {
+            _transfer(from, _toList[i], _amounts[i]);
+            unchecked {
+                ++i;
+            }
+        }
     }
 
     /**
@@ -114,7 +163,11 @@ abstract contract ERC20 is IERC20Isbe, ERC20InternalCommon {
         uint256 _addedValue
     ) external whenNotPaused returns (bool) {
         address owner = _msgSender();
-        _approve(owner, _spender, _allowance(owner, _spender) + _addedValue);
+        uint256 amount;
+        unchecked {
+            amount = _allowance(owner, _spender) + _addedValue;
+        }
+        _approve(owner, _spender, amount);
         return true;
     }
 
@@ -142,9 +195,11 @@ abstract contract ERC20 is IERC20Isbe, ERC20InternalCommon {
             currentAllowance >= _subtractedValue,
             IERC20Isbe.DecreasedAllowanceBellowZero()
         );
+        uint256 amount;
         unchecked {
-            _approve(owner, _spender, currentAllowance - _subtractedValue);
+            amount = currentAllowance - _subtractedValue;
         }
+        _approve(owner, _spender, amount);
 
         return true;
     }

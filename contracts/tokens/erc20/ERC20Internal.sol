@@ -35,6 +35,24 @@ abstract contract ERC20Internal is DidDocumentDetailedInternal {
     }
 
     /**
+     * @dev Internal function to update the token name in storage.
+     * Applies the {emptyString} modifier to ensure the input is not an empty string.
+     * @param _newName The new name to assign to the token.
+     */
+    function _setName(string memory _newName) internal {
+        _erc20Storage().name = _newName;
+    }
+
+    /**
+     * @dev Internal function to update the token symbol in storage.
+     * Applies the {emptyString} modifier to ensure the input is not an empty string.
+     * @param _newSymbol The new symbol to assign to the token.
+     */
+    function _setSymbol(string memory _newSymbol) internal {
+        _erc20Storage().symbol = _newSymbol;
+    }
+
+    /**
      * @dev Moves `amount` of tokens from `from` to `to`.
      *
      * This internal function is equivalent to {transfer}, and can be used to
@@ -54,14 +72,9 @@ abstract contract ERC20Internal is DidDocumentDetailedInternal {
         uint256 _amount
     ) internal virtual addressIsNotZero(_from) addressIsNotZero(_to) {
         _beforeTokenTransfer(_from, _to, _amount);
-        ERC20Storage storage $ = _erc20Storage();
-        uint256 fromBalance = $.balances[_from];
-        require(
-            fromBalance >= _amount,
-            IERC20Isbe.TransferAmountExceedsBalance()
-        );
         unchecked {
-            $.balances[_from] = fromBalance - _amount;
+            ERC20Storage storage $ = _erc20Storage();
+            $.balances[_from] -= _amount;
             // Overflow not possible: the sum of all balances is capped by totalSupply, and the sum is preserved by
             // decrementing then incrementing.
             $.balances[_to] += _amount;
@@ -115,14 +128,9 @@ abstract contract ERC20Internal is DidDocumentDetailedInternal {
     ) internal virtual addressIsNotZero(_account) {
         _beforeTokenTransfer(_account, address(0), _amount);
 
-        ERC20Storage storage $ = _erc20Storage();
-        uint256 accountBalance = $.balances[_account];
-        require(
-            accountBalance >= _amount,
-            IERC20Isbe.BurnAmountExceedsBalance()
-        );
         unchecked {
-            $.balances[_account] = accountBalance - _amount;
+            ERC20Storage storage $ = _erc20Storage();
+            $.balances[_account] -= _amount;
             // Overflow not possible: amount <= accountBalance <= totalSupply.
             $.totalSupply -= _amount;
         }
@@ -173,9 +181,11 @@ abstract contract ERC20Internal is DidDocumentDetailedInternal {
             currentAllowance >= _amount,
             IERC20Isbe.InsufficientAllowance()
         );
+        uint256 amount;
         unchecked {
-            _approve(_owner, _spender, currentAllowance - _amount);
+            amount = currentAllowance - _amount;
         }
+        _approve(_owner, _spender, amount);
     }
 
     // solhint-disable no-empty-blocks
@@ -245,6 +255,50 @@ abstract contract ERC20Internal is DidDocumentDetailedInternal {
         address spender
     ) internal view returns (uint256) {
         return _erc20Storage().allowances[owner][spender];
+    }
+
+    /**
+     * @dev Calculates the total amount from an array and validates that the sender has sufficient balance
+     * @param _from The address to check the balance of
+     * @param _amounts Array of amounts to sum
+     * @return totalAmount The total sum of all amounts in the array
+     *
+     * Requirements:
+     * - The sender must have a balance greater than or equal to the total amount
+     *
+     * Reverts:
+     * - {TransferAmountExceedsBalance} if sender has insufficient balance
+     */
+    function _checkTotalAmount(
+        address _from,
+        uint256[] calldata _amounts
+    ) internal view returns (uint256 totalAmount) {
+        totalAmount = _calculateTotalAmount(_amounts);
+        _checkTransferAmountExceedsBalance(_balanceOf(_from), totalAmount);
+    }
+
+    function _calculateTotalAmount(
+        uint256[] calldata _amounts
+    ) internal pure returns (uint256 totalAmount_) {
+        // Calculate total amount for balance validation
+        uint256 amountsLength = _amounts.length;
+        for (uint256 i; i < amountsLength; ) {
+            // preventing overflow issues
+            totalAmount_ += _amounts[i];
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    function _checkTransferAmountExceedsBalance(
+        uint256 _balance,
+        uint256 _totalAmount
+    ) internal pure {
+        require(
+            _balance >= _totalAmount,
+            IERC20Isbe.TransferAmountExceedsBalance()
+        );
     }
 
     function _erc20Storage()

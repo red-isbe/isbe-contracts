@@ -3,10 +3,7 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { CleanDeploymentOrchestrator } from './deployment/CleanDeploymentOrchestrator'
 import { DeploymentOrchestrator } from './deployment/DeploymentOrchestrator'
 import { DeploymentConfig } from './deployment/config/DeploymentConfig'
-import {
-    DeploymentResult,
-    DeploymentOptions,
-} from './deployment/types/DeploymentTypes'
+import { DeploymentResult } from './deployment/types/DeploymentTypes'
 import { logNetworkInfo } from '../utils/networkUtils'
 import { PreCommitValidator } from './validation/PreCommitValidator'
 import { SignatureProviderFactory } from './deployment/providers/SignatureProviderFactory'
@@ -138,15 +135,8 @@ async function deployWithCleanOrchestrator(
         console.log(`   • Signature curve: ${providerInfo.curve}`)
         console.log('')
 
-        // Set deployment options for the clean orchestrator
-        const deploymentOptions: DeploymentOptions = {
-            skipBusinessLogics: false,
-            skipUseCases: taskArgs.noDeployUseCases === true,
-            skipTests: false,
-        }
-
         // Run the clean orchestrated deployment
-        const deploymentResult = await orchestrator.deploy(deploymentOptions)
+        const deploymentResult = await orchestrator.deploy()
 
         // Run pre-commit validations if requested
         if (taskArgs.precommit) {

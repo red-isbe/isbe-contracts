@@ -67,6 +67,7 @@ import {
     NETWORK_DIRECTORY_ROLE,
     CONFIGURATION_ID_ERC20,
     CONFIGURATION_ID_ERC721,
+    CONFIGURATION_ID_ERC3643,
     CONFIGURATION_ID_ENS_REGISTRY,
     CONFIGURATION_ID_DID_REGISTRY,
     CONFIGURATION_ID_CLIENT_FILTERING,
@@ -368,6 +369,19 @@ export async function deployGovernance(
                     init_BusinessId_UseCase,
                     init_CallData_UseCase
                 )
+            case CONFIGURATION_ID_ERC3643: {
+                const { deployERC3643UseCasesFacets } = await import(
+                    './erc3643'
+                )
+                return await deployERC3643UseCasesFacets(
+                    isbeFactory,
+                    ISBEPauseFacetFactory,
+                    rbacsUseCase,
+                    init_pause,
+                    init_BusinessId_UseCase,
+                    init_CallData_UseCase
+                )
+            }
 
             case CONFIGURATION_ID_KNOWN_DID_TEST:
                 return await deployKnownDidTestWrapperUseCaseFacets(

@@ -107,7 +107,7 @@ export function buildConfigurationId(
             logInitialConfiguration(seed, resolverKeys)
         }
 
-        // Sort resolver keys for deterministic results
+        // Sort resolver keys for deterministic results (required by ADR-003)
         const orderedKeys = [...resolverKeys].sort()
 
         // Process resolver keys

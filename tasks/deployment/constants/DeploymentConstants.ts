@@ -3,9 +3,14 @@ import { ENS_DEFINITIONS, ENS_USE_CASE_CONFIGS } from './ens'
 import { UTILITY_DEFINITIONS, UTILITY_USE_CASE_CONFIGS } from './utility'
 import { ERC20_DEFINITIONS } from './token/erc20'
 import { ERC721_DEFINITIONS } from './token/erc721'
+import {
+    ERC3643_DEFINITIONS,
+    ERC203643_SHARED_DEFINITIONS,
+} from './token/erc3643'
 // Import token use case configurations
 import { ERC20_USE_CASE_CONFIGS } from './erc20'
 import { ERC721_USE_CASE_CONFIGS } from './token/erc721_configurations'
+import { ERC3643_USE_CASE_CONFIGS } from './token/erc3643_configurations'
 
 // Export core constants
 export { DEFAULT_VERSION } from './version'
@@ -17,6 +22,7 @@ export * from './resolverKeys'
 // Export token configurations
 export * from './erc20'
 export * from './erc721'
+export * from './token/erc3643'
 
 // Export feature definitions
 export * from './ens'
@@ -66,6 +72,9 @@ export const DEFAULT_USE_CASE_CONFIGURATIONS = [
 
     // Complete configuration (all 4 extensions)
     ERC20_USE_CASE_CONFIGS.COMPLETE,
+
+    // ERC3643 Security Token
+    ERC3643_USE_CASE_CONFIGS.SECURITY_TOKEN,
 
     // ERC721 use cases - Base and Single Extensions
     ERC721_USE_CASE_CONFIGS.BASE,
@@ -260,23 +269,23 @@ export const DEFAULT_USE_CASE_CONFIGURATIONS = [
     // ERC721 use cases - Seven extension combinations
     ERC721_USE_CASE_CONFIGS.BURN_ENUM_CAP_CTRL_SNAP_ROY_CONS,
     /* Total use cases currently deployed:
-        DID: 1 Base Registry
-        ENS: 2 (Registry & Public Resolver)
-        Utility: 1 (Hash Timestamp Service)
-        Client: 1 (Client Filtering)
-        TSA: 1 (TimeStamping Authority)
-        TSR: 1 (TimeStamping Registry)
-        ERC20: 16 variations
-        ERC721: Total 60 variations:
-          + 1 Base
-          + 7 Single Extensions C(7,1)
-          + 21 Double Extensions C(7,2)
-          + 25 Triple Extensions C(7,3) [subset]
-          + 4 Four Extensions [subset]
-          + 16 Five Extensions
-          + 6 Six Extensions
-          + 0 Complete (All 7 Extensions)
-        Total Deployed Use Cases = 83 */
+      DID: 1 Base Registry
+      ENS: 2 (Registry & Public Resolver)
+      Utility: 1 (Hash Timestamp Service)
+      Client: 1 (Client Filtering)
+      TSA: 1 (TimeStamping Authority)
+      TSR: 1 (TimeStamping Registry)
+      ERC20: 16 variations
+      ERC721: Total 60 variations:
+        + 1 Base
+        + 7 Single Extensions C(7,1)
+        + 21 Double Extensions C(7,2)
+        + 25 Triple Extensions C(7,3) [subset]
+        + 4 Four Extensions [subset]
+        + 16 Five Extensions
+        + 6 Six Extensions
+        + 0 Complete (All 7 Extensions)
+      Total Deployed Use Cases = 83 */
 ]
 
 // Combine all business logic definitions
@@ -284,5 +293,7 @@ export const BUSINESS_LOGIC_DEFINITIONS = [
     ...UTILITY_DEFINITIONS,
     ...ENS_DEFINITIONS,
     ...ERC20_DEFINITIONS,
+    ...ERC203643_SHARED_DEFINITIONS, // Shared facets between ERC20 and ERC3643
     ...ERC721_DEFINITIONS,
+    ...ERC3643_DEFINITIONS,
 ]

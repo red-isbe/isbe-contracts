@@ -19,3 +19,7 @@ bytes32 constant _CONTRACT_NAME_TIME_STAMPING_REGISTRY = 0x9904ac63bf17aeae68be5
 // keccak256('1.0.0') - reuse same version
 // solhint-disable-next-line max-line-length
 bytes32 constant _CONTRACT_VERSION_TIME_STAMPING_REGISTRY = 0x06c015bd22b4c69690933c1058878ebdfef31f9aaae40bbe86d8a09fe1b2972c;
+
+// Compliance feature flags for mappings in ERC3643ComplianceStorage
+bytes32 constant _FLAG_MAX_BALANCE = 0x0f75e3deba2182a18fd89dc0501b9db2a644d5ec6b4d47b33f9a5d1d10e7e52e;
+bytes32 constant _FLAG_DAILY_MONTH = 0x0f47955f9e52e4974cb889d851d8d56240a3a5d58d129b0bb6d4f6038802036b;

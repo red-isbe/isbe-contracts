@@ -56,6 +56,18 @@ bytes32 constant _ENS_MANAGER_ROLE = 0x6e23e5e4b53b45e5b32b8b2e8e9a8c48b8a7c3b9c
 // keccak256('isbe.contracts.role.royalty');
 bytes32 constant _ROYALTY_ROLE = 0xe87ed15151829ed3753553fc34d39b49f60370ac439fddb4e9304af60bce3045;
 
+// keccak256("isbe.contracts.role.freeze")
+bytes32 constant _FREEZE_ROLE = 0xa4e18dbe5b5a07c8c736c28f272d9ef8b1c38dc1fc3a3e57f4a79d5ebd8dc8f4;
+
+// keccak256("isbe.contracts.role.metadata")
+bytes32 constant _METADATA_ROLE = 0x37c3b5a6b2e6b682d82cfaf5a8dc82ff6b64b930f276ee684d6368f079b14b8f;
+
+// keccak256("isbe.contracts.role.recovery")
+bytes32 constant _RECOVERY_ROLE = 0xf2297f89cf57d1a505c0563f0b3b7b36b043d2de6e2d0e5e75ee83cf3278e30f;
+
+// keccak256("isbe.contracts.role.compliance")
+bytes32 constant _COMPLIANCE_ROLE = 0x9d43bbd4f3a613173d2ad8b3212cc0e8a4435b57f0c28a38a40097c7b7d35d79;
+
 // keccak256('isbe.contracts.role.client.filtering');
 bytes32 constant _CLIENT_FILTERING_ROLE = 0xcbb09df20dd6e5dbe10d3957a6ca4269c2c926a5334d2cbcd9ea39ab0593f79a;
 
@@ -73,5 +85,8 @@ bytes32 constant _METADATA_MANAGER_ROLE = 0x9a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f
 
 // keccak256('isbe.contracts.role.network.directory');
 bytes32 constant _NETWORK_DIRECTORY_ROLE = 0xd9a7f0b03b752d9c44200ba27e635446a5cfcfec8a2720d6b06e3a170e5bc43b;
+
+// keccak256('isbe.contracts.role.whitelist');
+bytes32 constant _WHITELIST_ROLE = 0xded7ba58b0451b60e5cc01e919d11ddff88fe87bbc51ec62070e38b0ff25d63a;
 
 // solhint-enable max-line-length

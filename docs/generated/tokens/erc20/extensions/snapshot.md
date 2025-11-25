@@ -2,13 +2,17 @@
 
 Implements snapshot mechanism
 
-_Inherits from IERC20Snapshot and ERC20InternalCommon_
+_Inherits from IERC20Snapshot and ERC203643InternalCommon_
 
 ### snapshot
 
 ```solidity
 function snapshot() external
 ```
+
+Creates a new snapshot of balances and total supply.
+
+_Triggers the `Snapshot` event with the newly generated snapshot ID._
 
 ### balanceOfAt
 
@@ -160,10 +164,16 @@ struct Snapshots {
 function _snapshot() internal virtual returns (uint256)
 ```
 
-### \_beforeTokenTransfer
+### \_updateAccountSnapshot
 
 ```solidity
-function _beforeTokenTransfer(address _from, address _to, uint256) internal virtual
+function _updateAccountSnapshot(address _account) internal
+```
+
+### \_updateTotalSupplySnapshot
+
+```solidity
+function _updateTotalSupplySnapshot() internal
 ```
 
 ### \_getCurrentSnapshotId
@@ -235,6 +245,10 @@ _This is triggered when querying a nonexistent or invalid snapshot ID._
 ```solidity
 function snapshot() external
 ```
+
+Creates a new snapshot of balances and total supply.
+
+_Triggers the `Snapshot` event with the newly generated snapshot ID._
 
 ### balanceOfAt
 

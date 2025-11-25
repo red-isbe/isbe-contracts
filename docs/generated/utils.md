@@ -94,6 +94,21 @@ Emitted when two values are expected to have the same length but differ
 | a    | uint256 | The length of the first value  |
 | b    | uint256 | The length of the second value |
 
+### NotSameLengthArray
+
+```solidity
+error NotSameLengthArray(uint256 a, uint256 b)
+```
+
+Emitted when two arraysdo not match in length
+
+#### Parameters
+
+| Name | Type    | Description                    |
+| ---- | ------- | ------------------------------ |
+| a    | uint256 | The length of the first array  |
+| b    | uint256 | The length of the second array |
+
 ### \_blockTimestamp
 
 ```solidity

@@ -2,7 +2,7 @@
 
 Implements burn mechanism
 
-_Inherits from IERC20Burnable and ERC20InternalCommon_
+_Inherits from IERC20Burnable and ERC203643InternalCommon_
 
 ### burn
 

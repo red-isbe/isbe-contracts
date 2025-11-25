@@ -32,6 +32,10 @@ interface IERC20Snapshot {
      */
     error NonExistentSnapshotId();
 
+    /**
+     * @notice Creates a new snapshot of balances and total supply.
+     * @dev Triggers the `Snapshot` event with the newly generated snapshot ID.
+     */
     function snapshot() external;
 
     /**

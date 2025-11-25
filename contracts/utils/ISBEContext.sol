@@ -61,6 +61,13 @@ abstract contract ISBEContext is Context {
     error NotSameLength(uint256 a, uint256 b);
 
     /**
+     * @notice Emitted when two arraysdo not match in length
+     * @param a The length of the first array
+     * @param b The length of the second array
+     */
+    error NotSameLengthArray(uint256 a, uint256 b);
+
+    /**
      * @notice Returns the timestamp of the current block.
      * @dev This is a virtual function that wraps `block.timestamp`, allowing it to be
      * overridden in child contracts for testing purposes.

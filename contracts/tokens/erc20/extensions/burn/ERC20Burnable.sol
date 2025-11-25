@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {ERC20InternalCommon} from '../ERC20InternalCommon.sol';
+import {ERC203643InternalCommon} from '../../../erc203643/ERC203643InternalCommon.sol';
 import {IERC20Burnable} from './IERC20Burnable.sol';
 
 /// @title ERC20Burnable
 /// @notice Implements burn mechanism
-/// @dev Inherits from IERC20Burnable and ERC20InternalCommon
-abstract contract ERC20Burnable is IERC20Burnable, ERC20InternalCommon {
+/// @dev Inherits from IERC20Burnable and ERC203643InternalCommon
+abstract contract ERC20Burnable is IERC20Burnable, ERC203643InternalCommon {
     function burn(uint256 _amount) external override whenNotPaused {
         _burn(_msgSender(), _amount);
     }

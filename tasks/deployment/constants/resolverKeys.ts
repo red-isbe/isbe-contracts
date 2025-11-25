@@ -31,6 +31,13 @@ export const ERC20_RESOLVER_KEYS: ResolverKeys = {
         '0xed76d446b6029b8a177fda4fc38162d9dc0dc29ab636541fd6e75ae60fe17151',
 }
 
+// ERC20/ERC3643 shared facets (used by both standards)
+export const ERC20_ERC3643_SHARED_RESOLVER_KEYS: ResolverKeys = {
+    CAPPED: '0x1f3e5d6c7b8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f60718293a4b5c6d7e8',
+    CONTROLLER:
+        '0x9b1f4e8c6d7a5b4c3e2f1a0b9c8d7e6f5a4b3c2d1e0f9e8d7c6b5a4b3c2d1e0f',
+}
+
 // ERC721 facets
 export const ERC721_RESOLVER_KEYS: ResolverKeys = {
     ERC721: '0x90e014dbbf0f1e8a714d05a5a0c9464d9ab25275f7dcdaf3297d1ccc80452413',
@@ -85,6 +92,27 @@ export const BESU_NODE_MANAGER_RESOLVER_KEYS: ResolverKeys = {
 export const NETWORK_RESOLVER_KEYS: ResolverKeys = {
     NETWORK_CATALOG:
         '0x17a2f0004227d8948b0a9dfe41e92bca9785ffa344bc4443c88f2df3d2f8ee87',
+}
+
+// ERC3643 Security Token facets
+export const ERC3643_RESOLVER_KEYS: ResolverKeys = {
+    METADATA:
+        '0x8bffaf1ebc4070155b40757cd1d588dd59fcab63cd7007ebf7755f7f60a0c1e1',
+    FREEZE: '0xb4f0898a6b06b69baf87b46c4c2932dc9b05f07368e9b14ceee64d5d44e8f273',
+    RECOVERY:
+        '0x2f59403873a4d80c3817c2b3cf0c1d5105a6c508c118b0c8b9c38582c4068b8f',
+    COMPLIANCE:
+        '0x8a5420a9e83a88b62e9b707d311e9dbf53149c09464f3c1c33d0b8d85f7ca10b',
+    COMPLIANCE_MAXBALANCE:
+        '0x439f087ef8d9d8d02c3b2d39c55c55a73b329d5b0d78ab0e81eb0e55343cdd9d',
+    COMPLIANCE_DMLIM:
+        '0x228279b8c9f85cc60c2a3f60cf0371583eaf4d08a3bb4b04cbeb47711165d29e',
+}
+
+// Whitelist extension (transversal - shared by ERC20, ERC721, ERC3643)
+export const WHITELIST_RESOLVER_KEYS: ResolverKeys = {
+    BASIC_WHITELIST:
+        '0x7d9f8a6b5c4e3d2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f',
 }
 
 // ENS facets
