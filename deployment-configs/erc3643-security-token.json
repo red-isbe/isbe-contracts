@@ -1,0 +1,22 @@
+{
+    "description": "ERC3643 Security Token - Full Compliance Stack",
+    "version": "1.0.0",
+    "includeAllBusinessLogics": true,
+    "useCaseFilters": {
+        "enabled": true,
+        "includePatterns": ["Security Token"],
+        "excludePatterns": [],
+        "categories": ["erc3643"]
+    },
+    "metadata": {
+        "author": "ISBE Development Team",
+        "created": "2025-11-14",
+        "purpose": "Deploy ERC3643 Security Token with full regulatory compliance features",
+        "notes": [
+            "Includes ERC20 base + Snapshot, Capped, Controller extensions",
+            "Includes all 6 ERC3643 facets: Metadata, Freeze, Recovery, Compliance stack",
+            "Total 10 facets for complete regulatory compliance",
+            "Configuration ID: 0x008208000000002a000000004c0000005f006a0046000060000000000000f743"
+        ]
+    }
+}

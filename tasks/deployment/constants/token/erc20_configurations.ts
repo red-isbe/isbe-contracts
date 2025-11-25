@@ -1,5 +1,5 @@
 import { TokenConfiguration } from '../types'
-import { ERC20_RESOLVER_KEYS } from '../resolverKeys'
+import { ERC20_RESOLVER_KEYS, WHITELIST_RESOLVER_KEYS } from '../resolverKeys'
 import { CONFIGURATION_IDS } from '../configurationIds'
 import {
     createTokenConfig,
@@ -29,6 +29,7 @@ const extensions = {
     snapshot: [ERC20_RESOLVER_KEYS.SNAPSHOT],
     capped: [ERC20_RESOLVER_KEYS.CAPPED],
     controller: [ERC20_RESOLVER_KEYS.CONTROLLER],
+    whitelist: [WHITELIST_RESOLVER_KEYS.BASIC_WHITELIST],
 }
 
 // Generate configurations
@@ -60,6 +61,11 @@ export const ERC20_USE_CASE_CONFIGS = {
         createERC20Config([...extensions.base, ...extensions.controller]),
         'erc20',
         'ERC20 w/Ctrl'
+    ),
+    WITH_WHITELIST: createTokenConfig(
+        createERC20Config([...extensions.base, ...extensions.whitelist]),
+        'erc20',
+        'ERC20 w/Whitelist'
     ),
 
     // Two extension combinations

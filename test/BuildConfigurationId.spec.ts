@@ -5,8 +5,8 @@ import {
     ERC20_RESOLVER_KEY,
     ERC20_SNAPSHOT_RESOLVER_KEY,
     ERC20_BURNABLE_RESOLVER_KEY,
-    ERC20_CAPPED_RESOLVER_KEY,
-    ERC20_CONTROLLER_RESOLVER_KEY,
+    ERC203643_CAPPED_RESOLVER_KEY,
+    ERC203643_CONTROLLER_RESOLVER_KEY,
     ERC721_RESOLVER_KEY,
     ERC721_TEST_WRAPPER_RESOLVER_KEY,
     ERC721_BURNABLE_RESOLVER_KEY,
@@ -16,8 +16,19 @@ import {
     ERC721_ENUMERABLE_RESOLVER_KEY,
     ERC721_ROYALTY_RESOLVER_KEY,
     ERC721_CONSECUTIVE_RESOLVER_KEY,
+    ERC3643_METADATA_RESOLVER_KEY,
+    ERC3643_FREEZE_RESOLVER_KEY,
+    ERC3643_RECOVERY_RESOLVER_KEY,
+    ERC3643_COMPLIANCE_RESOLVER_KEY,
+    ERC3643_COMPLIANCE_MAXBALANCE_RESOLVER_KEY,
+    ERC3643_COMPLIANCE_DMLIM_RESOLVER_KEY,
+    OWNABLE_RESOLVER_KEY,
+    ASSET_EVENT_TRACKER_RESOLVER_KEY,
+    HASH_TIMESTAMP_RESOLVER_KEY,
+    MOCK_TIMESTAMP_RESOLVER_KEY,
     CONFIGURATION_ID_ERC20,
     CONFIGURATION_ID_ERC721,
+    CONFIGURATION_ID_ERC3643,
 } from '../utils/constants'
 
 describe('buildConfigurationId', function () {
@@ -62,21 +73,25 @@ describe('buildConfigurationId', function () {
         it('should build configuration ID for ERC20 with all extensions', async function () {
             const seed = CONFIGURATION_ID_ERC20
             const resolverKeys = [
-                ERC20_RESOLVER_KEY, // 0x0000000000000000000000000000000000006a00000000000000000000000000
-                ERC20_SNAPSHOT_RESOLVER_KEY, // 0x000000000000002a000000000000000000000000000000000000000000000000
-                ERC20_BURNABLE_RESOLVER_KEY, // 0x00000000000000000000000000002a0000000000000000000000000000000000
-                ERC20_CAPPED_RESOLVER_KEY, // 0x000000001e000000000000000000000000000000000000000000000000000000
-                ERC20_CONTROLLER_RESOLVER_KEY, // 0x0000000000000000000000000000620000000000000000000000000000000000
+                OWNABLE_RESOLVER_KEY,
+                ERC20_SNAPSHOT_RESOLVER_KEY,
+                ERC20_BURNABLE_RESOLVER_KEY,
+                ERC203643_CAPPED_RESOLVER_KEY,
+                ERC203643_CONTROLLER_RESOLVER_KEY,
+                ERC20_RESOLVER_KEY,
+                ASSET_EVENT_TRACKER_RESOLVER_KEY,
+                HASH_TIMESTAMP_RESOLVER_KEY,
+                MOCK_TIMESTAMP_RESOLVER_KEY,
             ]
             const result = buildConfigurationId(seed, resolverKeys)
 
             // Verify it's a valid hex string with 0x prefix
             expect(result).to.match(/^0x[0-9a-f]+$/)
 
-            // The result should be different from just the seed
-            expect(result).to.be.equal(
-                '0x000000001e00002a000000000000480000006a00000000000000000000000020'
-            )
+            // The configuration ID built from seed + XOR of all keys
+            const expected =
+                '0x320000000074002aef00000000002a005a006a00000000600000000000000020'
+            expect(result).to.be.equal(expected)
         })
 
         it('should handle ERC20 resolver keys in different orders', async function () {
@@ -100,16 +115,21 @@ describe('buildConfigurationId', function () {
         it('should verify ERC20 configuration ID matches expected constant', async function () {
             const seed = ethers.ZeroHash
             const resolverKeys = [
-                ERC20_RESOLVER_KEY,
+                OWNABLE_RESOLVER_KEY,
                 ERC20_SNAPSHOT_RESOLVER_KEY,
                 ERC20_BURNABLE_RESOLVER_KEY,
-                ERC20_CAPPED_RESOLVER_KEY,
-                ERC20_CONTROLLER_RESOLVER_KEY,
+                ERC203643_CAPPED_RESOLVER_KEY,
+                ERC203643_CONTROLLER_RESOLVER_KEY,
+                ERC20_RESOLVER_KEY,
+                ASSET_EVENT_TRACKER_RESOLVER_KEY,
+                HASH_TIMESTAMP_RESOLVER_KEY,
+                MOCK_TIMESTAMP_RESOLVER_KEY,
             ]
             const result = buildConfigurationId(seed, resolverKeys)
 
+            // This is the XOR of all ERC20 resolver keys
             expect(result).to.be.equal(
-                '0x000000001e00002a000000000000480000006a00000000000000000000000000'
+                '0x320000000074002aef00000000002a005a006a00000000600000000000000000'
             )
         })
     })
@@ -185,6 +205,112 @@ describe('buildConfigurationId', function () {
             const result = buildConfigurationId(seed, resolverKeys)
             expect(result).to.be.equal(
                 '0x0000b0000000000000a2b098a000f70000000061000000591300000000000000'
+            )
+        })
+    })
+
+    describe('ERC3643 Battery Tests', function () {
+        it('should build configuration ID for ERC3643 SECURITY_TOKEN with all extensions', async function () {
+            const seed = CONFIGURATION_ID_ERC3643
+            // This matches SECURITY_TOKEN configuration from erc3643_configurations.ts
+            const resolverKeys = [
+                ERC20_RESOLVER_KEY,
+                ERC20_SNAPSHOT_RESOLVER_KEY, // Added for dividends & voting
+                ERC203643_CAPPED_RESOLVER_KEY,
+                ERC203643_CONTROLLER_RESOLVER_KEY,
+                ERC3643_METADATA_RESOLVER_KEY,
+                ERC3643_FREEZE_RESOLVER_KEY,
+                ERC3643_RECOVERY_RESOLVER_KEY,
+                ERC3643_COMPLIANCE_RESOLVER_KEY,
+                ERC3643_COMPLIANCE_MAXBALANCE_RESOLVER_KEY,
+                ERC3643_COMPLIANCE_DMLIM_RESOLVER_KEY,
+            ]
+            const result = buildConfigurationId(seed, resolverKeys)
+
+            // Verify it's a valid hex string with 0x prefix
+            expect(result).to.match(/^0x[0-9a-f]+$/)
+
+            // The result should match our generated Configuration ID
+            expect(result).to.equal(
+                '0x008208000000002a000000004c0000005f006a0046000060000000000000f743'
+            )
+        })
+
+        it('should handle ERC3643 resolver keys in different orders (determinism)', async function () {
+            const seed = CONFIGURATION_ID_ERC3643
+            const resolverKeys1 = [
+                ERC20_RESOLVER_KEY,
+                ERC20_SNAPSHOT_RESOLVER_KEY,
+                ERC3643_METADATA_RESOLVER_KEY,
+                ERC203643_CAPPED_RESOLVER_KEY,
+            ]
+            const resolverKeys2 = [
+                ERC203643_CAPPED_RESOLVER_KEY,
+                ERC3643_METADATA_RESOLVER_KEY,
+                ERC20_SNAPSHOT_RESOLVER_KEY,
+                ERC20_RESOLVER_KEY,
+            ]
+
+            const result1 = buildConfigurationId(seed, resolverKeys1)
+            const result2 = buildConfigurationId(seed, resolverKeys2)
+
+            // Results should be the same regardless of order (sorting ensures determinism)
+            expect(result1).to.equal(result2)
+        })
+
+        it('should verify ERC3643 shares resolver keys with ERC20', async function () {
+            const seed = ethers.ZeroHash
+
+            // ERC20 uses these shared keys (from ERC20_ERC3643_SHARED_RESOLVER_KEYS)
+            const erc20Keys = [
+                ERC20_RESOLVER_KEY,
+                ERC20_SNAPSHOT_RESOLVER_KEY,
+                ERC203643_CAPPED_RESOLVER_KEY,
+                ERC203643_CONTROLLER_RESOLVER_KEY,
+            ]
+
+            // ERC3643 SECURITY_TOKEN uses the same shared keys plus its specific ones
+            const erc3643Keys = [
+                ERC20_RESOLVER_KEY,
+                ERC20_SNAPSHOT_RESOLVER_KEY,
+                ERC203643_CAPPED_RESOLVER_KEY,
+                ERC203643_CONTROLLER_RESOLVER_KEY,
+                ERC3643_METADATA_RESOLVER_KEY,
+                ERC3643_FREEZE_RESOLVER_KEY,
+            ]
+
+            const erc20Result = buildConfigurationId(seed, erc20Keys)
+            const erc3643Result = buildConfigurationId(seed, erc3643Keys)
+
+            // Results should be different (ERC3643 has additional resolver keys)
+            expect(erc20Result).to.not.equal(erc3643Result)
+
+            // But both should be valid
+            expect(erc20Result).to.match(/^0x[0-9a-f]+$/)
+            expect(erc3643Result).to.match(/^0x[0-9a-f]+$/)
+        })
+
+        it('should verify ERC3643 Configuration ID matches SECURITY_TOKEN from sdk config', async function () {
+            const seed = CONFIGURATION_ID_ERC3643
+            // All 10 resolver keys from SECURITY_TOKEN configuration
+            const resolverKeys = [
+                ERC20_RESOLVER_KEY,
+                ERC20_SNAPSHOT_RESOLVER_KEY,
+                ERC203643_CAPPED_RESOLVER_KEY,
+                ERC203643_CONTROLLER_RESOLVER_KEY,
+                ERC3643_METADATA_RESOLVER_KEY,
+                ERC3643_FREEZE_RESOLVER_KEY,
+                ERC3643_RECOVERY_RESOLVER_KEY,
+                ERC3643_COMPLIANCE_RESOLVER_KEY,
+                ERC3643_COMPLIANCE_MAXBALANCE_RESOLVER_KEY,
+                ERC3643_COMPLIANCE_DMLIM_RESOLVER_KEY,
+            ]
+            const result = buildConfigurationId(seed, resolverKeys)
+
+            // This is the deterministic Configuration ID generated in Phase 3
+            // Matches sdk/config/erc3643-configuration.json
+            expect(result).to.equal(
+                '0x008208000000002a000000004c0000005f006a0046000060000000000000f743'
             )
         })
     })

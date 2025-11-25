@@ -1,7 +1,6 @@
 @startuml
 title Arquitectura de SC ISBE
 
-
 skinparam class {
     BackgroundColor White
     ArrowColor Black
@@ -16,100 +15,114 @@ package "Core" {
     class Common <<(A,#228b22) abstract contract>>
     class LibCommon << (L,#FF7700) library >>
     class ISBEContext <<(A,#228b22) abstract contract>>
+    class DidDocumentDetailedInternal <<(A,#228b22) abstract contract>>
+    class VRelationshipsInternal <<(A,#228b22) abstract contract>>
     class AccessControlInternal <<(A,#228b22) abstract contract>> #lightblue
     class PauseInternalCommon <<(A,#228b22) abstract contract>> #FFDEAD
     class OwnableInternal <<(A,#228b22) abstract contract>> #lightgreen
     class ERC165Internal <<(A,#228b22) abstract contract>>
     class Context <<(A,#228b22) abstract contract>>
 
+    DidDocumentDetailedInternal --|> Common
+    DidDocumentDetailedInternal --|> VRelationshipsInternal 
     Common --|> Initializable
     Common --|> ERC165Internal
     Common --|> AccessControlInternal
-  
     Common --|> OwnableInternal
     Common --|> PauseInternalCommon
+    VRelationshipsInternal--|> ISBEContext
     PauseInternalCommon --|> ISBEContext
     OwnableInternal --|> ISBEContext
     ISBEContext --|> Context
     AccessControlInternal --|> LibCommon
 }
 
+' === ERC721 ===
+package "ERC721" {
+    class IERC721 <<(I,#FFD700) interface>> #FFFFE0
+    class IERC721Metadata <<(I,#FFD700) interface>> #FFFFE0
+    class IERC721Isbe <<(I,#FFD700) interface>> #FFFFE0  
+    class ERC721Internal <<(A,#228B22) abstract contract>> #FFFFE0
+    class ERC721InternalCommon <<(A,#228B22) abstract contract>> #FFFFE0
+    class ERC721 <<(A,#228B22) contract>> #FFFFE0
+    class ERC721Facet <<(C,#1E90FF) contract>> #FFFFE0
 
-' === Modules===
-package "Modules" {
-' === ACCESS ===
-package "Access" {
-    class AccessControl <<(C,#1E90FF) contract>> #lightblue
-    class AccessControlFacet <<(C,#1E90FF) contract>> #lightblue
-    class IAccessControl <<(I,#FFD700) interface>> #lightblue
+    ERC721 --|> IERC721Isbe
+    IERC721Isbe--|> IERC721
+    IERC721Isbe--|> IERC721Metadata
+    ERC721 --|> ERC721InternalCommon
+    ERC721Internal --|> DidDocumentDetailedInternal 
+    ERC721Facet --|> ERC721
 
-    AccessControl --|> IAccessControl
-    AccessControl --|> Common
-    AccessControlFacet --|> AccessControl
-}
+    class IERC721Burnable <<(I,#FFD700) interface>> #FFFFE0
+    class ERC721Burnable <<(A,#228B22) contract>> #FFFFE0
+    class ERC721BurnableFacet <<(C,#1E90FF) contract>> #FFFFE0
 
-' === OWNABLE ===
-package "Ownable" {
-    class Ownable <<(C,#1E90FF) contract>> #lightgreen
-    class OwnableBase <<(A,#228B22) abstract contract>> #lightgreen
-    class Ownable2Step <<(C,#1E90FF) contract>> #lightgreen
-    class Ownable2StepInternal <<(A,#228B22) abstract contract>> #lightgreen
-    class Ownable2StepFacet <<(C,#1E90FF) contract>> #lightgreen
-    class OwnableFacet <<(C,#1E90FF) contract>> #lightgreen
-    class IOwnable <<(I,#FFD700) interface>> #lightgreen
-    class IOwnable2Step <<(I,#FFD700) interface>> #lightgreen
-    class OwnableInternal <<(A,#228B22) abstract contract>> #lightgreen
+    ERC721BurnableFacet --|> ERC721Burnable
+    ERC721Burnable --|> IERC721Burnable
+    ERC721Burnable --|> ERC721InternalCommon
 
-    Ownable --|> OwnableBase
-    OwnableBase --|> IOwnable
-    OwnableBase --|> Common
-    Ownable2Step --|> IOwnable2Step
-    Ownable2Step --|> OwnableBase
-    Ownable2Step --|> Ownable2StepInternal
-    Ownable2StepInternal --|> OwnableInternal
-    OwnableFacet --|> Ownable
-    Ownable2StepFacet --|> Ownable2Step
-}
+    class IERC721Controller <<(I,#FFD700) interface>> #FFFFE0
+    class ERC721Controller <<(A,#228B22) contract>> #FFFFE0
+    class ERC721ControllerFacet <<(C,#1E90FF) contract>> #FFFFE0
 
-' === PAUSE ===
-package "Pause" {
-    class Pause <<(A,#228B22) abstract contract>> #FFDEAD
-    class PauseInternal <<(A,#228B22) abstract contract>> #FFDEAD
-    class ISBEPause <<(C,#1E90FF) contract>> #FFDEAD
-    class ISBEPauseFacet <<(C,#1E90FF) contract>> #FFDEAD
-    class IPause <<(I,#FFD700) interface>> #FFDEAD
+    ERC721ControllerFacet --|> ERC721Controller
+    ERC721Controller --|> IERC721Controller
+    ERC721Controller --|> ERC721InternalCommon
 
-    Pause --|> IPause
-    Pause --|> PauseInternal
-    PauseInternal --|> Common
-    ISBEPause --|> Pause
-    ISBEPauseFacet --|> ISBEPause
-}
+    class IERC721Capped <<(I,#FFD700) interface>> #FFFFE0
+    class ERC721CappedInternal <<(A,#228B22) abstract contract>> #FFFFE0
+    class ERC721Capped <<(A,#228B22) abstract contract>> #FFFFE0
+    class ERC721CappedFacet <<(C,#1E90FF) contract>> #FFFFE0
+ 
+    ERC721CappedFacet --|> ERC721Capped
+    ERC721Capped --|> IERC721Capped
+    ERC721Capped --|> ERC721InternalCommon
+    ERC721InternalCommon --|> ERC721CappedInternal
+    ERC721CappedInternal --|> ERC721Internal
 
-' === ASSET TRACKING ===
-package "Asset Tracking" {
-    class AssetEventTracker <<(A,#228B22) abstract contract>> #B5651D
-    class AssetEventTrackerFacet <<(C,#1E90FF) contract>> #B5651D
-    class AssetEventTrackerInternal <<(A,#228B22) abstract contract>> #B5651D
-    class IAssetEventTracker <<(I,#FFD700) interface>> #B5651D
+    class IERC721Snapshot <<(I,#FFD700) interface>> #FFFFE0
+    class ERC721SnapshotInternal <<(A,#228B22) abstract contract>> #FFFFE0
+    class ERC721Snapshot <<(A,#228B22) abstract contract>> #FFFFE0
+    class ERC721SnapshotFacet <<(C,#1E90FF) contract>> #FFFFE0
+    
+    ERC721SnapshotFacet --|> ERC721Snapshot
+    ERC721Snapshot --|> IERC721Snapshot
+    ERC721Snapshot --|> ERC721InternalCommon
+    ERC721InternalCommon --|> ERC721SnapshotInternal
+    ERC721SnapshotInternal --|> ERC721Internal
 
-    AssetEventTracker --|> IAssetEventTracker
-    AssetEventTracker --|> AssetEventTrackerInternal
-    AssetEventTrackerInternal --|> Common
-    AssetEventTrackerFacet --|> AssetEventTracker
-}
+    class IERC721Enumerable <<(I,#FFD700) interface>> #FFFFE0
+    class ERC721EnumerableInternal <<(A,#228B22) abstract contract>> #FFFFE0
+    class ERC721Enumerable <<(A,#228B22) abstract contract>> #FFFFE0
+    class ERC721EnumerableFacet <<(C,#1E90FF) contract>> #FFFFE0
 
-' === HASH TIMESTAMP ===
-package "Hash Timestamp" {
-    class HashTimestamp <<(A,#228B22) abstract contract>> #D8BFD8
-    class HashTimestampFacet <<(C,#1E90FF) contract>> #D8BFD8
-    class HashTimestampInternal <<(A,#228B22) abstract contract>> #D8BFD8
-    class IHashTimestamp <<(I,#FFD700) interface>> #D8BFD8
+    ERC721EnumerableFacet --|> ERC721Enumerable
+    ERC721Enumerable --|> IERC721Enumerable
+    ERC721Enumerable --|> ERC721InternalCommon
+    ERC721InternalCommon --|> ERC721EnumerableInternal
+    ERC721EnumerableInternal --|> ERC721Internal
 
-    HashTimestamp --|> IHashTimestamp
-    HashTimestamp --|> HashTimestampInternal
-    HashTimestampInternal --|> Common
-    HashTimestampFacet --|> HashTimestamp
-}
+    class IERC721Royalty <<(I,#FFD700) interface>> #FFFFE0
+    class ERC721RoyaltyInternal <<(A,#228B22) abstract contract>> #FFFFE0
+    class ERC721Royalty <<(A,#228B22) abstract contract>> #FFFFE0
+    class ERC721RoyaltyFacet <<(C,#1E90FF) contract>> #FFFFE0
+    
+    ERC721RoyaltyFacet --|> ERC721Royalty
+    ERC721Royalty --|> IERC721Royalty
+    ERC721Royalty --|> ERC721InternalCommon
+    ERC721InternalCommon --|> ERC721RoyaltyInternal
+    ERC721RoyaltyInternal --|> ERC721Internal
+
+    class IERC721Consecutive <<(I,#FFD700) interface>> #FFFFE0
+    class ERC721ConsecutiveInternal <<(A,#228B22) abstract contract>> #FFFFE0
+    class ERC721Consecutive <<(A,#228B22) abstract contract>> #FFFFE0
+    class ERC721ConsecutiveFacet <<(C,#1E90FF) contract>> #FFFFE0
+
+    ERC721ConsecutiveFacet --|> ERC721Consecutive
+    ERC721Consecutive --|> IERC721Consecutive
+    ERC721Consecutive --|> ERC721InternalCommon
+    ERC721InternalCommon --|> ERC721ConsecutiveInternal
+    ERC721ConsecutiveInternal --|> ERC721Internal
 }
 @enduml

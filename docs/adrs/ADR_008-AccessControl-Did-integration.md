@@ -187,7 +187,10 @@ This approach provides:
 ```solidity
 // UNCHANGED - existing IAccessControl interface preserved
 interface IAccessControl {
-    function hasRole(bytes32 role, address account) external view returns (bool);
+    function hasRole(
+        bytes32 role,
+        address account
+    ) external view returns (bool);
     function grantRole(bytes32 role, address account) external;
     function revokeRole(bytes32 role, address account) external;
     function getRoleAdmin(bytes32 role) external view returns (bytes32);

@@ -1,0 +1,45 @@
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.28;
+
+import {_ERC3643_COMPLIANCE_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
+import {ERC3643Compliance} from './ERC3643Compliance.sol';
+import {IEIP2535Introspection} from '../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+
+contract ERC3643ComplianceFacet is ERC3643Compliance, IEIP2535Introspection {
+    function interfacesIntrospection()
+        external
+        pure
+        returns (bytes4[] memory _interfaces)
+    {
+        return _implementedInterfaces();
+    }
+
+    function businessIdIntrospection()
+        external
+        pure
+        override
+        returns (bytes32 _businessId)
+    {
+        _businessId = _ERC3643_COMPLIANCE_RESOLVER_KEY;
+    }
+
+    function selectorsIntrospection()
+        external
+        pure
+        override
+        returns (bytes4[] memory _selectors)
+    {
+        uint256 selectorsLength = 6;
+        _selectors = new bytes4[](selectorsLength);
+        _selectors[--selectorsLength] = this
+            .initializeERC3643Compliance
+            .selector;
+        _selectors[--selectorsLength] = this.setMaxBalanceEnabled.selector;
+        _selectors[--selectorsLength] = this.isMaxBalanceEnabled.selector;
+        _selectors[--selectorsLength] = this
+            .setDailyMonthLimitsEnabled
+            .selector;
+        _selectors[--selectorsLength] = this.isDailyMonthLimitsEnabled.selector;
+        _selectors[--selectorsLength] = this.canTransfer.selector;
+    }
+}

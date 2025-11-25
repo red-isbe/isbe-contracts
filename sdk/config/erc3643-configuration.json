@@ -1,0 +1,140 @@
+{
+    "generated": "2025-11-14T10:05:33.723Z",
+    "network": "any",
+    "algorithm": "Position-Based XOR (ADR-003) with lexicographically sorted resolver keys",
+    "note": "Configuration ID is deterministic - same facet selection always produces same ID",
+    "configuration": {
+        "name": "SECURITY_TOKEN",
+        "description": "ERC3643 compliant security token with full regulatory compliance features",
+        "configurationId": "0x008208000000002a000000004c0000005f006a0046000060000000000000f743",
+        "seed": "0x0000000000000000000000000000000000000000000000000000000000003643",
+        "facets": [
+            "ERC20Facet",
+            "ERC20SnapshotFacet",
+            "ERC20CappedFacet",
+            "ERC20ControllerFacet",
+            "ERC3643MetadataFacet",
+            "ERC3643FreezeFacet",
+            "ERC3643RecoveryFacet",
+            "ERC3643ComplianceFacet",
+            "ERC3643ComplianceMaxBalFacet",
+            "ERC3643ComplianceDMLimFacet"
+        ],
+        "resolverKeys": {
+            "base": [
+                "0x2428f215905ecd05cc26794e218b9fad455e6ae2ca828b2f1c1903e8770265ad"
+            ],
+            "erc20Extensions": [
+                "0xc4968fe952eba32a52cb112176a56b4e86a0fbaff835dc8336fa0e804a0af398",
+                "0x1f3e5d6c7b8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f60718293a4b5c6d7e8",
+                "0x9b1f4e8c6d7a5b4c3e2f1a0b9c8d7e6f5a4b3c2d1e0f9e8d7c6b5a4b3c2d1e0f"
+            ],
+            "erc3643Core": [
+                "0x8bffaf1ebc4070155b40757cd1d588dd59fcab63cd7007ebf7755f7f60a0c1e1",
+                "0xb4f0898a6b06b69baf87b46c4c2932dc9b05f07368e9b14ceee64d5d44e8f273",
+                "0x2f59403873a4d80c3817c2b3cf0c1d5105a6c508c118b0c8b9c38582c4068b8f"
+            ],
+            "compliance": [
+                "0x8a5420a9e83a88b62e9b707d311e9dbf53149c09464f3c1c33d0b8d85f7ca10b",
+                "0x439f087ef8d9d8d02c3b2d39c55c55a73b329d5b0d78ab0e81eb0e55343cdd9d",
+                "0x228279b8c9f85cc60c2a3f60cf0371583eaf4d08a3bb4b04cbeb47711165d29e"
+            ]
+        },
+        "features": {
+            "base": [
+                {
+                    "name": "ERC20",
+                    "description": "Standard fungible token functionality"
+                },
+                {
+                    "name": "AccessControl",
+                    "description": "Role-based access control"
+                },
+                {
+                    "name": "Pausable",
+                    "description": "Emergency pause mechanism"
+                }
+            ],
+            "erc20Extensions": [
+                {
+                    "name": "Snapshot",
+                    "description": "Balance snapshots for dividends and voting rights"
+                },
+                {
+                    "name": "Capped Supply",
+                    "description": "Maximum supply limit for regulatory compliance"
+                },
+                {
+                    "name": "Controller",
+                    "description": "Controlled transfers and forced transfer capability"
+                }
+            ],
+            "erc3643Core": [
+                {
+                    "name": "Metadata",
+                    "description": "Extended metadata with onchainID and version tracking"
+                },
+                {
+                    "name": "Freeze",
+                    "description": "Address and partial token freezing capabilities"
+                },
+                {
+                    "name": "Recovery",
+                    "description": "Lost or locked token recovery mechanism"
+                }
+            ],
+            "compliance": [
+                {
+                    "name": "Base Compliance Engine",
+                    "description": "Transfer validation and compliance checking"
+                },
+                {
+                    "name": "Max Balance Limit",
+                    "description": "Per-address maximum balance enforcement"
+                },
+                {
+                    "name": "Daily/Monthly Limits",
+                    "description": "Temporal transfer volume restrictions"
+                }
+            ]
+        },
+        "roles": [
+            {
+                "role": "DEFAULT_ADMIN_ROLE",
+                "description": "Full administrative control"
+            },
+            {
+                "role": "METADATA_ROLE",
+                "description": "Update token metadata and onchainID"
+            },
+            {
+                "role": "FREEZE_ROLE",
+                "description": "Freeze/unfreeze addresses and tokens"
+            },
+            {
+                "role": "RECOVERY_ROLE",
+                "description": "Recover lost or locked tokens"
+            },
+            {
+                "role": "COMPLIANCE_ROLE",
+                "description": "Configure compliance rules and limits"
+            },
+            {
+                "role": "CONTROLLER_ROLE",
+                "description": "Execute forced transfers"
+            },
+            {
+                "role": "CAP_ROLE",
+                "description": "Adjust supply cap (if needed)"
+            },
+            {
+                "role": "SNAPSHOT_ROLE",
+                "description": "Create balance snapshots"
+            },
+            {
+                "role": "PAUSER_ROLE",
+                "description": "Pause/unpause token operations"
+            }
+        ]
+    }
+}

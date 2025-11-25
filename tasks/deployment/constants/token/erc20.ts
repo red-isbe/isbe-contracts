@@ -1,4 +1,7 @@
-import { ERC20_RESOLVER_KEYS } from '../resolverKeys'
+import {
+    ERC20_RESOLVER_KEYS,
+    ERC20_ERC3643_SHARED_RESOLVER_KEYS,
+} from '../resolverKeys'
 import { ARTIFACT_PATHS, CONTRACT_NAMES } from '../configurationIds'
 
 export const ERC20_DEFINITIONS = [
@@ -21,15 +24,15 @@ export const ERC20_DEFINITIONS = [
         artifactPath: ARTIFACT_PATHS.ERC20_BURNABLE,
     },
     {
-        description: CONTRACT_NAMES.ERC20_CAPPED,
-        key: ERC20_RESOLVER_KEYS.CAPPED,
-        contractName: CONTRACT_NAMES.ERC20_CAPPED,
-        artifactPath: ARTIFACT_PATHS.ERC20_CAPPED,
+        description: CONTRACT_NAMES.ERC203643_CAPPED,
+        key: ERC20_ERC3643_SHARED_RESOLVER_KEYS.CAPPED,
+        contractName: CONTRACT_NAMES.ERC203643_CAPPED,
+        artifactPath: ARTIFACT_PATHS.ERC203643_CAPPED,
     },
     {
-        description: CONTRACT_NAMES.ERC20_CONTROLLER,
-        key: ERC20_RESOLVER_KEYS.CONTROLLER,
-        contractName: CONTRACT_NAMES.ERC20_CONTROLLER,
-        artifactPath: ARTIFACT_PATHS.ERC20_CONTROLLER,
+        description: CONTRACT_NAMES.ERC203643_CONTROLLER,
+        key: ERC20_ERC3643_SHARED_RESOLVER_KEYS.CONTROLLER,
+        contractName: CONTRACT_NAMES.ERC203643_CONTROLLER,
+        artifactPath: ARTIFACT_PATHS.ERC203643_CONTROLLER,
     },
 ]

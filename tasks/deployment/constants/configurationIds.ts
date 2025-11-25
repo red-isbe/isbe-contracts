@@ -6,6 +6,8 @@ export const TOKEN_CONFIGURATION_IDS = {
 export const CONFIGURATION_IDS = {
     ERC20: '0x0000000000000000000000000000000000000000000000000000000000000020',
     ERC721: '0x0000000000000000000000000000000000000000000000000000000000000721',
+    ERC3643:
+        '0x0000000000000000000000000000000000000000000000000000000000003643',
     DID_REGISTRY:
         '0x00000000000000000000000000000000000000004449445F5245474953545259',
     HASH_TIMESTAMP:
@@ -37,9 +39,29 @@ export const ARTIFACT_PATHS = {
         'contracts/tokens/erc20/extensions/snapshot/ERC20SnapshotFacet.sol',
     ERC20_BURNABLE:
         'contracts/tokens/erc20/extensions/burn/ERC20BurnableFacet.sol',
-    ERC20_CAPPED: 'contracts/tokens/erc20/extensions/cap/ERC20CappedFacet.sol',
-    ERC20_CONTROLLER:
-        'contracts/tokens/erc20/extensions/controller/ERC20ControllerFacet.sol',
+
+    // ERC203643 Shared facets (used by both ERC20 and ERC3643)
+    ERC203643_CAPPED:
+        'contracts/tokens/erc203643/erc203643capped/ERC203643CappedFacet.sol',
+    ERC203643_CONTROLLER:
+        'contracts/tokens/erc203643/erc203643controller/ERC203643ControllerFacet.sol',
+
+    // ERC3643 Security Token facets
+    ERC3643_METADATA:
+        'contracts/tokens/erc3643/token/erc3643metadata/ERC3643MetadataFacet.sol',
+    ERC3643_FREEZE:
+        'contracts/tokens/erc3643/token/erc3643freeze/ERC3643FreezeFacet.sol',
+    ERC3643_RECOVERY:
+        'contracts/tokens/erc3643/token/erc3643recovery/ERC3643RecoveryFacet.sol',
+    ERC3643_COMPLIANCE:
+        'contracts/tokens/erc3643/compliance/ERC3643ComplianceFacet.sol',
+    ERC3643_COMPLIANCE_MAXBAL:
+        'contracts/tokens/erc3643/compliance/erc3643compliancemaxbalance/ERC3643ComplianceMaxBalFacet.sol',
+    ERC3643_COMPLIANCE_DMLIM:
+        'contracts/tokens/erc3643/compliance/erc3643compliancedaymonthlimits/ERC3643ComplianceDMLimFacet.sol',
+
+    // Whitelist extension (transversal - shared by ERC20, ERC721, ERC3643)
+    BASIC_WHITELIST: 'contracts/tokens/whitelist/basic/BasicWhitelistFacet.sol',
 
     // ERC721 facets
     ERC721: 'contracts/tokens/erc721/ERC721Facet.sol',
@@ -103,8 +125,21 @@ export const CONTRACT_NAMES = {
     ERC20: 'ERC20Facet',
     ERC20_SNAPSHOT: 'ERC20SnapshotFacet',
     ERC20_BURNABLE: 'ERC20BurnableFacet',
-    ERC20_CAPPED: 'ERC20CappedFacet',
-    ERC20_CONTROLLER: 'ERC20ControllerFacet',
+
+    // ERC203643 Shared facets (used by both ERC20 and ERC3643)
+    ERC203643_CAPPED: 'ERC203643CappedFacet',
+    ERC203643_CONTROLLER: 'ERC203643ControllerFacet',
+
+    // ERC3643 Security Token facets
+    ERC3643_METADATA: 'ERC3643MetadataFacet',
+    ERC3643_FREEZE: 'ERC3643FreezeFacet',
+    ERC3643_RECOVERY: 'ERC3643RecoveryFacet',
+    ERC3643_COMPLIANCE: 'ERC3643ComplianceFacet',
+    ERC3643_COMPLIANCE_MAXBAL: 'ERC3643ComplianceMaxBalanceFacet',
+    ERC3643_COMPLIANCE_DMLIM: 'ERC3643ComplianceDMLimFacet',
+
+    // Whitelist extension (transversal - shared by ERC20, ERC721, ERC3643)
+    BASIC_WHITELIST: 'BasicWhitelistFacet',
 
     // ERC721 facets
     ERC721: 'ERC721Facet',

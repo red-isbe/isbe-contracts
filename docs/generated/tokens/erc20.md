@@ -44,6 +44,29 @@ Requirements:
 - `to` cannot be the zero address.
 - the caller must have a balance of at least `amount`.\_
 
+### batchTransfer
+
+```solidity
+function batchTransfer(address[] _toList, uint256[] _amounts) external
+```
+
+Transfer tokens to multiple addresses in a single transaction (batch operation)
+
+\_Transfers tokens from the caller's account to multiple recipients.
+
+     **ERC20 Mode:** Simple batch transfers without additional validations
+     **ERC3643 Mode:** Requires all recipients to be verified and sender/recipients not frozen
+
+     IMPORTANT: THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_toList.length` IS TOO HIGH,
+     USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION_
+
+#### Parameters
+
+| Name      | Type      | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| --------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| \_toList  | address[] | The addresses of the receivers (all must be verified for ERC3643)                                                                                                                                                                                                                                                                                                                                                                                                                |
+| \_amounts | uint256[] | The number of tokens to transfer to each corresponding receiver Requirements: - Caller must have sufficient balance for the total amount - Arrays must have the same length - For ERC3643: all addresses in `_toList` must be verified in Identity Registry - For ERC3643: caller and all recipients must not be frozen Emits: - {Transfer} event for each transfer via internal transfer mechanism Reverts: - {TransferAmountExceedsBalance} if caller has insufficient balance |
+
 ### approve
 
 ```solidity
@@ -309,6 +332,36 @@ struct ERC20Storage {
 function _initialize(string _newName, string _newSymbol, uint8 _newDecimals) internal
 ```
 
+### \_setName
+
+```solidity
+function _setName(string _newName) internal
+```
+
+_Internal function to update the token name in storage.
+Applies the {emptyString} modifier to ensure the input is not an empty string._
+
+#### Parameters
+
+| Name      | Type   | Description                          |
+| --------- | ------ | ------------------------------------ |
+| \_newName | string | The new name to assign to the token. |
+
+### \_setSymbol
+
+```solidity
+function _setSymbol(string _newSymbol) internal
+```
+
+_Internal function to update the token symbol in storage.
+Applies the {emptyString} modifier to ensure the input is not an empty string._
+
+#### Parameters
+
+| Name        | Type   | Description                            |
+| ----------- | ------ | -------------------------------------- |
+| \_newSymbol | string | The new symbol to assign to the token. |
+
 ### \_transfer
 
 ```solidity
@@ -464,6 +517,39 @@ function _balanceOf(address account) internal view returns (uint256)
 function _allowance(address owner, address spender) internal view returns (uint256)
 ```
 
+### \_checkTotalAmount
+
+```solidity
+function _checkTotalAmount(address _from, uint256[] _amounts) internal view returns (uint256 totalAmount)
+```
+
+_Calculates the total amount from an array and validates that the sender has sufficient balance_
+
+#### Parameters
+
+| Name      | Type      | Description                         |
+| --------- | --------- | ----------------------------------- |
+| \_from    | address   | The address to check the balance of |
+| \_amounts | uint256[] | Array of amounts to sum             |
+
+#### Return Values
+
+| Name        | Type    | Description                                                                                                                                                                                                     |
+| ----------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| totalAmount | uint256 | The total sum of all amounts in the array Requirements: - The sender must have a balance greater than or equal to the total amount Reverts: - {TransferAmountExceedsBalance} if sender has insufficient balance |
+
+### \_calculateTotalAmount
+
+```solidity
+function _calculateTotalAmount(uint256[] _amounts) internal pure returns (uint256 totalAmount_)
+```
+
+### \_checkTransferAmountExceedsBalance
+
+```solidity
+function _checkTransferAmountExceedsBalance(uint256 _balance, uint256 _totalAmount) internal pure
+```
+
 ---
 
 ## IERC20Isbe
@@ -522,6 +608,29 @@ error InsufficientAllowance()
 ```
 
 Error thrown when an operation tries to spend more tokens than the assigned allowance.
+
+### batchTransfer
+
+```solidity
+function batchTransfer(address[] _toList, uint256[] _amounts) external
+```
+
+Transfer tokens to multiple addresses in a single transaction (batch operation)
+
+\_Transfers tokens from the caller's account to multiple recipients.
+
+     **ERC20 Mode:** Simple batch transfers without additional validations
+     **ERC3643 Mode:** Requires all recipients to be verified and sender/recipients not frozen
+
+     IMPORTANT: THIS TRANSACTION COULD EXCEED GAS LIMIT IF `_toList.length` IS TOO HIGH,
+     USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION_
+
+#### Parameters
+
+| Name      | Type      | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| --------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| \_toList  | address[] | The addresses of the receivers (all must be verified for ERC3643)                                                                                                                                                                                                                                                                                                                                                                                                                |
+| \_amounts | uint256[] | The number of tokens to transfer to each corresponding receiver Requirements: - Caller must have sufficient balance for the total amount - Arrays must have the same length - For ERC3643: all addresses in `_toList` must be verified in Identity Registry - For ERC3643: caller and all recipients must not be frozen Emits: - {Transfer} event for each transfer via internal transfer mechanism Reverts: - {TransferAmountExceedsBalance} if caller has insufficient balance |
 
 ### initializeErc20
 

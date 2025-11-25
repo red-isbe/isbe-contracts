@@ -3,7 +3,7 @@ import { ethers } from 'hardhat'
 import { Signer, HDNodeWallet } from 'ethers'
 import {
     ERC20,
-    ERC20Capped,
+    ERC203643Capped,
     IAccessControlDid,
     IDidRegistry__factory,
 } from '../typechain-types'
@@ -13,13 +13,15 @@ import {
     SNAPSHOT_ROLE,
     CONTROLLER_ROLE,
     ERC20_RESOLVER_KEY,
-    ERC20_CAPPED_RESOLVER_KEY,
+    ERC203643_CAPPED_RESOLVER_KEY,
     DID_REGISTRY_ROLE,
+    WHITELIST_ROLE,
 } from '../utils/constants'
 import { deployGovernance } from './fixtures/governance'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { EllipticType } from './types/identity'
 import { config } from 'hardhat'
+
 describe('ERC20', function () {
     const decimals = 2
     const name = 'ISBE stable token'
@@ -28,7 +30,7 @@ describe('ERC20', function () {
     let erc20Facet: ERC20
 
     let erc20: ERC20
-    let erc20Capped: ERC20Capped
+    let erc20Capped: ERC203643Capped
 
     let owner: Signer
     let ownerAddress: string
@@ -46,8 +48,8 @@ describe('ERC20', function () {
             erc20: result.erc20,
             erc20Snapshot: result.erc20Snapshot,
             erc20Burnable: result.erc20Burnable,
-            erc20Capped: result.erc20Capped,
-            erc20Controller: result.erc20Controller,
+            erc20Capped: result.erc203643Capped,
+            erc20Controller: result.erc203643Controller,
             accessControl: result.accessControl,
             erc20Facet: result.erc20Facet,
             owner,
@@ -69,10 +71,11 @@ describe('ERC20', function () {
         const otherAccountAddress = await otherAccountSigner.getAddress()
 
         const ERC20Factory = await ethers.getContractFactory('ERC20Facet')
-        const CappedFactory =
-            await ethers.getContractFactory('ERC20CappedFacet')
+        const CappedFactory = await ethers.getContractFactory(
+            'ERC203643CappedFacet'
+        )
 
-        const businessIds = [ERC20_RESOLVER_KEY, ERC20_CAPPED_RESOLVER_KEY]
+        const businessIds = [ERC20_RESOLVER_KEY, ERC203643_CAPPED_RESOLVER_KEY]
         const data = [
             ERC20Factory.interface.encodeFunctionData('initializeErc20', [
                 name,
@@ -101,8 +104,8 @@ describe('ERC20', function () {
             erc20: result.erc20,
             erc20Snapshot: result.erc20Snapshot,
             erc20Burnable: result.erc20Burnable,
-            erc20Capped: result.erc20Capped,
-            erc20Controller: result.erc20Controller,
+            erc20Capped: result.erc203643Capped,
+            erc20Controller: result.erc203643Controller,
             accessControl: result.accessControl,
             erc20Facet: result.erc20Facet,
             owner: ownerSigner,
@@ -118,10 +121,11 @@ describe('ERC20', function () {
         const otherAccountAddress = await otherAccountSigner.getAddress()
 
         const ERC20Factory = await ethers.getContractFactory('ERC20Facet')
-        const CappedFactory =
-            await ethers.getContractFactory('ERC20CappedFacet')
+        const CappedFactory = await ethers.getContractFactory(
+            'ERC203643CappedFacet'
+        )
 
-        const businessIds = [ERC20_RESOLVER_KEY, ERC20_CAPPED_RESOLVER_KEY]
+        const businessIds = [ERC20_RESOLVER_KEY, ERC203643_CAPPED_RESOLVER_KEY]
         const data = [
             ERC20Factory.interface.encodeFunctionData('initializeErc20', [
                 name,
@@ -150,8 +154,8 @@ describe('ERC20', function () {
             erc20: result.erc20,
             erc20Snapshot: result.erc20Snapshot,
             erc20Burnable: result.erc20Burnable,
-            erc20Capped: result.erc20Capped,
-            erc20Controller: result.erc20Controller,
+            erc20Capped: result.erc203643Capped,
+            erc20Controller: result.erc203643Controller,
             accessControl: result.accessControl,
             erc20Facet: result.erc20Facet,
             owner: ownerSigner,
@@ -167,10 +171,11 @@ describe('ERC20', function () {
         const otherAccountAddress = await otherAccountSigner.getAddress()
 
         const ERC20Factory = await ethers.getContractFactory('ERC20Facet')
-        const CappedFactory =
-            await ethers.getContractFactory('ERC20CappedFacet')
+        const CappedFactory = await ethers.getContractFactory(
+            'ERC203643CappedFacet'
+        )
 
-        const businessIds = [ERC20_RESOLVER_KEY, ERC20_CAPPED_RESOLVER_KEY]
+        const businessIds = [ERC20_RESOLVER_KEY, ERC203643_CAPPED_RESOLVER_KEY]
         const data = [
             ERC20Factory.interface.encodeFunctionData('initializeErc20', [
                 name,
@@ -205,8 +210,8 @@ describe('ERC20', function () {
             erc20: result.erc20,
             erc20Snapshot: result.erc20Snapshot,
             erc20Burnable: result.erc20Burnable,
-            erc20Capped: result.erc20Capped,
-            erc20Controller: result.erc20Controller,
+            erc20Capped: result.erc203643Capped,
+            erc20Controller: result.erc203643Controller,
             accessControl: result.accessControl,
             erc20Facet: result.erc20Facet,
             owner: ownerSigner,
@@ -265,6 +270,18 @@ describe('ERC20', function () {
                     'ContractIsAlreadyInitialized'
                 )
                 .withArgs(ERC20_RESOLVER_KEY, 1, 1)
+        })
+
+        it('GIVEN an ERC20 WHEN initialize with empty name THEN it fails', async () => {
+            await expect(
+                erc20.initializeErc20('', symbol, decimals)
+            ).to.be.revertedWithCustomError(erc20, 'EmptyString')
+        })
+
+        it('GIVEN an ERC20 WHEN initialize with empty symbol THEN it fails', async () => {
+            await expect(
+                erc20.initializeErc20(name, '', decimals)
+            ).to.be.revertedWithCustomError(erc20, 'EmptyString')
         })
     })
 
@@ -413,7 +430,7 @@ describe('ERC20', function () {
         it('GIVEN an ERC20 WHEN initializeCap with Zero THEN it fails', async () => {
             await expect(
                 erc20Capped.initializeCap(0)
-            ).to.be.revertedWithCustomError(erc20Capped, 'CapIsZero')
+            ).to.be.revertedWithCustomError(erc20Capped, 'EmptyUint')
         })
 
         it('GIVEN an ERC20 WHEN cap is initialized THEN it can be retrieved', async () => {
@@ -425,7 +442,7 @@ describe('ERC20', function () {
                     erc20,
                     'ContractIsAlreadyInitialized'
                 )
-                .withArgs(ERC20_CAPPED_RESOLVER_KEY, 1, 1)
+                .withArgs(ERC203643_CAPPED_RESOLVER_KEY, 1, 1)
 
             expect(await erc20Capped.cap()).to.equal(1000)
         })
@@ -535,6 +552,375 @@ describe('ERC20', function () {
             )
                 .to.emit(contracts.erc20Capped, 'Transfer')
                 .withArgs(ethers.ZeroAddress, contracts.ownerAddress, 100)
+        })
+
+        describe('Whitelist Integration', () => {
+            it('GIVEN an ERC20 with whitelist enabled WHEN minting to non-whitelisted recipient THEN it fails', async () => {
+                const contracts = await loadFixture(deployPreparedTokensFixture)
+                const basicWhitelist = await ethers.getContractAt(
+                    'BasicWhitelistFacet',
+                    await contracts.erc20.getAddress()
+                )
+
+                await contracts.accessControl.grantRole(
+                    WHITELIST_ROLE,
+                    contracts.ownerAddress
+                )
+
+                // Enable whitelist
+                await basicWhitelist.enableWhitelist()
+
+                await expect(
+                    contracts.erc20Capped.mint(
+                        contracts.otherAccountAddress,
+                        100
+                    )
+                )
+                    .to.be.revertedWithCustomError(
+                        basicWhitelist,
+                        'NotWhitelisted'
+                    )
+                    .withArgs(contracts.otherAccountAddress)
+            })
+
+            it('GIVEN an ERC20 with whitelist enabled WHEN minting to whitelisted recipient THEN it succeeds', async () => {
+                const contracts = await loadFixture(deployPreparedTokensFixture)
+                const basicWhitelist = await ethers.getContractAt(
+                    'BasicWhitelistFacet',
+                    await contracts.erc20.getAddress()
+                )
+
+                await contracts.accessControl.grantRole(
+                    WHITELIST_ROLE,
+                    contracts.ownerAddress
+                )
+
+                // Enable whitelist and add recipient
+                await basicWhitelist.enableWhitelist()
+                await basicWhitelist.addToWhitelist(
+                    contracts.otherAccountAddress
+                )
+
+                await expect(
+                    contracts.erc20Capped.mint(
+                        contracts.otherAccountAddress,
+                        100
+                    )
+                )
+                    .to.emit(contracts.erc20, 'Transfer')
+                    .withArgs(
+                        ethers.ZeroAddress,
+                        contracts.otherAccountAddress,
+                        100
+                    )
+            })
+
+            it('GIVEN an ERC20 with whitelist disabled WHEN minting to non-whitelisted recipient THEN it succeeds', async () => {
+                const contracts = await loadFixture(deployPreparedTokensFixture)
+                const basicWhitelist = await ethers.getContractAt(
+                    'BasicWhitelistFacet',
+                    await contracts.erc20.getAddress()
+                )
+
+                await contracts.accessControl.grantRole(
+                    WHITELIST_ROLE,
+                    contracts.ownerAddress
+                )
+
+                // Disable whitelist if it was enabled
+                if (await basicWhitelist.isWhitelistEnabled()) {
+                    await basicWhitelist.disableWhitelist()
+                }
+
+                await expect(
+                    contracts.erc20Capped.mint(
+                        contracts.otherAccountAddress,
+                        100
+                    )
+                )
+                    .to.emit(contracts.erc20, 'Transfer')
+                    .withArgs(
+                        ethers.ZeroAddress,
+                        contracts.otherAccountAddress,
+                        100
+                    )
+            })
+
+            it('GIVEN an ERC20 with whitelisted recipient WHEN removed from whitelist THEN mint fails', async () => {
+                const contracts = await loadFixture(deployPreparedTokensFixture)
+                const basicWhitelist = await ethers.getContractAt(
+                    'BasicWhitelistFacet',
+                    await contracts.erc20.getAddress()
+                )
+
+                await contracts.accessControl.grantRole(
+                    WHITELIST_ROLE,
+                    contracts.ownerAddress
+                )
+
+                // Enable whitelist, add recipient, then remove
+                await basicWhitelist.enableWhitelist()
+                await basicWhitelist.addToWhitelist(
+                    contracts.otherAccountAddress
+                )
+                await basicWhitelist.removeFromWhitelist(
+                    contracts.otherAccountAddress
+                )
+
+                await expect(
+                    contracts.erc20Capped.mint(
+                        contracts.otherAccountAddress,
+                        100
+                    )
+                )
+                    .to.be.revertedWithCustomError(
+                        basicWhitelist,
+                        'NotWhitelisted'
+                    )
+                    .withArgs(contracts.otherAccountAddress)
+            })
+
+            it('GIVEN an ERC20 with removed recipient WHEN re-added to whitelist THEN mint succeeds', async () => {
+                const contracts = await loadFixture(deployPreparedTokensFixture)
+                const basicWhitelist = await ethers.getContractAt(
+                    'BasicWhitelistFacet',
+                    await contracts.erc20.getAddress()
+                )
+
+                await contracts.accessControl.grantRole(
+                    WHITELIST_ROLE,
+                    contracts.ownerAddress
+                )
+
+                // Enable whitelist, add, remove, then re-add recipient
+                await basicWhitelist.enableWhitelist()
+                await basicWhitelist.addToWhitelist(
+                    contracts.otherAccountAddress
+                )
+                await basicWhitelist.removeFromWhitelist(
+                    contracts.otherAccountAddress
+                )
+                await basicWhitelist.addToWhitelist(
+                    contracts.otherAccountAddress
+                )
+
+                await expect(
+                    contracts.erc20Capped.mint(
+                        contracts.otherAccountAddress,
+                        100
+                    )
+                )
+                    .to.emit(contracts.erc20, 'Transfer')
+                    .withArgs(
+                        ethers.ZeroAddress,
+                        contracts.otherAccountAddress,
+                        100
+                    )
+            })
+        })
+    })
+
+    describe('BatchMint', () => {
+        it('GIVEN an initialized ERC20 WHEN non MINTER tries batchMint THEN it fails', async () => {
+            const contracts = await loadFixture(deployInitializedFixture)
+
+            await expect(
+                contracts.erc20Capped.batchMint([contracts.ownerAddress], [100])
+            ).to.be.revertedWithCustomError(
+                contracts.accessControl,
+                'AccountHasNoRole'
+            )
+        })
+
+        it('GIVEN an initialized ERC20 WHEN batchMint on paused token THEN it fails', async () => {
+            const contracts = await loadFixture(deployPausedFixture)
+
+            await expect(
+                contracts.erc20Capped.batchMint([contracts.ownerAddress], [100])
+            ).to.be.revertedWithCustomError(contracts.erc20, 'IsPaused')
+        })
+
+        it('GIVEN an initialized ERC20 WHEN arrays have different lengths THEN it fails', async () => {
+            const contracts = await loadFixture(deployPreparedTokensFixture)
+
+            await expect(
+                contracts.erc20Capped.batchMint(
+                    [contracts.ownerAddress, contracts.otherAccountAddress],
+                    [100]
+                )
+            ).to.be.revertedWithCustomError(contracts.erc20, 'NotSameLength')
+        })
+
+        it('GIVEN an initialized ERC20 WHEN batchMint exceeds cap THEN it fails', async () => {
+            const contracts = await loadFixture(deployPreparedTokensFixture)
+
+            await expect(
+                contracts.erc20Capped.batchMint(
+                    [contracts.ownerAddress, contracts.otherAccountAddress],
+                    [600, 600]
+                )
+            ).to.be.revertedWithCustomError(
+                contracts.erc20Capped,
+                'CapExceeded'
+            )
+        })
+
+        it('GIVEN an ERC20 WHEN it is prepared THEN batchMint with empty arrays succeeds', async () => {
+            const contracts = await loadFixture(deployPreparedTokensFixture)
+            const initialSupply = await contracts.erc20.totalSupply()
+
+            await expect(contracts.erc20Capped.batchMint([], [])).to.not.be
+                .reverted
+
+            expect(await contracts.erc20.totalSupply()).to.equal(initialSupply)
+        })
+
+        it('GIVEN an ERC20 WHEN it is prepared THEN batchMint to multiple addresses succeeds', async () => {
+            const contracts = await loadFixture(deployPreparedTokensFixture)
+            const recipients = [
+                contracts.ownerAddress,
+                contracts.otherAccountAddress,
+            ]
+            const amounts = [100, 200]
+
+            await expect(contracts.erc20Capped.batchMint(recipients, amounts))
+                .to.emit(contracts.erc20, 'Transfer')
+                .withArgs(ethers.ZeroAddress, recipients[0], amounts[0])
+                .to.emit(contracts.erc20, 'Transfer')
+                .withArgs(ethers.ZeroAddress, recipients[1], amounts[1])
+
+            expect(await contracts.erc20.totalSupply()).to.equal(300)
+            expect(
+                await contracts.erc20.balanceOf(contracts.ownerAddress)
+            ).to.equal(100)
+            expect(
+                await contracts.erc20.balanceOf(contracts.otherAccountAddress)
+            ).to.equal(200)
+        })
+
+        it('GIVEN an ERC20 WHEN batchMint to single address THEN it succeeds', async () => {
+            const contracts = await loadFixture(deployPreparedTokensFixture)
+
+            await expect(
+                contracts.erc20Capped.batchMint([contracts.ownerAddress], [150])
+            )
+                .to.emit(contracts.erc20, 'Transfer')
+                .withArgs(ethers.ZeroAddress, contracts.ownerAddress, 150)
+
+            expect(await contracts.erc20.totalSupply()).to.equal(150)
+            expect(
+                await contracts.erc20.balanceOf(contracts.ownerAddress)
+            ).to.equal(150)
+        })
+
+        it('GIVEN an ERC20 WHEN batchMint with exact cap THEN it succeeds', async () => {
+            const contracts = await loadFixture(deployPreparedTokensFixture)
+
+            await expect(
+                contracts.erc20Capped.batchMint(
+                    [contracts.ownerAddress, contracts.otherAccountAddress],
+                    [400, 600]
+                )
+            )
+                .to.emit(contracts.erc20, 'Transfer')
+                .withArgs(ethers.ZeroAddress, contracts.ownerAddress, 400)
+                .to.emit(contracts.erc20, 'Transfer')
+                .withArgs(
+                    ethers.ZeroAddress,
+                    contracts.otherAccountAddress,
+                    600
+                )
+
+            expect(await contracts.erc20.totalSupply()).to.equal(1000)
+            expect(await contracts.erc20Capped.cap()).to.equal(1000)
+        })
+
+        it('GIVEN an ERC20 WHEN batchMint with zero amounts THEN it succeeds', async () => {
+            const contracts = await loadFixture(deployPreparedTokensFixture)
+
+            await expect(
+                contracts.erc20Capped.batchMint([contracts.ownerAddress], [0])
+            )
+                .to.emit(contracts.erc20, 'Transfer')
+                .withArgs(ethers.ZeroAddress, contracts.ownerAddress, 0)
+
+            expect(await contracts.erc20.totalSupply()).to.equal(0)
+        })
+
+        it('GIVEN an ERC20 WHEN batchMint after partial supply THEN it respects remaining cap', async () => {
+            const contracts = await loadFixture(deployPreparedTokensFixture)
+
+            // Mint 300 first
+            await contracts.erc20Capped.mint(contracts.ownerAddress, 300)
+
+            // Batch mint remaining 700
+            await expect(
+                contracts.erc20Capped.batchMint(
+                    [contracts.ownerAddress, contracts.otherAccountAddress],
+                    [400, 300]
+                )
+            ).to.not.be.reverted
+
+            expect(await contracts.erc20.totalSupply()).to.equal(1000)
+        })
+
+        describe('Whitelist Integration', () => {
+            it('GIVEN an ERC20 with whitelist enabled WHEN batchMinting to non-whitelisted recipient THEN it fails', async () => {
+                const contracts = await loadFixture(deployPreparedTokensFixture)
+                const basicWhitelist = await ethers.getContractAt(
+                    'BasicWhitelistFacet',
+                    await contracts.erc20.getAddress()
+                )
+
+                await contracts.accessControl.grantRole(
+                    WHITELIST_ROLE,
+                    contracts.ownerAddress
+                )
+
+                // Enable whitelist
+                await basicWhitelist.enableWhitelist()
+
+                await expect(
+                    contracts.erc20Capped.batchMint(
+                        [contracts.otherAccountAddress],
+                        [100]
+                    )
+                )
+                    .to.be.revertedWithCustomError(
+                        basicWhitelist,
+                        'NotWhitelisted'
+                    )
+                    .withArgs(contracts.otherAccountAddress)
+            })
+
+            it('GIVEN an ERC20 with whitelist enabled WHEN batchMinting to whitelisted recipients THEN it succeeds', async () => {
+                const contracts = await loadFixture(deployPreparedTokensFixture)
+                const basicWhitelist = await ethers.getContractAt(
+                    'BasicWhitelistFacet',
+                    await contracts.erc20.getAddress()
+                )
+
+                await contracts.accessControl.grantRole(
+                    WHITELIST_ROLE,
+                    contracts.ownerAddress
+                )
+
+                // Enable whitelist and add recipients
+                await basicWhitelist.enableWhitelist()
+                await basicWhitelist.addToWhitelist(contracts.ownerAddress)
+                await basicWhitelist.addToWhitelist(
+                    contracts.otherAccountAddress
+                )
+
+                await expect(
+                    contracts.erc20Capped.batchMint(
+                        [contracts.ownerAddress, contracts.otherAccountAddress],
+                        [100, 200]
+                    )
+                ).to.not.be.reverted
+
+                expect(await contracts.erc20.totalSupply()).to.equal(300)
+            })
         })
     })
 
@@ -721,6 +1107,156 @@ describe('ERC20', function () {
                 )
             ).to.be.equal(0)
         })
+
+        describe('Whitelist Integration', () => {
+            it('GIVEN an ERC20 with whitelist enabled WHEN transferring to non-whitelisted recipient THEN it fails', async () => {
+                const contracts = await prepare()
+                const basicWhitelist = await ethers.getContractAt(
+                    'BasicWhitelistFacet',
+                    await contracts.erc20.getAddress()
+                )
+
+                await contracts.accessControl.grantRole(
+                    WHITELIST_ROLE,
+                    contracts.ownerAddress
+                )
+
+                // Enable whitelist
+                await basicWhitelist.enableWhitelist()
+
+                await expect(
+                    contracts.erc20.transfer(contracts.otherAccountAddress, 50)
+                )
+                    .to.be.revertedWithCustomError(
+                        basicWhitelist,
+                        'NotWhitelisted'
+                    )
+                    .withArgs(contracts.otherAccountAddress)
+            })
+
+            it('GIVEN an ERC20 with whitelist enabled WHEN transferring to whitelisted recipient THEN it succeeds', async () => {
+                const contracts = await prepare()
+                const basicWhitelist = await ethers.getContractAt(
+                    'BasicWhitelistFacet',
+                    await contracts.erc20.getAddress()
+                )
+
+                await contracts.accessControl.grantRole(
+                    WHITELIST_ROLE,
+                    contracts.ownerAddress
+                )
+
+                // Enable whitelist and add recipient
+                await basicWhitelist.enableWhitelist()
+                await basicWhitelist.addToWhitelist(
+                    contracts.otherAccountAddress
+                )
+
+                await expect(
+                    contracts.erc20.transfer(contracts.otherAccountAddress, 50)
+                )
+                    .to.emit(contracts.erc20, 'Transfer')
+                    .withArgs(
+                        contracts.ownerAddress,
+                        contracts.otherAccountAddress,
+                        50
+                    )
+            })
+
+            it('GIVEN an ERC20 with whitelist disabled WHEN transferring to non-whitelisted recipient THEN it succeeds', async () => {
+                const contracts = await prepare()
+                const basicWhitelist = await ethers.getContractAt(
+                    'BasicWhitelistFacet',
+                    await contracts.erc20.getAddress()
+                )
+
+                await contracts.accessControl.grantRole(
+                    WHITELIST_ROLE,
+                    contracts.ownerAddress
+                )
+
+                // Disable whitelist if it was enabled
+                if (await basicWhitelist.isWhitelistEnabled()) {
+                    await basicWhitelist.disableWhitelist()
+                }
+
+                await expect(
+                    contracts.erc20.transfer(contracts.otherAccountAddress, 50)
+                )
+                    .to.emit(contracts.erc20, 'Transfer')
+                    .withArgs(
+                        contracts.ownerAddress,
+                        contracts.otherAccountAddress,
+                        50
+                    )
+            })
+
+            it('GIVEN an ERC20 with whitelisted recipient WHEN removed from whitelist THEN transfer fails', async () => {
+                const contracts = await prepare()
+                const basicWhitelist = await ethers.getContractAt(
+                    'BasicWhitelistFacet',
+                    await contracts.erc20.getAddress()
+                )
+
+                await contracts.accessControl.grantRole(
+                    WHITELIST_ROLE,
+                    contracts.ownerAddress
+                )
+
+                // Enable whitelist, add recipient, then remove
+                await basicWhitelist.enableWhitelist()
+                await basicWhitelist.addToWhitelist(
+                    contracts.otherAccountAddress
+                )
+                await basicWhitelist.removeFromWhitelist(
+                    contracts.otherAccountAddress
+                )
+
+                await expect(
+                    contracts.erc20.transfer(contracts.otherAccountAddress, 50)
+                )
+                    .to.be.revertedWithCustomError(
+                        basicWhitelist,
+                        'NotWhitelisted'
+                    )
+                    .withArgs(contracts.otherAccountAddress)
+            })
+
+            it('GIVEN an ERC20 with removed recipient WHEN re-added to whitelist THEN transfer succeeds', async () => {
+                const contracts = await prepare()
+                const basicWhitelist = await ethers.getContractAt(
+                    'BasicWhitelistFacet',
+                    await contracts.erc20.getAddress()
+                )
+
+                await contracts.accessControl.grantRole(
+                    WHITELIST_ROLE,
+                    contracts.ownerAddress
+                )
+
+                // Enable whitelist, add, remove, then re-add recipient
+                await basicWhitelist.enableWhitelist()
+                await basicWhitelist.addToWhitelist(
+                    contracts.otherAccountAddress
+                )
+                await basicWhitelist.removeFromWhitelist(
+                    contracts.otherAccountAddress
+                )
+                await basicWhitelist.addToWhitelist(
+                    contracts.otherAccountAddress
+                )
+
+                await expect(
+                    contracts.erc20.transfer(contracts.otherAccountAddress, 50)
+                )
+                    .to.emit(contracts.erc20, 'Transfer')
+                    .withArgs(
+                        contracts.ownerAddress,
+                        contracts.otherAccountAddress,
+                        50
+                    )
+            })
+        })
     })
 
     describe('TransferFrom', () => {
@@ -860,6 +1396,275 @@ describe('ERC20', function () {
                 ).to.be.equal(ethers.MaxUint256)
             }
         )
+
+        describe('Whitelist Integration', () => {
+            it('GIVEN an ERC20 with whitelist enabled WHEN transferFrom to non-whitelisted recipient THEN it fails', async () => {
+                const contracts = await prepare()
+                const basicWhitelist = await ethers.getContractAt(
+                    'BasicWhitelistFacet',
+                    await contracts.erc20.getAddress()
+                )
+
+                await contracts.accessControl.grantRole(
+                    WHITELIST_ROLE,
+                    contracts.ownerAddress
+                )
+
+                // Approve and enable whitelist
+                await contracts.erc20
+                    .connect(contracts.otherAccount)
+                    .approve(contracts.ownerAddress, 100)
+                await basicWhitelist.enableWhitelist()
+
+                // Create a third account that is not whitelisted
+                const [, , thirdAccount] = await ethers.getSigners()
+                const thirdAccountAddress = await thirdAccount.getAddress()
+
+                await expect(
+                    contracts.erc20.transferFrom(
+                        contracts.otherAccountAddress,
+                        thirdAccountAddress,
+                        50
+                    )
+                )
+                    .to.be.revertedWithCustomError(
+                        basicWhitelist,
+                        'NotWhitelisted'
+                    )
+                    .withArgs(thirdAccountAddress)
+            })
+
+            it('GIVEN an ERC20 with whitelist enabled WHEN transferFrom to whitelisted recipient THEN it succeeds', async () => {
+                const contracts = await prepare()
+                const basicWhitelist = await ethers.getContractAt(
+                    'BasicWhitelistFacet',
+                    await contracts.erc20.getAddress()
+                )
+
+                await contracts.accessControl.grantRole(
+                    WHITELIST_ROLE,
+                    contracts.ownerAddress
+                )
+
+                // Approve, enable whitelist, and add recipient
+                await contracts.erc20
+                    .connect(contracts.otherAccount)
+                    .approve(contracts.ownerAddress, 100)
+                await basicWhitelist.enableWhitelist()
+                await basicWhitelist.addToWhitelist(contracts.ownerAddress)
+
+                await expect(
+                    contracts.erc20.transferFrom(
+                        contracts.otherAccountAddress,
+                        contracts.ownerAddress,
+                        50
+                    )
+                )
+                    .to.emit(contracts.erc20, 'Transfer')
+                    .withArgs(
+                        contracts.otherAccountAddress,
+                        contracts.ownerAddress,
+                        50
+                    )
+            })
+        })
+    })
+
+    describe('BatchTransfer', () => {
+        const prepare = async (init_pause: boolean = false) => {
+            const contracts = init_pause
+                ? await loadFixture(deployPausedFixture)
+                : await loadFixture(deployPreparedTokensFixture)
+
+            if (init_pause) return contracts
+
+            await contracts.erc20Capped.mint(contracts.ownerAddress, 300)
+            return contracts
+        }
+
+        it('GIVEN an ERC20 initialized WHEN try to use address(0) in recipients THEN it fails', async () => {
+            const contracts = await prepare()
+            await expect(
+                contracts.erc20.batchTransfer(
+                    [ethers.ZeroAddress, contracts.otherAccountAddress],
+                    [50, 50]
+                )
+            ).to.be.revertedWithCustomError(contracts.erc20, 'AddressZero')
+        })
+
+        it('GIVEN an ERC20 initialized WHEN arrays have different lengths THEN it fails', async () => {
+            const contracts = await prepare()
+            await expect(
+                contracts.erc20.batchTransfer(
+                    [contracts.otherAccountAddress],
+                    [50, 100]
+                )
+            ).to.be.revertedWithCustomError(contracts.erc20, 'NotSameLength')
+        })
+
+        it('GIVEN an ERC20 initialized WHEN try to batch transfer without enough balance THEN it fails', async () => {
+            const contracts = await prepare()
+            await expect(
+                contracts.erc20.batchTransfer(
+                    [contracts.otherAccountAddress, contracts.ownerAddress],
+                    [200, 200]
+                )
+            ).to.be.revertedWithCustomError(
+                contracts.erc20,
+                'TransferAmountExceedsBalance'
+            )
+        })
+
+        it('GIVEN an ERC20 initialized WHEN try to batch transfer from a paused token THEN it fails', async () => {
+            const contracts = await loadFixture(deployPausedFixture)
+
+            await expect(
+                contracts.erc20.batchTransfer([contracts.ownerAddress], [0])
+            ).to.be.revertedWithCustomError(contracts.erc20, 'IsPaused')
+        })
+
+        it('GIVEN an ERC20 WHEN it is prepared THEN a batch transfer can be made', async () => {
+            const contracts = await prepare()
+            const recipients = [
+                contracts.otherAccountAddress,
+                contracts.ownerAddress,
+            ]
+            const amounts = [100, 50]
+
+            await expect(contracts.erc20.batchTransfer(recipients, amounts))
+                .to.emit(contracts.erc20, 'Transfer')
+                .withArgs(contracts.ownerAddress, recipients[0], amounts[0])
+                .to.emit(contracts.erc20, 'Transfer')
+                .withArgs(contracts.ownerAddress, recipients[1], amounts[1])
+
+            expect(await contracts.erc20.totalSupply()).to.be.equal(300)
+            expect(
+                await contracts.erc20.balanceOf(contracts.ownerAddress)
+            ).to.be.equal(200)
+            expect(
+                await contracts.erc20.balanceOf(contracts.otherAccountAddress)
+            ).to.be.equal(100)
+        })
+
+        it('GIVEN an ERC20 WHEN batch transfer with empty arrays THEN it succeeds without transfers', async () => {
+            const contracts = await prepare()
+            await expect(contracts.erc20.batchTransfer([], [])).to.not.be
+                .reverted
+
+            expect(await contracts.erc20.totalSupply()).to.be.equal(300)
+            expect(
+                await contracts.erc20.balanceOf(contracts.ownerAddress)
+            ).to.be.equal(300)
+        })
+
+        it('GIVEN an ERC20 WHEN batch transfer to single recipient THEN it succeeds', async () => {
+            const contracts = await prepare()
+            await expect(
+                contracts.erc20.batchTransfer(
+                    [contracts.otherAccountAddress],
+                    [150]
+                )
+            )
+                .to.emit(contracts.erc20, 'Transfer')
+                .withArgs(
+                    contracts.ownerAddress,
+                    contracts.otherAccountAddress,
+                    150
+                )
+
+            expect(await contracts.erc20.totalSupply()).to.be.equal(300)
+            expect(
+                await contracts.erc20.balanceOf(contracts.ownerAddress)
+            ).to.be.equal(150)
+            expect(
+                await contracts.erc20.balanceOf(contracts.otherAccountAddress)
+            ).to.be.equal(150)
+        })
+
+        it('GIVEN an ERC20 WHEN batch transfer with exact balance THEN it succeeds', async () => {
+            const contracts = await prepare()
+            await expect(
+                contracts.erc20.batchTransfer(
+                    [contracts.otherAccountAddress, contracts.ownerAddress],
+                    [200, 100]
+                )
+            )
+                .to.emit(contracts.erc20, 'Transfer')
+                .withArgs(
+                    contracts.ownerAddress,
+                    contracts.otherAccountAddress,
+                    200
+                )
+                .to.emit(contracts.erc20, 'Transfer')
+                .withArgs(contracts.ownerAddress, contracts.ownerAddress, 100)
+
+            expect(await contracts.erc20.totalSupply()).to.be.equal(300)
+            expect(
+                await contracts.erc20.balanceOf(contracts.ownerAddress)
+            ).to.be.equal(100)
+            expect(
+                await contracts.erc20.balanceOf(contracts.otherAccountAddress)
+            ).to.be.equal(200)
+        })
+
+        describe('Whitelist Integration', () => {
+            it('GIVEN an ERC20 with whitelist enabled WHEN batchTransfer to non-whitelisted recipient THEN it fails', async () => {
+                const contracts = await prepare()
+                const basicWhitelist = await ethers.getContractAt(
+                    'BasicWhitelistFacet',
+                    await contracts.erc20.getAddress()
+                )
+
+                await contracts.accessControl.grantRole(
+                    WHITELIST_ROLE,
+                    contracts.ownerAddress
+                )
+
+                // Enable whitelist
+                await basicWhitelist.enableWhitelist()
+
+                await expect(
+                    contracts.erc20.batchTransfer(
+                        [contracts.otherAccountAddress],
+                        [100]
+                    )
+                )
+                    .to.be.revertedWithCustomError(
+                        basicWhitelist,
+                        'NotWhitelisted'
+                    )
+                    .withArgs(contracts.otherAccountAddress)
+            })
+
+            it('GIVEN an ERC20 with whitelist enabled WHEN batchTransfer to whitelisted recipients THEN it succeeds', async () => {
+                const contracts = await prepare()
+                const basicWhitelist = await ethers.getContractAt(
+                    'BasicWhitelistFacet',
+                    await contracts.erc20.getAddress()
+                )
+
+                await contracts.accessControl.grantRole(
+                    WHITELIST_ROLE,
+                    contracts.ownerAddress
+                )
+
+                // Enable whitelist and add recipients
+                await basicWhitelist.enableWhitelist()
+                await basicWhitelist.addToWhitelist(contracts.ownerAddress)
+                await basicWhitelist.addToWhitelist(
+                    contracts.otherAccountAddress
+                )
+
+                await expect(
+                    contracts.erc20.batchTransfer(
+                        [contracts.ownerAddress, contracts.otherAccountAddress],
+                        [100, 200]
+                    )
+                ).to.not.be.reverted
+
+                expect(await contracts.erc20.totalSupply()).to.equal(300)
+            })
+        })
     })
 
     describe('Snapshot', () => {
@@ -1123,7 +1928,7 @@ describe('ERC20', function () {
         let addressAccountAddress: string
         let useCaseAccessControlDid: IAccessControlDid
         let erc20Mixed: ERC20
-        let erc20CappedMixed: ERC20Capped
+        let erc20CappedMixed: ERC203643Capped
         let accessControlMixed: unknown
 
         function walletOfFirstSigner(): HDNodeWallet {
@@ -1148,10 +1953,14 @@ describe('ERC20', function () {
 
             // Deploy ERC20 with initialization
             const ERC20Factory = await ethers.getContractFactory('ERC20Facet')
-            const CappedFactory =
-                await ethers.getContractFactory('ERC20CappedFacet')
+            const CappedFactory = await ethers.getContractFactory(
+                'ERC203643CappedFacet'
+            )
 
-            const businessIds = [ERC20_RESOLVER_KEY, ERC20_CAPPED_RESOLVER_KEY]
+            const businessIds = [
+                ERC20_RESOLVER_KEY,
+                ERC203643_CAPPED_RESOLVER_KEY,
+            ]
             const data = [
                 ERC20Factory.interface.encodeFunctionData('initializeErc20', [
                     name,
@@ -1246,7 +2055,7 @@ describe('ERC20', function () {
 
             return {
                 erc20: govResult.erc20,
-                erc20Capped: govResult.erc20Capped,
+                erc20Capped: govResult.erc203643Capped,
                 erc20Snapshot: govResult.erc20Snapshot,
                 accessControl: govResult.accessControl,
                 useCaseAccessControlDid,
