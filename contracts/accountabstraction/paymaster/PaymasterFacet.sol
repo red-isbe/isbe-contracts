@@ -3,7 +3,7 @@ pragma solidity ^0.8.28;
 
 import {IEIP2535Introspection} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 import {Paymaster} from './Paymaster.sol';
-import {_AA_PAYMASTER_PAYMASTER_KEY} from '../../constants/resolverKeys.sol';
+import {_ACCOUNT_ABSTRACTION_PAYMASTER_PAYMASTER_KEY} from '../../constants/resolverKeys.sol';
 
 /**
  * @title ERC-3447 Paymaster Facet
@@ -44,7 +44,7 @@ contract PaymasterFacet is Paymaster, IEIP2535Introspection {
         override
         returns (bytes32 businessId_)
     {
-        return _AA_PAYMASTER_PAYMASTER_KEY;
+        return _ACCOUNT_ABSTRACTION_PAYMASTER_PAYMASTER_KEY;
     }
 
     /**

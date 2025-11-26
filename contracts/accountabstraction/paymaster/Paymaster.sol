@@ -6,7 +6,8 @@ import {IPaymaster} from '@account-abstraction/contracts/interfaces/IPaymaster.s
 import {PackedUserOperation} from '@account-abstraction/contracts/interfaces/PackedUserOperation.sol';
 import {IBasePaymaster} from './IBasePaymaster.sol';
 import {PaymasterInternal} from './PaymasterInternal.sol';
-import {_AA_PAYMASTER_PAYMASTER_KEY} from '../../constants/resolverKeys.sol';
+import {_ACCOUNT_ABSTRACTION_PAYMASTER_PAYMASTER_KEY} from '../../constants/resolverKeys.sol';
+import {_ACCOUNT_ABSTRACTION_PAYMASTER_VERSION} from '../../constants/facetVersions.sol';
 
 /**
  * @title Paymaster Internal Implementation
@@ -31,7 +32,10 @@ abstract contract Paymaster is IBasePaymaster, PaymasterInternal {
         external
         onlyOwner
         addressIsNotZero(address(_entryPoint))
-        initializer(_AA_PAYMASTER_PAYMASTER_KEY)
+        initializer(
+            _ACCOUNT_ABSTRACTION_PAYMASTER_PAYMASTER_KEY,
+            _ACCOUNT_ABSTRACTION_PAYMASTER_VERSION
+        )
     {
         _initializePaymaster(_entryPoint);
         emit PaymasterInitialized(address(_entryPoint));

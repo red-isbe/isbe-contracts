@@ -15,7 +15,7 @@ import {
     ISBE_CUT_RESOLVER_KEY,
     ISBE_LOUPE_RESOLVER_KEY,
     AA_PAYMASTER_PAYMASTER_KEY,
-    CONFIGURATION_AA_PAYMASTER,
+    CONFIGURATION_ACCOUNT_ABSTRACTION_PAYMASTER,
     OWNABLE_RESOLVER_KEY,
 } from '../../utils/constants'
 import { getEvent } from '../../scripts/utils/getEvent'
@@ -104,19 +104,22 @@ export async function deployPaymasterUseCaseFacets(
         PaymasterFacetFactory
     )
 
-    await isbeFactory.setConfiguration(CONFIGURATION_AA_PAYMASTER, [
-        {
-            businessId: OWNABLE_RESOLVER_KEY,
-            version: 1,
-        },
-        {
-            businessId: AA_PAYMASTER_PAYMASTER_KEY,
-            version: 1,
-        },
-    ])
+    await isbeFactory.setConfiguration(
+        CONFIGURATION_ACCOUNT_ABSTRACTION_PAYMASTER,
+        [
+            {
+                businessId: OWNABLE_RESOLVER_KEY,
+                version: 1,
+            },
+            {
+                businessId: AA_PAYMASTER_PAYMASTER_KEY,
+                version: 1,
+            },
+        ]
+    )
 
     const tx = await isbeFactory.deployUseCase(
-        CONFIGURATION_AA_PAYMASTER,
+        CONFIGURATION_ACCOUNT_ABSTRACTION_PAYMASTER,
         1,
         rbacs,
         init_pause,

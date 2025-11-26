@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { ethers } from 'hardhat'
+import { ethers, network } from 'hardhat'
 import { Signer, ZeroAddress, AbiCoder } from 'ethers'
 import {
     MockEntryPoint,
@@ -8,7 +8,7 @@ import {
 } from '../../typechain-types'
 import {
     PAUSER_ROLE,
-    CONFIGURATION_AA_PAYMASTER,
+    CONFIGURATION_ACCOUNT_ABSTRACTION_PAYMASTER,
     AA_PAYMASTER_PAYMASTER_KEY,
 } from '../../utils/constants'
 import { deployGovernance } from '../fixtures/governance'
@@ -20,6 +20,7 @@ const SIG_VALIDATION_SUCCESS = 0n
 const SIG_VALIDATION_FAILED = 1n
 
 describe('Account Abstraction Paymaster', () => {
+    let adminAccount: Signer
     let adminAccountAddress: string
     let account_2: Signer
     let account_2Address: string
@@ -82,7 +83,7 @@ describe('Account Abstraction Paymaster', () => {
         const governanceResult = await deployGovernance(
             adminAccountSigner,
             updatedRbacs,
-            CONFIGURATION_AA_PAYMASTER,
+            CONFIGURATION_ACCOUNT_ABSTRACTION_PAYMASTER,
             init_pause
         )
 
@@ -123,6 +124,7 @@ describe('Account Abstraction Paymaster', () => {
         entryPoint = contracts.entryPoint
         paymaster = contracts.paymaster
         pause = contracts.pause
+        adminAccount = contracts.adminAccount
         adminAccountAddress = contracts.adminAccountAddress
         account_2 = contracts.account_2
         account_2Address = contracts.account_2Address
@@ -350,7 +352,7 @@ describe('Account Abstraction Paymaster', () => {
                     paymaster,
                     'ContractIsAlreadyInitialized'
                 )
-                .withArgs(AA_PAYMASTER_PAYMASTER_KEY)
+                .withArgs(AA_PAYMASTER_PAYMASTER_KEY, 1, 1)
         })
 
         it('GIVEN Paymaster deployed WHEN initialize THEN success', async () => {
@@ -550,12 +552,11 @@ describe('Account Abstraction Paymaster', () => {
             await paymaster.deposit({ value: maxCost })
             await paymaster.whitelist(sender)
 
-            const response = await entryPoint.validatePaymasterUserOpMockCall(
-                paymaster,
-                userOp,
-                userOpHash,
-                maxCost
-            )
+            const entryPointSigner = await getEntryPointSignerImpersonation()
+
+            const response = await paymaster
+                .connect(entryPointSigner)
+                .validatePaymasterUserOp(userOp, userOpHash, maxCost)
             expect(response.validationData).to.equal(SIG_VALIDATION_SUCCESS)
         })
 
@@ -568,12 +569,11 @@ describe('Account Abstraction Paymaster', () => {
             const userOpHash = await entryPoint.getUserOpHash(userOp)
             const maxCost = 100n
 
-            const response = await entryPoint.validatePaymasterUserOpMockCall(
-                paymaster,
-                userOp,
-                userOpHash,
-                maxCost
-            )
+            const entryPointSigner = await getEntryPointSignerImpersonation()
+
+            const response = await paymaster
+                .connect(entryPointSigner)
+                .validatePaymasterUserOp(userOp, userOpHash, maxCost)
             expect(response.validationData).to.equal(SIG_VALIDATION_FAILED)
         })
 
@@ -589,12 +589,11 @@ describe('Account Abstraction Paymaster', () => {
             await paymaster.deposit({ value: maxCost - 10n })
             await paymaster.whitelist(sender)
 
-            const response = await entryPoint.validatePaymasterUserOpMockCall(
-                paymaster,
-                userOp,
-                userOpHash,
-                maxCost
-            )
+            const entryPointSigner = await getEntryPointSignerImpersonation()
+
+            const response = await paymaster
+                .connect(entryPointSigner)
+                .validatePaymasterUserOp(userOp, userOpHash, maxCost)
             expect(response.validationData).to.equal(SIG_VALIDATION_FAILED)
         })
     })
@@ -645,4 +644,22 @@ describe('Account Abstraction Paymaster', () => {
                 .withArgs(sender, opMode, maxCost)
         })
     })
+
+    async function getEntryPointSignerImpersonation(
+        initialBalance?: bigint
+    ): Promise<Signer> {
+        const entryPointAddress = await entryPoint.getAddress()
+        await network.provider.request({
+            method: 'hardhat_impersonateAccount',
+            params: [entryPointAddress],
+        })
+        const entryPointSigner =
+            await ethers.provider.getSigner(entryPointAddress)
+        await adminAccount.sendTransaction({
+            to: entryPointAddress,
+            value: initialBalance ?? ethers.parseEther('1.0'),
+        })
+
+        return entryPointSigner
+    }
 })

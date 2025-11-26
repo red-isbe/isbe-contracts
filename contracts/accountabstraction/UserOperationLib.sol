@@ -16,11 +16,6 @@ library UserOperationLib {
     uint256 public constant PAYMASTER_VALIDATION_GAS_OFFSET = 20;
     uint256 public constant PAYMASTER_POSTOP_GAS_OFFSET = 36;
     uint256 public constant PAYMASTER_DATA_OFFSET = 52;
-    bytes32 internal constant PACKED_USEROP_TYPEHASH =
-        keccak256(
-            // solhint-disable-next-line max-line-length
-            'PackedUserOperation(address sender,uint256 nonce,bytes initCode,bytes callData,bytes32 accountGasLimits,uint256 preVerificationGas,bytes32 gasFees,bytes paymasterAndData)'
-        );
 
     // solhint-disable max-line-length
     bytes32 internal constant PACKED_USEROP_TYPEHASH =
