@@ -75,6 +75,7 @@ import {
     CONFIGURATION_ID_PROXY_TESTS,
     CONFIGURATION_ID_KNOWN_DID_TEST,
     CONFIGURATION_ID_BESU_NODE_MANAGER,
+    CONFIGURATION_ACCOUNT_ABSTRACTION_SMART_ACCOUNT,
     ANCHORER_ROLE,
     METADATA_MANAGER_ROLE,
     CONFIGURATION_ID_NETWORK_DIRECTORY,
@@ -398,6 +399,7 @@ export async function deployGovernance(
             case CONFIGURATION_ID_TIMESTAMPING_REGISTRY:
             case CONFIGURATION_ID_BESU_NODE_MANAGER:
             case CONFIGURATION_ID_NETWORK_DIRECTORY:
+            case CONFIGURATION_ACCOUNT_ABSTRACTION_SMART_ACCOUNT:
                 break
             default:
                 throw new Error(`Unknown configuration id ${configurationId}`)

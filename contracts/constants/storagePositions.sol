@@ -136,6 +136,9 @@ bytes32 constant _TIMESTAMPING_REGISTRY_STORAGE_POSITION = 0x7bea5e2e127c51f0457
 // keccak256('isbe.contracts.network.directory.storage');
 bytes32 constant _NETWORK_DIRECTORY_STORAGE_POSITION = 0x3a0420dd147d7cf5a565887fe2c7ea7e96d447cad78f400d62fac5802d1cec34;
 
+// keccak256('isbe.contracts.accountabstraction.smartaccount.storage');
+bytes32 constant _ACCOUNT_ABSTRACTION_SMART_ACCOUNT_STORAGE_POSITION = 0x08b1a88f6d4f9bd4b5e54ea613cf4d25682438e7843cfb0b2ff4b7ea1200f210;
+
 // BesuNodeManager - Core layer (shared enodes)
 // keccak256('com.isbe.besu.node.manager.core.storage')
 bytes32 constant _BESU_NODE_MANAGER_CORE_STORAGE_POSITION = 0x11ac89760e0337d7c2f84ee9741ea0ddac3e0d00723ece28a875d7acffbb14d1;

@@ -162,6 +162,9 @@ bytes32 constant _ENS_PUBLIC_RESOLVER_RESOLVER_KEY = 0x01286e867987641a8805e8007
 // keccak256('isbe.contracts.timestamping.registry.resolver.key');
 bytes32 constant _TIMESTAMPING_REGISTRY_RESOLVER_KEY = 0xc96c356b7532d6eba398b97f362b68829d7392627c879e8ba5909c4810ca7ad5;
 
+// keccak256('isbe.contracts.accountabstraction.smartaccount.resolver.key');
+bytes32 constant _ACCOUNT_ABSTRACTION_SMART_ACCOUNT_RESOLVER_KEY = 0x57876e40acb603eb4558aec823c2ca73d5bc934402bcb441f7e6bc5874a6e547;
+
 // keccak256('BESU_NODE_MANAGER')
 bytes32 constant _BESU_NODE_MANAGER_RESOLVER_KEY = 0xed251ea052ffafa4903db889a3309600adf2ac15456e02760c1221ea3792c1ca;
 
