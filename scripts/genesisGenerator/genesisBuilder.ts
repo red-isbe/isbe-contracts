@@ -2,7 +2,6 @@ import { promises as fs } from 'fs'
 import * as path from 'path'
 import type { GenesisAlloc } from '.' // wherever you have your types
 
-// @ts-expect-error Using `any` intentionally for flexible JSON schema
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type JSONGenesis = any
 
@@ -86,7 +85,6 @@ export async function extractISBEAdminAddress(
     }
     const data: JSONGenesis = JSON.parse(raw)
 
-    //console.log('Genesis data:', data.alloc) // Debugging line
     const genesisAlloc = data.genesis ? data.genesis.alloc : data.alloc
     if (!genesisAlloc || Object.keys(genesisAlloc).length === 0) {
         throw new Error(
