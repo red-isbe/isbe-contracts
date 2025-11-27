@@ -179,63 +179,63 @@ export class CleanGovernanceDeployer {
             rbacs: [
                 {
                     role: DEFAULT_ADMIN_ROLE,
-                    members: members,
+                    members,
                 },
                 {
                     role: ISBE_ROLE,
-                    members: members,
+                    members,
                 },
                 {
                     role: PROXY_DEPLOYER_ROLE,
-                    members: members,
+                    members,
                 },
                 {
                     role: GOVERNANCE_CONFIGURATION_MANAGER_ROLE,
-                    members: members,
+                    members,
                 },
                 {
                     role: BUSINESS_LOGIC_DEPLOYER_ROLE,
-                    members: members,
+                    members,
                 },
                 {
                     role: ISBE_PAUSER_ROLE,
-                    members: members,
+                    members,
                 },
                 {
                     role: GOVERNANCE_MANAGER_ROLE,
-                    members: members,
+                    members,
                 },
                 {
                     role: ANCHORER_ROLE,
-                    members: members,
+                    members,
                 },
                 {
                     role: METADATA_MANAGER_ROLE,
-                    members: members,
+                    members,
                 },
                 {
                     role: DID_REGISTRY_ROLE,
-                    members: members,
+                    members,
                 },
                 {
                     role: ENS_MANAGER_ROLE,
-                    members: members,
+                    members,
                 },
                 {
                     role: CLIENT_FILTERING_ROLE,
-                    members: members,
+                    members,
                 },
                 {
                     role: TIMESTAMPING_REGISTRY_ROLE,
-                    members: members,
+                    members,
                 },
                 {
                     role: NETWORK_DIRECTORY_ROLE,
-                    members: members,
+                    members,
                 },
                 {
                     role: BESU_NODE_MANAGER_ROLE,
-                    members: members,
+                    members,
                 },
             ],
             init: this.hre.ethers.ZeroAddress,
