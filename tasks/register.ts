@@ -104,3 +104,4 @@ import './client/besuNodeManager/isBootNode'
 // Genesis
 import './genesisGeneration'
 import './bootstapping'
+import './includePKgenesis'

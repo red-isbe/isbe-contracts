@@ -8,7 +8,11 @@ start=$(date +%s)
 BESU_DIR="../isbe-besu-local-deployer"
 TEMPLATE_FILE="#"
 OUTPUT_FILE="#"
-GOBERNANCE_ADDRESS="#"
+GOVERNANCE_ADDRESS="#"
+SECRET_FILE="#"
+IS_LOCAL=false
+
+TEMPORARY_OUTPUT_FILE="genesis_temp.json"
 
 EXEC_BESU="bash install.sh -b"
 
@@ -16,6 +20,7 @@ EXEC_BESU="bash install.sh -b"
 SKIP_GEN=false
 SKIP_BESU_STARTUP=true
 SKIP_VALIDATION=true
+CHANGE_ALLOC=false
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -44,8 +49,12 @@ while [[ $# -gt 0 ]]; do
       OUTPUT_FILE="$2"
       shift 2
       ;;
-    --gobernance-address)
-      GOBERNANCE_ADDRESS="$2"
+    --governance-address)
+      GOVERNANCE_ADDRESS="$2"
+      shift 2
+      ;;
+    --secret-file)
+      SECRET_FILE="$2"
       shift 2
       ;;
     *)
@@ -60,7 +69,8 @@ while [[ $# -gt 0 ]]; do
       echo "  --besu-dir <path>               Specify the directory containing the Besu build."
       echo "  --template-file <file>          Specify the genesis template JSON file to use. (MANDATORY)"
       echo "  --output-file <file>            Specify the generated output JSON file. (MANDATORY if not skipping genesis)"
-      echo "  --gobernance-address <address>  Specify the governance contract address."
+      echo "  --governance-address <address>  Specify the governance contract address."
+      echo "  --secret-file <file>            Specify the file containing private keys for account allocation modification."
       echo ""
       echo "Example:"
       echo "  ./script.sh --skip-gen --do-besu-startup --besu-dir ./besu/"
@@ -73,12 +83,22 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+if [ "$SECRET_FILE" == "#" ]; then
+  echo "📁 No secret file specified."
+  exit 1
+fi
+
+if jq -e '.version == "genesis-local-template"' "$TEMPLATE_FILE" >/dev/null 2>&1; then
+  echo "📁 Local genesis template detected."
+  IS_LOCAL=true
+fi
+
 echo "📁 BESU_DIR set to: $BESU_DIR"
 echo "   (use --besu-dir <path> to override)"
 echo ""
 
-if [ "$GOBERNANCE_ADDRESS" = "#" ]; then
-  echo "📁 No Gobernance address specified."
+if [ "$GOVERNANCE_ADDRESS" = "#" ]; then
+  echo "📁 No Governance address specified."
   exit 1
 fi
 
@@ -88,14 +108,21 @@ if [ "$TEMPLATE_FILE" = "#" ]; then
 fi
 
 if [ "$OUTPUT_FILE" = "#" ] && [ "$SKIP_GEN" = false ]; then
-  echo "📁 Wrong template file specified."
+  echo "📁 Wrong output file specified."
   exit 1
+fi
+
+if [ "$IS_LOCAL" = true ]; then
+  echo "🔧 Modifying account allocations using: $TEMPLATE_FILE with secrests $SECRET_FILE"
+  npx hardhat genesis:modifyAllocations --templatefile "$TEMPLATE_FILE" --outputfile "$TEMPORARY_OUTPUT_FILE" --pkfile "$SECRET_FILE"
+  TEMPLATE_FILE="$TEMPORARY_OUTPUT_FILE"
+  echo "✅ Account allocations modified in template file."
 fi
 
 # Step 1: Genesis generation
 if [ "$SKIP_GEN" = false ]; then
   echo "🔧 Generating genesis..."
-  EXEC_CHAIN="npx hardhat genesis:generate --templatefile "$TEMPLATE_FILE" --outputfile "$OUTPUT_FILE" --governanceaddress "$GOBERNANCE_ADDRESS""
+  EXEC_CHAIN="npx hardhat genesis:generate --templatefile "$TEMPLATE_FILE" --outputfile "$OUTPUT_FILE" --governanceaddress "$GOVERNANCE_ADDRESS""
   start=$(date +%s) 
   NODE_OPTIONS="--max-old-space-size=24576" $EXEC_CHAIN
   end=$(date +%s)
@@ -146,9 +173,11 @@ fi
 
 # Step 3: Validate genesis
 if [ "$SKIP_VALIDATION" = false ]; then
-  npx hardhat genesis:validate --network NO_NETWORK --templatefile "$TEMPLATE_FILE" --governanceaddress "$GOBERNANCE_ADDRESS" 
+  npx hardhat genesis:validate --network NO_NETWORK --templatefile "$TEMPLATE_FILE" --governanceaddress "$GOVERNANCE_ADDRESS" 
   echo "✅ Genesis validation completed."
 fi
+
+rm -f "$TEMPORARY_OUTPUT_FILE"
 
 end=$(date +%s)
 elapsed=$(( end - start ))

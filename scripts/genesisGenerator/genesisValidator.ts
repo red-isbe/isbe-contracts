@@ -6,8 +6,6 @@ import { revokeRole } from '../access/accessControl/revokeRole'
 import { grantRole } from '../access/accessControl/grantRole'
 import { pause } from '../pause/pause'
 import { unpause } from '../pause/unpause'
-import { registerFilter } from '../client/registerFilter'
-import { getFiltersLength } from '../client/getFiltersLength'
 
 // Tipo de dato de la estructura base devuelta por facets()
 // type RawFacetEntry = [string, string[]]
@@ -205,10 +203,6 @@ async function validateRoles(
         console.log(`  Role ${i}: ${r}`)
     })
 
-    // roles = await accessControlContract.getRolesByAccountCount("0x2279b7a0a67db372996a5fab50d91eaa73d2ebe6");
-    // console.log(`Roles count for governance address: ${roles}`);
-    // roles = await accessControlContract.getRolesByAccountCount("0x5FbDB2315678afecb367f032d93F642f64180aa3");
-    // console.log(`Roles count for default address: ${roles}`);
     console.log(
         `\n\n--- ROLES VALIDATION COMPLETED ---------------------------------------\n`
     )
@@ -243,51 +237,6 @@ async function validateBusinesLogic(
     )
 }
 
-async function validateFilters(
-    hre: HardhatRuntimeEnvironment,
-    businessAddress: string
-) {
-    console.log(
-        `\n\n--- VALIDATING FILTERS ---------------------------------------\n`
-    )
-
-    const signatureProvider: ISignatureProvider =
-        SignatureProviderFactory.create(hre)
-    const signer = await signatureProvider.getSigner()
-
-    const { filtersLength } = await getFiltersLength(businessAddress, signer)
-    console.log(`Current filters length: ${filtersLength}`)
-
-    const filterId =
-        '0x112dd723577b76611d03a5df6740ef34e4adf801a94538796f066cda9100e159'
-    const signature = '0x12345678'
-    const transactionHash =
-        '0x112dd723577b76611d03a5df6740ef34e4adf801a94538796f066cda9100e157'
-    const jsonRpcMethod = 'eth_storageAt'
-    const initialBlock = 0
-    const endBlock = 999
-    const clientFilteringAddress = '0xaa294264E0F26fBEeD82044Ec6961dfceb15E0d8'
-
-    console.log('Ussing address: ' + businessAddress)
-
-    const filterType = 1 // Tx filter
-    await registerFilter(
-        filterId,
-        BigInt(filterType),
-        transactionHash,
-        clientFilteringAddress,
-        signature,
-        jsonRpcMethod,
-        BigInt(initialBlock),
-        BigInt(endBlock),
-        businessAddress,
-        signer
-    )
-
-    const filterLength = await getFiltersLength(businessAddress, signer)
-    console.log(`Current filters length: ${filterLength.filtersLength}`)
-}
-
 export async function validateGenesis(
     hre: HardhatRuntimeEnvironment,
     businessAddress: string
@@ -299,7 +248,6 @@ export async function validateGenesis(
     await validateBusinesLogic(hre, businessAddress)
     await validateRoles(hre, businessAddress)
     await validatePausable(hre, businessAddress)
-    await validateFilters(hre, businessAddress)
     console.log(
         `\n\n=== GENESIS VALIDATION COMPLETED ===================================`
     )
