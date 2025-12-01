@@ -9,8 +9,8 @@ import {ERC203643CappedInternal} from './erc203643capped/ERC203643CappedInternal
 import {ERC3643FreezeInternal} from '../erc3643/token/erc3643freeze/ERC3643FreezeInternal.sol';
 import {ERC20SnapshotInternal} from '../erc20/extensions/snapshot/ERC20SnapshotInternal.sol';
 import {ERC3643ComplianceInternal} from '../erc3643/compliance/ERC3643ComplianceInternal.sol';
-import {BasicWhitelistInternal} from '../whitelist/basic/BasicWhitelistInternal.sol';
-import {IBasicWhitelist} from '../whitelist/basic/IBasicWhitelist.sol';
+import {BasicWhitelistInternal} from '../../access/whitelist/basic/BasicWhitelistInternal.sol';
+import {IBasicWhitelist} from '../../access/whitelist/basic/IBasicWhitelist.sol';
 import {ICompliance} from '../erc3643/compliance/ICompliance.sol';
 import {_CONTROLLER_ROLE} from '../../constants/roles.sol';
 import {_RECOVERY_ROLE} from '../../constants/roles.sol';

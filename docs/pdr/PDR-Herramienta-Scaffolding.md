@@ -9,6 +9,7 @@
 ## 1) Contexto y problema
 
 La arquitectura de contratos inteligentes de ISBE sigue un patrón estricto basado en EIP-2535 (Diamond) que separa cada módulo funcional en cuatro capas distintas:
+
 1.  **Interfaz (`I*.sol`)**: Definiciones externas (eventos, errores, structs públicos, firmas de funciones).
 2.  **Interno (`*Internal.sol`)**: Gestión de almacenamiento mediante slots de assembly y lógica privada.
 3.  **Abstract Core (`*.sol`)**: Implementación de funciones externas con control de acceso (roles, modifiers).
@@ -17,9 +18,10 @@ La arquitectura de contratos inteligentes de ISBE sigue un patrón estricto basa
 Adicionalmente, ISBE no utiliza librerías enlazadas externamente (external linked libraries) para evitar complicaciones en el `delegatecall` y el despliegue.
 
 **Problema:** Desarrollar bajo este estándar manualmente es lento, repetitivo y propenso a errores críticos, tales como:
-*   Colisiones de almacenamiento por mala definición de slots.
-*   Errores en la lista de selectores de introspección (olvidar un selector rompe la integración).
-*   Dificultad para integrar lógica estándar (como OpenZeppelin) sin reescribirla completamente.
+
+- Colisiones de almacenamiento por mala definición de slots.
+- Errores en la lista de selectores de introspección (olvidar un selector rompe la integración).
+- Dificultad para integrar lógica estándar (como OpenZeppelin) sin reescribirla completamente.
 
 ---
 
@@ -59,26 +61,26 @@ Se implementará la herramienta como un **Plugin de Hardhat con Scaffolding Inte
 
 ### Comparación: Scaffolding vs Transpiler
 
-| Aspecto | **Transpiler** (Descartado) | **Scaffolding** (Seleccionado) |
-|---------|---------------------------|-------------------------------|
-| **Concepto** | Convertir código Solidity estándar a ISBE automáticamente | Generar código ISBE desde cero mediante templates y preguntas |
-| **Complejidad técnica** | Alta (parsing AST, reescritura de referencias) | Media (templates + CLI interactivo) |
-| **Curva de aprendizaje** | Alta (requiere entender entrada Y salida) | Baja (guiado paso a paso) |
-| **Flexibilidad** | Limitada (output fijo basado en reglas) | Alta (templates configurables, código editable con TODOs) |
-| **Mantenibilidad** | Compleja (mantener parser compatible con Solidity) | Simple (actualizar templates cuando cambie arquitectura) |
-| **Control del desarrollador** | Opaco (caja negra, difícil debuggear) | Transparente (código generado es código fuente editable) |
-| **Gestión de roles y permisos** | Difícil inferir automáticamente qué funciones necesitan qué roles | Pregunta explícita al desarrollador durante scaffolding |
-| **Errores y debugging** | Difíciles de rastrear (¿error en input o en transpiler?) | TODOs claros, errores de compilación estándar |
-| **Casos de uso** | Migración masiva de contratos legacy | Desarrollo greenfield de nuevas facetas |
+| Aspecto                         | **Transpiler** (Descartado)                                       | **Scaffolding** (Seleccionado)                                |
+| ------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------- |
+| **Concepto**                    | Convertir código Solidity estándar a ISBE automáticamente         | Generar código ISBE desde cero mediante templates y preguntas |
+| **Complejidad técnica**         | Alta (parsing AST, reescritura de referencias)                    | Media (templates + CLI interactivo)                           |
+| **Curva de aprendizaje**        | Alta (requiere entender entrada Y salida)                         | Baja (guiado paso a paso)                                     |
+| **Flexibilidad**                | Limitada (output fijo basado en reglas)                           | Alta (templates configurables, código editable con TODOs)     |
+| **Mantenibilidad**              | Compleja (mantener parser compatible con Solidity)                | Simple (actualizar templates cuando cambie arquitectura)      |
+| **Control del desarrollador**   | Opaco (caja negra, difícil debuggear)                             | Transparente (código generado es código fuente editable)      |
+| **Gestión de roles y permisos** | Difícil inferir automáticamente qué funciones necesitan qué roles | Pregunta explícita al desarrollador durante scaffolding       |
+| **Errores y debugging**         | Difíciles de rastrear (¿error en input o en transpiler?)          | TODOs claros, errores de compilación estándar                 |
+| **Casos de uso**                | Migración masiva de contratos legacy                              | Desarrollo greenfield de nuevas facetas                       |
 
 ### Justificación de la Decisión
 
 **El transpiler presenta las siguientes limitaciones críticas:**
 
 1. **Ambigüedad semántica:** No puede decidir automáticamente:
-   - ¿Qué funciones requieren `onlyRole()` y con qué rol?
-   - ¿El storage necesita `EnumerableSet` o basta con `mapping`?
-   - ¿Qué hereda: `Common` o `DidDocumentDetailedInternal`?
+    - ¿Qué funciones requieren `onlyRole()` y con qué rol?
+    - ¿El storage necesita `EnumerableSet` o basta con `mapping`?
+    - ¿Qué hereda: `Common` o `DidDocumentDetailedInternal`?
 
 2. **Complejidad de mantenimiento:** Cada actualización en la arquitectura ISBE (nuevos modifiers, cambios en storage pattern) requiere actualizar el parser AST.
 
@@ -100,6 +102,7 @@ El scaffolding seguirá un flujo de **preguntas → configuración → generaci�
 4. **Output con TODOs:** Código generado incluye comentarios `// TODO: Implementar lógica aquí` en puntos críticos.
 
 El diseño prioriza:
+
 - **Seguridad:** Eliminación de errores humanos en storage positions y selectores mediante generación automática.
 - **Velocidad:** Generación instantánea de estructura completa lista para compilar.
 - **Estándar:** Garantía de que todo el código generado cumple 100% con la arquitectura ISBE.
@@ -115,7 +118,7 @@ El diseño prioriza:
 npx hardhat isbe:scaffold
 
 ? Nombre de tu faceta: TokenRoyalty
-? Tipo de funcionalidad: 
+? Tipo de funcionalidad:
   ❯ Gestión de metadata
     Control de acceso custom
     Lógica de negocio
@@ -153,6 +156,7 @@ npx hardhat isbe:scaffold
 Los templates podrían seguir la convención de nombres de Handlebars/Mustache con variables dinámicas:
 
 **Estructura de directorios:**
+
 ```
 hardhat-isbe-scaffold/
 ├── templates/
@@ -170,34 +174,22 @@ hardhat-isbe-scaffold/
 ### Ejemplo de Template (Conceptual)
 
 **Internal.sol.hbs (simplificado):**
+
 ```handlebars
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.28;
-
-import { {{baseContract}} } from "{{baseContractPath}}";
-import {_{{constantCase name}}_STORAGE_POSITION} from "../../constants/storagePositions.sol";
-
-abstract contract {{name}}Internal is {{baseContract}} {
-    struct {{name}}Storage {
-        // TODO: Definir campos de storage aquí
-        {{#if includesComplexStorage}}
-        // Ejemplo con EnumerableSet:
-        // EnumerableSet.UintSet itemIds;
-        {{/if}}
-    }
-
-    function _{{camelCase name}}Storage()
-        internal
-        pure
-        returns ({{name}}Storage storage storage_)
-    {
-        bytes32 position = _{{constantCase name}}_STORAGE_POSITION;
-        assembly {
-            storage_.slot := position
-        }
-    }
-
-    // TODO: Implementar funciones internas
+// SPDX-License-Identifier: UNLICENSED pragma solidity ^0.8.28; import {
+{{baseContract}}
+} from "{{baseContractPath}}"; import {_{{constantCase name}}_STORAGE_POSITION}
+from "../../constants/storagePositions.sol"; abstract contract
+{{name}}Internal is
+{{baseContract}}
+{ struct
+{{name}}Storage { // TODO: Definir campos de storage aquí
+{{#if includesComplexStorage}}
+    // Ejemplo con EnumerableSet: // EnumerableSet.UintSet itemIds;
+{{/if}}
+} function _{{camelCase name}}Storage() internal pure returns ({{name}}Storage
+storage storage_) { bytes32 position = _{{constantCase name}}_STORAGE_POSITION;
+assembly { storage_.slot := position } } // TODO: Implementar funciones internas
 }
 ```
 
@@ -205,25 +197,31 @@ abstract contract {{name}}Internal is {{baseContract}} {
 
 El sistema calculará automáticamente:
 
-1. **Storage Position:** 
-   ```typescript
-   const storagePosition = ethers.keccak256(
-     ethers.toUtf8Bytes(`isbe.contracts.client.${facetName.toLowerCase()}.storage`)
-   );
-   ```
+1. **Storage Position:**
+
+    ```typescript
+    const storagePosition = ethers.keccak256(
+        ethers.toUtf8Bytes(
+            `isbe.contracts.client.${facetName.toLowerCase()}.storage`
+        )
+    )
+    ```
 
 2. **Resolver Key:**
-   ```typescript
-   const resolverKey = ethers.keccak256(
-     ethers.toUtf8Bytes(`client.${facetName.toLowerCase()}.resolver`)
-   );
-   ```
+
+    ```typescript
+    const resolverKey = ethers.keccak256(
+        ethers.toUtf8Bytes(`client.${facetName.toLowerCase()}.resolver`)
+    )
+    ```
 
 3. **Role Constant:**
-   ```typescript
-   const roleName = `_${customRole.toUpperCase()}_ROLE`;
-   const roleHash = ethers.keccak256(ethers.toUtf8Bytes(customRole.toUpperCase()));
-   ```
+    ```typescript
+    const roleName = `_${customRole.toUpperCase()}_ROLE`
+    const roleHash = ethers.keccak256(
+        ethers.toUtf8Bytes(customRole.toUpperCase())
+    )
+    ```
 
 ### Output con TODOs Estratégicos
 
@@ -242,7 +240,7 @@ function _setRoyalty(uint256 tokenId, uint256 percentage) internal {
     TokenRoyaltyStorage storage $ = _tokenRoyaltyStorage();
     // TODO: Validaciones necesarias
     // require(percentage <= 10000, "Royalty exceeds 100%");
-    
+
     // TODO: Implementar lógica
     $.royalties[tokenId] = percentage;
 }
@@ -253,26 +251,31 @@ function _setRoyalty(uint256 tokenId, uint256 percentage) internal {
 ## 6) Plan de Trabajo
 
 ### Fase 1: Prototipo CLI
+
 - Implementar sistema de preguntas interactivas usando `inquirer`.
 - Crear templates básicos para los 4 archivos de arquitectura.
 - Script independiente de generación que prueba el flujo end-to-end.
 
 ### Fase 2: Generación de Templates
+
 - Sistema de templates con Handlebars.
 - Lógica de transformación de nombres (camelCase, PascalCase, CONSTANT_CASE).
 - Generación de storage positions y resolver keys con keccak256.
 
 ### Fase 3: Actualización de Constantes
+
 - Parser para `storagePositions.sol`, `roles.sol`, `resolverKeys.sol`.
 - Inyección automática de nuevas constantes sin romper el formato existente.
 - Validación de colisiones de nombres.
 
 ### Fase 4: Integración Hardhat
+
 - Empaquetado como plugin Hardhat (`hardhat-isbe-scaffold`).
 - Configuración en `hardhat.config.ts`.
 - Testing con casos reales del proyecto.
 
 ### Fase 5: Documentación y Testing
+
 - Guía de uso del comando `isbe:scaffold`.
 - Ejemplos de flujos comunes (ERC20 extension, metadata custom, etc.).
 - Testing end-to-end con generación y compilación de código.

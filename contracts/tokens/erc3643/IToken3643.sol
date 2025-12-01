@@ -3,7 +3,7 @@ pragma solidity ^0.8.28;
 
 import {ICompliance} from './compliance/ICompliance.sol';
 import {IERC3643} from './token/IERC3643.sol';
-import {IBasicWhitelist} from '../whitelist/basic/IBasicWhitelist.sol';
+import {IBasicWhitelist} from '../../access/whitelist/basic/IBasicWhitelist.sol';
 
 /**
  * @title IToken3643

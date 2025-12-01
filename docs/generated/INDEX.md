@@ -2,6 +2,7 @@
 
 - [access/accessControl](access/accessControl.md)
 - [access/ownable](access/ownable.md)
+- [access/whitelist/basic](access/whitelist/basic.md)
 - [assetevent](assetevent.md)
 - [client/anchoring](client/anchoring.md)
 - [client/besuNodeManager](client/besuNodeManager.md)
@@ -66,5 +67,4 @@
 - [tokens/erc721/extensions/enumerable](tokens/erc721/extensions/enumerable.md)
 - [tokens/erc721/extensions/royalty](tokens/erc721/extensions/royalty.md)
 - [tokens/erc721/extensions/snapshot](tokens/erc721/extensions/snapshot.md)
-- [tokens/whitelist/basic](tokens/whitelist/basic.md)
 - [utils](utils.md)
