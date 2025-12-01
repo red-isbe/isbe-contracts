@@ -83,19 +83,16 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [ "$SECRET_FILE" == "#" ]; then
-  echo "📁 No secret file specified."
-  exit 1
-fi
 
 if jq -e '.version == "genesis-local-template"' "$TEMPLATE_FILE" >/dev/null 2>&1; then
+    if [ "$SECRET_FILE" == "#" ]; then
+      echo "📁 No secret file specified and Local genesis template detected."
+      exit 1
+    fi
   echo "📁 Local genesis template detected."
   IS_LOCAL=true
 fi
 
-echo "📁 BESU_DIR set to: $BESU_DIR"
-echo "   (use --besu-dir <path> to override)"
-echo ""
 
 if [ "$GOVERNANCE_ADDRESS" = "#" ]; then
   echo "📁 No Governance address specified."
@@ -111,6 +108,60 @@ if [ "$OUTPUT_FILE" = "#" ] && [ "$SKIP_GEN" = false ]; then
   echo "📁 Wrong output file specified."
   exit 1
 fi
+
+# Check if output file already exists
+if [ "$SKIP_GEN" = false ] && [ -f "$OUTPUT_FILE" ]; then
+  echo "❌ Error: Output file already exists: $OUTPUT_FILE"
+  echo "   Please remove it or specify a different output file."
+  exit 1
+fi
+
+# Check if Besu directory exists
+if [ "$SKIP_BESU_STARTUP" = false ] && [ ! -d "$BESU_DIR" ]; then
+  echo "❌ Error: Besu directory does not exist: $BESU_DIR"
+  echo "   Please check the path or use --besu-dir <path> to specify a valid directory."
+  exit 1
+fi
+
+# Check if template file exists and validate its content
+if [ ! -f "$TEMPLATE_FILE" ]; then
+  echo "❌ Error: Template file does not exist: $TEMPLATE_FILE"
+  exit 1
+fi
+
+# Check if file is empty
+if [ ! -s "$TEMPLATE_FILE" ]; then
+  echo "❌ Error: Template file is empty: $TEMPLATE_FILE"
+  exit 1
+fi
+
+if ! jq empty "$TEMPLATE_FILE" >/dev/null 2>&1; then
+  echo "❌ Error: Template file is not valid JSON: $TEMPLATE_FILE"
+  exit 1
+fi
+
+# Validate template has required structure
+if ! jq -e '.config' "$TEMPLATE_FILE" >/dev/null 2>&1; then
+  echo "❌ Error: Template file does not contain required 'config' field: $TEMPLATE_FILE"
+  exit 1
+fi
+
+if ! jq -e '.alloc' "$TEMPLATE_FILE" >/dev/null 2>&1; then
+  echo "❌ Error: Template file does not contain required 'alloc' field: $TEMPLATE_FILE"
+  exit 1
+fi
+
+# Check if governance address is already in the alloc
+if jq -e --arg addr "$GOVERNANCE_ADDRESS" '.alloc | has($addr)' "$TEMPLATE_FILE" >/dev/null 2>&1 | grep -q true; then
+  echo "❌ Error: Governance address is already present in the template file alloc: $GOVERNANCE_ADDRESS"
+  echo "   Please use a template file without the governance address pre-allocated. Perhaps you are using an output file as template."
+  exit 1
+fi 
+
+
+echo "📁 BESU_DIR set to: $BESU_DIR"
+echo "   (use --besu-dir <path> to override)"
+echo ""
 
 if [ "$IS_LOCAL" = true ]; then
   echo "🔧 Modifying account allocations using: $TEMPLATE_FILE with secrests $SECRET_FILE"
