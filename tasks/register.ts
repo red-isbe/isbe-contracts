@@ -21,6 +21,7 @@ import './diamond/loupe/getFacetSelectors'
 import './diamond/cut/diamondCut'
 import './diamond/cut/facetUpdates'
 import './diamond/cut/interfaceCut'
+import "./facetsReport"
 
 // Pause/Unpause tasks
 import './globalPause/pauseIsbe'
@@ -105,3 +106,6 @@ import './client/besuNodeManager/isBootNode'
 import './genesisGeneration'
 import './bootstapping'
 import './includePKgenesis'
+
+// Anchoring
+import './client/Anchoring'

@@ -5,6 +5,6 @@ export {
     extractISBEAdminAddress,
     extractCurve,
 } from './genesisBuilder'
-export { validateGenesis } from './genesisValidator'
+export { validateGenesis, validateFacests } from './genesisValidator'
 export { BootstrapIsbenetwork } from './BootstrapIsbenetwork'
 export { pkmanagement } from './pkmanagement'
