@@ -90,7 +90,7 @@ export const BESU_NODE_MANAGER_RESOLVER_KEYS: ResolverKeys = {
 
 // Network resources facets
 export const NETWORK_RESOLVER_KEYS: ResolverKeys = {
-    NETWORK_CATALOG:
+    NETWORK_DIRECTORY:
         '0x17a2f0004227d8948b0a9dfe41e92bca9785ffa344bc4443c88f2df3d2f8ee87',
 }
 

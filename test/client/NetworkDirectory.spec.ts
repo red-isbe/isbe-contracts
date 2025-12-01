@@ -49,7 +49,7 @@ async function deployNetworkDirectoryFixture() {
         governanceAddress
     )
 
-    // Grant NETWORK_CATALOG_ROLE to owner
+    // Grant NETWORK_DIRECTORY_ROLE to owner
     await result.accessControl.grantRole(NETWORK_DIRECTORY_ROLE, ownerAddress)
 
     return {
@@ -58,7 +58,7 @@ async function deployNetworkDirectoryFixture() {
         owner,
         otherAccount,
         ownerAddress,
-        NETWORK_CATALOG_ROLE: NETWORK_DIRECTORY_ROLE,
+        NETWORK_DIRECTORY_ROLE: NETWORK_DIRECTORY_ROLE,
     }
 }
 

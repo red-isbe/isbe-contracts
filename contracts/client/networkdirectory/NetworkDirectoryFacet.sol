@@ -8,8 +8,8 @@ import {IEIP2535Introspection} from '../../proxies/eip2535/interfaces/IEIP2535In
 
 /**
  * @title NetworkDirectoryFacet
- * @notice Diamond facet implementing network catalog functionality with EIP-2535 introspection
- * @dev This contract serves as a diamond facet for the network catalog system.
+ * @notice Diamond facet implementing network directory functionality with EIP-2535 introspection
+ * @dev This contract serves as a diamond facet for the network directory system.
  *      It combines the NetworkDirectory functionality with EIP-2535 introspection capabilities
  *      to support diamond proxy pattern deployment and management.
  * @author ISBE Development Team
@@ -31,7 +31,7 @@ contract NetworkDirectoryFacet is NetworkDirectory, IEIP2535Introspection {
     /**
      * @notice Returns the business identifier for this facet
      * @dev Used for facet identification and resolution in diamond architecture
-     * @return businessId_ The unique business identifier for network catalog functionality
+     * @return businessId_ The unique business identifier for network directory functionality
      */
     function businessIdIntrospection()
         external

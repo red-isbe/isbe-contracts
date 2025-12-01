@@ -8,10 +8,10 @@ import {_NETWORK_DIRECTORY_ROLE} from '../../constants/roles.sol';
 
 /**
  * @title NetworkDirectory
- * @notice External layer providing access-controlled network catalog operations
- * @dev This abstract contract implements the public interface for network catalog management.
+ * @notice External layer providing access-controlled network directory operations
+ * @dev This abstract contract implements the public interface for network directory management.
  *      It adds access control, pause functionality, and validation to the internal operations.
- *      All functions require the NETWORK_CATALOG_ROLE and respect the contract pause state.
+ *      All functions require the NETWORK_DIRECTORY_ROLE and respect the contract pause state.
  * @author ISBE Development Team
  */
 abstract contract NetworkDirectory is
@@ -19,7 +19,7 @@ abstract contract NetworkDirectory is
     NetworkDirectoryInternal
 {
     /**
-     * @notice Creates a new network in the catalog
+     * @notice Creates a new network in the directory
      * @dev Validates network data, checks pause state, and requires NETWORK_DIRECTORY_ROLE
      * @param network The complete network information to create
      * @custom:security Requires NETWORK_DIRECTORY_ROLE permission
@@ -27,7 +27,7 @@ abstract contract NetworkDirectory is
      * @custom:revert EmptyUint if chainId is 0
      * @custom:revert EmptyBytes32 if name or symbol is empty (ZeroHash)
      * @custom:revert InvalidStage if stage is NONE or invalid enum value
-     * @custom:revert NetworkAlreadyExists if chainId already exists in catalog
+     * @custom:revert NetworkAlreadyExists if chainId already exists in directory
      * @custom:revert DuplicatedResource if resources array contains duplicate resourceIds
      * @custom:revert Paused if contract is paused
      * @custom:revert AccessControlUnauthorizedAccount if caller lacks NETWORK_DIRECTORY_ROLE
@@ -37,7 +37,7 @@ abstract contract NetworkDirectory is
      *   - algorithm must be valid EllipticType enum (SECP_256_K1 or SECP_256_R1)
      *   - stage must be valid enum value (DEV, PRE, or PROD) and cannot be NONE
      *   - resources array cannot contain duplicate resourceIds
-     *   - network is added to catalog and can be retrieved after creation
+     *   - network is added to directory and can be retrieved after creation
      * @custom:emit NetworkCreated with the complete network data
      */
     function createNetwork(
@@ -55,7 +55,7 @@ abstract contract NetworkDirectory is
     }
 
     /**
-     * @notice Updates an existing network in the catalog
+     * @notice Updates an existing network in the directory
      * @dev Validates network data, checks pause state, and requires NETWORK_DIRECTORY_ROLE
      * @param network The updated network information (resources are managed separately via setResource)
      * @custom:security Requires NETWORK_DIRECTORY_ROLE permission
@@ -89,7 +89,7 @@ abstract contract NetworkDirectory is
     }
 
     /**
-     * @notice Deletes a network and all its resources from the catalog
+     * @notice Deletes a network and all its resources from the directory
      * @dev Ensures network exists, checks pause state and permissions before deletion
      * @param chainId The unique identifier of the network to delete
      * @custom:security Requires NETWORK_DIRECTORY_ROLE permission
@@ -105,7 +105,7 @@ abstract contract NetworkDirectory is
      *   - network must not exist after deletion
      *   - all associated resources are automatically deleted (cascade)
      *   - network count is decremented
-     *   - chainId is removed from the catalog's chainId array
+     *   - chainId is removed from the directory's chainId array
      * @custom:emit NetworkDeleted with the deleted chainId
      */
     function deleteNetwork(
@@ -218,13 +218,13 @@ abstract contract NetworkDirectory is
     }
 
     /**
-     * @notice Retrieves all networks registered in the catalog
+     * @notice Retrieves all networks registered in the directory
      * @dev Returns complete network information including resources for all networks. Returns empty array
      *      if no networks exist.
      * @return networks Array of all registered networks with their complete resource arrays
-     * @custom:gas May consume significant gas for large catalogs (20+ networks)
-     * @custom:warning For large catalogs, consider using getNetworksPaginated() instead for better gas efficiency
-     * @custom:behaviour Returns empty array when catalog contains no networks
+     * @custom:gas May consume significant gas for large directories (20+ networks)
+     * @custom:warning For large directories, consider using getNetworksPaginated() instead for better gas efficiency
+     * @custom:behaviour Returns empty array when directory contains no networks
      */
     function getAllNetworks()
         external
@@ -249,17 +249,17 @@ abstract contract NetworkDirectory is
     }
 
     /**
-     * @notice Retrieves paginated networks from the catalog
+     * @notice Retrieves paginated networks from the directory
      * @dev Returns a subset of networks with pagination metadata. Handles edge cases gracefully.
      * @param pageSize Maximum number of networks per page
      * @param pageIndex Index of the page to retrieve (1-based indexing)
      * @return networks Array of networks for the requested page (may be empty if offset exceeds count)
-     * @return totalCount Total number of networks in the catalog
+     * @return totalCount Total number of networks in the directory
      * @return howMany Actual number of networks returned in the current page (0 if offset exceeds total)
      * @return prev Previous page index (clamped to first page, minimum 1)
      * @return next Next page index (clamped to last available page)
      * @custom:behaviour When pageIndex exceeds available pages, returns empty array with metadata
-     * @custom:gas More gas-efficient than getAllNetworks() for large catalogs
+     * @custom:gas More gas-efficient than getAllNetworks() for large directories
      */
     function getNetworksPaginated(
         uint256 pageSize,
@@ -280,9 +280,9 @@ abstract contract NetworkDirectory is
     }
 
     /**
-     * @notice Gets the total count of networks in the catalog
-     * @dev Efficient way to determine pagination parameters without loading data. Returns 0 if catalog is empty.
-     * @return count Total number of networks registered in the catalog (0 if empty)
+     * @notice Gets the total count of networks in the directory
+     * @dev Efficient way to determine pagination parameters without loading data. Returns 0 if directory is empty.
+     * @return count Total number of networks registered in the directory (0 if empty)
      * @custom:gas Very low gas consumption compared to getAllNetworks()
      * @custom:usage Useful for calculating pagination parameters before calling getNetworksPaginated()
      */

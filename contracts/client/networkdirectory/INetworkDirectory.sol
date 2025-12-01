@@ -5,7 +5,7 @@ import {NetworkData, UpdateNetworkData, Algorithm} from './Types.sol';
 
 /**
  * @title INetworkDirectory
- * @notice Interface for managing a decentralised catalog of blockchain networks and their resources
+ * @notice Interface for managing a decentralised directory of blockchain networks and their resources
  * @dev This interface provides CRUD operations for networks and their associated resources.
  *      Networks are identified by chainId and can have multiple resources (RPC endpoints, explorers, etc.)
  * @author Network Directory Development Team
@@ -24,7 +24,7 @@ interface INetworkDirectory {
     event NetworkUpdated(UpdateNetworkData network);
 
     /**
-     * @notice Emitted when a network is deleted from the catalog
+     * @notice Emitted when a network is deleted from the directory
      * @param chainId The unique identifier of the deleted network
      */
     event NetworkDeleted(uint256 chainId);
@@ -45,7 +45,7 @@ interface INetworkDirectory {
     event ResourceDeleted(uint256 chainId, bytes32 resourceId);
 
     /**
-     * @notice Creates a new network in the catalog
+     * @notice Creates a new network in the directory
      * @dev The network chainId must be unique and greater than 0
      * @param network The network data to create
      * @custom:security Only authorised roles can call this function
@@ -63,7 +63,7 @@ interface INetworkDirectory {
     function updateNetwork(UpdateNetworkData calldata network) external;
 
     /**
-     * @notice Deletes a network and all its associated resources from the catalog
+     * @notice Deletes a network and all its associated resources from the directory
      * @dev This operation is irreversible and will remove all network resources
      * @param chainId The unique identifier of the network to delete
      * @custom:security Only authorised roles can call this function
@@ -112,10 +112,10 @@ interface INetworkDirectory {
     ) external view returns (NetworkData memory network);
 
     /**
-     * @notice Retrieves all networks in the catalog
+     * @notice Retrieves all networks in the directory
      * @dev Returns an array of all registered networks with their resources
-     * @return networks Array containing all networks in the catalog
-     * @custom:gas This function may consume significant gas for large catalogs
+     * @return networks Array containing all networks in the directory
+     * @custom:gas This function may consume significant gas for large directorys
      */
     function getAllNetworks()
         external
@@ -133,12 +133,12 @@ interface INetworkDirectory {
     ) external view returns (NetworkData[] memory networks);
 
     /**
-     * @notice Retrieves paginated networks from the catalog
+     * @notice Retrieves paginated networks from the directory
      * @dev Returns a subset of networks with pagination details
      * @param pageSize Number of networks per page
      * @param pageIndex Index of the page to retrieve
      * @return networks Array of networks for the requested page
-     * @return totalCount Total number of networks in the catalog
+     * @return totalCount Total number of networks in the directory
      * @return howMany Number of items returned in the current page
      * @return prev Previous page index (clamped to first page)
      * @return next Next page index (clamped to last page)
@@ -158,7 +158,7 @@ interface INetworkDirectory {
         );
 
     /**
-     * @notice Gets the total count of networks in the catalog
+     * @notice Gets the total count of networks in the directory
      * @dev Efficient way to get total count without fetching all data
      * @return count Total number of networks registered
      */

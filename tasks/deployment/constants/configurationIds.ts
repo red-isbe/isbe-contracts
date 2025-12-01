@@ -110,7 +110,7 @@ export const ARTIFACT_PATHS = {
     BESU_NODE_MANAGER:
         'contracts/client/besuNodeManager/BesuNodeManagerFacet.sol',
     // Network resources facets
-    NETWORK_CATALOG: 'contracts/networkresources/NetworkDirectoryFacet.sol',
+    NETWORK_DIRECTORY: 'contracts/networkresources/NetworkDirectoryFacet.sol',
 } as const
 
 export const CONTRACT_NAMES = {
@@ -173,5 +173,5 @@ export const CONTRACT_NAMES = {
     // BesuNodeManager facets
     BESU_NODE_MANAGER: 'BesuNodeManagerFacet',
     // Network resources facets
-    NETWORK_CATALOG: 'NetworkDirectoryFacet',
+    NETWORK_DIRECTORY: 'NetworkDirectoryFacet',
 } as const

@@ -1,6 +1,6 @@
 ## INetworkDirectory
 
-Interface for managing a decentralised catalog of blockchain networks and their resources
+Interface for managing a decentralised directory of blockchain networks and their resources
 
 _This interface provides CRUD operations for networks and their associated resources.
 Networks are identified by chainId and can have multiple resources (RPC endpoints, explorers, etc.)_
@@ -39,7 +39,7 @@ Emitted when an existing network is updated
 event NetworkDeleted(uint256 chainId)
 ```
 
-Emitted when a network is deleted from the catalog
+Emitted when a network is deleted from the directory
 
 #### Parameters
 
@@ -84,7 +84,7 @@ Emitted when a resource is deleted from a network
 function createNetwork(struct NetworkData network) external
 ```
 
-Creates a new network in the catalog
+Creates a new network in the directory
 
 _The network chainId must be unique and greater than 0_
 
@@ -116,7 +116,7 @@ _The chainId in the path must match the chainId in the network data_
 function deleteNetwork(uint256 chainId) external
 ```
 
-Deletes a network and all its associated resources from the catalog
+Deletes a network and all its associated resources from the directory
 
 _This operation is irreversible and will remove all network resources_
 
@@ -189,15 +189,15 @@ _Returns the complete network information including all resources_
 function getAllNetworks() external view returns (struct NetworkData[] networks)
 ```
 
-Retrieves all networks in the catalog
+Retrieves all networks in the directory
 
 _Returns an array of all registered networks with their resources_
 
 #### Return Values
 
-| Name     | Type                 | Description                                  |
-| -------- | -------------------- | -------------------------------------------- |
-| networks | struct NetworkData[] | Array containing all networks in the catalog |
+| Name     | Type                 | Description                                    |
+| -------- | -------------------- | ---------------------------------------------- |
+| networks | struct NetworkData[] | Array containing all networks in the directory |
 
 ### getNetworksByAlgorithm
 
@@ -227,7 +227,7 @@ _Filters networks by algorithm field and returns matches with resources_
 function getNetworksPaginated(uint256 pageSize, uint256 pageIndex) external view returns (struct NetworkData[] networks, uint256 totalCount, uint256 howMany, uint256 prev, uint256 next)
 ```
 
-Retrieves paginated networks from the catalog
+Retrieves paginated networks from the directory
 
 _Returns a subset of networks with pagination details_
 
@@ -243,7 +243,7 @@ _Returns a subset of networks with pagination details_
 | Name       | Type                 | Description                                  |
 | ---------- | -------------------- | -------------------------------------------- |
 | networks   | struct NetworkData[] | Array of networks for the requested page     |
-| totalCount | uint256              | Total number of networks in the catalog      |
+| totalCount | uint256              | Total number of networks in the directory    |
 | howMany    | uint256              | Number of items returned in the current page |
 | prev       | uint256              | Previous page index (clamped to first page)  |
 | next       | uint256              | Next page index (clamped to last page)       |
@@ -254,7 +254,7 @@ _Returns a subset of networks with pagination details_
 function getNetworksCount() external view returns (uint256 count)
 ```
 
-Gets the total count of networks in the catalog
+Gets the total count of networks in the directory
 
 _Efficient way to get total count without fetching all data_
 
@@ -340,11 +340,11 @@ _Efficient way to get resource count without loading resource data_
 
 ## NetworkDirectory
 
-External layer providing access-controlled network catalog operations
+External layer providing access-controlled network directory operations
 
-_This abstract contract implements the public interface for network catalog management.
+_This abstract contract implements the public interface for network directory management.
 It adds access control, pause functionality, and validation to the internal operations.
-All functions require the NETWORK_CATALOG_ROLE and respect the contract pause state._
+All functions require the NETWORK_DIRECTORY_ROLE and respect the contract pause state._
 
 ### createNetwork
 
@@ -352,7 +352,7 @@ All functions require the NETWORK_CATALOG_ROLE and respect the contract pause st
 function createNetwork(struct NetworkData network) external
 ```
 
-Creates a new network in the catalog
+Creates a new network in the directory
 
 _Validates network data, checks pause state, and requires NETWORK_DIRECTORY_ROLE_
 
@@ -368,7 +368,7 @@ _Validates network data, checks pause state, and requires NETWORK_DIRECTORY_ROLE
 function updateNetwork(struct UpdateNetworkData network) external
 ```
 
-Updates an existing network in the catalog
+Updates an existing network in the directory
 
 _Validates network data, checks pause state, and requires NETWORK_DIRECTORY_ROLE_
 
@@ -384,7 +384,7 @@ _Validates network data, checks pause state, and requires NETWORK_DIRECTORY_ROLE
 function deleteNetwork(uint256 chainId) external
 ```
 
-Deletes a network and all its resources from the catalog
+Deletes a network and all its resources from the directory
 
 _Ensures network exists, checks pause state and permissions before deletion_
 
@@ -457,7 +457,7 @@ _Returns network data including all associated resources. Returns empty/zero val
 function getAllNetworks() external view returns (struct NetworkData[] networks)
 ```
 
-Retrieves all networks registered in the catalog
+Retrieves all networks registered in the directory
 
 _Returns complete network information including resources for all networks. Returns empty array
 if no networks exist._
@@ -496,7 +496,7 @@ _Filters networks by algorithm field and returns complete information including 
 function getNetworksPaginated(uint256 pageSize, uint256 pageIndex) external view returns (struct NetworkData[] networks, uint256 totalCount, uint256 howMany, uint256 prev, uint256 next)
 ```
 
-Retrieves paginated networks from the catalog
+Retrieves paginated networks from the directory
 
 _Returns a subset of networks with pagination metadata. Handles edge cases gracefully._
 
@@ -512,7 +512,7 @@ _Returns a subset of networks with pagination metadata. Handles edge cases grace
 | Name       | Type                 | Description                                                                        |
 | ---------- | -------------------- | ---------------------------------------------------------------------------------- |
 | networks   | struct NetworkData[] | Array of networks for the requested page (may be empty if offset exceeds count)    |
-| totalCount | uint256              | Total number of networks in the catalog                                            |
+| totalCount | uint256              | Total number of networks in the directory                                          |
 | howMany    | uint256              | Actual number of networks returned in the current page (0 if offset exceeds total) |
 | prev       | uint256              | Previous page index (clamped to first page, minimum 1)                             |
 | next       | uint256              | Next page index (clamped to last available page)                                   |
@@ -523,15 +523,15 @@ _Returns a subset of networks with pagination metadata. Handles edge cases grace
 function getNetworksCount() external view returns (uint256 count)
 ```
 
-Gets the total count of networks in the catalog
+Gets the total count of networks in the directory
 
-_Efficient way to determine pagination parameters without loading data. Returns 0 if catalog is empty._
+_Efficient way to determine pagination parameters without loading data. Returns 0 if directory is empty._
 
 #### Return Values
 
-| Name  | Type    | Description                                                     |
-| ----- | ------- | --------------------------------------------------------------- |
-| count | uint256 | Total number of networks registered in the catalog (0 if empty) |
+| Name  | Type    | Description                                                       |
+| ----- | ------- | ----------------------------------------------------------------- |
+| count | uint256 | Total number of networks registered in the directory (0 if empty) |
 
 ### getResourceKeys
 
@@ -611,9 +611,9 @@ npReturns 0 for non-existent networks or networks without resources._
 
 ## NetworkDirectoryFacet
 
-Diamond facet implementing network catalog functionality with EIP-2535 introspection
+Diamond facet implementing network directory functionality with EIP-2535 introspection
 
-_This contract serves as a diamond facet for the network catalog system.
+_This contract serves as a diamond facet for the network directory system.
 It combines the NetworkDirectory functionality with EIP-2535 introspection capabilities
 to support diamond proxy pattern deployment and management._
 
@@ -645,9 +645,9 @@ _Used for facet identification and resolution in diamond architecture_
 
 #### Return Values
 
-| Name         | Type    | Description                                                      |
-| ------------ | ------- | ---------------------------------------------------------------- |
-| businessId\_ | bytes32 | The unique business identifier for network catalog functionality |
+| Name         | Type    | Description                                                        |
+| ------------ | ------- | ------------------------------------------------------------------ |
+| businessId\_ | bytes32 | The unique business identifier for network directory functionality |
 
 ### selectorsIntrospection
 
@@ -685,9 +685,9 @@ _Internal function used by interfacesIntrospection for EIP-165 support_
 
 ## NetworkDirectoryInternal
 
-Internal implementation of network catalog operations using diamond storage pattern
+Internal implementation of network directory operations using diamond storage pattern
 
-_This contract provides the core business logic for network catalog management.
+_This contract provides the core business logic for network directory management.
 Uses diamond storage pattern to avoid storage collisions in proxy contracts.
 All functions are internal and should be called through the external layer._
 
@@ -878,9 +878,9 @@ _Efficient way to get count without loading all network data_
 
 #### Return Values
 
-| Name  | Type    | Description                             |
-| ----- | ------- | --------------------------------------- |
-| count | uint256 | Total number of networks in the catalog |
+| Name  | Type    | Description                               |
+| ----- | ------- | ----------------------------------------- |
+| count | uint256 | Total number of networks in the directory |
 
 ### \_getResourceKeysPaginated
 

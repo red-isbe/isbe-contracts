@@ -484,7 +484,7 @@ export async function deployGovernance(
             governanceAddress
         ) as AnchoringCoreFacet,
 
-        // Network Catalog
+        // Network directory
         networkDirectoryFacet,
 
         // Use case deployment (spread all properties)

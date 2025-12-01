@@ -23,8 +23,8 @@ import {_NETWORK_DIRECTORY_STORAGE_POSITION} from '../../constants/storagePositi
 
 /**
  * @title NetworkDirectoryInternal
- * @notice Internal implementation of network catalog operations using diamond storage pattern
- * @dev This contract provides the core business logic for network catalog management.
+ * @notice Internal implementation of network directory operations using diamond storage pattern
+ * @dev This contract provides the core business logic for network directory management.
  *      Uses diamond storage pattern to avoid storage collisions in proxy contracts.
  *      All functions are internal and should be called through the external layer.
  * @author ISBE Development Team
@@ -282,7 +282,7 @@ abstract contract NetworkDirectoryInternal is DidDocumentDetailedInternal {
     /**
      * @notice Internal function to get total count of networks
      * @dev Efficient way to get count without loading all network data
-     * @return count Total number of networks in the catalog
+     * @return count Total number of networks in the directory
      */
     function _getNetworksCount() internal view returns (uint256 count) {
         return _directoryStorage().chainIds.length();
