@@ -2,7 +2,7 @@
 
 Implements unified capped mechanism with minting functionality for both ERC20 and ERC3643 tokens
 
-_Inherits from IERC203643Capped and ERC203643InternalCommon
+_Inherits from IERC203643Capped and ERC203643CappedInternal
 Behavior adapts automatically based on token type through internal logic_
 
 ### constructor

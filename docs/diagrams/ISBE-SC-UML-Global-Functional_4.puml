@@ -1,0 +1,93 @@
+@startuml
+title Arquitectura de SC ISBE
+
+skinparam class {
+    BackgroundColor White
+    ArrowColor Black
+    BorderColor Black
+}
+skinparam linetype polyline
+hide empty members
+
+' === CORE ===
+package "Core" {
+
+  ' --- DID and VRelationShip---
+    class DidDocumentDetailedInternal <<(A,#228b22) abstract contract>> #9370DB
+    class VRelationshipsInternal <<(A,#228b22) abstract contract>> #9370DB
+
+    DidDocumentDetailedInternal --|> Common
+    DidDocumentDetailedInternal --|> VRelationshipsInternal 
+    VRelationshipsInternal--|> ISBEContext
+}
+
+
+
+
+' === Compliance ===
+package "Compliance" {
+
+        ' --- ERC203643 Internal Common ---
+    class ERC203643InternalCommon <<(A,#228B22) abstract contract>> #FFFF99
+    
+    ' --- ERC20---
+    
+    class ERC20Internal <<(A,#228B22) abstract contract>> #FFB6C1
+    ERC20Internal --|> DidDocumentDetailedInternal 
+  
+
+
+    ' --- Compliance---
+    class ICompliance <<(I,#FFD700) interface>> #E6E6FA
+    class ERC3643ComplianceInternal <<(A,#228B22) abstract contract>> #E6E6FA
+    class ERC3643Compliance <<(A,#228B22) abstract contract>> #E6E6FA
+    class ERC3643ComplianceFacet <<(C,#1E90FF) contract>> #E6E6FA
+    
+    ERC3643ComplianceFacet --|> ERC3643Compliance
+    ERC3643Compliance --|> ICompliance  
+    ERC3643Compliance --|> ERC203643InternalCommon
+    ERC203643InternalCommon --|> ERC3643ComplianceInternal   
+
+ 
+
+    ' --- Compliance Max Balance---
+
+    class IERC3643ComplianceMaxBalance <<(I,#FFD700) interface>> #E6E6FA
+    class ERC3643ComplianceMaxBalanceInternal <<(A,#228B22) abstract contract>> #E6E6FA
+    class ERC3643ComplianceMaxBalance <<(A,#228B22) abstract contract>> #E6E6FA
+    class ERC3643ComplianceMaxBalanceFacet <<(C,#1E90FF) contract>> #E6E6FA
+    
+    ERC3643ComplianceMaxBalanceFacet --|> ERC3643ComplianceMaxBalance
+    ERC3643ComplianceMaxBalance --|> IERC3643ComplianceMaxBalance 
+    ERC3643ComplianceMaxBalance --|> ERC203643InternalCommon
+
+
+    ERC3643ComplianceMaxBalanceInternal --|> ERC20Internal
+
+    ERC3643ComplianceInternal --|> ERC3643ComplianceMaxBalanceInternal 
+
+
+   ' --- DM Limit---
+    class IERC3643ComplianceDMLim<<(I,#FFD700) interface>> #E6E6FA
+    class ERC3643ComplianceDMLimInternal<<(A,#228B22) abstract contract>> #E6E6FA
+    class ERC3643ComplianceDMLim<<(A,#228B22) abstract contract>> #E6E6FA
+    class ERC3643ComplianceDMLimFacet<<(C,#1E90FF) contract>> #E6E6FA
+    
+    ERC3643ComplianceDMLimFacet--|> ERC3643ComplianceDMLim
+    ERC3643ComplianceDMLim--|> IERC3643ComplianceDMLim
+    ERC3643ComplianceDMLim--|> ERC3643ComplianceDMLimInternal
+    ERC3643ComplianceDMLimInternal--|> DidDocumentDetailedInternal
+    ERC3643ComplianceInternal --|> ERC3643ComplianceDMLimInternal
+
+   
+   
+note right of ERC3643ComplianceMaxBalance
+ERC3643ComplianceMaxBalance si extiende directamente el ERC20Internal y no pasar por
+el ERC203643InternalCommon como el ERC3643ComplianceDMLim,hay que gestionar conflictos.
+Como este módulo se va a separar del diamante del token,no tiene sentido hacer retrabajo ahora ya que asi es funcional
+end note
+
+
+
+}
+@enduml

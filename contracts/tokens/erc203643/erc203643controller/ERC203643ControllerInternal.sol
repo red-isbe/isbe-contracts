@@ -8,13 +8,10 @@ import {IERC203643Controller} from './IERC203643Controller.sol';
 /// @notice Implements unified force mechanism for both ERC20 and ERC3643 tokens
 /// @dev Inherits from IERC203643Controller and ERC203643InternalCommon
 ///      Behavior adapts automatically based on token type through internal logic
-abstract contract ERC203643ControllerInternal is
-    IERC203643Controller,
-    ERC203643InternalCommon
-{
+abstract contract ERC203643ControllerInternal is ERC203643InternalCommon {
     function _forceBurn(address _from, uint256 _amount) internal {
         _burn(_from, _amount);
-        emit ForceBurn(_msgSender(), _from, _amount);
+        emit IERC203643Controller.ForceBurn(_msgSender(), _from, _amount);
     }
 
     function _forceTransfer(
@@ -24,7 +21,7 @@ abstract contract ERC203643ControllerInternal is
         uint256 _amount
     ) internal returns (bool success) {
         _transfer(_from, _to, _amount);
-        emit ForceTransfer(_sender, _from, _to, _amount);
+        emit IERC203643Controller.ForceTransfer(_sender, _from, _to, _amount);
         return true;
     }
 }
