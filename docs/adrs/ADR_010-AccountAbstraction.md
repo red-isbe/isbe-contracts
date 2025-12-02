@@ -111,8 +111,9 @@ This minimal implementation serves as the foundation for validating the full Acc
 
 #### Smart Contracts Architecture
 
+- IBasePaymaster - extends [IPaymaster](https://github.com/eth-infinitism/account-abstraction/blob/v0.8.0/contracts/interfaces/IPaymaster.sol) interface from the standard and defines our custom events, errors and functions
 - PaymasterInternal - implements required business logic to support paymaster functionality. All methods are internal.
-- Paymaster - implements [IPaymaster](https://github.com/eth-infinitism/account-abstraction/blob/v0.8.0/contracts/interfaces/IPaymaster.sol) interface from the standard and uses internal functions defined in PaymasterInternal.
+- Paymaster - implements `IBasePaymaster` and uses internal functions defined in PaymasterInternal.
 - PaymasterFacet - required facet to be included into the corresponding diamond proxy, extending Paymaster and IEIP2535Introspection contracts.
 
 ![image](../diagrams/AccountAbstraction/AccountAbstraction-Paymaster.png)
