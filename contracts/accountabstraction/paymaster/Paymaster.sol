@@ -226,7 +226,7 @@ abstract contract Paymaster is IBasePaymaster, PaymasterInternal {
      */
     function setEntryPoint(
         IEntryPoint entryPoint
-    ) external onlyRole(_DEFAULT_ADMIN_ROLE) whenNotPaused {
+    ) external onlyRole(_DEFAULT_ADMIN_ROLE) whenPaused {
         _setEntryPoint(entryPoint);
         emit EntryPointUpdated(address(entryPoint));
     }

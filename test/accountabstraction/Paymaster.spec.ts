@@ -213,10 +213,11 @@ describe('Account Abstraction Paymaster', () => {
             await loadFixture(fixture)
         })
 
-        it('GIVEN a paused Paymaster WHEN try to setEntryPoint THEN it fails', async () => {
+        it('GIVEN an unpaused Paymaster WHEN try to setEntryPoint THEN it fails', async () => {
+            await pause.unpause()
             await expect(
                 paymaster.setEntryPoint(entryPoint)
-            ).to.be.revertedWithCustomError(pause, 'IsPaused')
+            ).to.be.revertedWithCustomError(pause, 'IsNotPaused')
         })
 
         it('GIVEN a paused Paymaster WHEN try to whitelist THEN it fails', async () => {
@@ -420,6 +421,7 @@ describe('Account Abstraction Paymaster', () => {
         })
 
         it('GIVEN Paymaster deployed WHEN set entryPoint with invalid EntryPoint THEN it fails', async () => {
+            await pause.pause()
             await expect(paymaster.setEntryPoint(governance))
                 .to.be.revertedWithCustomError(
                     paymaster,
@@ -498,6 +500,7 @@ describe('Account Abstraction Paymaster', () => {
     describe('EntryPoint', () => {
         describe('setEntryPoint', () => {
             it('GIVEN Paymaster deployed WHEN set entryPoint THEN success', async () => {
+                await pause.pause()
                 expect(await paymaster.setEntryPoint(entryPoint))
                     .to.emit(paymaster, 'EntryPointUpdated')
                     .withArgs(await entryPoint.getAddress())
@@ -696,7 +699,9 @@ describe('Account Abstraction Paymaster', () => {
 
     describe('validatePaymasterUserOp', () => {
         beforeEach(async () => {
+            await pause.pause()
             await paymaster.setEntryPoint(entryPoint)
+            await pause.unpause()
         })
 
         it('GIVEN a Paymaster and a userOp WHEN validatePaymasterUserOp THEN returns SIG_VALIDATION_SUCCESS', async () => {
@@ -760,7 +765,9 @@ describe('Account Abstraction Paymaster', () => {
 
     describe('postOp', () => {
         beforeEach(async () => {
+            await pause.pause()
             await paymaster.setEntryPoint(entryPoint)
+            await pause.unpause()
         })
 
         it('GIVEN a Paymaster and a reverted userOp WHEN postOp THEN emit PostOpReverted', async () => {
