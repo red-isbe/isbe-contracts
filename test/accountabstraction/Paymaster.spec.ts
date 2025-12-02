@@ -1,20 +1,24 @@
 import { expect } from 'chai'
-import { ethers, network } from 'hardhat'
-import { Signer, ZeroAddress, AbiCoder } from 'ethers'
+import { config, ethers, network } from 'hardhat'
+import { Signer, ZeroAddress, AbiCoder, HDNodeWallet } from 'ethers'
 import {
     MockEntryPoint,
     Paymaster,
     ISBEPauseFacet,
+    IDidRegistry__factory,
 } from '../../typechain-types'
 import {
     PAUSER_ROLE,
     CONFIGURATION_ACCOUNT_ABSTRACTION_PAYMASTER,
     AA_PAYMASTER_PAYMASTER_KEY,
+    DEFAULT_ADMIN_ROLE,
+    DID_REGISTRY_ROLE,
 } from '../../utils/constants'
 import { deployGovernance } from '../fixtures/governance'
 import { deployPaymasterUseCaseFacets } from '../fixtures/paymaster'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { PackedUserOperationStruct } from 'typechain-types/contracts/accountabstraction/MockEntryPoint'
+import { EllipticType } from '../types/identity'
 
 const SIG_VALIDATION_SUCCESS = 0n
 const SIG_VALIDATION_FAILED = 1n
@@ -24,10 +28,12 @@ describe('Account Abstraction Paymaster', () => {
     let adminAccountAddress: string
     let account_2: Signer
     let account_2Address: string
+    let didWallet: HDNodeWallet
 
     let governance: string
     let entryPoint: MockEntryPoint
     let paymaster: Paymaster
+    let didConnectedPaymaster: Paymaster
     let pause: ISBEPauseFacet
 
     const pack128 = (hi: bigint, lo: bigint) =>
@@ -87,6 +93,67 @@ describe('Account Abstraction Paymaster', () => {
             init_pause
         )
 
+        function walletOfFirstSigner(): HDNodeWallet {
+            const mnemonic = (
+                config.networks.hardhat.accounts as {
+                    mnemonic: string
+                    path: string
+                }
+            ).mnemonic
+            return ethers.Wallet.fromPhrase(mnemonic)
+        }
+
+        const baseWallet = walletOfFirstSigner()
+        const wallet = baseWallet.derivePath('302')
+        const didId = ethers.id('did:erc20:test:1')
+
+        // Grant DID registry role
+        await governanceResult.accessControlGovernance!.grantRole(
+            DID_REGISTRY_ROLE,
+            adminAccountAddress
+        )
+
+        // Initialize DID registry
+        const governanceAddress =
+            await governanceResult.accessControlGovernance!.getAddress()
+        const didRegistryWithSigner = IDidRegistry__factory.connect(
+            governanceAddress,
+            adminAccountSigner
+        )
+        await didRegistryWithSigner.initializeDiDRegistry(
+            EllipticType.SECP_256_K1
+        )
+
+        // Insert DID document
+        const notBefore = Math.floor(Date.now() / 1000)
+        const notAfter = notBefore + 365 * 24 * 60 * 60
+
+        const publicKey = wallet.signingKey.publicKey
+        const vMethodId = ethers.id(`vmethod:${didId}`)
+        const message = ethers.keccak256(
+            ethers.solidityPacked(['bytes'], [publicKey])
+        )
+        const signature = wallet.signingKey.sign(message)
+        const proof = ethers.Signature.from(signature).serialized
+
+        await didRegistryWithSigner.insertFirstDidDocument(
+            didId,
+            `document:${didId}`,
+            vMethodId,
+            proof,
+            publicKey,
+            EllipticType.SECP_256_K1,
+            notBefore,
+            notAfter,
+            ''
+        )
+
+        // Fund DID wallet
+        await adminAccountSigner.sendTransaction({
+            to: wallet.address,
+            value: ethers.parseEther('1.0'),
+        })
+
         const isbeFactory = await ethers.getContractAt(
             'IIsbeFactory',
             await governanceResult.governanceContract.getAddress()
@@ -108,6 +175,7 @@ describe('Account Abstraction Paymaster', () => {
             adminAccount: adminAccountSigner,
             account_2: account2Signer,
             account_3: account3Signer,
+            wallet: wallet,
             adminAccountAddress,
             account_2Address: account2Address,
             account_3Address: account3Address,
@@ -128,6 +196,13 @@ describe('Account Abstraction Paymaster', () => {
         adminAccountAddress = contracts.adminAccountAddress
         account_2 = contracts.account_2
         account_2Address = contracts.account_2Address
+        didWallet = contracts.wallet
+
+        const didSigner = new ethers.Wallet(
+            didWallet.privateKey,
+            ethers.provider
+        )
+        didConnectedPaymaster = contracts.paymaster.connect(didSigner)
     })
 
     describe('Paused', () => {
@@ -146,25 +221,25 @@ describe('Account Abstraction Paymaster', () => {
 
         it('GIVEN a paused Paymaster WHEN try to whitelist THEN it fails', async () => {
             await expect(
-                paymaster.whitelist(account_2Address)
+                didConnectedPaymaster.whitelist(account_2Address)
             ).to.be.revertedWithCustomError(pause, 'IsPaused')
         })
 
         it('GIVEN a paused Paymaster WHEN try to unwhitelist THEN it fails', async () => {
             await expect(
-                paymaster.unwhitelist(account_2Address)
+                didConnectedPaymaster.unwhitelist(account_2Address)
             ).to.be.revertedWithCustomError(pause, 'IsPaused')
         })
 
         it('GIVEN a paused Paymaster WHEN try to deposit THEN it fails', async () => {
             await expect(
-                paymaster.deposit({ value: 100n })
+                didConnectedPaymaster.deposit({ value: 100n })
             ).to.be.revertedWithCustomError(pause, 'IsPaused')
         })
 
         it('GIVEN a paused Paymaster WHEN try to withdrawTo THEN it fails', async () => {
             await expect(
-                paymaster.withdrawTo(paymaster, 100n)
+                didConnectedPaymaster.withdrawTo(didConnectedPaymaster, 100n)
             ).to.be.revertedWithCustomError(pause, 'IsPaused')
         })
 
@@ -172,20 +247,21 @@ describe('Account Abstraction Paymaster', () => {
             const value = 100n
             const unstakeDelaySec = 1n
             await expect(
-                paymaster.addStake(unstakeDelaySec, { value: value })
+                didConnectedPaymaster.addStake(unstakeDelaySec, {
+                    value: value,
+                })
             ).to.be.revertedWithCustomError(pause, 'IsPaused')
         })
 
         it('GIVEN a paused Paymaster WHEN try to unlockStake THEN it fails', async () => {
-            await expect(paymaster.unlockStake()).to.be.revertedWithCustomError(
-                pause,
-                'IsPaused'
-            )
+            await expect(
+                didConnectedPaymaster.unlockStake()
+            ).to.be.revertedWithCustomError(pause, 'IsPaused')
         })
 
         it('GIVEN a paused Paymaster WHEN try to withdrawStake THEN it fails', async () => {
             await expect(
-                paymaster.withdrawStake(paymaster)
+                didConnectedPaymaster.withdrawStake(didConnectedPaymaster)
             ).to.be.revertedWithCustomError(pause, 'IsPaused')
         })
 
@@ -198,69 +274,120 @@ describe('Account Abstraction Paymaster', () => {
             const userOpHash = await entryPoint.getUserOpHash(userOp)
             const maxCost = 100n
             await expect(
-                paymaster.validatePaymasterUserOp(userOp, userOpHash, maxCost)
+                didConnectedPaymaster.validatePaymasterUserOp(
+                    userOp,
+                    userOpHash,
+                    maxCost
+                )
             ).to.be.revertedWithCustomError(pause, 'IsPaused')
         })
     })
 
     describe('Unauthorized', () => {
-        it('GIVEN Paymaster deployed WHEN initialize THEN success', async () => {
+        it('GIVEN an unauthorized signer WHEN initialize THEN AccountHasNoRole', async () => {
             await expect(
-                paymaster.connect(account_2).initializePaymaster(entryPoint)
+                didConnectedPaymaster
+                    .connect(account_2)
+                    .initializePaymaster(entryPoint)
             )
-                .to.be.revertedWithCustomError(paymaster, 'AccountIsNotOwner')
-                .withArgs(account_2Address)
+                .to.be.revertedWithCustomError(
+                    didConnectedPaymaster,
+                    'AccountHasNoRole'
+                )
+                .withArgs(account_2Address, DEFAULT_ADMIN_ROLE)
         })
 
-        it('GIVEN Paymaster deployed WHEN setEntryPoint THEN success', async () => {
-            await expect(paymaster.connect(account_2).setEntryPoint(entryPoint))
-                .to.be.revertedWithCustomError(paymaster, 'AccountIsNotOwner')
-                .withArgs(account_2Address)
-        })
-
-        it('GIVEN Paymaster deployed WHEN whitelist THEN success', async () => {
-            await expect(paymaster.connect(account_2).whitelist(entryPoint))
-                .to.be.revertedWithCustomError(paymaster, 'AccountIsNotOwner')
-                .withArgs(account_2Address)
-        })
-
-        it('GIVEN Paymaster deployed WHEN unwhitelist THEN success', async () => {
-            await expect(paymaster.connect(account_2).unwhitelist(entryPoint))
-                .to.be.revertedWithCustomError(paymaster, 'AccountIsNotOwner')
-                .withArgs(account_2Address)
-        })
-
-        it('GIVEN Paymaster deployed WHEN deposit THEN success', async () => {
-            await expect(paymaster.connect(account_2).deposit({ value: 10n }))
-                .to.be.revertedWithCustomError(paymaster, 'AccountIsNotOwner')
-                .withArgs(account_2Address)
-        })
-
-        it('GIVEN Paymaster deployed WHEN withdrawTo THEN success', async () => {
+        it('GIVEN an unauthorized signer WHEN setEntryPoint THEN AccountHasNoRole', async () => {
             await expect(
-                paymaster.connect(account_2).withdrawTo(entryPoint, 10n)
+                didConnectedPaymaster
+                    .connect(account_2)
+                    .setEntryPoint(entryPoint)
             )
-                .to.be.revertedWithCustomError(paymaster, 'AccountIsNotOwner')
-                .withArgs(account_2Address)
+                .to.be.revertedWithCustomError(
+                    didConnectedPaymaster,
+                    'AccountHasNoRole'
+                )
+                .withArgs(account_2Address, DEFAULT_ADMIN_ROLE)
         })
 
-        it('GIVEN Paymaster deployed WHEN addStake THEN success', async () => {
+        it('GIVEN an unkown wallet WHEN whitelist THEN AddressNotKnown', async () => {
             await expect(
-                paymaster.connect(account_2).addStake(100n, { value: 100n })
+                didConnectedPaymaster.connect(account_2).whitelist(entryPoint)
             )
-                .to.be.revertedWithCustomError(paymaster, 'AccountIsNotOwner')
+                .to.be.revertedWithCustomError(
+                    didConnectedPaymaster,
+                    'AddressNotKnown'
+                )
                 .withArgs(account_2Address)
         })
 
-        it('GIVEN Paymaster deployed WHEN unlockStake THEN success', async () => {
-            await expect(paymaster.connect(account_2).unlockStake())
-                .to.be.revertedWithCustomError(paymaster, 'AccountIsNotOwner')
+        it('GIVEN an unkown wallet WHEN unwhitelist THEN success', async () => {
+            await expect(
+                didConnectedPaymaster.connect(account_2).unwhitelist(entryPoint)
+            )
+                .to.be.revertedWithCustomError(
+                    didConnectedPaymaster,
+                    'AddressNotKnown'
+                )
                 .withArgs(account_2Address)
         })
 
-        it('GIVEN Paymaster deployed WHEN withdrawStake THEN success', async () => {
-            await expect(paymaster.connect(account_2).withdrawStake(account_2))
-                .to.be.revertedWithCustomError(paymaster, 'AccountIsNotOwner')
+        it('GIVEN an unkown wallet WHEN deposit THEN success', async () => {
+            await expect(
+                didConnectedPaymaster.connect(account_2).deposit({ value: 10n })
+            )
+                .to.be.revertedWithCustomError(
+                    didConnectedPaymaster,
+                    'AddressNotKnown'
+                )
+                .withArgs(account_2Address)
+        })
+
+        it('GIVEN an unkown wallet WHEN withdrawTo THEN success', async () => {
+            await expect(
+                didConnectedPaymaster
+                    .connect(account_2)
+                    .withdrawTo(entryPoint, 10n)
+            )
+                .to.be.revertedWithCustomError(
+                    didConnectedPaymaster,
+                    'AddressNotKnown'
+                )
+                .withArgs(account_2Address)
+        })
+
+        it('GIVEN an unkown wallet WHEN addStake THEN success', async () => {
+            await expect(
+                didConnectedPaymaster
+                    .connect(account_2)
+                    .addStake(100n, { value: 100n })
+            )
+                .to.be.revertedWithCustomError(
+                    didConnectedPaymaster,
+                    'AddressNotKnown'
+                )
+                .withArgs(account_2Address)
+        })
+
+        it('GIVEN an unkown wallet WHEN unlockStake THEN success', async () => {
+            await expect(didConnectedPaymaster.connect(account_2).unlockStake())
+                .to.be.revertedWithCustomError(
+                    didConnectedPaymaster,
+                    'AddressNotKnown'
+                )
+                .withArgs(account_2Address)
+        })
+
+        it('GIVEN an unkown wallet WHEN withdrawStake THEN success', async () => {
+            await expect(
+                didConnectedPaymaster
+                    .connect(account_2)
+                    .withdrawStake(account_2)
+            )
+                .to.be.revertedWithCustomError(
+                    didConnectedPaymaster,
+                    'AddressNotKnown'
+                )
                 .withArgs(account_2Address)
         })
     })
@@ -274,8 +401,11 @@ describe('Account Abstraction Paymaster', () => {
 
         it('GIVEN Paymaster deployed WHEN whitelist zeroAddress THEN it fails', async () => {
             await expect(
-                paymaster.whitelist(ZeroAddress)
-            ).to.be.revertedWithCustomError(paymaster, 'AddressZero')
+                didConnectedPaymaster.whitelist(ZeroAddress)
+            ).to.be.revertedWithCustomError(
+                didConnectedPaymaster,
+                'AddressZero'
+            )
         })
     })
 
@@ -329,15 +459,18 @@ describe('Account Abstraction Paymaster', () => {
             const actualGasCost = 100n
             const actualUserOpFeePerGas = 100n
             await expect(
-                paymaster.postOp(
+                didConnectedPaymaster.postOp(
                     postOpMode,
                     context,
                     actualGasCost,
                     actualUserOpFeePerGas
                 )
             )
-                .to.be.revertedWithCustomError(paymaster, 'NotEntryPoint')
-                .withArgs(adminAccountAddress)
+                .to.be.revertedWithCustomError(
+                    didConnectedPaymaster,
+                    'NotEntryPoint'
+                )
+                .withArgs(didWallet)
         })
     })
 
@@ -386,30 +519,34 @@ describe('Account Abstraction Paymaster', () => {
     describe('Whitelist Users', () => {
         describe('whitelist', () => {
             it('GIVEN Paymaster deployed WHEN whitelist user THEN success', async () => {
-                expect(await paymaster.whitelist(account_2Address))
-                    .to.emit(paymaster, 'UserWhiteListed')
+                expect(await didConnectedPaymaster.whitelist(account_2Address))
+                    .to.emit(didConnectedPaymaster, 'UserWhiteListed')
                     .withArgs(account_2Address)
             })
         })
 
         describe('unwhitelist', () => {
             it('GIVEN Paymaster deployed WHEN whitelist user THEN success', async () => {
-                expect(await paymaster.unwhitelist(account_2Address))
-                    .to.emit(paymaster, 'UserUnwhiteListed')
+                expect(
+                    await didConnectedPaymaster.unwhitelist(account_2Address)
+                )
+                    .to.emit(didConnectedPaymaster, 'UserUnwhiteListed')
                     .withArgs(account_2Address)
             })
         })
 
         describe('iswhitelisted', () => {
             it('GIVEN Paymaster deployed WHEN isWhitelisted on whitelisted THEN returns true', async () => {
-                await paymaster.whitelist(account_2Address)
-                expect(await paymaster.isWhitelisted(account_2Address)).to.be
-                    .true
+                await didConnectedPaymaster.whitelist(account_2Address)
+                expect(
+                    await didConnectedPaymaster.isWhitelisted(account_2Address)
+                ).to.be.true
             })
 
             it('GIVEN Paymaster deployed WHEN isWhitelisted on unwhitelisted THEN returns false', async () => {
-                expect(await paymaster.isWhitelisted(account_2Address)).to.be
-                    .false
+                expect(
+                    await didConnectedPaymaster.isWhitelisted(account_2Address)
+                ).to.be.false
             })
         })
     })
@@ -425,12 +562,14 @@ describe('Account Abstraction Paymaster', () => {
         describe('deposit', () => {
             it('GIVEN Paymaster deployed WHEN deposit THEN value is deposited into the EntryPoint', async () => {
                 const value = 100n
-                expect(await paymaster.deposit({ value: value }))
-                    .to.emit(paymaster, 'AmountDeposited')
+                expect(await didConnectedPaymaster.deposit({ value: value }))
+                    .to.emit(didConnectedPaymaster, 'AmountDeposited')
                     .withArgs(value)
 
                 expect(
-                    await entryPoint.balanceOf(await paymaster.getAddress())
+                    await entryPoint.balanceOf(
+                        await didConnectedPaymaster.getAddress()
+                    )
                 ).to.equal(value)
             })
         })
@@ -438,10 +577,12 @@ describe('Account Abstraction Paymaster', () => {
         describe('getDeposit', () => {
             it('GIVEN Paymaster deployed WHEN get deposit THEN value deposited in the EP is returned', async () => {
                 const value = 100n
-                await paymaster.deposit({ value: value })
+                await didConnectedPaymaster.deposit({ value: value })
                 expect(
-                    await entryPoint.balanceOf(await paymaster.getAddress())
-                ).to.equal(await paymaster.getDeposit())
+                    await entryPoint.balanceOf(
+                        await didConnectedPaymaster.getAddress()
+                    )
+                ).to.equal(await didConnectedPaymaster.getDeposit())
             })
         })
 
@@ -449,23 +590,32 @@ describe('Account Abstraction Paymaster', () => {
             it('GIVEN Paymaster deployed WHEN withdraw to THEN value deposited in the EP is transferred to the recipient', async () => {
                 const value = 100n
                 const withdraw = value / 2n
-                await paymaster.deposit({ value: value })
+                await didConnectedPaymaster.deposit({ value: value })
                 expect(
-                    await entryPoint.balanceOf(await paymaster.getAddress())
-                ).to.equal(await paymaster.getDeposit())
+                    await entryPoint.balanceOf(
+                        await didConnectedPaymaster.getAddress()
+                    )
+                ).to.equal(await didConnectedPaymaster.getDeposit())
 
-                expect(await paymaster.withdrawTo(paymaster, withdraw))
-                    .to.emit(paymaster, 'AmountWithdrawn')
-                    .withArgs(paymaster, withdraw)
+                expect(
+                    await didConnectedPaymaster.withdrawTo(
+                        didConnectedPaymaster,
+                        withdraw
+                    )
+                )
+                    .to.emit(didConnectedPaymaster, 'AmountWithdrawn')
+                    .withArgs(didConnectedPaymaster, withdraw)
 
                 const amountInEp = await entryPoint.balanceOf(
-                    await paymaster.getAddress()
+                    await didConnectedPaymaster.getAddress()
                 )
-                expect(amountInEp).to.equal(await paymaster.getDeposit())
+                expect(amountInEp).to.equal(
+                    await didConnectedPaymaster.getDeposit()
+                )
                 expect(amountInEp).to.equal(value - withdraw)
-                expect(await ethers.provider.getBalance(paymaster)).to.equal(
-                    withdraw
-                )
+                expect(
+                    await ethers.provider.getBalance(didConnectedPaymaster)
+                ).to.equal(withdraw)
             })
         })
     })
@@ -483,13 +633,15 @@ describe('Account Abstraction Paymaster', () => {
                 const value = 100n
                 const unstakeDelaySec = 1n
                 expect(
-                    await paymaster.addStake(unstakeDelaySec, { value: value })
+                    await didConnectedPaymaster.addStake(unstakeDelaySec, {
+                        value: value,
+                    })
                 )
-                    .to.emit(paymaster, 'StakeAdded')
+                    .to.emit(didConnectedPaymaster, 'StakeAdded')
                     .withArgs(value, unstakeDelaySec)
 
                 const stakeInfo = await entryPoint.getDepositInfo(
-                    await paymaster.getAddress()
+                    await didConnectedPaymaster.getAddress()
                 )
                 expect(stakeInfo.staked).to.be.true
                 expect(stakeInfo.stake).to.equal(value)
@@ -500,15 +652,17 @@ describe('Account Abstraction Paymaster', () => {
             it('GIVEN Paymaster deployed WHEN unlockStake THEN value staked in the EP is unlocked', async () => {
                 const value = 100n
                 const unstakeDelaySec = 1n
-                await paymaster.addStake(unstakeDelaySec, { value: value })
+                await didConnectedPaymaster.addStake(unstakeDelaySec, {
+                    value: value,
+                })
 
-                expect(await paymaster.unlockStake()).to.emit(
-                    paymaster,
+                expect(await didConnectedPaymaster.unlockStake()).to.emit(
+                    didConnectedPaymaster,
                     'StakedUnlocked'
                 )
 
                 const stakeInfo = await entryPoint.getDepositInfo(
-                    await paymaster.getAddress()
+                    await didConnectedPaymaster.getAddress()
                 )
                 expect(stakeInfo.staked).to.be.false
                 expect(stakeInfo.stake).to.equal(value)
@@ -519,14 +673,20 @@ describe('Account Abstraction Paymaster', () => {
             it('GIVEN Paymaster deployed WHEN withdraw Stake THEN value staked in the EP is transferred to the recipient', async () => {
                 const value = 100n
                 const unstakeDelaySec = 1n
-                await paymaster.addStake(unstakeDelaySec, { value: value })
-                await paymaster.unlockStake()
-                expect(await paymaster.withdrawStake(paymaster))
-                    .to.emit(paymaster, 'StakeWithdrawn')
-                    .withArgs(paymaster)
+                await didConnectedPaymaster.addStake(unstakeDelaySec, {
+                    value: value,
+                })
+                await didConnectedPaymaster.unlockStake()
+                expect(
+                    await didConnectedPaymaster.withdrawStake(
+                        didConnectedPaymaster
+                    )
+                )
+                    .to.emit(didConnectedPaymaster, 'StakeWithdrawn')
+                    .withArgs(didConnectedPaymaster)
 
                 const stakeInfo = await entryPoint.getDepositInfo(
-                    await paymaster.getAddress()
+                    await didConnectedPaymaster.getAddress()
                 )
                 expect(stakeInfo.staked).to.be.false
                 expect(stakeInfo.stake).to.equal(0n)
@@ -549,8 +709,8 @@ describe('Account Abstraction Paymaster', () => {
             const maxCost = 100n
 
             // Requirements for validation to succeed
-            await paymaster.deposit({ value: maxCost })
-            await paymaster.whitelist(sender)
+            await didConnectedPaymaster.deposit({ value: maxCost })
+            await didConnectedPaymaster.whitelist(sender)
 
             const entryPointSigner = await getEntryPointSignerImpersonation()
 
@@ -586,8 +746,8 @@ describe('Account Abstraction Paymaster', () => {
             const userOpHash = await entryPoint.getUserOpHash(userOp)
             const maxCost = 100n
 
-            await paymaster.deposit({ value: maxCost - 10n })
-            await paymaster.whitelist(sender)
+            await didConnectedPaymaster.deposit({ value: maxCost - 10n })
+            await didConnectedPaymaster.whitelist(sender)
 
             const entryPointSigner = await getEntryPointSignerImpersonation()
 

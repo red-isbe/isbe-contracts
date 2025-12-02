@@ -8,6 +8,7 @@ import {IBasePaymaster} from './IBasePaymaster.sol';
 import {PaymasterInternal} from './PaymasterInternal.sol';
 import {_ACCOUNT_ABSTRACTION_PAYMASTER_PAYMASTER_KEY} from '../../constants/resolverKeys.sol';
 import {_ACCOUNT_ABSTRACTION_PAYMASTER_VERSION} from '../../constants/facetVersions.sol';
+import {_DEFAULT_ADMIN_ROLE} from '../../constants/roles.sol';
 
 /**
  * @title Paymaster Internal Implementation
@@ -30,7 +31,7 @@ abstract contract Paymaster is IBasePaymaster, PaymasterInternal {
         IEntryPoint _entryPoint
     )
         external
-        onlyOwner
+        onlyRole(_DEFAULT_ADMIN_ROLE)
         addressIsNotZero(address(_entryPoint))
         initializer(
             _ACCOUNT_ABSTRACTION_PAYMASTER_PAYMASTER_KEY,
@@ -70,7 +71,13 @@ abstract contract Paymaster is IBasePaymaster, PaymasterInternal {
      * @dev Payable. Forwards value to EntryPoint. Emits {AmountDeposited}.
      *      Implementations MAY restrict callers through access control.
      */
-    function deposit() external payable override onlyOwner whenNotPaused {
+    function deposit()
+        external
+        payable
+        override
+        onlyKnownDid(_msgSender())
+        whenNotPaused
+    {
         _deposit(msg.value);
         emit AmountDeposited(msg.value);
     }
@@ -83,7 +90,13 @@ abstract contract Paymaster is IBasePaymaster, PaymasterInternal {
      */
     function whitelist(
         address user
-    ) external override onlyOwner whenNotPaused addressIsNotZero(user) {
+    )
+        external
+        override
+        onlyKnownDid(_msgSender())
+        whenNotPaused
+        addressIsNotZero(user)
+    {
         _whitelist(user);
         emit UserWhiteListed(user);
     }
@@ -96,57 +109,62 @@ abstract contract Paymaster is IBasePaymaster, PaymasterInternal {
      */
     function unwhitelist(
         address user
-    ) external override onlyOwner whenNotPaused {
+    ) external override onlyKnownDid(_msgSender()) whenNotPaused {
         _unwhitelist(user);
         emit UserUnwhiteListed(user);
     }
 
     /**
      * @notice Withdraws deposit funds to a recipient.
-     * @dev Restricted by {onlyOwner}. Emits {AmountWithdrawn}.
+     * @dev Restricted by {onlyKnownDid}. Emits {AmountWithdrawn}.
      * @param withdrawAddress The payable recipient address.
      * @param amount The amount of wei to withdraw.
      */
     function withdrawTo(
         address payable withdrawAddress,
         uint256 amount
-    ) external override onlyOwner whenNotPaused {
+    ) external override onlyKnownDid(_msgSender()) whenNotPaused {
         _withdrawTo(withdrawAddress, amount);
         emit AmountWithdrawn(withdrawAddress, amount);
     }
 
     /**
      * @notice Adds stake required by EntryPoint to secure obligations.
-     * @dev Payable. Restricted by {onlyOwner}. Unstake delay can only
+     * @dev Payable. Restricted by {onlyKnownDid}. Unstake delay can only
      *      increase. Emits {StakeAdded}.
      * @param unstakeDelaySec The enforced unstake delay in seconds.
      */
     function addStake(
         uint32 unstakeDelaySec
-    ) external payable override onlyOwner whenNotPaused {
+    ) external payable override onlyKnownDid(_msgSender()) whenNotPaused {
         _addStake(unstakeDelaySec, msg.value);
         emit StakeAdded(msg.value, unstakeDelaySec);
     }
 
     /**
      * @notice Initiates the stake unlock process.
-     * @dev Restricted by {onlyOwner}. The paymaster cannot serve while
+     * @dev Restricted by {onlyKnownDid}. The paymaster cannot serve while
      *      unlocked. Emits {StakedUnlocked}.
      */
-    function unlockStake() external override onlyOwner whenNotPaused {
+    function unlockStake()
+        external
+        override
+        onlyKnownDid(_msgSender())
+        whenNotPaused
+    {
         _unlockStake();
         emit StakedUnlocked();
     }
 
     /**
      * @notice Withdraws stake after the unlock delay has elapsed.
-     * @dev Restricted by {onlyOwner}. Requires prior unlock and elapsed
+     * @dev Restricted by {onlyKnownDid}. Requires prior unlock and elapsed
      *      delay per EntryPoint rules. Emits {StakeWithdrawn}.
      * @param withdrawAddress The recipient of the withdrawn stake.
      */
     function withdrawStake(
         address payable withdrawAddress
-    ) external override onlyOwner whenNotPaused {
+    ) external override onlyKnownDid(_msgSender()) whenNotPaused {
         _withdrawStake(withdrawAddress);
         emit StakeWithdrawn(withdrawAddress);
     }
@@ -203,12 +221,12 @@ abstract contract Paymaster is IBasePaymaster, PaymasterInternal {
 
     /**
      * @notice Updates the EntryPoint reference.
-     * @dev Restricted by {onlyOwner}. Emits {EntryPointUpdated}.
+     * @dev Restricted by {onlyKnownDid}. Emits {EntryPointUpdated}.
      * @param entryPoint The new EntryPoint contract to store.
      */
     function setEntryPoint(
         IEntryPoint entryPoint
-    ) external onlyOwner whenNotPaused {
+    ) external onlyRole(_DEFAULT_ADMIN_ROLE) whenNotPaused {
         _setEntryPoint(entryPoint);
         emit EntryPointUpdated(address(entryPoint));
     }
