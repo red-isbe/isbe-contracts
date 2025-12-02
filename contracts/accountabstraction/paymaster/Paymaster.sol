@@ -189,7 +189,6 @@ abstract contract Paymaster is IBasePaymaster, PaymasterInternal {
     )
         external
         view
-        virtual
         override
         whenNotPaused
         returns (bytes memory context, uint256 validationData)
@@ -209,7 +208,7 @@ abstract contract Paymaster is IBasePaymaster, PaymasterInternal {
      */
     function setEntryPoint(
         IEntryPoint entryPoint
-    ) public onlyOwner whenNotPaused {
+    ) external onlyOwner whenNotPaused {
         _setEntryPoint(entryPoint);
         emit EntryPointUpdated(address(entryPoint));
     }
@@ -219,7 +218,7 @@ abstract contract Paymaster is IBasePaymaster, PaymasterInternal {
      * @dev View helper; does not perform external calls.
      * @return entryPoint_ The stored EntryPoint instance.
      */
-    function getEntryPoint() public view returns (IEntryPoint entryPoint_) {
+    function getEntryPoint() external view returns (IEntryPoint entryPoint_) {
         entryPoint_ = _getEntryPoint();
     }
 
