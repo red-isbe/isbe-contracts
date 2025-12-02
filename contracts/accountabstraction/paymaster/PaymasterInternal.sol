@@ -11,6 +11,7 @@ import {
 } from '@account-abstraction/contracts/core/Helpers.sol';
 import {IBasePaymaster} from './IBasePaymaster.sol';
 import {DidDocumentDetailedInternal} from '../../identity/didregistry/DidDocumentDetailedInternal.sol';
+import {BasicWhitelistInternal} from '../../access/whitelist/basic/BasicWhitelistInternal.sol';
 import {_AA_PAYMASTER_STORAGE_POSITION} from '../../constants/storagePositions.sol';
 
 /**
@@ -22,15 +23,13 @@ import {_AA_PAYMASTER_STORAGE_POSITION} from '../../constants/storagePositions.s
  *      Validation returns SIG_VALIDATION_* flags as required by EntryPoint.
  * @author ISBE Development Team
  */
-abstract contract PaymasterInternal is DidDocumentDetailedInternal {
+abstract contract PaymasterInternal is BasicWhitelistInternal {
     /**
      * @notice Holds EntryPoint reference and the whitelist registry.
      * @param entryPoint ERC-4337 EntryPoint authorised to call validation hooks.
-     * @param whitelist Mapping of user account to whitelisted flag.
      */
     struct PaymasterStorage {
         IEntryPoint entryPoint;
-        mapping(address => bool) whitelist;
     }
 
     /**
@@ -67,24 +66,6 @@ abstract contract PaymasterInternal is DidDocumentDetailedInternal {
     function _setEntryPoint(IEntryPoint _entryPoint) internal {
         _validateEntryPointInterface(_entryPoint);
         _paymasterStorage().entryPoint = _entryPoint;
-    }
-
-    /**
-     * @notice Adds a user account to the whitelist.
-     * @dev Idempotent. No event is emitted by this internal helper.
-     * @param _user The account permitted for sponsorship.
-     */
-    function _whitelist(address _user) internal {
-        _paymasterStorage().whitelist[_user] = true;
-    }
-
-    /**
-     * @notice Removes a user account from the whitelist.
-     * @dev Idempotent. No event is emitted by this internal helper.
-     * @param _user The account no longer permitted for sponsorship.
-     */
-    function _unwhitelist(address _user) internal {
-        _paymasterStorage().whitelist[_user] = false;
     }
 
     /**
@@ -226,18 +207,6 @@ abstract contract PaymasterInternal is DidDocumentDetailedInternal {
             _sender == address(_paymasterStorage().entryPoint),
             IBasePaymaster.NotEntryPoint(_sender)
         );
-    }
-
-    /**
-     * @notice Reports whether a user account is whitelisted.
-     * @dev Reads internal storage only.
-     * @param _user The account to check.
-     * @return isAllowed True if whitelisted, false otherwise.
-     */
-    function _isWhitelisted(
-        address _user
-    ) internal view returns (bool isAllowed) {
-        return _paymasterStorage().whitelist[_user];
     }
 
     /**

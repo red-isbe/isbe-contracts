@@ -59,15 +59,12 @@ contract PaymasterFacet is Paymaster, IEIP2535Introspection {
         pure
         returns (bytes4[] memory selectors_)
     {
-        uint256 selectorsLength = 14;
+        uint256 selectorsLength = 11;
         selectors_ = new bytes4[](selectorsLength);
 
         selectors_[--selectorsLength] = this.initializePaymaster.selector;
         selectors_[--selectorsLength] = this.validatePaymasterUserOp.selector;
         selectors_[--selectorsLength] = this.postOp.selector;
-        selectors_[--selectorsLength] = this.whitelist.selector;
-        selectors_[--selectorsLength] = this.unwhitelist.selector;
-        selectors_[--selectorsLength] = this.isWhitelisted.selector;
         selectors_[--selectorsLength] = this.deposit.selector;
         selectors_[--selectorsLength] = this.getDeposit.selector;
         selectors_[--selectorsLength] = this.withdrawTo.selector;

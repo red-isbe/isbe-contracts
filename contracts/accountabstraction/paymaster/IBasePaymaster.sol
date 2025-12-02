@@ -24,18 +24,6 @@ interface IBasePaymaster is IPaymaster {
     event PaymasterInitialized(address entryPoint);
 
     /**
-     * @notice Emitted when a user is added to the whitelist.
-     * @param user The account newly permitted to have operations sponsored.
-     */
-    event UserWhiteListed(address user);
-
-    /**
-     * @notice Emitted when a user is removed from the whitelist.
-     * @param user The account no longer permitted for sponsorship.
-     */
-    event UserUnwhiteListed(address user);
-
-    /**
      * @notice Emitted when Ether is deposited to the paymaster for gas funding.
      * @param amount The amount of wei credited to the deposit.
      */
@@ -160,27 +148,6 @@ interface IBasePaymaster is IPaymaster {
      * @param withdrawAddress The payable recipient of the withdrawn stake.
      */
     function withdrawStake(address payable withdrawAddress) external;
-
-    /**
-     * @notice Adds a user account to the whitelist for sponsored transactions.
-     * @dev Implementations SHOULD restrict access to authorised administrators.
-     * @param user The address of the account to whitelist.
-     */
-    function whitelist(address user) external;
-
-    /**
-     * @notice Removes a user account from the whitelist.
-     * @dev Implementations SHOULD restrict access to authorised administrators.
-     * @param user The address of the account to remove from the whitelist.
-     */
-    function unwhitelist(address user) external;
-
-    /**
-     * @notice Reports whether a user account is currently whitelisted.
-     * @param user The account to check.
-     * @return isAllowed True if the account is whitelisted, false otherwise.
-     */
-    function isWhitelisted(address user) external view returns (bool isAllowed);
 
     /**
      * @notice Returns the current deposit balance available for gas sponsorship.

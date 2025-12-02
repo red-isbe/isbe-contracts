@@ -6,16 +6,18 @@ import {
     Paymaster,
     ISBEPauseFacet,
     IDidRegistry__factory,
+    BasicWhitelistFacet,
+    PaymasterFacet,
 } from '../../typechain-types'
 import {
     PAUSER_ROLE,
     CONFIGURATION_ACCOUNT_ABSTRACTION_PAYMASTER,
     AA_PAYMASTER_PAYMASTER_KEY,
     DEFAULT_ADMIN_ROLE,
+    WHITELIST_ROLE,
     DID_REGISTRY_ROLE,
 } from '../../utils/constants'
 import { deployGovernance } from '../fixtures/governance'
-import { deployPaymasterUseCaseFacets } from '../fixtures/paymaster'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { PackedUserOperationStruct } from 'typechain-types/contracts/accountabstraction/MockEntryPoint'
 import { EllipticType } from '../types/identity'
@@ -35,6 +37,7 @@ describe('Account Abstraction Paymaster', () => {
     let paymaster: Paymaster
     let didConnectedPaymaster: Paymaster
     let pause: ISBEPauseFacet
+    let whitelist: BasicWhitelistFacet
 
     const pack128 = (hi: bigint, lo: bigint) =>
         ethers.toBeHex((hi << 128n) | lo, 32)
@@ -57,28 +60,12 @@ describe('Account Abstraction Paymaster', () => {
         } as PackedUserOperationStruct
     }
 
-    async function deployFixture(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        rbacsUseCase: any[] = [
-            {
-                role: PAUSER_ROLE,
-                members: [],
-            },
-        ],
-        init_pause: boolean = false
-    ) {
+    async function deployFixture() {
         const [adminAccountSigner, account2Signer, account3Signer] =
             await ethers.getSigners()
         const adminAccountAddress = await adminAccountSigner.getAddress()
         const account2Address = await account2Signer.getAddress()
         const account3Address = await account3Signer.getAddress()
-
-        // Update rbacs with actual addresses
-        const updatedRbacs = rbacsUseCase.map((rbac) => ({
-            ...rbac,
-            members:
-                rbac.members.length > 0 ? rbac.members : [adminAccountAddress],
-        }))
 
         const entryPointFactory =
             await ethers.getContractFactory('MockEntryPoint')
@@ -88,9 +75,17 @@ describe('Account Abstraction Paymaster', () => {
         // Deploy Governance
         const governanceResult = await deployGovernance(
             adminAccountSigner,
-            updatedRbacs,
-            CONFIGURATION_ACCOUNT_ABSTRACTION_PAYMASTER,
-            init_pause
+            [
+                {
+                    role: WHITELIST_ROLE,
+                    members: [adminAccountAddress],
+                },
+                {
+                    role: PAUSER_ROLE,
+                    members: [adminAccountAddress],
+                },
+            ],
+            CONFIGURATION_ACCOUNT_ABSTRACTION_PAYMASTER
         )
 
         function walletOfFirstSigner(): HDNodeWallet {
@@ -107,10 +102,9 @@ describe('Account Abstraction Paymaster', () => {
         const wallet = baseWallet.derivePath('302')
         const didId = ethers.id('did:erc20:test:1')
 
-        // Grant DID registry role
         await governanceResult.accessControlGovernance!.grantRole(
             DID_REGISTRY_ROLE,
-            adminAccountAddress
+            adminAccountSigner
         )
 
         // Initialize DID registry
@@ -154,35 +148,37 @@ describe('Account Abstraction Paymaster', () => {
             value: ethers.parseEther('1.0'),
         })
 
-        const isbeFactory = await ethers.getContractAt(
-            'IIsbeFactory',
-            await governanceResult.governanceContract.getAddress()
-        )
-        const ISBEPauseFacetFactory =
-            await ethers.getContractFactory('ISBEPauseFacet')
+        const proxy = governanceResult.useCaseProxy!
 
-        const result = await deployPaymasterUseCaseFacets(
-            isbeFactory,
-            ISBEPauseFacetFactory,
-            adminAccountSigner,
-            updatedRbacs,
-            init_pause,
-            [],
-            []
-        )
+        // Attach facets to the proxy
+        const paymaster = (await ethers.getContractAt(
+            'PaymasterFacet',
+            proxy
+        )) as PaymasterFacet
+
+        const whitelist = (await ethers.getContractAt(
+            'BasicWhitelistFacet',
+            proxy
+        )) as BasicWhitelistFacet
+
+        const pause = (await ethers.getContractAt(
+            'ISBEPauseFacet',
+            proxy
+        )) as ISBEPauseFacet
 
         return {
             adminAccount: adminAccountSigner,
             account_2: account2Signer,
             account_3: account3Signer,
-            wallet: wallet,
+            didWallet: wallet,
             adminAccountAddress,
             account_2Address: account2Address,
             account_3Address: account3Address,
             governance: governanceResult.governanceContract,
             entryPoint: entryPoint,
-            paymaster: result.paymaster,
-            pause: result.pause!,
+            paymaster: paymaster,
+            pause: pause,
+            whitelist: whitelist,
         }
     }
 
@@ -192,17 +188,21 @@ describe('Account Abstraction Paymaster', () => {
         entryPoint = contracts.entryPoint
         paymaster = contracts.paymaster
         pause = contracts.pause
+        whitelist = contracts.whitelist
+
         adminAccount = contracts.adminAccount
         adminAccountAddress = contracts.adminAccountAddress
         account_2 = contracts.account_2
         account_2Address = contracts.account_2Address
-        didWallet = contracts.wallet
+        didWallet = contracts.didWallet
 
         const didSigner = new ethers.Wallet(
             didWallet.privateKey,
             ethers.provider
         )
         didConnectedPaymaster = contracts.paymaster.connect(didSigner)
+
+        await whitelist.initializeBasicWhitelist(true)
     })
 
     describe('Paused', () => {
@@ -218,18 +218,6 @@ describe('Account Abstraction Paymaster', () => {
             await expect(
                 paymaster.setEntryPoint(entryPoint)
             ).to.be.revertedWithCustomError(pause, 'IsNotPaused')
-        })
-
-        it('GIVEN a paused Paymaster WHEN try to whitelist THEN it fails', async () => {
-            await expect(
-                didConnectedPaymaster.whitelist(account_2Address)
-            ).to.be.revertedWithCustomError(pause, 'IsPaused')
-        })
-
-        it('GIVEN a paused Paymaster WHEN try to unwhitelist THEN it fails', async () => {
-            await expect(
-                didConnectedPaymaster.unwhitelist(account_2Address)
-            ).to.be.revertedWithCustomError(pause, 'IsPaused')
         })
 
         it('GIVEN a paused Paymaster WHEN try to deposit THEN it fails', async () => {
@@ -311,28 +299,6 @@ describe('Account Abstraction Paymaster', () => {
                 .withArgs(account_2Address, DEFAULT_ADMIN_ROLE)
         })
 
-        it('GIVEN an unkown wallet WHEN whitelist THEN AddressNotKnown', async () => {
-            await expect(
-                didConnectedPaymaster.connect(account_2).whitelist(entryPoint)
-            )
-                .to.be.revertedWithCustomError(
-                    didConnectedPaymaster,
-                    'AddressNotKnown'
-                )
-                .withArgs(account_2Address)
-        })
-
-        it('GIVEN an unkown wallet WHEN unwhitelist THEN success', async () => {
-            await expect(
-                didConnectedPaymaster.connect(account_2).unwhitelist(entryPoint)
-            )
-                .to.be.revertedWithCustomError(
-                    didConnectedPaymaster,
-                    'AddressNotKnown'
-                )
-                .withArgs(account_2Address)
-        })
-
         it('GIVEN an unkown wallet WHEN deposit THEN success', async () => {
             await expect(
                 didConnectedPaymaster.connect(account_2).deposit({ value: 10n })
@@ -398,15 +364,6 @@ describe('Account Abstraction Paymaster', () => {
             await expect(
                 paymaster.initializePaymaster(ZeroAddress)
             ).to.be.revertedWithCustomError(paymaster, 'AddressZero')
-        })
-
-        it('GIVEN Paymaster deployed WHEN whitelist zeroAddress THEN it fails', async () => {
-            await expect(
-                didConnectedPaymaster.whitelist(ZeroAddress)
-            ).to.be.revertedWithCustomError(
-                didConnectedPaymaster,
-                'AddressZero'
-            )
         })
     })
 
@@ -505,8 +462,6 @@ describe('Account Abstraction Paymaster', () => {
                     .to.emit(paymaster, 'EntryPointUpdated')
                     .withArgs(await entryPoint.getAddress())
             })
-
-            // TODO AA: test with only owner
         })
 
         describe('getEntryPoint', () => {
@@ -515,41 +470,6 @@ describe('Account Abstraction Paymaster', () => {
                 expect(await paymaster.getEntryPoint()).to.equal(
                     await entryPoint.getAddress()
                 )
-            })
-        })
-    })
-
-    describe('Whitelist Users', () => {
-        describe('whitelist', () => {
-            it('GIVEN Paymaster deployed WHEN whitelist user THEN success', async () => {
-                expect(await didConnectedPaymaster.whitelist(account_2Address))
-                    .to.emit(didConnectedPaymaster, 'UserWhiteListed')
-                    .withArgs(account_2Address)
-            })
-        })
-
-        describe('unwhitelist', () => {
-            it('GIVEN Paymaster deployed WHEN whitelist user THEN success', async () => {
-                expect(
-                    await didConnectedPaymaster.unwhitelist(account_2Address)
-                )
-                    .to.emit(didConnectedPaymaster, 'UserUnwhiteListed')
-                    .withArgs(account_2Address)
-            })
-        })
-
-        describe('iswhitelisted', () => {
-            it('GIVEN Paymaster deployed WHEN isWhitelisted on whitelisted THEN returns true', async () => {
-                await didConnectedPaymaster.whitelist(account_2Address)
-                expect(
-                    await didConnectedPaymaster.isWhitelisted(account_2Address)
-                ).to.be.true
-            })
-
-            it('GIVEN Paymaster deployed WHEN isWhitelisted on unwhitelisted THEN returns false', async () => {
-                expect(
-                    await didConnectedPaymaster.isWhitelisted(account_2Address)
-                ).to.be.false
             })
         })
     })
@@ -715,7 +635,7 @@ describe('Account Abstraction Paymaster', () => {
 
             // Requirements for validation to succeed
             await didConnectedPaymaster.deposit({ value: maxCost })
-            await didConnectedPaymaster.whitelist(sender)
+            await whitelist.addToWhitelist(sender)
 
             const entryPointSigner = await getEntryPointSignerImpersonation()
 
@@ -734,6 +654,9 @@ describe('Account Abstraction Paymaster', () => {
             const userOpHash = await entryPoint.getUserOpHash(userOp)
             const maxCost = 100n
 
+            // Requirements for validation to fail: enough deposit but sender not whitelisted
+            await didConnectedPaymaster.deposit({ value: maxCost })
+
             const entryPointSigner = await getEntryPointSignerImpersonation()
 
             const response = await paymaster
@@ -751,8 +674,9 @@ describe('Account Abstraction Paymaster', () => {
             const userOpHash = await entryPoint.getUserOpHash(userOp)
             const maxCost = 100n
 
+            // Requirements for validation to fail: sender whitelisted but not enough deposit
             await didConnectedPaymaster.deposit({ value: maxCost - 10n })
-            await didConnectedPaymaster.whitelist(sender)
+            await whitelist.addToWhitelist(sender)
 
             const entryPointSigner = await getEntryPointSignerImpersonation()
 

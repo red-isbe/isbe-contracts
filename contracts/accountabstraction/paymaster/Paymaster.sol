@@ -83,38 +83,6 @@ abstract contract Paymaster is IBasePaymaster, PaymasterInternal {
     }
 
     /**
-     * @notice Adds a user account to the whitelist.
-     * @dev Emits {UserWhiteListed}. Access control is application-defined and
-     *      SHOULD restrict this operation to authorised roles.
-     * @param user The account permitted to have operations sponsored.
-     */
-    function whitelist(
-        address user
-    )
-        external
-        override
-        onlyKnownDid(_msgSender())
-        whenNotPaused
-        addressIsNotZero(user)
-    {
-        _whitelist(user);
-        emit UserWhiteListed(user);
-    }
-
-    /**
-     * @notice Removes a user account from the whitelist.
-     * @dev Emits {UserUnwhiteListed}. Access control is application-defined and
-     *      SHOULD restrict this operation to authorised roles.
-     * @param user The account no longer permitted for sponsorship.
-     */
-    function unwhitelist(
-        address user
-    ) external override onlyKnownDid(_msgSender()) whenNotPaused {
-        _unwhitelist(user);
-        emit UserUnwhiteListed(user);
-    }
-
-    /**
      * @notice Withdraws deposit funds to a recipient.
      * @dev Restricted by {onlyKnownDid}. Emits {AmountWithdrawn}.
      * @param withdrawAddress The payable recipient address.
@@ -167,18 +135,6 @@ abstract contract Paymaster is IBasePaymaster, PaymasterInternal {
     ) external override onlyKnownDid(_msgSender()) whenNotPaused {
         _withdrawStake(withdrawAddress);
         emit StakeWithdrawn(withdrawAddress);
-    }
-
-    /**
-     * @notice Reports whether a user account is whitelisted.
-     * @dev Pure view over internal storage; no external calls.
-     * @param _user The account to check for whitelist status.
-     * @return isAllowed True if the account is whitelisted, false otherwise.
-     */
-    function isWhitelisted(
-        address _user
-    ) external view override returns (bool isAllowed) {
-        isAllowed = _isWhitelisted(_user);
     }
 
     /**

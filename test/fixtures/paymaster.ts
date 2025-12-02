@@ -6,7 +6,7 @@ import {
     ISBEPauseFacet__factory,
     IIsbeFactory,
     PaymasterFacet__factory,
-    OwnableFacet,
+    BasicWhitelistFacet,
 } from '../../typechain-types'
 import {
     ACCESS_CONTROL_RESOLVER_KEY,
@@ -16,7 +16,7 @@ import {
     ISBE_LOUPE_RESOLVER_KEY,
     AA_PAYMASTER_PAYMASTER_KEY,
     CONFIGURATION_ACCOUNT_ABSTRACTION_PAYMASTER,
-    OWNABLE_RESOLVER_KEY,
+    BASIC_WHITELIST_RESOLVER_KEY,
 } from '../../utils/constants'
 import { getEvent } from '../../scripts/utils/getEvent'
 import { Paymaster } from 'typechain-types/contracts/accountabstraction/paymaster'
@@ -63,9 +63,11 @@ export async function deployPaymasterUseCaseFacets(
     const AccessControlDidFacetFactory = await ethers.getContractFactory(
         'AccessControlDidFacet'
     )
-    const OwnableFacetFactory = await ethers.getContractFactory('OwnableFacet')
     const PaymasterFacetFactory =
         await ethers.getContractFactory('PaymasterFacet')
+    const BasicWhitelistFacetFactory = await ethers.getContractFactory(
+        'BasicWhitelistFacet'
+    )
 
     const isbeCutFacet = await deployBusinessLogicFromFactory(
         isbeFactory,
@@ -92,11 +94,6 @@ export async function deployPaymasterUseCaseFacets(
         PAUSE_RESOLVER_KEY,
         ISBEPauseFacetFactory
     )
-    const ownableFacet = await deployBusinessLogicFromFactory(
-        isbeFactory,
-        OWNABLE_RESOLVER_KEY,
-        OwnableFacetFactory
-    )
 
     const paymasterFacet = await deployBusinessLogicFromFactory(
         isbeFactory,
@@ -104,11 +101,17 @@ export async function deployPaymasterUseCaseFacets(
         PaymasterFacetFactory
     )
 
+    const basicWhitelistFacet = await deployBusinessLogicFromFactory(
+        isbeFactory,
+        BASIC_WHITELIST_RESOLVER_KEY,
+        BasicWhitelistFacetFactory
+    )
+
     await isbeFactory.setConfiguration(
         CONFIGURATION_ACCOUNT_ABSTRACTION_PAYMASTER,
         [
             {
-                businessId: OWNABLE_RESOLVER_KEY,
+                businessId: BASIC_WHITELIST_RESOLVER_KEY,
                 version: 1,
             },
             {
@@ -130,27 +133,27 @@ export async function deployPaymasterUseCaseFacets(
     const deployedEvent = await getEvent('UseCaseDeployed', tx, isbeFactory)
     const { proxy } = deployedEvent.args
 
+    // Attach facets to proxy
     const paymaster = PaymasterFacet__factory.connect(proxy, owner) as Paymaster
     const pause = ISBEPauseFacetFactory.attach(proxy) as ISBEPauseFacet
     const accessControl = AccessControlFacetFactory.attach(
         proxy
     ) as AccessControlFacet
-
-    const ownable = OwnableFacetFactory.attach(proxy) as OwnableFacet
-
-    await ownable.initializeOwnable(owner)
+    const whitelist = BasicWhitelistFacetFactory.attach(
+        proxy
+    ) as BasicWhitelistFacet
 
     return {
         paymaster,
         pause,
         accessControl,
+        whitelist,
         paymasterFacet,
         pauseFacet,
         accessControlFacet,
         isbeCutFacet,
         isbeLoupeFacet,
+        basicWhitelistFacet,
         proxy,
-        ownable,
-        ownableFacet,
     }
 }

@@ -88,6 +88,7 @@ import {
 } from './erc20'
 import { deployERC721UseCasesFacets } from './erc721'
 import { deployKnownDidTestWrapperUseCaseFacets } from './knownDid'
+import { deployPaymasterUseCaseFacets } from './paymaster'
 
 let BusinessLogicFactoryFacetFactory: BusinessLogicFactoryFacet__factory
 let EIP2535AccessControlFactory: EIP2535AccessControl__factory
@@ -394,6 +395,16 @@ export async function deployGovernance(
                     init_BusinessId_UseCase,
                     init_CallData_UseCase
                 )
+            case CONFIGURATION_ACCOUNT_ABSTRACTION_PAYMASTER:
+                return await deployPaymasterUseCaseFacets(
+                    isbeFactory,
+                    ISBEPauseFacetFactory,
+                    owner,
+                    rbacsUseCase,
+                    init_pause,
+                    init_BusinessId_UseCase,
+                    init_CallData_UseCase
+                )
             case CONFIGURATION_ID_ENS_REGISTRY:
             case CONFIGURATION_ID_DID_REGISTRY:
             case CONFIGURATION_ID_CLIENT_FILTERING:
@@ -401,7 +412,6 @@ export async function deployGovernance(
             case CONFIGURATION_ID_BESU_NODE_MANAGER:
             case CONFIGURATION_ID_NETWORK_DIRECTORY:
             case CONFIGURATION_ACCOUNT_ABSTRACTION_SMART_ACCOUNT:
-            case CONFIGURATION_ACCOUNT_ABSTRACTION_PAYMASTER:
                 break
             default:
                 throw new Error(`Unknown configuration id ${configurationId}`)
