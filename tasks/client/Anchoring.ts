@@ -8,7 +8,6 @@ import { task, types } from "hardhat/config";
 /* ============================================================
    Function list task
    ============================================================ */
-
 task(
     "anchoringcorefacet:functionlist",
     "Prints all available AnchoringCoreFacet tasks"
@@ -122,7 +121,6 @@ task(
     .setAction(async (taskArgs, hre) => {
         const { governancediamond, pageindex, pagelength } = taskArgs;
 
-        const signatureProvider = SignatureProviderFactory.create(hre)
 
 
         console.log("anchoringcorefacet:getregisteredchains");
@@ -133,9 +131,8 @@ task(
         console.log("  _pageIndex :", pageindex.toString());
         console.log("  _pageLength:", pagelength.toString());
         console.log(`Network: ${hre.network.name}`)
-        console.log(`Curve: ${signatureProvider.getCurveType()}`)
 
-        const result = await getRegisteredChains(hre, governancediamond, pageindex, pagelength, signatureProvider);
+        const result = await getRegisteredChains(hre, governancediamond, pageindex, pagelength);
 
         console.log("\n✅ getRegisteredChains result:");
         console.log("  _thisChainId      :", result._thisChainId.toString());
@@ -162,11 +159,9 @@ task(
     console.log("Target Governance Diamond:", governancediamond);
     console.log("Function: getChainMetadata()");
 
-    const signatureProvider = SignatureProviderFactory.create(hre)
     console.log(`Network: ${hre.network.name}`)
-    console.log(`Curve: ${signatureProvider.getCurveType()}`)
 
-    const result = await getChainMetadata(hre, governancediamond, signatureProvider);
+    const result = await getChainMetadata(hre, governancediamond);
 
         console.log("\n✅ getChainMetadata result:");
         console.log("  _thisChainId      :", result._thisChainId.toString());
@@ -199,11 +194,9 @@ task(
     console.log("Parameters:");
     console.log("  _chainId:", chainid.toString());
 
-    const signatureProvider = SignatureProviderFactory.create(hre)
     console.log(`Network: ${hre.network.name}`)
-    console.log(`Curve: ${signatureProvider.getCurveType()}`)
 
-    const result = await getAnchoringStats(hre, governancediamond, chainid, signatureProvider);
+    const result = await getAnchoringStats(hre, governancediamond, chainid);
 
     //resuts
     console.log("\n✅ getAnchoringStats result for " + chainid.toString() + ":");
@@ -255,12 +248,10 @@ task(
     console.log("  _fromBlock :", fromblock.toString());
     console.log("  _toBlock   :", toblock.toString());
 
-    const signatureProvider = SignatureProviderFactory.create(hre)
     console.log(`Network: ${hre.network.name}`)
-    console.log(`Curve: ${signatureProvider.getCurveType()}`)
 
     // Call getBlocksInRange function
-    const result = await getBlocksInRange(hre, governancediamond, chainid, fromblock, toblock, signatureProvider);
+    const result = await getBlocksInRange(hre, governancediamond, chainid, fromblock, toblock);
 
     // Display results
     console.log("\n✅ getBlocksInRange result:");
@@ -313,12 +304,10 @@ task(
     console.log("  _chainId:", chainid.toString());
     console.log("  _count  :", count.toString());
 
-    const signatureProvider = SignatureProviderFactory.create(hre)
     console.log(`Network: ${hre.network.name}`)
-    console.log(`Curve: ${signatureProvider.getCurveType()}`)
 
     // Call getLastNBlocks function
-    const result = await getLastNBlocks(hre, governancediamond, chainid, count, signatureProvider);
+    const result = await getLastNBlocks(hre, governancediamond, chainid, count);
 
     // Display results
     console.log("\n✅ getLastNBlocks result:");
@@ -368,11 +357,9 @@ task(
     console.log("  _chainId     :", chainid.toString());
     console.log("  _blockNumber :", blocknumber.toString());
 
-    const signatureProvider = SignatureProviderFactory.create(hre)
     console.log(`Network: ${hre.network.name}`)
-    console.log(`Curve: ${signatureProvider.getCurveType()}`);
 
-    const result = await isBlockAnchored(hre, governancediamond, chainid, blocknumber, signatureProvider);
+    const result = await isBlockAnchored(hre, governancediamond, chainid, blocknumber);
     // Display result
     console.log("\n✅ isBlockAnchored result:");
     console.log(`  Is anchored: ${result}`);
@@ -413,11 +400,9 @@ task(
     console.log("  _chainId     :", chainid.toString());
     console.log("  _blockNumber :", blocknumber.toString());
 
-    const signatureProvider = SignatureProviderFactory.create(hre)
     console.log(`Network: ${hre.network.name}`)
-    console.log(`Curve: ${signatureProvider.getCurveType()}`)
 
-    const result = await getAnchoredBlock(hre, governancediamond, chainid, blocknumber, signatureProvider);
+    const result = await getAnchoredBlock(hre, governancediamond, chainid, blocknumber);
 
     // Display result
     console.log("\n✅ getAnchoredBlock result:");
@@ -454,11 +439,9 @@ task(
     console.log("Parameters:"); 
     console.log("  _chainId:", chainid.toString());
 
-    const signatureProvider = SignatureProviderFactory.create(hre)
     console.log(`Network: ${hre.network.name}`)
-    console.log(`Curve: ${signatureProvider.getCurveType()}`)
 
-    const result = await getLastAnchoredBlock(hre, governancediamond, chainid, signatureProvider);
+    const result = await getLastAnchoredBlock(hre, governancediamond, chainid);
 
     // Display result
     console.log("\n✅ getLastAnchoredBlock result:");
@@ -618,11 +601,11 @@ task(
       "Function: anchorBlocksBatch(uint256 _chainId, uint256[] _blockNumbers, bytes32[] _blockHashes, bytes32[] _stateRoots)"
     );
 
-    // console.log("Parameters:");
-    // console.log("  _chainId      :", chainid.toString());
-    // console.log("  _blockNumbers :", blockNumbersArr);
-    // console.log("  _blockHashes  :", blockHashesArr);
-    // console.log("  _stateRoots   :", stateRootsArr);
+    console.log("Parameters:");
+    console.log("  _chainId      :", chainid.toString());
+    console.log("  _blockNumbers :", blockNumbersArr);
+    console.log("  _blockHashes  :", blockHashesArr);
+    console.log("  _stateRoots   :", stateRootsArr);
 
     const signatureProvider = SignatureProviderFactory.create(hre)
     console.log(`Network: ${hre.network.name}`)

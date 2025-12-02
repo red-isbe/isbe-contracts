@@ -1,4 +1,4 @@
-import { Contract, Signer, Transaction, Provider } from "ethers";
+import { Contract, Signer, TransactionResponse, Provider } from "ethers";
 import { ISignatureProvider } from "../../tasks/index";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { TransactionReceipt } from "ethers/lib.esm";
@@ -13,9 +13,9 @@ class ErrorDecoder {
         this.contractName = contractName;
     }
 
-    async processTx(txPromise: Promise<Transaction>): Promise<any> {
+    async processTx(txPromise: Promise<TransactionResponse>): Promise<any> {
         try{
-            const tx: Transaction = await txPromise;
+            const tx: TransactionResponse = await txPromise;
             process.stdout.write(
                 'Sending transaction to network. TX Hash: ' + tx.hash + '           \r'
             );  
@@ -82,14 +82,46 @@ async function getContract(hre: HardhatRuntimeEnvironment, contractAddress: stri
     return contract;
 }
 
-export async function getChainMetadata(hre: HardhatRuntimeEnvironment, governancediamond: string, signatureProvider: ISignatureProvider): 
+
+
+/***************************************************************************************************************************** */
+
+
+export async function getRegisteredChains(
+    hre: HardhatRuntimeEnvironment, 
+    governancediamond: string, 
+    pageindex: string, 
+    pagelength: string
+): Promise<{ _thisChainId: bigint, _registeredChainIds: bigint[] }> {
+
+    const contract = await getContract(hre, governancediamond);
+    const provider: Provider = hre.ethers.provider;
+    console.log(`Using HRE default provider with network: ${await provider.getNetwork().then(n => n.name)}`);
+    const connectedContract = contract.connect(provider);
+    
+    // Convert string parameters to numbers
+    const pageIndexNum = Number(pageindex);
+    const pageLengthNum = Number(pagelength);
+    
+    console.log(`Fetching registered chains with pageIndex: ${pageIndexNum}, pageLength: ${pageLengthNum}`);
+    const result = await connectedContract.getRegisteredChains(pageIndexNum, pageLengthNum);
+    console.log(`Fetched ${result._registeredChainIds.length} registered chain IDs.`);
+
+    return {
+        _thisChainId: result._thisChainId,
+        _registeredChainIds: result._registeredChainIds
+    };
+}
+
+
+export async function getChainMetadata(hre: HardhatRuntimeEnvironment, governancediamond: string): 
     Promise<{ _thisChainId: bigint, _registeredChainIds: bigint[] }> {
 
     const contract = await getContract(hre, governancediamond);
     const provider: Provider = hre.ethers.provider;
     console.log(`Using HRE default provider with network: ${await provider.getNetwork().then(n => n.name)}`);
     const connectedContract = contract.connect(provider);
-
+    
     const result = await connectedContract.getChainMetadata();
 
     return {
@@ -98,7 +130,7 @@ export async function getChainMetadata(hre: HardhatRuntimeEnvironment, governanc
     };
 }
 
-export async function getAnchoringStats(hre: HardhatRuntimeEnvironment, governancediamond: string, chainid: string, signatureProvider: ISignatureProvider): 
+export async function getAnchoringStats(hre: HardhatRuntimeEnvironment, governancediamond: string, chainid: string): 
     Promise<{ _totalAnchors: bigint, _lastAnchoredBlock: bigint, _thisChainId: bigint, _anchoredChainId: bigint }> {
 
     const contract = await getContract(hre, governancediamond);
@@ -121,8 +153,7 @@ export async function getBlocksInRange(
     governancediamond: string, 
     chainid: string,
     startblock: string, 
-    endblock: string, 
-    signatureProvider: ISignatureProvider
+    endblock: string
 ): Promise<Array<{
     blockNumber: bigint;
     blockHash: string;
@@ -145,8 +176,7 @@ export async function getLastNBlocks(
     hre: HardhatRuntimeEnvironment, 
     governancediamond: string, 
     chainid: string,
-    nblocks: string, 
-    signatureProvider: ISignatureProvider
+    nblocks: string
 ): Promise<Array<{
     blockNumber: bigint;
     blockHash: string;
@@ -169,8 +199,7 @@ export async function isBlockAnchored(
     hre: HardhatRuntimeEnvironment, 
     governancediamond: string, 
     chainid: string,
-    blocknumber: string, 
-    signatureProvider: ISignatureProvider
+    blocknumber: string
 ): Promise<boolean> {
     
     const contract = await getContract(hre, governancediamond);
@@ -185,8 +214,7 @@ export async function getAnchoredBlock(
     hre: HardhatRuntimeEnvironment, 
     governancediamond: string, 
     chainid: string,
-    blocknumber: string, 
-    signatureProvider: ISignatureProvider
+    blocknumber: string
 ): Promise<{
     blockNumber: bigint;
     blockHash: string;
@@ -206,8 +234,7 @@ export async function getAnchoredBlock(
 export async function getLastAnchoredBlock(
     hre: HardhatRuntimeEnvironment, 
     governancediamond: string, 
-    chainid: string, 
-    signatureProvider: ISignatureProvider
+    chainid: string
 ): Promise<{
     blockNumber: bigint;
     blockHash: string;
@@ -230,10 +257,7 @@ export async function registerChain(
     chainid: string, 
     signatureProvider: ISignatureProvider
 ): Promise<void> {
-    if (signatureProvider.getCurveType() === 'secp256r1') {
-        throw new Error("registerChain is not yet supported for secp256r1 curve");
-    }
-
+    
     const contract = await getContract(hre, governancediamond);
     const signer: Signer = await signatureProvider.getSigner();
     console.log(`Using signer address: ${await signer.getAddress()}`);
@@ -242,9 +266,22 @@ export async function registerChain(
     const chainIdNum = Number(chainid);
     
     const errorDecoder = new ErrorDecoder(hre, "AnchoringCoreFacet");
-    const connectedContract = contract.connect(signer);
     
-    const receipt = await errorDecoder.processTx(connectedContract.registerChain(chainIdNum));
+    if (signatureProvider.getCurveType() === 'secp256r1') {
+        // For secp256r1, encode the function call and send as raw transaction
+        const data = contract.interface.encodeFunctionData("registerChain", [chainIdNum]);
+        
+        const tx = signatureProvider.sendTransaction({
+            to: governancediamond,
+            data: data
+        });
+        
+        const receipt = await errorDecoder.processTx(tx);
+    } else {
+        // For secp256k1, use standard contract call
+        const connectedContract = contract.connect(signer);
+        const receipt = await errorDecoder.processTx(connectedContract.registerChain(chainIdNum));
+    }
     
     console.log(`Transaction confirmed.`);
 }
@@ -259,10 +296,6 @@ export async function anchorBlock(
     signatureProvider: ISignatureProvider
 ): Promise<void> {
 
-    if (signatureProvider.getCurveType() === 'secp256r1') {
-        throw new Error("anchorBlock is not yet supported for secp256r1 curve");
-    }
-
     const contract = await getContract(hre, governancediamond);
     const signer: Signer = await signatureProvider.getSigner();
     console.log(`Using signer address: ${await signer.getAddress()}`);
@@ -272,14 +305,27 @@ export async function anchorBlock(
     const blockNumberNum = Number(blocknumber);
     
     const errorDecoder = new ErrorDecoder(hre, "AnchoringCoreFacet");
-    const connectedContract = contract.connect(signer);
     
-    const receipt = await errorDecoder.processTx(connectedContract.anchorBlock(
-        chainIdNum, 
-        blockNumberNum, 
-        blockhash, 
-        stateroot
-    ));
+    if (signatureProvider.getCurveType() === 'secp256r1') {
+        // For secp256r1, encode the function call and send as raw transaction
+        const data = contract.interface.encodeFunctionData("anchorBlock", [chainIdNum, blockNumberNum, blockhash, stateroot]);
+        
+        const tx = signatureProvider.sendTransaction({
+            to: governancediamond,
+            data: data
+        });
+        
+        const receipt = await errorDecoder.processTx(tx);
+    } else {
+        // For secp256k1, use standard contract call
+        const connectedContract = contract.connect(signer);
+        const receipt = await errorDecoder.processTx(connectedContract.anchorBlock(
+            chainIdNum, 
+            blockNumberNum, 
+            blockhash, 
+            stateroot
+        ));
+    }
     
     console.log(`Transaction confirmed.`);
 }
@@ -294,10 +340,6 @@ export async function anchorBlocksBatch(
     stateRootsArr: string[], 
     signatureProvider: ISignatureProvider
 ): Promise<void> {
-    if (signatureProvider.getCurveType() === 'secp256r1') {
-        throw new Error("anchorBlocksBatch is not yet supported for secp256r1 curve");
-    }
-
     const contract = await getContract(hre, governancediamond);
     const signer: Signer = await signatureProvider.getSigner();
     console.log(`Using signer address: ${await signer.getAddress()}`);
@@ -318,14 +360,27 @@ export async function anchorBlocksBatch(
     });
 
     const errorDecoder = new ErrorDecoder(hre, "AnchoringCoreFacet");
-    const connectedContract = contract.connect(signer);
-
-    const receipt = await errorDecoder.processTx(connectedContract.anchorBlocksBatch(
-        chainIdNum, 
-        blockNumbersNum, 
-        blockHashesArr, 
-        stateRootsArr
-    ));
+    
+    if (signatureProvider.getCurveType() === 'secp256r1') {
+        // For secp256r1, encode the function call and send as raw transaction
+        const data = contract.interface.encodeFunctionData("anchorBlocksBatch", [chainIdNum, blockNumbersNum, blockHashesArr, stateRootsArr]);
+        
+        const tx = signer.sendTransaction({
+            to: governancediamond,
+            data: data
+        });
+        
+        const receipt = await errorDecoder.processTx(tx);
+    } else {
+        // For secp256k1, use standard contract call
+        const connectedContract = contract.connect(signer);
+        const receipt = await errorDecoder.processTx(connectedContract.anchorBlocksBatch(
+            chainIdNum, 
+            blockNumbersNum, 
+            blockHashesArr, 
+            stateRootsArr
+        ));
+    }
 
     console.log(`Transaction confirmed.`);  
 }
