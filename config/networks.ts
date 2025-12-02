@@ -16,7 +16,7 @@ import type {
 const LOCALHOST_URL = process.env.LOCALHOST_URL || 'http://172.16.240.30:8545'
 const DEV_URL =
     process.env.DEV_URL ||
-    'https://besu-node-validator-1-rpc.dev.aws.envs.redisbe.com/'
+    'https://besu-node-validator-1-rpc.dev.cloud-w.envs.redisbe.com'
 const BARE_URL =
     process.env.BARE_URL ||
     'https://besu-node-validator-bare-1-rpc.dev.aws.envs.redisbe.com/'
