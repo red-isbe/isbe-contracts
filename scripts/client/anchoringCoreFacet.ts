@@ -1,86 +1,94 @@
-import { Contract, Signer } from "ethers";
+import { Contract, Signer, Transaction, Provider } from "ethers";
 import { ISignatureProvider } from "../../tasks/index";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
+import { TransactionReceipt } from "ethers/lib.esm";
 
 
-async function decodeError(hre:HardhatRuntimeEnvironment,data: string): Promise<string> {
-    // The first 4 bytes are the function selector
-    const errorSelector = data.slice(0, 10); // '0x' + 8 hex chars
+class ErrorDecoder {
+    private hre: HardhatRuntimeEnvironment;
+    private contractName: string;
 
-    // The rest is the encoded error message
-    const errorData = '0x' + data.slice(10);
-
-    const abi =  (await hre.artifacts.readArtifact("AnchoringCoreFacet")).abi;
-
-    // Find the error definition in the ABI
-    const errorFragment = abi.find((item: any) => item.type === 'error' && hre.ethers.id(item.name + '(' + (item.inputs ? item.inputs.map((input: any) => input.type).join(',') : '') + ')').slice(0, 10) === errorSelector);
-    
-    if (!errorFragment) {
-        return `Unknown error with selector ${errorSelector}`;
+    constructor(hre: HardhatRuntimeEnvironment, contractName: string = "AnchoringCoreFacet") {
+        this.hre = hre;
+        this.contractName = contractName;
     }
 
-    // Decode the error parameters using AbiCoder from ethers v6
-    const abiCoder = hre.ethers.AbiCoder.defaultAbiCoder();
-    const decodedParams = abiCoder.decode(
-        errorFragment.inputs.map((input: any) => input.type),
-        errorData
-    );
-
-    // Construct a readable error message
-    let errorMessage = `Error: ${errorFragment.name}(`;
-    errorFragment.inputs.forEach((input: any, index: number) => {
-        errorMessage += `${input.name}: ${decodedParams[index]}`;
-        if (index < errorFragment.inputs.length - 1) {
-            errorMessage += ', ';
+    async processTx(txPromise: Promise<Transaction>): Promise<any> {
+        try{
+            const tx: Transaction = await txPromise;
+            process.stdout.write(
+                'Sending transaction to network. TX Hash: ' + tx.hash + '           \r'
+            );  
+            const receipt: TransactionReceipt = await tx.wait();
+            process.stdout.write(
+                'Sending transaction to network. TX Hash: ' + tx.hash +'    [\x1b[32mOK\x1b[0m]                              \n'
+            )
+            return receipt;
+        }catch(error){
+            if(error.data){
+                const decodedError = await this.decodeError(error.data);
+                console.error("Decoded error:  \x1b[31m" + decodedError+ "\x1b[0m \n\n");
+            }
+        throw error;
         }
-    });
-    errorMessage += ')';
+    }
 
-    return errorMessage;    
+    private async decodeError(data: string): Promise<string> {
+        // The first 4 bytes are the function selector
+        const errorSelector = data.slice(0, 10); // '0x' + 8 hex chars
+
+        // The rest is the encoded error message
+        const errorData = '0x' + data.slice(10);
+
+        const abi = (await this.hre.artifacts.readArtifact(this.contractName)).abi;
+
+        // Find the error definition in the ABI
+        const errorFragment = abi.find((item: any) => 
+            item.type === 'error' && 
+            this.hre.ethers.id(item.name + '(' + (item.inputs ? item.inputs.map((input: any) => input.type).join(',') : '') + ')').slice(0, 10) === errorSelector
+        );
+        
+        if (!errorFragment) {
+            return `Unknown error with selector ${errorSelector}`;
+        }
+
+        // Decode the error parameters using AbiCoder from ethers v6
+        const abiCoder = this.hre.ethers.AbiCoder.defaultAbiCoder();
+        const decodedParams = abiCoder.decode(
+            errorFragment.inputs.map((input: any) => input.type),
+            errorData
+        );
+
+        // Construct a readable error message
+        let errorMessage = `${errorFragment.name}(`;
+        errorFragment.inputs.forEach((input: any, index: number) => {
+            errorMessage += `${input.name}: ${decodedParams[index]}`;
+            if (index < errorFragment.inputs.length - 1) {
+                errorMessage += ', ';
+            }
+        });
+        errorMessage += ')';
+
+        return errorMessage;
+    }
 }
+
 
 async function getContract(hre: HardhatRuntimeEnvironment, contractAddress: string): Promise<Contract> {
     console.log(`Getting AnchoringCoreFacet contract at address: ${contractAddress}`);
     const artifact = await hre.artifacts.readArtifact("AnchoringCoreFacet");
-
+    
     const contract = new hre.ethers.Contract(contractAddress, artifact.abi);
     return contract;
 }
 
-
-export async function getRegisteredChains(hre: HardhatRuntimeEnvironment, governancediamond: string, pageindex: string, pagelength: string, signatureProvider: ISignatureProvider): 
-    Promise<{ _thisChainId: bigint, _registeredChainIds: bigint[] }> {
-
-
-    if (signatureProvider.getCurveType() === 'secp256r1') {
-        throw new Error("getRegisteredChains is not yet supported for secp256r1 curve");
-    }
-
-    const contract = await getContract(hre, governancediamond);
-    const signer:Signer = await signatureProvider.getSigner();
-    console.log(`Using signer address: ${await signer.getAddress()}`);
-    const connectedContract = contract.connect(signer);
-
-    const result = await connectedContract.getRegisteredChains(pageindex, pagelength);
-
-    return {
-        _thisChainId: result._thisChainId,
-        _registeredChainIds: result._registeredChainIds
-    };
-}
-
-
 export async function getChainMetadata(hre: HardhatRuntimeEnvironment, governancediamond: string, signatureProvider: ISignatureProvider): 
     Promise<{ _thisChainId: bigint, _registeredChainIds: bigint[] }> {
 
-    if (signatureProvider.getCurveType() === 'secp256r1') {
-        throw new Error("getChainMetadata is not yet supported for secp256r1 curve");
-    }
-
     const contract = await getContract(hre, governancediamond);
-    const signer: Signer = await signatureProvider.getSigner();
-    console.log(`Using signer address: ${await signer.getAddress()}`);
-    const connectedContract = contract.connect(signer);
+    const provider: Provider = hre.ethers.provider;
+    console.log(`Using HRE default provider with network: ${await provider.getNetwork().then(n => n.name)}`);
+    const connectedContract = contract.connect(provider);
 
     const result = await connectedContract.getChainMetadata();
 
@@ -93,14 +101,10 @@ export async function getChainMetadata(hre: HardhatRuntimeEnvironment, governanc
 export async function getAnchoringStats(hre: HardhatRuntimeEnvironment, governancediamond: string, chainid: string, signatureProvider: ISignatureProvider): 
     Promise<{ _totalAnchors: bigint, _lastAnchoredBlock: bigint, _thisChainId: bigint, _anchoredChainId: bigint }> {
 
-    if (signatureProvider.getCurveType() === 'secp256r1') {
-        throw new Error("getAnchoringStats is not yet supported for secp256r1 curve");
-    }
-
     const contract = await getContract(hre, governancediamond);
-    const signer: Signer = await signatureProvider.getSigner();
-    console.log(`Using signer address: ${await signer.getAddress()}`);
-    const connectedContract = contract.connect(signer);
+    const provider: Provider = hre.ethers.provider;
+    console.log(`Using HRE default provider with network: ${await provider.getNetwork().then(n => n.name)}`);
+    const connectedContract = contract.connect(provider);
 
     const result = await connectedContract.getAnchoringStats(chainid);
 
@@ -127,14 +131,10 @@ export async function getBlocksInRange(
     anchorer: string;
 }>> {
 
-    if (signatureProvider.getCurveType() === 'secp256r1') {
-        throw new Error("getBlocksInRange is not yet supported for secp256r1 curve");
-    }
-
     const contract = await getContract(hre, governancediamond);
-    const signer: Signer = await signatureProvider.getSigner();
-    console.log(`Using signer address: ${await signer.getAddress()}`);
-    const connectedContract = contract.connect(signer);
+    const provider: Provider = hre.ethers.provider;
+    console.log(`Using HRE default provider with network: ${await provider.getNetwork().then(n => n.name)}`);
+    const connectedContract = contract.connect(provider);
 
     const result = await connectedContract.getBlocksInRange(chainid, startblock, endblock);
 
@@ -155,14 +155,10 @@ export async function getLastNBlocks(
     anchorer: string;
 }>> {
 
-    if (signatureProvider.getCurveType() === 'secp256r1') {
-        throw new Error("getLastNBlocks is not yet supported for secp256r1 curve");
-    }
-
     const contract = await getContract(hre, governancediamond);
-    const signer: Signer = await signatureProvider.getSigner();
-    console.log(`Using signer address: ${await signer.getAddress()}`);
-    const connectedContract = contract.connect(signer);
+    const provider: Provider = hre.ethers.provider;
+    console.log(`Using HRE default provider with network: ${await provider.getNetwork().then(n => n.name)}`);
+    const connectedContract = contract.connect(provider);
 
     const result = await connectedContract.getLastNBlocks(chainid, nblocks);
     
@@ -176,14 +172,11 @@ export async function isBlockAnchored(
     blocknumber: string, 
     signatureProvider: ISignatureProvider
 ): Promise<boolean> {
-    if (signatureProvider.getCurveType() === 'secp256r1') {
-        throw new Error("isBlockAnchored is not yet supported for secp256r1 curve");
-    }
     
     const contract = await getContract(hre, governancediamond);
-    const signer: Signer = await signatureProvider.getSigner();
-    console.log(`Using signer address: ${await signer.getAddress()}`);
-    const connectedContract = contract.connect(signer);
+    const provider: Provider = hre.ethers.provider;
+    console.log(`Using HRE default provider with network: ${await provider.getNetwork().then(n => n.name)}`);
+    const connectedContract = contract.connect(provider);
     const result = await connectedContract.isBlockAnchored(chainid, blocknumber);
     return result;
 }
@@ -202,13 +195,10 @@ export async function getAnchoredBlock(
     anchorer: string;
 }> {
     
-    if (signatureProvider.getCurveType() === 'secp256r1') {
-        throw new Error("getAnchoredBlock is not yet supported for secp256r1 curve");
-    }
     const contract = await getContract(hre, governancediamond);
-    const signer: Signer = await signatureProvider.getSigner();
-    console.log(`Using signer address: ${await signer.getAddress()}`);
-    const connectedContract = contract.connect(signer);
+    const provider: Provider = hre.ethers.provider;
+    console.log(`Using HRE default provider with network: ${await provider.getNetwork().then(n => n.name)}`);
+    const connectedContract = contract.connect(provider);
     const result = await connectedContract.getAnchoredBlock(chainid, blocknumber);
     return result;
 }  
@@ -226,14 +216,10 @@ export async function getLastAnchoredBlock(
     anchorer: string;
 }> {
 
-    if (signatureProvider.getCurveType() === 'secp256r1') {
-        throw new Error("getLastAnchoredBlock is not yet supported for secp256r1 curve");
-    }
-
     const contract = await getContract(hre, governancediamond);
-    const signer: Signer = await signatureProvider.getSigner();
-    console.log(`Using signer address: ${await signer.getAddress()}`);
-    const connectedContract = contract.connect(signer);
+    const provider: Provider = hre.ethers.provider;
+    console.log(`Using HRE default provider with network: ${await provider.getNetwork().then(n => n.name)}`);
+    const connectedContract = contract.connect(provider);
     const result = await connectedContract.getLastAnchoredBlock(chainid);
     return result;
 }
@@ -251,10 +237,15 @@ export async function registerChain(
     const contract = await getContract(hre, governancediamond);
     const signer: Signer = await signatureProvider.getSigner();
     console.log(`Using signer address: ${await signer.getAddress()}`);
+    
+    // Convert string parameter to proper type
+    const chainIdNum = Number(chainid);
+    
+    const errorDecoder = new ErrorDecoder(hre, "AnchoringCoreFacet");
     const connectedContract = contract.connect(signer);
-    const tx = await connectedContract.registerChain(chainid);
-    console.log(`Transaction submitted. Hash: ${tx.hash}`);
-    await tx.wait();
+    
+    const receipt = await errorDecoder.processTx(connectedContract.registerChain(chainIdNum));
+    
     console.log(`Transaction confirmed.`);
 }
 
@@ -275,15 +266,21 @@ export async function anchorBlock(
     const contract = await getContract(hre, governancediamond);
     const signer: Signer = await signatureProvider.getSigner();
     console.log(`Using signer address: ${await signer.getAddress()}`);
+    
+    // Convert string parameters to proper types
+    const chainIdNum = Number(chainid);
+    const blockNumberNum = Number(blocknumber);
+    
+    const errorDecoder = new ErrorDecoder(hre, "AnchoringCoreFacet");
     const connectedContract = contract.connect(signer);
-    const tx = await connectedContract.anchorBlock(
-        chainid, 
-        blocknumber, 
+    
+    const receipt = await errorDecoder.processTx(connectedContract.anchorBlock(
+        chainIdNum, 
+        blockNumberNum, 
         blockhash, 
         stateroot
-    );
-    console.log(`Transaction submitted. Hash: ${tx.hash}`);
-    await tx.wait();
+    ));
+    
     console.log(`Transaction confirmed.`);
 }
 
@@ -319,24 +316,16 @@ export async function anchorBlocksBatch(
     blockNumbersNum.forEach((num, i) => {
         console.log(`    [${i}] blockNumber: ${num}, blockHash: ${blockHashesArr[i]}, stateRoot: ${stateRootsArr[i]}`);
     });
-    let tx
+
+    const errorDecoder = new ErrorDecoder(hre, "AnchoringCoreFacet");
     const connectedContract = contract.connect(signer);
-    try{
-        tx = await connectedContract.anchorBlocksBatch(
-            chainIdNum, 
-            blockNumbersNum, 
-            blockHashesArr, 
-            stateRootsArr
-        );
-    }catch(error){
-        console.error("Error during anchorBlocksBatch transaction submission:", JSON.stringify(error));
-        if(error.data){
-            const decodedError = await decodeError(hre,error.data);
-            console.error("Decoded error:", decodedError);
-        }
-        throw error;
-    }
-    console.log(`Transaction submitted. Hash: ${tx.hash}`);
-    await tx.wait();
+
+    const receipt = await errorDecoder.processTx(connectedContract.anchorBlocksBatch(
+        chainIdNum, 
+        blockNumbersNum, 
+        blockHashesArr, 
+        stateRootsArr
+    ));
+
     console.log(`Transaction confirmed.`);  
 }

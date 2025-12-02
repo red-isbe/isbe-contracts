@@ -13,23 +13,84 @@ task(
     "anchoringcorefacet:functionlist",
     "Prints all available AnchoringCoreFacet tasks"
 ).setAction(async () => {
-    console.log("\nAvailable AnchoringCoreFacet tasks:\n");
-    const list = [
-        "anchoringcorefacet:getregisteredchains",
-        "anchoringcorefacet:getchainmetadata",
-        "anchoringcorefacet:getanchoringstats",
-        "anchoringcorefacet:getblocksinrange",
-        "anchoringcorefacet:getlastnblocks",
-        "anchoringcorefacet:isblockanchored",
-        "anchoringcorefacet:getanchoredblock",
-        "anchoringcorefacet:getlastanchoredblock",
-        "anchoringcorefacet:anchorblocksbatch",
-        "anchoringcorefacet:anchorblock",
-        "anchoringcorefacet:registerchain",
+    console.log("\n\x1b[1m📋 Available AnchoringCoreFacet tasks:\x1b[0m\n");
+    
+    const tasks = [
+        {
+            name: "anchoringcorefacet:getregisteredchains",
+            description: "Get paginated list of registered chains",
+            params: "--governancediamond <address> --pageindex <uint256> --pagelength <uint256>",
+            example: "npx hardhat anchoringcorefacet:getregisteredchains --network <network> --governancediamond 0x00000000000000000000000000000000000015BE --pageindex 0 --pagelength 10"
+        },
+        {
+            name: "anchoringcorefacet:getchainmetadata",
+            description: "Get this chain ID and all registered chain IDs",
+            params: "--governancediamond <address>",
+            example: "npx hardhat anchoringcorefacet:getchainmetadata --network <network> --governancediamond 0x00000000000000000000000000000000000015BE"
+        },
+        {
+            name: "anchoringcorefacet:getanchoringstats",
+            description: "Get anchoring statistics for a specific chain",
+            params: "--governancediamond <address> --chainid <uint256>",
+            example: "npx hardhat anchoringcorefacet:getanchoringstats --network <network> --governancediamond 0x00000000000000000000000000000000000015BE --chainid 1"
+        },
+        {
+            name: "anchoringcorefacet:getblocksinrange",
+            description: "Get anchored blocks in a range",
+            params: "--governancediamond <address> --chainid <uint256> --fromblock <uint256> --toblock <uint256>",
+            example: "npx hardhat anchoringcorefacet:getblocksinrange --network <network> --governancediamond 0x00000000000000000000000000000000000015BE --chainid 1 --fromblock 100 --toblock 110"
+        },
+        {
+            name: "anchoringcorefacet:getlastnblocks",
+            description: "Get the last N anchored blocks",
+            params: "--governancediamond <address> --chainid <uint256> --count <uint256>",
+            example: "npx hardhat anchoringcorefacet:getlastnblocks --network <network> --governancediamond 0x00000000000000000000000000000000000015BE --chainid 1 --count 5"
+        },
+        {
+            name: "anchoringcorefacet:isblockanchored",
+            description: "Check if a specific block is anchored",
+            params: "--governancediamond <address> --chainid <uint256> --blocknumber <uint256>",
+            example: "npx hardhat anchoringcorefacet:isblockanchored --network <network> --governancediamond 0x00000000000000000000000000000000000015BE --chainid 1 --blocknumber 100"
+        },
+        {
+            name: "anchoringcorefacet:getanchoredblock",
+            description: "Get details of a specific anchored block",
+            params: "--governancediamond <address> --chainid <uint256> --blocknumber <uint256>",
+            example: "npx hardhat anchoringcorefacet:getanchoredblock --network <network> --governancediamond 0x00000000000000000000000000000000000015BE --chainid 1 --blocknumber 100"
+        },
+        {
+            name: "anchoringcorefacet:getlastanchoredblock",
+            description: "Get the last anchored block for a chain",
+            params: "--governancediamond <address> --chainid <uint256>",
+            example: "npx hardhat anchoringcorefacet:getlastanchoredblock --network <network> --governancediamond 0x00000000000000000000000000000000000015BE --chainid 1"
+        },
+        {
+            name: "anchoringcorefacet:registerchain",
+            description: "Register a new chain for anchoring (requires ANCHORER_ROLE)",
+            params: "--governancediamond <address> --chainid <uint256>",
+            example: "npx hardhat anchoringcorefacet:registerchain --network <network> --governancediamond 0x00000000000000000000000000000000000015BE --chainid 1"
+        },
+        {
+            name: "anchoringcorefacet:anchorblock",
+            description: "Anchor a single block (requires ANCHORER_ROLE)",
+            params: "--governancediamond <address> --chainid <uint256> --blocknumber <uint256> --blockhash <bytes32> --stateroot <bytes32>",
+            example: "npx hardhat anchoringcorefacet:anchorblock --network <network> --governancediamond 0x00000000000000000000000000000000000015BE --chainid 1 --blocknumber 100 --blockhash 0xaaaa... --stateroot 0x1111..."
+        },
+        {
+            name: "anchoringcorefacet:anchorblocksbatch",
+            description: "Anchor multiple blocks in batch (requires ANCHORER_ROLE)",
+            params: "--governancediamond <address> --chainid <uint256> --blocknumbers <csv> --blockhashes <csv> --stateroots <csv>",
+            example: "npx hardhat anchoringcorefacet:anchorblocksbatch --network <network> --governancediamond 0x00000000000000000000000000000000000015BE --chainid 1 --blocknumbers \"100,101,102\" --blockhashes \"0xaaaa...,0xbbbb...,0xcccc...\" --stateroots \"0x1111...,0x2222...,0x3333...\""
+        }
     ];
 
-    list.forEach((t) => console.log(`  • ${t}`));
-    console.log();
+    tasks.forEach((task, index) => {
+        console.log(`\x1b[36m${index + 1}. ${task.name}\x1b[0m`);
+        console.log(`   \x1b[90m${task.description}\x1b[0m`);
+        console.log(`   \x1b[33mParams:\x1b[0m ${task.params}`);
+        console.log(`   \x1b[32mExample:\x1b[0m ${task.example}`);
+        console.log();
+    });
 });
 
 
@@ -557,11 +618,11 @@ task(
       "Function: anchorBlocksBatch(uint256 _chainId, uint256[] _blockNumbers, bytes32[] _blockHashes, bytes32[] _stateRoots)"
     );
 
-    console.log("Parameters:");
-    console.log("  _chainId      :", chainid.toString());
-    console.log("  _blockNumbers :", blockNumbersArr);
-    console.log("  _blockHashes  :", blockHashesArr);
-    console.log("  _stateRoots   :", stateRootsArr);
+    // console.log("Parameters:");
+    // console.log("  _chainId      :", chainid.toString());
+    // console.log("  _blockNumbers :", blockNumbersArr);
+    // console.log("  _blockHashes  :", blockHashesArr);
+    // console.log("  _stateRoots   :", stateRootsArr);
 
     const signatureProvider = SignatureProviderFactory.create(hre)
     console.log(`Network: ${hre.network.name}`)
