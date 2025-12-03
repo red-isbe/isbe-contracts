@@ -7,6 +7,7 @@ import {
     ERC3643_DEFINITIONS,
     ERC203643_SHARED_DEFINITIONS,
 } from './token/erc3643'
+import { WHITELIST_DEFINITIONS } from './token/whitelist'
 // Import token use case configurations
 import { ERC20_USE_CASE_CONFIGS } from './erc20'
 import { ERC721_USE_CASE_CONFIGS } from './token/erc721_configurations'
@@ -276,5 +277,6 @@ export const BUSINESS_LOGIC_DEFINITIONS = [
     ...ERC20_DEFINITIONS,
     ...ERC203643_SHARED_DEFINITIONS, // Shared facets between ERC20 and ERC3643
     ...ERC721_DEFINITIONS,
+    ...WHITELIST_DEFINITIONS, // Transversal whitelist extension
     ...ERC3643_DEFINITIONS,
 ]
