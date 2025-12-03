@@ -1170,7 +1170,7 @@ describe('DiDRegistry', function () {
 
                     const didDocument = await didRegistry.getDidDocument(did)
                     const alsoKnownAs = didDocument[1] // alsoKnownAs is the second return value
-                    expect(alsoKnownAs).to.equal(ALSO_KNOWN_AS_EXAMPLE)
+                    expect(alsoKnownAs).to.deep.equal([ALSO_KNOWN_AS_EXAMPLE])
                 })
             })
 

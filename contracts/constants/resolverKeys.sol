@@ -141,6 +141,9 @@ bytes32 constant _CLIENT_FILTERING_RESOLVER_KEY = 0x9d459b48dcede9ec86807b1af972
 // keccak256('isbe.contracts.did.registry.query.resolver.key');
 bytes32 constant _DID_REGISTRY_QUERY_RESOLVER_KEY = 0x5fb7bbf7185d00a34fa9c782b90e076f7b5d9e337febead788d0b980b59aa53b;
 
+// keccak256('isbe.contracts.trusted.issuers.registry.resolver.key');
+bytes32 constant _TRUSTED_ISSUERS_REGISTRY_RESOLVER_KEY = 0xa6d24218dbc9b95fcf333de1ad885429be1bc02839798a978c01989cffe93983;
+
 // keccak256('isbe.contracts.ens.registry.resolver.key');
 bytes32 constant _ENS_REGISTRY_RESOLVER_KEY = 0xc0629a5fdc41a377e7fd772f766ce559d0fecbb52e72bd1b4915525935b59053;
 

@@ -48,7 +48,7 @@ abstract contract DidDocumentDetailedInternal is
      */
     struct DidDocument {
         string baseDocument;
-        string alsoKnownAs;
+        string[] alsoKnownAs;
         bytes32[] controllers;
         mapping(bytes32 controller => bool exists) controllerExist;
         mapping(bytes32 vMethodId => IDidDocumentDetailed.VMethod vMethod) vMethods;
@@ -157,7 +157,7 @@ abstract contract DidDocumentDetailedInternal is
 
         document.exists = true;
         document.baseDocument = _baseDocument;
-        document.alsoKnownAs = _alsoKnownAs;
+        document.alsoKnownAs.push(_alsoKnownAs);
         _addVerificationMethod(_did, _vMethodId, _publicKey, _ellipticType);
 
         _addVerificationRelationshipToDocument(
@@ -429,7 +429,7 @@ abstract contract DidDocumentDetailedInternal is
         bytes32 _did,
         string memory _alsoKnownAs
     ) internal returns (bool) {
-        _didDocumentsStorage().didList[_did].alsoKnownAs = _alsoKnownAs;
+        _didDocumentsStorage().didList[_did].alsoKnownAs[0] = _alsoKnownAs;
         return true;
     }
 
@@ -473,7 +473,7 @@ abstract contract DidDocumentDetailedInternal is
         view
         returns (
             string memory baseDocument_,
-            string memory alsoKnownAs_,
+            string[] memory alsoKnownAs_,
             bytes32[] memory controllers_,
             bytes32[] memory vMethodIds_,
             IDidDocumentDetailed.VMethod[] memory vMethods_,
@@ -491,7 +491,7 @@ abstract contract DidDocumentDetailedInternal is
         view
         returns (
             string memory baseDocument_,
-            string memory alsoKnownAs_,
+            string[] memory alsoKnownAs_,
             bytes32[] memory controllers_,
             bytes32[] memory vMethodIds_,
             IDidDocumentDetailed.VMethod[] memory vMethods_,
@@ -698,7 +698,7 @@ abstract contract DidDocumentDetailedInternal is
     function _getAlsoKnownAs(
         bytes32 _did
     ) internal view returns (string memory) {
-        return _didDocumentsStorage().didList[_did].alsoKnownAs;
+        return _didDocumentsStorage().didList[_did].alsoKnownAs[0];
     }
 
     function _didOf(address account) internal view returns (bytes32 did_) {

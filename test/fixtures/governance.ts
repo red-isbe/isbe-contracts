@@ -36,6 +36,10 @@ import {
     DidVerificationMethodFacet__factory,
     DidControllerFacet__factory,
     DidDocumentDetailedFacet__factory,
+    TrustedIssuersRegistryFacet__factory,
+    TrustedIssuersRegistryFacet,
+    ITrustedIssuersRegistry__factory,
+    ITrustedIssuersRegistry,
     ClientFilteringFacet__factory,
     TimeStampingRegistry,
     MockTimestampFacet,
@@ -60,6 +64,7 @@ import {
     ISBE_PAUSER_ROLE,
     PAUSER_ROLE,
     DID_REGISTRY_ROLE,
+    TRUSTED_ISSUERS_REGISTRY_ROLE,
     ENS_MANAGER_ROLE,
     CLIENT_FILTERING_ROLE,
     TIMESTAMPING_REGISTRY_ROLE,
@@ -99,6 +104,7 @@ let DidDocumentDetailedFacetFactory: DidDocumentDetailedFacet__factory
 let DidControllerFacetFactory: DidControllerFacet__factory
 let DidVerificationMethodFacetFactory: DidVerificationMethodFacet__factory
 let DidVerificationRelationshipFacetFactory: DidVerificationRelationshipFacet__factory
+let TrustedIssuersRegistryFacetFactory: TrustedIssuersRegistryFacet__factory
 let DidRegistryQueryFacetFactory: DidRegistryQueryFacet__factory
 let EnsRegistryFacetFactory: EnsRegistryFacet__factory
 let ClientFilteringFacetFactory: ClientFilteringFacet__factory
@@ -154,6 +160,7 @@ export async function deployGovernance(
         },
         { role: PAUSER_ROLE, members: [ownerAddress] },
         { role: DID_REGISTRY_ROLE, members: [ownerAddress] },
+        { role: TRUSTED_ISSUERS_REGISTRY_ROLE, members: [ownerAddress] },
         { role: ENS_MANAGER_ROLE, members: [ownerAddress] },
         { role: CLIENT_FILTERING_ROLE, members: [ownerAddress] },
         { role: TIMESTAMPING_REGISTRY_ROLE, members: [ownerAddress] },
@@ -197,6 +204,9 @@ export async function deployGovernance(
     )
     DidRegistryQueryFacetFactory = await ethers.getContractFactory(
         'DidRegistryQueryTestWrapperFacet'
+    )
+    TrustedIssuersRegistryFacetFactory = await ethers.getContractFactory(
+        'TrustedIssuersRegistryTestWrapperFacet'
     )
     EnsRegistryFacetFactory =
         await ethers.getContractFactory('EnsRegistryFacet')
@@ -269,6 +279,8 @@ export async function deployGovernance(
         await DidVerificationRelationshipFacetFactory.deploy()
     const didRegistryQueryFacet: DidRegistryQueryFacet =
         await DidRegistryQueryFacetFactory.deploy()
+    const trustedIssuersRegistryFacet: TrustedIssuersRegistryFacet =
+        await TrustedIssuersRegistryFacetFactory.deploy()
     const ensRegistryFacet: EnsRegistryFacet =
         await EnsRegistryFacetFactory.deploy()
     const clientFilteringFacet: ClientFiltering =
@@ -289,6 +301,7 @@ export async function deployGovernance(
     await didVerificationMethodFacet.waitForDeployment()
     await didVerificationRelationshipFacet.waitForDeployment()
     await didRegistryQueryFacet.waitForDeployment()
+    await trustedIssuersRegistryFacet.waitForDeployment()
     await ensRegistryFacet.waitForDeployment()
     await clientFilteringFacet.waitForDeployment()
     await timeStampingRegistryFacet.waitForDeployment()
@@ -311,6 +324,7 @@ export async function deployGovernance(
         await didVerificationMethodFacet.getAddress(),
         await didVerificationRelationshipFacet.getAddress(),
         await didRegistryQueryFacet.getAddress(),
+        await trustedIssuersRegistryFacet.getAddress(),
         await ensRegistryFacet.getAddress(),
         await clientFilteringFacet.getAddress(),
         await timeStampingRegistryFacet.getAddress(),
@@ -455,6 +469,12 @@ export async function deployGovernance(
             governanceAddress,
             owner
         ) as IDidRegistry,
+
+        trustedIssuersRegistryFacet,
+        trustedIssuersRegistry: ITrustedIssuersRegistry__factory.connect(
+            governanceAddress,
+            owner
+        ) as ITrustedIssuersRegistry,
 
         // ENS
         ensRegistryFacet,

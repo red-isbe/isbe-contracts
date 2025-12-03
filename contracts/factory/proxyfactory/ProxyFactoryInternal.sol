@@ -58,6 +58,7 @@ abstract contract ProxyFactoryInternal is ConfigurationManagementInternal {
 
         _initializeUseCase(proxyAddress_, _rbacs, _initPause);
 
+        // TODO: ensure the roles aren't changed by external initializers.
         _storeDeployedDiamond(_configurationId, _version, proxyAddress_);
     }
 

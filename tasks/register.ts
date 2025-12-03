@@ -101,6 +101,16 @@ import './client/besuNodeManager/getPaginatedBootNodes'
 import './client/besuNodeManager/getBootNodeState'
 import './client/besuNodeManager/isBootNode'
 
+// Trusted Issuers Registry
+import './identity/trustedissuersregistry/getIssuer'
+import './identity/trustedissuersregistry/getIssuerAttributeRevisions'
+import './identity/trustedissuersregistry/getIssuerAttributes'
+import './identity/trustedissuersregistry/getIssuers'
+import './identity/trustedissuersregistry/getLatestRevisionAttributeId'
+import './identity/trustedissuersregistry/getLatestRevisionAttribute'
+import './identity/trustedissuersregistry/setAttributeData'
+import './identity/trustedissuersregistry/setAttributeMetadata'
+
 // Genesis
 import './genesisGeneration'
 import './bootstapping'

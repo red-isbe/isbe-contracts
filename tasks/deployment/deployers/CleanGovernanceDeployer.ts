@@ -18,6 +18,7 @@ import {
     TIMESTAMPING_REGISTRY_ROLE,
     ANCHORER_ROLE,
     METADATA_MANAGER_ROLE,
+    TRUSTED_ISSUERS_REGISTRY_ROLE,
 } from '../../../utils/constants'
 
 /**
@@ -104,6 +105,7 @@ export class CleanGovernanceDeployer {
             'DidVerificationMethodFacet',
             'DidVerificationRelationshipFacet',
             'DidRegistryQueryFacet',
+            'TrustedIssuersRegistryFacet',
             'EnsRegistryFacet',
             'TimeStampingRegistryFacet',
             'ClientFilteringFacet',
@@ -215,6 +217,10 @@ export class CleanGovernanceDeployer {
                 },
                 {
                     role: DID_REGISTRY_ROLE,
+                    members,
+                },
+                {
+                    role: TRUSTED_ISSUERS_REGISTRY_ROLE,
                     members,
                 },
                 {

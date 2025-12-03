@@ -22,7 +22,7 @@
   Garantiza un control trazable y verificable de la configuración de red, alineado con las políticas de gobernanza de ISBE.
 
     El módulo de **Anchoring** utiliza este directorio como catálogo de redes de referencia para anclar bloques y estados entre cadenas certificadas.  
-    De este modo, las pruebas de estado cross‑chain se apoyan en la información canonizada del NetworkDirectory (chainIds, entornos y metadatos técnicos).
+     De este modo, las pruebas de estado cross‑chain se apoyan en la información canonizada del NetworkDirectory (chainIds, entornos y metadatos técnicos).
 
 - **Beneficio para ISBE:**
     - Centraliza la información de todas las redes certificadas.

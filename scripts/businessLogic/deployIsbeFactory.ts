@@ -32,13 +32,17 @@ import {
     TimeStampingRegistryFacet__factory,
     TimeStampingRegistryFacet,
     DidRegistryQueryFacet,
-    AccessControlDidFacet,
     DidRegistryQueryFacet__factory,
     AccessControlDidFacet__factory,
     BesuNodeManagerFacet,
     BesuNodeManagerFacet__factory,
     AnchoringCoreFacet,
     AnchoringCoreFacet__factory,
+    AccessControlDidGovernanceFacet,
+    TrustedIssuersRegistryFacet,
+    NetworkDirectoryFacet,
+    TrustedIssuersRegistryFacet__factory,
+    NetworkDirectoryFacet__factory,
 } from '../../typechain-types'
 import {
     BUSINESS_LOGIC_DEPLOYER_ROLE,
@@ -55,6 +59,8 @@ import {
     BESU_NODE_MANAGER_ROLE,
     ANCHORER_ROLE,
     METADATA_MANAGER_ROLE,
+    TRUSTED_ISSUERS_REGISTRY_ROLE,
+    NETWORK_DIRECTORY_ROLE,
 } from '../../utils/constants'
 
 let AccessControlFacetFactory: AccessControlGovernanceFacet__factory
@@ -72,8 +78,10 @@ let DidControllerFacetFactory: DidControllerFacet__factory
 let DidVerificationMethodFacetFactory: DidVerificationMethodFacet__factory
 let DidVerificationRelationshipFacetFactory: DidVerificationRelationshipFacet__factory
 let DidRegistryQueryFacetFactory: DidRegistryQueryFacet__factory
+let TrustedIssuersRegistryFacetFactory: TrustedIssuersRegistryFacet__factory
 let EnsRegistryFacetFactory: EnsRegistryFacet__factory
 let TimeStampingRegistryFacetFactory: TimeStampingRegistryFacet__factory
+let NetworkDirectoryFacetFactory: NetworkDirectoryFacet__factory
 let ClientFilteringFacetFactory: ClientFilteringFacet__factory
 let BesuNodeManagerFacetFactory: BesuNodeManagerFacet__factory
 
@@ -82,8 +90,8 @@ let diamondProxy: EIP2535AccessControl
 let businessLogicFactoryFacet: BusinessLogicFactoryFacet
 let proxyFactoryFacet: ProxyFactoryFacet
 let globalIsbePauseFacet: GlobalIsbePauseFacet
-let accessControlFacet: AccessControlGovernanceFacet
-let accessControlDidFacet: AccessControlDidFacet
+let accessControlGovernanceFacet: AccessControlGovernanceFacet
+let accessControlDidGovernanceFacet: AccessControlDidGovernanceFacet
 let pauseFacet: ISBEPauseFacet
 let diamondCutFacet: DiamondCutAccessControlFacet
 let diamondLoupeFacet: DiamondLoupeFacet
@@ -93,9 +101,11 @@ let didControllerFacet: DidControllerFacet
 let didVerificationMethodFacet: DidVerificationMethodFacet
 let didVerificationRelationshipFacet: DidVerificationRelationshipFacet
 let didRegistryQueryFacet: DidRegistryQueryFacet
+let trustedIssuersRegistryFacet: TrustedIssuersRegistryFacet
 let ensRegistryFacet: EnsRegistryFacet
 let timeStampingRegistryFacet: TimeStampingRegistryFacet
 let clientFilteringFacet: ClientFilteringFacet
+let networkDirectoryFacet: NetworkDirectoryFacet
 let besuNodeManagerFacet: BesuNodeManagerFacet
 let anchoringCoreFacet: AnchoringCoreFacet
 
@@ -116,7 +126,7 @@ async function deployInitial(ethers: any) {
         'AccessControlGovernanceFacet'
     )
     AccessControlDidFacetFactory = await ethers.getContractFactory(
-        'AccessControlDidFacet'
+        'AccessControlDidGovernanceFacet'
     )
     IsbePausableFacetFactory = await ethers.getContractFactory('ISBEPauseFacet')
     DiamondCutFacetFactory = await ethers.getContractFactory(
@@ -141,6 +151,9 @@ async function deployInitial(ethers: any) {
     DidRegistryQueryFacetFactory = await ethers.getContractFactory(
         'DidRegistryQueryFacet'
     )
+    TrustedIssuersRegistryFacetFactory = await ethers.getContractFactory(
+        'TrustedIssuersRegistryFacet'
+    )
     EnsRegistryFacetFactory =
         await ethers.getContractFactory('EnsRegistryFacet')
     TimeStampingRegistryFacetFactory = await ethers.getContractFactory(
@@ -148,6 +161,9 @@ async function deployInitial(ethers: any) {
     )
     ClientFilteringFacetFactory = await ethers.getContractFactory(
         'ClientFilteringFacet'
+    )
+    NetworkDirectoryFacetFactory = await ethers.getContractFactory(
+        'NetworkDirectoryFacet'
     )
     BesuNodeManagerFacetFactory = await ethers.getContractFactory(
         'BesuNodeManagerFacet'
@@ -163,8 +179,9 @@ async function deployInitial(ethers: any) {
     proxyFactoryFacet = await ProxyFactoryFacetFactory.deploy(deployOptions)
     globalIsbePauseFacet =
         await GlobalIsbePauseFacetFactory.deploy(deployOptions)
-    accessControlFacet = await AccessControlFacetFactory.deploy(deployOptions)
-    accessControlDidFacet =
+    accessControlGovernanceFacet =
+        await AccessControlFacetFactory.deploy(deployOptions)
+    accessControlDidGovernanceFacet =
         await AccessControlDidFacetFactory.deploy(deployOptions)
     pauseFacet = await IsbePausableFacetFactory.deploy(deployOptions)
     diamondCutFacet = await DiamondCutFacetFactory.deploy(deployOptions)
@@ -179,11 +196,15 @@ async function deployInitial(ethers: any) {
         await DidVerificationRelationshipFacetFactory.deploy(deployOptions)
     didRegistryQueryFacet =
         await DidRegistryQueryFacetFactory.deploy(deployOptions)
+    trustedIssuersRegistryFacet =
+        await TrustedIssuersRegistryFacetFactory.deploy(deployOptions)
     ensRegistryFacet = await EnsRegistryFacetFactory.deploy(deployOptions)
     timeStampingRegistryFacet =
         await TimeStampingRegistryFacetFactory.deploy(deployOptions)
     clientFilteringFacet =
         await ClientFilteringFacetFactory.deploy(deployOptions)
+    networkDirectoryFacet =
+        await NetworkDirectoryFacetFactory.deploy(deployOptions)
     besuNodeManagerFacet =
         await BesuNodeManagerFacetFactory.deploy(deployOptions)
     anchoringCoreFacet = await AnchoringCoreFacetFactory.deploy()
@@ -191,8 +212,8 @@ async function deployInitial(ethers: any) {
     await businessLogicFactoryFacet.waitForDeployment()
     await proxyFactoryFacet.waitForDeployment()
     await globalIsbePauseFacet.waitForDeployment()
-    await accessControlFacet.waitForDeployment()
-    await accessControlDidFacet.waitForDeployment()
+    await accessControlGovernanceFacet.waitForDeployment()
+    await accessControlDidGovernanceFacet.waitForDeployment()
     await pauseFacet.waitForDeployment()
     await diamondCutFacet.waitForDeployment()
     await diamondLoupeFacet.waitForDeployment()
@@ -202,9 +223,11 @@ async function deployInitial(ethers: any) {
     await didVerificationMethodFacet.waitForDeployment()
     await didVerificationRelationshipFacet.waitForDeployment()
     await didRegistryQueryFacet.waitForDeployment()
+    await trustedIssuersRegistryFacet.waitForDeployment()
     await ensRegistryFacet.waitForDeployment()
     await timeStampingRegistryFacet.waitForDeployment()
     await clientFilteringFacet.waitForDeployment()
+    await networkDirectoryFacet.waitForDeployment()
     await besuNodeManagerFacet.waitForDeployment()
     await anchoringCoreFacet.waitForDeployment()
 }
@@ -220,11 +243,11 @@ export async function deployIsbeFactory(
 
     const facetAddresses = [
         await businessLogicFactoryFacet.getAddress(),
-        await globalIsbePauseFacet.getAddress(),
-        await accessControlFacet.getAddress(),
-        await accessControlDidFacet.getAddress(),
-        await pauseFacet.getAddress(),
         await proxyFactoryFacet.getAddress(),
+        await globalIsbePauseFacet.getAddress(),
+        await accessControlGovernanceFacet.getAddress(),
+        await accessControlDidGovernanceFacet.getAddress(),
+        await pauseFacet.getAddress(),
         await diamondCutFacet.getAddress(),
         await diamondLoupeFacet.getAddress(),
         await configMgmtFacet.getAddress(),
@@ -233,9 +256,11 @@ export async function deployIsbeFactory(
         await didVerificationMethodFacet.getAddress(),
         await didVerificationRelationshipFacet.getAddress(),
         await didRegistryQueryFacet.getAddress(),
+        await trustedIssuersRegistryFacet.getAddress(),
         await ensRegistryFacet.getAddress(),
         await timeStampingRegistryFacet.getAddress(),
         await clientFilteringFacet.getAddress(),
+        await networkDirectoryFacet.getAddress(),
         await besuNodeManagerFacet.getAddress(),
         await anchoringCoreFacet.getAddress(),
     ]
@@ -276,6 +301,10 @@ export async function deployIsbeFactory(
                     members: [accountAddress],
                 },
                 {
+                    role: TRUSTED_ISSUERS_REGISTRY_ROLE,
+                    members: [accountAddress],
+                },
+                {
                     role: ENS_MANAGER_ROLE,
                     members: [accountAddress],
                 },
@@ -285,6 +314,10 @@ export async function deployIsbeFactory(
                 },
                 {
                     role: TIMESTAMPING_REGISTRY_ROLE,
+                    members: [accountAddress],
+                },
+                {
+                    role: NETWORK_DIRECTORY_ROLE,
                     members: [accountAddress],
                 },
                 {
