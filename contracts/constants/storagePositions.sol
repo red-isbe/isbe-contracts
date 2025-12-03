@@ -161,4 +161,7 @@ bytes32 constant _ANCHORING_STORAGE_POSITION = 0x5910b7bacf413fc0f7947b11aa2cd75
 // keccak256('isbe.contracts.whitelist.basic.storage');
 bytes32 constant _BASIC_WHITELIST_STORAGE_POSITION = 0x8c3a8a9f4e7b5d6c9a2b1e0f3d4a5c6e7b8d9a0c1e2f3a4b5c6d7e8f9a0b1c2d;
 
+// keccak256('isbe.contracts.erc712.storage');
+bytes32 constant _ERC712_STORAGE_POSITION = 0xd2c19cc56caf34f0cf86a379153a905f398b57ff1f280074bff5c6b4f7268355;
+
 // solhint-enable max-line-length
