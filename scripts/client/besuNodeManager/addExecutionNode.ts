@@ -1,7 +1,6 @@
 import { getBesuNodeManager } from '../../../scripts/utils/getBesuNodeManager'
 import { getEvent } from '../../../scripts/utils/getEvent'
 import { decodeError } from '../../../scripts/utils/translateCustomError'
-import { isValidBytesAndLength } from '../../../scripts/utils/validation'
 import { ISignatureProvider } from '../../../tasks/index'
 import {
     ContractTransactionResponse,
@@ -11,26 +10,29 @@ import {
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 const CONTRACT_NAME = 'ExecutionNodeManager'
-const EVENT_NAME = 'ExecutionNodeRemoved'
+const EVENT_NAME = 'ExecutionNodeAdded'
 
-export async function removeExecutionNode(
+export interface ExecutionNodeAddedResult {
+    nodeId: string
+    enode: string
+    timestamp: bigint
+    state: bigint
+}
+
+export async function addExecutionNode(
     hre: HardhatRuntimeEnvironment,
     signatureProvider: ISignatureProvider,
     diamond: string,
-    besuNodeId: string
-): Promise<string> {
-    // Function implementation goes here
-    if (!isValidBytesAndLength(besuNodeId, 32))
-        throw new Error('Invalid role format: ' + besuNodeId)
-
+    enode: string
+): Promise<ExecutionNodeAddedResult> {
     console.log(
-        `🔐 Using ${signatureProvider.getCurveType()} signature for role granting...`
+        `🔐 Using ${signatureProvider.getCurveType()} signature for execution node management...`
     )
 
     if (signatureProvider.getCurveType() === 'secp256r1') {
-        return await removeExecutionNodeWithRawTransaction(
+        return await addExecutionNodeWithRawTransaction(
             hre,
-            besuNodeId,
+            enode,
             diamond,
             signatureProvider
         )
@@ -40,12 +42,13 @@ export async function removeExecutionNode(
     const signer = await signatureProvider.getSigner()
     const besuNodeManager = await getBesuNodeManager(diamond, signer)
 
-    console.log('📡 Sending removeExecutionNode transaction...')
+    console.log('📡 Sending addExecutionNode transaction...')
     let tx: ContractTransactionResponse
     try {
-        tx = await besuNodeManager.removeExecutionNode(besuNodeId)
+        tx = await besuNodeManager.addExecutionNode(enode)
+        console.log(`   🔗 Transaction submitted: ${tx.hash}`)
     } catch (error) {
-        if (error.data) {
+        if (error?.data) {
             console.log(
                 'Transaction SEND failed: ' +
                     (await decodeError(hre, CONTRACT_NAME, error.data))
@@ -61,13 +64,15 @@ export async function removeExecutionNode(
     try {
         receipt = await tx.wait()
         if (!receipt) throw new Error('Transaction receipt is null')
+        if (receipt.status !== 1) {
+            throw new Error('Transaction failed or was reverted')
+        }
     } catch (error) {
-        //include correct error handling
         console.log('Transaction MINING failed: ' + error)
         throw error
     }
 
-    const logDescription: LogDescription = await getEvent(
+    const logDescription: LogDescription | null = await getEvent(
         EVENT_NAME,
         tx,
         besuNodeManager
@@ -77,42 +82,61 @@ export async function removeExecutionNode(
         throw new Error(`${EVENT_NAME} event not found in transaction logs`)
     }
 
-    const { nodeId } = logDescription.args
+    const args = logDescription.args
 
-    if (nodeId !== besuNodeId) {
+    if (
+        typeof args.nodeId !== 'string' ||
+        typeof args.enode !== 'string' ||
+        typeof args.timestamp !== 'bigint' ||
+        typeof args.state !== 'bigint'
+    ) {
+        throw new Error('Invalid ExecutionNodeAdded event args format')
+    }
+
+    const {
+        nodeId: evNodeId,
+        enode: evEnode,
+        timestamp: evTimestamp,
+        state: evState,
+    } = args
+
+    if (evEnode !== enode) {
         console.warn(
-            'Warning: Bad state detected. Check manually if operation has been processed correctly. '
+            'Warning: Bad state detected. Check manually if operation has been processed correctly.'
         )
     }
 
-    return nodeId
+    return {
+        nodeId: evNodeId,
+        enode: evEnode,
+        timestamp: evTimestamp,
+        state: evState,
+    }
 }
 
 /**
- * Revoke role using raw transactions for secp256r1 compatibility
+ * Add execution node using raw transactions for secp256r1 compatibility
  * Avoids the "Cannot find square root" error by bypassing ethers Contract interface
  */
-async function removeExecutionNodeWithRawTransaction(
+async function addExecutionNodeWithRawTransaction(
     hre: HardhatRuntimeEnvironment,
-    besuNodeId: string,
+    enode: string,
     diamond: string,
     signatureProvider: ISignatureProvider
-): Promise<string> {
-    // Import AccessControl interface for encoding function data
+): Promise<ExecutionNodeAddedResult> {
     const { ExecutionNodeManager__factory } = await import(
         '../../../typechain-types'
     )
 
-    // Create interface for encoding function data
     const contractInterface = ExecutionNodeManager__factory.createInterface()
 
-    // Encode the revokeRole function call
+    // Encode the addExecutionNode function call
     const functionData = contractInterface.encodeFunctionData(
-        'removeExecutionNode',
-        [besuNodeId]
+        'addExecutionNode',
+        [enode]
     )
 
-    console.log('📡 Sending revokeRole raw transaction...')
+    console.log('📡 Sending addExecutionNode raw transaction...')
 
     let txResponse
     try {
@@ -122,18 +146,19 @@ async function removeExecutionNodeWithRawTransaction(
             from: await signatureProvider.getAddress(),
             data: functionData,
         })
+
         // Send raw transaction using signature provider
         txResponse = await signatureProvider.sendTransaction({
             to: diamond,
             data: functionData,
-            gasLimit: 200000n, // Reasonable gas limit for revokeRole
+            gasLimit: 400000n, // Reasonable gas limit for addExecutionNode
         })
 
         console.log(`   🔗 Transaction submitted: ${txResponse.hash}`)
     } catch (error) {
         console.log(error)
         console.log('❌ Raw transaction failed to submit')
-        if (error.data) {
+        if (error?.data) {
             console.log(
                 '   ❌ Error: ' +
                     (await decodeError(hre, CONTRACT_NAME, error.data)) +
@@ -141,7 +166,9 @@ async function removeExecutionNodeWithRawTransaction(
             )
         }
         throw new Error(
-            `Failed to submit revokeRole raw transaction: ${error instanceof Error ? error.message : String(error)}`
+            `Failed to submit addExecutionNode raw transaction: ${
+                error instanceof Error ? error.message : String(error)
+            }`
         )
     }
 
@@ -158,8 +185,8 @@ async function removeExecutionNodeWithRawTransaction(
         throw error
     }
 
-    // Parse RoleRevoked event from the receipt
-    const roleRevokedEvent = receipt.logs
+    // Parse ExecutionNodeAdded event from the receipt
+    const executionNodeAddedEvent = receipt.logs
         .map((log) => {
             try {
                 return contractInterface.parseLog(log)
@@ -169,17 +196,38 @@ async function removeExecutionNodeWithRawTransaction(
         })
         .find((log) => log && log.name === EVENT_NAME)
 
-    if (!roleRevokedEvent) {
+    if (!executionNodeAddedEvent) {
         throw new Error(`${EVENT_NAME} event not found in transaction receipt`)
     }
 
-    const { nodeId } = roleRevokedEvent.args
+    const args = executionNodeAddedEvent.args
 
-    if (nodeId !== besuNodeId) {
+    if (
+        typeof args.nodeId !== 'string' ||
+        typeof args.enode !== 'string' ||
+        typeof args.timestamp !== 'bigint' ||
+        typeof args.state !== 'bigint'
+    ) {
+        throw new Error('Invalid ExecutionNodeAdded event args format')
+    }
+
+    const {
+        nodeId: evNodeId,
+        enode: evEnode,
+        timestamp: evTimestamp,
+        state: evState,
+    } = args
+
+    if (evEnode !== enode) {
         console.warn(
-            'Warning: Bad state detected. Check manually if operation has been processed correctly. '
+            'Warning: Bad state detected. Check manually if operation has been processed correctly.'
         )
     }
 
-    return besuNodeId
+    return {
+        nodeId: evNodeId,
+        enode: evEnode,
+        timestamp: evTimestamp,
+        state: evState,
+    }
 }

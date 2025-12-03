@@ -12,7 +12,6 @@ export async function decodeError(
     const errorData = '0x' + data.slice(10)
 
     const abi = (await hre.artifacts.readArtifact(contractName)).abi
-    console.log('Decoding error using ABI of contract:', abi)
 
     // Find the error definition in the ABI
     const errorFragment = abi.find(
