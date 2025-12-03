@@ -2,10 +2,10 @@
 pragma solidity ^0.8.28;
 
 import {ERC203643InternalCommon} from '../erc203643/ERC203643InternalCommon.sol';
-import {IERC712} from "./IERC712.sol";
-import {_SPONSOR_ROLE} from "../../constants/roles.sol";
-import {_ERC712_RESOLVER_KEY} from "../../constants/resolverKeys.sol";
-import {_ERC712_FACET_VERSION} from "../../constants/facetVersions.sol";
+import {IERC712} from './IERC712.sol';
+import {_SPONSOR_ROLE} from '../../constants/roles.sol';
+import {_ERC712_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
+import {_ERC712_FACET_VERSION} from '../../constants/facetVersions.sol';
 
 /**
  * @title ERC712
@@ -49,45 +49,8 @@ abstract contract ERC712 is IERC712, ERC203643InternalCommon {
     }
 
     /**
-     * @dev Returns the domain separator used in the encoding of the signature for permits, as defined by EIP-712
-     * @return bytes32 The domain separator
-     */
-    function DOMAIN_SEPARATOR() external view override returns (bytes32) {
-        return _domainSeparatorV4();
-    }
-
-    /**
-     * @dev Returns the current nonce for an address
-     * @param owner Address to query
-     * @return uint256 Current nonce value
-     */
-    function nonces(address owner) external view override returns (uint256) {
-        return _nonces(owner);
-    }
-
-    /**
-     * @dev Returns the fields and values that describe the domain separator used by this contract for EIP-712 signature
-     */
-    function eip712Domain()
-        external
-        view
-        override
-        returns (
-            bytes1 fields,
-            string memory name,
-            string memory version,
-            uint256 chainId,
-            address verifyingContract,
-            bytes32 salt,
-            uint256[] memory extensions
-        )
-    {
-        return _eip712Domain();
-    }
-
-    /**
-     * @dev Execute a transfer operation on behalf of a signer using EIP-712 signature
-     * Requires SPONSOR_ROLE
+     * @dev Execute a transfer operation on behalf of a signer
+     * using EIP-712 signature. Requires SPONSOR_ROLE
      */
     function transferBySponsor(
         address from,
@@ -98,8 +61,15 @@ abstract contract ERC712 is IERC712, ERC203643InternalCommon {
         bytes32 r,
         bytes32 s
     ) external override onlyRole(_SPONSOR_ROLE) {
-
-        address signer = _verifyTransferSignature(from, to, value, deadline, v, r, s);
+        address signer = _verifyTransferSignature(
+            from,
+            to,
+            value,
+            deadline,
+            v,
+            r,
+            s
+        );
 
         _transfer(from, to, value);
 
@@ -118,7 +88,6 @@ abstract contract ERC712 is IERC712, ERC203643InternalCommon {
         bytes32 r,
         bytes32 s
     ) external override onlyRole(_SPONSOR_ROLE) {
-
         address signer = _verifyMintSignature(to, value, deadline, v, r, s);
 
         _mint(to, value);
@@ -138,12 +107,50 @@ abstract contract ERC712 is IERC712, ERC203643InternalCommon {
         bytes32 r,
         bytes32 s
     ) external override onlyRole(_SPONSOR_ROLE) {
-
         address signer = _verifyBurnSignature(from, value, deadline, v, r, s);
 
         _burn(from, value);
 
         emit BurnBySponsor(from, value, msg.sender, signer);
+    }
+
+    /**
+     * @dev Returns the domain separator used in the encoding of the signature
+     * for permits, as defined by EIP-712
+     * @return bytes32 The domain separator
+     */
+    function domainSeparator() external view override returns (bytes32) {
+        return _domainSeparatorV4();
+    }
+
+    /**
+     * @dev Returns the current nonce for an address
+     * @param owner Address to query
+     * @return uint256 Current nonce value
+     */
+    function nonces(address owner) external view override returns (uint256) {
+        return _nonces(owner);
+    }
+
+    /**
+     * @dev Returns the fields and values that describe the domain separator
+     * used by this contract for EIP-712 signature
+     */
+    function eip712Domain()
+        external
+        view
+        override
+        returns (
+            bytes1 fields,
+            string memory name,
+            string memory version,
+            uint256 chainId,
+            address verifyingContract,
+            bytes32 salt,
+            uint256[] memory extensions
+        )
+    {
+        return _eip712Domain();
     }
 
     /// @notice Returns the list of interfaces implemented by this contract
@@ -159,5 +166,4 @@ abstract contract ERC712 is IERC712, ERC203643InternalCommon {
         interfaces_ = new bytes4[](interfacesLength);
         interfaces_[--interfacesLength] = type(IERC712).interfaceId;
     }
-
 }

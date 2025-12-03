@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {_ERC712_RESOLVER_KEY} from "../../constants/resolverKeys.sol";
-import {ERC712} from "./ERC712.sol";
-import {IEIP2535Introspection} from "../../proxies/eip2535/interfaces/IEIP2535Introspection.sol";
+import {_ERC712_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
+import {ERC712} from './ERC712.sol';
+import {IEIP2535Introspection} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 
 /**
  * @title ERC712Facet
@@ -55,7 +55,7 @@ contract ERC712Facet is ERC712, IEIP2535Introspection {
         uint256 selectorsLength = 7;
         selectors_ = new bytes4[](selectorsLength);
         selectors_[--selectorsLength] = this.initializeErc712.selector;
-        selectors_[--selectorsLength] = this.DOMAIN_SEPARATOR.selector;
+        selectors_[--selectorsLength] = this.domainSeparator.selector;
         selectors_[--selectorsLength] = this.nonces.selector;
         selectors_[--selectorsLength] = this.eip712Domain.selector;
         selectors_[--selectorsLength] = this.transferBySponsor.selector;

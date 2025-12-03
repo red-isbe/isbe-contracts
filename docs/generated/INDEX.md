@@ -59,6 +59,7 @@
 - [tokens/erc3643/token/erc3643freeze](tokens/erc3643/token/erc3643freeze.md)
 - [tokens/erc3643/token/erc3643metadata](tokens/erc3643/token/erc3643metadata.md)
 - [tokens/erc3643/token/erc3643recovery](tokens/erc3643/token/erc3643recovery.md)
+- [tokens/erc712](tokens/erc712.md)
 - [tokens/erc721](tokens/erc721.md)
 - [tokens/erc721/extensions](tokens/erc721/extensions.md)
 - [tokens/erc721/extensions/burn](tokens/erc721/extensions/burn.md)
