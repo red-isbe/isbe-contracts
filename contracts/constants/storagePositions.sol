@@ -109,6 +109,9 @@ bytes32 constant _DID_CONTROLLERS_STORAGE_POSITION = 0xf63f4b221a52b770150d67231
 // keccak256('isbe.contracts.did.vrelationships.storage');
 bytes32 constant _DID_VRELATIONSHIPS_STORAGE_POSITION = 0x069080572c15b1fdb02941c6065fda2799e12c178afaf7e09aba823ce980a70f;
 
+// keccak256('isbe.contracts.issuer.storage');
+bytes32 constant _ISSUER_STORAGE_POSITION = 0x68cda611a370aa0f838913dcacf77607f50aaf4928b5c181b28a027aee7c4500;
+
 // keccak256('isbe.contracts.ens.registry.storage');
 bytes32 constant _ENS_REGISTRY_STORAGE_POSITION = 0x53b88d0c454d93bf0c49742517d0b10b89ae98101c3fe2be64ccce2e1e5565eb;
 

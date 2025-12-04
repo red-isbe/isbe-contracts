@@ -10,9 +10,8 @@ import { NetworkConfigWithCurve } from '../../types/hardhat'
   --config-id "0x0000000000000000000000000000000000000000000000000000000000000001" \
   --business-ids '["0xf4e751bf7e74c25f287942d8743e3d0fdfb08f29556e786178a50e2d69dc403a", "0x112dd723577b76611d03a5df6740ef34e4adf801a94538796f066cda9100e157"]' \
   --versions '[1,1]' \
-  --factory "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6"
+  --factory "0x00000000000000000000000000000000000015BE"
  */
-
 task('setConfig', 'Sets config')
     .addParam('configId', 'The configuration ID')
     .addParam('businessIds', 'The array of business ids', undefined, types.json)

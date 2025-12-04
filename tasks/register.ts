@@ -120,6 +120,15 @@ import './client/besuNodeManager/quarantineValidator'
 import './client/besuNodeManager/unquarantineValidator'
 import './client/besuNodeManager/standbyValidator'
 import './client/besuNodeManager/promoteValidator'
+// Trusted Issuers Registry
+import './identity/trustedissuersregistry/getIssuer'
+import './identity/trustedissuersregistry/getIssuerAttributeRevisions'
+import './identity/trustedissuersregistry/getIssuerAttributes'
+import './identity/trustedissuersregistry/getIssuers'
+import './identity/trustedissuersregistry/getLatestRevisionAttributeId'
+import './identity/trustedissuersregistry/getLatestRevisionAttribute'
+import './identity/trustedissuersregistry/setAttributeData'
+import './identity/trustedissuersregistry/setAttributeMetadata'
 
 // Genesis
 import './genesisGeneration'

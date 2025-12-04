@@ -343,7 +343,7 @@ interface IDidDocumentDetailed {
         view
         returns (
             string memory baseDocument,
-            string memory alsoKnownAs,
+            string[] memory alsoKnownAs,
             bytes32[] memory controllers,
             bytes32[] memory vMethodIds,
             VMethod[] memory vMethods,
@@ -371,7 +371,7 @@ interface IDidDocumentDetailed {
         view
         returns (
             string memory baseDocument,
-            string memory alsoKnownAs,
+            string[] memory alsoKnownAs,
             bytes32[] memory controllers,
             bytes32[] memory vMethodIds,
             VMethod[] memory vMethods,
