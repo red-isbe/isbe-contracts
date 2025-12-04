@@ -1,5 +1,6 @@
+import { ISignatureProvider } from '../../../tasks/index'
+import { getBesuNodeManager } from '../../../scripts/utils/getBesuNodeManager'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
-import { BesuNodeManagerFacet__factory } from '../../../typechain-types'
 
 export interface NodeDTO {
     nodeId: string
@@ -10,16 +11,14 @@ export interface NodeDTO {
 export async function getNode(
     hre: HardhatRuntimeEnvironment,
     diamond: string,
+    signatureProvider: ISignatureProvider,
     nodeId: string
 ): Promise<NodeDTO> {
     console.log('📡 Querying node information...')
 
     // Use provider for read-only operations (no signer needed)
-    const provider = hre.ethers.provider
-    const besuNodeManager = BesuNodeManagerFacet__factory.connect(
-        diamond,
-        provider
-    )
+    const signer = await signatureProvider.getSigner()
+    const besuNodeManager = await getBesuNodeManager(diamond, signer)
 
     try {
         const node = await besuNodeManager.getNode(nodeId)

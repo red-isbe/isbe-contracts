@@ -1,6 +1,7 @@
 import { task, types } from 'hardhat/config'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { getNode } from '../../../scripts/client/besuNodeManager/getNode'
+import { SignatureProviderFactory } from '../../../tasks/deployment/providers/SignatureProviderFactory'
 
 /*
 npx hardhat getNode \
@@ -33,7 +34,9 @@ task('getNode', 'Get node information by nodeId from BesuNodeManager.')
             console.log(`   Diamond: ${diamond}`)
             console.log(`   Network: ${hre.network.name}`)
 
-            const node = await getNode(hre, diamond, nodeId)
+            const signatureProvider = SignatureProviderFactory.create(hre)
+
+            const node = await getNode(hre, diamond, signatureProvider, nodeId)
 
             console.log('\n📋 Node Information:')
             console.log(`   NodeId:    ${node.nodeId}`)
