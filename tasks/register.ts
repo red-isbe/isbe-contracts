@@ -28,6 +28,7 @@ import './globalPause/unpauseIsbe'
 import './pause/pause'
 import './pause/unpause'
 import './pause/isPaused'
+import './pause/authorityLevel'
 
 // Access Control tasks
 import './access/accessControl/getRoleAdmin'
