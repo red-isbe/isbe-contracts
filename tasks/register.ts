@@ -49,6 +49,7 @@ import './configMgmt/facetAddress'
 import './configMgmt/facetAddresses'
 import './configMgmt/facetSelectors'
 import './configMgmt/facetSupportsInterface'
+import './configMgmt/checkConfiguration'
 import './configMgmt/getConfig'
 import './configMgmt/setConfig'
 

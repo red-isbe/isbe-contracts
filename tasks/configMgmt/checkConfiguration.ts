@@ -1,30 +1,24 @@
 import { task, types } from 'hardhat/config'
 
-import { getFacetSupportsInterface } from '../../scripts/configMgmt/getFacetSupportsInterface'
+import { checkConfiguration } from '../../scripts/configMgmt/checkConfiguration'
 import { SignatureProviderFactory } from '../../tasks/deployment/providers/SignatureProviderFactory'
 
 /**
- npx hardhat facetSupportsInterface --network genesis_validation_network_k1 \
-  --config-id "0x0000000000000000000000000000000000000000000000000000000000000001" \
+ npx hardhat checkConfiguration --network genesis_validation_network_k1 \
+  --config-id "0x7e3880b922d76e9757625c953ece5be0530dd13a66fb3237abf2486ceb601741" \
   --config-version 1 \
-  --interface-id "0x01ffc9a7" \
   --diamond "0x00000000000000000000000000000000000015BE"
 
-Note: interface-id examples:
-  - ERC165: 0x01ffc9a7
-  - ERC721: 0x80ac58cd
-  - ERC20: 0x36372b07
-  - IDiamondCut: 0x1f931c1c
-  - IDiamondLoupe: 0x48e2b093
+Note: This function reverts if the configuration doesn't exist.
+Use version 0 to check the latest version.
  */
 
 task(
-    'facetSupportsInterface',
-    'Check if a facet in the configuration supports a specific interface'
+    'checkConfiguration',
+    'Validates that a specific configuration and version exist. Reverts if not found.'
 )
     .addParam('configId', 'The configuration ID (bytes32)')
-    .addParam('configVersion', 'The version number')
-    .addParam('interfaceId', 'The interface ID to check (bytes4)')
+    .addParam('configVersion', 'The version number (use 0 for latest)')
     .addOptionalParam(
         'diamond',
         'The diamond contract address',
@@ -36,32 +30,35 @@ task(
             taskArgs: {
                 configId: string
                 configVersion: number
-                interfaceId: string
                 diamond: string
             },
             hre
         ) => {
-            const { configId, configVersion, interfaceId, diamond } = taskArgs
+            const { configId, configVersion, diamond } = taskArgs
 
             const signatureProvider = SignatureProviderFactory.create(hre)
 
-            console.log('\nFACET SUPPORTS INTERFACE')
+            console.log('\nCHECK CONFIGURATION')
             console.log('Configuration ID:', configId)
             console.log('Version:', configVersion)
-            console.log('Interface ID:', interfaceId)
             console.log('Diamond:', diamond)
             console.log('Network:', hre.network.name)
 
-            const supported = await getFacetSupportsInterface(
+            const exists = await checkConfiguration(
                 hre,
                 diamond,
                 signatureProvider,
                 configId,
-                configVersion,
-                interfaceId
+                configVersion
             )
 
             console.log('\n📋 Result:')
-            console.log(`   Supported: ${supported}`)
+            console.log(`   Configuration exists: ${exists}`)
+
+            if (exists) {
+                console.log('✅ Configuration is valid')
+            } else {
+                console.log('❌ Configuration not found')
+            }
         }
     )
