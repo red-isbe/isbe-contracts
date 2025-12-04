@@ -40,7 +40,7 @@ export async function unquarantineExecutionNode(
     try {
         tx = await besuNodeManager.unquarantineExecutionNode(nodeId)
         console.log(`   🔗 Transaction submitted: ${tx.hash}`)
-    } catch (error: any) {
+    } catch (error) {
         if (error?.data) {
             console.log(
                 'Transaction SEND failed: ' +
@@ -85,7 +85,7 @@ export async function unquarantineExecutionNode(
 
     const { nodeId: evNodeId } = args
 
-    return evNodeId;
+    return evNodeId
 }
 
 /**
@@ -112,7 +112,7 @@ async function unquarantineExecutionNodeWithRawTransaction(
 
     console.log('📡 Sending unquarantineExecutionNode raw transaction...')
 
-    let txResponse: any
+    let txResponse
     try {
         // FIRST simulate tx to catch errors early and avoid gas costs
         await hre.ethers.provider.call({
@@ -129,7 +129,7 @@ async function unquarantineExecutionNodeWithRawTransaction(
         })
 
         console.log(`   🔗 Transaction submitted: ${txResponse.hash}`)
-    } catch (error: any) {
+    } catch (error) {
         console.log(error)
         console.log('❌ Raw transaction failed to submit')
         if (error?.data) {
@@ -147,7 +147,7 @@ async function unquarantineExecutionNodeWithRawTransaction(
     }
 
     console.log('⏳ Waiting for raw transaction to be mined...')
-    let receipt: any
+    let receipt
     try {
         receipt = await txResponse.wait()
         if (!receipt || receipt.status !== 1) {
@@ -161,14 +161,14 @@ async function unquarantineExecutionNodeWithRawTransaction(
 
     // Parse ExecutionNodeUnquarantined event from the receipt
     const executionNodeUnquarantinedEvent = receipt.logs
-        .map((log: any) => {
+        .map((log) => {
             try {
                 return contractInterface.parseLog(log)
             } catch {
                 return null
             }
         })
-        .find((log: any) => log && log.name === UNQUARANTINE_EVENT_NAME)
+        .find((log) => log && log.name === UNQUARANTINE_EVENT_NAME)
 
     if (!executionNodeUnquarantinedEvent) {
         throw new Error(
@@ -184,5 +184,5 @@ async function unquarantineExecutionNodeWithRawTransaction(
 
     const { nodeId: evNodeId } = args
 
-    return  evNodeId;
+    return evNodeId
 }

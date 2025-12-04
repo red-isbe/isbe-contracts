@@ -40,7 +40,7 @@ export async function removeBootNode(
     try {
         tx = await besuNodeManager.removeBootNode(nodeId)
         console.log(`   🔗 Transaction submitted: ${tx.hash}`)
-    } catch (error: any) {
+    } catch (error) {
         if (error?.data) {
             console.log(
                 'Transaction SEND failed: ' +
@@ -116,7 +116,7 @@ async function removeBootNodeWithRawTransaction(
 
     console.log('📡 Sending removeBootNode raw transaction...')
 
-    let txResponse: any
+    let txResponse
     try {
         // FIRST simulate tx to catch errors early and avoid gas costs
         await hre.ethers.provider.call({
@@ -133,7 +133,7 @@ async function removeBootNodeWithRawTransaction(
         })
 
         console.log(`   🔗 Transaction submitted: ${txResponse.hash}`)
-    } catch (error: any) {
+    } catch (error) {
         console.log(error)
         console.log('❌ Raw transaction failed to submit')
         if (error?.data) {
@@ -151,7 +151,7 @@ async function removeBootNodeWithRawTransaction(
     }
 
     console.log('⏳ Waiting for raw transaction to be mined...')
-    let receipt: any
+    let receipt
     try {
         receipt = await txResponse.wait()
         if (!receipt || receipt.status !== 1) {
@@ -165,19 +165,17 @@ async function removeBootNodeWithRawTransaction(
 
     // Parse BootNodeRemoved event from the receipt
     const bootNodeRemovedEvent = receipt.logs
-        .map((log: any) => {
+        .map((log) => {
             try {
                 return contractInterface.parseLog(log)
             } catch {
                 return null
             }
         })
-        .find((log: any) => log && log.name === EVENT_NAME)
+        .find((log) => log && log.name === EVENT_NAME)
 
     if (!bootNodeRemovedEvent) {
-        throw new Error(
-            `${EVENT_NAME} event not found in transaction receipt`
-        )
+        throw new Error(`${EVENT_NAME} event not found in transaction receipt`)
     }
 
     const args = bootNodeRemovedEvent.args

@@ -47,7 +47,7 @@ export async function addBootNode(
     try {
         tx = await besuNodeManager.addBootNode(enode)
         console.log(`   🔗 Transaction submitted: ${tx.hash}`)
-    } catch (error: any) {
+    } catch (error) {
         if (error?.data) {
             console.log(
                 'Transaction SEND failed: ' +
@@ -131,14 +131,13 @@ async function addBootNodeWithRawTransaction(
     const contractInterface = BootNodeManager__factory.createInterface()
 
     // Encode the addBootNode function call
-    const functionData = contractInterface.encodeFunctionData(
-        'addBootNode',
-        [enode]
-    )
+    const functionData = contractInterface.encodeFunctionData('addBootNode', [
+        enode,
+    ])
 
     console.log('📡 Sending addBootNode raw transaction...')
 
-    let txResponse: any
+    let txResponse
     try {
         // FIRST simulate tx to catch errors early and avoid gas costs
         await hre.ethers.provider.call({
@@ -155,7 +154,7 @@ async function addBootNodeWithRawTransaction(
         })
 
         console.log(`   🔗 Transaction submitted: ${txResponse.hash}`)
-    } catch (error: any) {
+    } catch (error) {
         console.log(error)
         console.log('❌ Raw transaction failed to submit')
         if (error?.data) {
@@ -173,7 +172,7 @@ async function addBootNodeWithRawTransaction(
     }
 
     console.log('⏳ Waiting for raw transaction to be mined...')
-    let receipt: any
+    let receipt
     try {
         receipt = await txResponse.wait()
         if (!receipt || receipt.status !== 1) {
@@ -187,14 +186,14 @@ async function addBootNodeWithRawTransaction(
 
     // Parse BootNodeAdded event from the receipt
     const bootNodeAddedEvent = receipt.logs
-        .map((log: any) => {
+        .map((log) => {
             try {
                 return contractInterface.parseLog(log)
             } catch {
                 return null
             }
         })
-        .find((log: any) => log && log.name === EVENT_NAME)
+        .find((log) => log && log.name === EVENT_NAME)
 
     if (!bootNodeAddedEvent) {
         throw new Error(`${EVENT_NAME} event not found in transaction receipt`)

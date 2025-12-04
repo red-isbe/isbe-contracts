@@ -40,7 +40,7 @@ export async function unquarantineValidator(
     try {
         tx = await besuNodeManager.unquarantineValidator(nodeId)
         console.log(`   🔗 Transaction submitted: ${tx.hash}`)
-    } catch (error: any) {
+    } catch (error) {
         if (error?.data) {
             console.log(
                 'Transaction SEND failed: ' +
@@ -112,7 +112,7 @@ async function unquarantineValidatorWithRawTransaction(
 
     console.log('📡 Sending unquarantineValidator raw transaction...')
 
-    let txResponse: any
+    let txResponse
     try {
         // FIRST simulate tx to catch errors early and avoid gas costs
         await hre.ethers.provider.call({
@@ -129,7 +129,7 @@ async function unquarantineValidatorWithRawTransaction(
         })
 
         console.log(`   🔗 Transaction submitted: ${txResponse.hash}`)
-    } catch (error: any) {
+    } catch (error) {
         console.log(error)
         console.log('❌ Raw transaction failed to submit')
         if (error?.data) {
@@ -147,7 +147,7 @@ async function unquarantineValidatorWithRawTransaction(
     }
 
     console.log('⏳ Waiting for raw transaction to be mined...')
-    let receipt: any
+    let receipt
     try {
         receipt = await txResponse.wait()
         if (!receipt || receipt.status !== 1) {
@@ -161,14 +161,14 @@ async function unquarantineValidatorWithRawTransaction(
 
     // Parse ValidatorUnquarantined event from the receipt
     const validatorUnquarantinedEvent = receipt.logs
-        .map((log: any) => {
+        .map((log) => {
             try {
                 return contractInterface.parseLog(log)
             } catch {
                 return null
             }
         })
-        .find((log: any) => log && log.name === UNQUARANTINE_EVENT_NAME)
+        .find((log) => log && log.name === UNQUARANTINE_EVENT_NAME)
 
     if (!validatorUnquarantinedEvent) {
         throw new Error(
