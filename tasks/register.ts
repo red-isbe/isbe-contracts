@@ -109,3 +109,5 @@ import './includePKgenesis'
 // BesuNodeManagement
 import './client/besuNodeManager/removeExecutionNode'
 import './client/besuNodeManager/addExecutionNode'
+import './client/besuNodeManager/quarantineExecution'
+import './client/besuNodeManager/unquarantineExecution'
