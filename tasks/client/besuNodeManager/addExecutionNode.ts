@@ -2,11 +2,11 @@ import { addExecutionNode } from '../../../scripts/client/besuNodeManager/addExe
 import { SignatureProviderFactory } from '../../../tasks/deployment/providers/SignatureProviderFactory'
 import { task, types } from 'hardhat/config'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
-import { checkValidEnode } from '../../../scripts/utils/validation'
+import { isValidEnode } from '../../../scripts/utils/validation'
 
 /*
 npx hardhat addExecutionNode \
-  --enode enode://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@1.2.3.4:30303 \
+  --enode enode://8892b3cc26ce2a9b48e8847ce4a3e16411a1d73f4abc361736baac8a507982f0e15daaa2746720a7f43a49984405bf870046c179982a0fd45b9fe8f4df22aa86@172.16.240.32:30306 \
   --diamond 0x00000000000000000000000000000000000015BE \
   --network genesis_validation_network_k1
 */
@@ -27,14 +27,14 @@ task('addExecutionNode', 'Add a new execution node to the BesuNodeManager.')
             },
             hre: HardhatRuntimeEnvironment
         ) => {
-            if (!checkValidEnode(besuNodeId))
-                throw new Error('Invalid enode format: ' + besuNodeId)
+            const { enode, diamond } = taskArgs
+
+            if (!isValidEnode(enode))
+                throw new Error('Invalid enode format: ' + enode)
             console.log(
                 '🔐 Initializing signature provider for access control...'
             )
             const signatureProvider = SignatureProviderFactory.create(hre)
-
-            const { enode, diamond } = taskArgs
 
             console.info('ADD EXECUTION NODE TASK')
             console.log(`Adding Besu Execution Node:`)
