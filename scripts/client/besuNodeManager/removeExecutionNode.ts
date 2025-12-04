@@ -1,7 +1,6 @@
 import { getBesuNodeManager } from '../../../scripts/utils/getBesuNodeManager'
 import { getEvent } from '../../../scripts/utils/getEvent'
 import { decodeError } from '../../../scripts/utils/translateCustomError'
-import { isValidBytesAndLength } from '../../../scripts/utils/validation'
 import { ISignatureProvider } from '../../../tasks/index'
 import {
     ContractTransactionResponse,
@@ -19,10 +18,6 @@ export async function removeExecutionNode(
     diamond: string,
     besuNodeId: string
 ): Promise<string> {
-    // Function implementation goes here
-    if (!isValidBytesAndLength(besuNodeId, 32))
-        throw new Error('Invalid role format: ' + besuNodeId)
-
     console.log(
         `🔐 Using ${signatureProvider.getCurveType()} signature for role granting...`
     )

@@ -236,3 +236,38 @@ export function checkValidHexadecimal(
     const notAdjustedToRegEx = !regExp.test(input)
     if (notAdjustedToRegEx || differentLength) throw new Error(errorMessage)
 }
+
+/**
+ * Validate an EVM enode string (Besu/Geth format).
+ *
+ * Valid formats:
+ *   enode://<128 hex chars>@<ip>:<port>
+ *
+ * Examples:
+ *   enode://abcd...1234@127.0.0.1:30303
+ *   enode://abcd...1234@[2001:db8::1]:30303
+ */
+export function checkValidEnode(
+    enode: string = '',
+    errorMessage: string = 'Invalid enode format'
+) {
+    // 1. Public key: 128 hex chars
+    const pubkeyRegex = '[0-9a-fA-F]{128}'
+
+    // 2. IPv4: 1.2.3.4
+    const ipv4Regex = '(?:\\d{1,3}\\.){3}\\d{1,3}'
+
+    // 3. IPv6: [abcd:1234::1]
+    const ipv6Regex = '\\[[0-9a-fA-F:]+\\]'
+
+    // 4. Port: :30303
+    const portRegex = '\\d{1,5}'
+
+    const fullRegex = new RegExp(
+        `^enode://${pubkeyRegex}@(${ipv4Regex}|${ipv6Regex}):${portRegex}$`
+    )
+
+    if (!fullRegex.test(enode)) {
+        throw new Error(errorMessage)
+    }
+}
