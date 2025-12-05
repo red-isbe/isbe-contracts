@@ -384,9 +384,8 @@ export async function deployGovernance(
                     init_CallData_UseCase
                 )
             case CONFIGURATION_ID_ERC3643: {
-                const { deployERC3643UseCasesFacets } = await import(
-                    './erc3643'
-                )
+                const { deployERC3643UseCasesFacets } =
+                    await import('./erc3643')
                 return await deployERC3643UseCasesFacets(
                     isbeFactory,
                     ISBEPauseFacetFactory,

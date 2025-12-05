@@ -73,9 +73,8 @@ async function setAttributeDataWithRawTransaction(
     attributeId: string
     attributeData: string
 }> {
-    const { TrustedIssuersRegistryFacet__factory } = await import(
-        '../../../typechain-types'
-    )
+    const { TrustedIssuersRegistryFacet__factory } =
+        await import('../../../typechain-types')
     // Create interface for encoding function data
     const trustedIssuersRegistryInterface =
         TrustedIssuersRegistryFacet__factory.createInterface()

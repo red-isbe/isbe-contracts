@@ -24,9 +24,8 @@ task('deployIsbeFactory', 'Deploys the ISBE Factory contract').setAction(
 
         if (networkConfig.curve === 'secp256r1') {
             console.log('   🔧 Using secp256r1-compatible deployment method...')
-            const { deployIsbeFactorySecp256r1 } = await import(
-                '../../scripts/businessLogic/deployIsbeFactorySecp256r1'
-            )
+            const { deployIsbeFactorySecp256r1 } =
+                await import('../../scripts/businessLogic/deployIsbeFactorySecp256r1')
             address = await deployIsbeFactorySecp256r1(
                 hre,
                 accountAddress,

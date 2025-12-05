@@ -19,6 +19,9 @@ import {
     IIsbeFactory,
     AccessControlDidFacet,
     BasicWhitelistFacet,
+    ERC203643TransferSigned,
+    ERC203643CappedSigned,
+    ERC20BurnableSigned, // Add this import
 } from '../../typechain-types'
 import {
     OWNABLE_RESOLVER_KEY,
@@ -38,6 +41,9 @@ import {
     BASIC_WHITELIST_RESOLVER_KEY,
     CONFIGURATION_ID_ERC20,
     CONFIGURATION_ID_PROXY_TESTS,
+    ERC203643_TRANSFER_SIGNED_RESOLVER_KEY,
+    ERC203643_CAPPED_SIGNED_RESOLVER_KEY,
+    ERC20_BURNABLE_SIGNED_RESOLVER_KEY,
 } from '../../utils/constants'
 import { getEvent } from '../../scripts/utils/getEvent'
 
@@ -98,6 +104,16 @@ export async function deployERC20UseCasesFacets(
     )
     const ERC203643ControllerFacetFactory = await ethers.getContractFactory(
         'ERC203643ControllerFacet'
+    )
+    const ERC203643TransferSignedFacetFactory = await ethers.getContractFactory(
+        'ERC203643TransferSignedFacet'
+    )
+    // Add the new factory
+    const ERC203643CappedSignedFacetFactory = await ethers.getContractFactory(
+        'ERC203643CappedSignedFacet'
+    )
+    const ERC20BurnableSignedFacetFactory = await ethers.getContractFactory(
+        'ERC20BurnableSignedFacet'
     )
     const ERC20FacetFactory = await ethers.getContractFactory('ERC20Facet')
     const BasicWhitelistFacetFactory = await ethers.getContractFactory(
@@ -166,6 +182,22 @@ export async function deployERC20UseCasesFacets(
         ERC203643_CONTROLLER_RESOLVER_KEY,
         ERC203643ControllerFacetFactory
     )
+    const erc203643TransferSignedFacet = await deployBusinessLogicFromFactory(
+        isbeFactory,
+        ERC203643_TRANSFER_SIGNED_RESOLVER_KEY,
+        ERC203643TransferSignedFacetFactory
+    )
+    // Deploy the new facet
+    const erc203643CappedSignedFacet = await deployBusinessLogicFromFactory(
+        isbeFactory,
+        ERC203643_CAPPED_SIGNED_RESOLVER_KEY,
+        ERC203643CappedSignedFacetFactory
+    )
+    const erc20BurnableSignedFacet = await deployBusinessLogicFromFactory(
+        isbeFactory,
+        ERC20_BURNABLE_SIGNED_RESOLVER_KEY,
+        ERC20BurnableSignedFacetFactory
+    )
     const erc20Facet = await deployBusinessLogicFromFactory(
         isbeFactory,
         ERC20_RESOLVER_KEY,
@@ -214,6 +246,18 @@ export async function deployERC20UseCasesFacets(
             version: 1,
         },
         {
+            businessId: ERC203643_TRANSFER_SIGNED_RESOLVER_KEY,
+            version: 1,
+        },
+        {
+            businessId: ERC203643_CAPPED_SIGNED_RESOLVER_KEY,
+            version: 1,
+        },
+        {
+            businessId: ERC20_BURNABLE_SIGNED_RESOLVER_KEY,
+            version: 1,
+        },
+        {
             businessId: ERC20_RESOLVER_KEY,
             version: 1,
         },
@@ -259,6 +303,15 @@ export async function deployERC20UseCasesFacets(
     const erc203643Controller = ERC203643ControllerFacetFactory.attach(
         proxy
     ) as ERC203643ControllerFacet
+    const erc203643TransferSigned = ERC203643TransferSignedFacetFactory.attach(
+        proxy
+    ) as ERC203643TransferSigned
+    const erc203643CappedSigned = ERC203643CappedSignedFacetFactory.attach(
+        proxy
+    ) as ERC203643CappedSigned
+    const erc20BurnableSinged = ERC20BurnableSignedFacetFactory.attach(
+        proxy
+    ) as ERC20BurnableSigned
     const erc20 = ERC20FacetFactory.attach(proxy) as ERC20Facet
 
     const basicWhitelist = BasicWhitelistFacetFactory.attach(
@@ -294,6 +347,9 @@ export async function deployERC20UseCasesFacets(
         erc20Burnable,
         erc203643Capped,
         erc203643Controller,
+        erc203643TransferSigned,
+        erc203643CappedSigned,
+        erc20BurnableSinged,
         basicWhitelist,
         pause,
         accessControl,
@@ -306,6 +362,9 @@ export async function deployERC20UseCasesFacets(
         erc20BurnableFacet,
         erc203643CappedFacet,
         erc203643ControllerFacet,
+        erc203643TransferSignedFacet,
+        erc203643CappedSignedFacet,
+        erc20BurnableSignedFacet,
         basicWhitelistFacet,
         pauseFacet,
         accessControlFacet,

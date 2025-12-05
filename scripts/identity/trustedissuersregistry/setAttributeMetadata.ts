@@ -93,9 +93,8 @@ async function setAttributeMetadataWithRawTransaction(
     newRevisionId: string
     rootTaoDid: string
 }> {
-    const { TrustedIssuersRegistryFacet__factory } = await import(
-        '../../../typechain-types'
-    )
+    const { TrustedIssuersRegistryFacet__factory } =
+        await import('../../../typechain-types')
     // Create interface for encoding function data
     const trustedIssuersRegistryInterface =
         TrustedIssuersRegistryFacet__factory.createInterface()

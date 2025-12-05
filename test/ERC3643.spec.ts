@@ -2485,9 +2485,10 @@ describe('ERC3643 Token', function () {
                                 )
 
                             // Advance time by 1 day
-                            await ethers.provider.send('evm_increaseTime', [
-                                86400,
-                            ])
+                            await ethers.provider.send(
+                                'evm_increaseTime',
+                                [86400]
+                            )
                             await ethers.provider.send('evm_mine', [])
 
                             // Second transfer that would exceed monthly limit

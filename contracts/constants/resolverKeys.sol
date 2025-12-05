@@ -177,7 +177,13 @@ bytes32 constant _NETWORK_DIRECTORY_RESOLVER_KEY = 0xa02352a617fa557d3bef91c39fb
 // keccak256('isbe.contracts.whitelist.basic.resolver.key');
 bytes32 constant _BASIC_WHITELIST_RESOLVER_KEY = 0x7d9f8a6b5c4e3d2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f;
 
-// keccak256('isbe.contracts.erc712.resolver.key');
-bytes32 constant _ERC712_RESOLVER_KEY = 0x90df039f5c723e65d01bd715af995d20c24547b88e435f3404431164d6fae02e;
+// keccak256('isbe.contracts.erc203643.transfer.signed.resolver.key');
+bytes32 constant _ERC203643_TRANSFER_SIGNED_RESOLVER_KEY = 0x941be87cfe1e3c38fe157e6406c10604eb2c599a8172a0e165b332acdf8f93cd;
+
+// keccak256('isbe.contracts.erc203643.capped.signed.resolver.key');
+bytes32 constant _ERC203543_CAPPED_SIGNED_RESOLVER_KEY = 0x7c097c4fd1aad0f9803e61165ce86a509a739e480279ae9d1fea4c870bc36172;
+
+// keccak256('isbe.contracts.erc20.burnable.signed.resolver.key');
+bytes32 constant _ERC20_BURNABLE_SIGNED_RESOLVER_KEY = 0x5f8ef61cf4f1fd1ccee74532a80e88a92a4ad8ee5602b44f9bef12409368c7db;
 
 // solhint-enable max-line-length
