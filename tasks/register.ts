@@ -57,6 +57,7 @@ import './configMgmt/setConfig'
 import './proxyFactory/deployUseCase'
 import './proxyFactory/deployUseCaseTo'
 import './proxyFactory/getConfigurationByProxy'
+import './proxyFactory/getDeployedProxiesByConfiguration'
 
 // Deployment tasks
 import './deployTest'
