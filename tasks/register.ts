@@ -86,6 +86,8 @@ import './client/isFilterRegistered'
 import './utils/buildConfigurationId'
 
 // Besu Node Manager
+import './client/besuNodeManager/getNode'
+
 import './client/besuNodeManager/getTotalValidators'
 import './client/besuNodeManager/getPaginatedValidators'
 import './client/besuNodeManager/getValidatorState'
@@ -101,6 +103,23 @@ import './client/besuNodeManager/getPaginatedBootNodes'
 import './client/besuNodeManager/getBootNodeState'
 import './client/besuNodeManager/isBootNode'
 
+import './client/besuNodeManager/removeExecutionNode'
+import './client/besuNodeManager/addExecutionNode'
+import './client/besuNodeManager/quarantineExecution'
+import './client/besuNodeManager/unquarantineExecution'
+
+import './client/besuNodeManager/addBootNode'
+import './client/besuNodeManager/removeBootNode'
+import './client/besuNodeManager/quarantineBootNode'
+import './client/besuNodeManager/unquarantineBootNode'
+
+import './client/besuNodeManager/addValidator'
+import './client/besuNodeManager/addValidatorStandby'
+import './client/besuNodeManager/removeValidator'
+import './client/besuNodeManager/quarantineValidator'
+import './client/besuNodeManager/unquarantineValidator'
+import './client/besuNodeManager/standbyValidator'
+import './client/besuNodeManager/promoteValidator'
 // Trusted Issuers Registry
 import './identity/trustedissuersregistry/getIssuer'
 import './identity/trustedissuersregistry/getIssuerAttributeRevisions'
