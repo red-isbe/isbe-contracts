@@ -17,7 +17,7 @@ struct SignedTsrData {
     /// @notice The address of the signer
     address sender;
     /// @notice The expiration timestamp for the signature
-    uint256 expirationTimestamp;
+    uint256 deadline;
     /// @notice The nonce to prevent replay attacks
     uint256 nonce;
 }

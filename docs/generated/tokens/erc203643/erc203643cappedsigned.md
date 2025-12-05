@@ -15,7 +15,7 @@ constructor() internal
 ### mintWithSignature
 
 ```solidity
-function mintWithSignature(address _to, uint256 _amount, address _sender, uint256 _expirationTimestamp, uint256 _nonce, bytes _signature) external
+function mintWithSignature(address _to, uint256 _amount, address _sender, uint256 _deadline, uint256 _nonce, bytes _signature) external
 ```
 
 Mints new tokens based on a signed message
@@ -27,14 +27,14 @@ Emits a WithSignatureMinted event upon successful minting._
 
 #### Parameters
 
-| Name                  | Type    | Description                                         |
-| --------------------- | ------- | --------------------------------------------------- |
-| \_to                  | address | The address to mint tokens to                       |
-| \_amount              | uint256 | The amount of tokens to mint                        |
-| \_sender              | address | The address of the token minter (signer)            |
-| \_expirationTimestamp | uint256 | Unix timestamp after which the signature is invalid |
-| \_nonce               | uint256 | Unique number to prevent replay attacks             |
-| \_signature           | bytes   | Signature of the minting data                       |
+| Name        | Type    | Description                                         |
+| ----------- | ------- | --------------------------------------------------- |
+| \_to        | address | The address to mint tokens to                       |
+| \_amount    | uint256 | The amount of tokens to mint                        |
+| \_sender    | address | The address of the token minter (signer)            |
+| \_deadline  | uint256 | Unix timestamp after which the signature is invalid |
+| \_nonce     | uint256 | Unique number to prevent replay attacks             |
+| \_signature | bytes   | Signature of the minting data                       |
 
 ### \_implementedInterfaces
 
@@ -120,26 +120,26 @@ _Provides methods for signed minting to enable off-chain approvals and decentral
 ### WithSignatureMinted
 
 ```solidity
-event WithSignatureMinted(address to, uint256 amount, address sender, uint256 expirationTimestamp, uint256 nonce, bytes signature)
+event WithSignatureMinted(address to, uint256 amount, address sender, uint256 deadline, uint256 nonce, bytes signature)
 ```
 
 Event emitted when tokens are minted using a signature
 
 #### Parameters
 
-| Name                | Type    | Description                                           |
-| ------------------- | ------- | ----------------------------------------------------- |
-| to                  | address | Recipient address (indexed)                           |
-| amount              | uint256 | Amount of tokens minted                               |
-| sender              | address | Original signer who authorised the minting (indexed)  |
-| expirationTimestamp | uint256 | Timestamp after which the signature is invalid        |
-| nonce               | uint256 | Unique identifier for this specific minting operation |
-| signature           | bytes   | Cryptographic signature authorising the minting       |
+| Name      | Type    | Description                                           |
+| --------- | ------- | ----------------------------------------------------- |
+| to        | address | Recipient address (indexed)                           |
+| amount    | uint256 | Amount of tokens minted                               |
+| sender    | address | Original signer who authorised the minting (indexed)  |
+| deadline  | uint256 | Timestamp after which the signature is invalid        |
+| nonce     | uint256 | Unique identifier for this specific minting operation |
+| signature | bytes   | Cryptographic signature authorising the minting       |
 
 ### mintWithSignature
 
 ```solidity
-function mintWithSignature(address _to, uint256 _amount, address _sender, uint256 _expirationTimestamp, uint256 _nonce, bytes _signature) external
+function mintWithSignature(address _to, uint256 _amount, address _sender, uint256 _deadline, uint256 _nonce, bytes _signature) external
 ```
 
 Mints new tokens using a cryptographic signature instead of direct access control
@@ -148,11 +148,11 @@ _Allows off-chain signing for decentralised minting without direct role requirem
 
 #### Parameters
 
-| Name                  | Type    | Description                                           |
-| --------------------- | ------- | ----------------------------------------------------- |
-| \_to                  | address | Recipient address                                     |
-| \_amount              | uint256 | Amount to mint                                        |
-| \_sender              | address | Original signer who authorised the minting            |
-| \_expirationTimestamp | uint256 | Timestamp after which signature becomes invalid       |
-| \_nonce               | uint256 | Unique identifier for this specific minting operation |
-| \_signature           | bytes   | Cryptographic signature authorising the minting       |
+| Name        | Type    | Description                                           |
+| ----------- | ------- | ----------------------------------------------------- |
+| \_to        | address | Recipient address                                     |
+| \_amount    | uint256 | Amount to mint                                        |
+| \_sender    | address | Original signer who authorised the minting            |
+| \_deadline  | uint256 | Timestamp after which signature becomes invalid       |
+| \_nonce     | uint256 | Unique identifier for this specific minting operation |
+| \_signature | bytes   | Cryptographic signature authorising the minting       |

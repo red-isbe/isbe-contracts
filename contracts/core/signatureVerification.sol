@@ -43,7 +43,7 @@ error ExpiredDeadline(uint256 _deadline);
  * @param _tsaHash The hash identifying the timestamp authority
  * @param _externalReferenceId A unique identifier for external reference
  * @param _sender The address of the message sender
- * @param _expirationTimestamp The timestamp after which the message is invalid
+ * @param _deadline The timestamp after which the message is invalid
  * @param _nonce A unique number to prevent replay attacks
  * @return The computed message hash
  */
@@ -52,7 +52,7 @@ function _getMessageHashStampTsr(
     bytes32 _tsaHash,
     bytes32 _externalReferenceId,
     address _sender,
-    uint256 _expirationTimestamp,
+    uint256 _deadline,
     uint256 _nonce
 ) pure returns (bytes32) {
     return
@@ -63,7 +63,7 @@ function _getMessageHashStampTsr(
                 _tsaHash,
                 _externalReferenceId,
                 _sender,
-                _expirationTimestamp,
+                _deadline,
                 _nonce
             )
         );
@@ -75,7 +75,7 @@ function _getMessageHashStampTsr(
  * @param _to The recipient address of the transfer
  * @param _amount The amount of tokens to transfer
  * @param _sender The address initiating the transfer
- * @param _expirationTimestamp The timestamp after which the message is invalid
+ * @param _deadline The timestamp after which the message is invalid
  * @param _nonce A unique number to prevent replay attacks
  * @return The computed message hash
  */
@@ -83,7 +83,7 @@ function _getMessageHashTransfer(
     address _to,
     uint256 _amount,
     address _sender,
-    uint256 _expirationTimestamp,
+    uint256 _deadline,
     uint256 _nonce
 ) pure returns (bytes32) {
     return
@@ -93,7 +93,7 @@ function _getMessageHashTransfer(
                 _to,
                 _amount,
                 _sender,
-                _expirationTimestamp,
+                _deadline,
                 _nonce
             )
         );
@@ -106,7 +106,7 @@ function _getMessageHashTransfer(
  * @param _to The recipient address of the transfer
  * @param _amount The amount of tokens to transfer
  * @param _sender The address initiating the transfer
- * @param _expirationTimestamp The timestamp after which the message is invalid
+ * @param _deadline The timestamp after which the message is invalid
  * @param _nonce A unique number to prevent replay attacks
  * @return The computed message hash
  */
@@ -115,7 +115,7 @@ function _getMessageHashTransferFrom(
     address _to,
     uint256 _amount,
     address _sender,
-    uint256 _expirationTimestamp,
+    uint256 _deadline,
     uint256 _nonce
 ) pure returns (bytes32) {
     return
@@ -126,7 +126,7 @@ function _getMessageHashTransferFrom(
                 _to,
                 _amount,
                 _sender,
-                _expirationTimestamp,
+                _deadline,
                 _nonce
             )
         );
@@ -138,7 +138,7 @@ function _getMessageHashTransferFrom(
  * @param _to The recipient address of the mint
  * @param _amount The amount of tokens to mint
  * @param _sender The address initiating the mint
- * @param _expirationTimestamp The timestamp after which the message is invalid
+ * @param _deadline The timestamp after which the message is invalid
  * @param _nonce A unique number to prevent replay attacks
  * @return The computed message hash
  */
@@ -146,7 +146,7 @@ function _getMessageHashMint(
     address _to,
     uint256 _amount,
     address _sender,
-    uint256 _expirationTimestamp,
+    uint256 _deadline,
     uint256 _nonce
 ) pure returns (bytes32) {
     return
@@ -156,7 +156,7 @@ function _getMessageHashMint(
                 _to,
                 _amount,
                 _sender,
-                _expirationTimestamp,
+                _deadline,
                 _nonce
             )
         );
@@ -167,14 +167,14 @@ function _getMessageHashMint(
  * @dev Encodes the message using the `_ERC20_BURN_TYPEHASH` and the provided parameters
  * @param _account The address of the account whose tokens are being burned
  * @param _amount The amount of tokens to burn
- * @param _expirationTimestamp The timestamp after which the message is invalid
+ * @param _deadline The timestamp after which the message is invalid
  * @param _nonce A unique number to prevent replay attacks
  * @return The computed message hash
  */
 function _getMessageHashBurn(
     address _account,
     uint256 _amount,
-    uint256 _expirationTimestamp,
+    uint256 _deadline,
     uint256 _nonce
 ) pure returns (bytes32) {
     return
@@ -183,7 +183,7 @@ function _getMessageHashBurn(
                 _ERC20_BURN_TYPEHASH,
                 _account,
                 _amount,
-                _expirationTimestamp,
+                _deadline,
                 _nonce
             )
         );
@@ -195,7 +195,7 @@ function _getMessageHashBurn(
  * @param _sender The address initiating the burn
  * @param _account The address of the account whose tokens are being burned
  * @param _amount The amount of tokens to burn
- * @param _expirationTimestamp The timestamp after which the message is invalid
+ * @param _deadline The timestamp after which the message is invalid
  * @param _nonce A unique number to prevent replay attacks
  * @return The computed message hash
  */
@@ -203,7 +203,7 @@ function _getMessageHashBurnFrom(
     address _sender,
     address _account,
     uint256 _amount,
-    uint256 _expirationTimestamp,
+    uint256 _deadline,
     uint256 _nonce
 ) pure returns (bytes32) {
     return
@@ -213,7 +213,7 @@ function _getMessageHashBurnFrom(
                 _sender,
                 _account,
                 _amount,
-                _expirationTimestamp,
+                _deadline,
                 _nonce
             )
         );

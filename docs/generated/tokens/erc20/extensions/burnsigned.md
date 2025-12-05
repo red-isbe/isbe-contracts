@@ -14,7 +14,7 @@ constructor() internal
 ### burnWithSignature
 
 ```solidity
-function burnWithSignature(address _account, uint256 _amount, uint256 _expirationTimestamp, uint256 _nonce, bytes _signature) external
+function burnWithSignature(address _account, uint256 _amount, uint256 _deadline, uint256 _nonce, bytes _signature) external
 ```
 
 Burns tokens from the caller's account based on a signed message
@@ -25,18 +25,18 @@ Emits a WithSignatureBurned event upon successful burn._
 
 #### Parameters
 
-| Name                  | Type    | Description                                         |
-| --------------------- | ------- | --------------------------------------------------- |
-| \_account             | address | The address whose tokens are being burned           |
-| \_amount              | uint256 | The amount of tokens to burn                        |
-| \_expirationTimestamp | uint256 | Unix timestamp after which the signature is invalid |
-| \_nonce               | uint256 | Unique number to prevent replay attacks             |
-| \_signature           | bytes   | Signature of the transaction data                   |
+| Name        | Type    | Description                                         |
+| ----------- | ------- | --------------------------------------------------- |
+| \_account   | address | The address whose tokens are being burned           |
+| \_amount    | uint256 | The amount of tokens to burn                        |
+| \_deadline  | uint256 | Unix timestamp after which the signature is invalid |
+| \_nonce     | uint256 | Unique number to prevent replay attacks             |
+| \_signature | bytes   | Signature of the transaction data                   |
 
 ### burnFromWithSignature
 
 ```solidity
-function burnFromWithSignature(address _sender, address _account, uint256 _amount, uint256 _expirationTimestamp, uint256 _nonce, bytes _signature) external
+function burnFromWithSignature(address _sender, address _account, uint256 _amount, uint256 _deadline, uint256 _nonce, bytes _signature) external
 ```
 
 Burns tokens from a specific account using a signed message (pull payment)
@@ -47,14 +47,14 @@ Emits a WithSignatureBurnedFrom event upon successful burn._
 
 #### Parameters
 
-| Name                  | Type    | Description                                         |
-| --------------------- | ------- | --------------------------------------------------- |
-| \_sender              | address | The address of the transaction sponsor (signer)     |
-| \_account             | address | The address whose tokens are being burned           |
-| \_amount              | uint256 | The amount of tokens to burn                        |
-| \_expirationTimestamp | uint256 | Unix timestamp after which the signature is invalid |
-| \_nonce               | uint256 | Unique number to prevent replay attacks             |
-| \_signature           | bytes   | Signature of the transaction data                   |
+| Name        | Type    | Description                                         |
+| ----------- | ------- | --------------------------------------------------- |
+| \_sender    | address | The address of the transaction sponsor (signer)     |
+| \_account   | address | The address whose tokens are being burned           |
+| \_amount    | uint256 | The amount of tokens to burn                        |
+| \_deadline  | uint256 | Unix timestamp after which the signature is invalid |
+| \_nonce     | uint256 | Unique number to prevent replay attacks             |
+| \_signature | bytes   | Signature of the transaction data                   |
 
 ### \_implementedInterfaces
 
@@ -140,44 +140,44 @@ _Provides methods for signed burns to enable off-chain approvals and decentralis
 ### WithSignatureBurned
 
 ```solidity
-event WithSignatureBurned(address account, uint256 amount, uint256 expirationTimestamp, uint256 nonce, bytes signature)
+event WithSignatureBurned(address account, uint256 amount, uint256 deadline, uint256 nonce, bytes signature)
 ```
 
 Event emitted when a burn is executed using a signature
 
 #### Parameters
 
-| Name                | Type    | Description                                        |
-| ------------------- | ------- | -------------------------------------------------- |
-| account             | address | Address whose tokens are being burned (indexed)    |
-| amount              | uint256 | Amount of tokens burned                            |
-| expirationTimestamp | uint256 | Timestamp after which the signature is invalid     |
-| nonce               | uint256 | Unique identifier for this specific burn operation |
-| signature           | bytes   | Cryptographic signature authorising the burn       |
+| Name      | Type    | Description                                        |
+| --------- | ------- | -------------------------------------------------- |
+| account   | address | Address whose tokens are being burned (indexed)    |
+| amount    | uint256 | Amount of tokens burned                            |
+| deadline  | uint256 | Timestamp after which the signature is invalid     |
+| nonce     | uint256 | Unique identifier for this specific burn operation |
+| signature | bytes   | Cryptographic signature authorising the burn       |
 
 ### WithSignatureBurnedFrom
 
 ```solidity
-event WithSignatureBurnedFrom(address sender, address account, uint256 amount, uint256 expirationTimestamp, uint256 nonce, bytes signature)
+event WithSignatureBurnedFrom(address sender, address account, uint256 amount, uint256 deadline, uint256 nonce, bytes signature)
 ```
 
 Event emitted when a burnFrom is executed using a signature
 
 #### Parameters
 
-| Name                | Type    | Description                                              |
-| ------------------- | ------- | -------------------------------------------------------- |
-| sender              | address | Original signer who authorised the transaction (indexed) |
-| account             | address | Address whose tokens are being burned (indexed)          |
-| amount              | uint256 | Amount of tokens burned                                  |
-| expirationTimestamp | uint256 | Timestamp after which the signature is invalid           |
-| nonce               | uint256 | Unique identifier for this specific burn operation       |
-| signature           | bytes   | Cryptographic signature authorising the burn             |
+| Name      | Type    | Description                                              |
+| --------- | ------- | -------------------------------------------------------- |
+| sender    | address | Original signer who authorised the transaction (indexed) |
+| account   | address | Address whose tokens are being burned (indexed)          |
+| amount    | uint256 | Amount of tokens burned                                  |
+| deadline  | uint256 | Timestamp after which the signature is invalid           |
+| nonce     | uint256 | Unique identifier for this specific burn operation       |
+| signature | bytes   | Cryptographic signature authorising the burn             |
 
 ### burnWithSignature
 
 ```solidity
-function burnWithSignature(address _account, uint256 _amount, uint256 _expirationTimestamp, uint256 _nonce, bytes _signature) external
+function burnWithSignature(address _account, uint256 _amount, uint256 _deadline, uint256 _nonce, bytes _signature) external
 ```
 
 Burns tokens from the caller's account using a cryptographic signature
@@ -186,18 +186,18 @@ _Allows off-chain signing for decentralised token burning without prior allowanc
 
 #### Parameters
 
-| Name                  | Type    | Description                                        |
-| --------------------- | ------- | -------------------------------------------------- |
-| \_account             | address | Address whose tokens are being burned              |
-| \_amount              | uint256 | Amount to burn                                     |
-| \_expirationTimestamp | uint256 | Timestamp after which signature becomes invalid    |
-| \_nonce               | uint256 | Unique identifier for this specific burn operation |
-| \_signature           | bytes   | Cryptographic signature authorising the burn       |
+| Name        | Type    | Description                                        |
+| ----------- | ------- | -------------------------------------------------- |
+| \_account   | address | Address whose tokens are being burned              |
+| \_amount    | uint256 | Amount to burn                                     |
+| \_deadline  | uint256 | Timestamp after which signature becomes invalid    |
+| \_nonce     | uint256 | Unique identifier for this specific burn operation |
+| \_signature | bytes   | Cryptographic signature authorising the burn       |
 
 ### burnFromWithSignature
 
 ```solidity
-function burnFromWithSignature(address _sender, address _account, uint256 _amount, uint256 _expirationTimestamp, uint256 _nonce, bytes _signature) external
+function burnFromWithSignature(address _sender, address _account, uint256 _amount, uint256 _deadline, uint256 _nonce, bytes _signature) external
 ```
 
 Burns tokens from a specific account using a cryptographic signature (pull payment)
@@ -207,11 +207,11 @@ Similar to burnWithSignature but with explicit account specification_
 
 #### Parameters
 
-| Name                  | Type    | Description                                        |
-| --------------------- | ------- | -------------------------------------------------- |
-| \_sender              | address | Original signer who authorised the transaction     |
-| \_account             | address | Address whose tokens are being burned              |
-| \_amount              | uint256 | Amount to burn                                     |
-| \_expirationTimestamp | uint256 | Timestamp after which signature becomes invalid    |
-| \_nonce               | uint256 | Unique identifier for this specific burn operation |
-| \_signature           | bytes   | Cryptographic signature authorising the burn       |
+| Name        | Type    | Description                                        |
+| ----------- | ------- | -------------------------------------------------- |
+| \_sender    | address | Original signer who authorised the transaction     |
+| \_account   | address | Address whose tokens are being burned              |
+| \_amount    | uint256 | Amount to burn                                     |
+| \_deadline  | uint256 | Timestamp after which signature becomes invalid    |
+| \_nonce     | uint256 | Unique identifier for this specific burn operation |
+| \_signature | bytes   | Cryptographic signature authorising the burn       |

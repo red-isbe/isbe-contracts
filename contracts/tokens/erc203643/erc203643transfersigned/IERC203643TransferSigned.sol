@@ -13,7 +13,7 @@ interface IERC203643TransferSigned {
      * @param to Recipient address (indexed)
      * @param amount Amount of tokens transferred
      * @param sender Original signer of the transaction (indexed)
-     * @param expirationTimestamp Timestamp after which the signature is invalid
+     * @param deadline Timestamp after which the signature is invalid
      * @param nonce Unique identifier for this specific transfer operation
      * @param signature Cryptographic signature authorising the transfer
      */
@@ -22,7 +22,7 @@ interface IERC203643TransferSigned {
         address indexed to,
         uint256 amount,
         address indexed sender,
-        uint256 expirationTimestamp,
+        uint256 deadline,
         uint256 nonce,
         bytes signature
     );
@@ -33,7 +33,7 @@ interface IERC203643TransferSigned {
      * @param _to Recipient address
      * @param _amount Amount to transfer
      * @param _sender Original signer who authorised the transaction
-     * @param _expirationTimestamp Timestamp after which signature becomes invalid
+     * @param _deadline Timestamp after which signature becomes invalid
      * @param _nonce Unique identifier for this specific transfer operation
      * @param _signature Cryptographic signature authorising the transfer
      */
@@ -41,7 +41,7 @@ interface IERC203643TransferSigned {
         address _to,
         uint256 _amount,
         address _sender,
-        uint256 _expirationTimestamp,
+        uint256 _deadline,
         uint256 _nonce,
         bytes calldata _signature
     ) external;
@@ -54,7 +54,7 @@ interface IERC203643TransferSigned {
      * @param _to Recipient address
      * @param _amount Amount to transfer
      * @param _sender Original signer who authorised the transaction
-     * @param _expirationTimestamp Timestamp after which signature becomes invalid
+     * @param _deadline Timestamp after which signature becomes invalid
      * @param _nonce Unique identifier for this specific transfer operation
      * @param _signature Cryptographic signature authorising the transfer
      */
@@ -63,7 +63,7 @@ interface IERC203643TransferSigned {
         address _to,
         uint256 _amount,
         address _sender,
-        uint256 _expirationTimestamp,
+        uint256 _deadline,
         uint256 _nonce,
         bytes calldata _signature
     ) external;

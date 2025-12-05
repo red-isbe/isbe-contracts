@@ -38,7 +38,7 @@ abstract contract ERC203643CappedSigned is
      * @param _to The address to mint tokens to
      * @param _amount The amount of tokens to mint
      * @param _sender The address of the token minter (signer)
-     * @param _expirationTimestamp Unix timestamp after which the signature is invalid
+     * @param _deadline Unix timestamp after which the signature is invalid
      * @param _nonce Unique number to prevent replay attacks
      * @param _signature Signature of the minting data
      */
@@ -46,21 +46,15 @@ abstract contract ERC203643CappedSigned is
         address _to,
         uint256 _amount,
         address _sender,
-        uint256 _expirationTimestamp,
+        uint256 _deadline,
         uint256 _nonce,
         bytes calldata _signature
     ) external override whenNotPaused onlyRole(_SPONSOR_ROLE) {
         _checkSignedTransaction(
             _sender,
-            _expirationTimestamp,
+            _deadline,
             _nonce,
-            _getMessageHashMint(
-                _to,
-                _amount,
-                _sender,
-                _expirationTimestamp,
-                _nonce
-            ),
+            _getMessageHashMint(_to, _amount, _sender, _deadline, _nonce),
             _signature,
             _CONTRACT_NAME_ERC203643,
             _CONTRACT_VERSION_ERC203643,
@@ -72,7 +66,7 @@ abstract contract ERC203643CappedSigned is
             _to,
             _amount,
             _sender,
-            _expirationTimestamp,
+            _deadline,
             _nonce,
             _signature
         );

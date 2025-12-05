@@ -11,14 +11,14 @@ interface IERC20BurnableSigned {
      * @notice Event emitted when a burn is executed using a signature
      * @param account Address whose tokens are being burned (indexed)
      * @param amount Amount of tokens burned
-     * @param expirationTimestamp Timestamp after which the signature is invalid
+     * @param deadline Timestamp after which the signature is invalid
      * @param nonce Unique identifier for this specific burn operation
      * @param signature Cryptographic signature authorising the burn
      */
     event WithSignatureBurned(
         address indexed account,
         uint256 amount,
-        uint256 expirationTimestamp,
+        uint256 deadline,
         uint256 nonce,
         bytes signature
     );
@@ -28,7 +28,7 @@ interface IERC20BurnableSigned {
      * @param sender Original signer who authorised the transaction (indexed)
      * @param account Address whose tokens are being burned (indexed)
      * @param amount Amount of tokens burned
-     * @param expirationTimestamp Timestamp after which the signature is invalid
+     * @param deadline Timestamp after which the signature is invalid
      * @param nonce Unique identifier for this specific burn operation
      * @param signature Cryptographic signature authorising the burn
      */
@@ -36,7 +36,7 @@ interface IERC20BurnableSigned {
         address indexed sender,
         address indexed account,
         uint256 amount,
-        uint256 expirationTimestamp,
+        uint256 deadline,
         uint256 nonce,
         bytes signature
     );
@@ -46,14 +46,14 @@ interface IERC20BurnableSigned {
      * @dev Allows off-chain signing for decentralised token burning without prior allowance
      * @param _account Address whose tokens are being burned
      * @param _amount Amount to burn
-     * @param _expirationTimestamp Timestamp after which signature becomes invalid
+     * @param _deadline Timestamp after which signature becomes invalid
      * @param _nonce Unique identifier for this specific burn operation
      * @param _signature Cryptographic signature authorising the burn
      */
     function burnWithSignature(
         address _account,
         uint256 _amount,
-        uint256 _expirationTimestamp,
+        uint256 _deadline,
         uint256 _nonce,
         bytes calldata _signature
     ) external;
@@ -65,7 +65,7 @@ interface IERC20BurnableSigned {
      * @param _sender Original signer who authorised the transaction
      * @param _account Address whose tokens are being burned
      * @param _amount Amount to burn
-     * @param _expirationTimestamp Timestamp after which signature becomes invalid
+     * @param _deadline Timestamp after which signature becomes invalid
      * @param _nonce Unique identifier for this specific burn operation
      * @param _signature Cryptographic signature authorising the burn
      */
@@ -73,7 +73,7 @@ interface IERC20BurnableSigned {
         address _sender,
         address _account,
         uint256 _amount,
-        uint256 _expirationTimestamp,
+        uint256 _deadline,
         uint256 _nonce,
         bytes calldata _signature
     ) external;

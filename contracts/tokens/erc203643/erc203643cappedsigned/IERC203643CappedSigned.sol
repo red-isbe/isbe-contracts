@@ -12,7 +12,7 @@ interface IERC203643CappedSigned {
      * @param to Recipient address (indexed)
      * @param amount Amount of tokens minted
      * @param sender Original signer who authorised the minting (indexed)
-     * @param expirationTimestamp Timestamp after which the signature is invalid
+     * @param deadline Timestamp after which the signature is invalid
      * @param nonce Unique identifier for this specific minting operation
      * @param signature Cryptographic signature authorising the minting
      */
@@ -20,7 +20,7 @@ interface IERC203643CappedSigned {
         address indexed to,
         uint256 amount,
         address indexed sender,
-        uint256 expirationTimestamp,
+        uint256 deadline,
         uint256 nonce,
         bytes signature
     );
@@ -31,7 +31,7 @@ interface IERC203643CappedSigned {
      * @param _to Recipient address
      * @param _amount Amount to mint
      * @param _sender Original signer who authorised the minting
-     * @param _expirationTimestamp Timestamp after which signature becomes invalid
+     * @param _deadline Timestamp after which signature becomes invalid
      * @param _nonce Unique identifier for this specific minting operation
      * @param _signature Cryptographic signature authorising the minting
      */
@@ -39,7 +39,7 @@ interface IERC203643CappedSigned {
         address _to,
         uint256 _amount,
         address _sender,
-        uint256 _expirationTimestamp,
+        uint256 _deadline,
         uint256 _nonce,
         bytes calldata _signature
     ) external;

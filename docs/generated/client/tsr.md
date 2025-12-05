@@ -497,7 +497,6 @@ struct TimestampingRegistryStorage {
   mapping(bytes32 => struct TimeStampingRegistryInternal.TsrRecord) records;
   mapping(bytes32 => bytes32) tsaHashToOriginal;
   mapping(bytes32 => bytes32) externalRefToOriginal;
-  mapping(address => uint256) nonces;
 }
 ```
 
@@ -777,43 +776,3 @@ _Reverts with ExternalReferenceIdAlreadyExists error if the ID is already regist
 | Name                  | Type    | Description                        |
 | --------------------- | ------- | ---------------------------------- |
 | \_externalReferenceId | bytes32 | The external reference ID to check |
-
-### \_checkStampSignature
-
-```solidity
-function _checkStampSignature(struct SignedTsrData _tsrData, bytes _signature) internal view
-```
-
-Internal function to validate stamp signature and nonce
-
-_Checks nonce, deadline, and signature validity for stamping operations_
-
-#### Parameters
-
-| Name        | Type                 | Description                     |
-| ----------- | -------------------- | ------------------------------- |
-| \_tsrData   | struct SignedTsrData | The signed TSR data to validate |
-| \_signature | bytes                | The signature to verify         |
-
-### \_isStampSignatureValid
-
-```solidity
-function _isStampSignatureValid(struct SignedTsrData _tsrData, bytes _signature) internal view returns (bool isValid_)
-```
-
-Internal function to validate stamp signature
-
-_Creates message hash and verifies EIP712 signature_
-
-#### Parameters
-
-| Name        | Type                 | Description                     |
-| ----------- | -------------------- | ------------------------------- |
-| \_tsrData   | struct SignedTsrData | The signed TSR data to validate |
-| \_signature | bytes                | The signature to verify         |
-
-#### Return Values
-
-| Name      | Type | Description                                     |
-| --------- | ---- | ----------------------------------------------- |
-| isValid\_ | bool | True if the signature is valid, false otherwise |

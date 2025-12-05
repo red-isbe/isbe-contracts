@@ -2240,7 +2240,7 @@ describe('ERC20', function () {
 
         const domain = {
             name: 'ERC203643',
-            version: '1.0.0',
+            version: '1',
             chainId: 0, // Will be set in beforeEach
             verifyingContract: '', // Will be set in beforeEach
         }
@@ -2254,7 +2254,7 @@ describe('ERC20', function () {
                     { name: 'to', type: 'address' },
                     { name: 'amount', type: 'uint256' },
                     { name: 'sender', type: 'address' },
-                    { name: 'expirationTimestamp', type: 'uint256' },
+                    { name: 'deadline', type: 'uint256' },
                     { name: 'nonce', type: 'uint256' },
                 ],
             }
@@ -2265,7 +2265,7 @@ describe('ERC20', function () {
                     { name: 'to', type: 'address' },
                     { name: 'amount', type: 'uint256' },
                     { name: 'sender', type: 'address' },
-                    { name: 'expirationTimestamp', type: 'uint256' },
+                    { name: 'deadline', type: 'uint256' },
                     { name: 'nonce', type: 'uint256' },
                 ],
             }
@@ -2350,13 +2350,13 @@ describe('ERC20', function () {
             it('GIVEN valid signed transfer data WHEN calling transferWithSignature THEN should successfully transfer tokens and emit event', async function () {
                 const amount = 100
                 const nonce = 1
-                const expirationTimestamp = Math.floor(Date.now() / 1000) + 3600 // 1 hour from now
+                const deadline = Math.floor(Date.now() / 1000) + 3600 // 1 hour from now
 
                 const message = {
                     to: otherAccountAddress,
                     amount: amount,
                     sender: ownerAddress,
-                    expirationTimestamp: expirationTimestamp,
+                    deadline: deadline,
                     nonce: nonce,
                 }
 
@@ -2372,7 +2372,7 @@ describe('ERC20', function () {
                         otherAccountAddress,
                         amount,
                         ownerAddress,
-                        expirationTimestamp,
+                        deadline,
                         nonce,
                         signature
                     )
@@ -2387,7 +2387,7 @@ describe('ERC20', function () {
                         otherAccountAddress,
                         amount,
                         ownerAddress,
-                        expirationTimestamp,
+                        deadline,
                         nonce,
                         signature
                     )
@@ -2403,14 +2403,14 @@ describe('ERC20', function () {
 
                 const amount = 150
                 const nonce = 1
-                const expirationTimestamp = Math.floor(Date.now() / 1000) + 3600 // 1 hour from now
+                const deadline = Math.floor(Date.now() / 1000) + 3600 // 1 hour from now
 
                 const message = {
                     from: ownerAddress,
                     to: otherAccountAddress,
                     amount: amount,
                     sender: otherAccountAddress, // Sponsor is the sender
-                    expirationTimestamp: expirationTimestamp,
+                    deadline: deadline,
                     nonce: nonce,
                 }
 
@@ -2427,7 +2427,7 @@ describe('ERC20', function () {
                         otherAccountAddress,
                         amount,
                         otherAccountAddress,
-                        expirationTimestamp,
+                        deadline,
                         nonce,
                         signature
                     )
@@ -2442,7 +2442,7 @@ describe('ERC20', function () {
                         otherAccountAddress,
                         amount,
                         otherAccountAddress,
-                        expirationTimestamp,
+                        deadline,
                         nonce,
                         signature
                     )
@@ -2464,7 +2464,7 @@ describe('ERC20', function () {
                     { name: 'to', type: 'address' },
                     { name: 'amount', type: 'uint256' },
                     { name: 'sender', type: 'address' },
-                    { name: 'expirationTimestamp', type: 'uint256' },
+                    { name: 'deadline', type: 'uint256' },
                     { name: 'nonce', type: 'uint256' },
                 ],
             }
@@ -2528,14 +2528,13 @@ describe('ERC20', function () {
                 it('GIVEN the signer of 712 is not MINTER_ROLE WHEN calling mintWithSignature THEN fails', async function () {
                     const amount = 100
                     const nonce = 1
-                    const expirationTimestamp =
-                        Math.floor(Date.now() / 1000) + 3600 // 1 hour from now
+                    const deadline = Math.floor(Date.now() / 1000) + 3600 // 1 hour from now
 
                     const message = {
                         to: otherAccountAddress,
                         amount: amount,
                         sender: ownerAddress,
-                        expirationTimestamp: expirationTimestamp,
+                        deadline: deadline,
                         nonce: nonce,
                     }
 
@@ -2552,7 +2551,7 @@ describe('ERC20', function () {
                                 otherAccountAddress,
                                 amount,
                                 ownerAddress,
-                                expirationTimestamp,
+                                deadline,
                                 nonce,
                                 signature
                             )
@@ -2573,14 +2572,13 @@ describe('ERC20', function () {
                 it('GIVEN valid signed mint data WHEN calling mintWithSignature THEN should successfully mint tokens and emit event', async function () {
                     const amount = 100
                     const nonce = 1
-                    const expirationTimestamp =
-                        Math.floor(Date.now() / 1000) + 3600 // 1 hour from now
+                    const deadline = Math.floor(Date.now() / 1000) + 3600 // 1 hour from now
 
                     const message = {
                         to: otherAccountAddress,
                         amount: amount,
                         sender: ownerAddress,
-                        expirationTimestamp: expirationTimestamp,
+                        deadline: deadline,
                         nonce: nonce,
                     }
 
@@ -2596,7 +2594,7 @@ describe('ERC20', function () {
                             otherAccountAddress,
                             amount,
                             ownerAddress,
-                            expirationTimestamp,
+                            deadline,
                             nonce,
                             signature
                         )
@@ -2607,7 +2605,7 @@ describe('ERC20', function () {
                             otherAccountAddress,
                             amount,
                             ownerAddress,
-                            expirationTimestamp,
+                            deadline,
                             nonce,
                             signature
                         )
@@ -2622,14 +2620,13 @@ describe('ERC20', function () {
                 it('GIVEN valid signed mint data to zero address WHEN calling mintWithSignature THEN should fail with AddressZero', async function () {
                     const amount = 100
                     const nonce = 1
-                    const expirationTimestamp =
-                        Math.floor(Date.now() / 1000) + 3600
+                    const deadline = Math.floor(Date.now() / 1000) + 3600
 
                     const message = {
                         to: ethers.ZeroAddress,
                         amount: amount,
                         sender: ownerAddress,
-                        expirationTimestamp: expirationTimestamp,
+                        deadline: deadline,
                         nonce: nonce,
                     }
 
@@ -2646,7 +2643,7 @@ describe('ERC20', function () {
                                 ethers.ZeroAddress,
                                 amount,
                                 ownerAddress,
-                                expirationTimestamp,
+                                deadline,
                                 nonce,
                                 signature
                             )
@@ -2656,12 +2653,12 @@ describe('ERC20', function () {
                 it('GIVEN expired signature WHEN calling mintWithSignature THEN should fail with ExpiredDeadline', async function () {
                     const amount = 100
                     const nonce = 1
-                    const expirationTimestamp = 1
+                    const deadline = 1
                     const message = {
                         to: otherAccountAddress,
                         amount: amount,
                         sender: ownerAddress,
-                        expirationTimestamp: expirationTimestamp,
+                        deadline: deadline,
                         nonce: nonce,
                     }
 
@@ -2678,7 +2675,7 @@ describe('ERC20', function () {
                                 otherAccountAddress,
                                 amount,
                                 ownerAddress,
-                                expirationTimestamp,
+                                deadline,
                                 nonce,
                                 signature
                             )
@@ -2687,14 +2684,13 @@ describe('ERC20', function () {
                             erc203643CappedSigned,
                             'ExpiredDeadline'
                         )
-                        .withArgs(expirationTimestamp)
+                        .withArgs(deadline)
                 })
 
                 it('GIVEN invalid signature WHEN calling mintWithSignature THEN should fail with InvalidSignature', async function () {
                     const amount = 100
                     const nonce = 1
-                    const expirationTimestamp =
-                        Math.floor(Date.now() / 1000) + 3600
+                    const deadline = Math.floor(Date.now() / 1000) + 3600
 
                     await expect(
                         erc203643CappedSigned
@@ -2703,7 +2699,7 @@ describe('ERC20', function () {
                                 otherAccountAddress,
                                 amount,
                                 ownerAddress,
-                                expirationTimestamp,
+                                deadline,
                                 nonce,
                                 '0x' + '00'.repeat(65) // Invalid signature
                             )
@@ -2718,14 +2714,13 @@ describe('ERC20', function () {
                 it('GIVEN duplicate nonce WHEN calling mintWithSignature THEN should fail with WrongNonce', async function () {
                     const amount = 100
                     const nonce = 1
-                    const expirationTimestamp =
-                        Math.floor(Date.now() / 1000) + 3600
+                    const deadline = Math.floor(Date.now() / 1000) + 3600
 
                     const message = {
                         to: otherAccountAddress,
                         amount: amount,
                         sender: ownerAddress,
-                        expirationTimestamp: expirationTimestamp,
+                        deadline: deadline,
                         nonce: nonce,
                     }
 
@@ -2742,7 +2737,7 @@ describe('ERC20', function () {
                             otherAccountAddress,
                             amount,
                             ownerAddress,
-                            expirationTimestamp,
+                            deadline,
                             nonce,
                             signature
                         )
@@ -2755,7 +2750,7 @@ describe('ERC20', function () {
                                 otherAccountAddress,
                                 amount,
                                 ownerAddress,
-                                expirationTimestamp,
+                                deadline,
                                 nonce,
                                 signature
                             )
@@ -2776,7 +2771,7 @@ describe('ERC20', function () {
                 BurnWithSignature: [
                     { name: 'account', type: 'address' },
                     { name: 'amount', type: 'uint256' },
-                    { name: 'expirationTimestamp', type: 'uint256' },
+                    { name: 'deadline', type: 'uint256' },
                     { name: 'nonce', type: 'uint256' },
                 ],
             }
@@ -2786,7 +2781,7 @@ describe('ERC20', function () {
                     { name: 'sender', type: 'address' },
                     { name: 'account', type: 'address' },
                     { name: 'amount', type: 'uint256' },
-                    { name: 'expirationTimestamp', type: 'uint256' },
+                    { name: 'deadline', type: 'uint256' },
                     { name: 'nonce', type: 'uint256' },
                 ],
             }
@@ -2862,13 +2857,12 @@ describe('ERC20', function () {
                 it('GIVEN valid signed burn data WHEN calling burnWithSignature THEN should successfully burn tokens and emit event', async function () {
                     const amount = 100
                     const nonce = 1
-                    const expirationTimestamp =
-                        Math.floor(Date.now() / 1000) + 3600 // 1 hour from now
+                    const deadline = Math.floor(Date.now() / 1000) + 3600 // 1 hour from now
 
                     const message = {
                         account: ownerAddress,
                         amount: amount,
-                        expirationTimestamp: expirationTimestamp,
+                        deadline: deadline,
                         nonce: nonce,
                     }
 
@@ -2883,7 +2877,7 @@ describe('ERC20', function () {
                         .burnWithSignature(
                             ownerAddress,
                             amount,
-                            expirationTimestamp,
+                            deadline,
                             nonce,
                             signature
                         )
@@ -2893,7 +2887,7 @@ describe('ERC20', function () {
                         .withArgs(
                             ownerAddress,
                             amount,
-                            expirationTimestamp,
+                            deadline,
                             nonce,
                             signature
                         )
@@ -2906,11 +2900,11 @@ describe('ERC20', function () {
                 it('GIVEN expired signature WHEN calling burnWithSignature THEN should fail with ExpiredDeadline', async function () {
                     const amount = 100
                     const nonce = 1
-                    const expirationTimestamp = 1
+                    const deadline = 1
                     const message = {
                         account: ownerAddress,
                         amount: amount,
-                        expirationTimestamp: expirationTimestamp,
+                        deadline: deadline,
                         nonce: nonce,
                     }
 
@@ -2926,7 +2920,7 @@ describe('ERC20', function () {
                             .burnWithSignature(
                                 ownerAddress,
                                 amount,
-                                expirationTimestamp,
+                                deadline,
                                 nonce,
                                 signature
                             )
@@ -2935,14 +2929,13 @@ describe('ERC20', function () {
                             erc20BurnableSigned,
                             'ExpiredDeadline'
                         )
-                        .withArgs(expirationTimestamp)
+                        .withArgs(deadline)
                 })
 
                 it('GIVEN invalid signature WHEN calling burnWithSignature THEN should fail with InvalidSignature', async function () {
                     const amount = 100
                     const nonce = 1
-                    const expirationTimestamp =
-                        Math.floor(Date.now() / 1000) + 3600
+                    const deadline = Math.floor(Date.now() / 1000) + 3600
 
                     await expect(
                         erc20BurnableSigned
@@ -2950,7 +2943,7 @@ describe('ERC20', function () {
                             .burnWithSignature(
                                 ownerAddress,
                                 amount,
-                                expirationTimestamp,
+                                deadline,
                                 nonce,
                                 '0x' + '00'.repeat(65) // Invalid signature
                             )
@@ -2965,13 +2958,12 @@ describe('ERC20', function () {
                 it('GIVEN duplicate nonce WHEN calling burnWithSignature THEN should fail with WrongNonce', async function () {
                     const amount = 100
                     const nonce = 1
-                    const expirationTimestamp =
-                        Math.floor(Date.now() / 1000) + 3600
+                    const deadline = Math.floor(Date.now() / 1000) + 3600
 
                     const message = {
                         account: ownerAddress,
                         amount: amount,
-                        expirationTimestamp: expirationTimestamp,
+                        deadline: deadline,
                         nonce: nonce,
                     }
 
@@ -2987,7 +2979,7 @@ describe('ERC20', function () {
                         .burnWithSignature(
                             ownerAddress,
                             amount,
-                            expirationTimestamp,
+                            deadline,
                             nonce,
                             signature
                         )
@@ -2999,7 +2991,7 @@ describe('ERC20', function () {
                             .burnWithSignature(
                                 ownerAddress,
                                 amount,
-                                expirationTimestamp,
+                                deadline,
                                 nonce,
                                 signature
                             )
@@ -3089,14 +3081,13 @@ describe('ERC20', function () {
 
                     const amount = 150
                     const nonce = 1
-                    const expirationTimestamp =
-                        Math.floor(Date.now() / 1000) + 3600 // 1 hour from now
+                    const deadline = Math.floor(Date.now() / 1000) + 3600 // 1 hour from now
 
                     const message = {
                         sender: otherAccountAddress, // Sponsor is the sender
                         account: ownerAddress,
                         amount: amount,
-                        expirationTimestamp: expirationTimestamp,
+                        deadline: deadline,
                         nonce: nonce,
                     }
 
@@ -3112,7 +3103,7 @@ describe('ERC20', function () {
                             otherAccountAddress,
                             ownerAddress,
                             amount,
-                            expirationTimestamp,
+                            deadline,
                             nonce,
                             signature
                         )
@@ -3123,7 +3114,7 @@ describe('ERC20', function () {
                             otherAccountAddress,
                             ownerAddress,
                             amount,
-                            expirationTimestamp,
+                            deadline,
                             nonce,
                             signature
                         )
@@ -3142,12 +3133,12 @@ describe('ERC20', function () {
 
                     const amount = 150
                     const nonce = 1
-                    const expirationTimestamp = 1
+                    const deadline = 1
                     const message = {
                         sender: otherAccountAddress,
                         account: ownerAddress,
                         amount: amount,
-                        expirationTimestamp: expirationTimestamp,
+                        deadline: deadline,
                         nonce: nonce,
                     }
 
@@ -3164,7 +3155,7 @@ describe('ERC20', function () {
                                 otherAccountAddress,
                                 ownerAddress,
                                 amount,
-                                expirationTimestamp,
+                                deadline,
                                 nonce,
                                 signature
                             )
@@ -3173,7 +3164,7 @@ describe('ERC20', function () {
                             erc20BurnableSigned,
                             'ExpiredDeadline'
                         )
-                        .withArgs(expirationTimestamp)
+                        .withArgs(deadline)
                 })
 
                 it('GIVEN invalid signature WHEN calling burnFromWithSignature THEN should fail with InvalidSignature', async function () {
@@ -3182,8 +3173,7 @@ describe('ERC20', function () {
 
                     const amount = 150
                     const nonce = 1
-                    const expirationTimestamp =
-                        Math.floor(Date.now() / 1000) + 3600
+                    const deadline = Math.floor(Date.now() / 1000) + 3600
 
                     await expect(
                         erc20BurnableSigned
@@ -3192,7 +3182,7 @@ describe('ERC20', function () {
                                 otherAccountAddress,
                                 ownerAddress,
                                 amount,
-                                expirationTimestamp,
+                                deadline,
                                 nonce,
                                 '0x' + '00'.repeat(65) // Invalid signature
                             )
@@ -3209,14 +3199,13 @@ describe('ERC20', function () {
 
                     const amount = 150
                     const nonce = 1
-                    const expirationTimestamp =
-                        Math.floor(Date.now() / 1000) + 3600
+                    const deadline = Math.floor(Date.now() / 1000) + 3600
 
                     const message = {
                         sender: otherAccountAddress,
                         account: ownerAddress,
                         amount: amount,
-                        expirationTimestamp: expirationTimestamp,
+                        deadline: deadline,
                         nonce: nonce,
                     }
 
@@ -3233,7 +3222,7 @@ describe('ERC20', function () {
                             otherAccountAddress,
                             ownerAddress,
                             amount,
-                            expirationTimestamp,
+                            deadline,
                             nonce,
                             signature
                         )
@@ -3246,7 +3235,7 @@ describe('ERC20', function () {
                                 otherAccountAddress,
                                 ownerAddress,
                                 amount,
-                                expirationTimestamp,
+                                deadline,
                                 nonce,
                                 signature
                             )
@@ -3264,14 +3253,13 @@ describe('ERC20', function () {
 
                     const amount = 150 // More than approved
                     const nonce = 1
-                    const expirationTimestamp =
-                        Math.floor(Date.now() / 1000) + 3600
+                    const deadline = Math.floor(Date.now() / 1000) + 3600
 
                     const message = {
                         sender: otherAccountAddress,
                         account: ownerAddress,
                         amount: amount,
-                        expirationTimestamp: expirationTimestamp,
+                        deadline: deadline,
                         nonce: nonce,
                     }
 
@@ -3288,7 +3276,7 @@ describe('ERC20', function () {
                                 otherAccountAddress,
                                 ownerAddress,
                                 amount,
-                                expirationTimestamp,
+                                deadline,
                                 nonce,
                                 signature
                             )

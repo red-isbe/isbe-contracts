@@ -38,27 +38,22 @@ abstract contract ERC20BurnableSigned is
      *      Emits a WithSignatureBurned event upon successful burn.
      * @param _account The address whose tokens are being burned
      * @param _amount The amount of tokens to burn
-     * @param _expirationTimestamp Unix timestamp after which the signature is invalid
+     * @param _deadline Unix timestamp after which the signature is invalid
      * @param _nonce Unique number to prevent replay attacks
      * @param _signature Signature of the transaction data
      */
     function burnWithSignature(
         address _account,
         uint256 _amount,
-        uint256 _expirationTimestamp,
+        uint256 _deadline,
         uint256 _nonce,
         bytes calldata _signature
     ) external override whenNotPaused onlyRole(_SPONSOR_ROLE) {
         _checkSignedTransaction(
             _account,
-            _expirationTimestamp,
+            _deadline,
             _nonce,
-            _getMessageHashBurn(
-                _account,
-                _amount,
-                _expirationTimestamp,
-                _nonce
-            ),
+            _getMessageHashBurn(_account, _amount, _deadline, _nonce),
             _signature,
             _CONTRACT_NAME_ERC203643,
             _CONTRACT_VERSION_ERC203643,
@@ -68,7 +63,7 @@ abstract contract ERC20BurnableSigned is
         emit WithSignatureBurned(
             _account,
             _amount,
-            _expirationTimestamp,
+            _deadline,
             _nonce,
             _signature
         );
@@ -82,7 +77,7 @@ abstract contract ERC20BurnableSigned is
      * @param _sender The address of the transaction sponsor (signer)
      * @param _account The address whose tokens are being burned
      * @param _amount The amount of tokens to burn
-     * @param _expirationTimestamp Unix timestamp after which the signature is invalid
+     * @param _deadline Unix timestamp after which the signature is invalid
      * @param _nonce Unique number to prevent replay attacks
      * @param _signature Signature of the transaction data
      */
@@ -90,19 +85,19 @@ abstract contract ERC20BurnableSigned is
         address _sender,
         address _account,
         uint256 _amount,
-        uint256 _expirationTimestamp,
+        uint256 _deadline,
         uint256 _nonce,
         bytes calldata _signature
     ) external override whenNotPaused onlyRole(_SPONSOR_ROLE) {
         _checkSignedTransaction(
             _sender,
-            _expirationTimestamp,
+            _deadline,
             _nonce,
             _getMessageHashBurnFrom(
                 _sender,
                 _account,
                 _amount,
-                _expirationTimestamp,
+                _deadline,
                 _nonce
             ),
             _signature,
@@ -116,7 +111,7 @@ abstract contract ERC20BurnableSigned is
             _sender,
             _account,
             _amount,
-            _expirationTimestamp,
+            _deadline,
             _nonce,
             _signature
         );
