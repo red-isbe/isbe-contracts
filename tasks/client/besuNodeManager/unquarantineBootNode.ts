@@ -10,17 +10,19 @@ npx hardhat unquarantineBootNode \
   --network genesis_validation_network_k1
 */
 
-task(
-    'unquarantineBootNode',
-    'Unquarantine a boot node in the BesuNodeManager.'
-)
+task('unquarantineBootNode', 'Unquarantine a boot node in the BesuNodeManager.')
     .addParam(
         'nodeId',
         'The nodeId of the Boot Node to be unquarantined.',
         undefined,
         types.string
     )
-    .addParam('diamond', 'The address of the contract')
+    .addOptionalParam(
+        'diamond',
+        'The address of the contract',
+        '0x00000000000000000000000000000000000015BE',
+        types.string
+    )
     .setAction(
         async (
             taskArgs: {
@@ -29,7 +31,9 @@ task(
             },
             hre: HardhatRuntimeEnvironment
         ) => {
-            console.log('🔐 Initializing signature provider for access control...')
+            console.log(
+                '🔐 Initializing signature provider for access control...'
+            )
             const signatureProvider = SignatureProviderFactory.create(hre)
 
             const { nodeId, diamond } = taskArgs

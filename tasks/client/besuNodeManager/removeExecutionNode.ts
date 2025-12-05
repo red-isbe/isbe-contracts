@@ -1,7 +1,7 @@
 import { SignatureProviderFactory } from '../../../tasks/deployment/providers/SignatureProviderFactory'
 import { removeExecutionNode } from '../../../scripts/client/besuNodeManager/removeExecutionNode'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
-import { task } from 'hardhat/config'
+import { task, types } from 'hardhat/config'
 
 /*
 npx hardhat removeExecutionNode \
@@ -20,7 +20,12 @@ task(
         undefined,
         types.string
     )
-    .addParam('diamond', 'The address of the contract')
+    .addOptionalParam(
+        'diamond',
+        'The address of the contract',
+        '0x00000000000000000000000000000000000015BE',
+        types.string
+    )
     .setAction(
         async (
             taskArgs: {

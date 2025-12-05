@@ -11,14 +11,22 @@ npx hardhat addValidatorStandby \
   --network genesis_validation_network_k1
 */
 
-task('addValidatorStandby', 'Add a new validator node in standby state to the BesuNodeManager.')
+task(
+    'addValidatorStandby',
+    'Add a new validator node in standby state to the BesuNodeManager.'
+)
     .addParam(
         'enode',
         'The enode string of the Besu Validator Node.',
         undefined,
         types.string
     )
-    .addParam('diamond', 'The address of the contract')
+    .addOptionalParam(
+        'diamond',
+        'The address of the contract',
+        '0x00000000000000000000000000000000000015BE',
+        types.string
+    )
     .setAction(
         async (
             taskArgs: {
@@ -48,9 +56,16 @@ task('addValidatorStandby', 'Add a new validator node in standby state to the Be
                 enode: evEnode,
                 timestamp: evTimestamp,
                 state: evState,
-            } = await addValidatorStandby(hre, signatureProvider, diamond, enode)
+            } = await addValidatorStandby(
+                hre,
+                signatureProvider,
+                diamond,
+                enode
+            )
 
-            console.log('\n✅ Validator Node added in Standby state successfully:')
+            console.log(
+                '\n✅ Validator Node added in Standby state successfully:'
+            )
             console.log(`   ID:          ${id}`)
             console.log(`   Enode:       ${evEnode}`)
             console.log(`   Timestamp:   ${evTimestamp}`)
