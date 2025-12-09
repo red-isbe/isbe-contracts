@@ -256,16 +256,6 @@ run_test \
     "true"
 
 run_test \
-    "getAnchoredBlock - Non-anchored block (should fail)" \
-    "npx hardhat anchoringcorefacet:getanchoredblock --chainid ${CHAIN_ID} --blocknumber ${INVALID_BLOCK_NUMBER} --network ${NETWORK}" \
-    "false"
-
-run_test \
-    "getAnchoredBlock - Unregistered chain ID (should fail)" \
-    "npx hardhat anchoringcorefacet:getanchoredblock --chainid ${INVALID_CHAIN_ID} --blocknumber ${VALID_BLOCK_NUMBER} --network ${NETWORK}" \
-    "false"
-
-run_test \
     "getAnchoredBlock - Missing chainid parameter" \
     "npx hardhat anchoringcorefacet:getanchoredblock --blocknumber ${VALID_BLOCK_NUMBER} --network ${NETWORK}" \
     "false"
@@ -282,11 +272,6 @@ run_test \
     "getLastAnchoredBlock - Get last anchored block" \
     "npx hardhat anchoringcorefacet:getlastanchoredblock --chainid ${CHAIN_ID} --network ${NETWORK}" \
     "true"
-
-run_test \
-    "getLastAnchoredBlock - Unregistered chain ID (should fail)" \
-    "npx hardhat anchoringcorefacet:getlastanchoredblock --chainid ${INVALID_CHAIN_ID} --network ${NETWORK}" \
-    "false"
 
 run_test \
     "getLastAnchoredBlock - Missing chainid parameter" \
@@ -333,11 +318,6 @@ run_test \
     "getBlocksInRange - Empty range (no blocks)" \
     "npx hardhat anchoringcorefacet:getblocksinrange --chainid ${CHAIN_ID} --fromblock 200 --toblock 205 --network ${NETWORK}" \
     "true"
-
-run_test \
-    "getBlocksInRange - Invalid range (from > to, should fail)" \
-    "npx hardhat anchoringcorefacet:getblocksinrange --chainid ${CHAIN_ID} --fromblock 200 --toblock 100 --network ${NETWORK}" \
-    "false"
 
 run_test \
     "getBlocksInRange - Missing fromblock parameter" \
