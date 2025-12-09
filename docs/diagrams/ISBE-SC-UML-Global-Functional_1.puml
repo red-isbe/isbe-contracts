@@ -11,118 +11,106 @@ hide empty members
 
 ' === CORE ===
 package "Core" {
-    class Initializable <<(A,#228b22) abstract contract>>
     class Common <<(A,#228b22) abstract contract>>
-    class LibCommon << (L,#FF7700) library >>
-    class ISBEContext <<(A,#228b22) abstract contract>>
-    class DidDocumentDetailedInternal <<(A,#228b22) abstract contract>>
-    class VRelationshipsInternal <<(A,#228b22) abstract contract>>
-    class AccessControlInternal <<(A,#228b22) abstract contract>> #lightblue
-    class PauseInternalCommon <<(A,#228b22) abstract contract>> #FFDEAD
-    class OwnableInternal <<(A,#228b22) abstract contract>> #lightgreen
-    class ERC165Internal <<(A,#228b22) abstract contract>>
-    class Context <<(A,#228b22) abstract contract>>
+    Common--|> ERC165Internal
+    Common--|> AccessControlInternal 
+    Common--|> OwnableInternal
+    Common--|> BasicWhitelistInternal
+    Common--|> PauseInternalCommon
+    
 
-    DidDocumentDetailedInternal --|> Common
-    DidDocumentDetailedInternal --|> VRelationshipsInternal 
-    Common --|> Initializable
-    Common --|> ERC165Internal
-    Common --|> AccessControlInternal
-    Common --|> OwnableInternal
-    Common --|> PauseInternalCommon
-    VRelationshipsInternal--|> ISBEContext
-    PauseInternalCommon --|> ISBEContext
-    OwnableInternal --|> ISBEContext
+     ' --- Context---
+    class ISBEContext <<(A,#228b22) abstract contract>> #4682B4
+    class Context <<(A,#228b22) abstract contract>> #4682B4
     ISBEContext --|> Context
-    AccessControlInternal --|> LibCommon
-}
-
-' === ERC721 ===
-package "ERC721" {
-    class IERC721 <<(I,#FFD700) interface>> #FFFFE0
-    class IERC721Metadata <<(I,#FFD700) interface>> #FFFFE0
-    class IERC721Isbe <<(I,#FFD700) interface>> #FFFFE0  
-    class ERC721Internal <<(A,#228B22) abstract contract>> #FFFFE0
-    class ERC721InternalCommon <<(A,#228B22) abstract contract>> #FFFFE0
-    class ERC721 <<(A,#228B22) contract>> #FFFFE0
-    class ERC721Facet <<(C,#1E90FF) contract>> #FFFFE0
-
-    ERC721 --|> IERC721Isbe
-    IERC721Isbe--|> IERC721
-    IERC721Isbe--|> IERC721Metadata
-    ERC721 --|> ERC721InternalCommon
-    ERC721Internal --|> DidDocumentDetailedInternal 
-    ERC721Facet --|> ERC721
-
-    class IERC721Burnable <<(I,#FFD700) interface>> #FFFFE0
-    class ERC721Burnable <<(A,#228B22) contract>> #FFFFE0
-    class ERC721BurnableFacet <<(C,#1E90FF) contract>> #FFFFE0
-
-    ERC721BurnableFacet --|> ERC721Burnable
-    ERC721Burnable --|> IERC721Burnable
-    ERC721Burnable --|> ERC721InternalCommon
-
-    class IERC721Controller <<(I,#FFD700) interface>> #FFFFE0
-    class ERC721Controller <<(A,#228B22) contract>> #FFFFE0
-    class ERC721ControllerFacet <<(C,#1E90FF) contract>> #FFFFE0
-
-    ERC721ControllerFacet --|> ERC721Controller
-    ERC721Controller --|> IERC721Controller
-    ERC721Controller --|> ERC721InternalCommon
-
-    class IERC721Capped <<(I,#FFD700) interface>> #FFFFE0
-    class ERC721CappedInternal <<(A,#228B22) abstract contract>> #FFFFE0
-    class ERC721Capped <<(A,#228B22) abstract contract>> #FFFFE0
-    class ERC721CappedFacet <<(C,#1E90FF) contract>> #FFFFE0
  
-    ERC721CappedFacet --|> ERC721Capped
-    ERC721Capped --|> IERC721Capped
-    ERC721Capped --|> ERC721InternalCommon
-    ERC721InternalCommon --|> ERC721CappedInternal
-    ERC721CappedInternal --|> ERC721Internal
 
-    class IERC721Snapshot <<(I,#FFD700) interface>> #FFFFE0
-    class ERC721SnapshotInternal <<(A,#228B22) abstract contract>> #FFFFE0
-    class ERC721Snapshot <<(A,#228B22) abstract contract>> #FFFFE0
-    class ERC721SnapshotFacet <<(C,#1E90FF) contract>> #FFFFE0
+    ' --- AccessControl---
+    class IAccessControlEoa<<(I,#FFD700) interface>> #77DD77
+    class IAccessControlDid<<(I,#FFD700) interface>> #77DD77
+    class AccessControlInternal <<(A,#228B22) abstract contract>> #77DD77
+    class AccessControl <<(A,#228B22) abstract contract>> #77DD77
+    class AccessControlDid<<(A,#228B22) abstract contract>> #77DD77
+    class AccessControlFacet<<(C,#1E90FF) contract>> #77DD77
+    class AccessControlDidFacet<<(C,#1E90FF) contract>> #77DD77
+
+    AccessControlFacet--|> AccessControl 
+    AccessControl --|> IAccessControlEoa
+    AccessControl --|> Common
+    AccessControlDidFacet--|> AccessControlDid
+    AccessControlDid--|> IAccessControlDid
+    AccessControlDid--|> Common
     
-    ERC721SnapshotFacet --|> ERC721Snapshot
-    ERC721Snapshot --|> IERC721Snapshot
-    ERC721Snapshot --|> ERC721InternalCommon
-    ERC721InternalCommon --|> ERC721SnapshotInternal
-    ERC721SnapshotInternal --|> ERC721Internal
+    AccessControlInternal --|> ISBEContext
+    AccessControlInternal --|> IsbeFactoryInternal
 
-    class IERC721Enumerable <<(I,#FFD700) interface>> #FFFFE0
-    class ERC721EnumerableInternal <<(A,#228B22) abstract contract>> #FFFFE0
-    class ERC721Enumerable <<(A,#228B22) abstract contract>> #FFFFE0
-    class ERC721EnumerableFacet <<(C,#1E90FF) contract>> #FFFFE0
+    ' --- Ownable---
+    class IOwnable<<(I,#FFD700) interface>> #E6E6FA
+    class IOwnable2Step<<(I,#FFD700) interface>> #E6E6FA
+    class Ownable2StepInternal <<(A,#228B22) abstract contract>> #E6E6FA
+    class OwnableInternal<<(A,#228B22) abstract contract>> #E6E6FA
 
-    ERC721EnumerableFacet --|> ERC721Enumerable
-    ERC721Enumerable --|> IERC721Enumerable
-    ERC721Enumerable --|> ERC721InternalCommon
-    ERC721InternalCommon --|> ERC721EnumerableInternal
-    ERC721EnumerableInternal --|> ERC721Internal
+    class OwnableBase<<(A,#228B22) abstract contract>> #E6E6FA
+    class Ownable<<(A,#228B22) abstract contract>> #E6E6FA
+    class Ownable2Step<<(A,#228B22) abstract contract>> #E6E6FA
 
-    class IERC721Royalty <<(I,#FFD700) interface>> #FFFFE0
-    class ERC721RoyaltyInternal <<(A,#228B22) abstract contract>> #FFFFE0
-    class ERC721Royalty <<(A,#228B22) abstract contract>> #FFFFE0
-    class ERC721RoyaltyFacet <<(C,#1E90FF) contract>> #FFFFE0
+    class OwnableFacet<<(C,#1E90FF) contract>> #E6E6FA
+    class Ownable2StepFacet<<(C,#1E90FF) contract>> #E6E6FA
+
+
+    Ownable--|> OwnableBase
+    Ownable2Step--|> IOwnable2Step
+    Ownable2Step--|> OwnableBase
+    Ownable2Step--|> Ownable2StepInternal
+    Ownable2StepFacet--|> Ownable2Step
+    Ownable2StepInternal--|> OwnableInternal
+    OwnableBase--|> IOwnable
+    OwnableBase--|> Common
+    OwnableFacet--|> Ownable
+    OwnableInternal--|> ISBEContext
     
-    ERC721RoyaltyFacet --|> ERC721Royalty
-    ERC721Royalty --|> IERC721Royalty
-    ERC721Royalty --|> ERC721InternalCommon
-    ERC721InternalCommon --|> ERC721RoyaltyInternal
-    ERC721RoyaltyInternal --|> ERC721Internal
 
-    class IERC721Consecutive <<(I,#FFD700) interface>> #FFFFE0
-    class ERC721ConsecutiveInternal <<(A,#228B22) abstract contract>> #FFFFE0
-    class ERC721Consecutive <<(A,#228B22) abstract contract>> #FFFFE0
-    class ERC721ConsecutiveFacet <<(C,#1E90FF) contract>> #FFFFE0
+   ' --- BasicWhitelist---
+    class IBasicWhitelist<<(I,#FFD700) interface>> #FFFF99
+    class BasicWhitelistInternal<<(A,#228B22) abstract contract>> #FFFF99
+    class BasicWhitelist<<(A,#228B22) abstract contract>> #FFFF99
+    class BasicWhitelistFacet<<(C,#1E90FF) contract>> #FFFF99
 
-    ERC721ConsecutiveFacet --|> ERC721Consecutive
-    ERC721Consecutive --|> IERC721Consecutive
-    ERC721Consecutive --|> ERC721InternalCommon
-    ERC721InternalCommon --|> ERC721ConsecutiveInternal
-    ERC721ConsecutiveInternal --|> ERC721Internal
+    BasicWhitelistFacet--|> BasicWhitelist
+    BasicWhitelist--|> IBasicWhitelist
+    BasicWhitelist--|> Common
+
+
+    ' --- Pause---
+    class IPause<<(I,#FFD700) interface>> #FFB6C1
+    class ISBEPause<<(A,#228B22) abstract contract>> #FFB6C1
+    class Pause<<(A,#228B22) abstract contract>> #FFB6C1
+    class PauseInternal<<(A,#228B22) abstract contract>> #FFB6C1
+    class PauseInternalCommon<<(A,#228B22) abstract contract>> #FFB6C1
+    class ISBEPauseFacet<<(C,#1E90FF) contract>> #FFB6C1
+    
+    ISBEPause--|> Pause
+    ISBEPauseFacet--|> ISBEPause
+    Pause--|> IPause
+    Pause--|> PauseInternal
+    PauseInternal--|> Common
+    PauseInternalCommon--|> ISBEContext
+    
+
+   ' --- 165---
+    class IERC165<<(I,#FFD700) interface>> #6A5ACD
+    class ERC165Internal<<(A,#228B22) abstract contract>> #6A5ACD
+    class ERC165<<(A,#228B22) abstract contract>> #6A5ACD
+
+    ERC165--|> IERC165
+    ERC165--|> ERC165Internal
+    
+
+    ' --- Initializable---
+    class Initializable<<(A,#228B22) abstract contract>> #D2B48C
+
+    Common --|> Initializable
+
+
 }
 @enduml

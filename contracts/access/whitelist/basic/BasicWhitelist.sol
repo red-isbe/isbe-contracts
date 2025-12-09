@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {BasicWhitelistInternal} from './BasicWhitelistInternal.sol';
+import {Common} from '../../../core/Common.sol';
 import {IBasicWhitelist} from './IBasicWhitelist.sol';
 import {_BASIC_WHITELIST_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
 import {_BASIC_WHITELIST_FACET_VERSION} from '../../../constants/facetVersions.sol';
@@ -16,7 +16,7 @@ import {_WHITELIST_ROLE} from '../../../constants/roles.sol';
  *      Access control is enforced using ISBE's role-based system.
  *      This is designed to be used in diamond proxy patterns via BasicWhitelistFacet.
  */
-abstract contract BasicWhitelist is IBasicWhitelist, BasicWhitelistInternal {
+abstract contract BasicWhitelist is IBasicWhitelist, Common {
     /**
      * @notice Constructor that disables initializers for the logic contract
      * @dev This prevents the logic contract from being initialized directly

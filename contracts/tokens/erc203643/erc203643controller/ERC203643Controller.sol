@@ -9,7 +9,10 @@ import {_CONTROLLER_ROLE} from '../../../constants/roles.sol';
 /// @notice Implements unified force mechanism for both ERC20 and ERC3643 tokens
 /// @dev Inherits from IERC203643Controller and ERC203643InternalCommon
 ///      Behavior adapts automatically based on token type through internal logic
-abstract contract ERC203643Controller is ERC203643ControllerInternal {
+abstract contract ERC203643Controller is
+    ERC203643ControllerInternal,
+    IERC203643Controller
+{
     /**
      * @notice Forces a transfer of tokens between two addresses
      * @dev Works for both ERC20 and ERC3643 tokens with automatic behavior adaptation.

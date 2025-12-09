@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {ERC203643InternalCommon} from '../ERC203643InternalCommon.sol';
+import {ERC203643CappedInternal} from './ERC203643CappedInternal.sol';
 import {IERC203643Capped} from './IERC203643Capped.sol';
 import {_ERC203643_CAPPED_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
 import {_ERC203643_CAPPED_FACET_VERSION} from '../../../constants/facetVersions.sol';
@@ -9,9 +9,9 @@ import {_CAP_ROLE, _MINTER_ROLE} from '../../../constants/roles.sol';
 
 /// @title ERC203643Capped
 /// @notice Implements unified capped mechanism with minting functionality for both ERC20 and ERC3643 tokens
-/// @dev Inherits from IERC203643Capped and ERC203643InternalCommon
+/// @dev Inherits from IERC203643Capped and ERC203643CappedInternal
 ///      Behavior adapts automatically based on token type through internal logic
-abstract contract ERC203643Capped is IERC203643Capped, ERC203643InternalCommon {
+abstract contract ERC203643Capped is IERC203643Capped, ERC203643CappedInternal {
     constructor() {
         _disableInitializers(_ERC203643_CAPPED_RESOLVER_KEY);
     }

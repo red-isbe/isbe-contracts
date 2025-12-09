@@ -50,6 +50,9 @@ bytes32 constant _MINTER_ROLE = 0xd8e8f9f9638a19d632dbb79025022db564483265e96ba9
 // keccak256('isbe.contracts.role.did.registry');
 bytes32 constant _DID_REGISTRY_ROLE = 0xaf2da20f2930ba6162489e7dc51c672f0482cbdc3b62d16063683f2d23f0a973;
 
+// keccak256('isbe.contracts.role.trusted.issuers.registry');
+bytes32 constant _TRUSTED_ISSUERS_REGISTRY_ROLE = 0x851082823889050845ac21877ec718094d3f20497e34e5a8281bde69dde672e5;
+
 // keccak256('isbe.contracts.role.ens.manager');
 bytes32 constant _ENS_MANAGER_ROLE = 0x6e23e5e4b53b45e5b32b8b2e8e9a8c48b8a7c3b9c2b8a9a7b9a8c4b8b9a8c9b9;
 

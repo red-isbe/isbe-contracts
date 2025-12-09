@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {DidDocumentDetailedInternal} from '../../../identity/didregistry/DidDocumentDetailedInternal.sol';
 import {_BASIC_WHITELIST_STORAGE_POSITION} from '../../../constants/storagePositions.sol';
 import {IBasicWhitelist} from './IBasicWhitelist.sol';
 
@@ -13,7 +12,7 @@ import {IBasicWhitelist} from './IBasicWhitelist.sol';
  *      It uses unstructured storage to avoid storage collisions in diamond proxy patterns.
  *      Inherits from DidDocumentDetailedInternal to access common ISBE functionality.
  */
-abstract contract BasicWhitelistInternal is DidDocumentDetailedInternal {
+abstract contract BasicWhitelistInternal {
     /**
      * @notice Storage structure for BasicWhitelist data
      * @dev Uses unstructured storage pattern for diamond compatibility

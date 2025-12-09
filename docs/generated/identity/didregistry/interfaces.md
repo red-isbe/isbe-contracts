@@ -702,7 +702,7 @@ support for large datasets and optimised gas usage_
 ### getDidDocument
 
 ```solidity
-function getDidDocument(bytes32 did) external view returns (string baseDocument, string alsoKnownAs, bytes32[] controllers, bytes32[] vMethodIds, struct IDidDocumentDetailed.VMethod[] vMethods, struct IDidDocumentDetailed.VRelationship[] vRelationships)
+function getDidDocument(bytes32 did) external view returns (string baseDocument, string[] alsoKnownAs, bytes32[] controllers, bytes32[] vMethodIds, struct IDidDocumentDetailed.VMethod[] vMethods, struct IDidDocumentDetailed.VRelationship[] vRelationships)
 ```
 
 Retrieves the complete current DID document with all verification methods
@@ -721,7 +721,7 @@ verification methods, and relationships as they exist at the current timestamp_
 | Name           | Type                                        | Description                                                      |
 | -------------- | ------------------------------------------- | ---------------------------------------------------------------- |
 | baseDocument   | string                                      | The base JSON-LD document content                                |
-| alsoKnownAs    | string                                      | The alternative identifier for the entity                        |
+| alsoKnownAs    | string[]                                    | The alternative identifier for the entity                        |
 | controllers    | bytes32[]                                   | Array of DID strings authorised to control this document         |
 | vMethodIds     | bytes32[]                                   | Array of verification method identifiers                         |
 | vMethods       | struct IDidDocumentDetailed.VMethod[]       | Array of verification method structures with keys and algorithms |
@@ -730,7 +730,7 @@ verification methods, and relationships as they exist at the current timestamp_
 ### getDidDocumentByTimestamp
 
 ```solidity
-function getDidDocumentByTimestamp(bytes32 did, uint256 timestamp) external view returns (string baseDocument, string alsoKnownAs, bytes32[] controllers, bytes32[] vMethodIds, struct IDidDocumentDetailed.VMethod[] vMethods, struct IDidDocumentDetailed.VRelationship[] vRelationships)
+function getDidDocumentByTimestamp(bytes32 did, uint256 timestamp) external view returns (string baseDocument, string[] alsoKnownAs, bytes32[] controllers, bytes32[] vMethodIds, struct IDidDocumentDetailed.VMethod[] vMethods, struct IDidDocumentDetailed.VRelationship[] vRelationships)
 ```
 
 Retrieves the DID document as it existed at a specific historical timestamp
@@ -750,7 +750,7 @@ verification methods and relationships that were valid at the specified time_
 | Name           | Type                                        | Description                                                 |
 | -------------- | ------------------------------------------- | ----------------------------------------------------------- |
 | baseDocument   | string                                      | The base JSON-LD document content at the specified time     |
-| alsoKnownAs    | string                                      | The alternative identifier for the entity                   |
+| alsoKnownAs    | string[]                                    | The alternative identifier for the entity                   |
 | controllers    | bytes32[]                                   | Array of DID strings authorised to control this document    |
 | vMethodIds     | bytes32[]                                   | Array of verification method identifiers valid at timestamp |
 | vMethods       | struct IDidDocumentDetailed.VMethod[]       | Array of verification methods that were active at timestamp |

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {ERC20Internal} from '../../erc20/ERC20Internal.sol';
+import {ERC203643InternalCommon} from '../ERC203643InternalCommon.sol';
 import {_ERC203643_CAPPED_STORAGE_POSITION} from '../../../constants/storagePositions.sol';
 import {IERC203643Capped} from './IERC203643Capped.sol';
 
@@ -18,7 +18,7 @@ import {IERC203643Capped} from './IERC203643Capped.sol';
  *      - Behavior adapts automatically for ERC20/ERC3643 through ERC203643InternalCommon._beforeTokenTransfer.
  *      This contract is intended to be inherited by other contracts, which will provide external interface functions.
  */
-abstract contract ERC203643CappedInternal is ERC20Internal {
+abstract contract ERC203643CappedInternal is ERC203643InternalCommon {
     /// @dev Storage struct for capped functionality
     struct ERC203643CappedStorage {
         uint256 cap;

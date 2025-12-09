@@ -5,11 +5,9 @@ pragma solidity ^0.8.28;
 // Imports
 // =======================
 
-import {ERC203643CappedInternal} from './erc203643capped/ERC203643CappedInternal.sol';
 import {ERC3643FreezeInternal} from '../erc3643/token/erc3643freeze/ERC3643FreezeInternal.sol';
 import {ERC20SnapshotInternal} from '../erc20/extensions/snapshot/ERC20SnapshotInternal.sol';
 import {ERC3643ComplianceInternal} from '../erc3643/compliance/ERC3643ComplianceInternal.sol';
-import {BasicWhitelistInternal} from '../../access/whitelist/basic/BasicWhitelistInternal.sol';
 import {IBasicWhitelist} from '../../access/whitelist/basic/IBasicWhitelist.sol';
 import {ICompliance} from '../erc3643/compliance/ICompliance.sol';
 import {_CONTROLLER_ROLE} from '../../constants/roles.sol';
@@ -24,10 +22,8 @@ import {IERC3643Freeze} from '../erc3643/token/erc3643freeze/IERC3643Freeze.sol'
 /// @dev Provides unified token transfer logic for both ERC20 and ERC3643 standards
 abstract contract ERC203643InternalCommon is
     ERC20SnapshotInternal,
-    ERC203643CappedInternal,
     ERC3643FreezeInternal,
-    ERC3643ComplianceInternal,
-    BasicWhitelistInternal
+    ERC3643ComplianceInternal
 {
     // =======================
     // Transfer Hooks

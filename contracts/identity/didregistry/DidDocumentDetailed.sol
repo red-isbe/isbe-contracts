@@ -196,7 +196,7 @@ abstract contract DidDocumentDetailed is
         override
         returns (
             string memory baseDocument_,
-            string memory alsoKnownAs_,
+            string[] memory alsoKnownAs_,
             bytes32[] memory controllers_,
             bytes32[] memory vMethodIds_,
             VMethod[] memory vMethods_,
@@ -215,7 +215,7 @@ abstract contract DidDocumentDetailed is
         override
         returns (
             string memory baseDocument_,
-            string memory alsoKnownAs_,
+            string[] memory alsoKnownAs_,
             bytes32[] memory controllers_,
             bytes32[] memory vMethodIds_,
             VMethod[] memory vMethods_,

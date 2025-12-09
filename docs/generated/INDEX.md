@@ -32,6 +32,7 @@
 - [identity/ens/publicresolver/profiles/name](identity/ens/publicresolver/profiles/name.md)
 - [identity/ens/publicresolver/profiles/pubkey](identity/ens/publicresolver/profiles/pubkey.md)
 - [identity/ens/publicresolver/profiles/text](identity/ens/publicresolver/profiles/text.md)
+- [identity/trustedissuersregistry](identity/trustedissuersregistry.md)
 - [pause](pause.md)
 - [proxies/ERC1967](proxies/ERC1967.md)
 - [proxies/beacon](proxies/beacon.md)

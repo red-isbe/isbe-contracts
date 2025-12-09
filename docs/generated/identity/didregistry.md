@@ -334,13 +334,13 @@ function getDids(uint256 _page, uint256 _pageSize) external view returns (bytes3
 ### getDidDocument
 
 ```solidity
-function getDidDocument(bytes32 _did) external view returns (string baseDocument_, string alsoKnownAs_, bytes32[] controllers_, bytes32[] vMethodIds_, struct IDidDocumentDetailed.VMethod[] vMethods_, struct IDidDocumentDetailed.VRelationship[] vRelationships_)
+function getDidDocument(bytes32 _did) external view returns (string baseDocument_, string[] alsoKnownAs_, bytes32[] controllers_, bytes32[] vMethodIds_, struct IDidDocumentDetailed.VMethod[] vMethods_, struct IDidDocumentDetailed.VRelationship[] vRelationships_)
 ```
 
 ### getDidDocumentByTimestamp
 
 ```solidity
-function getDidDocumentByTimestamp(bytes32 _did, uint256 _timestamp) external view returns (string baseDocument_, string alsoKnownAs_, bytes32[] controllers_, bytes32[] vMethodIds_, struct IDidDocumentDetailed.VMethod[] vMethods_, struct IDidDocumentDetailed.VRelationship[] vRelationships_)
+function getDidDocumentByTimestamp(bytes32 _did, uint256 _timestamp) external view returns (string baseDocument_, string[] alsoKnownAs_, bytes32[] controllers_, bytes32[] vMethodIds_, struct IDidDocumentDetailed.VMethod[] vMethods_, struct IDidDocumentDetailed.VRelationship[] vRelationships_)
 ```
 
 ---
@@ -431,7 +431,7 @@ Complete DID document structure with verification methods and relationships
 ```solidity
 struct DidDocument {
   string baseDocument;
-  string alsoKnownAs;
+  string[] alsoKnownAs;
   bytes32[] controllers;
   mapping(bytes32 => bool) controllerExist;
   mapping(bytes32 => struct IDidDocumentDetailed.VMethod) vMethods;
@@ -613,13 +613,13 @@ function _getDids(uint256 _page, uint256 _pageSize) internal view returns (bytes
 ### \_getDidDocument
 
 ```solidity
-function _getDidDocument(bytes32 _did) internal view returns (string baseDocument_, string alsoKnownAs_, bytes32[] controllers_, bytes32[] vMethodIds_, struct IDidDocumentDetailed.VMethod[] vMethods_, struct IDidDocumentDetailed.VRelationship[] vRelationships_)
+function _getDidDocument(bytes32 _did) internal view returns (string baseDocument_, string[] alsoKnownAs_, bytes32[] controllers_, bytes32[] vMethodIds_, struct IDidDocumentDetailed.VMethod[] vMethods_, struct IDidDocumentDetailed.VRelationship[] vRelationships_)
 ```
 
 ### \_getDidDocumentByTimestamp
 
 ```solidity
-function _getDidDocumentByTimestamp(bytes32 _did, uint256 _timestamp) internal view returns (string baseDocument_, string alsoKnownAs_, bytes32[] controllers_, bytes32[] vMethodIds_, struct IDidDocumentDetailed.VMethod[] vMethods_, struct IDidDocumentDetailed.VRelationship[] vRelationships_)
+function _getDidDocumentByTimestamp(bytes32 _did, uint256 _timestamp) internal view returns (string baseDocument_, string[] alsoKnownAs_, bytes32[] controllers_, bytes32[] vMethodIds_, struct IDidDocumentDetailed.VMethod[] vMethods_, struct IDidDocumentDetailed.VRelationship[] vRelationships_)
 ```
 
 ### \_checkEllipticType

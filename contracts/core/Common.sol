@@ -6,6 +6,7 @@ import {ERC165Internal} from './ERC165Internal.sol';
 import {Initializable} from './Initializable.sol';
 import {OwnableInternal} from '../access/ownable/OwnableInternal.sol';
 import {PauseInternalCommon} from '../pause/PauseInternalCommon.sol';
+import {BasicWhitelistInternal} from '../access/whitelist/basic/BasicWhitelistInternal.sol';
 
 /**
  * @title Common
@@ -21,7 +22,8 @@ abstract contract Common is
     ERC165Internal,
     AccessControlInternal,
     PauseInternalCommon,
-    OwnableInternal
+    OwnableInternal,
+    BasicWhitelistInternal
 {
     /**
      * @dev Checks if an address equals to zero address
