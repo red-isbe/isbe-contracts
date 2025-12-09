@@ -141,5 +141,15 @@ import './genesisGeneration'
 import './bootstapping'
 import './includePKgenesis'
 
-// Anchoring
-import './client/Anchoring'
+// Anchoring tasks
+import './client/anchoring/getRegisteredChains'
+import './client/anchoring/getChainMetadata'
+import './client/anchoring/getAnchoringStats'
+import './client/anchoring/getBlocksInRange'
+import './client/anchoring/getLastNBlocks'
+import './client/anchoring/isBlockAnchored'
+import './client/anchoring/getAnchoredBlock'
+import './client/anchoring/getLastAnchoredBlock'
+import './client/anchoring/registerChain'
+import './client/anchoring/anchorBlock'
+import './client/anchoring/anchorBlocksBatch'
