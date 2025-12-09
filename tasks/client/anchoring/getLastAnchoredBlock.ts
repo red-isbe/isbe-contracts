@@ -1,5 +1,6 @@
 import { task, types } from 'hardhat/config'
-import { getLastAnchoredBlock } from '../../../scripts/client/anchoringCoreFacet'
+import { getLastAnchoredBlock } from '../../../scripts/client/anchoring/getLastAnchoredBlock'
+import { SignatureProviderFactory } from '../../deployment/providers/SignatureProviderFactory'
 
 /*
 npx hardhat anchoringcorefacet:getlastanchoredblock \
@@ -32,10 +33,14 @@ task(
         console.log('  _chainId:', chainid.toString())
         console.log(`Network: ${hre.network.name}`)
 
+        const signatureProvider = SignatureProviderFactory.create(hre)
+        console.log(`Curve: ${signatureProvider.getCurveType()}`)
+
         const result = await getLastAnchoredBlock(
             hre,
             governancediamond,
-            chainid
+            chainid,
+            signatureProvider
         )
 
         console.log('\n✅ getLastAnchoredBlock result:')

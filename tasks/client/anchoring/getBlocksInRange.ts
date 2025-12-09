@@ -1,5 +1,6 @@
 import { task, types } from 'hardhat/config'
-import { getBlocksInRange } from '../../../scripts/client/anchoringCoreFacet'
+import { getBlocksInRange } from '../../../scripts/client/anchoring/getBlocksInRange'
+import { SignatureProviderFactory } from '../../deployment/providers/SignatureProviderFactory'
 
 /*
 npx hardhat anchoringcorefacet:getblocksinrange \
@@ -51,12 +52,16 @@ task(
             console.log('  _toBlock   :', toblock.toString())
             console.log(`Network: ${hre.network.name}`)
 
+            const signatureProvider = SignatureProviderFactory.create(hre)
+            console.log(`Curve: ${signatureProvider.getCurveType()}`)
+
             const result = await getBlocksInRange(
                 hre,
                 governancediamond,
                 chainid,
                 fromblock,
-                toblock
+                toblock,
+                signatureProvider
             )
 
             console.log('\n✅ getBlocksInRange result:')

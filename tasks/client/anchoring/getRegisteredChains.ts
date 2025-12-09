@@ -1,5 +1,6 @@
 import { task, types } from 'hardhat/config'
-import { getRegisteredChains } from '../../../scripts/client/anchoringCoreFacet'
+import { getRegisteredChains } from '../../../scripts/client/anchoring/getRegisteredChains'
+import { SignatureProviderFactory } from '../../deployment/providers/SignatureProviderFactory'
 
 /*
 npx hardhat anchoringcorefacet:getregisteredchains \
@@ -45,17 +46,21 @@ task(
         console.log('  _pageLength:', pagelength.toString())
         console.log(`Network: ${hre.network.name}`)
 
+        const signatureProvider = SignatureProviderFactory.create(hre)
+        console.log(`Curve: ${signatureProvider.getCurveType()}`)
+
         const result = await getRegisteredChains(
             hre,
             governancediamond,
             pageindex,
-            pagelength
+            pagelength,
+            signatureProvider
         )
 
         console.log('\n✅ getRegisteredChains result:')
-        console.log('  _thisChainId      :', result._thisChainId.toString())
+        console.log('  thisChainId      :', result.thisChainId.toString())
         console.log(
-            '  _registeredChainIds:',
-            result._registeredChainIds.map((id) => id.toString()).join(', ')
+            '  registeredChainIds:',
+            result.registeredChainIds.map((id) => id.toString()).join(', ')
         )
     })

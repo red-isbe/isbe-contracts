@@ -1,5 +1,6 @@
 import { task, types } from 'hardhat/config'
-import { getLastNBlocks } from '../../../scripts/client/anchoringCoreFacet'
+import { getLastNBlocks } from '../../../scripts/client/anchoring/getLastNBlocks'
+import { SignatureProviderFactory } from '../../deployment/providers/SignatureProviderFactory'
 
 /*
 npx hardhat anchoringcorefacet:getlastnblocks \
@@ -42,11 +43,15 @@ task(
         console.log('  _count  :', count.toString())
         console.log(`Network: ${hre.network.name}`)
 
+        const signatureProvider = SignatureProviderFactory.create(hre)
+        console.log(`Curve: ${signatureProvider.getCurveType()}`)
+
         const result = await getLastNBlocks(
             hre,
             governancediamond,
             chainid,
-            count
+            count,
+            signatureProvider
         )
 
         console.log('\n✅ getLastNBlocks result:')

@@ -1,5 +1,6 @@
 import { task, types } from 'hardhat/config'
-import { getAnchoringStats } from '../../../scripts/client/anchoringCoreFacet'
+import { getAnchoringStats } from '../../../scripts/client/anchoring/getAnchoringStats'
+import { SignatureProviderFactory } from '../../deployment/providers/SignatureProviderFactory'
 
 /*
 npx hardhat anchoringcorefacet:getanchoringstats \
@@ -32,16 +33,21 @@ task(
         console.log('  _chainId:', chainid.toString())
         console.log(`Network: ${hre.network.name}`)
 
-        const result = await getAnchoringStats(hre, governancediamond, chainid)
+        const signatureProvider = SignatureProviderFactory.create(hre)
+        console.log(`Curve: ${signatureProvider.getCurveType()}`)
+
+        const result = await getAnchoringStats(
+            hre,
+            governancediamond,
+            chainid,
+            signatureProvider
+        )
 
         console.log(
             '\n✅ getAnchoringStats result for ' + chainid.toString() + ':'
         )
-        console.log('  _totalAnchors     :', result._totalAnchors.toString())
-        console.log(
-            '  _lastAnchoredBlock:',
-            result._lastAnchoredBlock.toString()
-        )
-        console.log('  _thisChainId      :', result._thisChainId.toString())
-        console.log('  _anchoredChainId  :', result._anchoredChainId.toString())
+        console.log('  totalAnchors     :', result.totalAnchors.toString())
+        console.log('  lastAnchoredBlock:', result.lastAnchoredBlock.toString())
+        console.log('  thisChainId      :', result.thisChainId.toString())
+        console.log('  anchoredChainId  :', result.anchoredChainId.toString())
     })

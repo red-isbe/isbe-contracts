@@ -1,5 +1,6 @@
 import { task, types } from 'hardhat/config'
-import { getChainMetadata } from '../../../scripts/client/anchoringCoreFacet'
+import { getChainMetadata } from '../../../scripts/client/anchoring/getChainMetadata'
+import { SignatureProviderFactory } from '../../deployment/providers/SignatureProviderFactory'
 
 /*
 npx hardhat anchoringcorefacet:getchainmetadata \
@@ -25,12 +26,19 @@ task(
         console.log('Function: getChainMetadata()')
         console.log(`Network: ${hre.network.name}`)
 
-        const result = await getChainMetadata(hre, governancediamond)
+        const signatureProvider = SignatureProviderFactory.create(hre)
+        console.log(`Curve: ${signatureProvider.getCurveType()}`)
+
+        const result = await getChainMetadata(
+            hre,
+            governancediamond,
+            signatureProvider
+        )
 
         console.log('\n✅ getChainMetadata result:')
-        console.log('  _thisChainId      :', result._thisChainId.toString())
+        console.log('  thisChainId      :', result.thisChainId.toString())
         console.log(
-            '  _registeredChainIds:',
-            result._registeredChainIds.map((id) => id.toString()).join(', ')
+            '  registeredChainIds:',
+            result.registeredChainIds.map((id) => id.toString()).join(', ')
         )
     })

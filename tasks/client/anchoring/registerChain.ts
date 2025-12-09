@@ -1,6 +1,6 @@
 import { task, types } from 'hardhat/config'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
-import { registerChain } from '../../../scripts/client/anchoringCoreFacet'
+import { registerChain } from '../../../scripts/client/anchoring/registerChain'
 import { SignatureProviderFactory } from '../../deployment/providers/SignatureProviderFactory'
 
 /*

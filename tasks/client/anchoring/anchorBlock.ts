@@ -1,6 +1,6 @@
 import { task, types } from 'hardhat/config'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
-import { anchorBlock } from '../../../scripts/client/anchoringCoreFacet'
+import { anchorBlock } from '../../../scripts/client/anchoring/anchorBlock'
 import { SignatureProviderFactory } from '../../deployment/providers/SignatureProviderFactory'
 
 /*

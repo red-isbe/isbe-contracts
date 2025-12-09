@@ -1,5 +1,6 @@
 import { task, types } from 'hardhat/config'
-import { isBlockAnchored } from '../../../scripts/client/anchoringCoreFacet'
+import { isBlockAnchored } from '../../../scripts/client/anchoring/isBlockAnchored'
+import { SignatureProviderFactory } from '../../deployment/providers/SignatureProviderFactory'
 
 /*
 npx hardhat anchoringcorefacet:isblockanchored \
@@ -42,11 +43,15 @@ task(
         console.log('  _blockNumber :', blocknumber.toString())
         console.log(`Network: ${hre.network.name}`)
 
+        const signatureProvider = SignatureProviderFactory.create(hre)
+        console.log(`Curve: ${signatureProvider.getCurveType()}`)
+
         const result = await isBlockAnchored(
             hre,
             governancediamond,
             chainid,
-            blocknumber
+            blocknumber,
+            signatureProvider
         )
 
         console.log('\n✅ isBlockAnchored result:')
