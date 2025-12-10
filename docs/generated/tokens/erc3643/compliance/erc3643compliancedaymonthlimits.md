@@ -277,40 +277,6 @@ Emits DayMonthLimitsTransferHook event._
 | \_from   | address | The address of the sender.        |
 | \_amount | uint256 | The amount of tokens transferred. |
 
-### \_creationActionOnDayMonthLimits
-
-```solidity
-function _creationActionOnDayMonthLimits(address _to, uint256 _amount) internal
-```
-
-_Internal hook for post-mint operations for DayMonthLimits feature.
-Intentionally left empty for feature mapping.
-Emits DayMonthLimitsCreationHook event._
-
-#### Parameters
-
-| Name     | Type    | Description                          |
-| -------- | ------- | ------------------------------------ |
-| \_to     | address | The address receiving minted tokens. |
-| \_amount | uint256 | The amount of tokens minted.         |
-
-### \_destructionActionOnDayMonthLimits
-
-```solidity
-function _destructionActionOnDayMonthLimits(address _from, uint256 _amount) internal
-```
-
-_Internal hook for post-burn operations for DayMonthLimits feature.
-Intentionally left empty for feature mapping.
-Emits DayMonthLimitsDestructionHook event._
-
-#### Parameters
-
-| Name     | Type    | Description                               |
-| -------- | ------- | ----------------------------------------- |
-| \_from   | address | The address from which tokens are burned. |
-| \_amount | uint256 | The amount of tokens burned.              |
-
 ### \_getDailyLimit
 
 ```solidity

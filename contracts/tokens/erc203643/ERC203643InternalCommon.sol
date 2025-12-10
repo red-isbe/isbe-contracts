@@ -96,15 +96,15 @@ abstract contract ERC203643InternalCommon is
         _updateAccountSnapshot(_from);
         _updateTotalSupplySnapshot();
 
-        uint256 balance = _balanceOf(_from);
-        require(balance >= _amount, IERC20Isbe.BurnAmountExceedsBalance());
+        require(
+            _balanceOf(_from) >= _amount,
+            IERC20Isbe.BurnAmountExceedsBalance()
+        );
 
         _unfreezeIf3643Mode(_from, _amount);
 
         // Compliance hooks (ERC-3643 mode only). By pass by _COMPLIANCE_ROLE.
-        bool hasComplianceRole = _hasRole(_COMPLIANCE_ROLE, _msgSender());
-
-        if (hasComplianceRole) {
+        if (_hasRole(_COMPLIANCE_ROLE, _msgSender())) {
             // Compliance role bypasses the _destroyed hook
             // This is intentional for compliance contract operations
             return;

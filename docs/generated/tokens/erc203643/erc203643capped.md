@@ -42,7 +42,7 @@ ERC203643InternalCommon.\_beforeTokenTransfer.
 
      Respects the cap limit set for the token.
 
-     Emits a {Transfer} event from address(0) via {_mint}._
+     Emits a {Transfer} event from address(0) via {_mint} and a {Minted} event for off-chain listeners._
 
 #### Parameters
 
@@ -70,10 +70,10 @@ Respects the supply cap - will revert if minting would exceed the cap.
 
 #### Parameters
 
-| Name      | Type      | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| --------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| \_toList  | address[] | The addresses to mint tokens to (all must be verified for ERC3643)                                                                                                                                                                                                                                                                                                                                                                                                  |
-| \_amounts | uint256[] | The number of tokens to mint to each corresponding address Requirements: - Caller must have MINTER_ROLE - Contract must not be paused - Arrays must have the same length - For ERC3643: all addresses in `_toList` must be verified in Identity Registry - Total supply after minting must not exceed cap Emits: - {Transfer} event from address(0) for each mint via internal mint mechanism Reverts: - {CapExceeded} if batch minting would exceed the supply cap |
+| Name      | Type      | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| --------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| \_toList  | address[] | The addresses to mint tokens to (all must be verified for ERC3643)                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| \_amounts | uint256[] | The number of tokens to mint to each corresponding address Requirements: - Caller must have MINTER_ROLE - Contract must not be paused - Arrays must have the same length - For ERC3643: all addresses in `_toList` must be verified in Identity Registry - Total supply after minting must not exceed cap Emits: - {Transfer} event from address(0) for each mint via internal mint mechanism - {BatchMinted} event aggregating the batch inputs for off-chain listeners Reverts: - {CapExceeded} if batch minting would exceed the supply cap |
 
 ### setCap
 
@@ -303,6 +303,38 @@ _Should be triggered when `initializeCap` or `setCap` sets the supply cap._
 | -------- | ------- | ---------------------------------- |
 | operator | address | The account that set the cap.      |
 | newCap   | uint256 | The value of the token supply cap. |
+
+### Minted
+
+```solidity
+event Minted(address operator, address to, uint256 amount)
+```
+
+Emitted after successfully minting tokens to a single account.
+
+#### Parameters
+
+| Name     | Type    | Description                                            |
+| -------- | ------- | ------------------------------------------------------ |
+| operator | address | The account that executed the mint.                    |
+| to       | address | The recipient that received the freshly minted tokens. |
+| amount   | uint256 | The number of tokens minted for the recipient.         |
+
+### BatchMinted
+
+```solidity
+event BatchMinted(address operator, address[] toList, uint256[] amounts)
+```
+
+Emitted after successfully minting tokens to multiple accounts in a batch.
+
+#### Parameters
+
+| Name     | Type      | Description                                                   |
+| -------- | --------- | ------------------------------------------------------------- |
+| operator | address   | The account that executed the batch mint.                     |
+| toList   | address[] | The list of recipients that received tokens.                  |
+| amounts  | uint256[] | The number of tokens minted for each corresponding recipient. |
 
 ### NewCapIsLessThanTotalSupply
 

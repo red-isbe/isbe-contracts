@@ -21,6 +21,60 @@ interface IERC20Isbe is IERC20, IERC20Metadata {
      */
     event Erc20Initialized(string name, string symbol, uint8 decimals);
 
+    /**
+     * @notice Emitted after executing a batch transfer operation.
+     * @param sender The address initiating the batch transfer.
+     * @param recipients The list of recipient addresses.
+     * @param amounts The list of token amounts transferred to each recipient.
+     */
+    event BatchTransferExecuted(
+        address indexed sender,
+        address[] recipients,
+        uint256[] amounts
+    );
+
+    /**
+     * @notice Emitted when `transferFrom` successfully transfers tokens.
+     * @param operator The address executing the transfer.
+     * @param from The address the tokens are transferred from.
+     * @param to The address receiving the tokens.
+     * @param amount The amount of tokens transferred.
+     */
+    event TransferFromExecuted(
+        address indexed operator,
+        address indexed from,
+        address indexed to,
+        uint256 amount
+    );
+
+    /**
+     * @notice Emitted when `increaseAllowance` raises a spender's allowance.
+     * @param owner The address granting the allowance.
+     * @param spender The address whose allowance increases.
+     * @param addedValue The amount added to the allowance.
+     * @param newAllowance The resulting allowance after the increase.
+     */
+    event AllowanceIncreased(
+        address indexed owner,
+        address indexed spender,
+        uint256 addedValue,
+        uint256 newAllowance
+    );
+
+    /**
+     * @notice Emitted when `decreaseAllowance` reduces a spender's allowance.
+     * @param owner The address granting the allowance.
+     * @param spender The address whose allowance decreases.
+     * @param subtractedValue The amount subtracted from the allowance.
+     * @param newAllowance The resulting allowance after the decrease.
+     */
+    event AllowanceDecreased(
+        address indexed owner,
+        address indexed spender,
+        uint256 subtractedValue,
+        uint256 newAllowance
+    );
+
     /// @notice Error thrown when an operation tries to decrease the allowance, resulting in a negative value.
     error DecreasedAllowanceBellowZero();
 

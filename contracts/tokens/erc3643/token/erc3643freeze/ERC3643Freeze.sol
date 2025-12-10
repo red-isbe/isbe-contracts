@@ -84,6 +84,7 @@ abstract contract ERC3643Freeze is IERC3643Freeze, ERC203643InternalCommon {
      *
      * Emits:
      * - {AddressFrozen} event for each address
+     * - {BatchAddressFrozen} event aggregating the changes
      */
     function batchSetAddressFrozen(
         address[] calldata _userAddresses,
@@ -98,6 +99,7 @@ abstract contract ERC3643Freeze is IERC3643Freeze, ERC203643InternalCommon {
                 ++i;
             }
         }
+        emit BatchAddressFrozen(sender, _userAddresses, _freeze);
     }
 
     /**
@@ -112,6 +114,7 @@ abstract contract ERC3643Freeze is IERC3643Freeze, ERC203643InternalCommon {
      *
      * Emits:
      * - {TokensFrozen} event for each address
+     * - {BatchTokensFrozen} event aggregating the changes
      */
     function batchFreezePartialTokens(
         address[] calldata _userAddresses,
@@ -125,6 +128,7 @@ abstract contract ERC3643Freeze is IERC3643Freeze, ERC203643InternalCommon {
                 ++i;
             }
         }
+        emit BatchTokensFrozen(_msgSender(), _userAddresses, _amounts);
     }
 
     /**
@@ -139,6 +143,7 @@ abstract contract ERC3643Freeze is IERC3643Freeze, ERC203643InternalCommon {
      *
      * Emits:
      * - {TokensUnfrozen} event for each address
+     * - {BatchTokensUnfrozen} event aggregating the changes
      */
     function batchUnfreezePartialTokens(
         address[] calldata _userAddresses,
@@ -152,6 +157,7 @@ abstract contract ERC3643Freeze is IERC3643Freeze, ERC203643InternalCommon {
                 ++i;
             }
         }
+        emit BatchTokensUnfrozen(_msgSender(), _userAddresses, _amounts);
     }
 
     /**

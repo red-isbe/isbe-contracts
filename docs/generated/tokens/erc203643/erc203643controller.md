@@ -17,7 +17,7 @@ Forces a transfer of tokens between two addresses
 For ERC3643: If `_from` lacks enough free (unfrozen) balance but has sufficient total
 balance, it automatically unfreezes the missing portion to complete the transfer.
 
-     Emits a {ForceTransfer} event.
+     Emits a {ForcedTransfer} event.
      Emits a {TokensUnfrozen} event if `_amount` exceeds the free balance of `_from` (ERC3643 only).
      Emits a {Transfer} event via {_transfer}._
 
@@ -47,7 +47,7 @@ Forces a burn of tokens from an address
 For ERC3643: If `_from` lacks enough free (unfrozen) balance but has sufficient total
 balance, it automatically unfreezes the missing portion to complete the burn.
 
-     Emits a {ForceBurn} event.
+     Emits a {ForcedBurn} event.
      Emits a {TokensUnfrozen} event if `_amount` exceeds the free balance of `_from` (ERC3643 only).
      Emits a {Transfer} event to 0x0 via {_burn}._
 
@@ -79,10 +79,10 @@ No approval required from token holders.
 
 #### Parameters
 
-| Name            | Type      | Description                                                                                                                                                                                                                                                                     |
-| --------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| \_userAddresses | address[] | The addresses to burn tokens from                                                                                                                                                                                                                                               |
-| \_amounts       | uint256[] | The number of tokens to burn from each corresponding address Emits a `ForceBurn` event for each burn Emits a `TokensUnfrozen` event if `_amounts[i]` is higher than the free balance of `_userAddresses[i]` (ERC3643 only) Emits a `Transfer` event to address(0) for each burn |
+| Name            | Type      | Description                                                                                                                                                                                                                                                                      |
+| --------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| \_userAddresses | address[] | The addresses to burn tokens from                                                                                                                                                                                                                                                |
+| \_amounts       | uint256[] | The number of tokens to burn from each corresponding address Emits a `ForcedBurn` event for each burn Emits a `TokensUnfrozen` event if `_amounts[i]` is higher than the free balance of `_userAddresses[i]` (ERC3643 only) Emits a `Transfer` event to address(0) for each burn |
 
 ### batchForceTransfer
 
@@ -106,11 +106,11 @@ No approval required from token holders.
 
 #### Parameters
 
-| Name       | Type      | Description                                                                                                                                                                                                                                                              |
-| ---------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| \_fromList | address[] | The addresses to transfer tokens from                                                                                                                                                                                                                                    |
-| \_toList   | address[] | The addresses to transfer tokens to                                                                                                                                                                                                                                      |
-| \_amounts  | uint256[] | The number of tokens to transfer for each corresponding pair Emits a `ForceTransfer` event for each transfer Emits a `TokensUnfrozen` event if `_amounts[i]` is higher than the free balance of `_fromList[i]` (ERC3643 only) Emits a `Transfer` event for each transfer |
+| Name       | Type      | Description                                                                                                                                                                                                                                                               |
+| ---------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| \_fromList | address[] | The addresses to transfer tokens from                                                                                                                                                                                                                                     |
+| \_toList   | address[] | The addresses to transfer tokens to                                                                                                                                                                                                                                       |
+| \_amounts  | uint256[] | The number of tokens to transfer for each corresponding pair Emits a `ForcedTransfer` event for each transfer Emits a `TokensUnfrozen` event if `_amounts[i]` is higher than the free balance of `_fromList[i]` (ERC3643 only) Emits a `Transfer` event for each transfer |
 
 ### \_implementedInterfaces
 
@@ -194,7 +194,7 @@ function _forceBurn(address _from, uint256 _amount) internal
 ### \_forceTransfer
 
 ```solidity
-function _forceTransfer(address _sender, address _from, address _to, uint256 _amount) internal returns (bool success)
+function _forceTransfer(address _from, address _to, uint256 _amount) internal returns (bool success)
 ```
 
 ---
@@ -206,10 +206,10 @@ Interface for administrative control over ERC20 and ERC3643 tokens, allowing for
 _Intended for use in regulated environments or asset-backed tokens where such functionality is required.
 Behavior adapts automatically based on token type (ERC20 vs ERC3643)._
 
-### ForceTransfer
+### ForcedTransfer
 
 ```solidity
-event ForceTransfer(address operator, address from, address to, uint256 amount)
+event ForcedTransfer(address operator, address from, address to, uint256 amount)
 ```
 
 Emitted when tokens are forcefully transferred from one account to another
@@ -223,10 +223,10 @@ Emitted when tokens are forcefully transferred from one account to another
 | to       | address | The address the tokens are sent to         |
 | amount   | uint256 | The number of tokens transferred           |
 
-### ForceBurn
+### ForcedBurn
 
 ```solidity
-event ForceBurn(address operator, address from, uint256 amount)
+event ForcedBurn(address operator, address from, uint256 amount)
 ```
 
 Emitted when tokens are forcefully burned from an account
@@ -238,6 +238,39 @@ Emitted when tokens are forcefully burned from an account
 | operator | address | The address performing the forced burn |
 | from     | address | The address the tokens are burned from |
 | amount   | uint256 | The number of tokens burned            |
+
+### BatchForcedBurn
+
+```solidity
+event BatchForcedBurn(address operator, address[] _userAddresses, uint256[] _amounts)
+```
+
+Emitted when tokens are forcefully burned from multiple accounts in a batch
+
+#### Parameters
+
+| Name            | Type      | Description                                                |
+| --------------- | --------- | ---------------------------------------------------------- |
+| operator        | address   | The address performing the forced burn                     |
+| \_userAddresses | address[] | The list of addresses the tokens are burned from           |
+| \_amounts       | uint256[] | The number of tokens burned for each corresponding address |
+
+### BatchForcedTransfer
+
+```solidity
+event BatchForcedTransfer(address operator, address[] _fromList, address[] _toList, uint256[] _amounts)
+```
+
+Emitted when tokens are forcefully transferred between multiple accounts in a batch
+
+#### Parameters
+
+| Name       | Type      | Description                                                  |
+| ---------- | --------- | ------------------------------------------------------------ |
+| operator   | address   | The address performing the forced transfer                   |
+| \_fromList | address[] | The list of addresses the tokens are taken from              |
+| \_toList   | address[] | The list of addresses the tokens are sent to                 |
+| \_amounts  | uint256[] | The number of tokens transferred for each corresponding pair |
 
 ### forceTransfer
 
@@ -252,8 +285,7 @@ No approval required from token holder.
 
      For ERC3643 tokens: recipient must be verified and tokens may be unfrozen if needed.
      In case the `_from` address has not enough free tokens (unfrozen tokens)
-     but has a total balance higher or equal to the `_amount`
-     the tokens will be unfrozen to complete the transfer._
+     but has a total balance higher or equal to the `_amount`_
 
 #### Parameters
 
@@ -265,9 +297,9 @@ No approval required from token holder.
 
 #### Return Values
 
-| Name | Type | Description                                                                                                                                                                                          |
-| ---- | ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [0]  | bool | `true` if successful, otherwise reverts Emits a `ForceTransfer` event Emits a `TokensUnfrozen` event if `_amount` is higher than the free balance of `_from` (ERC3643 only) Emits a `Transfer` event |
+| Name | Type | Description                                                                                                                                                                                           |
+| ---- | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [0]  | bool | `true` if successful, otherwise reverts Emits a `ForcedTransfer` event Emits a `TokensUnfrozen` event if `_amount` is higher than the free balance of `_from` (ERC3643 only) Emits a `Transfer` event |
 
 ### forceBurn
 
@@ -287,10 +319,10 @@ No approval required from token holder.
 
 #### Parameters
 
-| Name     | Type    | Description                                                                                                                                                                                         |
-| -------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| \_from   | address | The address to burn tokens from                                                                                                                                                                     |
-| \_amount | uint256 | The number of tokens to burn Emits a `ForceBurn` event Emits a `TokensUnfrozen` event if `_amount` is higher than the free balance of `_from` (ERC3643 only) Emits a `Transfer` event to address(0) |
+| Name     | Type    | Description                                                                                                                                                                                          |
+| -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| \_from   | address | The address to burn tokens from                                                                                                                                                                      |
+| \_amount | uint256 | The number of tokens to burn Emits a `ForcedBurn` event Emits a `TokensUnfrozen` event if `_amount` is higher than the free balance of `_from` (ERC3643 only) Emits a `Transfer` event to address(0) |
 
 ### batchForceBurn
 
@@ -313,10 +345,10 @@ No approval required from token holders.
 
 #### Parameters
 
-| Name            | Type      | Description                                                                                                                                                                                                                                                                     |
-| --------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| \_userAddresses | address[] | The addresses to burn tokens from                                                                                                                                                                                                                                               |
-| \_amounts       | uint256[] | The number of tokens to burn from each corresponding address Emits a `ForceBurn` event for each burn Emits a `TokensUnfrozen` event if `_amounts[i]` is higher than the free balance of `_userAddresses[i]` (ERC3643 only) Emits a `Transfer` event to address(0) for each burn |
+| Name            | Type      | Description                                                                                                                                                                                                                                                                           |
+| --------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| \_userAddresses | address[] | The addresses to burn tokens from                                                                                                                                                                                                                                                     |
+| \_amounts       | uint256[] | The number of tokens to burn from each corresponding address Emits a `BatchForcedBurn` event for each burn Emits a `TokensUnfrozen` event if `_amounts[i]` is higher than the free balance of `_userAddresses[i]` (ERC3643 only) Emits a `Transfer` event to address(0) for each burn |
 
 ### batchForceTransfer
 
@@ -341,8 +373,8 @@ No approval required from token holders.
 
 #### Parameters
 
-| Name       | Type      | Description                                                                                                                                                                                                                                                              |
-| ---------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| \_fromList | address[] | The addresses to transfer tokens from                                                                                                                                                                                                                                    |
-| \_toList   | address[] | The addresses to transfer tokens to                                                                                                                                                                                                                                      |
-| \_amounts  | uint256[] | The number of tokens to transfer for each corresponding pair Emits a `ForceTransfer` event for each transfer Emits a `TokensUnfrozen` event if `_amounts[i]` is higher than the free balance of `_fromList[i]` (ERC3643 only) Emits a `Transfer` event for each transfer |
+| Name       | Type      | Description                                                                                                                                                                                                                                                                    |
+| ---------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| \_fromList | address[] | The addresses to transfer tokens from                                                                                                                                                                                                                                          |
+| \_toList   | address[] | The addresses to transfer tokens to                                                                                                                                                                                                                                            |
+| \_amounts  | uint256[] | The number of tokens to transfer for each corresponding pair Emits a `BatchForcedTransfer` event for each transfer Emits a `TokensUnfrozen` event if `_amounts[i]` is higher than the free balance of `_fromList[i]` (ERC3643 only) Emits a `Transfer` event for each transfer |

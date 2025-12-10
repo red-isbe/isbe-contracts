@@ -100,6 +100,8 @@ abstract contract ERC20 is IERC20Isbe, ERC203643InternalCommon {
                 ++i;
             }
         }
+
+        emit BatchTransferExecuted(from, _toList, _amounts);
     }
 
     /**
@@ -117,6 +119,7 @@ abstract contract ERC20 is IERC20Isbe, ERC203643InternalCommon {
         uint256 _amount
     ) external override whenNotPaused returns (bool) {
         _approve(_msgSender(), _spender, _amount);
+        emit IERC20.Approval(_msgSender(), _spender, _amount);
         return true;
     }
 
@@ -143,6 +146,7 @@ abstract contract ERC20 is IERC20Isbe, ERC203643InternalCommon {
     ) external override whenNotPaused returns (bool) {
         _spendAllowance(_from, _msgSender(), _amount);
         _transfer(_from, _to, _amount);
+        emit TransferFromExecuted(_msgSender(), _from, _to, _amount);
         return true;
     }
 
@@ -168,6 +172,8 @@ abstract contract ERC20 is IERC20Isbe, ERC203643InternalCommon {
             amount = _allowance(owner, _spender) + _addedValue;
         }
         _approve(owner, _spender, amount);
+        emit AllowanceIncreased(owner, _spender, _addedValue, amount);
+        emit IERC20.Approval(owner, _spender, amount);
         return true;
     }
 
@@ -200,6 +206,8 @@ abstract contract ERC20 is IERC20Isbe, ERC203643InternalCommon {
             amount = currentAllowance - _subtractedValue;
         }
         _approve(owner, _spender, amount);
+        emit AllowanceDecreased(owner, _spender, _subtractedValue, amount);
+        emit IERC20.Approval(owner, _spender, amount);
 
         return true;
     }

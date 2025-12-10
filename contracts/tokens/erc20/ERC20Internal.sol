@@ -159,7 +159,6 @@ abstract contract ERC20Internal is DidDocumentDetailedInternal {
         uint256 _amount
     ) internal virtual addressIsNotZero(_owner) addressIsNotZero(_spender) {
         _erc20Storage().allowances[_owner][_spender] = _amount;
-        emit IERC20.Approval(_owner, _spender, _amount);
     }
 
     /**
@@ -186,6 +185,7 @@ abstract contract ERC20Internal is DidDocumentDetailedInternal {
             amount = currentAllowance - _amount;
         }
         _approve(_owner, _spender, amount);
+        emit IERC20.Approval(_owner, _spender, amount);
     }
 
     // solhint-disable no-empty-blocks

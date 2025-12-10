@@ -161,7 +161,7 @@ struct Snapshots {
 ### \_snapshot
 
 ```solidity
-function _snapshot() internal virtual returns (uint256)
+function _snapshot() internal virtual returns (uint256 currentId_)
 ```
 
 ### \_updateAccountSnapshot

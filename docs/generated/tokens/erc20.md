@@ -577,6 +577,73 @@ Emitted when the ERC20 token is initialized with a name, symbol, and decimals.
 | symbol   | string | The symbol of the initialized ERC20 token.                    |
 | decimals | uint8  | The number of decimal places for the initialized ERC20 token. |
 
+### BatchTransferExecuted
+
+```solidity
+event BatchTransferExecuted(address sender, address[] recipients, uint256[] amounts)
+```
+
+Emitted after executing a batch transfer operation.
+
+#### Parameters
+
+| Name       | Type      | Description                                              |
+| ---------- | --------- | -------------------------------------------------------- |
+| sender     | address   | The address initiating the batch transfer.               |
+| recipients | address[] | The list of recipient addresses.                         |
+| amounts    | uint256[] | The list of token amounts transferred to each recipient. |
+
+### TransferFromExecuted
+
+```solidity
+event TransferFromExecuted(address operator, address from, address to, uint256 amount)
+```
+
+Emitted when `transferFrom` successfully transfers tokens.
+
+#### Parameters
+
+| Name     | Type    | Description                                  |
+| -------- | ------- | -------------------------------------------- |
+| operator | address | The address executing the transfer.          |
+| from     | address | The address the tokens are transferred from. |
+| to       | address | The address receiving the tokens.            |
+| amount   | uint256 | The amount of tokens transferred.            |
+
+### AllowanceIncreased
+
+```solidity
+event AllowanceIncreased(address owner, address spender, uint256 addedValue, uint256 newAllowance)
+```
+
+Emitted when `increaseAllowance` raises a spender's allowance.
+
+#### Parameters
+
+| Name         | Type    | Description                                 |
+| ------------ | ------- | ------------------------------------------- |
+| owner        | address | The address granting the allowance.         |
+| spender      | address | The address whose allowance increases.      |
+| addedValue   | uint256 | The amount added to the allowance.          |
+| newAllowance | uint256 | The resulting allowance after the increase. |
+
+### AllowanceDecreased
+
+```solidity
+event AllowanceDecreased(address owner, address spender, uint256 subtractedValue, uint256 newAllowance)
+```
+
+Emitted when `decreaseAllowance` reduces a spender's allowance.
+
+#### Parameters
+
+| Name            | Type    | Description                                 |
+| --------------- | ------- | ------------------------------------------- |
+| owner           | address | The address granting the allowance.         |
+| spender         | address | The address whose allowance decreases.      |
+| subtractedValue | uint256 | The amount subtracted from the allowance.   |
+| newAllowance    | uint256 | The resulting allowance after the decrease. |
+
 ### DecreasedAllowanceBellowZero
 
 ```solidity

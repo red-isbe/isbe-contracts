@@ -46,6 +46,10 @@ abstract contract ERC3643Compliance is ICompliance, ERC203643InternalCommon {
             'DailyMonthLimits',
             _dailyMonthLimitsEnabled
         );
+        emit ComplianceInitialized(
+            _maxBalanceEnabled,
+            _dailyMonthLimitsEnabled
+        );
     }
 
     // --- Set MaxBalance Activation ---

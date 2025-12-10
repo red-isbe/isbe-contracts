@@ -146,57 +146,6 @@ _Internal function to update the max balance value in storage._
 | ------------ | ------- | ------------------------------------ |
 | \_maxBalance | uint256 | The new max balance value to assign. |
 
-### \_transferActionOnMaxBalance
-
-```solidity
-function _transferActionOnMaxBalance(address _from, uint256 _amount) internal
-```
-
-_Internal hook for post-transfer operations for MaxBalance feature.
-Intentionally left empty for feature mapping.
-Emits MaxBalanceTransferHook event._
-
-#### Parameters
-
-| Name     | Type    | Description                       |
-| -------- | ------- | --------------------------------- |
-| \_from   | address | The address of the sender.        |
-| \_amount | uint256 | The amount of tokens transferred. |
-
-### \_creationActionOnMaxBalance
-
-```solidity
-function _creationActionOnMaxBalance(address _to, uint256 _amount) internal
-```
-
-_Internal hook for post-mint operations for MaxBalance feature.
-Intentionally left empty for feature mapping.
-Emits MaxBalanceCreationHook event._
-
-#### Parameters
-
-| Name     | Type    | Description                          |
-| -------- | ------- | ------------------------------------ |
-| \_to     | address | The address receiving minted tokens. |
-| \_amount | uint256 | The amount of tokens minted.         |
-
-### \_destructionActionOnMaxBalance
-
-```solidity
-function _destructionActionOnMaxBalance(address _from, uint256 _amount) internal
-```
-
-_Internal hook for post-burn operations for MaxBalance feature.
-Intentionally left empty for feature mapping.
-Emits MaxBalanceDestructionHook event._
-
-#### Parameters
-
-| Name     | Type    | Description                               |
-| -------- | ------- | ----------------------------------------- |
-| \_from   | address | The address from which tokens are burned. |
-| \_amount | uint256 | The amount of tokens burned.              |
-
 ### \_getMaxBalance
 
 ```solidity

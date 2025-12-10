@@ -128,6 +128,36 @@ the event is emitted by the token init function and by the setTokenInformation f
 `_newSymbol` is the symbol of the token
 `_newDecimals` is the decimals of the token
 
+### NameSet
+
+```solidity
+event NameSet(address operator, string newName)
+```
+
+Emitted when the token name is updated via {setName}.
+
+#### Parameters
+
+| Name     | Type    | Description                        |
+| -------- | ------- | ---------------------------------- |
+| operator | address | The account performing the update. |
+| newName  | string  | The new token name.                |
+
+### SymbolSet
+
+```solidity
+event SymbolSet(address operator, string newSymbol)
+```
+
+Emitted when the token symbol is updated via {setSymbol}.
+
+#### Parameters
+
+| Name      | Type    | Description                        |
+| --------- | ------- | ---------------------------------- |
+| operator  | address | The account performing the update. |
+| newSymbol | string  | The new token symbol.              |
+
 ### setName
 
 ```solidity
@@ -137,7 +167,7 @@ function setName(string _name) external
 @dev sets the token name
 @param \_name the name of token to set
 Only the owner of the token smart contract can call this function
-emits a `UpdatedTokenInformation` event
+emits `UpdatedTokenInformation` and `NameSet` events
 
 ### setSymbol
 
@@ -148,4 +178,4 @@ function setSymbol(string _symbol) external
 @dev sets the token symbol
 @param \_symbol the token symbol to set
 Only the owner of the token smart contract can call this function
-emits a `UpdatedTokenInformation` event
+emits `UpdatedTokenInformation` and `SymbolSet` events

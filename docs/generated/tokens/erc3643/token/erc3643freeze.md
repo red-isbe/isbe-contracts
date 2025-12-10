@@ -61,10 +61,10 @@ _Batch sets the freeze status for multiple wallets_
 
 #### Parameters
 
-| Name            | Type      | Description                                                                                                                                                                                         |
-| --------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| \_userAddresses | address[] | Array of addresses to update                                                                                                                                                                        |
-| \_freeze        | bool[]    | Array of freeze statuses (true/false) Requirements: - Caller must have FREEZE_ROLE - Contract must not be paused - Arrays must have the same length Emits: - {AddressFrozen} event for each address |
+| Name            | Type      | Description                                                                                                                                                                                                                                              |
+| --------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| \_userAddresses | address[] | Array of addresses to update                                                                                                                                                                                                                             |
+| \_freeze        | bool[]    | Array of freeze statuses (true/false) Requirements: - Caller must have FREEZE_ROLE - Contract must not be paused - Arrays must have the same length Emits: - {AddressFrozen} event for each address - {BatchAddressFrozen} event aggregating the changes |
 
 ### batchFreezePartialTokens
 
@@ -76,10 +76,10 @@ _Batch freezes specified amounts of tokens for multiple addresses_
 
 #### Parameters
 
-| Name            | Type      | Description                                                                                                                                                                             |
-| --------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| \_userAddresses | address[] | Array of addresses to freeze tokens for                                                                                                                                                 |
-| \_amounts       | uint256[] | Array of amounts to freeze Requirements: - Caller must have FREEZE_ROLE - Contract must not be paused - Arrays must have the same length Emits: - {TokensFrozen} event for each address |
+| Name            | Type      | Description                                                                                                                                                                                                                                 |
+| --------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| \_userAddresses | address[] | Array of addresses to freeze tokens for                                                                                                                                                                                                     |
+| \_amounts       | uint256[] | Array of amounts to freeze Requirements: - Caller must have FREEZE_ROLE - Contract must not be paused - Arrays must have the same length Emits: - {TokensFrozen} event for each address - {BatchTokensFrozen} event aggregating the changes |
 
 ### batchUnfreezePartialTokens
 
@@ -91,10 +91,10 @@ _Batch unfreezes specified amounts of tokens for multiple addresses_
 
 #### Parameters
 
-| Name            | Type      | Description                                                                                                                                                                                 |
-| --------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| \_userAddresses | address[] | Array of addresses to unfreeze tokens for                                                                                                                                                   |
-| \_amounts       | uint256[] | Array of amounts to unfreeze Requirements: - Caller must have FREEZE_ROLE - Contract must not be paused - Arrays must have the same length Emits: - {TokensUnfrozen} event for each address |
+| Name            | Type      | Description                                                                                                                                                                                                                                       |
+| --------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| \_userAddresses | address[] | Array of addresses to unfreeze tokens for                                                                                                                                                                                                         |
+| \_amounts       | uint256[] | Array of amounts to unfreeze Requirements: - Caller must have FREEZE_ROLE - Contract must not be paused - Arrays must have the same length Emits: - {TokensUnfrozen} event for each address - {BatchTokensUnfrozen} event aggregating the changes |
 
 ### isFrozen
 
@@ -353,6 +353,54 @@ the event is emitted by unfreezePartialTokens and batchUnfreezePartialTokens fun
 `_userAddress` is the wallet of the investor that is concerned by the freezing status
 `_amount` is the amount of tokens that are unfrozen
 
+### BatchAddressFrozen
+
+```solidity
+event BatchAddressFrozen(address operator, address[] userAddresses, bool[] statuses)
+```
+
+Emitted when multiple addresses have their frozen status updated in a single call.
+
+#### Parameters
+
+| Name          | Type      | Description                                    |
+| ------------- | --------- | ---------------------------------------------- |
+| operator      | address   | The account performing the batch update.       |
+| userAddresses | address[] | The list of investors impacted.                |
+| statuses      | bool[]    | The resulting frozen status for each investor. |
+
+### BatchTokensFrozen
+
+```solidity
+event BatchTokensFrozen(address operator, address[] userAddresses, uint256[] amounts)
+```
+
+Emitted when multiple addresses have tokens frozen in a single call.
+
+#### Parameters
+
+| Name          | Type      | Description                              |
+| ------------- | --------- | ---------------------------------------- |
+| operator      | address   | The account performing the batch freeze. |
+| userAddresses | address[] | The list of investors impacted.          |
+| amounts       | uint256[] | The amount frozen for each investor.     |
+
+### BatchTokensUnfrozen
+
+```solidity
+event BatchTokensUnfrozen(address operator, address[] userAddresses, uint256[] amounts)
+```
+
+Emitted when multiple addresses have tokens unfrozen in a single call.
+
+#### Parameters
+
+| Name          | Type      | Description                                |
+| ------------- | --------- | ------------------------------------------ |
+| operator      | address   | The account performing the batch unfreeze. |
+| userAddresses | address[] | The list of investors impacted.            |
+| amounts       | uint256[] | The amount unfrozen for each investor.     |
+
 ### UnfreezeAmountExceedsFrozen
 
 ```solidity
@@ -461,7 +509,7 @@ USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
 @param \_userAddresses The addresses for which to update frozen status
 @param \_freeze Frozen status of the corresponding address
 This function can only be called by a wallet set as agent of the token
-emits \_userAddresses.length `AddressFrozen` events
+emits `_userAddresses.length` `AddressFrozen` events and one `BatchAddressFrozen` event
 
 ### batchFreezePartialTokens
 
@@ -475,7 +523,7 @@ USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
 @param \_userAddresses The addresses on which tokens need to be frozen
 @param \_amounts the amount of tokens to freeze on the corresponding address
 This function can only be called by a wallet set as agent of the token
-emits \_userAddresses.length `TokensFrozen` events
+emits `_userAddresses.length` `TokensFrozen` events and one `BatchTokensFrozen` event
 
 ### batchUnfreezePartialTokens
 
@@ -489,7 +537,7 @@ USE WITH CARE OR YOU COULD LOSE TX FEES WITH AN "OUT OF GAS" TRANSACTION
 @param \_userAddresses The addresses on which tokens need to be unfrozen
 @param \_amounts the amount of tokens to unfreeze on the corresponding address
 This function can only be called by a wallet set as agent of the token
-emits \_userAddresses.length `TokensUnfrozen` events
+emits `_userAddresses.length` `TokensUnfrozen` events and one `BatchTokensUnfrozen` event
 
 ### isFrozen
 

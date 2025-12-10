@@ -382,10 +382,25 @@ Emitted when a compliance feature is enabled or disabled.
 | \_feature | string | The name of the feature (e.g., "MaxBalance"). |
 | \_enabled | bool   | True if enabled, false if disabled.           |
 
-### ComplianceTransfer
+### ComplianceInitialized
 
 ```solidity
-event ComplianceTransfer(address _from, address _to, uint256 _amount)
+event ComplianceInitialized(bool _maxBalanceEnabled, bool _dailyMonthLimitsEnabled)
+```
+
+Emitted when the compliance module is initialized.
+
+#### Parameters
+
+| Name                      | Type | Description                                    |
+| ------------------------- | ---- | ---------------------------------------------- |
+| \_maxBalanceEnabled       | bool | Initial flag for MaxBalance feature.           |
+| \_dailyMonthLimitsEnabled | bool | Initial flag for Daily/Monthly limits feature. |
+
+### ComplianceTransferred
+
+```solidity
+event ComplianceTransferred(address _from, address _to, uint256 _amount)
 ```
 
 Emitted when tokens are transferred between wallets.

@@ -2,7 +2,6 @@
 pragma solidity ^0.8.28;
 
 import {ERC203643InternalCommon} from '../ERC203643InternalCommon.sol';
-import {IERC203643Controller} from './IERC203643Controller.sol';
 
 /// @title ERC203643Controller
 /// @notice Implements unified force mechanism for both ERC20 and ERC3643 tokens
@@ -11,17 +10,14 @@ import {IERC203643Controller} from './IERC203643Controller.sol';
 abstract contract ERC203643ControllerInternal is ERC203643InternalCommon {
     function _forceBurn(address _from, uint256 _amount) internal {
         _burn(_from, _amount);
-        emit IERC203643Controller.ForceBurn(_msgSender(), _from, _amount);
     }
 
     function _forceTransfer(
-        address _sender,
         address _from,
         address _to,
         uint256 _amount
     ) internal returns (bool success) {
         _transfer(_from, _to, _amount);
-        emit IERC203643Controller.ForceTransfer(_sender, _from, _to, _amount);
         return true;
     }
 }

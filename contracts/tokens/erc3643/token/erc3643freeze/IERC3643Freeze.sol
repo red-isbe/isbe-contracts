@@ -39,6 +39,42 @@ interface IERC3643Freeze {
      */
     event TokensUnfrozen(address indexed _userAddress, uint256 _amount);
 
+    /**
+     * @notice Emitted when multiple addresses have their frozen status updated in a single call.
+     * @param operator The account performing the batch update.
+     * @param userAddresses The list of investors impacted.
+     * @param statuses The resulting frozen status for each investor.
+     */
+    event BatchAddressFrozen(
+        address indexed operator,
+        address[] userAddresses,
+        bool[] statuses
+    );
+
+    /**
+     * @notice Emitted when multiple addresses have tokens frozen in a single call.
+     * @param operator The account performing the batch freeze.
+     * @param userAddresses The list of investors impacted.
+     * @param amounts The amount frozen for each investor.
+     */
+    event BatchTokensFrozen(
+        address indexed operator,
+        address[] userAddresses,
+        uint256[] amounts
+    );
+
+    /**
+     * @notice Emitted when multiple addresses have tokens unfrozen in a single call.
+     * @param operator The account performing the batch unfreeze.
+     * @param userAddresses The list of investors impacted.
+     * @param amounts The amount unfrozen for each investor.
+     */
+    event BatchTokensUnfrozen(
+        address indexed operator,
+        address[] userAddresses,
+        uint256[] amounts
+    );
+
     /// @notice Error indicating that an attempt was made to unfreeze more tokens than are frozen
     /// @param account The address attempting to unfreeze tokens
     /// @param requested The amount requested to unfreeze
@@ -107,7 +143,7 @@ interface IERC3643Freeze {
      *  @param _userAddresses The addresses for which to update frozen status
      *  @param _freeze Frozen status of the corresponding address
      *  This function can only be called by a wallet set as agent of the token
-     *  emits _userAddresses.length `AddressFrozen` events
+     *  emits `_userAddresses.length` `AddressFrozen` events and one `BatchAddressFrozen` event
      */
     function batchSetAddressFrozen(
         address[] calldata _userAddresses,
@@ -121,7 +157,7 @@ interface IERC3643Freeze {
      *  @param _userAddresses The addresses on which tokens need to be frozen
      *  @param _amounts the amount of tokens to freeze on the corresponding address
      *  This function can only be called by a wallet set as agent of the token
-     *  emits _userAddresses.length `TokensFrozen` events
+     *  emits `_userAddresses.length` `TokensFrozen` events and one `BatchTokensFrozen` event
      */
     function batchFreezePartialTokens(
         address[] calldata _userAddresses,
@@ -135,7 +171,7 @@ interface IERC3643Freeze {
      *  @param _userAddresses The addresses on which tokens need to be unfrozen
      *  @param _amounts the amount of tokens to unfreeze on the corresponding address
      *  This function can only be called by a wallet set as agent of the token
-     *  emits _userAddresses.length `TokensUnfrozen` events
+     *  emits `_userAddresses.length` `TokensUnfrozen` events and one `BatchTokensUnfrozen` event
      */
     function batchUnfreezePartialTokens(
         address[] calldata _userAddresses,

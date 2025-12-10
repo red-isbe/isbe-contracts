@@ -19,7 +19,7 @@ abstract contract ERC203643Controller is
      *      For ERC3643: If `_from` lacks enough free (unfrozen) balance but has sufficient total
      *      balance, it automatically unfreezes the missing portion to complete the transfer.
      *
-     *      Emits a {ForceTransfer} event.
+     *      Emits a {ForcedTransfer} event.
      *      Emits a {TokensUnfrozen} event if `_amount` exceeds the free balance of `_from` (ERC3643 only).
      *      Emits a {Transfer} event via {_transfer}.
      *
@@ -39,7 +39,8 @@ abstract contract ERC203643Controller is
         onlyRole(_CONTROLLER_ROLE)
         returns (bool success)
     {
-        return _forceTransfer(_msgSender(), _from, _to, _amount);
+        success = _forceTransfer(_from, _to, _amount);
+        emit ForcedTransfer(_msgSender(), _from, _to, _amount);
     }
 
     /**
@@ -48,7 +49,7 @@ abstract contract ERC203643Controller is
      *      For ERC3643: If `_from` lacks enough free (unfrozen) balance but has sufficient total
      *      balance, it automatically unfreezes the missing portion to complete the burn.
      *
-     *      Emits a {ForceBurn} event.
+     *      Emits a {ForcedBurn} event.
      *      Emits a {TokensUnfrozen} event if `_amount` exceeds the free balance of `_from` (ERC3643 only).
      *      Emits a {Transfer} event to 0x0 via {_burn}.
      *
@@ -60,6 +61,7 @@ abstract contract ERC203643Controller is
         uint256 _amount
     ) external override whenNotPaused onlyRole(_CONTROLLER_ROLE) {
         _forceBurn(_from, _amount);
+        emit ForcedBurn(_msgSender(), _from, _amount);
     }
 
     /**
@@ -78,7 +80,7 @@ abstract contract ERC203643Controller is
      * @param _userAddresses The addresses to burn tokens from
      * @param _amounts The number of tokens to burn from each corresponding address
      *
-     * Emits a `ForceBurn` event for each burn
+     * Emits a `ForcedBurn` event for each burn
      * Emits a `TokensUnfrozen` event if `_amounts[i]`
      * is higher than the free balance of `_userAddresses[i]` (ERC3643 only)
      * Emits a `Transfer` event to address(0) for each burn
@@ -95,6 +97,7 @@ abstract contract ERC203643Controller is
                 ++i;
             }
         }
+        emit BatchForcedBurn(_msgSender(), _userAddresses, _amounts);
     }
 
     /**
@@ -115,7 +118,7 @@ abstract contract ERC203643Controller is
      * @param _toList The addresses to transfer tokens to
      * @param _amounts The number of tokens to transfer for each corresponding pair
      *
-     * Emits a `ForceTransfer` event for each transfer
+     * Emits a `ForcedTransfer` event for each transfer
      * Emits a `TokensUnfrozen` event if `_amounts[i]` is higher than the free balance of `_fromList[i]` (ERC3643 only)
      * Emits a `Transfer` event for each transfer
      */
@@ -127,13 +130,13 @@ abstract contract ERC203643Controller is
         uint256 fromListLength = _fromList.length;
         _checkSameLength(fromListLength, _toList.length);
         _checkSameLength(fromListLength, _amounts.length);
-        address sender = _msgSender();
         for (uint256 i; i < fromListLength; ) {
-            _forceTransfer(sender, _fromList[i], _toList[i], _amounts[i]);
+            _forceTransfer(_fromList[i], _toList[i], _amounts[i]);
             unchecked {
                 ++i;
             }
         }
+        emit BatchForcedTransfer(_msgSender(), _fromList, _toList, _amounts);
     }
 
     /**

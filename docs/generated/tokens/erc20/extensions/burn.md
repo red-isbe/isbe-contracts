@@ -110,6 +110,37 @@ _This interface defines two methods: - `burn`: Burns a specific amount of tokens
 Implementing contracts are expected to handle the necessary checks and emissions of events
 like `Transfer` to reflect changes in token balances and total supply._
 
+### Burned
+
+```solidity
+event Burned(address _account, uint256 _amount)
+```
+
+Emitted when tokens are burned from the caller's balance.
+
+#### Parameters
+
+| Name      | Type    | Description                           |
+| --------- | ------- | ------------------------------------- |
+| \_account | address | The address whose tokens were burned. |
+| \_amount  | uint256 | The amount of tokens burned.          |
+
+### BurnedFrom
+
+```solidity
+event BurnedFrom(address _operator, address _account, uint256 _amount)
+```
+
+Emitted when tokens are burned from another account via allowance.
+
+#### Parameters
+
+| Name       | Type    | Description                           |
+| ---------- | ------- | ------------------------------------- |
+| \_operator | address | The address executing the burn.       |
+| \_account  | address | The address whose tokens were burned. |
+| \_amount   | uint256 | The amount of tokens burned.          |
+
 ### burn
 
 ```solidity

@@ -36,6 +36,7 @@ abstract contract ERC3643Metadata is IERC3643Metadata, ERC203643InternalCommon {
         whenNotPaused
     {
         _setName(_newName);
+        emit NameSet(_msgSender(), _newName);
         emit UpdatedTokenInformation(_newName, _symbol(), _decimals());
     }
 
@@ -63,6 +64,7 @@ abstract contract ERC3643Metadata is IERC3643Metadata, ERC203643InternalCommon {
         whenNotPaused
     {
         _setSymbol(_newSymbol);
+        emit SymbolSet(_msgSender(), _newSymbol);
         emit UpdatedTokenInformation(_name(), _newSymbol, _decimals());
     }
 

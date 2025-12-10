@@ -1855,7 +1855,7 @@ describe('ERC20', function () {
                     MINTED
                 )
             )
-                .to.emit(contracts.erc20Controller, 'ForceBurn')
+                .to.emit(contracts.erc20Controller, 'ForcedBurn')
                 .withArgs(
                     contracts.ownerAddress,
                     contracts.otherAccountAddress,
@@ -1919,7 +1919,7 @@ describe('ERC20', function () {
                     MINTED
                 )
             )
-                .to.emit(contracts.erc20Controller, 'ForceTransfer')
+                .to.emit(contracts.erc20Controller, 'ForcedTransfer')
                 .withArgs(
                     contracts.ownerAddress,
                     contracts.otherAccountAddress,

@@ -51,12 +51,9 @@ abstract contract ERC20SnapshotInternal is ERC20Internal {
         uint256[] values;
     }
 
-    function _snapshot() internal virtual returns (uint256) {
+    function _snapshot() internal virtual returns (uint256 currentId_) {
         _erc20SnapshotStorage().currentSnapshotId.increment();
-
-        uint256 currentId = _getCurrentSnapshotId();
-        emit IERC20Snapshot.Snapshot(currentId);
-        return currentId;
+        currentId_ = _getCurrentSnapshotId();
     }
 
     function _updateAccountSnapshot(address _account) internal {

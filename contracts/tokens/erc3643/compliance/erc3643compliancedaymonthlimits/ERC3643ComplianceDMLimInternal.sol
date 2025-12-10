@@ -3,7 +3,6 @@ pragma solidity ^0.8.28;
 
 import {_ERC3643_COMPLIANCE_DMLIM_STORAGE_POSITION} from '../../../../constants/storagePositions.sol';
 import {DidDocumentDetailedInternal} from '../../../../identity/didregistry/DidDocumentDetailedInternal.sol';
-import {IERC3643ComplianceDMLim} from './IERC3643ComplianceDMLim.sol';
 /**
  * @title ERC3643ComplianceDMLimInternal
  * @notice Internal contract for managing ERC-3643 daily/monthly transfer limits.
@@ -85,40 +84,6 @@ abstract contract ERC3643ComplianceDMLimInternal is
         // Update counters (los límites ya han sido validados en compliance)
         transferCounter.dailyCount += _amount;
         transferCounter.monthlyCount += _amount;
-
-        emit IERC3643ComplianceDMLim.DayMonthLimitsTransferHook(_from, _amount);
-    }
-
-    /**
-     * @dev Internal hook for post-mint operations for DayMonthLimits feature.
-     *      Intentionally left empty for feature mapping.
-     *      Emits DayMonthLimitsCreationHook event.
-     * @param _to The address receiving minted tokens.
-     * @param _amount The amount of tokens minted.
-     */
-    // solhint-disable no-empty-blocks
-    function _creationActionOnDayMonthLimits(
-        address _to,
-        uint256 _amount
-    ) internal {
-        emit IERC3643ComplianceDMLim.DayMonthLimitsCreationHook(_to, _amount);
-    }
-
-    /**
-     * @dev Internal hook for post-burn operations for DayMonthLimits feature.
-     *      Intentionally left empty for feature mapping.
-     *      Emits DayMonthLimitsDestructionHook event.
-     * @param _from The address from which tokens are burned.
-     * @param _amount The amount of tokens burned.
-     */
-    function _destructionActionOnDayMonthLimits(
-        address _from,
-        uint256 _amount
-    ) internal {
-        emit IERC3643ComplianceDMLim.DayMonthLimitsDestructionHook(
-            _from,
-            _amount
-        );
     }
 
     /**

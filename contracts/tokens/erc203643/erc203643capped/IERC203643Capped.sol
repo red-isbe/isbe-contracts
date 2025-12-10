@@ -21,6 +21,26 @@ interface IERC203643Capped {
      */
     event CapSet(address operator, uint256 newCap);
 
+    /**
+     * @notice Emitted after successfully minting tokens to a single account.
+     * @param operator The account that executed the mint.
+     * @param to The recipient that received the freshly minted tokens.
+     * @param amount The number of tokens minted for the recipient.
+     */
+    event Minted(address indexed operator, address indexed to, uint256 amount);
+
+    /**
+     * @notice Emitted after successfully minting tokens to multiple accounts in a batch.
+     * @param operator The account that executed the batch mint.
+     * @param toList The list of recipients that received tokens.
+     * @param amounts The number of tokens minted for each corresponding recipient.
+     */
+    event BatchMinted(
+        address indexed operator,
+        address[] toList,
+        uint256[] amounts
+    );
+
     // --- Custom Errors ---
 
     /**

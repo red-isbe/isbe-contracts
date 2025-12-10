@@ -44,7 +44,7 @@ abstract contract ERC203643Capped is IERC203643Capped, ERC203643CappedInternal {
      *
      *      Respects the cap limit set for the token.
      *
-     *      Emits a {Transfer} event from address(0) via {_mint}.
+     *      Emits a {Transfer} event from address(0) via {_mint} and a {Minted} event for off-chain listeners.
      *
      * @param _to The address to mint tokens to
      * @param _amount The number of tokens to mint
@@ -54,6 +54,7 @@ abstract contract ERC203643Capped is IERC203643Capped, ERC203643CappedInternal {
         uint256 _amount
     ) external validateCap(_amount) whenNotPaused onlyRole(_MINTER_ROLE) {
         _mint(_to, _amount);
+        emit Minted(_msgSender(), _to, _amount);
     }
 
     /**
@@ -79,6 +80,7 @@ abstract contract ERC203643Capped is IERC203643Capped, ERC203643CappedInternal {
      *
      * Emits:
      * - {Transfer} event from address(0) for each mint via internal mint mechanism
+     * - {BatchMinted} event aggregating the batch inputs for off-chain listeners
      *
      * Reverts:
      * - {CapExceeded} if batch minting would exceed the supply cap
@@ -96,6 +98,7 @@ abstract contract ERC203643Capped is IERC203643Capped, ERC203643CappedInternal {
                 ++i;
             }
         }
+        emit BatchMinted(_msgSender(), _toList, _amounts);
     }
 
     /**

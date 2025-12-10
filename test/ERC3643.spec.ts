@@ -544,7 +544,7 @@ describe('ERC3643 Token', function () {
                 ).to.not.be.reverted
             })
 
-            it('GIVEN valid batch WHEN batchSetAddressFrozen THEN succeeds and emits multiple AddressFrozen events', async () => {
+            it('GIVEN valid batch WHEN batchSetAddressFrozen THEN succeeds and emit BatchAddressFrozen event', async () => {
                 const addresses = [aliceAddress, bobAddress, charlieAddress]
                 const freezeStates = [true, false, true]
 
@@ -553,16 +553,8 @@ describe('ERC3643 Token', function () {
                     .batchSetAddressFrozen(addresses, freezeStates)
 
                 await expect(tx)
-                    .to.emit(erc3643, 'AddressFrozen')
-                    .withArgs(aliceAddress, true, ownerAddress)
-
-                await expect(tx)
-                    .to.emit(erc3643, 'AddressFrozen')
-                    .withArgs(bobAddress, false, ownerAddress)
-
-                await expect(tx)
-                    .to.emit(erc3643, 'AddressFrozen')
-                    .withArgs(charlieAddress, true, ownerAddress)
+                    .to.emit(erc3643, 'BatchAddressFrozen')
+                    .withArgs(ownerAddress, addresses, freezeStates)
 
                 expect(await erc3643.isFrozen(aliceAddress)).to.equal(true)
                 expect(await erc3643.isFrozen(bobAddress)).to.equal(false)
@@ -603,6 +595,10 @@ describe('ERC3643 Token', function () {
                     .to.emit(erc3643, 'AddressFrozen')
                     .withArgs(aliceAddress, true, ownerAddress)
 
+                await expect(tx)
+                    .to.emit(erc3643, 'BatchAddressFrozen')
+                    .withArgs(ownerAddress, [aliceAddress], [true])
+
                 expect(await erc3643.isFrozen(aliceAddress)).to.equal(true)
             })
 
@@ -627,6 +623,10 @@ describe('ERC3643 Token', function () {
                 await expect(tx)
                     .to.emit(erc3643, 'AddressFrozen')
                     .withArgs(bobAddress, true, ownerAddress)
+
+                await expect(tx)
+                    .to.emit(erc3643, 'BatchAddressFrozen')
+                    .withArgs(ownerAddress, addresses, freezeStates)
 
                 expect(await erc3643.isFrozen(aliceAddress)).to.equal(false)
                 expect(await erc3643.isFrozen(bobAddress)).to.equal(true)
@@ -732,6 +732,14 @@ describe('ERC3643 Token', function () {
                     .to.emit(erc3643, 'TokensFrozen')
                     .withArgs(bobAddress, freezeAmount2)
 
+                await expect(tx)
+                    .to.emit(erc3643, 'BatchTokensFrozen')
+                    .withArgs(
+                        ownerAddress,
+                        [aliceAddress, bobAddress],
+                        [freezeAmount1, freezeAmount2]
+                    )
+
                 // Verify frozen tokens increased
                 expect(await erc3643.getFrozenTokens(aliceAddress)).to.equal(
                     '200'
@@ -795,6 +803,10 @@ describe('ERC3643 Token', function () {
                 await expect(tx)
                     .to.emit(erc3643, 'TokensFrozen')
                     .withArgs(aliceAddress, '0')
+
+                await expect(tx)
+                    .to.emit(erc3643, 'BatchTokensFrozen')
+                    .withArgs(ownerAddress, [aliceAddress], ['0'])
 
                 expect(await erc3643.getFrozenTokens(aliceAddress)).to.equal(
                     '0'
@@ -911,6 +923,14 @@ describe('ERC3643 Token', function () {
                 await expect(tx)
                     .to.emit(erc3643, 'TokensUnfrozen')
                     .withArgs(bobAddress, unfreezeAmount2)
+
+                await expect(tx)
+                    .to.emit(erc3643, 'BatchTokensUnfrozen')
+                    .withArgs(
+                        ownerAddress,
+                        [aliceAddress, bobAddress],
+                        [unfreezeAmount1, unfreezeAmount2]
+                    )
 
                 // Verify frozen tokens decreased
                 expect(await erc3643.getFrozenTokens(aliceAddress)).to.equal(
@@ -1130,7 +1150,7 @@ describe('ERC3643 Token', function () {
                                     transferAmount
                                 )
                         )
-                            .to.emit(erc3643Controller, 'ForceTransfer')
+                            .to.emit(erc3643Controller, 'ForcedTransfer')
                             .withArgs(
                                 ownerAddress,
                                 aliceAddress,
@@ -1168,7 +1188,7 @@ describe('ERC3643 Token', function () {
                         )
                             .to.emit(erc3643, 'TokensUnfrozen')
                             .withArgs(aliceAddress, expectedUnfreeze)
-                            .and.to.emit(erc3643Controller, 'ForceTransfer')
+                            .and.to.emit(erc3643Controller, 'ForcedTransfer')
                             .withArgs(
                                 ownerAddress,
                                 aliceAddress,
@@ -1203,7 +1223,7 @@ describe('ERC3643 Token', function () {
                         )
                             .to.emit(erc3643, 'TokensUnfrozen')
                             .withArgs(aliceAddress, totalBalance)
-                            .and.to.emit(erc3643Controller, 'ForceTransfer')
+                            .and.to.emit(erc3643Controller, 'ForcedTransfer')
                             .withArgs(
                                 ownerAddress,
                                 aliceAddress,
@@ -1228,7 +1248,7 @@ describe('ERC3643 Token', function () {
                                 .connect(owner)
                                 .forceTransfer(aliceAddress, bobAddress, 0n)
                         )
-                            .to.emit(erc3643Controller, 'ForceTransfer')
+                            .to.emit(erc3643Controller, 'ForcedTransfer')
                             .withArgs(
                                 ownerAddress,
                                 aliceAddress,
@@ -1272,7 +1292,7 @@ describe('ERC3643 Token', function () {
                                     transferAmount
                                 )
                         )
-                            .to.emit(erc3643Controller, 'ForceTransfer')
+                            .to.emit(erc3643Controller, 'ForcedTransfer')
                             .withArgs(
                                 ownerAddress,
                                 aliceAddress,
@@ -1306,7 +1326,7 @@ describe('ERC3643 Token', function () {
                                     transferAmount
                                 )
                         )
-                            .to.emit(erc3643Controller, 'ForceTransfer')
+                            .to.emit(erc3643Controller, 'ForcedTransfer')
                             .withArgs(
                                 ownerAddress,
                                 aliceAddress,
@@ -1359,7 +1379,7 @@ describe('ERC3643 Token', function () {
                                 .connect(owner)
                                 .forceBurn(aliceAddress, burnAmount)
                         )
-                            .to.emit(erc3643Controller, 'ForceBurn')
+                            .to.emit(erc3643Controller, 'ForcedBurn')
                             .withArgs(ownerAddress, aliceAddress, burnAmount)
                             .and.to.emit(erc20Facet, 'Transfer')
                             .withArgs(aliceAddress, ZeroAddress, burnAmount)
@@ -1388,7 +1408,7 @@ describe('ERC3643 Token', function () {
                         )
                             .to.emit(erc3643, 'TokensUnfrozen')
                             .withArgs(aliceAddress, expectedUnfreeze)
-                            .and.to.emit(erc3643Controller, 'ForceBurn')
+                            .and.to.emit(erc3643Controller, 'ForcedBurn')
                             .withArgs(ownerAddress, aliceAddress, burnAmount)
                             .and.to.emit(erc20Facet, 'Transfer')
                             .withArgs(aliceAddress, ZeroAddress, burnAmount)
@@ -1414,7 +1434,7 @@ describe('ERC3643 Token', function () {
                         )
                             .to.emit(erc3643, 'TokensUnfrozen')
                             .withArgs(aliceAddress, totalBalance)
-                            .and.to.emit(erc3643Controller, 'ForceBurn')
+                            .and.to.emit(erc3643Controller, 'ForcedBurn')
                             .withArgs(ownerAddress, aliceAddress, totalBalance)
 
                         expect(
@@ -1431,7 +1451,7 @@ describe('ERC3643 Token', function () {
                                 .connect(owner)
                                 .forceBurn(aliceAddress, 0n)
                         )
-                            .to.emit(erc3643Controller, 'ForceBurn')
+                            .to.emit(erc3643Controller, 'ForcedBurn')
                             .withArgs(ownerAddress, aliceAddress, 0n)
                             .and.to.not.emit(erc3643, 'TokensUnfrozen')
 
@@ -1462,7 +1482,7 @@ describe('ERC3643 Token', function () {
                                 .connect(owner)
                                 .forceBurn(aliceAddress, burnAmount)
                         )
-                            .to.emit(erc3643Controller, 'ForceBurn')
+                            .to.emit(erc3643Controller, 'ForcedBurn')
                             .withArgs(ownerAddress, aliceAddress, burnAmount)
 
                         expect(
@@ -1487,7 +1507,7 @@ describe('ERC3643 Token', function () {
                                 .connect(owner)
                                 .forceBurn(aliceAddress, burnAmount)
                         )
-                            .to.emit(erc3643Controller, 'ForceBurn')
+                            .to.emit(erc3643Controller, 'ForcedBurn')
                             .withArgs(ownerAddress, aliceAddress, burnAmount)
                             .and.to.not.emit(erc3643, 'TokensUnfrozen') // No unfreeze needed
 
@@ -1514,7 +1534,7 @@ describe('ERC3643 Token', function () {
                                 .connect(owner)
                                 .forceBurn(aliceAddress, burnAmount)
                         )
-                            .to.emit(erc3643Controller, 'ForceBurn')
+                            .to.emit(erc3643Controller, 'ForcedBurn')
                             .withArgs(ownerAddress, aliceAddress, burnAmount)
 
                         expect(
@@ -1617,7 +1637,7 @@ describe('ERC3643 Token', function () {
                         ).to.equal(initialBalance)
                     })
 
-                    it('GIVEN valid batch within free balance WHEN batchForceBurn THEN succeeds and emits multiple ForceBurn events', async () => {
+                    it('GIVEN valid batch within free balance WHEN batchForceBurn THEN succeeds and emits BatchForceBurn event', async () => {
                         const burnAmount1 = 100n
                         const burnAmount2 = 200n
 
@@ -1636,21 +1656,12 @@ describe('ERC3643 Token', function () {
 
                         // Check ForceBurn events
                         await expect(tx)
-                            .to.emit(erc3643Controller, 'ForceBurn')
-                            .withArgs(ownerAddress, aliceAddress, burnAmount1)
-
-                        await expect(tx)
-                            .to.emit(erc3643Controller, 'ForceBurn')
-                            .withArgs(ownerAddress, charlieAddress, burnAmount2)
-
-                        // Check Transfer events
-                        await expect(tx)
-                            .to.emit(erc20Facet, 'Transfer')
-                            .withArgs(aliceAddress, ZeroAddress, burnAmount1)
-
-                        await expect(tx)
-                            .to.emit(erc20Facet, 'Transfer')
-                            .withArgs(charlieAddress, ZeroAddress, burnAmount2)
+                            .to.emit(erc3643Controller, 'BatchForcedBurn')
+                            .withArgs(
+                                ownerAddress,
+                                [aliceAddress, charlieAddress],
+                                [burnAmount1, burnAmount2]
+                            )
 
                         // Verify balances
                         expect(
@@ -1771,12 +1782,12 @@ describe('ERC3643 Token', function () {
                             )
 
                         await expect(tx)
-                            .to.emit(erc3643Controller, 'ForceBurn')
-                            .withArgs(ownerAddress, aliceAddress, burnAmount1)
-
-                        await expect(tx)
-                            .to.emit(erc3643Controller, 'ForceBurn')
-                            .withArgs(ownerAddress, charlieAddress, burnAmount2)
+                            .to.emit(erc3643Controller, 'BatchForcedBurn')
+                            .withArgs(
+                                ownerAddress,
+                                [aliceAddress, charlieAddress],
+                                [burnAmount1, burnAmount2]
+                            )
 
                         expect(
                             await erc20Facet.balanceOf(aliceAddress)
@@ -1910,7 +1921,7 @@ describe('ERC3643 Token', function () {
                         ).to.equal(initialBalance)
                     })
 
-                    it('GIVEN valid batch within free balance WHEN batchForceTransfer THEN succeeds and emits multiple ForceTransfer events', async () => {
+                    it('GIVEN valid batch within free balance WHEN batchForceTransfer THEN succeeds and emit BatchForceTransfer event', async () => {
                         const transferAmount1 = 200n
                         const transferAmount2 = 300n
 
@@ -1924,23 +1935,13 @@ describe('ERC3643 Token', function () {
 
                         // Check ForceTransfer events
                         await expect(tx)
-                            .to.emit(erc3643Controller, 'ForceTransfer')
+                            .to.emit(erc3643Controller, 'BatchForcedTransfer')
                             .withArgs(
                                 ownerAddress,
-                                aliceAddress,
-                                bobAddress,
-                                transferAmount1
+                                [aliceAddress, charlieAddress],
+                                [bobAddress, davidAddress],
+                                [transferAmount1, transferAmount2]
                             )
-
-                        await expect(tx)
-                            .to.emit(erc3643Controller, 'ForceTransfer')
-                            .withArgs(
-                                ownerAddress,
-                                charlieAddress,
-                                davidAddress,
-                                transferAmount2
-                            )
-
                         // Check Transfer events
                         await expect(tx)
                             .to.emit(erc20Facet, 'Transfer')
@@ -2092,21 +2093,12 @@ describe('ERC3643 Token', function () {
                             )
 
                         await expect(tx)
-                            .to.emit(erc3643Controller, 'ForceTransfer')
+                            .to.emit(erc3643Controller, 'BatchForcedTransfer')
                             .withArgs(
                                 ownerAddress,
-                                aliceAddress,
-                                bobAddress,
-                                transferAmount1
-                            )
-
-                        await expect(tx)
-                            .to.emit(erc3643Controller, 'ForceTransfer')
-                            .withArgs(
-                                ownerAddress,
-                                charlieAddress,
-                                davidAddress,
-                                transferAmount2
+                                [aliceAddress, charlieAddress],
+                                [bobAddress, davidAddress],
+                                [transferAmount1, transferAmount2]
                             )
 
                         expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
@@ -2137,21 +2129,12 @@ describe('ERC3643 Token', function () {
                             )
 
                         await expect(tx)
-                            .to.emit(erc3643Controller, 'ForceTransfer')
+                            .to.emit(erc3643Controller, 'BatchForcedTransfer')
                             .withArgs(
                                 ownerAddress,
-                                aliceAddress,
-                                bobAddress,
-                                transferAmount1
-                            )
-
-                        await expect(tx)
-                            .to.emit(erc3643Controller, 'ForceTransfer')
-                            .withArgs(
-                                ownerAddress,
-                                charlieAddress,
-                                davidAddress,
-                                transferAmount2
+                                [aliceAddress, charlieAddress],
+                                [bobAddress, davidAddress],
+                                [transferAmount1, transferAmount2]
                             )
 
                         expect(await erc20Facet.balanceOf(bobAddress)).to.equal(
@@ -3223,7 +3206,7 @@ describe('ERC3643 Token', function () {
                         ).to.be.reverted
                     })
 
-                    it('GIVEN recipient WHEN mint within cap THEN succeeds and emits Transfer', async () => {
+                    it('GIVEN recipient WHEN mint within cap THEN succeeds and emit Mint event', async () => {
                         const mintAmount = 5000n
 
                         await expect(
@@ -3231,8 +3214,8 @@ describe('ERC3643 Token', function () {
                                 .connect(owner)
                                 .mint(aliceAddress, mintAmount)
                         )
-                            .to.emit(erc20Facet, 'Transfer')
-                            .withArgs(ZeroAddress, aliceAddress, mintAmount)
+                            .to.emit(erc3643Capped, 'Minted')
+                            .withArgs(ownerAddress, aliceAddress, mintAmount)
 
                         expect(
                             await erc20Facet.balanceOf(aliceAddress)
@@ -3351,7 +3334,7 @@ describe('ERC3643 Token', function () {
                         )
                     })
 
-                    it('GIVEN valid batch WHEN batchMint THEN succeeds and emits multiple Transfer events', async () => {
+                    it('GIVEN valid batch WHEN batchMint THEN succeeds and emit BatchMint event', async () => {
                         const addresses = [
                             aliceAddress,
                             bobAddress,
@@ -3364,16 +3347,8 @@ describe('ERC3643 Token', function () {
                             .batchMint(addresses, amounts)
 
                         await expect(tx)
-                            .to.emit(erc20Facet, 'Transfer')
-                            .withArgs(ZeroAddress, aliceAddress, amounts[0])
-
-                        await expect(tx)
-                            .to.emit(erc20Facet, 'Transfer')
-                            .withArgs(ZeroAddress, bobAddress, amounts[1])
-
-                        await expect(tx)
-                            .to.emit(erc20Facet, 'Transfer')
-                            .withArgs(ZeroAddress, charlieAddress, amounts[2])
+                            .to.emit(erc3643Capped, 'BatchMinted')
+                            .withArgs(ownerAddress, addresses, amounts)
 
                         expect(
                             await erc20Facet.balanceOf(aliceAddress)
@@ -3442,14 +3417,14 @@ describe('ERC3643 Token', function () {
                         ).to.equal(300n)
                     })
 
-                    it('GIVEN zero amount WHEN batchMint THEN succeeds and emits Transfer', async () => {
+                    it('GIVEN zero amount WHEN batchMint THEN succeeds and emit BatchMint', async () => {
                         const tx = await erc3643Capped
                             .connect(owner)
                             .batchMint([aliceAddress], [0n])
 
                         await expect(tx)
-                            .to.emit(erc20Facet, 'Transfer')
-                            .withArgs(ZeroAddress, aliceAddress, 0n)
+                            .to.emit(erc3643Capped, 'BatchMinted')
+                            .withArgs(ownerAddress, [aliceAddress], [0n])
 
                         expect(
                             await erc20Facet.balanceOf(aliceAddress)

@@ -13,6 +13,25 @@ pragma solidity ^0.8.28;
  */
 interface IERC20Burnable {
     /**
+     * @notice Emitted when tokens are burned from the caller's balance.
+     * @param _account The address whose tokens were burned.
+     * @param _amount The amount of tokens burned.
+     */
+    event Burned(address indexed _account, uint256 _amount);
+
+    /**
+     * @notice Emitted when tokens are burned from another account via allowance.
+     * @param _operator The address executing the burn.
+     * @param _account The address whose tokens were burned.
+     * @param _amount The amount of tokens burned.
+     */
+    event BurnedFrom(
+        address indexed _operator,
+        address indexed _account,
+        uint256 _amount
+    );
+
+    /**
      * @notice Burns a specific amount of tokens from the caller's account.
      * @dev Reduces the caller's token balance and the total supply by the specified `amount`.
      *      The caller must have at least the specified `amount` of tokens in their account.

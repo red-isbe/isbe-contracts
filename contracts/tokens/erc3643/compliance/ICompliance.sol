@@ -17,12 +17,22 @@ interface ICompliance {
     event ComplianceFeatureToggled(string indexed _feature, bool _enabled);
 
     /**
+     * @notice Emitted when the compliance module is initialized.
+     * @param _maxBalanceEnabled Initial flag for MaxBalance feature.
+     * @param _dailyMonthLimitsEnabled Initial flag for Daily/Monthly limits feature.
+     */
+    event ComplianceInitialized(
+        bool _maxBalanceEnabled,
+        bool _dailyMonthLimitsEnabled
+    );
+
+    /**
      * @notice Emitted when tokens are transferred between wallets.
      * @param _from The address of the sender.
      * @param _to The address of the receiver.
      * @param _amount The amount of tokens transferred.
      */
-    event ComplianceTransfer(
+    event ComplianceTransferred(
         address indexed _from,
         address indexed _to,
         uint256 _amount

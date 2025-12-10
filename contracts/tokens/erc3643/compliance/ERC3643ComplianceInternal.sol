@@ -4,7 +4,9 @@ pragma solidity ^0.8.28;
 import {ERC3643ComplianceMaxBalInternal} from './erc3643compliancemaxbalance/ERC3643ComplianceMaxBalInternal.sol';
 import {ERC3643ComplianceDMLimInternal} from './erc3643compliancedaymonthlimits/ERC3643ComplianceDMLimInternal.sol';
 import {_ERC3643_COMPLIANCE_STORAGE_POSITION} from '../../../constants/storagePositions.sol';
-import {ICompliance} from './ICompliance.sol'; // Importa la interfaz con los eventos
+import {ICompliance} from './ICompliance.sol';
+import {IERC3643ComplianceDMLim} from './erc3643compliancedaymonthlimits/IERC3643ComplianceDMLim.sol';
+import {IERC3643ComplianceMaxBal} from './erc3643compliancemaxbalance/IERC3643ComplianceMaxBal.sol';
 import {
     _FLAG_MAX_BALANCE,
     _FLAG_DAILY_MONTH
@@ -75,15 +77,22 @@ abstract contract ERC3643ComplianceInternal is
     ) internal returns (bool) {
         // Llamar al hook de MaxBalance para cobertura, aunque esté vacío
         if (_isMaxBalanceEnabled()) {
-            _transferActionOnMaxBalance(_from, _amount);
+            emit IERC3643ComplianceMaxBal.MaxBalanceTransferHook(
+                _from,
+                _amount
+            );
         }
         if (_isDailyMonthLimitsEnabled()) {
             _transferActionOnDayMonthLimits(_from, _amount);
+            emit IERC3643ComplianceDMLim.DayMonthLimitsTransferHook(
+                _from,
+                _amount
+            );
         }
 
         // Emitir evento solo si algún flag de compliance está activo
         if (_isMaxBalanceEnabled() || _isDailyMonthLimitsEnabled()) {
-            emit ICompliance.ComplianceTransfer(_from, _to, _amount);
+            emit ICompliance.ComplianceTransferred(_from, _to, _amount);
         }
         return true;
     }
@@ -97,11 +106,14 @@ abstract contract ERC3643ComplianceInternal is
     function _created(address _to, uint256 _amount) internal returns (bool) {
         // Llamar al hook de MaxBalance para cobertura, aunque esté vacío
         if (_isMaxBalanceEnabled()) {
-            _creationActionOnMaxBalance(_to, _amount);
+            emit IERC3643ComplianceMaxBal.MaxBalanceCreationHook(_to, _amount);
         }
         // Llamar al hook de DayMonthLimits para cobertura, aunque esté vacío
         if (_isDailyMonthLimitsEnabled()) {
-            _creationActionOnDayMonthLimits(_to, _amount);
+            emit IERC3643ComplianceDMLim.DayMonthLimitsCreationHook(
+                _to,
+                _amount
+            );
         }
         // Emitir evento solo si algún flag de compliance está activo
         if (_isMaxBalanceEnabled() || _isDailyMonthLimitsEnabled()) {
@@ -122,11 +134,17 @@ abstract contract ERC3643ComplianceInternal is
     ) internal returns (bool) {
         // Llamar al hook de MaxBalance para cobertura, aunque esté vacío
         if (_isMaxBalanceEnabled()) {
-            _destructionActionOnMaxBalance(_from, _amount);
+            emit IERC3643ComplianceMaxBal.MaxBalanceDestructionHook(
+                _from,
+                _amount
+            );
         }
         // Llamar al hook de DayMonthLimits para simetría y cobertura, aunque esté vacío
         if (_isDailyMonthLimitsEnabled()) {
-            _destructionActionOnDayMonthLimits(_from, _amount);
+            emit IERC3643ComplianceDMLim.DayMonthLimitsDestructionHook(
+                _from,
+                _amount
+            );
         }
         // Emitir evento solo si algún flag de compliance está activo
         if (_isMaxBalanceEnabled() || _isDailyMonthLimitsEnabled()) {

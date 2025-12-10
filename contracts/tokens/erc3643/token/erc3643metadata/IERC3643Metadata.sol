@@ -25,10 +25,24 @@ interface IERC3643Metadata {
     );
 
     /**
+     * @notice Emitted when the token name is updated via {setName}.
+     * @param operator The account performing the update.
+     * @param newName The new token name.
+     */
+    event NameSet(address indexed operator, string newName);
+
+    /**
+     * @notice Emitted when the token symbol is updated via {setSymbol}.
+     * @param operator The account performing the update.
+     * @param newSymbol The new token symbol.
+     */
+    event SymbolSet(address indexed operator, string newSymbol);
+
+    /**
      *  @dev sets the token name
      *  @param _name the name of token to set
      *  Only the owner of the token smart contract can call this function
-     *  emits a `UpdatedTokenInformation` event
+     *  emits `UpdatedTokenInformation` and `NameSet` events
      */
     function setName(string calldata _name) external;
 
@@ -36,7 +50,7 @@ interface IERC3643Metadata {
      *  @dev sets the token symbol
      *  @param _symbol the token symbol to set
      *  Only the owner of the token smart contract can call this function
-     *  emits a `UpdatedTokenInformation` event
+     *  emits `UpdatedTokenInformation` and `SymbolSet` events
      */
     function setSymbol(string calldata _symbol) external;
 }

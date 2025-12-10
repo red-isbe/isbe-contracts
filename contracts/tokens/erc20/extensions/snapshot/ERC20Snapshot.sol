@@ -15,7 +15,7 @@ abstract contract ERC20Snapshot is IERC20Snapshot, ERC203643InternalCommon {
         whenNotPaused
         onlyRole(_SNAPSHOT_ROLE)
     {
-        _snapshot();
+        emit Snapshot(_snapshot());
     }
 
     function balanceOfAt(

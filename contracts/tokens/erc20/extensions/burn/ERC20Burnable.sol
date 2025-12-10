@@ -10,6 +10,7 @@ import {IERC20Burnable} from './IERC20Burnable.sol';
 abstract contract ERC20Burnable is IERC20Burnable, ERC203643InternalCommon {
     function burn(uint256 _amount) external override whenNotPaused {
         _burn(_msgSender(), _amount);
+        emit Burned(_msgSender(), _amount);
     }
 
     function burnFrom(
@@ -18,6 +19,7 @@ abstract contract ERC20Burnable is IERC20Burnable, ERC203643InternalCommon {
     ) external override whenNotPaused {
         _spendAllowance(_account, _msgSender(), _amount);
         _burn(_account, _amount);
+        emit BurnedFrom(_msgSender(), _account, _amount);
     }
 
     function _implementedInterfaces()
