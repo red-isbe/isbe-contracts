@@ -124,9 +124,8 @@ async function addValidatorWithRawTransaction(
     diamond: string,
     signatureProvider: ISignatureProvider
 ): Promise<ValidatorAddedResult> {
-    const { ValidatorManager__factory } = await import(
-        '../../../typechain-types'
-    )
+    const { ValidatorManager__factory } =
+        await import('../../../typechain-types')
 
     const contractInterface = ValidatorManager__factory.createInterface()
 

@@ -372,11 +372,12 @@ graph TD
 
 ## 10. Reglas de Control y Actualización
 
-| Tipo de cambio      | Versionado | Flujo de aprobación                | Documentación requerida         |
-|--------------------|------------|------------------------------------|---------------------------------|
-| Evolutivo menor    | X.Y+0.1    | Pull Request + revisión GT         | Release notes detalladas        |
-| Evolutivo mayor    | X+1.0      | Pull Request + revisión Comité     | Informe de impacto y release notes |
-| Correctivo         | X.Y.Z+1    | Pull Request + revisión GT         | Descripción del fix en release notes |
+| Tipo de cambio  | Versionado | Flujo de aprobación            | Documentación requerida              |
+| --------------- | ---------- | ------------------------------ | ------------------------------------ |
+| Evolutivo menor | X.Y+0.1    | Pull Request + revisión GT     | Release notes detalladas             |
+| Evolutivo mayor | X+1.0      | Pull Request + revisión Comité | Informe de impacto y release notes   |
+| Correctivo      | X.Y.Z+1    | Pull Request + revisión GT     | Descripción del fix en release notes |
 
 ---
+
 Copyright © 2025 Comunidad de Madrid & Alastria

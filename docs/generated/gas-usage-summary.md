@@ -1,6 +1,6 @@
 # ⛽ Gas Usage Report
 
-> Generated on 2025-12-05
+> Generated on 2025-12-10
 
 ## Configuration
 
@@ -20,33 +20,33 @@
 | ProxyFactory(F)                | `deployUseCaseTo(b32,u256,(b32,adr[])[],bool,b32[],b[],b32)` | 0         | 0         | 1,069,749 | █░░░░░░░░░░░░░░░░░3.57░░░░░░░░░░░░░░░░░░ | 4     |
 | ProxyFactory(F)                | `deployUseCase(b32,u256,(b32,adr[])[],bool,b32[],b[])`       | 930,935   | 1,304,543 | 1,057,448 | █░░░░░░░░░░░░░░░░░3.52░░░░░░░░░░░░░░░░░░ | 320   |
 | DidDocumentDetailed(F)         | `insertFirstDidDocument(b32,str,b32,b,b,u8,u256,u256,str)`   | 903,621   | 1,006,149 | 963,233   | █░░░░░░░░░░░░░░░░░3.21░░░░░░░░░░░░░░░░░░ | 329   |
-| DidDocumentDetailed(F)         | `insertDidDocument(b32,str,b32,b,u8,u256,u256)`              | 884,126   | 952,763   | 904,862   | █░░░░░░░░░░░░░░░░░3.02░░░░░░░░░░░░░░░░░░ | 31    |
+| DidDocumentDetailed(F)         | `insertDidDocument(b32,str,b32,b,u8,u256,u256)`              | 884,114   | 952,763   | 904,860   | █░░░░░░░░░░░░░░░░░3.02░░░░░░░░░░░░░░░░░░ | 31    |
 | ERC721Consecutive(F)           | `mintConsecutive(adr,u256)`                                  | 319,249   | 721,829   | 496,119   | ░░░░░░░░░░░░░░░░░░1.65░░░░░░░░░░░░░░░░░░ | 6     |
-| AnchoringCore(F)               | `anchorBlocksBatch(u256,u256[],b32[],b32[])`                 | 377,836   | 536,298   | 483,473   | ░░░░░░░░░░░░░░░░░░1.61░░░░░░░░░░░░░░░░░░ | 3     |
-| DidVerificationMethod(F)       | `rollVerificationMethod((b32,b32,b,u8,u256,u256,b32,u256))`  | 188,680   | 757,932   | 473,306   | ░░░░░░░░░░░░░░░░░░1.58░░░░░░░░░░░░░░░░░░ | 4     |
+| AnchoringCore(F)               | `anchorBlocksBatch(u256,u256[],b32[],b32[])`                 | 377,824   | 536,310   | 483,481   | ░░░░░░░░░░░░░░░░░░1.61░░░░░░░░░░░░░░░░░░ | 3     |
+| DidVerificationMethod(F)       | `rollVerificationMethod((b32,b32,b,u8,u256,u256,b32,u256))`  | 188,692   | 757,908   | 473,300   | ░░░░░░░░░░░░░░░░░░1.58░░░░░░░░░░░░░░░░░░ | 4     |
 | DiamondCutAccessControl(F)     | `facetUpdates(adr[],adr,b)`                                  | 293,950   | 691,945   | 346,875   | ░░░░░░░░░░░░░░░░░░1.16░░░░░░░░░░░░░░░░░░ | 10    |
 | AccessControlDid(F)            | `initializeDidAccessControl((b32,b32[])[])`                  | 192,729   | 423,832   | 346,798   | ░░░░░░░░░░░░░░░░░░1.16░░░░░░░░░░░░░░░░░░ | 3     |
-| DidVerificationRelationship(F) | `addVerificationRelationship(b32,str,b32,u256,u256)`         | 306,153   | 323,241   | 312,350   | ░░░░░░░░░░░░░░░░░░1.04░░░░░░░░░░░░░░░░░░ | 6     |
+| DidVerificationRelationship(F) | `addVerificationRelationship(b32,str,b32,u256,u256)`         | 306,153   | 323,253   | 312,354   | ░░░░░░░░░░░░░░░░░░1.04░░░░░░░░░░░░░░░░░░ | 6     |
 | TimeStampingRegistry(F)        | `stampWithSignature(((b32,b32,b32),adr,u256,u256),b)`        | 0         | 0         | 312,223   | ░░░░░░░░░░░░░░░░░░1.04░░░░░░░░░░░░░░░░░░ | 3     |
-| TrustedIssuersRegistry(F)      | `setAttributeMetadata(b32,u8,b32,b32,b32)`                   | 186,067   | 367,088   | 304,420   | ░░░░░░░░░░░░░░░░░░1.01░░░░░░░░░░░░░░░░░░ | 62    |
+| TrustedIssuersRegistry(F)      | `setAttributeMetadata(b32,u8,b32,b32,b32)`                   | 186,067   | 367,088   | 304,417   | ░░░░░░░░░░░░░░░░░░1.01░░░░░░░░░░░░░░░░░░ | 62    |
 | TimeStampingRegistry(F)        | `stamp(b32,b32,b32)`                                         | 264,750   | 281,862   | 277,399   | ░░░░░░░░░░░░░░░░░░0.92░░░░░░░░░░░░░░░░░░ | 23    |
 | BesuNodeManager(F)             | `addBootNode(str)`                                           | 224,483   | 241,583   | 240,547   | ░░░░░░░░░░░░░░░░░░0.80░░░░░░░░░░░░░░░░░░ | 33    |
 | BesuNodeManager(F)             | `addExecutionNode(str)`                                      | 224,473   | 241,573   | 240,504   | ░░░░░░░░░░░░░░░░░░0.80░░░░░░░░░░░░░░░░░░ | 32    |
 | BesuNodeManager(F)             | `addValidator(str)`                                          | 224,558   | 241,658   | 240,492   | ░░░░░░░░░░░░░░░░░░0.80░░░░░░░░░░░░░░░░░░ | 44    |
 | BesuNodeManager(F)             | `addValidatorStandby(str)`                                   | 224,557   | 241,669   | 239,358   | ░░░░░░░░░░░░░░░░░░0.80░░░░░░░░░░░░░░░░░░ | 37    |
-| ERC20(TW)                      | `batchMint(adr[],u256[])`                                    | 51,645    | 1,750,844 | 233,611   | ░░░░░░░░░░░░░░░░░░0.78░░░░░░░░░░░░░░░░░░ | 38    |
-| DidVerificationMethod(F)       | `addVerificationMethod(b32,b32,b,u8)`                        | 177,892   | 247,597   | 218,549   | ░░░░░░░░░░░░░░░░░░0.73░░░░░░░░░░░░░░░░░░ | 12    |
+| ERC20(TW)                      | `batchMint(adr[],u256[])`                                    | 51,645    | 1,750,856 | 233,612   | ░░░░░░░░░░░░░░░░░░0.78░░░░░░░░░░░░░░░░░░ | 38    |
+| DidVerificationMethod(F)       | `addVerificationMethod(b32,b32,b,u8)`                        | 177,892   | 247,597   | 218,552   | ░░░░░░░░░░░░░░░░░░0.73░░░░░░░░░░░░░░░░░░ | 12    |
 | AccessControl(F)               | `initializeAccessControl((b32,adr[])[])`                     | 174,746   | 413,173   | 215,029   | ░░░░░░░░░░░░░░░░░░0.72░░░░░░░░░░░░░░░░░░ | 16    |
-| ClientFiltering(F)             | `registerFilter((b32,u8,b32,adr,b4,b32,u256,u256,bool))`     | 184,072   | 227,584   | 209,683   | ░░░░░░░░░░░░░░░░░░0.70░░░░░░░░░░░░░░░░░░ | 34    |
-| AnchoringCore(F)               | `anchorBlock(u256,u256,b32,b32)`                             | 201,703   | 216,406   | 207,137   | ░░░░░░░░░░░░░░░░░░0.69░░░░░░░░░░░░░░░░░░ | 95    |
+| ClientFiltering(F)             | `registerFilter((b32,u8,b32,adr,b4,b32,u256,u256,bool))`     | 183,815   | 227,572   | 209,587   | ░░░░░░░░░░░░░░░░░░0.70░░░░░░░░░░░░░░░░░░ | 34    |
+| AnchoringCore(F)               | `anchorBlock(u256,u256,b32,b32)`                             | 201,703   | 216,406   | 207,136   | ░░░░░░░░░░░░░░░░░░0.69░░░░░░░░░░░░░░░░░░ | 95    |
 | TrustedIssuersRegistry(F)      | `setAttributeData(b32,b32,b)`                                | 203,628   | 209,652   | 204,636   | ░░░░░░░░░░░░░░░░░░0.68░░░░░░░░░░░░░░░░░░ | 12    |
-| ERC3643Freeze(F)               | `batchSetAddressFrozen(adr[],bool[])`                        | 47,199    | 807,475   | 188,635   | ░░░░░░░░░░░░░░░░░░0.63░░░░░░░░░░░░░░░░░░ | 13    |
+| ERC3643Freeze(F)               | `batchSetAddressFrozen(adr[],bool[])`                        | 47,199    | 807,499   | 188,638   | ░░░░░░░░░░░░░░░░░░0.63░░░░░░░░░░░░░░░░░░ | 13    |
 | NetworkDirectory(F)            | `createNetwork((u256,b32,b32,u8,u8,(b32,str)[]))`            | 159,825   | 582,439   | 185,853   | ░░░░░░░░░░░░░░░░░░0.62░░░░░░░░░░░░░░░░░░ | 93    |
 | ERC20(TW)                      | `batchForceTransfer(adr[],adr[],u256[])`                     | 47,786    | 357,799   | 185,738   | ░░░░░░░░░░░░░░░░░░0.62░░░░░░░░░░░░░░░░░░ | 26    |
 | ERC203643TransferSigned(F)     | `transferFromWithSignature(adr,adr,u256,adr,u256,u256,b)`    | 0         | 0         | 169,576   | ░░░░░░░░░░░░░░░░░░0.57░░░░░░░░░░░░░░░░░░ | 2     |
 | DiamondCutAccessControl(F)     | `diamondCut((adr,u8,b4[])[],adr,b)`                          | 48,555    | 340,379   | 169,125   | ░░░░░░░░░░░░░░░░░░0.56░░░░░░░░░░░░░░░░░░ | 7     |
 | AccessControlDid(F)            | `grantDidRole(b32,b32)`                                      | 36,231    | 185,380   | 167,688   | ░░░░░░░░░░░░░░░░░░0.56░░░░░░░░░░░░░░░░░░ | 105   |
-| ERC203643TransferSigned(F)     | `transferWithSignature(adr,u256,adr,u256,u256,b)`            | 0         | 0         | 161,565   | ░░░░░░░░░░░░░░░░░░0.54░░░░░░░░░░░░░░░░░░ | 2     |
+| ERC203643TransferSigned(F)     | `transferWithSignature(adr,u256,adr,u256,u256,b)`            | 0         | 0         | 161,577   | ░░░░░░░░░░░░░░░░░░0.54░░░░░░░░░░░░░░░░░░ | 2     |
 | AccessControl(F)               | `grantRole(b32,adr)`                                         | 34,337    | 203,738   | 160,155   | ░░░░░░░░░░░░░░░░░░0.53░░░░░░░░░░░░░░░░░░ | 2,079 |
 | ERC203643CappedSigned(F)       | `mintWithSignature(adr,u256,adr,u256,u256,b)`                | 0         | 0         | 159,439   | ░░░░░░░░░░░░░░░░░░0.53░░░░░░░░░░░░░░░░░░ | 3     |
 | ERC20(TW)                      | `transfer(adr,u256)`                                         | 104,535   | 262,563   | 159,324   | ░░░░░░░░░░░░░░░░░░0.53░░░░░░░░░░░░░░░░░░ | 40    |
@@ -56,14 +56,14 @@
 | ERC20(TW)                      | `initializeErc20(str,str,u8)`                                | 123,307   | 138,453   | 138,190   | ░░░░░░░░░░░░░░░░░░0.46░░░░░░░░░░░░░░░░░░ | 315   |
 | ERC721(TW)(F)                  | `transfer(adr,adr,u256)`                                     | 122,961   | 152,750   | 136,789   | ░░░░░░░░░░░░░░░░░░0.46░░░░░░░░░░░░░░░░░░ | 6     |
 | ERC20(TW)                      | `mint(adr,u256)`                                             | 90,282    | 264,472   | 134,409   | ░░░░░░░░░░░░░░░░░░0.45░░░░░░░░░░░░░░░░░░ | 577   |
-| DidDocumentDetailed(F)         | `updateBaseDocument(b32,str)`                                | 0         | 0         | 134,237   | ░░░░░░░░░░░░░░░░░░0.45░░░░░░░░░░░░░░░░░░ | 2     |
+| DidDocumentDetailed(F)         | `updateBaseDocument(b32,str)`                                | 0         | 0         | 134,249   | ░░░░░░░░░░░░░░░░░░0.45░░░░░░░░░░░░░░░░░░ | 2     |
 | ERC3643Recovery(F)             | `recoveryAddress(adr,adr)`                                   | 105,329   | 214,495   | 133,946   | ░░░░░░░░░░░░░░░░░░0.45░░░░░░░░░░░░░░░░░░ | 19    |
 | ERC20(TW)                      | `transferFrom(adr,adr,u256)`                                 | 90,312    | 465,920   | 132,820   | ░░░░░░░░░░░░░░░░░░0.44░░░░░░░░░░░░░░░░░░ | 27    |
-| DidController(F)               | `addController(b32,b32)`                                     | 132,535   | 132,547   | 132,546   | ░░░░░░░░░░░░░░░░░░0.44░░░░░░░░░░░░░░░░░░ | 36    |
+| DidController(F)               | `addController(b32,b32)`                                     | 132,535   | 132,547   | 132,545   | ░░░░░░░░░░░░░░░░░░0.44░░░░░░░░░░░░░░░░░░ | 36    |
 | NetworkDirectory(F)            | `setResource(u256,b32,str)`                                  | 45,390    | 863,918   | 132,177   | ░░░░░░░░░░░░░░░░░░0.44░░░░░░░░░░░░░░░░░░ | 54    |
-| ERC20BurnableSigned(F)         | `burnFromWithSignature(adr,adr,u256,u256,u256,b)`            | 0         | 0         | 130,274   | ░░░░░░░░░░░░░░░░░░0.43░░░░░░░░░░░░░░░░░░ | 3     |
+| ERC20BurnableSigned(F)         | `burnFromWithSignature(adr,adr,u256,u256,u256,b)`            | 0         | 0         | 130,286   | ░░░░░░░░░░░░░░░░░░0.43░░░░░░░░░░░░░░░░░░ | 3     |
 | AssetEventTracker(TW)          | `recordState(u256)`                                          | 117,295   | 152,520   | 130,138   | ░░░░░░░░░░░░░░░░░░0.43░░░░░░░░░░░░░░░░░░ | 20    |
-| EnsRegistry(F)                 | `setSubnodeRecord(b32,b32,adr,adr,u64)`                      | 127,534   | 127,558   | 127,544   | ░░░░░░░░░░░░░░░░░░0.43░░░░░░░░░░░░░░░░░░ | 5     |
+| EnsRegistry(F)                 | `setSubnodeRecord(b32,b32,adr,adr,u64)`                      | 127,546   | 127,558   | 127,551   | ░░░░░░░░░░░░░░░░░░0.43░░░░░░░░░░░░░░░░░░ | 5     |
 | ERC20BurnableSigned(F)         | `burnWithSignature(adr,u256,u256,u256,b)`                    | 0         | 0         | 121,914   | ░░░░░░░░░░░░░░░░░░0.41░░░░░░░░░░░░░░░░░░ | 3     |
 | ERC20(TW)                      | `forceTransfer(adr,adr,u256)`                                | 89,469    | 214,083   | 121,563   | ░░░░░░░░░░░░░░░░░░0.41░░░░░░░░░░░░░░░░░░ | 37    |
 | GlobalIsbePause(F)             | `pauseIsbe(adr)`                                             | 0         | 0         | 117,980   | ░░░░░░░░░░░░░░░░░░0.39░░░░░░░░░░░░░░░░░░ | 4     |
@@ -89,17 +89,17 @@
 | ERC20(TW)                      | `burnFrom(adr,u256)`                                         | 82,004    | 93,871    | 89,124    | ░░░░░░░░░░░░░░░░░░0.30░░░░░░░░░░░░░░░░░░ | 5     |
 | EnsResolver(F)                 | `initializePublicResolver(adr)`                              | 0         | 0         | 88,970    | ░░░░░░░░░░░░░░░░░░0.30░░░░░░░░░░░░░░░░░░ | 30    |
 | ISBEPause(F)                   | `initializePause(bool)`                                      | 0         | 0         | 88,947    | ░░░░░░░░░░░░░░░░░░0.30░░░░░░░░░░░░░░░░░░ | 1     |
-| HashTimestamp(F)               | `timestampHash(b32)`                                         | 72,936    | 108,261   | 88,680    | ░░░░░░░░░░░░░░░░░░0.30░░░░░░░░░░░░░░░░░░ | 9     |
+| HashTimestamp(F)               | `timestampHash(b32)`                                         | 72,936    | 108,261   | 88,678    | ░░░░░░░░░░░░░░░░░░0.30░░░░░░░░░░░░░░░░░░ | 9     |
 | ERC3643ComplianceMaxBalance(F) | `initializeERC3643ComplianceMaxBalance(u256)`                | 68,736    | 88,660    | 88,257    | ░░░░░░░░░░░░░░░░░░0.29░░░░░░░░░░░░░░░░░░ | 99    |
-| PubkeyResolver(F)              | `setPubkey(b32,b32,b32)`                                     | 56,507    | 108,120   | 88,020    | ░░░░░░░░░░░░░░░░░░0.29░░░░░░░░░░░░░░░░░░ | 11    |
+| PubkeyResolver(F)              | `setPubkey(b32,b32,b32)`                                     | 56,507    | 108,120   | 88,018    | ░░░░░░░░░░░░░░░░░░0.29░░░░░░░░░░░░░░░░░░ | 11    |
 | DiamondCutAccessControl(F)     | `interfaceCut((adr,u8,b4[])[])`                              | 71,485    | 132,053   | 87,252    | ░░░░░░░░░░░░░░░░░░0.29░░░░░░░░░░░░░░░░░░ | 4     |
-| DidVerificationMethod(F)       | `revokeVerificationMethod(b32,b32,u256)`                     | 44,192    | 100,256   | 86,228    | ░░░░░░░░░░░░░░░░░░0.29░░░░░░░░░░░░░░░░░░ | 8     |
+| DidVerificationMethod(F)       | `revokeVerificationMethod(b32,b32,u256)`                     | 44,204    | 100,256   | 86,232    | ░░░░░░░░░░░░░░░░░░0.29░░░░░░░░░░░░░░░░░░ | 8     |
 | ERC3643Freeze(F)               | `batchFreezePartialTokens(adr[],u256[])`                     | 47,238    | 170,494   | 85,750    | ░░░░░░░░░░░░░░░░░░0.29░░░░░░░░░░░░░░░░░░ | 8     |
 | EnsRegistry(F)                 | `setRecord(b32,adr,adr,u64)`                                 | 0         | 0         | 84,585    | ░░░░░░░░░░░░░░░░░░0.28░░░░░░░░░░░░░░░░░░ | 2     |
 | ERC20(TW)                      | `burn(u256)`                                                 | 76,356    | 102,251   | 83,777    | ░░░░░░░░░░░░░░░░░░0.28░░░░░░░░░░░░░░░░░░ | 9     |
 | ERC721Royalty(F)               | `setDefaultRoyalty(adr,u96)`                                 | 71,309    | 106,642   | 80,142    | ░░░░░░░░░░░░░░░░░░0.27░░░░░░░░░░░░░░░░░░ | 4     |
 | EnsResolver(F)                 | `approve(b32,adr,bool)`                                      | 60,650    | 82,562    | 77,084    | ░░░░░░░░░░░░░░░░░░0.26░░░░░░░░░░░░░░░░░░ | 8     |
-| TextResolver(F)                | `setText(b32,str,str)`                                       | 59,748    | 89,262    | 76,775    | ░░░░░░░░░░░░░░░░░░0.26░░░░░░░░░░░░░░░░░░ | 15    |
+| TextResolver(F)                | `setText(b32,str,str)`                                       | 59,760    | 89,370    | 76,821    | ░░░░░░░░░░░░░░░░░░0.26░░░░░░░░░░░░░░░░░░ | 15    |
 | KnownDid(TW)                   | `testOnlyKnownDid()`                                         | 0         | 0         | 75,334    | ░░░░░░░░░░░░░░░░░░0.25░░░░░░░░░░░░░░░░░░ | 4     |
 | DidVerificationMethod(F)       | `expireVerificationMethod(b32,b32,u256)`                     | 40,907    | 96,959    | 74,523    | ░░░░░░░░░░░░░░░░░░0.25░░░░░░░░░░░░░░░░░░ | 5     |
 | GlobalIsbePause(F)             | `unpauseIsbe(adr)`                                           | 0         | 0         | 74,268    | ░░░░░░░░░░░░░░░░░░0.25░░░░░░░░░░░░░░░░░░ | 2     |
@@ -153,8 +153,8 @@
 | UpgradeableBeacon              | `renounceOwnership()`                                        | 45,044    | 45,137    | 45,091    | ░░░░░░░░░░░░░░░░░░0.15░░░░░░░░░░░░░░░░░░ | 4     |
 | AccessControl(F)               | `setRoleAdmin(b32,b32)`                                      | 33,738    | 56,082    | 44,910    | ░░░░░░░░░░░░░░░░░░0.15░░░░░░░░░░░░░░░░░░ | 4     |
 | ERC721ReceiverMock             | `setSelector(b4)`                                            | 0         | 0         | 43,628    | ░░░░░░░░░░░░░░░░░░0.15░░░░░░░░░░░░░░░░░░ | 2     |
-| DidDocumentDetailed(F)         | `updateAlsoKnownAs(b32,str)`                                 | 37,095    | 42,675    | 41,734    | ░░░░░░░░░░░░░░░░░░0.14░░░░░░░░░░░░░░░░░░ | 12    |
-| EnsRegistry(F)                 | `setSubnodeOwner(b32,b32,adr)`                               | 0         | 0         | 41,673    | ░░░░░░░░░░░░░░░░░░0.14░░░░░░░░░░░░░░░░░░ | 2     |
+| DidDocumentDetailed(F)         | `updateAlsoKnownAs(b32,str)`                                 | 37,095    | 42,675    | 41,730    | ░░░░░░░░░░░░░░░░░░0.14░░░░░░░░░░░░░░░░░░ | 12    |
+| EnsRegistry(F)                 | `setSubnodeOwner(b32,b32,adr)`                               | 0         | 0         | 41,685    | ░░░░░░░░░░░░░░░░░░0.14░░░░░░░░░░░░░░░░░░ | 2     |
 | CounterV2(F)(TW)               | `reinitializeCounter(u256)`                                  | 0         | 0         | 41,202    | ░░░░░░░░░░░░░░░░░░0.14░░░░░░░░░░░░░░░░░░ | 4     |
 | IsbeProxyAdmin                 | `upgrade(adr,adr)`                                           | 0         | 0         | 39,055    | ░░░░░░░░░░░░░░░░░░0.13░░░░░░░░░░░░░░░░░░ | 1     |
 | EnsRegistry(F)                 | `setOwner(b32,adr)`                                          | 0         | 0         | 38,502    | ░░░░░░░░░░░░░░░░░░0.13░░░░░░░░░░░░░░░░░░ | 2     |

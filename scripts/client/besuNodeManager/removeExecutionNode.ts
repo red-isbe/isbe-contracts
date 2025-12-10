@@ -94,9 +94,8 @@ async function removeExecutionNodeWithRawTransaction(
     signatureProvider: ISignatureProvider
 ): Promise<string> {
     // Import AccessControl interface for encoding function data
-    const { ExecutionNodeManager__factory } = await import(
-        '../../../typechain-types'
-    )
+    const { ExecutionNodeManager__factory } =
+        await import('../../../typechain-types')
 
     // Create interface for encoding function data
     const contractInterface = ExecutionNodeManager__factory.createInterface()

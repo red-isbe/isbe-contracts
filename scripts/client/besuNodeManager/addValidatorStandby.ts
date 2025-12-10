@@ -124,16 +124,16 @@ async function addValidatorStandbyWithRawTransaction(
     diamond: string,
     signatureProvider: ISignatureProvider
 ): Promise<ValidatorAddedResult> {
-    const { ValidatorManager__factory } = await import(
-        '../../../typechain-types'
-    )
+    const { ValidatorManager__factory } =
+        await import('../../../typechain-types')
 
     const contractInterface = ValidatorManager__factory.createInterface()
 
     // Encode the addValidatorStandby function call
-    const functionData = contractInterface.encodeFunctionData('addValidatorStandby', [
-        enode,
-    ])
+    const functionData = contractInterface.encodeFunctionData(
+        'addValidatorStandby',
+        [enode]
+    )
 
     console.log('📡 Sending addValidatorStandby raw transaction...')
 

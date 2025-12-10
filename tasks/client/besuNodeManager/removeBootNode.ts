@@ -10,10 +10,7 @@ npx hardhat removeBootNode \
   --network genesis_validation_network_k1
 */
 
-task(
-    'removeBootNode',
-    'Remove a boot node from the BesuNodeManager.'
-)
+task('removeBootNode', 'Remove a boot node from the BesuNodeManager.')
     .addParam(
         'nodeId',
         'The id of the Besu Boot Node.',
@@ -37,9 +34,7 @@ task(
             const { nodeId, diamond } = taskArgs
 
             console.info('REMOVE BOOT NODE TASK')
-            console.log(
-                `Removing Besu Boot Node with id: ${nodeId}`
-            )
+            console.log(`Removing Besu Boot Node with id: ${nodeId}`)
             console.log(`   Diamond: ${diamond}`)
             console.log(`   Network: ${hre.network.name}`)
             console.log(`   Curve: ${signatureProvider.getCurveType()}`)

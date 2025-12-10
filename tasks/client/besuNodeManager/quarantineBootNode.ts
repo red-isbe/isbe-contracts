@@ -10,10 +10,7 @@ npx hardhat quarantineBootNode \
   --network genesis_validation_network_k1
 */
 
-task(
-    'quarantineBootNode',
-    'Quarantine a boot node in the BesuNodeManager.'
-)
+task('quarantineBootNode', 'Quarantine a boot node in the BesuNodeManager.')
     .addParam(
         'nodeId',
         'The nodeId of the Boot Node to be quarantined.',
@@ -29,7 +26,9 @@ task(
             },
             hre: HardhatRuntimeEnvironment
         ) => {
-            console.log('🔐 Initializing signature provider for access control...')
+            console.log(
+                '🔐 Initializing signature provider for access control...'
+            )
             const signatureProvider = SignatureProviderFactory.create(hre)
 
             const { nodeId, diamond } = taskArgs

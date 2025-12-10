@@ -130,6 +130,10 @@ import './identity/trustedissuersregistry/getLatestRevisionAttribute'
 import './identity/trustedissuersregistry/setAttributeData'
 import './identity/trustedissuersregistry/setAttributeMetadata'
 
+// shamir secret sharing tooling
+import './secret-sharing/sss.generate'
+import './secret-sharing/sss.recover'
+
 // Genesis
 import './genesisGeneration'
 import './bootstapping'

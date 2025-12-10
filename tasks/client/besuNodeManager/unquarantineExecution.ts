@@ -29,7 +29,9 @@ task(
             },
             hre: HardhatRuntimeEnvironment
         ) => {
-            console.log('🔐 Initializing signature provider for access control...')
+            console.log(
+                '🔐 Initializing signature provider for access control...'
+            )
             const signatureProvider = SignatureProviderFactory.create(hre)
 
             const { nodeId, diamond } = taskArgs

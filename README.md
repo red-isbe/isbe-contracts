@@ -47,6 +47,7 @@
         - [Gas Analysis](#gas-analysis)
         - [Documentation](#documentation)
         - [Pre-commit Pipeline](#pre-commit-pipeline)
+        - [🔐 Secret‑Sharing Utilities](#secret-sharing-utilities)
     - [🎯 Deployment Tasks](#-deployment-tasks)
         - [Full Deployment](#full-deployment)
         - [Business Logic Management](#business-logic-management)
@@ -94,9 +95,6 @@
     - [🚀 Advanced Usage](#-advanced-usage)
         - [Custom Network Configuration](#custom-network-configuration)
         - [Environment-Specific Deployment](#environment-specific-deployment)
-    - [User Roles](#user-roles)
-    - [Changes Procedure](#changes-procedure)
-    - [Deploy to isbe besu local deployer](#deploy-to-isbe-besu-local-deployer)
     - [Resources table](#resources-table)
 
 # ISBE Contracts
@@ -206,6 +204,8 @@ ACCOUNT_ADDRESS=0xYourAddress
 ACCOUNT_PRIVATE_KEY=0xYourPrivateKey
 ACCOUNTS=privatekey1,privatekey2,privatekey3,privatekey4,privatekey5
 ```
+
+> **Note for Local Deployer:** When using `isbelocaldeployer`, ensure the `ACCOUNT_ADDRESS` corresponds to the pre-funded account on the local Besu node and that `ACCOUNT_PRIVATE_KEY` matches.
 
 ### secp256r1 Networks (Hyperledger Besu)
 
@@ -669,6 +669,89 @@ npm run pre-commit
 # Includes: docgen, prettier, lint, test, coverage
 ```
 
+### 🔐 Secret‑Sharing Utilities
+
+The repository includes two Hardhat tasks that allow you to split a private key into Shamir
+Secret Sharing (SSS) shares and later recover the original key.
+
+#### `sss.generate`
+
+Generate a new secp256r1 private key, derive its secp256k1 counterpart, and split the
+private key into a configurable number of shares.
+
+```bash README.md
+# Usage
+npx hardhat sss.generate --number-of-shares <NUMBER_OF_SHARES> --threshold <THRESHOLD>
+
+# Example
+npx hardhat sss.generate --number-of-shares 10 --threshold 6
+```
+
+**Sample output**
+
+```json
+{
+    "shares": [
+        "0801410629583dabeb86bb3b448cebce22b57c0b21716d0b8e9dd531d05d3f71da86f162367ac2e9853637aa30a4b2c1f7c71e7f4b5f4d76b3b223bb37cae4497c373581b8073f1e00a8d4e2c286a6765a54",
+        "0802c90274d04e8249322e9ab5aecc3325084b5a201728128bf8c5db99c981e5173ccf1068482d11547c8a82f78e6905ae80e575a4c41ec8f095d9854ee98e8b7fa009055ab2488e2d981dfa539d1954672e",
+        "... (remaining shares) ..."
+    ],
+    "secp256k1": {
+        "publicKey": "0x03729dfc2d388ed66b99e7a22b29270cde62e757d491576afe2a9ad5b306ebf8e0",
+        "address": "0x22F4fcddaA10F53F5bAC1fE480242EdF490d3988"
+    },
+    "secp256r1": {
+        "publicKey": "0x03b362489bfe77dcdbd13c61fcb651bc96b9ebd71e199a1dbd98a19c33410570f2",
+        "address": "0x89bff86116e80e4ea41f7317ce833b4ca77d3003"
+    }
+}
+```
+
+> **Note** – The `shares` array contains the hexadecimal representation of each share.  
+> The `secp256k1` section shows the public key and the derived Ethereum address.  
+> The `secp256r1` section shows the compressed public key and the address derived from the same private key for the P‑256 curve.
+
+#### `sss.recover`
+
+Reconstruct the original private key from a comma‑separated list of shares and display
+the corresponding secp256k1 and secp256r1 key information.
+
+```bash README.md
+# Usage
+npx hardhat sss.recover --shares <SHARE_1,SHARE_2,...,SHARE_N>
+
+# Example (using the shares from the previous generate command)
+npx hardhat sss.recover --shares \
+0801410629583dabeb86bb3b448cebce22b57c0b21716d0b8e9dd531d05d3f71da86f162367ac2e9853637aa30a4b2c1f7c71e7f4b5f4d76b3b223bb37cae4497c373581b8073f1e00a8d4e2c286a6765a54,\
+0802c90274d04e8249322e9ab5aecc3325084b5a201728128bf8c5db99c981e5173ccf1068482d11547c8a82f78e6905ae80e575a4c41ec8f095d9854ee98e8b7fa009055ab2488e2d981dfa539d1954672e,\
+... (remaining shares) ...
+```
+
+**Sample output**
+
+```json
+{
+    "recoveredPrivateKey": "0x416b67d96729ccd9ffa159df109564870998eb3e7eac2ad2834084fa230fe847",
+    "secp256k1": {
+        "publicKey": "0x03729dfc2d388ed66b99e7a22b29270cde62e757d491576afe2a9ad5b306ebf8e0",
+        "address": "0x22F4fcddaA10F53F5bAC1fE480242EdF490d3988"
+    },
+    "secp256r1": {
+        "publicKey": "0x03b362489bfe77dcdbd13c61fcb651bc96b9ebd71e199a1dbd98a19c33410570f2",
+        "address": "0x89bff86116e80e4ea41f7317ce833b4ca77d3003"
+    }
+}
+```
+
+> The `recoveredPrivateKey` is the original secret (prefixed with `0x`). Both curve sections
+> show the public keys and derived addresses that correspond to the recovered key.
+
+---
+
+These tasks are handy for distributing a private key among multiple parties
+(e.g., custodians, administrators) while keeping the key recoverable only when the
+required threshold of shares is presented.
+
 ## 🎯 Deployment Tasks
 
 ### Full Deployment
@@ -780,7 +863,7 @@ npx hardhat getConfigurationByProxy --proxy <address> --network <network>
     --template-file <template-location>  \
     --output-file  <generated-file-location> \
     --do-validation \
-    --do-besu-startup
+    --do-besu-startup \
     --besu-dir <isbe-besu-local-deployer_repo-dir>
 ```
 
@@ -824,54 +907,44 @@ Deploy only specific use cases instead of all 150+ available cases. Perfect for 
 
 **Example - Deploy only ERC20 Base:**
 
-```bash
+```json
 {
-  "description": "ERC20 Base tokens only - no extensions",
-  "version": "1.0.0",
-  "includeAllBusinessLogics": true,
-  "useCaseFilters": {
-    "enabled": true,
-    "includePatterns": [
-      "ERC20 Base"
-    ],
-    "excludePatterns": [
-      "w/Burn",
-      "w/Cap",
-      "w/Ctrl",
-      "w/Snap",
-      "Complete"
-    ],
-    "categories": [
-      "erc20"
-    ]
-  },
-  "metadata": {
-    "author": "ISBE Development Team",
-    "created": "2025-10-30",
-    "purpose": "Deploy only basic ERC20 token without any extensions"
-  }
+    "description": "ERC20 Base tokens only - no extensions",
+    "version": "1.0.0",
+    "includeAllBusinessLogics": true,
+    "useCaseFilters": {
+        "enabled": true,
+        "includePatterns": ["ERC20 Base"],
+        "excludePatterns": ["w/Burn", "w/Cap", "w/Ctrl", "w/Snap", "Complete"],
+        "categories": ["erc20"]
+    },
+    "metadata": {
+        "author": "ISBE Development Team",
+        "created": "2025-10-30",
+        "purpose": "Deploy only basic ERC20 token without any extensions"
+    }
 }
 ```
 
-### Testing de ERC20 Basic
+### Testing Basic ERC20
 
 ```bash
 npx hardhat deployAllClean --network localhost --config-file erc20-basic.json
 ```
 
-### Setup for Essentials Use Cases
+### Setup for Essential Use Cases
 
 ```bash
 npx hardhat deployAllClean --network localhost --config-file essentials.json
 ```
 
-### Testing de minimal Functionality
+### Testing Minimal Functionality
 
 ```bash
 npx hardhat deployAllClean --network localhost --config-file minimal.json
 ```
 
-### Or Test a customn selection
+### Or Test a Custom Selection
 
 ```bash
 npx hardhat deployAllClean --network localhost --config-file custom.json
@@ -1320,7 +1393,7 @@ For detailed installation and usage instructions, visit the [package documentati
 
 - **Development Guidelines**: `docs/Development-guidelines.md`
 - **Diamond Pattern Guide**: `docs/Diamond-pattern-guidelines.md`
-- **Governance Architecture**: `docs/Gobernance-Layer-Architecture.md`
+- **Governance Architecture**: `docs/Governance-Layer-Architecture.md`
 - **TypeScript Code Improvements**: `docs/TypeScript-Code-Improvements.md` 🎯 _Phase 1 Completed_
 - **SECP256R1 Complete Guide**: `docs/SECP256R1_COMPLETE_GUIDE.md` ⚠️ _Experimental_
 - **Production Deployment Guide**: `docs/Production-Deployment-Guide.md`
@@ -1440,21 +1513,7 @@ export MY_NETWORK_URL="https://my-custom-endpoint.com"
 
 ### Environment-Specific Deployment
 
-Available networks: hardhat, localhost, mvp, arsys, besuLocalDeployer.
-
-## User Roles
-
-In this repository we can find two different users:
-
-- Admin users: These users must maintain the project and allow access to other users with the specific role defined. These users are smart contract working group coordinators (IoBuilders). Also, at least on of these users must review any change to be applied to this repository from other admin or collab users.
-
-- Collab users: These users have read permissions to the repository. They can also submit pull requests in order to contribute to the repository. These pull requests must be validated by admin users.
-
-## Changes Procedure
-
-In order to include any change in this repository, we need to follow these steps:
-
-Use different `.env` files for different environments:
+Use different `.env` files for different environments to manage deployment configurations securely:
 
 ```bash
 # Development
@@ -1466,19 +1525,7 @@ cp .env.production .env
 npx hardhat deployAll --network mvp
 ```
 
-This README provides comprehensive documentation for the ISBE contracts project, covering both secp256k1 and secp256r1 network support, all available tasks, and complete development workflows.
-
-## Deploy to isbe besu local deployer
-
-To deploy to Isbe besu local deployer, the test network provided on the repo, you need to add the correct .env variables, which are:
-
-- ACCOUNTS: A private key, for an account that exist on the network. It can´t start with 0x
-- ACCOUNT_ADDRESS: The wallet direction of that account. It has to start with 0x
-- PRIVATE_KEY: It should be the same value of ACCOUNTS
-
-Then you can do deployAll command and it should work as expected.
-
-# Resources table
+## Resources table
 
 - [ISBE Configuration](./config/README.md)
 - [Documentation table of content](./docs/README.md)

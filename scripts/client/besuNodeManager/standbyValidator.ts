@@ -98,9 +98,8 @@ async function standbyValidatorWithRawTransaction(
     diamond: string,
     signatureProvider: ISignatureProvider
 ): Promise<string> {
-    const { ValidatorManager__factory } = await import(
-        '../../../typechain-types'
-    )
+    const { ValidatorManager__factory } =
+        await import('../../../typechain-types')
 
     const contractInterface = ValidatorManager__factory.createInterface()
 

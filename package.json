@@ -102,6 +102,7 @@
         "lint-staged": "^15.5.1",
         "prettier": "^3.5.3",
         "prettier-plugin-solidity": "^2.0.0",
+        "shamirs-secret-sharing": "^2.0.1",
         "solhint": "^6.0.1",
         "solhint-plugin-prettier": "^0.1.0",
         "solidity-coverage": "^0.8.15",

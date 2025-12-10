@@ -98,9 +98,8 @@ async function quarantineExecutionNodeWithRawTransaction(
     diamond: string,
     signatureProvider: ISignatureProvider
 ): Promise<string> {
-    const { ExecutionNodeManager__factory } = await import(
-        '../../../typechain-types'
-    )
+    const { ExecutionNodeManager__factory } =
+        await import('../../../typechain-types')
 
     const contractInterface = ExecutionNodeManager__factory.createInterface()
 

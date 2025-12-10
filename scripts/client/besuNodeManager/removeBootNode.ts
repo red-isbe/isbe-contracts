@@ -102,9 +102,8 @@ async function removeBootNodeWithRawTransaction(
     diamond: string,
     signatureProvider: ISignatureProvider
 ): Promise<string> {
-    const { BootNodeManager__factory } = await import(
-        '../../../typechain-types'
-    )
+    const { BootNodeManager__factory } =
+        await import('../../../typechain-types')
 
     const contractInterface = BootNodeManager__factory.createInterface()
 
