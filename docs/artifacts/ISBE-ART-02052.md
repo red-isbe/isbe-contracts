@@ -9,7 +9,7 @@
 | **Nombre del artefacto**    | ISBE-ART-02052 — SC Network governance                                                                                                              |
 | **Origen**                  | Documento derivado del repositorio oficial de Smart Contracts, consolidando información técnica sobre la gestión de nodos Hyperledger Besu en ISBE. |
 | **Estado**                  | Validado                                                                                                                                            |
-| **Versión del documento**   | 0.1.0                                                                                                                                               |
+| **Versión del documento**   | 1.0.0                                                                                                                                               |
 | **Fecha**                   | 2025-08-11                                                                                                                                          |
 | **Repositorio (congelado)** | [https://github.com/alastria/isbe-contracts](https://github.com/alastria/isbe-contracts)                                                            |
 | **Commit**                  | `2c3a2accef78bbf723c970c8139df34a4d3137c8`                                                                                                          |
@@ -240,16 +240,16 @@ graph LR
 
 ```mermaid
 graph TD
-    A[Query: getNode(nodeId)] --> B[Búsqueda en Validadores]
-    B --> C{¿Encontrado?}
-    C -->|Sí| D[Devolver NodeDTO]
-    C -->|No| E[Búsqueda en Boot Nodes]
-    E --> F{¿Encontrado?}
+    A["Query: getNode(nodeId)"] --> B["Búsqueda en Validadores"]
+    B --> C{"¿Encontrado?"}
+    C -->|Sí| D["Devolver NodeDTO"]
+    C -->|No| E["Búsqueda en Boot Nodes"]
+    E --> F{"¿Encontrado?"}
     F -->|Sí| D
-    F -->|No| G[Búsqueda en Execution Nodes]
-    G --> H{¿Encontrado?}
+    F -->|No| G["Búsqueda en Execution Nodes"]
+    G --> H{"¿Encontrado?"}
     H -->|Sí| D
-    H -->|No| I[NodeDTO vacío]
+    H -->|No| I["NodeDTO vacío"]
 ```
 
 ---
@@ -369,3 +369,14 @@ graph TD
 - **Hyperledger Besu**: Enode URL standard
 - **ISBE RBAC**: Role-Based Access Control
 - **Smart Contract Best Practices**: OpenZeppelin patterns
+
+## 10. Reglas de Control y Actualización
+
+| Tipo de cambio      | Versionado | Flujo de aprobación                | Documentación requerida         |
+|--------------------|------------|------------------------------------|---------------------------------|
+| Evolutivo menor    | X.Y+0.1    | Pull Request + revisión GT         | Release notes detalladas        |
+| Evolutivo mayor    | X+1.0      | Pull Request + revisión Comité     | Informe de impacto y release notes |
+| Correctivo         | X.Y.Z+1    | Pull Request + revisión GT         | Descripción del fix en release notes |
+
+---
+Copyright © 2025 Comunidad de Madrid & Alastria
