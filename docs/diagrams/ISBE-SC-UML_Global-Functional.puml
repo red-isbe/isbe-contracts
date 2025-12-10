@@ -1,0 +1,218 @@
+@startuml
+title Arquitectura de SC ISBE
+
+top to bottom direction
+scale 0.8
+
+skinparam class {
+    BackgroundColor White
+    ArrowColor Black
+    BorderColor Black
+}
+skinparam linetype polyline
+hide empty members
+
+' ===========================================
+' CORE
+' ===========================================
+package "Core" {  
+
+    ' ---------- DID & VRelationship ----------
+    class DidDocumentDetailedInternal <<(A,#228b22) abstract contract>> #9370DB
+    class VRelationshipsInternal <<(A,#228b22) abstract contract>> #9370DB
+
+    DidDocumentDetailedInternal --|> Common
+    DidDocumentDetailedInternal --|> VRelationshipsInternal 
+
+    ' ---------- Common ----------
+    class Common <<(A,#228b22) abstract contract>> #77DD77
+    class ERC165Internal <<(A,#228B22) abstract contract>> #77DD77
+    class AccessControlInternal <<(A,#228B22) abstract contract>> #77DD77
+    class OwnableInternal <<(A,#228B22) abstract contract>> #77DD77
+    class BasicWhitelistInternal <<(A,#228B22) abstract contract>> #77DD77
+    class PauseInternalCommon <<(A,#228B22) abstract contract>> #77DD77
+    class Initializable <<(A,#228B22) abstract contract>> #77DD77
+
+    Common --|> ERC165Internal
+    Common --|> AccessControlInternal 
+    Common --|> OwnableInternal
+    Common --|> BasicWhitelistInternal
+    Common --|> PauseInternalCommon
+    Common --|> Initializable
+
+    ' ---------- AccessControl ----------
+    class AccessControlFEI #77DD77
+    class AccessControlDiDFEI #77DD77
+
+    AccessControlFEI --|> Common
+    AccessControlDiDFEI --|> Common
+
+    ' ---------- Ownable ----------
+    class OwnableFEI #77DD77
+    OwnableFEI --|> Common    
+
+    ' ---------- BasicWhitelist ----------
+    class BasicWhitelistFEI #77DD77
+    BasicWhitelistFEI --|> Common
+
+    ' ---------- Pause ----------
+    class PauseFEI #77DD77
+    PauseFEI --|> Common
+
+    ' ---------- ERC165 ----------
+    class 165FEI #77DD77
+    165FEI --|> ERC165Internal
+}
+
+' ===========================================
+' ERC721
+' ===========================================
+package "ERC721" {
+
+    ' ---------- Núcleo ----------
+    class ERC721FEI #FFFFE0
+    class ERC721Internal <<(A,#228B22) abstract contract>> #FFFFE0
+    class ERC721InternalCommon <<(A,#228B22) abstract contract>> #FFFFE0
+
+    ERC721FEI --|> ERC721InternalCommon
+    ERC721Internal --|> DidDocumentDetailedInternal 
+
+    ' Nota sobre FEI
+    note right of ERC721FEI
+      FEI incluye:
+      - facet
+      - external
+      - interfaces
+    end note
+
+    ' ---------- Burnable ----------
+    class ERC721BurnableFEI #FFFFE0
+    ERC721BurnableFEI --|> ERC721InternalCommon
+
+    ' ---------- Controller ----------
+    class ERC721ControllerFEI #FFFFE0
+    ERC721ControllerFEI --|> ERC721InternalCommon
+
+    ' ---------- Capped ----------
+    class ERC721CappedFEI #FFFFE0
+    class ERC721CappedInternal <<(A,#228B22) abstract contract>> #FFFFE0
+
+    ERC721CappedFEI --|> ERC721InternalCommon
+    ERC721InternalCommon --|> ERC721CappedInternal
+    ERC721CappedInternal --|> ERC721Internal
+
+    ' ---------- Snapshot ----------
+    class ERC721SnapshotFEI #FFFFE0
+    class ERC721SnapshotInternal <<(A,#228B22) abstract contract>> #FFFFE0
+ 
+    ERC721SnapshotFEI --|> ERC721InternalCommon
+    ERC721InternalCommon --|> ERC721SnapshotInternal
+    ERC721SnapshotInternal --|> ERC721Internal
+
+    ' ---------- Enumerable ----------
+    class ERC721EnumerableFEI #FFFFE0
+    class ERC721EnumerableInternal <<(A,#228B22) abstract contract>> #FFFFE0
+
+    ERC721EnumerableFEI --|> ERC721InternalCommon
+    ERC721InternalCommon --|> ERC721EnumerableInternal
+    ERC721EnumerableInternal --|> ERC721Internal
+
+    ' ---------- Royalty ----------
+    class ERC721RoyaltyFEI #FFFFE0
+    class ERC721RoyaltyInternal <<(A,#228B22) abstract contract>> #FFFFE0
+    
+    ERC721RoyaltyFEI --|> ERC721InternalCommon
+    ERC721InternalCommon --|> ERC721RoyaltyInternal
+    ERC721RoyaltyInternal --|> ERC721Internal
+
+    ' ---------- Consecutive ----------
+    class ERC721ConsecutiveFEI #FFFFE0
+    class ERC721ConsecutiveInternal <<(A,#228B22) abstract contract>> #FFFFE0
+
+    ERC721ConsecutiveFEI --|> ERC721InternalCommon
+    ERC721InternalCommon --|> ERC721ConsecutiveInternal
+    ERC721ConsecutiveInternal --|> ERC721Internal
+}
+
+' ===========================================
+' ERC20 & ERC3643
+' ===========================================
+package "ERC20 and ERC3643" {
+
+    ' ---------- Commons ERC20/3643 ----------
+    class ERC203643InternalCommon <<(A,#228B22) abstract contract>> #FFFF99
+
+    ' ---------- ERC20 ----------
+    class ERC20FEI #FFB6C1
+    class ERC20Internal <<(A,#228B22) abstract contract>> #FFB6C1
+
+    ERC20FEI --|> ERC203643InternalCommon
+    ERC20Internal --|> DidDocumentDetailedInternal 
+
+    ' ---------- ERC20 Burnable ----------
+    class ERC20BurnableFEI #FFB6C1
+    ERC20BurnableFEI --|> ERC203643InternalCommon
+
+    ' ---------- ERC20 Snapshot ----------
+    class ERC20SnapshotFEI #FFB6C1
+    class ERC20SnapshotInternal <<(A,#228B22) abstract contract>> #FFB6C1
+
+    ERC20SnapshotFEI --|> ERC203643InternalCommon
+    ERC203643InternalCommon --|> ERC20SnapshotInternal
+    ERC20SnapshotInternal --|> ERC20Internal
+
+    ' ---------- ERC203643 Capped ----------
+    class ERC203643CappedFEI #FFFF99
+    class ERC203643CappedInternal <<(A,#228B22) abstract contract>> #FFFF99
+
+    ERC203643CappedFEI --|> ERC203643CappedInternal
+    ERC203643CappedInternal --|> ERC203643InternalCommon 
+
+    ' ---------- ERC203643 Controller ----------
+    class ERC203643ControllerFEI #FFFF99
+    class ERC203643ControllerInternal <<(A,#228B22) abstract contract>> #FFFF99
+
+    ERC203643ControllerFEI --|> ERC203643ControllerInternal
+    ERC203643ControllerInternal --|> ERC203643InternalCommon 
+
+    ' ---------- ERC3643 Freeze ----------
+    class ERC3643FreezeFEI #b8801aff
+    class ERC3643FreezeInternal <<(A,#228B22) abstract contract>> #b8801aff
+ 
+    ERC3643FreezeFEI --|> ERC203643InternalCommon
+    ERC203643InternalCommon --|> ERC3643FreezeInternal
+    ERC3643FreezeInternal --|> DidDocumentDetailedInternal 
+
+    ' ---------- ERC3643 Recovery----------
+    class ERC3643RecoveryFEI #b8801aff
+ 
+    ERC3643RecoveryFEI--|> ERC203643InternalCommon
+
+    ' ---------- ERC3643 Metadata ----------
+    class ERC3643MetadataFEI #b8801aff
+    ERC3643MetadataFEI --|> ERC203643InternalCommon
+
+    ' ---------- ERC3643 Compliance ----------
+    class ERC3643ComplianceFEI #E6E6FA
+    class ERC3643ComplianceInternal <<(A,#228B22) abstract contract>> #E6E6FA
+
+    ERC3643ComplianceFEI --|> ERC203643InternalCommon
+    ERC203643InternalCommon --|> ERC3643ComplianceInternal  
+
+    ' ---------- Compliance Max Balance ----------
+    class ERC3643ComplianceMaxBalanceFEI #E6E6FA
+    class ERC3643ComplianceMaxBalanceInternal <<(A,#228B22) abstract contract>> #E6E6FA
+    
+    ERC3643ComplianceMaxBalanceFEI --|> ERC203643InternalCommon
+    ERC3643ComplianceMaxBalanceInternal --|> ERC20Internal
+    ERC3643ComplianceInternal --|> ERC3643ComplianceMaxBalanceInternal  
+
+    ' ---------- Compliance DM Limit ----------
+    class ERC3643ComplianceDMLimFEI #E6E6FA
+    class ERC3643ComplianceDMLimInternal <<(A,#228B22) abstract contract>> #E6E6FA
+    
+    ERC3643ComplianceDMLimFEI --|> ERC3643ComplianceDMLimInternal
+    ERC3643ComplianceDMLimInternal --|> DidDocumentDetailedInternal
+    ERC3643ComplianceInternal --|> ERC3643ComplianceDMLimInternal
+}
+@enduml
