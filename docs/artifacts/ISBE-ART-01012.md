@@ -80,56 +80,60 @@ Definir las interfaces, comportamientos y mecanismos de control asociados al **m
 
 El módulo ERC‑3643 Security Token en ISBE sigue un diseño modular basado en **arquitectura Diamond (EIP‑2535)** con **8 facets especializados**, permitiendo una implementación segura, auditada y adaptable para tokens de seguridad regulados.
 
-#### Componentes principales:
+#### Componentes principales
 
-##### 1. **ERC3643MetadataFacet** - Metadatos regulatorios
+Para reflejar la arquitectura final, los componentes se agrupan por categorías funcionales y transversales.
 
-- **Propósito**: Gestión de metadatos básicos del token (nombre y símbolo)
-- **Funciones clave**: `setName()`, `setSymbol()`
-- **Ubicación**: `contracts/tokens/erc3643/token/erc3643metadata/`
-- **Nota**: La identidad onchain se gestiona a través del sistema DID integrado en el control de acceso
+##### Módulos ERC20
 
-##### 2. **ERC3643FreezeFacet** - Control de congelación
+- **ERC20**
+    - Propósito: Funcionalidad base de token fungible (transferencias, aprobaciones, balances).
+    - Nota: Integrado en la arquitectura Diamond y consumido por lógica común `ERC203643InternalCommon`.
+- **ERC20Snapshot**
+    - Propósito: Gestión de snapshots para dividendos/votación y trazabilidad histórica.
+    - Funciones clave: `snapshot()`, consultas de `balanceOfAt`, `totalSupplyAt`.
 
-- **Propósito**: Congelación total o parcial de cuentas y tokens
-- **Funciones clave**: `freezePartialTokens()`, `unfreezePartialTokens()`, `setAddressFrozen()`
-- **Ubicación**: `contracts/tokens/erc3643/token/erc3643freeze/`
+- **ERC203643CappedFacet**
+    - Propósito: Límite máximo de suministro (cap) con validación en `mint` y `batchMint`.
+    - Ubicación: `contracts/tokens/erc203643/capped/`
+- **ERC203643ControllerFacet**
+    - Propósito: Operaciones forzadas reguladas (`forceTransfer`, `forceBurn`, batch) con roles.
+    - Ubicación: `contracts/tokens/erc203643/controller/`
 
-##### 3. **ERC3643RecoveryFacet** - Recuperación de tokens
+##### Módulos propios de ERC3643
 
-- **Propósito**: Recuperación de tokens perdidos o de cuentas comprometidas
-- **Funciones clave**: `recoveryAddress()`, ejecutada por RECOVERY_ROLE
-- **Ubicación**: `contracts/tokens/erc3643/token/erc3643recovery/`
+- **ERC3643FreezeFacet**
+    - Propósito: Congelación total o parcial de cuentas y tokens, con operaciones batch.
+    - Ubicación: `contracts/tokens/erc3643/token/erc3643freeze/`
+- **ERC3643RecoveryFacet**
+    - Propósito: Recuperación de tokens ante pérdida/compromiso de cuentas, ejecutada por `RECOVERY_ROLE`.
+    - Ubicación: `contracts/tokens/erc3643/token/erc3643recovery/`
+- **ERC3643MetadataFacet**
+    - Propósito: Gestión de metadatos del token (nombre y símbolo).
+    - Ubicación: `contracts/tokens/erc3643/token/erc3643metadata/`
 
-##### 4. **ERC3643ComplianceFacet** - Motor de cumplimiento base
+##### Módulos transversales de compliance
 
-- **Propósito**: Validación de transferencias según reglas de compliance
-- **Funciones clave**: `canTransfer()`, `transferred()`, hooks automáticos
-- **Ubicación**: `contracts/tokens/erc3643/compliance/`
+- **ERC3643ComplianceFacet**
+    - Propósito: Motor de cumplimiento centralizado; expone `canTransfer` y orquesta hooks internos.
+    - Ubicación: `contracts/tokens/erc3643/compliance/`
+- **ERC3643ComplianceDMLimFacet**
+    - Propósito: Límites diarios/mensuales de transferencia por cuenta, con contadores y consultas.
+    - Ubicación: `contracts/tokens/erc3643/compliance/erc3643compliancedaymonthlimits/`
+- **ERC3643ComplianceMaxBalanceFacet**
+    - Propósito: Límite de balance máximo por cuenta (AML), activable por `COMPLIANCE_ROLE`.
+    - Ubicación: `contracts/tokens/erc3643/compliance/erc3643compliancemaxbalance/`
 
-##### 5. **ERC3643ComplianceMaxBalanceFacet** - Límite de balance
+##### Módulos transversales genéricos
 
-- **Propósito**: Control de balance máximo por cuenta (regulación AML)
-- **Funciones clave**: `setMaxBalance()`, validación automática
-- **Ubicación**: `contracts/tokens/erc3643/compliance/erc3643compliancemaxbalance/`
-
-##### 6. **ERC3643ComplianceDMLimFacet** - Límites temporales
-
-- **Propósito**: Límites de transferencia diarios y mensuales
-- **Funciones clave**: `setDailyLimit()`, `setMonthlyLimit()`, tracking automático
-- **Ubicación**: `contracts/tokens/erc3643/compliance/erc3643compliancedaymonthlimits/`
-
-##### 7. **ERC203643CappedFacet** - Supply cap (compartido con ERC20)
-
-- **Propósito**: Límite máximo de suministro de tokens
-- **Funciones clave**: `cap()`, validación en mint
-- **Ubicación**: `contracts/tokens/erc203643/capped/`
-
-##### 8. **ERC203643ControllerFacet** - Control de transferencias (compartido con ERC20)
-
-- **Propósito**: Transferencias y quemas forzadas por autoridad regulatoria
-- **Funciones clave**: `forceTransfer()`, `forceBurn()`
-- **Ubicación**: `contracts/tokens/erc203643/controller/`
+- **AccessControl**
+    - Propósito: Control de acceso por roles granulares (grant/revoke/hasRole).
+- **Ownable**
+    - Propósito: Gestión de propiedad del contrato y transferencia de titularidad.
+- **Pause**
+    - Propósito: Pausa global de operaciones críticas (`pause`, `unpause`, `paused`).
+ - **BasicWhitelist**
+    - Propósito: Lista blanca básica transversal para habilitar/denegar interacciones según políticas.
 
 #### Arquitectura de compliance hooks:
 
@@ -175,6 +179,9 @@ Configuration ID:
 8. ERC3643_FREEZE_RESOLVER_KEY - Congelación de cuentas
 9. ERC3643_METADATA_RESOLVER_KEY - Metadatos regulatorios
 10. ERC3643_RECOVERY_RESOLVER_KEY - Recuperación de tokens
+
+Nota:
+- Los módulos transversales genéricos (AccessControl, Ownable, Pause, BasicWhitelist) forman parte del core de la arquitectura y se incluyen por defecto; por ello no aparecen como resolver keys específicos dentro de la configuración `SECURITY_TOKEN`.
 
 #### Algoritmo de generación:
 
