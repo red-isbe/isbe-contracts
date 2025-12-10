@@ -9,8 +9,8 @@
 | **Nombre del artefacto**    | ISBE-ART-02003 — Comprobación EOAs contra lista identidades                                                                                                   |
 | **Origen**                  | Documento derivado del repositorio oficial de Smart Contracts, consolidando información técnica sobre la verificación de EOAs contra identidades DID en ISBE. |
 | **Estado**                  | Validado                                                                                                                                                      |
-| **Versión del documento**   | 0.1.0                                                                                                                                                         |
-| **Fecha**                   | 2025-08-11                                                                                                                                                    |
+| **Versión del documento**   | 1.0.0                                                                                                                                                         |
+| **Fecha**                   | 2025-12-10                                                                                                                                                    |
 | **Repositorio (congelado)** | [https://github.com/alastria/isbe-contracts](https://github.com/alastria/isbe-contracts)                                                                      |
 | **Commit**                  | `2c3a2accef78bbf723c970c8139df34a4d3137c8`                                                                                                                    |
 
@@ -284,3 +284,14 @@ await expect(knownDidTestWrapper.connect(admin).testOnlyKnownDid())
 - **EIP-2535**: Diamond Proxy Pattern
 - **W3C DID-Core**: Decentralized Identifiers
 - **eIDAS2**: Electronic Identification and Trust Services
+
+## **10. Reglas de Control y Actualización**
+
+| Tipo de cambio      | Versionado | Flujo de aprobación                | Documentación requerida         |
+|--------------------|------------|------------------------------------|---------------------------------|
+| Evolutivo menor    | X.Y+0.1    | Pull Request + revisión GT         | Release notes detalladas        |
+| Evolutivo mayor    | X+1.0      | Pull Request + revisión Comité     | Informe de impacto y release notes |
+| Correctivo         | X.Y.Z+1    | Pull Request + revisión GT         | Descripción del fix en release notes |
+
+
+Copyright © 2025 Comunidad de Madrid & Alastria
