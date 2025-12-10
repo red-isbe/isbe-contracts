@@ -22,6 +22,7 @@ import './diamond/loupe/facetVersion'
 import './diamond/cut/diamondCut'
 import './diamond/cut/facetUpdates'
 import './diamond/cut/interfaceCut'
+import "./facetsReport"
 
 // Pause/Unpause tasks
 import './globalPause/pauseIsbe'
@@ -57,6 +58,7 @@ import './configMgmt/setConfig'
 import './proxyFactory/deployUseCase'
 import './proxyFactory/deployUseCaseTo'
 import './proxyFactory/getConfigurationByProxy'
+import './proxyFactory/getDeployedProxiesByConfiguration'
 
 // Deployment tasks
 import './deployTest'
@@ -142,3 +144,16 @@ import './secret-sharing/sss.recover'
 import './genesisGeneration'
 import './bootstapping'
 import './includePKgenesis'
+
+// Anchoring tasks
+import './client/anchoring/getRegisteredChains'
+import './client/anchoring/getChainMetadata'
+import './client/anchoring/getAnchoringStats'
+import './client/anchoring/getBlocksInRange'
+import './client/anchoring/getLastNBlocks'
+import './client/anchoring/isBlockAnchored'
+import './client/anchoring/getAnchoredBlock'
+import './client/anchoring/getLastAnchoredBlock'
+import './client/anchoring/registerChain'
+import './client/anchoring/anchorBlock'
+import './client/anchoring/anchorBlocksBatch'

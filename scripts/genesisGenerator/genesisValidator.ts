@@ -18,7 +18,7 @@ interface Facet {
     facetName?: string
 }
 
-async function validateFacests(
+export async function validateFacests(
     hre: HardhatRuntimeEnvironment,
     businessAddress: string
 ) {
