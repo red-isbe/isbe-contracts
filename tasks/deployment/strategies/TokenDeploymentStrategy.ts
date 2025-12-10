@@ -6,9 +6,7 @@ import {
 } from '../types/configuration'
 import { TransactionRequest } from 'ethers'
 
-export abstract class BaseTokenDeploymentStrategy
-    implements DeploymentStrategy
-{
+export abstract class BaseTokenDeploymentStrategy implements DeploymentStrategy {
     abstract deploy(
         config: TokenConfiguration,
         env: DeploymentEnvironment

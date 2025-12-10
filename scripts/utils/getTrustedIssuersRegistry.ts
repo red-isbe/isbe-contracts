@@ -6,9 +6,8 @@ export async function getTrustedIssuersRegistry(
     signer: Signer
 ) {
     // Use the specific facet factory since the deployed contract is a diamond with multiple facets
-    const { TrustedIssuersRegistryFacet__factory } = await import(
-        '../../typechain-types'
-    )
+    const { TrustedIssuersRegistryFacet__factory } =
+        await import('../../typechain-types')
     return getContract(
         TrustedIssuersRegistryFacet__factory,
         diamondAddress,

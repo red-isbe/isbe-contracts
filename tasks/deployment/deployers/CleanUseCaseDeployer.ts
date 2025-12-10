@@ -240,9 +240,8 @@ export class CleanUseCaseDeployer {
 
         if (this.signatureProvider.getCurveType() === 'secp256r1') {
             // Use secp256r1-compatible setConfig
-            const { setConfigSecp256r1 } = await import(
-                '../../../scripts/configMgmt/setConfigSecp256r1'
-            )
+            const { setConfigSecp256r1 } =
+                await import('../../../scripts/configMgmt/setConfigSecp256r1')
             configResult = await setConfigSecp256r1(
                 this.hre,
                 config.configurationId,
@@ -346,9 +345,8 @@ export class CleanUseCaseDeployer {
 
         if (this.signatureProvider.getCurveType() === 'secp256r1') {
             // Use secp256r1-compatible deployUseCase
-            const { deployUseCaseSecp256r1 } = await import(
-                '../../../scripts/proxyFactory/deployUseCaseSecp256r1'
-            )
+            const { deployUseCaseSecp256r1 } =
+                await import('../../../scripts/proxyFactory/deployUseCaseSecp256r1')
             useCaseDeployed = await deployUseCaseSecp256r1(
                 this.hre,
                 config.configurationId,

@@ -78,9 +78,8 @@ async function deployBusinessLogicWithRawTransaction(
     version: BigNumberish
 }> {
     // Import BusinessLogicFactory interface for encoding function data
-    const { BusinessLogicFactoryFacet__factory } = await import(
-        '../../typechain-types'
-    )
+    const { BusinessLogicFactoryFacet__factory } =
+        await import('../../typechain-types')
 
     // Create interface for encoding function data
     const factoryInterface =

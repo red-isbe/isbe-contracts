@@ -18,6 +18,7 @@
 - [Production Deployment Guide](Production-Deployment-Guide.md)
 - [Deployment Logging Improvements](DEPLOYMENT_LOGGING_IMPROVEMENTS.md) 🆕
 - [TypeScript Code Improvements](TypeScript-Code-Improvements.md) 🆕 (includes test performance optimizations)
+- [ERC20 code improvements](ERC20.spec.improvements.md)
 - [Configuration Migration Guide](Configuration-Migration-Guide.md) 🆕
 
 ## Secp256R1 Documentation

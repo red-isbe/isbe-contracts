@@ -31,9 +31,8 @@ async function validateFacests(
         `\n\n--- Calling facets() function ---------------------------------------`
     )
 
-    const artifactLoupe = await import(
-        '../../artifacts/contracts/proxies/eip2535/facets/DiamondLoupeFacet.sol/DiamondLoupeFacet.json'
-    )
+    const artifactLoupe =
+        await import('../../artifacts/contracts/proxies/eip2535/facets/DiamondLoupeFacet.sol/DiamondLoupeFacet.json')
     const loupeAdapterContract = new hre.ethers.Contract(
         businessAddress,
         artifactLoupe.abi,
@@ -99,9 +98,8 @@ async function validatePausable(
     console.log(
         `\n\n--- Calling pause() function ---------------------------------------`
     )
-    const artifactPausable = await import(
-        '../../artifacts/contracts/pause/ISBEPauseFacet.sol/ISBEPauseFacet.json'
-    )
+    const artifactPausable =
+        await import('../../artifacts/contracts/pause/ISBEPauseFacet.sol/ISBEPauseFacet.json')
 
     const pausableContract = new hre.ethers.Contract(
         businessAddress,
@@ -153,9 +151,8 @@ async function validateRoles(
     console.log(`Using signer address: ${signerAddress}`)
     console.log('Current network ' + hre.network.name)
 
-    const artifact = await import(
-        '../../artifacts/contracts/factory/accessControl/AccessControlGovernanceFacet.sol/AccessControlGovernanceFacet.json'
-    )
+    const artifact =
+        await import('../../artifacts/contracts/factory/accessControl/AccessControlGovernanceFacet.sol/AccessControlGovernanceFacet.json')
 
     const accessControlContract = new hre.ethers.Contract(
         businessAddress,
@@ -216,9 +213,8 @@ async function validateBusinesLogic(
         `\n\n--- VALIDATING BUSINESS LOGIC ---------------------------------------\n`
     )
     const provider = hre.ethers.provider
-    const artifact = await import(
-        '../../artifacts/contracts/factory/businesslogic/BusinessLogicFactoryFacet.sol/BusinessLogicFactoryFacet.json'
-    )
+    const artifact =
+        await import('../../artifacts/contracts/factory/businesslogic/BusinessLogicFactoryFacet.sol/BusinessLogicFactoryFacet.json')
     const businessLogicContract = new hre.ethers.Contract(
         businessAddress,
         artifact.abi,

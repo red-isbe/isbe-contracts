@@ -167,9 +167,8 @@ export class UseCaseDeployer {
         if (networkConfig.curve === 'secp256r1') {
             console.log('      🔧 Using secp256r1-compatible setConfig...')
             // Use secp256r1-compatible setConfig with raw transactions
-            const { setConfigSecp256r1 } = await import(
-                '../../../scripts/configMgmt/setConfigSecp256r1'
-            )
+            const { setConfigSecp256r1 } =
+                await import('../../../scripts/configMgmt/setConfigSecp256r1')
             configResult = await setConfigSecp256r1(
                 this.hre,
                 config.configurationId,
@@ -283,9 +282,8 @@ export class UseCaseDeployer {
         if (networkConfig.curve === 'secp256r1') {
             console.log('      🔧 Using secp256r1-compatible deployUseCase...')
             // Use secp256r1-compatible deployUseCase with raw transactions
-            const { deployUseCaseSecp256r1 } = await import(
-                '../../../scripts/proxyFactory/deployUseCaseSecp256r1'
-            )
+            const { deployUseCaseSecp256r1 } =
+                await import('../../../scripts/proxyFactory/deployUseCaseSecp256r1')
             useCaseDeployed = await deployUseCaseSecp256r1(
                 this.hre,
                 config.configurationId,
