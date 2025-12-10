@@ -247,34 +247,6 @@ _Internal function to get the current supply cap_
 | ---- | ------- | ------------------------------ |
 | [0]  | uint256 | The current maximum supply cap |
 
-### \_checkNewCapIsLessThanTotalSupply
-
-```solidity
-function _checkNewCapIsLessThanTotalSupply(uint256 _newCap) internal view virtual
-```
-
-_Internal function to validate a new cap value_
-
-#### Parameters
-
-| Name     | Type    | Description                                                                                                                                                                                                                                          |
-| -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| \_newCap | uint256 | The new cap value to validate Requirements: - New cap must be greater than zero - New cap must be >= current total supply Reverts: - {CapIsZero} if `_newCap` is zero - {NewCapIsLessThanTotalSupply} if `_newCap` is less than current total supply |
-
-### \_checkCapExceeded
-
-```solidity
-function _checkCapExceeded(uint256 _amount) internal view
-```
-
-_Internal function to check that an amount doesn't exceed the cap when added to current supply_
-
-#### Parameters
-
-| Name     | Type    | Description                                                                                                                                                      |
-| -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| \_amount | uint256 | The amount to check against the cap Requirements: - Current supply + amount must be <= cap Reverts: - {CapExceeded} if the operation would exceed the supply cap |
-
 ---
 
 ## IERC203643Capped

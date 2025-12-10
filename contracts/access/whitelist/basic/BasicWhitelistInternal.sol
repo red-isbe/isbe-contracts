@@ -24,13 +24,33 @@ abstract contract BasicWhitelistInternal {
         bool enabled;
     }
 
+    /**
+     * @notice Restricts access to accounts that are not whitelisted.
+     * @dev Checks if the provided account is not whitelisted before allowing execution.
+     * @param _account The address to check against the whitelist.
+     */
     modifier onlyWhitelisted(address _account) {
         _checkNotWhitelisted(_account);
         _;
     }
 
+    /**
+     * @notice Restricts access to accounts that are already whitelisted.
+     * @dev Checks if the provided account is already whitelisted before allowing execution.
+     * @param _account The address to check against the whitelist.
+     */
     modifier onlyNotWhitelisted(address _account) {
         _checkAlreadyWhitelisted(_account);
+        _;
+    }
+
+    /**
+     * @notice Restricts access to a batch of accounts that are not whitelisted.
+     * @dev Checks if all provided accounts are not whitelisted before allowing execution.
+     * @param _accounts An array of addresses to check against the whitelist.
+     */
+    modifier batchOnlyWhitelisted(address[] calldata _accounts) {
+        _checkBatchNotWhitelisted(_accounts);
         _;
     }
 
@@ -109,14 +129,45 @@ abstract contract BasicWhitelistInternal {
         enabled_ = _basicWhitelistStorage().enabled;
     }
 
-    function _checkNotWhitelisted(address _account) internal view {
+    /**
+     * @notice Checks a batch of accounts to ensure none are already whitelisted.
+     * @dev Iterates through a batch of addresses, calling `_checkNotWhitelisted` on each.
+     *      This prevents duplicate whitelisting of accounts.
+     * @param _accounts Array of addresses to check.
+     */
+    function _checkBatchNotWhitelisted(
+        address[] calldata _accounts
+    ) private view {
+        uint256 length = _accounts.length;
+        for (uint256 i; i < length; ) {
+            require(
+                _isWhitelisted(_accounts[i]),
+                IBasicWhitelist.NotWhitelistedInBatch(_accounts[i])
+            );
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    /**
+     * @notice Checks if an account is not whitelisted.
+     * @dev Reverts with `IBasicWhitelist.NotWhitelisted` if the account is already whitelisted.
+     * @param _account The address to check.
+     */
+    function _checkNotWhitelisted(address _account) private view {
         require(
             _isWhitelisted(_account),
             IBasicWhitelist.NotWhitelisted(_account)
         );
     }
 
-    function _checkAlreadyWhitelisted(address _account) internal view {
+    /**
+     * @notice Checks if an account is already whitelisted.
+     * @dev Reverts with `IBasicWhitelist.AlreadyWhitelisted` if the account is not whitelisted.
+     * @param _account The address to check.
+     */
+    function _checkAlreadyWhitelisted(address _account) private view {
         require(
             !_isWhitelisted(_account),
             IBasicWhitelist.AlreadyWhitelisted(_account)

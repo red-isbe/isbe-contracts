@@ -29,13 +29,19 @@ helpers belong in the external contract.\_
 
 ### FrozenState
 
-_Struct to hold frozen state information_
+Struct to hold frozen state information
 
 ```solidity
 struct FrozenState {
     uint256 frozenTokens;
     bool wasAddressFrozen;
 }
+```
+
+### onlyWithRecoveryPair
+
+```solidity
+modifier onlyWithRecoveryPair(address _lostWallet, address _newWallet)
 ```
 
 ### recoveryAddress
@@ -83,7 +89,9 @@ Emits:
 function _restoreFrozenState(address _newWallet, struct ERC3643Recovery.FrozenState _frozenState) internal
 ```
 
-_Restores frozen state to the new wallet._
+Restores frozen state to the new wallet.
+
+_This function is used to restore the frozen state of the tokens after a recovery operation._
 
 #### Parameters
 
@@ -98,7 +106,9 @@ _Restores frozen state to the new wallet._
 function _checkRecoverableBalance(address _lostWallet) internal view returns (uint256 balance)
 ```
 
-_Checks if the lost wallet has tokens to recover._
+Checks if the lost wallet has tokens to recover.
+
+_This function checks if the lost wallet has a non-zero balance before attempting recovery._
 
 #### Parameters
 
@@ -118,7 +128,9 @@ _Checks if the lost wallet has tokens to recover._
 function _captureFrozenState(address _wallet) internal view returns (struct ERC3643Recovery.FrozenState frozenState)
 ```
 
-_Captures the current frozen state of a wallet._
+Captures the current frozen state of a wallet.
+
+_This function captures the frozen token count and freeze status of a wallet._
 
 #### Parameters
 
@@ -132,13 +144,15 @@ _Captures the current frozen state of a wallet._
 | ----------- | ---------------------------------- | -------------------------------------------------------- |
 | frozenState | struct ERC3643Recovery.FrozenState | Struct containing frozen tokens count and freeze status. |
 
-### \_validateRecoveryInputs
+### \_checkRecoveryPairAddresses
 
 ```solidity
-function _validateRecoveryInputs(address _lostWallet, address _newWallet) internal pure
+function _checkRecoveryPairAddresses(address _lostWallet, address _newWallet) internal pure
 ```
 
-_Validates all recovery input parameters._
+Validates all recovery input parameters.
+
+_This function validates the lost and new wallet addresses, ensuring they are valid and different._
 
 #### Parameters
 
@@ -153,7 +167,9 @@ _Validates all recovery input parameters._
 function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
 ```
 
-_Declares the interfaces implemented by this facet._
+Declares the interfaces implemented by this facet.
+
+_This function declares the interfaces implemented by the contract._
 
 #### Return Values
 

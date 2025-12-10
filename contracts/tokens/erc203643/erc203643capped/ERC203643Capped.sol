@@ -52,7 +52,13 @@ abstract contract ERC203643Capped is IERC203643Capped, ERC203643CappedInternal {
     function mint(
         address _to,
         uint256 _amount
-    ) external validateCap(_amount) whenNotPaused onlyRole(_MINTER_ROLE) {
+    )
+        external
+        validateCap(_amount)
+        whenNotPaused
+        onlyRole(_MINTER_ROLE)
+        onlyWhitelisted(_to)
+    {
         _mint(_to, _amount);
         emit Minted(_msgSender(), _to, _amount);
     }
@@ -88,10 +94,16 @@ abstract contract ERC203643Capped is IERC203643Capped, ERC203643CappedInternal {
     function batchMint(
         address[] calldata _toList,
         uint256[] calldata _amounts
-    ) external override whenNotPaused onlyRole(_MINTER_ROLE) {
+    )
+        external
+        override
+        whenNotPaused
+        onlyRole(_MINTER_ROLE)
+        batchOnlyWhitelisted(_toList)
+        validateCap(_calculateTotalAmount(_amounts))
+    {
         uint256 toListLength = _toList.length;
         _checkSameLength(toListLength, _amounts.length);
-        _checkCapExceeded(_calculateTotalAmount(_amounts));
         for (uint256 i; i < toListLength; ) {
             _mint(_toList[i], _amounts[i]);
             unchecked {

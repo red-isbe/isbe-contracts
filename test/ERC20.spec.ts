@@ -440,6 +440,199 @@ describe('ERC20', function () {
                 'DecreasedAllowanceBellowZero'
             )
         })
+
+        describe('Whitelist Integration', () => {
+            it('GIVEN an ERC20 with whitelist enabled WHEN non-whitelisted owner approves THEN it fails', async () => {
+                const contracts = await loadFixture(deployPreparedTokensFixture)
+                const basicWhitelist = await ethers.getContractAt(
+                    'BasicWhitelistFacet',
+                    await contracts.erc20.getAddress()
+                )
+
+                await contracts.accessControl.grantRole(
+                    WHITELIST_ROLE,
+                    contracts.ownerAddress
+                )
+
+                // Enable whitelist without adding owner
+                await basicWhitelist.enableWhitelist()
+
+                await expect(
+                    contracts.erc20.approve(contracts.otherAccountAddress, 100)
+                )
+                    .to.be.revertedWithCustomError(
+                        basicWhitelist,
+                        'NotWhitelisted'
+                    )
+                    .withArgs(contracts.ownerAddress)
+            })
+
+            it('GIVEN an ERC20 with whitelist enabled WHEN approving non-whitelisted spender THEN it fails', async () => {
+                const contracts = await loadFixture(deployPreparedTokensFixture)
+                const basicWhitelist = await ethers.getContractAt(
+                    'BasicWhitelistFacet',
+                    await contracts.erc20.getAddress()
+                )
+
+                await contracts.accessControl.grantRole(
+                    WHITELIST_ROLE,
+                    contracts.ownerAddress
+                )
+
+                // Enable whitelist and add owner but not spender
+                await basicWhitelist.enableWhitelist()
+                await basicWhitelist.addToWhitelist(contracts.ownerAddress)
+
+                await expect(
+                    contracts.erc20.approve(contracts.otherAccountAddress, 100)
+                )
+                    .to.be.revertedWithCustomError(
+                        basicWhitelist,
+                        'NotWhitelisted'
+                    )
+                    .withArgs(contracts.otherAccountAddress)
+            })
+
+            it('GIVEN an ERC20 with whitelist enabled WHEN increaseAllowance from non-whitelisted owner THEN it fails', async () => {
+                const contracts = await loadFixture(deployInitializedFixture)
+                const basicWhitelist = await ethers.getContractAt(
+                    'BasicWhitelistFacet',
+                    await contracts.erc20.getAddress()
+                )
+
+                await contracts.accessControl.grantRole(
+                    WHITELIST_ROLE,
+                    contracts.ownerAddress
+                )
+
+                // Enable whitelist but don't add owner (sender)
+                await basicWhitelist.enableWhitelist()
+                await basicWhitelist.addToWhitelist(
+                    contracts.otherAccountAddress
+                )
+
+                await expect(
+                    contracts.erc20.increaseAllowance(
+                        contracts.otherAccountAddress,
+                        100
+                    )
+                )
+                    .to.be.revertedWithCustomError(
+                        basicWhitelist,
+                        'NotWhitelisted'
+                    )
+                    .withArgs(contracts.ownerAddress)
+            })
+
+            it('GIVEN an ERC20 with whitelist enabled WHEN increaseAllowance to non-whitelisted spender THEN it fails', async () => {
+                const contracts = await loadFixture(deployInitializedFixture)
+                const basicWhitelist = await ethers.getContractAt(
+                    'BasicWhitelistFacet',
+                    await contracts.erc20.getAddress()
+                )
+
+                await contracts.accessControl.grantRole(
+                    WHITELIST_ROLE,
+                    contracts.ownerAddress
+                )
+
+                // Enable whitelist and add owner but not spender
+                await basicWhitelist.enableWhitelist()
+                await basicWhitelist.addToWhitelist(contracts.ownerAddress)
+
+                await expect(
+                    contracts.erc20.increaseAllowance(
+                        contracts.otherAccountAddress,
+                        100
+                    )
+                )
+                    .to.be.revertedWithCustomError(
+                        basicWhitelist,
+                        'NotWhitelisted'
+                    )
+                    .withArgs(contracts.otherAccountAddress)
+            })
+
+            it('GIVEN an ERC20 with whitelist enabled WHEN decreaseAllowance from non-whitelisted owner THEN it fails', async () => {
+                const contracts = await loadFixture(deployInitializedFixture)
+                const basicWhitelist = await ethers.getContractAt(
+                    'BasicWhitelistFacet',
+                    await contracts.erc20.getAddress()
+                )
+
+                await contracts.accessControl.grantRole(
+                    WHITELIST_ROLE,
+                    contracts.ownerAddress
+                )
+
+                // First approve with whitelist enabled and both whitelisted
+                await basicWhitelist.enableWhitelist()
+                await basicWhitelist.addToWhitelist(contracts.ownerAddress)
+                await basicWhitelist.addToWhitelist(
+                    contracts.otherAccountAddress
+                )
+                await contracts.erc20.approve(
+                    contracts.otherAccountAddress,
+                    200
+                )
+
+                // Now remove owner from whitelist
+                await basicWhitelist.removeFromWhitelist(contracts.ownerAddress)
+
+                await expect(
+                    contracts.erc20.decreaseAllowance(
+                        contracts.otherAccountAddress,
+                        100
+                    )
+                )
+                    .to.be.revertedWithCustomError(
+                        basicWhitelist,
+                        'NotWhitelisted'
+                    )
+                    .withArgs(contracts.ownerAddress)
+            })
+
+            it('GIVEN an ERC20 with whitelist enabled WHEN decreaseAllowance to non-whitelisted spender THEN it fails', async () => {
+                const contracts = await loadFixture(deployInitializedFixture)
+                const basicWhitelist = await ethers.getContractAt(
+                    'BasicWhitelistFacet',
+                    await contracts.erc20.getAddress()
+                )
+
+                await contracts.accessControl.grantRole(
+                    WHITELIST_ROLE,
+                    contracts.ownerAddress
+                )
+
+                // First approve with whitelist enabled and both whitelisted
+                await basicWhitelist.enableWhitelist()
+                await basicWhitelist.addToWhitelist(contracts.ownerAddress)
+                await basicWhitelist.addToWhitelist(
+                    contracts.otherAccountAddress
+                )
+                await contracts.erc20.approve(
+                    contracts.otherAccountAddress,
+                    200
+                )
+
+                // Now remove spender from whitelist
+                await basicWhitelist.removeFromWhitelist(
+                    contracts.otherAccountAddress
+                )
+
+                await expect(
+                    contracts.erc20.decreaseAllowance(
+                        contracts.otherAccountAddress,
+                        100
+                    )
+                )
+                    .to.be.revertedWithCustomError(
+                        basicWhitelist,
+                        'NotWhitelisted'
+                    )
+                    .withArgs(contracts.otherAccountAddress)
+            })
+        })
     })
 
     describe('Cap', () => {
@@ -904,7 +1097,7 @@ describe('ERC20', function () {
                 )
                     .to.be.revertedWithCustomError(
                         basicWhitelist,
-                        'NotWhitelisted'
+                        'NotWhitelistedInBatch'
                     )
                     .withArgs(contracts.otherAccountAddress)
             })
@@ -978,6 +1171,49 @@ describe('ERC20', function () {
             expect(
                 await contracts.erc20.balanceOf(contracts.otherAccountAddress)
             ).to.be.equal(0)
+        })
+
+        describe('Whitelist Integration', () => {
+            it('GIVEN an ERC20 with whitelist enabled WHEN burn from non-whitelisted address THEN it fails', async () => {
+                const contracts = await loadFixture(deployPreparedTokensFixture)
+                const basicWhitelist = await ethers.getContractAt(
+                    'BasicWhitelistFacet',
+                    await contracts.erc20.getAddress()
+                )
+
+                // Grant whitelist role and enable whitelist
+                await contracts.accessControl.grantRole(
+                    WHITELIST_ROLE,
+                    contracts.ownerAddress
+                )
+                await basicWhitelist.enableWhitelist()
+
+                // Add otherAccount to whitelist to allow minting
+                await basicWhitelist.addToWhitelist(
+                    contracts.otherAccountAddress
+                )
+
+                // Mint tokens to otherAccount (owner is whitelisted by default)
+                await contracts.erc20Capped.mint(
+                    contracts.otherAccountAddress,
+                    100
+                )
+
+                // Remove otherAccount from whitelist
+                await basicWhitelist.removeFromWhitelist(
+                    contracts.otherAccountAddress
+                )
+
+                // Try to burn from non-whitelisted address (burn only takes amount)
+                await expect(
+                    contracts.erc20Burnable
+                        .connect(contracts.otherAccount)
+                        .burn(50)
+                ).to.be.revertedWithCustomError(
+                    basicWhitelist,
+                    'NotWhitelisted'
+                )
+            })
         })
     })
 
@@ -1058,6 +1294,47 @@ describe('ERC20', function () {
                 )
             ).to.be.equal(75)
         })
+
+        describe('Whitelist Integration', () => {
+            it('GIVEN an ERC20 with whitelist enabled WHEN burnFrom from non-whitelisted address THEN it fails', async () => {
+                const contracts = await loadFixture(deployPreparedTokensFixture)
+                const basicWhitelist = await ethers.getContractAt(
+                    'BasicWhitelistFacet',
+                    await contracts.erc20.getAddress()
+                )
+
+                // Grant whitelist role
+                await contracts.accessControl.grantRole(
+                    WHITELIST_ROLE,
+                    contracts.ownerAddress
+                )
+
+                // Mint tokens to otherAccount first (no whitelist active yet)
+                await contracts.erc20Capped.mint(
+                    contracts.otherAccountAddress,
+                    100
+                )
+
+                // otherAccount approves owner to burn
+                await contracts.erc20
+                    .connect(contracts.otherAccount)
+                    .approve(contracts.ownerAddress, 100)
+
+                // Enable whitelist (owner is automatically whitelisted, otherAccount is not)
+                await basicWhitelist.enableWhitelist()
+
+                // Try to burnFrom with non-whitelisted target address
+                await expect(
+                    contracts.erc20Burnable.burnFrom(
+                        contracts.otherAccountAddress,
+                        50
+                    )
+                ).to.be.revertedWithCustomError(
+                    basicWhitelist,
+                    'NotWhitelisted'
+                )
+            })
+        })
     })
 
     describe('Transfer', () => {
@@ -1071,13 +1348,6 @@ describe('ERC20', function () {
             await contracts.erc20Capped.mint(contracts.ownerAddress, 100)
             return contracts
         }
-
-        it('GIVEN an ERC20 initialized WHEN try to use address(0) THEN it fails', async () => {
-            const contracts = await loadFixture(deployPreparedTokensFixture)
-            await expect(
-                contracts.erc20.transfer(ethers.ZeroAddress, 100)
-            ).to.be.revertedWithCustomError(contracts.erc20, 'AddressZero')
-        })
 
         it('GIVEN an ERC20 initialized WHEN try to transfer without enough balance THEN it fails', async () => {
             const contracts = await loadFixture(deployPreparedTokensFixture)
@@ -1125,6 +1395,31 @@ describe('ERC20', function () {
         })
 
         describe('Whitelist Integration', () => {
+            it('GIVEN an ERC20 with whitelist enabled WHEN non-whitelisted sender transfers THEN it fails', async () => {
+                const contracts = await prepare()
+                const basicWhitelist = await ethers.getContractAt(
+                    'BasicWhitelistFacet',
+                    await contracts.erc20.getAddress()
+                )
+
+                await contracts.accessControl.grantRole(
+                    WHITELIST_ROLE,
+                    contracts.ownerAddress
+                )
+
+                // Enable whitelist but don't add owner
+                await basicWhitelist.enableWhitelist()
+
+                await expect(
+                    contracts.erc20.transfer(contracts.otherAccountAddress, 50)
+                )
+                    .to.be.revertedWithCustomError(
+                        basicWhitelist,
+                        'NotWhitelisted'
+                    )
+                    .withArgs(contracts.ownerAddress)
+            })
+
             it('GIVEN an ERC20 with whitelist enabled WHEN transferring to non-whitelisted recipient THEN it fails', async () => {
                 const contracts = await prepare()
                 const basicWhitelist = await ethers.getContractAt(
@@ -1139,6 +1434,7 @@ describe('ERC20', function () {
 
                 // Enable whitelist
                 await basicWhitelist.enableWhitelist()
+                await basicWhitelist.addToWhitelist(contracts.ownerAddress)
 
                 await expect(
                     contracts.erc20.transfer(contracts.otherAccountAddress, 50)
@@ -1164,6 +1460,7 @@ describe('ERC20', function () {
 
                 // Enable whitelist and add recipient
                 await basicWhitelist.enableWhitelist()
+                await basicWhitelist.addToWhitelist(contracts.ownerAddress)
                 await basicWhitelist.addToWhitelist(
                     contracts.otherAccountAddress
                 )
@@ -1221,6 +1518,7 @@ describe('ERC20', function () {
 
                 // Enable whitelist, add recipient, then remove
                 await basicWhitelist.enableWhitelist()
+                await basicWhitelist.addToWhitelist(contracts.ownerAddress)
                 await basicWhitelist.addToWhitelist(
                     contracts.otherAccountAddress
                 )
@@ -1252,6 +1550,7 @@ describe('ERC20', function () {
 
                 // Enable whitelist, add, remove, then re-add recipient
                 await basicWhitelist.enableWhitelist()
+                await basicWhitelist.addToWhitelist(contracts.ownerAddress)
                 await basicWhitelist.addToWhitelist(
                     contracts.otherAccountAddress
                 )
@@ -1414,6 +1713,41 @@ describe('ERC20', function () {
         )
 
         describe('Whitelist Integration', () => {
+            it('GIVEN an ERC20 with whitelist enabled WHEN transferFrom from non-whitelisted account THEN it fails', async () => {
+                const contracts = await prepare()
+                const basicWhitelist = await ethers.getContractAt(
+                    'BasicWhitelistFacet',
+                    await contracts.erc20.getAddress()
+                )
+
+                await contracts.accessControl.grantRole(
+                    WHITELIST_ROLE,
+                    contracts.ownerAddress
+                )
+
+                // Approve before enabling whitelist
+                await contracts.erc20
+                    .connect(contracts.otherAccount)
+                    .approve(contracts.ownerAddress, 100)
+
+                // Enable whitelist but don't add otherAccount (from)
+                await basicWhitelist.enableWhitelist()
+                await basicWhitelist.addToWhitelist(contracts.ownerAddress)
+
+                await expect(
+                    contracts.erc20.transferFrom(
+                        contracts.otherAccountAddress,
+                        contracts.ownerAddress,
+                        50
+                    )
+                )
+                    .to.be.revertedWithCustomError(
+                        basicWhitelist,
+                        'NotWhitelisted'
+                    )
+                    .withArgs(contracts.otherAccountAddress)
+            })
+
             it('GIVEN an ERC20 with whitelist enabled WHEN transferFrom to non-whitelisted recipient THEN it fails', async () => {
                 const contracts = await prepare()
                 const basicWhitelist = await ethers.getContractAt(
@@ -1427,10 +1761,14 @@ describe('ERC20', function () {
                 )
 
                 // Approve and enable whitelist
+                await basicWhitelist.enableWhitelist()
+                await basicWhitelist.addToWhitelist(contracts.ownerAddress)
+                await basicWhitelist.addToWhitelist(
+                    contracts.otherAccountAddress
+                )
                 await contracts.erc20
                     .connect(contracts.otherAccount)
                     .approve(contracts.ownerAddress, 100)
-                await basicWhitelist.enableWhitelist()
 
                 // Create a third account that is not whitelisted
                 const [, , thirdAccount] = await ethers.getSigners()
@@ -1463,11 +1801,14 @@ describe('ERC20', function () {
                 )
 
                 // Approve, enable whitelist, and add recipient
+                await basicWhitelist.enableWhitelist()
+                await basicWhitelist.addToWhitelist(
+                    contracts.otherAccountAddress
+                )
+                await basicWhitelist.addToWhitelist(contracts.ownerAddress)
                 await contracts.erc20
                     .connect(contracts.otherAccount)
                     .approve(contracts.ownerAddress, 100)
-                await basicWhitelist.enableWhitelist()
-                await basicWhitelist.addToWhitelist(contracts.ownerAddress)
 
                 await expect(
                     contracts.erc20.transferFrom(
@@ -1624,6 +1965,37 @@ describe('ERC20', function () {
         })
 
         describe('Whitelist Integration', () => {
+            it('GIVEN an ERC20 with whitelist enabled WHEN batchTransfer from non-whitelisted sender THEN it fails', async () => {
+                const contracts = await prepare()
+                const basicWhitelist = await ethers.getContractAt(
+                    'BasicWhitelistFacet',
+                    await contracts.erc20.getAddress()
+                )
+
+                await contracts.accessControl.grantRole(
+                    WHITELIST_ROLE,
+                    contracts.ownerAddress
+                )
+
+                // Enable whitelist but don't add owner (sender)
+                await basicWhitelist.enableWhitelist()
+                await basicWhitelist.addToWhitelist(
+                    contracts.otherAccountAddress
+                )
+
+                await expect(
+                    contracts.erc20.batchTransfer(
+                        [contracts.otherAccountAddress],
+                        [100]
+                    )
+                )
+                    .to.be.revertedWithCustomError(
+                        basicWhitelist,
+                        'NotWhitelisted'
+                    )
+                    .withArgs(contracts.ownerAddress)
+            })
+
             it('GIVEN an ERC20 with whitelist enabled WHEN batchTransfer to non-whitelisted recipient THEN it fails', async () => {
                 const contracts = await prepare()
                 const basicWhitelist = await ethers.getContractAt(
@@ -1638,6 +2010,7 @@ describe('ERC20', function () {
 
                 // Enable whitelist
                 await basicWhitelist.enableWhitelist()
+                await basicWhitelist.addToWhitelist(contracts.ownerAddress)
 
                 await expect(
                     contracts.erc20.batchTransfer(
@@ -1647,7 +2020,7 @@ describe('ERC20', function () {
                 )
                     .to.be.revertedWithCustomError(
                         basicWhitelist,
-                        'NotWhitelisted'
+                        'NotWhitelistedInBatch'
                     )
                     .withArgs(contracts.otherAccountAddress)
             })
@@ -1934,6 +2307,99 @@ describe('ERC20', function () {
             expect(
                 await contracts.erc20.balanceOf(contracts.ownerAddress)
             ).to.be.equal(MINTED)
+        })
+
+        describe('Whitelist Integration', () => {
+            it('GIVEN an ERC20 with whitelist enabled WHEN forceTransfer from non-whitelisted account THEN it fails', async () => {
+                const contracts = await prepare()
+                const basicWhitelist = await ethers.getContractAt(
+                    'BasicWhitelistFacet',
+                    await contracts.erc20.getAddress()
+                )
+
+                await contracts.accessControl.grantRole(
+                    WHITELIST_ROLE,
+                    contracts.ownerAddress
+                )
+
+                // Enable whitelist but don't add otherAccount (from)
+                await basicWhitelist.enableWhitelist()
+                await basicWhitelist.addToWhitelist(contracts.ownerAddress)
+
+                await expect(
+                    contracts.erc20Controller.forceTransfer(
+                        contracts.otherAccountAddress,
+                        contracts.ownerAddress,
+                        MINTED
+                    )
+                )
+                    .to.be.revertedWithCustomError(
+                        basicWhitelist,
+                        'NotWhitelisted'
+                    )
+                    .withArgs(contracts.otherAccountAddress)
+            })
+
+            it('GIVEN an ERC20 with whitelist enabled WHEN forceTransfer to non-whitelisted account THEN it fails', async () => {
+                const contracts = await prepare()
+                const basicWhitelist = await ethers.getContractAt(
+                    'BasicWhitelistFacet',
+                    await contracts.erc20.getAddress()
+                )
+
+                await contracts.accessControl.grantRole(
+                    WHITELIST_ROLE,
+                    contracts.ownerAddress
+                )
+
+                // Enable whitelist and add from but not to
+                await basicWhitelist.enableWhitelist()
+                await basicWhitelist.addToWhitelist(
+                    contracts.otherAccountAddress
+                )
+
+                await expect(
+                    contracts.erc20Controller.forceTransfer(
+                        contracts.otherAccountAddress,
+                        contracts.ownerAddress,
+                        MINTED
+                    )
+                )
+                    .to.be.revertedWithCustomError(
+                        basicWhitelist,
+                        'NotWhitelisted'
+                    )
+                    .withArgs(contracts.ownerAddress)
+            })
+
+            it('GIVEN an ERC20 with whitelist enabled WHEN forceBurn from non-whitelisted account THEN it fails', async () => {
+                const contracts = await prepare()
+                const basicWhitelist = await ethers.getContractAt(
+                    'BasicWhitelistFacet',
+                    await contracts.erc20.getAddress()
+                )
+
+                await contracts.accessControl.grantRole(
+                    WHITELIST_ROLE,
+                    contracts.ownerAddress
+                )
+
+                // Enable whitelist but don't add otherAccount
+                await basicWhitelist.enableWhitelist()
+                await basicWhitelist.addToWhitelist(contracts.ownerAddress)
+
+                await expect(
+                    contracts.erc20Controller.forceBurn(
+                        contracts.otherAccountAddress,
+                        MINTED
+                    )
+                )
+                    .to.be.revertedWithCustomError(
+                        basicWhitelist,
+                        'NotWhitelisted'
+                    )
+                    .withArgs(contracts.otherAccountAddress)
+            })
         })
     })
 

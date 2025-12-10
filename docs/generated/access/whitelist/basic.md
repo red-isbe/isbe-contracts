@@ -230,11 +230,47 @@ struct BasicWhitelistStorage {
 modifier onlyWhitelisted(address _account)
 ```
 
+Restricts access to accounts that are not whitelisted.
+
+_Checks if the provided account is not whitelisted before allowing execution._
+
+#### Parameters
+
+| Name      | Type    | Description                                 |
+| --------- | ------- | ------------------------------------------- |
+| \_account | address | The address to check against the whitelist. |
+
 ### onlyNotWhitelisted
 
 ```solidity
 modifier onlyNotWhitelisted(address _account)
 ```
+
+Restricts access to accounts that are already whitelisted.
+
+_Checks if the provided account is already whitelisted before allowing execution._
+
+#### Parameters
+
+| Name      | Type    | Description                                 |
+| --------- | ------- | ------------------------------------------- |
+| \_account | address | The address to check against the whitelist. |
+
+### batchOnlyWhitelisted
+
+```solidity
+modifier batchOnlyWhitelisted(address[] _accounts)
+```
+
+Restricts access to a batch of accounts that are not whitelisted.
+
+_Checks if all provided accounts are not whitelisted before allowing execution._
+
+#### Parameters
+
+| Name       | Type      | Description                                           |
+| ---------- | --------- | ----------------------------------------------------- |
+| \_accounts | address[] | An array of addresses to check against the whitelist. |
 
 ### \_initialize
 
@@ -342,18 +378,6 @@ _Internal view function_
 | --------- | ---- | --------------------------------------------- |
 | enabled\_ | bool | True if whitelist is enabled, false otherwise |
 
-### \_checkNotWhitelisted
-
-```solidity
-function _checkNotWhitelisted(address _account) internal view
-```
-
-### \_checkAlreadyWhitelisted
-
-```solidity
-function _checkAlreadyWhitelisted(address _account) internal view
-```
-
 ---
 
 ## IBasicWhitelist
@@ -446,6 +470,20 @@ Error thrown when attempting to remove an address that is not whitelisted
 | Name    | Type    | Description                              |
 | ------- | ------- | ---------------------------------------- |
 | account | address | The address that is not in the whitelist |
+
+### NotWhitelistedInBatch
+
+```solidity
+error NotWhitelistedInBatch(address account)
+```
+
+Error thrown when a batch operation includes a non-whitelisted address
+
+#### Parameters
+
+| Name    | Type    | Description                            |
+| ------- | ------- | -------------------------------------- |
+| account | address | The offending address within the batch |
 
 ### initializeBasicWhitelist
 

@@ -37,6 +37,8 @@ abstract contract ERC203643Controller is
         override
         whenNotPaused
         onlyRole(_CONTROLLER_ROLE)
+        onlyWhitelisted(_from)
+        onlyWhitelisted(_to)
         returns (bool success)
     {
         success = _forceTransfer(_from, _to, _amount);
@@ -59,7 +61,13 @@ abstract contract ERC203643Controller is
     function forceBurn(
         address _from,
         uint256 _amount
-    ) external override whenNotPaused onlyRole(_CONTROLLER_ROLE) {
+    )
+        external
+        override
+        whenNotPaused
+        onlyRole(_CONTROLLER_ROLE)
+        onlyWhitelisted(_from)
+    {
         _forceBurn(_from, _amount);
         emit ForcedBurn(_msgSender(), _from, _amount);
     }
@@ -88,7 +96,13 @@ abstract contract ERC203643Controller is
     function batchForceBurn(
         address[] calldata _userAddresses,
         uint256[] calldata _amounts
-    ) external override whenNotPaused onlyRole(_CONTROLLER_ROLE) {
+    )
+        external
+        override
+        whenNotPaused
+        onlyRole(_CONTROLLER_ROLE)
+        batchOnlyWhitelisted(_userAddresses)
+    {
         uint256 userAddressesLength = _userAddresses.length;
         _checkSameLength(userAddressesLength, _amounts.length);
         for (uint256 i; i < userAddressesLength; ) {
@@ -126,7 +140,14 @@ abstract contract ERC203643Controller is
         address[] calldata _fromList,
         address[] calldata _toList,
         uint256[] calldata _amounts
-    ) external override whenNotPaused onlyRole(_CONTROLLER_ROLE) {
+    )
+        external
+        override
+        whenNotPaused
+        onlyRole(_CONTROLLER_ROLE)
+        batchOnlyWhitelisted(_fromList)
+        batchOnlyWhitelisted(_toList)
+    {
         uint256 fromListLength = _fromList.length;
         _checkSameLength(fromListLength, _toList.length);
         _checkSameLength(fromListLength, _amounts.length);

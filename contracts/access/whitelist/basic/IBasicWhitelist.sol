@@ -46,6 +46,12 @@ interface IBasicWhitelist {
     error NotWhitelisted(address account);
 
     /**
+     * @notice Error thrown when a batch operation includes a non-whitelisted address
+     * @param account The offending address within the batch
+     */
+    error NotWhitelistedInBatch(address account);
+
+    /**
      * @notice Initializes the whitelist with an initial enabled/disabled state
      * @dev Can only be called once during contract initialization
      * @param _enabled Initial state of the whitelist (true to enable, false to disable)

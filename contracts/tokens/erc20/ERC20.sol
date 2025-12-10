@@ -54,7 +54,14 @@ abstract contract ERC20 is IERC20Isbe, ERC203643InternalCommon {
     function transfer(
         address _to,
         uint256 _amount
-    ) external override whenNotPaused returns (bool) {
+    )
+        external
+        override
+        whenNotPaused
+        onlyWhitelisted(_msgSender())
+        onlyWhitelisted(_to)
+        returns (bool)
+    {
         _transfer(_msgSender(), _to, _amount);
         return true;
     }
@@ -87,12 +94,21 @@ abstract contract ERC20 is IERC20Isbe, ERC203643InternalCommon {
     function batchTransfer(
         address[] calldata _toList,
         uint256[] calldata _amounts
-    ) external override whenNotPaused {
+    )
+        external
+        override
+        whenNotPaused
+        onlyWhitelisted(_msgSender())
+        batchOnlyWhitelisted(_toList)
+    {
         uint256 toListLength = _toList.length;
-        _checkSameLength(toListLength, _amounts.length);
+        uint256 amountsLength = _amounts.length;
+        _checkSameLength(toListLength, amountsLength);
         address from = _msgSender();
-        // Validate total amount and sender balance
-        _checkTotalAmount(from, _amounts);
+
+        // Fail-fast: check total balance upfront before loop
+        _checkTransferAmount(_balanceOf(from), _calculateTotalAmount(_amounts));
+
         // Perform individual transfers
         for (uint256 i; i < toListLength; ) {
             _transfer(from, _toList[i], _amounts[i]);
@@ -117,9 +133,15 @@ abstract contract ERC20 is IERC20Isbe, ERC203643InternalCommon {
     function approve(
         address _spender,
         uint256 _amount
-    ) external override whenNotPaused returns (bool) {
+    )
+        external
+        override
+        whenNotPaused
+        onlyWhitelisted(_msgSender())
+        onlyWhitelisted(_spender)
+        returns (bool)
+    {
         _approve(_msgSender(), _spender, _amount);
-        emit IERC20.Approval(_msgSender(), _spender, _amount);
         return true;
     }
 
@@ -143,7 +165,14 @@ abstract contract ERC20 is IERC20Isbe, ERC203643InternalCommon {
         address _from,
         address _to,
         uint256 _amount
-    ) external override whenNotPaused returns (bool) {
+    )
+        external
+        override
+        whenNotPaused
+        onlyWhitelisted(_from)
+        onlyWhitelisted(_to)
+        returns (bool)
+    {
         _spendAllowance(_from, _msgSender(), _amount);
         _transfer(_from, _to, _amount);
         emit TransferFromExecuted(_msgSender(), _from, _to, _amount);
@@ -165,7 +194,13 @@ abstract contract ERC20 is IERC20Isbe, ERC203643InternalCommon {
     function increaseAllowance(
         address _spender,
         uint256 _addedValue
-    ) external whenNotPaused returns (bool) {
+    )
+        external
+        whenNotPaused
+        onlyWhitelisted(_msgSender())
+        onlyWhitelisted(_spender)
+        returns (bool)
+    {
         address owner = _msgSender();
         uint256 amount;
         unchecked {
@@ -173,7 +208,6 @@ abstract contract ERC20 is IERC20Isbe, ERC203643InternalCommon {
         }
         _approve(owner, _spender, amount);
         emit AllowanceIncreased(owner, _spender, _addedValue, amount);
-        emit IERC20.Approval(owner, _spender, amount);
         return true;
     }
 
@@ -194,7 +228,13 @@ abstract contract ERC20 is IERC20Isbe, ERC203643InternalCommon {
     function decreaseAllowance(
         address _spender,
         uint256 _subtractedValue
-    ) external whenNotPaused returns (bool) {
+    )
+        external
+        whenNotPaused
+        onlyWhitelisted(_msgSender())
+        onlyWhitelisted(_spender)
+        returns (bool)
+    {
         address owner = _msgSender();
         uint256 currentAllowance = _allowance(owner, _spender);
         require(
@@ -207,7 +247,6 @@ abstract contract ERC20 is IERC20Isbe, ERC203643InternalCommon {
         }
         _approve(owner, _spender, amount);
         emit AllowanceDecreased(owner, _spender, _subtractedValue, amount);
-        emit IERC20.Approval(owner, _spender, amount);
 
         return true;
     }

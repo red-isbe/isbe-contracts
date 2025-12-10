@@ -35,11 +35,16 @@ import {_RECOVERY_ROLE} from '../../../../constants/roles.sol';
  */
 abstract contract ERC3643Recovery is IERC3643Recovery, ERC203643InternalCommon {
     /**
-     * @dev Struct to hold frozen state information
+     * @notice Struct to hold frozen state information
      */
     struct FrozenState {
         uint256 frozenTokens;
         bool wasAddressFrozen;
+    }
+
+    modifier onlyWithRecoveryPair(address _lostWallet, address _newWallet) {
+        _checkRecoveryPairAddresses(_lostWallet, _newWallet);
+        _;
     }
 
     /**
@@ -67,10 +72,16 @@ abstract contract ERC3643Recovery is IERC3643Recovery, ERC203643InternalCommon {
     function recoveryAddress(
         address _lostWallet,
         address _newWallet
-    ) external override whenNotPaused onlyRole(_RECOVERY_ROLE) returns (bool) {
-        // 1. Validate all input parameters
-        _validateRecoveryInputs(_lostWallet, _newWallet);
-
+    )
+        external
+        override
+        whenNotPaused
+        onlyRole(_RECOVERY_ROLE)
+        onlyWhitelisted(_newWallet)
+        onlyWhitelisted(_lostWallet)
+        onlyWithRecoveryPair(_lostWallet, _newWallet)
+        returns (bool)
+    {
         // 2. Check balance availability
         uint256 lostWalletBalance = _checkRecoverableBalance(_lostWallet);
 
@@ -94,7 +105,8 @@ abstract contract ERC3643Recovery is IERC3643Recovery, ERC203643InternalCommon {
     // ============================================================
 
     /**
-     * @dev Restores frozen state to the new wallet.
+     * @notice Restores frozen state to the new wallet.
+     * @dev This function is used to restore the frozen state of the tokens after a recovery operation.
      * @param _newWallet The wallet to restore frozen state to.
      * @param _frozenState The frozen state to restore.
      */
@@ -111,7 +123,8 @@ abstract contract ERC3643Recovery is IERC3643Recovery, ERC203643InternalCommon {
     }
 
     /**
-     * @dev Checks if the lost wallet has tokens to recover.
+     * @notice Checks if the lost wallet has tokens to recover.
+     * @dev This function checks if the lost wallet has a non-zero balance before attempting recovery.
      * @param _lostWallet The wallet to check.
      * @return balance The balance of the lost wallet.
      *
@@ -126,7 +139,8 @@ abstract contract ERC3643Recovery is IERC3643Recovery, ERC203643InternalCommon {
     }
 
     /**
-     * @dev Captures the current frozen state of a wallet.
+     * @notice Captures the current frozen state of a wallet.
+     * @dev This function captures the frozen token count and freeze status of a wallet.
      * @param _wallet The wallet to capture state from.
      * @return frozenState Struct containing frozen tokens count and freeze status.
      */
@@ -138,7 +152,8 @@ abstract contract ERC3643Recovery is IERC3643Recovery, ERC203643InternalCommon {
     }
 
     /**
-     * @dev Validates all recovery input parameters.
+     * @notice Validates all recovery input parameters.
+     * @dev This function validates the lost and new wallet addresses, ensuring they are valid and different.
      * @param _lostWallet The lost wallet address to validate.
      * @param _newWallet The new wallet address to validate.
      *
@@ -147,7 +162,7 @@ abstract contract ERC3643Recovery is IERC3643Recovery, ERC203643InternalCommon {
      * - {InvalidNewWallet} if new wallet is zero address.
      * - {SameWalletAddress} if lost and new wallets are the same.
      */
-    function _validateRecoveryInputs(
+    function _checkRecoveryPairAddresses(
         address _lostWallet,
         address _newWallet
     ) internal pure {
@@ -160,7 +175,8 @@ abstract contract ERC3643Recovery is IERC3643Recovery, ERC203643InternalCommon {
     }
 
     /**
-     * @dev Declares the interfaces implemented by this facet.
+     * @notice Declares the interfaces implemented by this facet.
+     * @dev This function declares the interfaces implemented by the contract.
      * @return interfaces_ Array of supported interface identifiers.
      */
     function _implementedInterfaces()

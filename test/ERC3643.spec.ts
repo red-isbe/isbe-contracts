@@ -1836,6 +1836,35 @@ describe('ERC3643 Token', function () {
                             ).to.equal(200n - amounts[i])
                         }
                     })
+
+                    describe('Whitelist Integration', () => {
+                        it('GIVEN whitelist enabled WHEN batchForceBurn with non-whitelisted address THEN reverts', async () => {
+                            // Grant WHITELIST_ROLE to owner
+                            await accessControl
+                                .connect(owner)
+                                .grantRole(WHITELIST_ROLE, ownerAddress)
+
+                            // Enable whitelist but don't add bob
+                            await erc3643.connect(owner).enableWhitelist()
+                            await erc3643
+                                .connect(owner)
+                                .addToWhitelist(aliceAddress)
+
+                            await expect(
+                                erc3643Controller
+                                    .connect(owner)
+                                    .batchForceBurn(
+                                        [aliceAddress, bobAddress],
+                                        [100n, 100n]
+                                    )
+                            )
+                                .to.be.revertedWithCustomError(
+                                    erc3643,
+                                    'NotWhitelistedInBatch'
+                                )
+                                .withArgs(bobAddress)
+                        })
+                    })
                 })
 
                 describe('batchForceTransfer', () => {
@@ -2236,6 +2265,67 @@ describe('ERC3643 Token', function () {
                         expect(
                             await erc20Facet.balanceOf(davidAddress)
                         ).to.equal(amount2)
+                    })
+
+                    describe('Whitelist Integration', () => {
+                        it('GIVEN whitelist enabled WHEN batchForceTransfer with non-whitelisted from address THEN reverts', async () => {
+                            // Grant WHITELIST_ROLE to owner
+                            await accessControl
+                                .connect(owner)
+                                .grantRole(WHITELIST_ROLE, ownerAddress)
+
+                            // Enable whitelist and add bob but not alice (from)
+                            await erc3643.connect(owner).enableWhitelist()
+                            await erc3643
+                                .connect(owner)
+                                .addToWhitelist(bobAddress)
+
+                            await expect(
+                                erc3643Controller
+                                    .connect(owner)
+                                    .batchForceTransfer(
+                                        [aliceAddress, bobAddress],
+                                        [bobAddress, aliceAddress],
+                                        [100n, 100n]
+                                    )
+                            )
+                                .to.be.revertedWithCustomError(
+                                    erc3643,
+                                    'NotWhitelistedInBatch'
+                                )
+                                .withArgs(aliceAddress)
+                        })
+
+                        it('GIVEN whitelist enabled WHEN batchForceTransfer with non-whitelisted to address THEN reverts', async () => {
+                            // Grant WHITELIST_ROLE to owner
+                            await accessControl
+                                .connect(owner)
+                                .grantRole(WHITELIST_ROLE, ownerAddress)
+
+                            // Enable whitelist and add alice but not david (to)
+                            await erc3643.connect(owner).enableWhitelist()
+                            await erc3643
+                                .connect(owner)
+                                .addToWhitelist(aliceAddress)
+                            await erc3643
+                                .connect(owner)
+                                .addToWhitelist(bobAddress)
+
+                            await expect(
+                                erc3643Controller
+                                    .connect(owner)
+                                    .batchForceTransfer(
+                                        [aliceAddress, bobAddress],
+                                        [bobAddress, davidAddress],
+                                        [100n, 100n]
+                                    )
+                            )
+                                .to.be.revertedWithCustomError(
+                                    erc3643,
+                                    'NotWhitelistedInBatch'
+                                )
+                                .withArgs(davidAddress)
+                        })
                     })
                 })
             })
@@ -4606,6 +4696,18 @@ describe('ERC3643 Token', function () {
                         ).to.be.reverted
                     })
 
+                    it('GIVEN ERC3643 mode WHEN all tokens frozen THEN transfer reverts with zero free balance', async () => {
+                        // Alice has 5000 tokens, freeze all of them
+                        await erc3643
+                            .connect(owner)
+                            .freezePartialTokens(aliceAddress, 5000n)
+
+                        // Try to transfer any amount should fail (free balance is 0)
+                        await expect(
+                            erc20Facet.connect(alice).transfer(bobAddress, 1n)
+                        ).to.be.reverted
+                    })
+
                     it('GIVEN ERC3643 mode WHEN valid transfer within free balance THEN succeeds', async () => {
                         await expect(
                             erc20Facet.connect(alice).transfer(bobAddress, 100n)
@@ -4664,9 +4766,28 @@ describe('ERC3643 Token', function () {
                         await loadFixture(fixture)
                     })
 
+                    it('GIVEN whitelist enabled and sender not whitelisted WHEN transfer THEN reverts', async () => {
+                        // Enable whitelist but don't add sender (alice)
+                        await erc3643.connect(owner).enableWhitelist()
+                        await erc3643.connect(owner).addToWhitelist(bobAddress)
+
+                        // Try to transfer without whitelisting sender
+                        await expect(
+                            erc20Facet.connect(alice).transfer(bobAddress, 100n)
+                        )
+                            .to.be.revertedWithCustomError(
+                                erc3643,
+                                'NotWhitelisted'
+                            )
+                            .withArgs(aliceAddress)
+                    })
+
                     it('GIVEN whitelist enabled and recipient not whitelisted WHEN transfer THEN reverts', async () => {
                         // Enable whitelist (alice already has tokens from beforeEach)
                         await erc3643.connect(owner).enableWhitelist()
+                        await erc3643
+                            .connect(owner)
+                            .addToWhitelist(aliceAddress)
 
                         // Try to transfer without whitelisting recipient
                         await expect(
@@ -4679,12 +4800,15 @@ describe('ERC3643 Token', function () {
                             .withArgs(bobAddress)
                     })
 
-                    it('GIVEN whitelist enabled and recipient whitelisted WHEN transfer THEN succeeds', async () => {
-                        // Enable whitelist and add recipient
+                    it('GIVEN whitelist enabled and both whitelisted WHEN transfer THEN succeeds', async () => {
+                        // Enable whitelist and add both sender and recipient
                         await erc3643.connect(owner).enableWhitelist()
+                        await erc3643
+                            .connect(owner)
+                            .addToWhitelist(aliceAddress)
                         await erc3643.connect(owner).addToWhitelist(bobAddress)
 
-                        // Transfer should succeed (sender whitelist is not checked)
+                        // Transfer should succeed
                         await expect(
                             erc20Facet.connect(alice).transfer(bobAddress, 100n)
                         )
@@ -4724,6 +4848,9 @@ describe('ERC3643 Token', function () {
                     it('GIVEN recipient whitelisted then removed WHEN transfer THEN reverts', async () => {
                         // Enable whitelist, add recipient, then remove
                         await erc3643.connect(owner).enableWhitelist()
+                        await erc3643
+                            .connect(owner)
+                            .addToWhitelist(aliceAddress)
                         await erc3643.connect(owner).addToWhitelist(bobAddress)
                         await erc3643
                             .connect(owner)
@@ -4743,6 +4870,9 @@ describe('ERC3643 Token', function () {
                     it('GIVEN recipient removed then re-added to whitelist WHEN transfer THEN succeeds', async () => {
                         // Enable whitelist, add recipient, remove, and re-add
                         await erc3643.connect(owner).enableWhitelist()
+                        await erc3643
+                            .connect(owner)
+                            .addToWhitelist(aliceAddress)
                         await erc3643.connect(owner).addToWhitelist(bobAddress)
                         await erc3643
                             .connect(owner)
@@ -4780,6 +4910,9 @@ describe('ERC3643 Token', function () {
 
                         // Enable whitelist
                         await erc3643.connect(owner).enableWhitelist()
+                        await erc3643
+                            .connect(owner)
+                            .addToWhitelist(aliceAddress)
 
                         // Second transfer should fail (charlie not whitelisted)
                         await expect(
@@ -4901,6 +5034,35 @@ describe('ERC3643 Token', function () {
                                 .connect(owner)
                                 .transferFrom(aliceAddress, ZeroAddress, 100n)
                         ).to.be.reverted
+                    })
+
+                    it('GIVEN ERC3643 mode WHEN transferFrom with max allowance THEN allowance is not updated', async () => {
+                        const MaxUint256 = ethers.MaxUint256
+
+                        // Alice approves max uint256 to owner
+                        await erc20Facet
+                            .connect(alice)
+                            .approve(owner.address, MaxUint256)
+
+                        expect(
+                            await erc20Facet.allowance(
+                                aliceAddress,
+                                owner.address
+                            )
+                        ).to.equal(MaxUint256)
+
+                        // Owner transfers from Alice to Bob
+                        await erc20Facet
+                            .connect(owner)
+                            .transferFrom(aliceAddress, bobAddress, 100n)
+
+                        // Allowance should still be MaxUint256 (not decremented)
+                        expect(
+                            await erc20Facet.allowance(
+                                aliceAddress,
+                                owner.address
+                            )
+                        ).to.equal(MaxUint256)
                     })
                 })
 
@@ -5821,6 +5983,65 @@ describe('ERC3643 Token', function () {
                             await erc3643.getFrozenTokens(bobAddress)
                         ).to.equal(frozenAmount)
                         expect(await erc3643.isFrozen(bobAddress)).to.be.true
+                    })
+                })
+
+                describe('Whitelist Integration', () => {
+                    beforeEach(async () => {
+                        const fixture = async () => {
+                            await accessControl
+                                .connect(owner)
+                                .grantRole(WHITELIST_ROLE, ownerAddress)
+                        }
+                        await loadFixture(fixture)
+                    })
+
+                    it('GIVEN whitelist enabled WHEN recoveryAddress with non-whitelisted lostWallet THEN reverts', async () => {
+                        const basicWhitelist = await ethers.getContractAt(
+                            'BasicWhitelistFacet',
+                            await erc3643.getAddress()
+                        )
+
+                        // Enable whitelist but don't add alice (lostWallet)
+                        await basicWhitelist.connect(owner).enableWhitelist()
+                        await basicWhitelist
+                            .connect(owner)
+                            .addToWhitelist(bobAddress)
+
+                        await expect(
+                            erc3643
+                                .connect(owner)
+                                .recoveryAddress(aliceAddress, bobAddress)
+                        )
+                            .to.be.revertedWithCustomError(
+                                basicWhitelist,
+                                'NotWhitelisted'
+                            )
+                            .withArgs(aliceAddress)
+                    })
+
+                    it('GIVEN whitelist enabled WHEN recoveryAddress with non-whitelisted newWallet THEN reverts', async () => {
+                        const basicWhitelist = await ethers.getContractAt(
+                            'BasicWhitelistFacet',
+                            await erc3643.getAddress()
+                        )
+
+                        // Enable whitelist and add alice but not bob (newWallet)
+                        await basicWhitelist.connect(owner).enableWhitelist()
+                        await basicWhitelist
+                            .connect(owner)
+                            .addToWhitelist(aliceAddress)
+
+                        await expect(
+                            erc3643
+                                .connect(owner)
+                                .recoveryAddress(aliceAddress, bobAddress)
+                        )
+                            .to.be.revertedWithCustomError(
+                                basicWhitelist,
+                                'NotWhitelisted'
+                            )
+                            .withArgs(bobAddress)
                     })
                 })
 

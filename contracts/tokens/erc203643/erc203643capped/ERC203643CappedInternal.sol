@@ -29,7 +29,7 @@ abstract contract ERC203643CappedInternal is ERC203643InternalCommon {
      * @param _newCap The new cap value to validate
      */
     modifier validateNewCap(uint256 _newCap) {
-        _checkNewCapIsLessThanTotalSupply(_newCap);
+        _checkNewCap(_newCap);
         _;
     }
 
@@ -38,7 +38,7 @@ abstract contract ERC203643CappedInternal is ERC203643InternalCommon {
      * @param _amount The amount to be minted
      */
     modifier validateCap(uint256 _amount) {
-        _checkCapExceeded(_amount);
+        _checkCap(_amount);
         _;
     }
 
@@ -70,9 +70,7 @@ abstract contract ERC203643CappedInternal is ERC203643InternalCommon {
      * - {CapIsZero} if `_newCap` is zero
      * - {NewCapIsLessThanTotalSupply} if `_newCap` is less than current total supply
      */
-    function _checkNewCapIsLessThanTotalSupply(
-        uint256 _newCap
-    ) internal view virtual {
+    function _checkNewCap(uint256 _newCap) private view {
         _checkUintIsNotZero(_newCap);
 
         uint256 totalSupply = _totalSupply();
@@ -84,16 +82,10 @@ abstract contract ERC203643CappedInternal is ERC203643InternalCommon {
     }
 
     /**
-     * @dev Internal function to check that an amount doesn't exceed the cap when added to current supply
-     * @param _amount The amount to check against the cap
-     *
-     * Requirements:
-     * - Current supply + amount must be <= cap
-     *
-     * Reverts:
-     * - {CapExceeded} if the operation would exceed the supply cap
+     * @dev Internal function to check if the minting amount is valid
+     * @param _amount The amount to be minted
      */
-    function _checkCapExceeded(uint256 _amount) internal view {
+    function _checkCap(uint256 _amount) private view {
         require(
             _totalSupply() + _amount <= _cap(),
             IERC203643Capped.CapExceeded()

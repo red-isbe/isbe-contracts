@@ -7,7 +7,6 @@ pragma solidity ^0.8.28;
 import {ERC3643FreezeInternal} from '../erc3643/token/erc3643freeze/ERC3643FreezeInternal.sol';
 import {ERC20SnapshotInternal} from '../erc20/extensions/snapshot/ERC20SnapshotInternal.sol';
 import {ERC3643ComplianceInternal} from '../erc3643/compliance/ERC3643ComplianceInternal.sol';
-import {IBasicWhitelist} from '../../access/whitelist/basic/IBasicWhitelist.sol';
 import {ICompliance} from '../erc3643/compliance/ICompliance.sol';
 import {_CONTROLLER_ROLE} from '../../constants/roles.sol';
 import {_RECOVERY_ROLE} from '../../constants/roles.sol';
@@ -65,7 +64,6 @@ abstract contract ERC203643InternalCommon is
      * In ERC-20 mode, these hooks are inert and always pass.
      */
     function _handleMintOperation(address _to, uint256 _amount) internal {
-        _checkNotWhitelisted(_to);
         _updateAccountSnapshot(_to);
         _updateTotalSupplySnapshot();
 
@@ -132,11 +130,10 @@ abstract contract ERC203643InternalCommon is
         address _to,
         uint256 _amount
     ) internal {
-        require(_isWhitelisted(_to), IBasicWhitelist.NotWhitelisted(_to));
         _updateAccountSnapshot(_from);
         _updateAccountSnapshot(_to);
 
-        _checkTransferAmountExceedsBalance(_balanceOf(_from), _amount);
+        _checkTransferAmount(_balanceOf(_from), _amount);
 
         // Compliance hooks (ERC-3643 mode only). By pass by _COMPLIANCE_ROLE.
         if (!_hasRole(_COMPLIANCE_ROLE, _msgSender())) {
@@ -151,22 +148,16 @@ abstract contract ERC203643InternalCommon is
         if (
             _hasRole(_CONTROLLER_ROLE, _msgSender()) ||
             _hasRole(_RECOVERY_ROLE, _msgSender())
-        ) {
-            _unfreezeIf3643Mode(_from, _amount);
-        } else {
-            // Normal transfer: enforce freeze checks (ERC-3643 mode only)
-            require(!_isFrozen(_from), IERC3643Freeze.SenderIsFrozen(_from));
-            require(!_isFrozen(_to), IERC3643Freeze.RecipientIsFrozen(_to));
-            uint256 freeBalance = _calculateFreeBalance(_from);
-            require(
-                freeBalance >= _amount,
-                IERC3643Freeze.InsufficientFreeBalance(
-                    _from,
-                    _amount,
-                    freeBalance
-                )
-            );
-        }
+        ) return _unfreezeIf3643Mode(_from, _amount);
+
+        // Normal transfer: enforce freeze checks (ERC-3643 mode only)
+        require(!_isFrozen(_from), IERC3643Freeze.SenderIsFrozen(_from));
+        require(!_isFrozen(_to), IERC3643Freeze.RecipientIsFrozen(_to));
+        uint256 freeBalance = _calculateFreeBalance(_from);
+        require(
+            freeBalance >= _amount,
+            IERC3643Freeze.InsufficientFreeBalance(_from, _amount, freeBalance)
+        );
     }
 
     // =======================
@@ -204,5 +195,12 @@ abstract contract ERC203643InternalCommon is
         uint256 balance = _balanceOf(_account);
         uint256 frozen = _getFrozenTokens(_account);
         return balance > frozen ? (balance - frozen) : 0;
+    }
+
+    function _checkTransferAmount(
+        uint256 _balance,
+        uint256 _total
+    ) internal pure {
+        require(_balance >= _total, IERC20Isbe.TransferAmountExceedsBalance());
     }
 }
