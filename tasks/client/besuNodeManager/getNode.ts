@@ -17,7 +17,12 @@ task('getNode', 'Get node information by nodeId from BesuNodeManager.')
         undefined,
         types.string
     )
-    .addParam('diamond', 'The address of the contract')
+    .addOptionalParam(
+        'diamond',
+        'The address of the contract',
+        '0x00000000000000000000000000000000000015BE',
+        types.string
+    )
     .setAction(
         async (
             taskArgs: {

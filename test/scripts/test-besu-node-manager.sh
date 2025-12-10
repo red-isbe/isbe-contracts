@@ -96,22 +96,22 @@ echo ""
 
 run_test \
     "addExecutionNode - Valid Enode" \
-    "npx hardhat addExecutionNode --enode '${VALID_ENODE}' --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat addExecutionNode --enode '${VALID_ENODE}' --network ${NETWORK}" \
     "true"
 
 run_test \
     "addExecutionNode - Invalid Enode format" \
-    "npx hardhat addExecutionNode --enode '${INVALID_ENODE}' --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat addExecutionNode --enode '${INVALID_ENODE}' --network ${NETWORK}" \
     "false"
 
 run_test \
     "addExecutionNode - Missing enode parameter" \
-    "npx hardhat addExecutionNode --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat addExecutionNode --network ${NETWORK}" \
     "false"
 
 run_test \
     "addExecutionNode - Duplicate Enode (should fail if already added)" \
-    "npx hardhat addExecutionNode --enode '${VALID_ENODE}' --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat addExecutionNode --enode '${VALID_ENODE}' --network ${NETWORK}" \
     "false"
 
 # ============================================
@@ -124,27 +124,27 @@ echo ""
 
 run_test \
     "quarantineExecutionNode - Valid Node ID" \
-    "npx hardhat quarantineExecutionNode --node-id ${VALID_NODE_ID} --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat quarantineExecutionNode --node-id ${VALID_NODE_ID} --network ${NETWORK}" \
     "true"
 
 run_test \
     "quarantineExecutionNode - Invalid Node ID format" \
-    "npx hardhat quarantineExecutionNode --node-id ${INVALID_NODE_ID} --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat quarantineExecutionNode --node-id ${INVALID_NODE_ID} --network ${NETWORK}" \
     "false"
 
 run_test \
     "quarantineExecutionNode - Non-existent Node ID" \
-    "npx hardhat quarantineExecutionNode --node-id 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat quarantineExecutionNode --node-id 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa --network ${NETWORK}" \
     "false"
 
 run_test \
     "quarantineExecutionNode - Missing node-id parameter" \
-    "npx hardhat quarantineExecutionNode --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat quarantineExecutionNode --network ${NETWORK}" \
     "false"
 
 run_test \
     "quarantineExecutionNode - Already quarantined node (should fail)" \
-    "npx hardhat quarantineExecutionNode --node-id ${VALID_NODE_ID} --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat quarantineExecutionNode --node-id ${VALID_NODE_ID} --network ${NETWORK}" \
     "false"
 
 # ============================================
@@ -157,27 +157,27 @@ echo ""
 
 run_test \
     "unquarantineExecutionNode - Valid quarantined Node ID" \
-    "npx hardhat unquarantineExecutionNode --node-id ${VALID_NODE_ID} --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat unquarantineExecutionNode --node-id ${VALID_NODE_ID} --network ${NETWORK}" \
     "true"
 
 run_test \
     "unquarantineExecutionNode - Invalid Node ID format" \
-    "npx hardhat unquarantineExecutionNode --node-id ${INVALID_NODE_ID} --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat unquarantineExecutionNode --node-id ${INVALID_NODE_ID} --network ${NETWORK}" \
     "false"
 
 run_test \
     "unquarantineExecutionNode - Non-quarantined Node ID (should fail)" \
-    "npx hardhat unquarantineExecutionNode --node-id ${VALID_NODE_ID} --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat unquarantineExecutionNode --node-id ${VALID_NODE_ID} --network ${NETWORK}" \
     "false"
 
 run_test \
     "unquarantineExecutionNode - Non-existent Node ID" \
-    "npx hardhat unquarantineExecutionNode --node-id 0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat unquarantineExecutionNode --node-id 0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb --network ${NETWORK}" \
     "false"
 
 run_test \
     "unquarantineExecutionNode - Missing node-id parameter" \
-    "npx hardhat unquarantineExecutionNode --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat unquarantineExecutionNode --network ${NETWORK}" \
     "false"
 
 # ============================================
@@ -190,27 +190,27 @@ echo ""
 
 run_test \
     "removeExecutionNode - Valid Node ID" \
-    "npx hardhat removeExecutionNode --execution-node-id ${VALID_NODE_ID} --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat removeExecutionNode --execution-node-id ${VALID_NODE_ID} --network ${NETWORK}" \
     "true"
 
 run_test \
     "removeExecutionNode - Invalid Node ID format" \
-    "npx hardhat removeExecutionNode --execution-node-id ${INVALID_NODE_ID} --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat removeExecutionNode --execution-node-id ${INVALID_NODE_ID} --network ${NETWORK}" \
     "false"
 
 run_test \
     "removeExecutionNode - Already removed Node ID (should fail)" \
-    "npx hardhat removeExecutionNode --execution-node-id ${VALID_NODE_ID} --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat removeExecutionNode --execution-node-id ${VALID_NODE_ID} --network ${NETWORK}" \
     "false"
 
 run_test \
     "removeExecutionNode - Non-existent Node ID" \
-    "npx hardhat removeExecutionNode --execution-node-id 0xcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat removeExecutionNode --execution-node-id 0xcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc --network ${NETWORK}" \
     "false"
 
 run_test \
     "removeExecutionNode - Missing execution-node-id parameter" \
-    "npx hardhat removeExecutionNode --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat removeExecutionNode --network ${NETWORK}" \
     "false"
 
 # ============================================

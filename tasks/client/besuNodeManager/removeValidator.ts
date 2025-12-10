@@ -13,11 +13,16 @@ npx hardhat removeValidator \
 task('removeValidator', 'Remove a validator node from the BesuNodeManager.')
     .addParam(
         'nodeId',
-        'The id of the Besu Validator Node.',
+        'The nodeId of the Validator Node to remove.',
         undefined,
         types.string
     )
-    .addParam('diamond', 'The address of the contract')
+    .addOptionalParam(
+        'diamond',
+        'The address of the contract',
+        '0x00000000000000000000000000000000000015BE',
+        types.string
+    )
     .setAction(
         async (
             taskArgs: {

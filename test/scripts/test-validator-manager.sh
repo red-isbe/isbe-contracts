@@ -97,22 +97,22 @@ echo ""
 
 run_test \
     "addValidator - Valid Enode" \
-    "npx hardhat addValidator --enode '${VALID_ENODE}' --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat addValidator --enode '${VALID_ENODE}' --network ${NETWORK}" \
     "true"
 
 run_test \
     "addValidator - Invalid Enode format" \
-    "npx hardhat addValidator --enode '${INVALID_ENODE}' --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat addValidator --enode '${INVALID_ENODE}' --network ${NETWORK}" \
     "false"
 
 run_test \
     "addValidator - Missing enode parameter" \
-    "npx hardhat addValidator --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat addValidator --network ${NETWORK}" \
     "false"
 
 run_test \
     "addValidator - Duplicate Enode (should fail if already added)" \
-    "npx hardhat addValidator --enode '${VALID_ENODE}' --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat addValidator --enode '${VALID_ENODE}' --network ${NETWORK}" \
     "false"
 
 # ============================================
@@ -125,17 +125,17 @@ echo ""
 
 run_test \
     "addValidatorStandby - Valid Enode" \
-    "npx hardhat addValidatorStandby --enode 'enode://1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef@172.16.240.33:30306' --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat addValidatorStandby --enode 'enode://1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef@172.16.240.33:30306' --network ${NETWORK}" \
     "true"
 
 run_test \
     "addValidatorStandby - Invalid Enode format" \
-    "npx hardhat addValidatorStandby --enode '${INVALID_ENODE}' --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat addValidatorStandby --enode '${INVALID_ENODE}' --network ${NETWORK}" \
     "false"
 
 run_test \
     "addValidatorStandby - Missing enode parameter" \
-    "npx hardhat addValidatorStandby --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat addValidatorStandby --network ${NETWORK}" \
     "false"
 
 # ============================================
@@ -148,22 +148,22 @@ echo ""
 
 run_test \
     "promoteValidator - Valid standby Node ID" \
-    "npx hardhat promoteValidator --node-id 0x3cd7f351eade981f627a538640f7e4a7446390c7d940b4d8b204463cefb7f6d4 --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat promoteValidator --node-id 0x3cd7f351eade981f627a538640f7e4a7446390c7d940b4d8b204463cefb7f6d4 --network ${NETWORK}" \
     "true"
 
 run_test \
     "promoteValidator - Invalid Node ID format" \
-    "npx hardhat promoteValidator --node-id ${INVALID_NODE_ID} --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat promoteValidator --node-id ${INVALID_NODE_ID} --network ${NETWORK}" \
     "false"
 
 run_test \
     "promoteValidator - Non-existent Node ID" \
-    "npx hardhat promoteValidator --node-id 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat promoteValidator --node-id 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa --network ${NETWORK}" \
     "false"
 
 run_test \
     "promoteValidator - Missing node-id parameter" \
-    "npx hardhat promoteValidator --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat promoteValidator --network ${NETWORK}" \
     "false"
 
 # ============================================
@@ -176,22 +176,22 @@ echo ""
 
 run_test \
     "standbyValidator - Valid active Node ID" \
-    "npx hardhat standbyValidator --node-id ${VALID_NODE_ID} --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat standbyValidator --node-id ${VALID_NODE_ID} --network ${NETWORK}" \
     "true"
 
 run_test \
     "standbyValidator - Invalid Node ID format" \
-    "npx hardhat standbyValidator --node-id ${INVALID_NODE_ID} --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat standbyValidator --node-id ${INVALID_NODE_ID} --network ${NETWORK}" \
     "false"
 
 run_test \
     "standbyValidator - Non-existent Node ID" \
-    "npx hardhat standbyValidator --node-id 0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat standbyValidator --node-id 0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb --network ${NETWORK}" \
     "false"
 
 run_test \
     "standbyValidator - Missing node-id parameter" \
-    "npx hardhat standbyValidator --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat standbyValidator --network ${NETWORK}" \
     "false"
 
 # ============================================
@@ -204,27 +204,27 @@ echo ""
 
 run_test \
     "quarantineValidator - Valid standby Node ID" \
-    "npx hardhat quarantineValidator --node-id ${VALID_NODE_ID} --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat quarantineValidator --node-id ${VALID_NODE_ID} --network ${NETWORK}" \
     "true"
 
 run_test \
     "quarantineValidator - Invalid Node ID format" \
-    "npx hardhat quarantineValidator --node-id ${INVALID_NODE_ID} --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat quarantineValidator --node-id ${INVALID_NODE_ID} --network ${NETWORK}" \
     "false"
 
 run_test \
     "quarantineValidator - Non-existent Node ID" \
-    "npx hardhat quarantineValidator --node-id 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat quarantineValidator --node-id 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa --network ${NETWORK}" \
     "false"
 
 run_test \
     "quarantineValidator - Missing node-id parameter" \
-    "npx hardhat quarantineValidator --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat quarantineValidator --network ${NETWORK}" \
     "false"
 
 run_test \
     "quarantineValidator - Already quarantined node (should fail)" \
-    "npx hardhat quarantineValidator --node-id ${VALID_NODE_ID} --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat quarantineValidator --node-id ${VALID_NODE_ID} --network ${NETWORK}" \
     "false"
 
 # ============================================
@@ -237,27 +237,27 @@ echo ""
 
 run_test \
     "unquarantineValidator - Valid quarantined Node ID" \
-    "npx hardhat unquarantineValidator --node-id ${VALID_NODE_ID} --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat unquarantineValidator --node-id ${VALID_NODE_ID} --network ${NETWORK}" \
     "true"
 
 run_test \
     "unquarantineValidator - Invalid Node ID format" \
-    "npx hardhat unquarantineValidator --node-id ${INVALID_NODE_ID} --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat unquarantineValidator --node-id ${INVALID_NODE_ID} --network ${NETWORK}" \
     "false"
 
 run_test \
     "unquarantineValidator - Non-quarantined Node ID (should fail)" \
-    "npx hardhat unquarantineValidator --node-id ${VALID_NODE_ID} --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat unquarantineValidator --node-id ${VALID_NODE_ID} --network ${NETWORK}" \
     "false"
 
 run_test \
     "unquarantineValidator - Non-existent Node ID" \
-    "npx hardhat unquarantineValidator --node-id 0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat unquarantineValidator --node-id 0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb --network ${NETWORK}" \
     "false"
 
 run_test \
     "unquarantineValidator - Missing node-id parameter" \
-    "npx hardhat unquarantineValidator --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat unquarantineValidator --network ${NETWORK}" \
     "false"
 
 # ============================================
@@ -270,27 +270,27 @@ echo ""
 
 run_test \
     "removeValidator - Valid Node ID" \
-    "npx hardhat removeValidator --node-id ${VALID_NODE_ID} --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat removeValidator --node-id ${VALID_NODE_ID} --network ${NETWORK}" \
     "true"
 
 run_test \
     "removeValidator - Invalid Node ID format" \
-    "npx hardhat removeValidator --node-id ${INVALID_NODE_ID} --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat removeValidator --node-id ${INVALID_NODE_ID} --network ${NETWORK}" \
     "false"
 
 run_test \
     "removeValidator - Already removed Node ID (should fail)" \
-    "npx hardhat removeValidator --node-id ${VALID_NODE_ID} --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat removeValidator --node-id ${VALID_NODE_ID} --network ${NETWORK}" \
     "false"
 
 run_test \
     "removeValidator - Non-existent Node ID" \
-    "npx hardhat removeValidator --node-id 0xcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat removeValidator --node-id 0xcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc --network ${NETWORK}" \
     "false"
 
 run_test \
     "removeValidator - Missing node-id parameter" \
-    "npx hardhat removeValidator --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat removeValidator --network ${NETWORK}" \
     "false"
 
 # ============================================

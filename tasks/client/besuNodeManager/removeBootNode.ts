@@ -13,11 +13,16 @@ npx hardhat removeBootNode \
 task('removeBootNode', 'Remove a boot node from the BesuNodeManager.')
     .addParam(
         'nodeId',
-        'The id of the Besu Boot Node.',
+        'The nodeId of the Boot Node to remove.',
         undefined,
         types.string
     )
-    .addParam('diamond', 'The address of the contract')
+    .addOptionalParam(
+        'diamond',
+        'The address of the contract',
+        '0x00000000000000000000000000000000000015BE',
+        types.string
+    )
     .setAction(
         async (
             taskArgs: {
