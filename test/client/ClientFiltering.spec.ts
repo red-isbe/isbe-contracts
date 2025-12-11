@@ -28,7 +28,7 @@ import {
     deployGovernance,
 } from '../fixtures/governance'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
-import { FilterType } from '../../scripts/client/interfaces'
+import { FilterType } from '../../scripts/client/filtering/interfaces'
 
 describe('ClientFiltering', function () {
     let adminAddress: string

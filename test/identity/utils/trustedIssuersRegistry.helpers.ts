@@ -60,9 +60,11 @@ export interface SetAttributeDataEvents {
 // ============================================================================
 
 export class EventValidator {
-    constructor(
-        private contractInterface: TrustedIssuersRegistryFacetInterface
-    ) {}
+    private contractInterface: TrustedIssuersRegistryFacetInterface
+
+    constructor(contractInterface: TrustedIssuersRegistryFacetInterface) {
+        this.contractInterface = contractInterface
+    }
 
     async expectAttributeMetadataSet(
         tx: ContractTransactionResponse,
