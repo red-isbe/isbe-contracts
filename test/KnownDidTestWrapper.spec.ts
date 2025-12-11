@@ -198,7 +198,9 @@ describe('KnownDidTestWrapper', function () {
                 ''
             )
 
-            // Don't set timestamp - capability invocation is not active yet
+            // Set timestamp to a time BEFORE notBefore so capability invocation is not active
+            await mockTimestamp.setMockedTimestamp(notBefore - 1000)
+
             await expect(knownDidTestWrapper.connect(admin).testOnlyKnownDid())
                 .to.be.revertedWithCustomError(
                     knownDidTestWrapper,
