@@ -8,7 +8,7 @@ export async function getDidsByController(
     diamond: string,
     provider: Provider
 ) {
-    const contract = getDidController(diamond, provider)
+    const contract = await getDidController(diamond, provider)
 
     console.log('\n🔍 Getting DIDs by Controller...\n')
     console.log(`  Controller: ${controller}`)

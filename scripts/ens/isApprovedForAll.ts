@@ -7,7 +7,7 @@ export async function isApprovedForAll(
     diamond: string,
     provider: Provider
 ) {
-    const contract = getEnsRegistry(diamond, provider)
+    const contract = await getEnsRegistry(diamond, provider)
 
     console.log(`📋 Checking operator approval`)
     console.log(`   Owner: ${owner}`)

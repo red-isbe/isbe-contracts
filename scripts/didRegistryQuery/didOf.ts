@@ -6,7 +6,7 @@ export async function didOf(
     diamond: string,
     provider: Provider
 ) {
-    const contract = getDidRegistryQuery(diamond, provider)
+    const contract = await getDidRegistryQuery(diamond, provider)
 
     console.log('\n🔍 Resolving DID of address...\n')
     console.log(`  Account: ${account}`)

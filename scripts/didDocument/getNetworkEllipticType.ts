@@ -8,7 +8,7 @@ export async function getNetworkEllipticType(
     console.log('\n📋 Getting Network Elliptic Type\n')
     console.log('Diamond:', diamond)
 
-    const facet = getDidDocumentFacet(diamond, provider)
+    const facet = await getDidDocumentFacet(diamond, provider)
 
     const filter = facet.filters.DiDRegistryInitialized()
     const latestBlock = await provider.getBlockNumber()

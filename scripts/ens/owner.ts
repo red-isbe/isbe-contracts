@@ -2,7 +2,7 @@ import { Provider } from 'ethers'
 import { getEnsRegistry } from './utils'
 
 export async function owner(node: string, diamond: string, provider: Provider) {
-    const contract = getEnsRegistry(diamond, provider)
+    const contract = await getEnsRegistry(diamond, provider)
 
     console.log('📋 Getting ENS node owner')
     console.log(`   Node: ${node}`)

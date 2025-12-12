@@ -13,7 +13,7 @@ export async function getDidsByVerificationRelationship(
     diamond: string,
     provider: Provider
 ) {
-    const contract = getDidVerificationRelationship(diamond, provider)
+    const contract = await getDidVerificationRelationship(diamond, provider)
 
     console.log('\n🔍 Getting DIDs by Verification Relationship...\n')
     console.log(`  V-Method ID: ${vMethodId}`)

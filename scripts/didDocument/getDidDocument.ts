@@ -14,7 +14,7 @@ export async function getDidDocument(
     diamond: string,
     provider: Provider
 ) {
-    const contract = getDidDocumentFacet(diamond, provider)
+    const contract = await getDidDocumentFacet(diamond, provider)
 
     console.log('\n🔍 Getting DID Document...\n')
     console.log(`  DID:     ${did}`)

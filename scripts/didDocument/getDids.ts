@@ -7,7 +7,7 @@ export async function getDids(
     diamond: string,
     provider: Provider
 ) {
-    const contract = getDidDocumentFacet(diamond, provider)
+    const contract = await getDidDocumentFacet(diamond, provider)
 
     console.log('\n🔍 Getting DIDs (Paginated)...\n')
     console.log(`  Page:      ${page}`)

@@ -8,7 +8,7 @@ export async function getRolesByDid(
     diamond: string,
     provider: Provider
 ) {
-    const contract = getAccessControlDid(diamond, provider)
+    const contract = await getAccessControlDid(diamond, provider)
 
     console.log('\n🔍 Getting Roles by DID...\n')
     console.log(`  DID:       ${did}`)

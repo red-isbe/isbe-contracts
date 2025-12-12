@@ -6,7 +6,7 @@ export async function getRoleMembersCountForDids(
     diamond: string,
     provider: Provider
 ) {
-    const contract = getAccessControlDid(diamond, provider)
+    const contract = await getAccessControlDid(diamond, provider)
 
     console.log('\n🔍 Getting Role Members Count for DIDs...\n')
     console.log(`  Role:    ${role}`)

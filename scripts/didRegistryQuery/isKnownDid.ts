@@ -6,7 +6,7 @@ export async function isKnownDid(
     diamond: string,
     provider: Provider
 ) {
-    const contract = getDidRegistryQuery(diamond, provider)
+    const contract = await getDidRegistryQuery(diamond, provider)
 
     console.log('\n🔍 Checking known DID...\n')
     console.log(`  Account: ${account}`)

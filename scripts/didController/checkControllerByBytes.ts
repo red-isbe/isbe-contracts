@@ -7,7 +7,7 @@ export async function checkControllerByBytes(
     diamond: string,
     provider: Provider
 ) {
-    const contract = getDidController(diamond, provider)
+    const contract = await getDidController(diamond, provider)
 
     console.log('\n🔍 Checking Controller (bytes format)...\n')
     console.log(`  DID:        ${did}`)

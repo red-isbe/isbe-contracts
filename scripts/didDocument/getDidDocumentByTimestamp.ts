@@ -15,7 +15,7 @@ export async function getDidDocumentByTimestamp(
     diamond: string,
     provider: Provider
 ) {
-    const contract = getDidDocumentFacet(diamond, provider)
+    const contract = await getDidDocumentFacet(diamond, provider)
     const timestampDate = new Date(timestamp * 1000).toISOString()
 
     console.log('\n🔍 Getting DID Document by Timestamp...\n')

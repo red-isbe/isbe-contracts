@@ -6,7 +6,7 @@ export async function recordExists(
     diamond: string,
     provider: Provider
 ) {
-    const contract = getEnsRegistry(diamond, provider)
+    const contract = await getEnsRegistry(diamond, provider)
 
     console.log('📋 Checking if ENS record exists')
     console.log(`   Node: ${node}`)

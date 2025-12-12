@@ -6,7 +6,7 @@ export async function resolver(
     diamond: string,
     provider: Provider
 ) {
-    const contract = getEnsRegistry(diamond, provider)
+    const contract = await getEnsRegistry(diamond, provider)
 
     console.log('📋 Getting ENS node resolver')
     console.log(`   Node: ${node}`)

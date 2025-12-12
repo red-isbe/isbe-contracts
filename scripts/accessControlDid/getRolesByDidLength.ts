@@ -6,7 +6,7 @@ export async function getRolesByDidLength(
     diamond: string,
     provider: Provider
 ) {
-    const contract = getAccessControlDid(diamond, provider)
+    const contract = await getAccessControlDid(diamond, provider)
 
     console.log('\n🔍 Getting Roles Count for DID...\n')
     console.log(`  DID:     ${did}`)

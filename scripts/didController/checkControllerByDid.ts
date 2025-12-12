@@ -7,7 +7,7 @@ export async function checkControllerByDid(
     diamond: string,
     provider: Provider
 ) {
-    const contract = getDidController(diamond, provider)
+    const contract = await getDidController(diamond, provider)
 
     console.log('\n🔍 Checking Controller (bytes32 format)...\n')
     console.log(`  DID:        ${did}`)

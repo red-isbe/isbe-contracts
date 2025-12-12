@@ -1443,9 +1443,9 @@ describe('ERC721', function () {
                 EllipticType.SECP_256_K1
             )
 
-            // Insert DID document
-            const notBefore = Math.floor(Date.now() / 1000)
-            const notAfter = notBefore + 365 * 24 * 60 * 60
+            // Insert DID document - Use fixed timestamp in the past to avoid race conditions
+            const notBefore = 5
+            const notAfter = notBefore + 1000000000000 // Very large to never expire
 
             const publicKey = wallet.signingKey.publicKey
             const vMethodId = ethers.id(`vmethod:${didId}`)
