@@ -6,10 +6,10 @@
 | ------------------------- | ----------------------------------------------------------- |
 | **Nombre del artefacto**  | ISBE-ART-01060 — Proceso de generación de bloque génesis    |
 | **Origen**                | isbe-contracts: Necesario para poder arrancar cualquier red |
-| **Estado**                | En desarrollo (Pendiente de validar)                        |
-| **Versión del documento** | _1.0_                                                       |
-| **Fecha**                 | _2025-11-06_                                                |
-| **Repositorio**           | https://github.com/alastria/isbe-contracts                  |
+| **Estado**                | Validado                        |
+| **Versión del documento** | _1.0.0_                                                       |
+| **Fecha**                 | _2025-12-12_                                                |
+| **Repositorio**           | https://github.com/alastria/isbe-network-builder                  |
 | **Commit**                | 1ea1358ff38bf518af12e170f32cc7bf286925a7                    |
 
 ## **2. Propósito del Artefacto**
@@ -217,6 +217,10 @@ Para determinar a qué contrato se asocia la creación de cada slot, es necesari
 - **Frecuencia de revisión o actualizaciones planificadas.** El proceso no tiene planificados eventos de actualización a corto plazo. La generación del génesis se realizará cada vez que se realicen cambios relevantes en el diamante de gobernanza.
 - **Herramienta de control de cambios:** Se usa el repositorio de ISBE en Github, más en concreto el repositorio [isbe-contracts](https://github.com/alastria/isbe-contracts/tree/feat/129-genesis-gobernance-diamond)
 
-| Tipo de cambio  | Versionado | Flujo de aprobación | Documentación requerida |
-| --------------- | ---------- | ------------------- | ----------------------- |
-| Evolutivo mayor | 1.0        | Aprobación por PR   | Este artefacto          |
+| Tipo de cambio      | Versionado | Flujo de aprobación                | Documentación requerida         |
+|--------------------|------------|------------------------------------|---------------------------------|
+| Evolutivo menor    | X.Y+0.1    | Pull Request + revisión GT         | Release notes detalladas        |
+| Evolutivo mayor    | X+1.0      | Pull Request + revisión Comité     | Informe de impacto y release notes |
+| Correctivo         | X.Y.Z+1    | Pull Request + revisión GT         | Descripción del fix en release notes |
+
+Copyright © 2025 Comunidad de Madrid & Alastria
