@@ -1,2 +1,3 @@
+npm run license:check
 npx lint-staged
 npx hardhat test --parallel

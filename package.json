@@ -69,7 +69,9 @@
         "docgen": "npx hardhat docgen && npx ts-node scripts/post-docgen.ts",
         "genesis:generate": "npx hardhat genesis:generate",
         "deployAll": "npx hardhat deployAllClean --nodeployusecases",
-        "toc:generate": "npx ts-node scripts/generate-toc.ts"
+        "toc:generate": "npx ts-node scripts/generate-toc.ts",
+        "license:check": "npx ts-node scripts/licenseManagement.ts check",
+        "license:generate": "npx ts-node scripts/licenseManagement.ts addlicense"
     },
     "repository": {
         "type": "git",
@@ -94,6 +96,7 @@
         "@eslint/js": "^9.25.1",
         "@nomicfoundation/hardhat-toolbox": "^5.0.0",
         "@openzeppelin/contracts": "^4.9.6",
+        "@types/node": "^25.0.0",
         "eslint": "^9.25.1",
         "ethers": "^6.15.0",
         "hardhat": "^2.26.3",

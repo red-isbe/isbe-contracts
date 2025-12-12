@@ -1,4 +1,17 @@
 #!/usr/bin/env bash
+
+# -----------------------------------------------------------------------------------
+# Copyright (c) 2025 Comunidad de Madrid & Alastria
+# Licensed under the Apache License, Version 2.0 (the "License");
+# You may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# -----------------------------------------------------------------------------------
 set -e
 
 # Colour definitions
@@ -90,10 +103,13 @@ monitor_coverage_progress() {
     done
 }
 
-# Phase 1: Compilation and Gas Calculation
+# Phase 1: License Check, Compilation and Gas Calculation
 run_phase1() {
-    log_phase "[PHASE 1] Running docgen and gas calculation..."
+    log_phase "[PHASE 1] Running license check, docgen and gas calculation..."
     start_phase
+
+    log_info "Checking license headers..."
+    npm run license:check
 
     log_info "Cleaning TypeScript-generated JS files to ensure fresh build..."
     npm run clean:ts-js
@@ -105,7 +121,7 @@ run_phase1() {
     npm run test:gas
 
     end_phase "Phase 1"
-    log_success "All contracts compiled and gas calculations completed successfully"
+    log_success "License check, compilation and gas calculations completed successfully"
 }
 
 # Phase 2: Start Coverage (parallel) + Documentation, Formatting, and Linting (sequential)
@@ -195,6 +211,31 @@ run_phase3() {
     end_phase "Phase 3"
 }
 
+# Phase 4: Final License Check
+run_phase4() {
+    log_phase "[PHASE 4] Final license verification..."
+    start_phase
+
+    log_info "Running final license check..."
+    
+    # Execute license check and capture exit code
+    set +e
+    npm run license:check
+    local license_exit=$?
+    set -e
+
+    if [ $license_exit -ne 0 ]; then
+        log_error "Final license check failed with exit code $license_exit"
+        log_error "Please ensure all files include the correct license headers."
+        return 1
+    fi
+
+    log_success "Final license check passed successfully"
+    echo ""
+
+    end_phase "Phase 4"
+}
+
 # Display final summary
 display_summary() {
     local script_end=$(date +%s)
@@ -216,6 +257,7 @@ main() {
     display_header
 
     # Execute phases
+    run_phase4
     run_phase1
     run_phase2
     run_phase3
@@ -226,3 +268,4 @@ main() {
 
 # Run main function
 main
+
