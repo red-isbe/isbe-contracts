@@ -32,5 +32,5 @@ task('deleteNetwork', 'Deletes a network from the NetworkDirectory')
 
         const signatureProvider = SignatureProviderFactory.create(hre)
 
-        await deleteNetwork(chainId, diamond, signatureProvider)
+        await deleteNetwork(hre, chainId, diamond, signatureProvider)
     })
