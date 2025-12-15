@@ -40,6 +40,7 @@ task('setResource', 'Sets or updates a resource for a network')
         const signatureProvider = SignatureProviderFactory.create(hre)
 
         await setResource(
+            hre,
             chainId,
             resourceId,
             resource,
