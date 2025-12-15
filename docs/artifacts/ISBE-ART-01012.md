@@ -482,41 +482,93 @@ error IsPaused();
 
 ## 7. Despliegue y Configuración
 
-### 7.1. Despliegue con deployAllClean
+### 7.1. Proceso de despliegue
 
-**Comando completo (todos los módulos)**
+El despliegue utiliza `deployAllClean`, orquestador que gestiona automáticamente el ciclo completo mediante `CleanDeploymentOrchestrator`:
 
-`npx hardhat deployAllClean --network dev`
+**Fases ejecutadas:**
+
+1. **Governance**: Despliegue de ISBEFactory (gestión de configuraciones y proxies)
+2. **Business Logics**: Registro de 11 facets ERC3643 como lógicas de negocio
+3. **Configuration**: Registro de SECURITY_TOKEN con `setConfig()` usando Configuration ID
+4. **Use Case**: Creación del proxy de Security Token mediante `deployUseCase()`
+5. **Validation**: Verificación automática de configuración y roles
+
+**Soporte multi-curva:**
+- `secp256k1`: Redes Ethereum estándar
+- `secp256r1`: Redes Hyperledger Besu
+
+### 7.2. Comandos de despliegue
+
+**Despliegue completo (todos los módulos)**
+
+```bash
+npx hardhat deployAllClean --network <network>
+```
 
 **Despliegue selectivo (solo ERC3643)**
 
-`npx hardhat deployAllClean --network dev --config-file erc3643-security-token.json`
+```bash
+npx hardhat deployAllClean --network <network> --config-file erc3643-security-token.json
+```
 
-**erc3643-security-token.json**
+**Con validaciones pre-commit**
+
+```bash
+npx hardhat deployAllClean --network <network> --config-file erc3643-security-token.json --precommit
+```
+
+### 7.3. Configuración del despliegue
+
+**Archivo: `deployment-configs/erc3643-security-token.json`**
 
 ```json
 {
-    "description": "Deploy ERC3643 Security Token with full compliance features",
-    "filters": {
-        "categories": ["erc3643"],
-        "patterns": ["Security Token"]
+    "description": "ERC3643 Security Token - Full Compliance Stack",
+    "version": "1.0.0",
+    "includeAllBusinessLogics": true,
+    "useCaseFilters": {
+        "enabled": true,
+        "includePatterns": ["Security Token"],
+        "categories": ["erc3643"]
     },
     "metadata": {
         "configurationId": "0x008208000000002a000000004c00000063006a0046000060000000000000f743",
         "totalFacets": 11,
-        "features": [
-            "ERC20 Base + Snapshot",
-            "Capped Supply",
-            "Controller Operations",
-            "Metadata Management",
-            "Freeze/Unfreeze",
-            "Token Recovery",
-            "Compliance Engine",
-            "Max Balance Limit",
-            "Daily/Monthly Limits"
+        "notes": [
+            "Includes ERC20 base + Snapshot, Capped, Controller",
+            "Includes all 6 ERC3643 facets + BasicWhitelist",
+            "Total 11 facets for complete regulatory compliance"
         ]
     }
 }
+```
+
+### 7.4. Verificación post-despliegue
+
+**Resultado esperado:**
+
+```
+📊 Deployment Progress: [████████████████████]
+✨ Total: 151 | ✅ Success: 151 | ❌ Failed: 0
+
+📦 ERC3643 DEPLOYMENTS
+| Security Token (ERC3643 Full Compliance) | ✅ | 0x3ee383e2229F60F57872732f88c03f53794f50Bd |
+
+✅ Clean deployment completed successfully!
+📋 FINAL SUMMARY:
+   • Deployed logics: 33/33
+   • Deployed use cases: 151/151
+```
+
+**Validación manual:**
+
+```bash
+# Verificar configuración del token
+npx hardhat validate-erc3643-token --proxy <address> --network <network>
+
+# Verificar roles administrativos
+npx hardhat check-admin-roles --proxy <address> --network <network>
 ```
 
 ## 8. Cumplimiento Regulatorio
