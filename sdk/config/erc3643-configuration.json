@@ -6,7 +6,7 @@
     "configuration": {
         "name": "SECURITY_TOKEN",
         "description": "ERC3643 compliant security token with full regulatory compliance features",
-        "configurationId": "0x008208000000002a000000004c0000005f006a0046000060000000000000f743",
+        "configurationId": "0x008208000000002a000000004c00000063006a0046000060000000000000f743",
         "seed": "0x0000000000000000000000000000000000000000000000000000000000003643",
         "facets": [
             "ERC20Facet",

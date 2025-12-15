@@ -61,7 +61,7 @@ export const ARTIFACT_PATHS = {
         'contracts/tokens/erc3643/compliance/erc3643compliancedaymonthlimits/ERC3643ComplianceDMLimFacet.sol',
 
     // Whitelist extension (transversal - shared by ERC20, ERC721, ERC3643)
-    BASIC_WHITELIST: 'contracts/tokens/whitelist/basic/BasicWhitelistFacet.sol',
+    BASIC_WHITELIST: 'contracts/access/whitelist/basic/BasicWhitelistFacet.sol',
 
     // ERC721 facets
     ERC721: 'contracts/tokens/erc721/ERC721Facet.sol',

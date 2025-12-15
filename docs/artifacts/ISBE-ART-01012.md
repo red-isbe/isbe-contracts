@@ -132,7 +132,7 @@ Para reflejar la arquitectura final, los componentes se agrupan por categorías 
     - Propósito: Gestión de propiedad del contrato y transferencia de titularidad.
 - **Pause**
     - Propósito: Pausa global de operaciones críticas (`pause`, `unpause`, `paused`).
- - **BasicWhitelist**
+- **BasicWhitelist**
     - Propósito: Lista blanca básica transversal para habilitar/denegar interacciones según políticas.
 
 #### Arquitectura de compliance hooks:
@@ -165,22 +165,24 @@ function _beforeTokenTransfer(
 ### 4.2. Configuración SECURITY_TOKEN
 
 Configuration ID:
-`0x008208000000002a000000004c0000005f006a0046000060000000000000f743`
+`0x008208000000002a000000004c00000063006a0046000060000000000000f743`
 
-#### Composición de facets (10 resolver keys ordenadas):
+#### Composición de facets (11 resolver keys ordenadas):
 
-1. ERC20_RESOLVER_KEY - Funcionalidad ERC20 base
-2. ERC20_SNAPSHOT_RESOLVER_KEY - Snapshots para dividendos/voting
-3. ERC20_ERC3643_SHARED_RESOLVER_KEYS.CAPPED - Supply cap regulatorio
-4. ERC20_ERC3643_SHARED_RESOLVER_KEYS.CONTROLLER - Control regulatorio
-5. ERC3643_COMPLIANCE_DMLIM_RESOLVER_KEY - Límites temporales
-6. ERC3643_COMPLIANCE_MAXBALANCE_RESOLVER_KEY - Límite de balance
-7. ERC3643_COMPLIANCE_RESOLVER_KEY - Motor de compliance
-8. ERC3643_FREEZE_RESOLVER_KEY - Congelación de cuentas
-9. ERC3643_METADATA_RESOLVER_KEY - Metadatos regulatorios
-10. ERC3643_RECOVERY_RESOLVER_KEY - Recuperación de tokens
+1. BASIC_WHITELIST_RESOLVER_KEY - Lista blanca básica transversal
+2. ERC20_RESOLVER_KEY - Funcionalidad ERC20 base
+3. ERC20_SNAPSHOT_RESOLVER_KEY - Snapshots para dividendos/voting
+4. ERC20_ERC3643_SHARED_RESOLVER_KEYS.CAPPED - Supply cap regulatorio
+5. ERC20_ERC3643_SHARED_RESOLVER_KEYS.CONTROLLER - Control regulatorio
+6. ERC3643_COMPLIANCE_DMLIM_RESOLVER_KEY - Límites temporales
+7. ERC3643_COMPLIANCE_MAXBALANCE_RESOLVER_KEY - Límite de balance
+8. ERC3643_COMPLIANCE_RESOLVER_KEY - Motor de compliance
+9. ERC3643_FREEZE_RESOLVER_KEY - Congelación de cuentas
+10. ERC3643_METADATA_RESOLVER_KEY - Metadatos regulatorios
+11. ERC3643_RECOVERY_RESOLVER_KEY - Recuperación de tokens
 
 Nota:
+
 - Los módulos transversales genéricos (AccessControl, Ownable, Pause, BasicWhitelist) forman parte del core de la arquitectura y se incluyen por defecto; por ello no aparecen como resolver keys específicos dentro de la configuración `SECURITY_TOKEN`.
 
 #### Algoritmo de generación:
@@ -424,8 +426,6 @@ event ForceBurn(address indexed operator, address indexed from, uint256 amount);
 
 ### 5.4. Errores personalizados
 
-### 5.4. Errores personalizados
-
 ```solidity
 // Errores de Metadata
 error EmptyString();
@@ -502,8 +502,8 @@ error IsPaused();
         "patterns": ["Security Token"]
     },
     "metadata": {
-        "configurationId": "0x008208000000002a000000004c0000005f006a0046000060000000000000f743",
-        "totalFacets": 10,
+        "configurationId": "0x008208000000002a000000004c00000063006a0046000060000000000000f743",
+        "totalFacets": 11,
         "features": [
             "ERC20 Base + Snapshot",
             "Capped Supply",
