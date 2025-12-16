@@ -495,6 +495,7 @@ El despliegue utiliza `deployAllClean`, orquestador que gestiona automáticament
 5. **Validation**: Verificación automática de configuración y roles
 
 **Soporte multi-curva:**
+
 - `secp256k1`: Redes Ethereum estándar
 - `secp256r1`: Redes Hyperledger Besu
 

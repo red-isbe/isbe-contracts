@@ -1967,9 +1967,10 @@ describe('ERC20', function () {
                     symbol,
                     decimals,
                 ]),
-                CappedFactory.interface.encodeFunctionData('initializeCap', [
-                    1000,
-                ]),
+                CappedFactory.interface.encodeFunctionData(
+                    'initializeCap',
+                    [1000]
+                ),
             ]
 
             const govResult = await deployGovernance(

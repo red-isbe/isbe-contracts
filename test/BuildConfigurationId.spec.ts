@@ -29,6 +29,7 @@ import {
     CONFIGURATION_ID_ERC20,
     CONFIGURATION_ID_ERC721,
     CONFIGURATION_ID_ERC3643,
+    BASIC_WHITELIST_RESOLVER_KEY,
 } from '../utils/constants'
 
 describe('buildConfigurationId', function () {
