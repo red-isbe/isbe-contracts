@@ -121,11 +121,22 @@ export async function executeDidWrite(
 
     const signer = await signatureProvider.getSigner()
     const contract = factory.connect(diamond, signer)
-    const tx = gasLimit
-        ? await contract[method](...args, { gasLimit })
-        : await contract[method](...args)
-    console.log(`   🔗 Transaction submitted: ${tx.hash}`)
-    const receipt = await tx.wait()
-    console.log(`   ✅ Transaction mined in block ${receipt?.blockNumber}`)
-    return { hash: tx.hash, receipt }
+
+    // Validate method exists
+    if (typeof contract[method] !== 'function') {
+        throw new Error(`Method '${method}' does not exist on contract`)
+    }
+
+    try {
+        const tx = gasLimit
+            ? await contract[method](...args, { gasLimit })
+            : await contract[method](...args)
+        console.log(`   🔗 Transaction submitted: ${tx.hash}`)
+        const receipt = await tx.wait()
+        console.log(`   ✅ Transaction mined in block ${receipt?.blockNumber}`)
+        return { hash: tx.hash, receipt }
+    } catch (error) {
+        console.error(`   ❌ Transaction failed for method '${method}':`, error)
+        throw error
+    }
 }
