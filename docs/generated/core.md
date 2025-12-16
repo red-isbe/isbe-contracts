@@ -107,6 +107,65 @@ function _implementedInterfaces() internal pure virtual returns (bytes4[] interf
 
 ---
 
+## ERC712Internal
+
+Provides internal utilities for verifying signed transactions using EIP-712
+
+_This abstract contract enables secure transaction validation with nonce and signature checks_
+
+### NonceStorage
+
+Stores nonces for each sender address
+
+_Used to prevent replay attacks by ensuring each transaction is unique_
+
+```solidity
+struct NonceStorage {
+    mapping(address => uint256) nonces;
+}
+```
+
+### \_checkSignedTransaction
+
+```solidity
+function _checkSignedTransaction(address _sender, uint256 _expirationTimestamp, uint256 _nonce, bytes32 _functionHash, bytes _signature, bytes32 _contractName, bytes32 _contractVersion, uint256 _chainId) internal
+```
+
+Validates a signed transaction and updates the sender's nonce
+
+_Performs nonce and deadline checks, verifies signature, and increments nonce_
+
+#### Parameters
+
+| Name                  | Type    | Description                                           |
+| --------------------- | ------- | ----------------------------------------------------- |
+| \_sender              | address | Address of the transaction sender                     |
+| \_expirationTimestamp | uint256 | Deadline timestamp for the transaction                |
+| \_nonce               | uint256 | Transaction nonce to prevent replay attacks           |
+| \_functionHash        | bytes32 | Hash of the function call data                        |
+| \_signature           | bytes   | Signature provided by the sender                      |
+| \_contractName        | bytes32 | Name of the contract for EIP-712 domain separation    |
+| \_contractVersion     | bytes32 | Version of the contract for EIP-712 domain separation |
+| \_chainId             | uint256 | Identifier of the network                             |
+
+### \_noncesStorage
+
+```solidity
+function _noncesStorage() internal pure returns (struct ERC712Internal.NonceStorage storage_)
+```
+
+Retrieves the nonce storage location
+
+_Returns a reference to the storage location for nonces_
+
+#### Return Values
+
+| Name      | Type                               | Description                    |
+| --------- | ---------------------------------- | ------------------------------ |
+| storage\_ | struct ERC712Internal.NonceStorage | Reference to the nonce storage |
+
+---
+
 ## Initializable
 
 Provides a versioned mechanism to ensure initialisation functions are executed properly per facet.

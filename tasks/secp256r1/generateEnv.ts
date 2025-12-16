@@ -180,9 +180,8 @@ async function generateSecp256r1Accounts(count: number) {
     console.log('🔧 Generating secp256r1 accounts...')
 
     // Import secp256r1 utilities
-    const { generateSecp256r1KeyPair, deriveEthereumAddress } = await import(
-        '../../utils/secp256r1Utils'
-    )
+    const { generateSecp256r1KeyPair, deriveEthereumAddress } =
+        await import('../../utils/secp256r1Utils')
 
     const accounts = []
     for (let i = 0; i < count; i++) {
@@ -277,9 +276,8 @@ async function handleDualMode(
 
         // Create secp256r1 accounts with same private keys
         console.log('🔧 Creating secp256r1 accounts with same private keys...')
-        const { deriveEthereumAddress } = await import(
-            '../../utils/secp256r1Utils'
-        )
+        const { deriveEthereumAddress } =
+            await import('../../utils/secp256r1Utils')
 
         const r1Accounts = []
         for (const privateKey of basePrivateKeys) {

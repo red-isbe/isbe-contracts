@@ -141,9 +141,8 @@ export class CleanBusinessLogicDeployer {
 
         if (this.signatureProvider.getCurveType() === 'secp256r1') {
             // Use secp256r1-compatible deployment
-            const { deployBusinessLogicSecp256r1 } = await import(
-                '../../../scripts/businessLogic/deployBusinessLogicSecp256r1'
-            )
+            const { deployBusinessLogicSecp256r1 } =
+                await import('../../../scripts/businessLogic/deployBusinessLogicSecp256r1')
             businessLogic = await deployBusinessLogicSecp256r1(
                 this.hre,
                 config.key,

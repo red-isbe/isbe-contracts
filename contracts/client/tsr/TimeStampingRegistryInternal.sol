@@ -8,19 +8,15 @@ import {
     _buildTsrData
 } from './ITimeStampingRegistry.sol';
 import {
-    _CONTRACT_NAME_TIME_STAMPING_REGISTRY,
-    _CONTRACT_VERSION_TIME_STAMPING_REGISTRY
+    _CONTRACT_NAME_ISBE,
+    _CONTRACT_VERSION_ISBE
 } from '../../constants/values.sol';
-import {
-    _getMessageHashStampTsr,
-    _verifySignature,
-    _checkNonceAndDeadline,
-    InvalidSignature
-} from '../../core/signatureVerification.sol';
+import {_getMessageHashStampTsr} from '../../core/signatureVerification.sol';
 import {DidDocumentDetailedInternal} from '../../identity/didregistry/DidDocumentDetailedInternal.sol';
 import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 import {LibCommon} from '../../core/LibCommon.sol';
 import {_TIMESTAMPING_REGISTRY_STORAGE_POSITION} from '../../constants/storagePositions.sol';
+import {ERC712Internal} from '../../core/ERC712Internal.sol';
 
 /// @title TimeStampingRegistryInternal
 /// @notice Internal logic for timestamping registry operations with originalHash as primary key
@@ -30,7 +26,10 @@ import {_TIMESTAMPING_REGISTRY_STORAGE_POSITION} from '../../constants/storagePo
 /// @author ISBE Team
 /// @custom:security-level 3
 /// @custom:auditor ISBE Security Team
-abstract contract TimeStampingRegistryInternal is DidDocumentDetailedInternal {
+abstract contract TimeStampingRegistryInternal is
+    DidDocumentDetailedInternal,
+    ERC712Internal
+{
     using EnumerableSet for EnumerableSet.Bytes32Set;
     using LibCommon for EnumerableSet.Bytes32Set;
 
@@ -45,8 +44,6 @@ abstract contract TimeStampingRegistryInternal is DidDocumentDetailedInternal {
         mapping(bytes32 tsaHash => bytes32 originalHash) tsaHashToOriginal;
         /// @notice Reverse mapping from external reference ID to original hash for uniqueness enforcement
         mapping(bytes32 externalReferenceId => bytes32 originalHash) externalRefToOriginal;
-        /// @notice Mapping from sender address to nonce for replay protection
-        mapping(address sender => uint256 nonce) nonces;
     }
 
     /// @notice Individual timestamp record structure with complete TSR data
@@ -133,7 +130,23 @@ abstract contract TimeStampingRegistryInternal is DidDocumentDetailedInternal {
         SignedTsrData calldata _tsrData,
         bytes calldata _signature
     ) internal {
-        _checkStampSignature(_tsrData, _signature);
+        _checkSignedTransaction(
+            _tsrData.sender,
+            _tsrData.deadline,
+            _tsrData.nonce,
+            _getMessageHashStampTsr(
+                _tsrData.tsrData.originalHash,
+                _tsrData.tsrData.tsaHash,
+                _tsrData.tsrData.externalReferenceId,
+                _tsrData.sender,
+                _tsrData.deadline,
+                _tsrData.nonce
+            ),
+            _signature,
+            _CONTRACT_NAME_ISBE,
+            _CONTRACT_VERSION_ISBE,
+            _blockChainId()
+        );
         _stamp(
             _tsrData.tsrData.originalHash,
             _tsrData.tsrData.tsaHash,
@@ -141,7 +154,6 @@ abstract contract TimeStampingRegistryInternal is DidDocumentDetailedInternal {
             _msgSender(),
             _tsrData.sender
         );
-        _timestampingRegistryStorage().nonces[_tsrData.sender] = _tsrData.nonce;
     }
 
     /// @notice Internal function to check if an original hash is registered
@@ -267,55 +279,6 @@ abstract contract TimeStampingRegistryInternal is DidDocumentDetailedInternal {
             ITimeStampingRegistry.ExternalReferenceIdAlreadyExists(
                 _externalReferenceId
             )
-        );
-    }
-
-    /// @notice Internal function to validate stamp signature and nonce
-    /// @dev Checks nonce, deadline, and signature validity for stamping operations
-    /// @param _tsrData The signed TSR data to validate
-    /// @param _signature The signature to verify
-    function _checkStampSignature(
-        SignedTsrData calldata _tsrData,
-        bytes calldata _signature
-    ) internal view {
-        _checkNonceAndDeadline(
-            _tsrData.nonce,
-            _tsrData.sender,
-            _timestampingRegistryStorage().nonces[_tsrData.sender],
-            _tsrData.expirationTimestamp,
-            _blockTimestamp()
-        );
-        require(
-            _isStampSignatureValid(_tsrData, _signature),
-            InvalidSignature(_tsrData.sender)
-        );
-    }
-
-    /// @notice Internal function to validate stamp signature
-    /// @dev Creates message hash and verifies EIP712 signature
-    /// @param _tsrData The signed TSR data to validate
-    /// @param _signature The signature to verify
-    /// @return isValid_ True if the signature is valid, false otherwise
-    function _isStampSignatureValid(
-        SignedTsrData calldata _tsrData,
-        bytes calldata _signature
-    ) internal view returns (bool isValid_) {
-        bytes32 messageHash = _getMessageHashStampTsr(
-            _tsrData.tsrData.originalHash,
-            _tsrData.tsrData.tsaHash,
-            _tsrData.tsrData.externalReferenceId,
-            _tsrData.sender,
-            _tsrData.expirationTimestamp,
-            _tsrData.nonce
-        );
-        isValid_ = _verifySignature(
-            _tsrData.sender,
-            messageHash,
-            _signature,
-            _CONTRACT_NAME_TIME_STAMPING_REGISTRY,
-            _CONTRACT_VERSION_TIME_STAMPING_REGISTRY,
-            _blockChainId(),
-            address(this)
         );
     }
 
