@@ -61,6 +61,7 @@ task('updateNetwork', 'Updates an existing network in the NetworkDirectory')
         const signatureProvider = SignatureProviderFactory.create(hre)
 
         await updateNetwork(
+            hre,
             {
                 chainId,
                 name,

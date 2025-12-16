@@ -37,5 +37,11 @@ task('deleteResource', 'Deletes a resource from a network')
 
         const signatureProvider = SignatureProviderFactory.create(hre)
 
-        await deleteResource(chainId, resourceId, diamond, signatureProvider)
+        await deleteResource(
+            hre,
+            chainId,
+            resourceId,
+            diamond,
+            signatureProvider
+        )
     })

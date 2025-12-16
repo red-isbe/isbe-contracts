@@ -54,14 +54,14 @@ function parseResources(resourcesJson: string): Resource[] {
 }
 
 /**
- npx hardhat createNetwork --network localhost \
+ npx hardhat createNetwork --network genesis_validation_network_k1 \
   --chain-id 2027 \
   --name "Alastria T" \
   --symbol "ALAT" \
   --algorithm 1 \
   --stage 1 \
   --resources '[{"resourceId":"RPC","resource":"https://rpc.alastria.io"}]' \
-  --diamond "0x9d6cbA688433eB558e91D38061e05aD91fbEE940"
+  --diamond "0x00000000000000000000000000000000000015BE"
  */
 task('createNetwork', 'Creates a new network in the NetworkDirectory')
     .addParam(
@@ -149,6 +149,7 @@ task('createNetwork', 'Creates a new network in the NetworkDirectory')
         console.log(`   Curve: ${signatureProvider.getCurveType()}`)
 
         const result = await createNetwork(
+            hre,
             networkData,
             diamond,
             signatureProvider

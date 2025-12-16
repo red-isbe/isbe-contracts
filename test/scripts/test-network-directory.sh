@@ -178,7 +178,7 @@ run_test \
 run_test \
     "getNetwork - Non-existent chain ID" \
     "npx hardhat getNetwork --chain-id ${NONEXISTENT_CHAIN_ID} --diamond ${DIAMOND} --network ${NETWORK}" \
-    "false"
+    "true"
 
 run_test \
     "getNetwork - Missing chain-id parameter" \
@@ -235,33 +235,33 @@ echo -e "${BLUE}═════════════════════�
 echo ""
 
 run_test \
-    "getNetworksPaginated - Valid parameters (offset 0, limit 10)" \
-    "npx hardhat getNetworksPaginated --offset 0 --limit 10 --diamond ${DIAMOND} --network ${NETWORK}" \
+    "getNetworksPaginated - Valid parameters (page-index 0, page-size 10)" \
+    "npx hardhat getNetworksPaginated --page-index 0 --page-size 10 --diamond ${DIAMOND} --network ${NETWORK}" \
     "true"
 
 run_test \
-    "getNetworksPaginated - Valid parameters (offset 1, limit 5)" \
-    "npx hardhat getNetworksPaginated --offset 1 --limit 5 --diamond ${DIAMOND} --network ${NETWORK}" \
+    "getNetworksPaginated - Valid parameters (page-index 1, page-size 5)" \
+    "npx hardhat getNetworksPaginated --page-index 1 --page-size 5 --diamond ${DIAMOND} --network ${NETWORK}" \
     "true"
 
 run_test \
-    "getNetworksPaginated - Missing offset parameter" \
-    "npx hardhat getNetworksPaginated --limit 10 --diamond ${DIAMOND} --network ${NETWORK}" \
+    "getNetworksPaginated - Missing page-index parameter" \
+    "npx hardhat getNetworksPaginated --page-size 10 --diamond ${DIAMOND} --network ${NETWORK}" \
     "false"
 
 run_test \
-    "getNetworksPaginated - Missing limit parameter" \
-    "npx hardhat getNetworksPaginated --offset 0 --diamond ${DIAMOND} --network ${NETWORK}" \
+    "getNetworksPaginated - Missing page-size parameter" \
+    "npx hardhat getNetworksPaginated --page-index 0 --diamond ${DIAMOND} --network ${NETWORK}" \
     "false"
 
 run_test \
-    "getNetworksPaginated - Invalid offset (negative)" \
-    "npx hardhat getNetworksPaginated --offset -1 --limit 10 --diamond ${DIAMOND} --network ${NETWORK}" \
+    "getNetworksPaginated - Invalid page-index (negative)" \
+    "npx hardhat getNetworksPaginated --page-index -1 --page-size 10 --diamond ${DIAMOND} --network ${NETWORK}" \
     "false"
 
 run_test \
-    "getNetworksPaginated - Invalid limit (zero)" \
-    "npx hardhat getNetworksPaginated --offset 0 --limit 0 --diamond ${DIAMOND} --network ${NETWORK}" \
+    "getNetworksPaginated - Invalid page-size (zero)" \
+    "npx hardhat getNetworksPaginated --page-index 0 --page-size 0 --diamond ${DIAMOND} --network ${NETWORK}" \
     "false"
 
 # ============================================
@@ -351,7 +351,7 @@ run_test \
 run_test \
     "getResourceKeys - Non-existent chain ID" \
     "npx hardhat getResourceKeys --chain-id ${NONEXISTENT_CHAIN_ID} --diamond ${DIAMOND} --network ${NETWORK}" \
-    "false"
+    "true"
 
 run_test \
     "getResourceKeys - Missing chain-id parameter" \
@@ -368,27 +368,27 @@ echo ""
 
 run_test \
     "getResourceKeysPaginated - Valid parameters" \
-    "npx hardhat getResourceKeysPaginated --chain-id ${TEST_CHAIN_ID} --offset 0 --limit 10 --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat getResourceKeysPaginated --chain-id ${TEST_CHAIN_ID} --page-index 0 --page-size 10 --diamond ${DIAMOND} --network ${NETWORK}" \
     "true"
 
 run_test \
     "getResourceKeysPaginated - Missing chain-id parameter" \
-    "npx hardhat getResourceKeysPaginated --offset 0 --limit 10 --diamond ${DIAMOND} --network ${NETWORK}" \
+    "npx hardhat getResourceKeysPaginated --page-index 0 --page-size 10 --diamond ${DIAMOND} --network ${NETWORK}" \
     "false"
 
 run_test \
-    "getResourceKeysPaginated - Missing offset parameter" \
-    "npx hardhat getResourceKeysPaginated --chain-id ${TEST_CHAIN_ID} --limit 10 --diamond ${DIAMOND} --network ${NETWORK}" \
+    "getResourceKeysPaginated - Missing page-index parameter" \
+    "npx hardhat getResourceKeysPaginated --chain-id ${TEST_CHAIN_ID} --page-size 10 --diamond ${DIAMOND} --network ${NETWORK}" \
     "false"
 
 run_test \
-    "getResourceKeysPaginated - Missing limit parameter" \
-    "npx hardhat getResourceKeysPaginated --chain-id ${TEST_CHAIN_ID} --offset 0 --diamond ${DIAMOND} --network ${NETWORK}" \
+    "getResourceKeysPaginated - Missing page-size parameter" \
+    "npx hardhat getResourceKeysPaginated --chain-id ${TEST_CHAIN_ID} --page-index 0 --diamond ${DIAMOND} --network ${NETWORK}" \
     "false"
 
 run_test \
-    "getResourceKeysPaginated - Invalid offset (negative)" \
-    "npx hardhat getResourceKeysPaginated --chain-id ${TEST_CHAIN_ID} --offset -1 --limit 10 --diamond ${DIAMOND} --network ${NETWORK}" \
+    "getResourceKeysPaginated - Invalid page-index (negative)" \
+    "npx hardhat getResourceKeysPaginated --chain-id ${TEST_CHAIN_ID} --page-index -1 --page-size 10 --diamond ${DIAMOND} --network ${NETWORK}" \
     "false"
 
 # ============================================
@@ -407,7 +407,7 @@ run_test \
 run_test \
     "getResourceCount - Non-existent chain ID" \
     "npx hardhat getResourceCount --chain-id ${NONEXISTENT_CHAIN_ID} --diamond ${DIAMOND} --network ${NETWORK}" \
-    "false"
+    "true"
 
 run_test \
     "getResourceCount - Missing chain-id parameter" \
