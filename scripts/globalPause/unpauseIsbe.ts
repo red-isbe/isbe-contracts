@@ -63,9 +63,8 @@ async function unpauseIsbeWithRawTransaction(
     account: string
 }> {
     // Import GlobalIsbePause interface for encoding function data
-    const { GlobalIsbePauseFacet__factory } = await import(
-        '../../typechain-types'
-    )
+    const { GlobalIsbePauseFacet__factory } =
+        await import('../../typechain-types')
 
     // Create interface for encoding function data
     const globalIsbePauseInterface =

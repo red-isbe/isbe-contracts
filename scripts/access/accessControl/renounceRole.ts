@@ -65,9 +65,8 @@ async function renounceRoleWithRawTransaction(
     sender: string
 }> {
     // Import AccessControl interface for encoding function data
-    const { AccessControlGovernanceFacet__factory } = await import(
-        '../../../typechain-types'
-    )
+    const { AccessControlGovernanceFacet__factory } =
+        await import('../../../typechain-types')
 
     // Create interface for encoding function data
     const accessControlInterface =

@@ -148,9 +148,8 @@ export class BusinessLogicDeployer {
                 `      🔧 Using ${this.signatureProvider.getCurveType()} deployment...`
             )
             // Use secp256r1-compatible deployment with raw transactions
-            const { deployBusinessLogicSecp256r1 } = await import(
-                '../../../scripts/businessLogic/deployBusinessLogicSecp256r1'
-            )
+            const { deployBusinessLogicSecp256r1 } =
+                await import('../../../scripts/businessLogic/deployBusinessLogicSecp256r1')
             businessLogic = await deployBusinessLogicSecp256r1(
                 this.hre,
                 config.key,

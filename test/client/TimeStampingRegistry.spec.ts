@@ -24,19 +24,19 @@ describe('TimeStampingRegistry', function () {
     let BLOCK_TIMESTAMP: number
 
     const types = {
-        stampWithSignature: [
+        StampWithSignature: [
             { name: 'originalHash', type: 'bytes32' },
             { name: 'tsaHash', type: 'bytes32' },
             { name: 'externalReferenceId', type: 'bytes32' },
             { name: 'sender', type: 'address' },
-            { name: 'expirationTimestamp', type: 'uint256' },
+            { name: 'deadline', type: 'uint256' },
             { name: 'nonce', type: 'uint256' },
         ],
     }
 
     const domain = {
-        name: 'TimeStampingRegistry',
-        version: '1.0.0',
+        name: '0x15BE',
+        version: '1',
         chainId: 1,
         verifyingContract: '',
     }
@@ -81,7 +81,7 @@ describe('TimeStampingRegistry', function () {
         BLOCK_TIMESTAMP = 1234567890
         await mockTimestamp.setMockedTimestamp(BLOCK_TIMESTAMP)
         domain.chainId = await network.provider.send('eth_chainId')
-        domain.verifyingContract = await timeStampingRegistry.getAddress()
+        domain.verifyingContract = await gov.governanceContract.getAddress()
     }
 
     beforeEach(async function () {
@@ -354,7 +354,7 @@ describe('TimeStampingRegistry', function () {
                     },
                     sender: adminAddress,
                     nonce: 1,
-                    expirationTimestamp: Math.floor(Date.now() / 1000) + 3600,
+                    deadline: Math.floor(Date.now() / 1000) + 3600,
                 }
 
                 await expect(
@@ -385,7 +385,7 @@ describe('TimeStampingRegistry', function () {
                     },
                     sender: adminAddress,
                     nonce: 1,
-                    expirationTimestamp: Math.floor(Date.now() / 1000) + 3600,
+                    deadline: Math.floor(Date.now() / 1000) + 3600,
                 }
 
                 await expect(
@@ -414,7 +414,7 @@ describe('TimeStampingRegistry', function () {
                     },
                     sender: adminAddress,
                     nonce: 1,
-                    expirationTimestamp: Math.floor(Date.now() / 1000) + 3600,
+                    deadline: Math.floor(Date.now() / 1000) + 3600,
                 }
 
                 await expect(
@@ -448,7 +448,7 @@ describe('TimeStampingRegistry', function () {
                     },
                     sender: adminAddress,
                     nonce: 1,
-                    expirationTimestamp: Math.floor(Date.now() / 1000) + 3600,
+                    deadline: Math.floor(Date.now() / 1000) + 3600,
                 }
 
                 const signature = '0x' + '00'.repeat(65)
@@ -494,7 +494,7 @@ describe('TimeStampingRegistry', function () {
                     },
                     sender: adminAddress,
                     nonce: 1,
-                    expirationTimestamp: Math.floor(Date.now() / 1000) + 3600,
+                    deadline: Math.floor(Date.now() / 1000) + 3600,
                 }
 
                 const signature = '0x' + '00'.repeat(65)
@@ -540,7 +540,7 @@ describe('TimeStampingRegistry', function () {
                     },
                     sender: adminAddress,
                     nonce: 1,
-                    expirationTimestamp: Math.floor(Date.now() / 1000) + 3600,
+                    deadline: Math.floor(Date.now() / 1000) + 3600,
                 }
 
                 const signature = '0x' + '00'.repeat(65)
@@ -576,7 +576,7 @@ describe('TimeStampingRegistry', function () {
                     },
                     sender: adminAddress,
                     nonce: 0,
-                    expirationTimestamp: Math.floor(Date.now() / 1000) + 3600,
+                    deadline: Math.floor(Date.now() / 1000) + 3600,
                 }
 
                 const signature = '0x' + '00'.repeat(65)
@@ -607,7 +607,7 @@ describe('TimeStampingRegistry', function () {
                 const currentTimestamp = 1000000
                 await mockTimestamp.setMockedTimestamp(currentTimestamp)
 
-                const expiredTimestamp = currentTimestamp - 3600
+                const expiredTimestamp = 1
                 const tsrData = {
                     tsrData: {
                         originalHash: originalHash,
@@ -616,7 +616,7 @@ describe('TimeStampingRegistry', function () {
                     },
                     sender: adminAddress,
                     nonce: 1,
-                    expirationTimestamp: expiredTimestamp,
+                    deadline: expiredTimestamp,
                 }
 
                 const signature = '0x' + '01'.repeat(65)
@@ -652,7 +652,7 @@ describe('TimeStampingRegistry', function () {
                     },
                     sender: adminAddress,
                     nonce: 1,
-                    expirationTimestamp: Math.floor(Date.now() / 1000) + 3600,
+                    deadline: Math.floor(Date.now() / 1000) + 3600,
                 }
 
                 const invalidSignature = '0x' + '00'.repeat(65)
@@ -690,7 +690,7 @@ describe('TimeStampingRegistry', function () {
                     },
                     sender: adminAddress,
                     nonce: 1,
-                    expirationTimestamp: Math.floor(Date.now() / 1000) + 3600,
+                    deadline: Math.floor(Date.now() / 1000) + 3600,
                 }
 
                 const signature = '0x' + '00'.repeat(65)
@@ -728,7 +728,7 @@ describe('TimeStampingRegistry', function () {
                     },
                     sender: adminAddress,
                     nonce: 1,
-                    expirationTimestamp: Math.floor(Date.now() / 1000) + 3600,
+                    deadline: Math.floor(Date.now() / 1000) + 3600,
                 }
 
                 const signature = '0x' + '00'.repeat(65)
@@ -762,7 +762,7 @@ describe('TimeStampingRegistry', function () {
                     },
                     sender: adminAddress,
                     nonce: 1,
-                    expirationTimestamp: Math.floor(Date.now() / 1000) + 3600,
+                    deadline: Math.floor(Date.now() / 1000) + 3600,
                 }
 
                 const message = {
@@ -770,7 +770,7 @@ describe('TimeStampingRegistry', function () {
                     tsaHash: tsaHash,
                     externalReferenceId: externalId,
                     sender: adminAddress,
-                    expirationTimestamp: signedTsrData.expirationTimestamp,
+                    deadline: signedTsrData.deadline,
                     nonce: signedTsrData.nonce,
                 }
 
@@ -780,7 +780,9 @@ describe('TimeStampingRegistry', function () {
                     message
                 )
 
-                await mockTimestamp.setMockedTimestamp(1000)
+                await mockTimestamp.setMockedTimestamp(
+                    signedTsrData.deadline + 1
+                )
 
                 await timeStampingRegistry
                     .connect(admin)
@@ -810,7 +812,7 @@ describe('TimeStampingRegistry', function () {
                     },
                     sender: adminAddress,
                     nonce: 1,
-                    expirationTimestamp: mockTimestamp1000 + 3600,
+                    deadline: mockTimestamp1000 + 3600,
                 }
 
                 const message = {
@@ -818,7 +820,7 @@ describe('TimeStampingRegistry', function () {
                     tsaHash: tsaHash,
                     externalReferenceId: externalId,
                     sender: adminAddress,
-                    expirationTimestamp: tsrData.expirationTimestamp,
+                    deadline: tsrData.deadline,
                     nonce: tsrData.nonce,
                 }
 
@@ -863,7 +865,7 @@ describe('TimeStampingRegistry', function () {
                     },
                     sender: adminAddress,
                     nonce: 1,
-                    expirationTimestamp: mockTimestamp1000 + 3600,
+                    deadline: mockTimestamp1000 + 3600,
                 }
 
                 const duplicateMessage = {
@@ -871,8 +873,7 @@ describe('TimeStampingRegistry', function () {
                     tsaHash: duplicateTsaHash,
                     externalReferenceId: duplicateExternalId,
                     sender: adminAddress,
-                    expirationTimestamp:
-                        duplicateNonceTsrData.expirationTimestamp,
+                    deadline: duplicateNonceTsrData.deadline,
                     nonce: duplicateNonceTsrData.nonce,
                 }
 
@@ -916,7 +917,7 @@ describe('TimeStampingRegistry', function () {
                     },
                     sender: adminAddress,
                     nonce: 1,
-                    expirationTimestamp: Math.floor(Date.now() / 1000) + 3600,
+                    deadline: Math.floor(Date.now() / 1000) + 3600,
                 }
 
                 const invalidSignatures = [
@@ -956,7 +957,7 @@ describe('TimeStampingRegistry', function () {
                     },
                     sender: adminAddress,
                     nonce: 1,
-                    expirationTimestamp: Math.floor(Date.now() / 1000) + 3600,
+                    deadline: Math.floor(Date.now() / 1000) + 3600,
                 }
 
                 // Invalid signature lengths (not 65 bytes)

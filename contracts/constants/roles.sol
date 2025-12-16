@@ -92,4 +92,7 @@ bytes32 constant _NETWORK_DIRECTORY_ROLE = 0xd9a7f0b03b752d9c44200ba27e635446a5c
 // keccak256('isbe.contracts.role.whitelist');
 bytes32 constant _WHITELIST_ROLE = 0xded7ba58b0451b60e5cc01e919d11ddff88fe87bbc51ec62070e38b0ff25d63a;
 
+// keccak256('isbe.contracts.role.sponsor');
+bytes32 constant _SPONSOR_ROLE = 0x4f3d2e1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d3c2b1a0f9e8d7c6b5a4f3e;
+
 // solhint-enable max-line-length

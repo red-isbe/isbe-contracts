@@ -84,9 +84,8 @@ export class GovernanceDeployer {
         if (networkConfig.curve === 'secp256r1') {
             console.log('   🔧 Using secp256r1-compatible deployment method...')
             // Use secp256r1-compatible deployment with raw transactions
-            const { deployIsbeFactorySecp256r1 } = await import(
-                '../../../scripts/businessLogic/deployIsbeFactorySecp256r1'
-            )
+            const { deployIsbeFactorySecp256r1 } =
+                await import('../../../scripts/businessLogic/deployIsbeFactorySecp256r1')
             factoryAddress = await deployIsbeFactorySecp256r1(
                 this.hre,
                 accountAddress,
@@ -95,9 +94,8 @@ export class GovernanceDeployer {
         } else {
             console.log('   🔧 Using standard Hardhat deployment method...')
             // Use standard deployment for secp256k1 networks
-            const { deployIsbeFactory } = await import(
-                '../../../scripts/businessLogic/deployIsbeFactory'
-            )
+            const { deployIsbeFactory } =
+                await import('../../../scripts/businessLogic/deployIsbeFactory')
             factoryAddress = await deployIsbeFactory(
                 this.hre,
                 accountAddress,

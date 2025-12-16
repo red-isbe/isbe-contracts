@@ -1,11 +1,16 @@
 import { expect } from 'chai'
-import { ethers } from 'hardhat'
+import { ethers, network } from 'hardhat'
 import { Signer, HDNodeWallet } from 'ethers'
 import {
+    AccessControl,
     ERC20,
     ERC203643Capped,
+    ERC203643CappedSigned,
+    ERC203643TransferSigned,
+    ERC20BurnableSigned,
     IAccessControlDid,
     IDidRegistry__factory,
+    Pause,
 } from '../typechain-types'
 import {
     CAP_ROLE,
@@ -16,6 +21,8 @@ import {
     ERC203643_CAPPED_RESOLVER_KEY,
     DID_REGISTRY_ROLE,
     WHITELIST_ROLE,
+    SPONSOR_ROLE,
+    PAUSER_ROLE,
 } from '../utils/constants'
 import { deployGovernance } from './fixtures/governance'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
@@ -31,6 +38,9 @@ describe('ERC20', function () {
 
     let erc20: ERC20
     let erc20Capped: ERC203643Capped
+    let erc203643TransferSigned: ERC203643TransferSigned
+    let accessControl: AccessControl
+    let pause: Pause
 
     let owner: Signer
     let ownerAddress: string
@@ -50,7 +60,9 @@ describe('ERC20', function () {
             erc20Burnable: result.erc20Burnable,
             erc20Capped: result.erc203643Capped,
             erc20Controller: result.erc203643Controller,
+            erc203643TransferSigned: result.erc203643TransferSigned,
             accessControl: result.accessControl,
+            pause: result.pause,
             erc20Facet: result.erc20Facet,
             owner,
             ownerAddress,
@@ -212,6 +224,7 @@ describe('ERC20', function () {
             erc20Burnable: result.erc20Burnable,
             erc20Capped: result.erc203643Capped,
             erc20Controller: result.erc203643Controller,
+            erc203645TransferSigned: result.erc203645TransferSigned,
             accessControl: result.accessControl,
             erc20Facet: result.erc20Facet,
             owner: ownerSigner,
@@ -226,6 +239,9 @@ describe('ERC20', function () {
         erc20 = contracts.erc20
         erc20Capped = contracts.erc20Capped
         erc20Facet = contracts.erc20Facet
+        erc203643TransferSigned = contracts.erc203643TransferSigned
+        accessControl = contracts.accessControl
+        pause = contracts.pause
         owner = contracts.owner
         ownerAddress = contracts.ownerAddress
         otherAccount = contracts.otherAccount
@@ -2190,6 +2206,1086 @@ describe('ERC20', function () {
                 did
             )
             expect(hasCapRole).to.be.true
+        })
+    })
+
+    describe('ERC712', () => {
+        // New comprehensive fixtures to replace repetitive beforeEach setups
+
+        const commonRolesFixture = async () => {
+            await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+            await accessControl.grantRole(CAP_ROLE, ownerAddress)
+            await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+            await accessControl.grantRole(SPONSOR_ROLE, otherAccountAddress)
+        }
+
+        const signatureReadyFixture = async () => {
+            await commonRolesFixture()
+            await erc20Capped.initializeCap(1000)
+            await erc20Capped.mint(ownerAddress, 500)
+        }
+
+        const sponsorOnlyFixture = async () => {
+            await accessControl.grantRole(SPONSOR_ROLE, otherAccountAddress)
+            await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+            await erc20Capped.initializeCap(1000)
+        }
+
+        const fullSponsorSetupFixture = async () => {
+            await accessControl.grantRole(SPONSOR_ROLE, ownerAddress)
+            await accessControl.grantRole(SPONSOR_ROLE, otherAccountAddress)
+            await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+            await erc20Capped.initializeCap(1000)
+        }
+
+        const domain = {
+            name: 'ERC203643',
+            version: '1',
+            chainId: 0, // Will be set in beforeEach
+            verifyingContract: '', // Will be set in beforeEach
+        }
+        beforeEach(async function () {
+            domain.chainId = await network.provider.send('eth_chainId')
+            domain.verifyingContract = await erc20.getAddress()
+        })
+        describe('TransferWithSignature', () => {
+            const transferTypes = {
+                TransferWithSignature: [
+                    { name: 'to', type: 'address' },
+                    { name: 'amount', type: 'uint256' },
+                    { name: 'sender', type: 'address' },
+                    { name: 'deadline', type: 'uint256' },
+                    { name: 'nonce', type: 'uint256' },
+                ],
+            }
+
+            const transferFromTypes = {
+                TransferFromWithSignature: [
+                    { name: 'from', type: 'address' },
+                    { name: 'to', type: 'address' },
+                    { name: 'amount', type: 'uint256' },
+                    { name: 'sender', type: 'address' },
+                    { name: 'deadline', type: 'uint256' },
+                    { name: 'nonce', type: 'uint256' },
+                ],
+            }
+
+            beforeEach(async function () {
+                await loadFixture(signatureReadyFixture)
+            })
+
+            it('GIVEN paused contract WHEN calling transferWithSignature THEN should revert with IsPaused', async function () {
+                // Pause the contract
+                await pause.pause()
+
+                await expect(
+                    erc203643TransferSigned
+                        .connect(otherAccount)
+                        .transferWithSignature(
+                            otherAccountAddress,
+                            100,
+                            ownerAddress,
+                            100,
+                            1,
+                            '0xdead'
+                        )
+                ).to.be.revertedWithCustomError(erc20, 'IsPaused')
+            })
+
+            it('GIVEN paused contract WHEN calling transferFromWithSignature THEN should revert with IsPaused', async function () {
+                // Pause the contract
+                await pause.pause()
+                await expect(
+                    erc203643TransferSigned
+                        .connect(otherAccount)
+                        .transferFromWithSignature(
+                            ownerAddress,
+                            otherAccountAddress,
+                            10,
+                            otherAccountAddress,
+                            10,
+                            1,
+                            '0xdead'
+                        )
+                ).to.be.revertedWithCustomError(erc20, 'IsPaused')
+            })
+
+            it('GIVEN caller without SPONSOR_ROLE WHEN calling transferWithSignature THEN should revert with AccountHasNoRole', async function () {
+                await expect(
+                    erc203643TransferSigned.transferWithSignature(
+                        otherAccountAddress,
+                        100,
+                        ownerAddress,
+                        10,
+                        1,
+                        '0xdead'
+                    )
+                )
+                    .to.be.revertedWithCustomError(
+                        accessControl,
+                        'AccountHasNoRole'
+                    )
+                    .withArgs(ownerAddress, SPONSOR_ROLE)
+            })
+
+            it('GIVEN caller without SPONSOR_ROLE WHEN calling transferFromWithSignature THEN should revert with AccountHasNoRole', async function () {
+                await expect(
+                    erc203643TransferSigned.transferFromWithSignature(
+                        ownerAddress,
+                        otherAccountAddress,
+                        100,
+                        otherAccountAddress,
+                        100,
+                        1,
+                        '0xdead'
+                    )
+                )
+                    .to.be.revertedWithCustomError(
+                        accessControl,
+                        'AccountHasNoRole'
+                    )
+                    .withArgs(ownerAddress, SPONSOR_ROLE)
+            })
+
+            it('GIVEN valid signed transfer data WHEN calling transferWithSignature THEN should successfully transfer tokens and emit event', async function () {
+                const amount = 100
+                const nonce = 1
+                const deadline = Math.floor(Date.now() / 1000) + 3600 // 1 hour from now
+
+                const message = {
+                    to: otherAccountAddress,
+                    amount: amount,
+                    sender: ownerAddress,
+                    deadline: deadline,
+                    nonce: nonce,
+                }
+
+                const signature = await owner.signTypedData(
+                    domain,
+                    transferTypes,
+                    message
+                )
+
+                const tx = await erc203643TransferSigned
+                    .connect(otherAccount) // Sponsor calls the function
+                    .transferWithSignature(
+                        otherAccountAddress,
+                        amount,
+                        ownerAddress,
+                        deadline,
+                        nonce,
+                        signature
+                    )
+
+                await expect(tx)
+                    .to.emit(
+                        erc203643TransferSigned,
+                        'WithSignatureTransferred'
+                    )
+                    .withArgs(
+                        ownerAddress,
+                        otherAccountAddress,
+                        amount,
+                        ownerAddress,
+                        deadline,
+                        nonce,
+                        signature
+                    )
+
+                // Verify balances
+                expect(await erc20.balanceOf(ownerAddress)).to.equal(400) // 500 - 100
+                expect(await erc20.balanceOf(otherAccountAddress)).to.equal(100)
+            })
+
+            it('GIVEN valid signed transferFrom data WHEN calling transferFromWithSignature THEN should successfully transfer tokens and emit event', async function () {
+                // Set up allowance for the sponsor (otherAccount) to spend owner's tokens
+                await erc20.connect(owner).approve(otherAccountAddress, 200)
+
+                const amount = 150
+                const nonce = 1
+                const deadline = Math.floor(Date.now() / 1000) + 3600 // 1 hour from now
+
+                const message = {
+                    from: ownerAddress,
+                    to: otherAccountAddress,
+                    amount: amount,
+                    sender: otherAccountAddress, // Sponsor is the sender
+                    deadline: deadline,
+                    nonce: nonce,
+                }
+
+                const signature = await otherAccount.signTypedData(
+                    domain,
+                    transferFromTypes,
+                    message
+                )
+
+                const tx = await erc203643TransferSigned
+                    .connect(otherAccount) // Sponsor calls the function
+                    .transferFromWithSignature(
+                        ownerAddress,
+                        otherAccountAddress,
+                        amount,
+                        otherAccountAddress,
+                        deadline,
+                        nonce,
+                        signature
+                    )
+
+                await expect(tx)
+                    .to.emit(
+                        erc203643TransferSigned,
+                        'WithSignatureTransferred'
+                    )
+                    .withArgs(
+                        ownerAddress,
+                        otherAccountAddress,
+                        amount,
+                        otherAccountAddress,
+                        deadline,
+                        nonce,
+                        signature
+                    )
+
+                // Verify balances and allowance
+                expect(await erc20.balanceOf(ownerAddress)).to.equal(350) // 500 - 150
+                expect(await erc20.balanceOf(otherAccountAddress)).to.equal(150)
+                expect(
+                    await erc20.allowance(ownerAddress, otherAccountAddress)
+                ).to.equal(50) // 200 - 150
+            })
+        })
+
+        describe('MintWithSignature', () => {
+            let erc203643CappedSigned: ERC203643CappedSigned // Replace with actual type when available
+
+            const mintTypes = {
+                MintWithSignature: [
+                    { name: 'to', type: 'address' },
+                    { name: 'amount', type: 'uint256' },
+                    { name: 'sender', type: 'address' },
+                    { name: 'deadline', type: 'uint256' },
+                    { name: 'nonce', type: 'uint256' },
+                ],
+            }
+
+            beforeEach(async function () {
+                erc203643CappedSigned = await ethers.getContractAt(
+                    'ERC203643CappedSigned',
+                    await erc20.getAddress()
+                )
+            })
+
+            describe('Modifier Coverage', () => {
+                beforeEach(async function () {
+                    await loadFixture(sponsorOnlyFixture)
+                })
+
+                it('GIVEN paused contract WHEN calling mintWithSignature THEN should revert with IsPaused', async function () {
+                    // Pause the contract
+                    await pause.pause()
+
+                    await expect(
+                        erc203643CappedSigned
+                            .connect(otherAccount)
+                            .mintWithSignature(
+                                otherAccountAddress,
+                                100,
+                                ownerAddress,
+                                Math.floor(Date.now() / 1000) + 3600,
+                                1,
+                                '0xdead'
+                            )
+                    ).to.be.revertedWithCustomError(erc20, 'IsPaused')
+                })
+
+                it('GIVEN caller without SPONSOR_ROLE WHEN calling mintWithSignature THEN should revert with AccountHasNoRole', async function () {
+                    // Revoke role to ensure it doesn't have it
+                    await accessControl.revokeRole(
+                        SPONSOR_ROLE,
+                        otherAccountAddress
+                    )
+
+                    await expect(
+                        erc203643CappedSigned
+                            .connect(otherAccount)
+                            .mintWithSignature(
+                                otherAccountAddress,
+                                100,
+                                ownerAddress,
+                                Math.floor(Date.now() / 1000) + 3600,
+                                1,
+                                '0xdead'
+                            )
+                    )
+                        .to.be.revertedWithCustomError(
+                            accessControl,
+                            'AccountHasNoRole'
+                        )
+                        .withArgs(otherAccountAddress, SPONSOR_ROLE)
+                })
+
+                it('GIVEN the signer of 712 is not MINTER_ROLE WHEN calling mintWithSignature THEN fails', async function () {
+                    const amount = 100
+                    const nonce = 1
+                    const deadline = Math.floor(Date.now() / 1000) + 3600 // 1 hour from now
+
+                    const message = {
+                        to: otherAccountAddress,
+                        amount: amount,
+                        sender: ownerAddress,
+                        deadline: deadline,
+                        nonce: nonce,
+                    }
+
+                    const signature = await owner.signTypedData(
+                        domain,
+                        mintTypes,
+                        message
+                    )
+
+                    await expect(
+                        erc203643CappedSigned
+                            .connect(otherAccount)
+                            .mintWithSignature(
+                                otherAccountAddress,
+                                amount,
+                                ownerAddress,
+                                deadline,
+                                nonce,
+                                signature
+                            )
+                    )
+                        .to.be.revertedWithCustomError(
+                            accessControl,
+                            'AccountHasNoRole'
+                        )
+                        .withArgs(ownerAddress, MINTER_ROLE)
+                })
+            })
+
+            describe('Successful Operations', () => {
+                beforeEach(async function () {
+                    await loadFixture(fullSponsorSetupFixture)
+                })
+
+                it('GIVEN valid signed mint data WHEN calling mintWithSignature THEN should successfully mint tokens and emit event', async function () {
+                    const amount = 100
+                    const nonce = 1
+                    const deadline = Math.floor(Date.now() / 1000) + 3600 // 1 hour from now
+
+                    const message = {
+                        to: otherAccountAddress,
+                        amount: amount,
+                        sender: ownerAddress,
+                        deadline: deadline,
+                        nonce: nonce,
+                    }
+
+                    const signature = await owner.signTypedData(
+                        domain,
+                        mintTypes,
+                        message
+                    )
+
+                    const tx = await erc203643CappedSigned
+                        .connect(otherAccount) // Sponsor calls the function
+                        .mintWithSignature(
+                            otherAccountAddress,
+                            amount,
+                            ownerAddress,
+                            deadline,
+                            nonce,
+                            signature
+                        )
+
+                    await expect(tx)
+                        .to.emit(erc203643CappedSigned, 'WithSignatureMinted')
+                        .withArgs(
+                            otherAccountAddress,
+                            amount,
+                            ownerAddress,
+                            deadline,
+                            nonce,
+                            signature
+                        )
+
+                    // Verify balances and supply
+                    expect(await erc20.balanceOf(otherAccountAddress)).to.equal(
+                        100
+                    )
+                    expect(await erc20.totalSupply()).to.equal(100)
+                })
+
+                it('GIVEN valid signed mint data to zero address WHEN calling mintWithSignature THEN should fail with AddressZero', async function () {
+                    const amount = 100
+                    const nonce = 1
+                    const deadline = Math.floor(Date.now() / 1000) + 3600
+
+                    const message = {
+                        to: ethers.ZeroAddress,
+                        amount: amount,
+                        sender: ownerAddress,
+                        deadline: deadline,
+                        nonce: nonce,
+                    }
+
+                    const signature = await owner.signTypedData(
+                        domain,
+                        mintTypes,
+                        message
+                    )
+
+                    await expect(
+                        erc203643CappedSigned
+                            .connect(otherAccount)
+                            .mintWithSignature(
+                                ethers.ZeroAddress,
+                                amount,
+                                ownerAddress,
+                                deadline,
+                                nonce,
+                                signature
+                            )
+                    ).to.be.revertedWithCustomError(erc20, 'AddressZero')
+                })
+
+                it('GIVEN expired signature WHEN calling mintWithSignature THEN should fail with ExpiredDeadline', async function () {
+                    const amount = 100
+                    const nonce = 1
+                    const deadline = 1
+                    const message = {
+                        to: otherAccountAddress,
+                        amount: amount,
+                        sender: ownerAddress,
+                        deadline: deadline,
+                        nonce: nonce,
+                    }
+
+                    const signature = await owner.signTypedData(
+                        domain,
+                        mintTypes,
+                        message
+                    )
+
+                    await expect(
+                        erc203643CappedSigned
+                            .connect(otherAccount)
+                            .mintWithSignature(
+                                otherAccountAddress,
+                                amount,
+                                ownerAddress,
+                                deadline,
+                                nonce,
+                                signature
+                            )
+                    )
+                        .to.be.revertedWithCustomError(
+                            erc203643CappedSigned,
+                            'ExpiredDeadline'
+                        )
+                        .withArgs(deadline)
+                })
+
+                it('GIVEN invalid signature WHEN calling mintWithSignature THEN should fail with InvalidSignature', async function () {
+                    const amount = 100
+                    const nonce = 1
+                    const deadline = Math.floor(Date.now() / 1000) + 3600
+
+                    await expect(
+                        erc203643CappedSigned
+                            .connect(otherAccount)
+                            .mintWithSignature(
+                                otherAccountAddress,
+                                amount,
+                                ownerAddress,
+                                deadline,
+                                nonce,
+                                '0x' + '00'.repeat(65) // Invalid signature
+                            )
+                    )
+                        .to.be.revertedWithCustomError(
+                            erc203643CappedSigned,
+                            'InvalidSignature'
+                        )
+                        .withArgs(ownerAddress)
+                })
+
+                it('GIVEN duplicate nonce WHEN calling mintWithSignature THEN should fail with WrongNonce', async function () {
+                    const amount = 100
+                    const nonce = 1
+                    const deadline = Math.floor(Date.now() / 1000) + 3600
+
+                    const message = {
+                        to: otherAccountAddress,
+                        amount: amount,
+                        sender: ownerAddress,
+                        deadline: deadline,
+                        nonce: nonce,
+                    }
+
+                    const signature = await owner.signTypedData(
+                        domain,
+                        mintTypes,
+                        message
+                    )
+
+                    // First call with valid nonce
+                    await erc203643CappedSigned
+                        .connect(otherAccount)
+                        .mintWithSignature(
+                            otherAccountAddress,
+                            amount,
+                            ownerAddress,
+                            deadline,
+                            nonce,
+                            signature
+                        )
+
+                    // Second call with same nonce should fail
+                    await expect(
+                        erc203643CappedSigned
+                            .connect(otherAccount)
+                            .mintWithSignature(
+                                otherAccountAddress,
+                                amount,
+                                ownerAddress,
+                                deadline,
+                                nonce,
+                                signature
+                            )
+                    )
+                        .to.be.revertedWithCustomError(
+                            erc203643CappedSigned,
+                            'WrongNonce'
+                        )
+                        .withArgs(nonce, ownerAddress)
+                })
+            })
+        })
+
+        describe('BurnWithSignature', () => {
+            let erc20BurnableSigned: ERC20BurnableSigned
+
+            const burnTypes = {
+                BurnWithSignature: [
+                    { name: 'account', type: 'address' },
+                    { name: 'amount', type: 'uint256' },
+                    { name: 'deadline', type: 'uint256' },
+                    { name: 'nonce', type: 'uint256' },
+                ],
+            }
+
+            const burnFromTypes = {
+                BurnFromWithSignature: [
+                    { name: 'sender', type: 'address' },
+                    { name: 'account', type: 'address' },
+                    { name: 'amount', type: 'uint256' },
+                    { name: 'deadline', type: 'uint256' },
+                    { name: 'nonce', type: 'uint256' },
+                ],
+            }
+
+            beforeEach(async function () {
+                erc20BurnableSigned = await ethers.getContractAt(
+                    'ERC20BurnableSignedFacet',
+                    await erc20.getAddress()
+                )
+            })
+
+            describe('Modifier Coverage', () => {
+                beforeEach(async function () {
+                    // Setup roles and initial state
+                    await accessControl.grantRole(
+                        SPONSOR_ROLE,
+                        otherAccountAddress
+                    )
+                    await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+                    await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+                    await erc20Capped.initializeCap(1000)
+                    await erc20Capped.mint(ownerAddress, 500)
+                })
+
+                it('GIVEN paused contract WHEN calling burnWithSignature THEN should revert with IsPaused', async function () {
+                    // Pause the contract
+                    await pause.pause()
+
+                    await expect(
+                        erc20BurnableSigned
+                            .connect(otherAccount)
+                            .burnWithSignature(
+                                ownerAddress,
+                                100,
+                                Math.floor(Date.now() / 1000) + 3600,
+                                1,
+                                '0xdead'
+                            )
+                    ).to.be.revertedWithCustomError(erc20, 'IsPaused')
+                })
+
+                it('GIVEN caller without SPONSOR_ROLE WHEN calling burnWithSignature THEN should revert with AccountHasNoRole', async function () {
+                    await expect(
+                        erc20BurnableSigned.burnWithSignature(
+                            ownerAddress,
+                            100,
+                            Math.floor(Date.now() / 1000) + 3600,
+                            1,
+                            '0xdead'
+                        )
+                    )
+                        .to.be.revertedWithCustomError(
+                            accessControl,
+                            'AccountHasNoRole'
+                        )
+                        .withArgs(ownerAddress, SPONSOR_ROLE)
+                })
+            })
+
+            describe('Successful Operations', () => {
+                beforeEach(async function () {
+                    // Setup roles and initial state
+                    await accessControl.grantRole(SPONSOR_ROLE, ownerAddress)
+                    await accessControl.grantRole(
+                        SPONSOR_ROLE,
+                        otherAccountAddress
+                    )
+                    await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+                    await erc20Capped.initializeCap(1000)
+                    await erc20Capped.mint(ownerAddress, 500)
+                })
+
+                it('GIVEN valid signed burn data WHEN calling burnWithSignature THEN should successfully burn tokens and emit event', async function () {
+                    const amount = 100
+                    const nonce = 1
+                    const deadline = Math.floor(Date.now() / 1000) + 3600 // 1 hour from now
+
+                    const message = {
+                        account: ownerAddress,
+                        amount: amount,
+                        deadline: deadline,
+                        nonce: nonce,
+                    }
+
+                    const signature = await owner.signTypedData(
+                        domain,
+                        burnTypes,
+                        message
+                    )
+
+                    const tx = await erc20BurnableSigned
+                        .connect(otherAccount) // Sponsor calls the function
+                        .burnWithSignature(
+                            ownerAddress,
+                            amount,
+                            deadline,
+                            nonce,
+                            signature
+                        )
+
+                    await expect(tx)
+                        .to.emit(erc20BurnableSigned, 'WithSignatureBurned')
+                        .withArgs(
+                            ownerAddress,
+                            amount,
+                            deadline,
+                            nonce,
+                            signature
+                        )
+
+                    // Verify balances and supply
+                    expect(await erc20.balanceOf(ownerAddress)).to.equal(400) // 500 - 100
+                    expect(await erc20.totalSupply()).to.equal(400) // 500 - 100
+                })
+
+                it('GIVEN expired signature WHEN calling burnWithSignature THEN should fail with ExpiredDeadline', async function () {
+                    const amount = 100
+                    const nonce = 1
+                    const deadline = 1
+                    const message = {
+                        account: ownerAddress,
+                        amount: amount,
+                        deadline: deadline,
+                        nonce: nonce,
+                    }
+
+                    const signature = await owner.signTypedData(
+                        domain,
+                        burnTypes,
+                        message
+                    )
+
+                    await expect(
+                        erc20BurnableSigned
+                            .connect(otherAccount)
+                            .burnWithSignature(
+                                ownerAddress,
+                                amount,
+                                deadline,
+                                nonce,
+                                signature
+                            )
+                    )
+                        .to.be.revertedWithCustomError(
+                            erc20BurnableSigned,
+                            'ExpiredDeadline'
+                        )
+                        .withArgs(deadline)
+                })
+
+                it('GIVEN invalid signature WHEN calling burnWithSignature THEN should fail with InvalidSignature', async function () {
+                    const amount = 100
+                    const nonce = 1
+                    const deadline = Math.floor(Date.now() / 1000) + 3600
+
+                    await expect(
+                        erc20BurnableSigned
+                            .connect(otherAccount)
+                            .burnWithSignature(
+                                ownerAddress,
+                                amount,
+                                deadline,
+                                nonce,
+                                '0x' + '00'.repeat(65) // Invalid signature
+                            )
+                    )
+                        .to.be.revertedWithCustomError(
+                            erc20BurnableSigned,
+                            'InvalidSignature'
+                        )
+                        .withArgs(ownerAddress)
+                })
+
+                it('GIVEN duplicate nonce WHEN calling burnWithSignature THEN should fail with WrongNonce', async function () {
+                    const amount = 100
+                    const nonce = 1
+                    const deadline = Math.floor(Date.now() / 1000) + 3600
+
+                    const message = {
+                        account: ownerAddress,
+                        amount: amount,
+                        deadline: deadline,
+                        nonce: nonce,
+                    }
+
+                    const signature = await owner.signTypedData(
+                        domain,
+                        burnTypes,
+                        message
+                    )
+
+                    // First call with valid nonce
+                    await erc20BurnableSigned
+                        .connect(otherAccount)
+                        .burnWithSignature(
+                            ownerAddress,
+                            amount,
+                            deadline,
+                            nonce,
+                            signature
+                        )
+
+                    // Second call with same nonce should fail
+                    await expect(
+                        erc20BurnableSigned
+                            .connect(otherAccount)
+                            .burnWithSignature(
+                                ownerAddress,
+                                amount,
+                                deadline,
+                                nonce,
+                                signature
+                            )
+                    )
+                        .to.be.revertedWithCustomError(
+                            erc20BurnableSigned,
+                            'WrongNonce'
+                        )
+                        .withArgs(nonce, ownerAddress)
+                })
+            })
+
+            describe('burnFromWithSignature - Modifier Coverage', () => {
+                beforeEach(async function () {
+                    // Setup roles and initial state
+                    await accessControl.grantRole(
+                        SPONSOR_ROLE,
+                        otherAccountAddress
+                    )
+                    await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+                    await accessControl.grantRole(PAUSER_ROLE, ownerAddress)
+                    await erc20Capped.initializeCap(1000)
+                    await erc20Capped.mint(ownerAddress, 500)
+                })
+
+                it('GIVEN paused contract WHEN calling burnFromWithSignature THEN should revert with IsPaused', async function () {
+                    // Pause the contract
+                    await pause.pause()
+
+                    await expect(
+                        erc20BurnableSigned
+                            .connect(otherAccount)
+                            .burnFromWithSignature(
+                                ownerAddress,
+                                ownerAddress,
+                                100,
+                                Math.floor(Date.now() / 1000) + 3600,
+                                1,
+                                '0xdead'
+                            )
+                    ).to.be.revertedWithCustomError(erc20, 'IsPaused')
+                })
+
+                it('GIVEN caller without SPONSOR_ROLE WHEN calling burnFromWithSignature THEN should revert with AccountHasNoRole', async function () {
+                    // Revoke role to ensure it doesn't have it
+                    await accessControl.revokeRole(
+                        SPONSOR_ROLE,
+                        otherAccountAddress
+                    )
+
+                    await expect(
+                        erc20BurnableSigned
+                            .connect(otherAccount)
+                            .burnFromWithSignature(
+                                ownerAddress,
+                                ownerAddress,
+                                100,
+                                Math.floor(Date.now() / 1000) + 3600,
+                                1,
+                                '0xdead'
+                            )
+                    )
+                        .to.be.revertedWithCustomError(
+                            accessControl,
+                            'AccountHasNoRole'
+                        )
+                        .withArgs(otherAccountAddress, SPONSOR_ROLE)
+                })
+            })
+
+            describe('burnFromWithSignature - Successful Operations', () => {
+                beforeEach(async function () {
+                    // Setup roles and initial state
+                    await accessControl.grantRole(SPONSOR_ROLE, ownerAddress)
+                    await accessControl.grantRole(MINTER_ROLE, ownerAddress)
+                    await accessControl.grantRole(
+                        SPONSOR_ROLE,
+                        otherAccountAddress
+                    )
+                    await erc20Capped.initializeCap(1000)
+                    await erc20Capped.mint(ownerAddress, 500)
+                })
+
+                it('GIVEN valid signed burnFrom data WHEN calling burnFromWithSignature THEN should successfully burn tokens and emit event', async function () {
+                    // First approve the spender
+                    await erc20.connect(owner).approve(otherAccountAddress, 200)
+
+                    const amount = 150
+                    const nonce = 1
+                    const deadline = Math.floor(Date.now() / 1000) + 3600 // 1 hour from now
+
+                    const message = {
+                        sender: otherAccountAddress, // Sponsor is the sender
+                        account: ownerAddress,
+                        amount: amount,
+                        deadline: deadline,
+                        nonce: nonce,
+                    }
+
+                    const signature = await otherAccount.signTypedData(
+                        domain,
+                        burnFromTypes,
+                        message
+                    )
+
+                    const tx = await erc20BurnableSigned
+                        .connect(otherAccount) // Sponsor calls the function
+                        .burnFromWithSignature(
+                            otherAccountAddress,
+                            ownerAddress,
+                            amount,
+                            deadline,
+                            nonce,
+                            signature
+                        )
+
+                    await expect(tx)
+                        .to.emit(erc20BurnableSigned, 'WithSignatureBurnedFrom')
+                        .withArgs(
+                            otherAccountAddress,
+                            ownerAddress,
+                            amount,
+                            deadline,
+                            nonce,
+                            signature
+                        )
+
+                    // Verify balances and allowance
+                    expect(await erc20.balanceOf(ownerAddress)).to.equal(350) // 500 - 150
+                    expect(await erc20.totalSupply()).to.equal(350) // 500 - 150
+                    expect(
+                        await erc20.allowance(ownerAddress, otherAccountAddress)
+                    ).to.equal(50) // 200 - 150
+                })
+
+                it('GIVEN expired signature WHEN calling burnFromWithSignature THEN should fail with ExpiredDeadline', async function () {
+                    // First approve the spender
+                    await erc20.connect(owner).approve(otherAccountAddress, 200)
+
+                    const amount = 150
+                    const nonce = 1
+                    const deadline = 1
+                    const message = {
+                        sender: otherAccountAddress,
+                        account: ownerAddress,
+                        amount: amount,
+                        deadline: deadline,
+                        nonce: nonce,
+                    }
+
+                    const signature = await otherAccount.signTypedData(
+                        domain,
+                        burnFromTypes,
+                        message
+                    )
+
+                    await expect(
+                        erc20BurnableSigned
+                            .connect(otherAccount)
+                            .burnFromWithSignature(
+                                otherAccountAddress,
+                                ownerAddress,
+                                amount,
+                                deadline,
+                                nonce,
+                                signature
+                            )
+                    )
+                        .to.be.revertedWithCustomError(
+                            erc20BurnableSigned,
+                            'ExpiredDeadline'
+                        )
+                        .withArgs(deadline)
+                })
+
+                it('GIVEN invalid signature WHEN calling burnFromWithSignature THEN should fail with InvalidSignature', async function () {
+                    // First approve the spender
+                    await erc20.connect(owner).approve(otherAccountAddress, 200)
+
+                    const amount = 150
+                    const nonce = 1
+                    const deadline = Math.floor(Date.now() / 1000) + 3600
+
+                    await expect(
+                        erc20BurnableSigned
+                            .connect(otherAccount)
+                            .burnFromWithSignature(
+                                otherAccountAddress,
+                                ownerAddress,
+                                amount,
+                                deadline,
+                                nonce,
+                                '0x' + '00'.repeat(65) // Invalid signature
+                            )
+                    )
+                        .to.be.revertedWithCustomError(
+                            erc20BurnableSigned,
+                            'InvalidSignature'
+                        )
+                        .withArgs(otherAccountAddress)
+                })
+                it('GIVEN duplicate nonce WHEN calling burnFromWithSignature THEN should fail with WrongNonce', async function () {
+                    // First approve the spender
+                    await erc20.connect(owner).approve(otherAccountAddress, 200)
+
+                    const amount = 150
+                    const nonce = 1
+                    const deadline = Math.floor(Date.now() / 1000) + 3600
+
+                    const message = {
+                        sender: otherAccountAddress,
+                        account: ownerAddress,
+                        amount: amount,
+                        deadline: deadline,
+                        nonce: nonce,
+                    }
+
+                    const signature = await otherAccount.signTypedData(
+                        domain,
+                        burnFromTypes,
+                        message
+                    )
+
+                    // First call with valid nonce
+                    await erc20BurnableSigned
+                        .connect(otherAccount)
+                        .burnFromWithSignature(
+                            otherAccountAddress,
+                            ownerAddress,
+                            amount,
+                            deadline,
+                            nonce,
+                            signature
+                        )
+
+                    // Second call with same nonce should fail
+                    await expect(
+                        erc20BurnableSigned
+                            .connect(otherAccount)
+                            .burnFromWithSignature(
+                                otherAccountAddress,
+                                ownerAddress,
+                                amount,
+                                deadline,
+                                nonce,
+                                signature
+                            )
+                    )
+                        .to.be.revertedWithCustomError(
+                            erc20BurnableSigned,
+                            'WrongNonce'
+                        )
+                        .withArgs(nonce, otherAccountAddress)
+                })
+
+                it('GIVEN insufficient allowance WHEN calling burnFromWithSignature THEN should fail with InsufficientAllowance', async function () {
+                    // First approve less than needed
+                    await erc20.connect(owner).approve(otherAccountAddress, 50)
+
+                    const amount = 150 // More than approved
+                    const nonce = 1
+                    const deadline = Math.floor(Date.now() / 1000) + 3600
+
+                    const message = {
+                        sender: otherAccountAddress,
+                        account: ownerAddress,
+                        amount: amount,
+                        deadline: deadline,
+                        nonce: nonce,
+                    }
+
+                    const signature = await otherAccount.signTypedData(
+                        domain,
+                        burnFromTypes,
+                        message
+                    )
+
+                    await expect(
+                        erc20BurnableSigned
+                            .connect(otherAccount)
+                            .burnFromWithSignature(
+                                otherAccountAddress,
+                                ownerAddress,
+                                amount,
+                                deadline,
+                                nonce,
+                                signature
+                            )
+                    ).to.be.revertedWithCustomError(
+                        erc20BurnableSigned,
+                        'InsufficientAllowance'
+                    )
+                })
+            })
         })
     })
 })
