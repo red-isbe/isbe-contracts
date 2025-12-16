@@ -80,56 +80,60 @@ Definir las interfaces, comportamientos y mecanismos de control asociados al **m
 
 El módulo ERC‑3643 Security Token en ISBE sigue un diseño modular basado en **arquitectura Diamond (EIP‑2535)** con **8 facets especializados**, permitiendo una implementación segura, auditada y adaptable para tokens de seguridad regulados.
 
-#### Componentes principales:
+#### Componentes principales
 
-##### 1. **ERC3643MetadataFacet** - Metadatos regulatorios
+Para reflejar la arquitectura final, los componentes se agrupan por categorías funcionales y transversales.
 
-- **Propósito**: Gestión de metadatos básicos del token (nombre y símbolo)
-- **Funciones clave**: `setName()`, `setSymbol()`
-- **Ubicación**: `contracts/tokens/erc3643/token/erc3643metadata/`
-- **Nota**: La identidad onchain se gestiona a través del sistema DID integrado en el control de acceso
+##### Módulos ERC20
 
-##### 2. **ERC3643FreezeFacet** - Control de congelación
+- **ERC20**
+    - Propósito: Funcionalidad base de token fungible (transferencias, aprobaciones, balances).
+    - Nota: Integrado en la arquitectura Diamond y consumido por lógica común `ERC203643InternalCommon`.
+- **ERC20Snapshot**
+    - Propósito: Gestión de snapshots para dividendos/votación y trazabilidad histórica.
+    - Funciones clave: `snapshot()`, consultas de `balanceOfAt`, `totalSupplyAt`.
 
-- **Propósito**: Congelación total o parcial de cuentas y tokens
-- **Funciones clave**: `freezePartialTokens()`, `unfreezePartialTokens()`, `setAddressFrozen()`
-- **Ubicación**: `contracts/tokens/erc3643/token/erc3643freeze/`
+- **ERC203643CappedFacet**
+    - Propósito: Límite máximo de suministro (cap) con validación en `mint` y `batchMint`.
+    - Ubicación: `contracts/tokens/erc203643/capped/`
+- **ERC203643ControllerFacet**
+    - Propósito: Operaciones forzadas reguladas (`forceTransfer`, `forceBurn`, batch) con roles.
+    - Ubicación: `contracts/tokens/erc203643/controller/`
 
-##### 3. **ERC3643RecoveryFacet** - Recuperación de tokens
+##### Módulos propios de ERC3643
 
-- **Propósito**: Recuperación de tokens perdidos o de cuentas comprometidas
-- **Funciones clave**: `recoveryAddress()`, ejecutada por RECOVERY_ROLE
-- **Ubicación**: `contracts/tokens/erc3643/token/erc3643recovery/`
+- **ERC3643FreezeFacet**
+    - Propósito: Congelación total o parcial de cuentas y tokens, con operaciones batch.
+    - Ubicación: `contracts/tokens/erc3643/token/erc3643freeze/`
+- **ERC3643RecoveryFacet**
+    - Propósito: Recuperación de tokens ante pérdida/compromiso de cuentas, ejecutada por `RECOVERY_ROLE`.
+    - Ubicación: `contracts/tokens/erc3643/token/erc3643recovery/`
+- **ERC3643MetadataFacet**
+    - Propósito: Gestión de metadatos del token (nombre y símbolo).
+    - Ubicación: `contracts/tokens/erc3643/token/erc3643metadata/`
 
-##### 4. **ERC3643ComplianceFacet** - Motor de cumplimiento base
+##### Módulos transversales de compliance
 
-- **Propósito**: Validación de transferencias según reglas de compliance
-- **Funciones clave**: `canTransfer()`, `transferred()`, hooks automáticos
-- **Ubicación**: `contracts/tokens/erc3643/compliance/`
+- **ERC3643ComplianceFacet**
+    - Propósito: Motor de cumplimiento centralizado; expone `canTransfer` y orquesta hooks internos.
+    - Ubicación: `contracts/tokens/erc3643/compliance/`
+- **ERC3643ComplianceDMLimFacet**
+    - Propósito: Límites diarios/mensuales de transferencia por cuenta, con contadores y consultas.
+    - Ubicación: `contracts/tokens/erc3643/compliance/erc3643compliancedaymonthlimits/`
+- **ERC3643ComplianceMaxBalanceFacet**
+    - Propósito: Límite de balance máximo por cuenta (AML), activable por `COMPLIANCE_ROLE`.
+    - Ubicación: `contracts/tokens/erc3643/compliance/erc3643compliancemaxbalance/`
 
-##### 5. **ERC3643ComplianceMaxBalanceFacet** - Límite de balance
+##### Módulos transversales genéricos
 
-- **Propósito**: Control de balance máximo por cuenta (regulación AML)
-- **Funciones clave**: `setMaxBalance()`, validación automática
-- **Ubicación**: `contracts/tokens/erc3643/compliance/erc3643compliancemaxbalance/`
-
-##### 6. **ERC3643ComplianceDMLimFacet** - Límites temporales
-
-- **Propósito**: Límites de transferencia diarios y mensuales
-- **Funciones clave**: `setDailyLimit()`, `setMonthlyLimit()`, tracking automático
-- **Ubicación**: `contracts/tokens/erc3643/compliance/erc3643compliancedaymonthlimits/`
-
-##### 7. **ERC203643CappedFacet** - Supply cap (compartido con ERC20)
-
-- **Propósito**: Límite máximo de suministro de tokens
-- **Funciones clave**: `cap()`, validación en mint
-- **Ubicación**: `contracts/tokens/erc203643/capped/`
-
-##### 8. **ERC203643ControllerFacet** - Control de transferencias (compartido con ERC20)
-
-- **Propósito**: Transferencias y quemas forzadas por autoridad regulatoria
-- **Funciones clave**: `forceTransfer()`, `forceBurn()`
-- **Ubicación**: `contracts/tokens/erc203643/controller/`
+- **AccessControl**
+    - Propósito: Control de acceso por roles granulares (grant/revoke/hasRole).
+- **Ownable**
+    - Propósito: Gestión de propiedad del contrato y transferencia de titularidad.
+- **Pause**
+    - Propósito: Pausa global de operaciones críticas (`pause`, `unpause`, `paused`).
+- **BasicWhitelist**
+    - Propósito: Lista blanca básica transversal para habilitar/denegar interacciones según políticas.
 
 #### Arquitectura de compliance hooks:
 
@@ -161,20 +165,25 @@ function _beforeTokenTransfer(
 ### 4.2. Configuración SECURITY_TOKEN
 
 Configuration ID:
-`0x008208000000002a000000004c0000005f006a0046000060000000000000f743`
+`0x008208000000002a000000004c00000063006a0046000060000000000000f743`
 
-#### Composición de facets (10 resolver keys ordenadas):
+#### Composición de facets (11 resolver keys ordenadas):
 
-1. ERC20_RESOLVER_KEY - Funcionalidad ERC20 base
-2. ERC20_SNAPSHOT_RESOLVER_KEY - Snapshots para dividendos/voting
-3. ERC20_ERC3643_SHARED_RESOLVER_KEYS.CAPPED - Supply cap regulatorio
-4. ERC20_ERC3643_SHARED_RESOLVER_KEYS.CONTROLLER - Control regulatorio
-5. ERC3643_COMPLIANCE_DMLIM_RESOLVER_KEY - Límites temporales
-6. ERC3643_COMPLIANCE_MAXBALANCE_RESOLVER_KEY - Límite de balance
-7. ERC3643_COMPLIANCE_RESOLVER_KEY - Motor de compliance
-8. ERC3643_FREEZE_RESOLVER_KEY - Congelación de cuentas
-9. ERC3643_METADATA_RESOLVER_KEY - Metadatos regulatorios
-10. ERC3643_RECOVERY_RESOLVER_KEY - Recuperación de tokens
+1. BASIC_WHITELIST_RESOLVER_KEY - Lista blanca básica transversal
+2. ERC20_RESOLVER_KEY - Funcionalidad ERC20 base
+3. ERC20_SNAPSHOT_RESOLVER_KEY - Snapshots para dividendos/voting
+4. ERC20_ERC3643_SHARED_RESOLVER_KEYS.CAPPED - Supply cap regulatorio
+5. ERC20_ERC3643_SHARED_RESOLVER_KEYS.CONTROLLER - Control regulatorio
+6. ERC3643_COMPLIANCE_DMLIM_RESOLVER_KEY - Límites temporales
+7. ERC3643_COMPLIANCE_MAXBALANCE_RESOLVER_KEY - Límite de balance
+8. ERC3643_COMPLIANCE_RESOLVER_KEY - Motor de compliance
+9. ERC3643_FREEZE_RESOLVER_KEY - Congelación de cuentas
+10. ERC3643_METADATA_RESOLVER_KEY - Metadatos regulatorios
+11. ERC3643_RECOVERY_RESOLVER_KEY - Recuperación de tokens
+
+Nota:
+
+- Los módulos transversales genéricos (AccessControl, Ownable, Pause, BasicWhitelist) forman parte del core de la arquitectura y se incluyen por defecto; por ello no aparecen como resolver keys específicos dentro de la configuración `SECURITY_TOKEN`.
 
 #### Algoritmo de generación:
 
@@ -417,8 +426,6 @@ event ForceBurn(address indexed operator, address indexed from, uint256 amount);
 
 ### 5.4. Errores personalizados
 
-### 5.4. Errores personalizados
-
 ```solidity
 // Errores de Metadata
 error EmptyString();
@@ -475,41 +482,94 @@ error IsPaused();
 
 ## 7. Despliegue y Configuración
 
-### 7.1. Despliegue con deployAllClean
+### 7.1. Proceso de despliegue
 
-**Comando completo (todos los módulos)**
+El despliegue utiliza `deployAllClean`, orquestador que gestiona automáticamente el ciclo completo mediante `CleanDeploymentOrchestrator`:
 
-`npx hardhat deployAllClean --network dev`
+**Fases ejecutadas:**
+
+1. **Governance**: Despliegue de ISBEFactory (gestión de configuraciones y proxies)
+2. **Business Logics**: Registro de 11 facets ERC3643 como lógicas de negocio
+3. **Configuration**: Registro de SECURITY_TOKEN con `setConfig()` usando Configuration ID
+4. **Use Case**: Creación del proxy de Security Token mediante `deployUseCase()`
+5. **Validation**: Verificación automática de configuración y roles
+
+**Soporte multi-curva:**
+
+- `secp256k1`: Redes Ethereum estándar
+- `secp256r1`: Redes Hyperledger Besu
+
+### 7.2. Comandos de despliegue
+
+**Despliegue completo (todos los módulos)**
+
+```bash
+npx hardhat deployAllClean --network <network>
+```
 
 **Despliegue selectivo (solo ERC3643)**
 
-`npx hardhat deployAllClean --network dev --config-file erc3643-security-token.json`
+```bash
+npx hardhat deployAllClean --network <network> --config-file erc3643-security-token.json
+```
 
-**erc3643-security-token.json**
+**Con validaciones pre-commit**
+
+```bash
+npx hardhat deployAllClean --network <network> --config-file erc3643-security-token.json --precommit
+```
+
+### 7.3. Configuración del despliegue
+
+**Archivo: `deployment-configs/erc3643-security-token.json`**
 
 ```json
 {
-    "description": "Deploy ERC3643 Security Token with full compliance features",
-    "filters": {
-        "categories": ["erc3643"],
-        "patterns": ["Security Token"]
+    "description": "ERC3643 Security Token - Full Compliance Stack",
+    "version": "1.0.0",
+    "includeAllBusinessLogics": true,
+    "useCaseFilters": {
+        "enabled": true,
+        "includePatterns": ["Security Token"],
+        "categories": ["erc3643"]
     },
     "metadata": {
-        "configurationId": "0x008208000000002a000000004c0000005f006a0046000060000000000000f743",
-        "totalFacets": 10,
-        "features": [
-            "ERC20 Base + Snapshot",
-            "Capped Supply",
-            "Controller Operations",
-            "Metadata Management",
-            "Freeze/Unfreeze",
-            "Token Recovery",
-            "Compliance Engine",
-            "Max Balance Limit",
-            "Daily/Monthly Limits"
+        "configurationId": "0x008208000000002a000000004c00000063006a0046000060000000000000f743",
+        "totalFacets": 11,
+        "notes": [
+            "Includes ERC20 base + Snapshot, Capped, Controller",
+            "Includes all 6 ERC3643 facets + BasicWhitelist",
+            "Total 11 facets for complete regulatory compliance"
         ]
     }
 }
+```
+
+### 7.4. Verificación post-despliegue
+
+**Resultado esperado:**
+
+```
+📊 Deployment Progress: [████████████████████]
+✨ Total: 151 | ✅ Success: 151 | ❌ Failed: 0
+
+📦 ERC3643 DEPLOYMENTS
+| Security Token (ERC3643 Full Compliance) | ✅ | 0x3ee383e2229F60F57872732f88c03f53794f50Bd |
+
+✅ Clean deployment completed successfully!
+📋 FINAL SUMMARY:
+   • Deployed logics: 33/33
+   • Deployed use cases: 151/151
+```
+
+**Validación manual:**
+
+```bash
+# Verificar configuración del token
+npx hardhat validate-erc3643-token --proxy <address> --network <network>
+
+# Verificar roles administrativos
+npx hardhat check-admin-roles --proxy <address> --network <network>
 ```
 
 ## 8. Cumplimiento Regulatorio

@@ -41,6 +41,7 @@ import {
     CONFIGURATION_ID_ERC20,
     CONFIGURATION_ID_ERC721,
     CONFIGURATION_ID_ERC3643,
+    BASIC_WHITELIST_RESOLVER_KEY,
 } from '../utils/constants'
 
 describe('buildConfigurationId', function () {
@@ -236,6 +237,7 @@ describe('buildConfigurationId', function () {
                 ERC3643_COMPLIANCE_RESOLVER_KEY,
                 ERC3643_COMPLIANCE_MAXBALANCE_RESOLVER_KEY,
                 ERC3643_COMPLIANCE_DMLIM_RESOLVER_KEY,
+                BASIC_WHITELIST_RESOLVER_KEY,
             ]
             const result = buildConfigurationId(seed, resolverKeys)
 
@@ -244,7 +246,7 @@ describe('buildConfigurationId', function () {
 
             // The result should match our generated Configuration ID
             expect(result).to.equal(
-                '0x008208000000002a000000004c0000005f006a0046000060000000000000f743'
+                '0x008208000000002a000000004c00000063006a0046000060000000000000f743'
             )
         })
 
