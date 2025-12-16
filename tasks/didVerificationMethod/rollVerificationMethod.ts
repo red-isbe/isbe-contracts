@@ -101,6 +101,7 @@ task(
         const signatureProvider = SignatureProviderFactory.create(hre)
 
         return rollVerificationMethod(
+            hre,
             did,
             vmethodid,
             publickey,

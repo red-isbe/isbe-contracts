@@ -131,7 +131,7 @@ echo "Initializing DID Registry for testing..."
 npx hardhat didDocument:initializeDiDRegistry \
   --diamond 0x00000000000000000000000000000000000015BE \
   --elliptictype 1 \
-  --network genesis_validation_network_k1
+  --network "${NETWORK}"
 echo "DID Registry initialized."
 
 

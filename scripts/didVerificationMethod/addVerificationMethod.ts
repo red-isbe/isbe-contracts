@@ -10,14 +10,18 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -------------------------------------------------------------- */
-import { ISignatureProvider } from '../../tasks/deployment/providers/ISignatureProvider'
-import { executeDidWrite } from '../did/utils'
+import { getEvent } from '../utils/getEvent'
+import { decodeError } from '../utils/translateCustomError'
+import { ISignatureProvider } from '../../tasks/index'
+import {
+    ContractTransactionResponse,
+    LogDescription,
+    TransactionReceipt,
+} from 'ethers'
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
-async function loadDidVerificationMethodFactory() {
-    const { DidVerificationMethodFacet__factory } =
-        await import('../../typechain-types')
-    return DidVerificationMethodFacet__factory
-}
+const CONTRACT_NAME = 'DidVerificationMethodFacet'
+const EVENT_NAME = 'VerificationMethodAdded'
 
 const EllipticTypeNames: Record<number, string> = {
     0: 'NONE',
@@ -25,37 +29,281 @@ const EllipticTypeNames: Record<number, string> = {
     2: 'SECP_256_R1',
 }
 
+export interface VerificationMethodAddedResult {
+    did: string
+    vMethodId: string
+    publicKey: string
+    ellipticType: number
+}
+
+async function loadDidVerificationMethodFactory() {
+    const { DidVerificationMethodFacet__factory } =
+        await import('../../typechain-types')
+    return DidVerificationMethodFacet__factory
+}
+
 export async function addVerificationMethod(
+    hre: HardhatRuntimeEnvironment,
     did: string,
     vMethodId: string,
     publicKey: string,
     ellipticType: number,
     diamond: string,
     signatureProvider: ISignatureProvider
-) {
-    console.log('\n🔐 Adding Verification Method...\n')
-    console.log(`  DID:          ${did}`)
-    console.log(`  V-Method ID:  ${vMethodId}`)
-    console.log(`  Public Key:   ${publicKey.substring(0, 30)}...`)
+): Promise<VerificationMethodAddedResult> {
     console.log(
-        `  EllipticType: ${EllipticTypeNames[ellipticType] || ellipticType}`
+        `🔐 Using ${signatureProvider.getCurveType()} signature for adding verification method...`
     )
-    console.log(`  Diamond:      ${diamond}`)
-    console.log(`  Curve:        ${signatureProvider.getCurveType()}`)
-    console.log('')
 
+    if (signatureProvider.getCurveType() === 'secp256r1') {
+        return await 
+        addVerificationMethodWithRawTransaction(
+            hre,
+            did,
+            vMethodId,
+            publicKey,
+            ellipticType,
+            diamond,
+            signatureProvider
+        )
+    }
+
+    // For secp256k1, use the standard contract interface
+    const signer = await signatureProvider.getSigner()
     const DidVerificationMethodFacet__factory =
         await loadDidVerificationMethodFactory()
+    const didVerificationMethodFacet =
+        DidVerificationMethodFacet__factory.connect(diamond, signer)
 
-    await executeDidWrite(
-        DidVerificationMethodFacet__factory,
-        diamond,
-        signatureProvider,
-        'addVerificationMethod',
-        [did, vMethodId, publicKey, ellipticType],
-        800000n
+    console.log('📡 Sending addVerificationMethod transaction...')
+    let tx: ContractTransactionResponse
+    try {
+        tx = await didVerificationMethodFacet.addVerificationMethod(
+            did,
+            vMethodId,
+            publicKey,
+            ellipticType
+        )
+        console.log(`   🔗 Transaction submitted: ${tx.hash}`)
+    } catch (error: any) {
+        if (error?.data) {
+            console.log(
+                'Transaction SEND failed: ' +
+                    (await decodeError(hre, CONTRACT_NAME, error.data))
+            )
+        } else {
+            console.log('Transaction SEND failed: ' + error)
+        }
+        throw error
+    }
+
+    console.log('⏳ Waiting for transaction to be mined...')
+    let receipt: TransactionReceipt | null
+    try {
+        receipt = await tx.wait()
+        if (!receipt) throw new Error('Transaction receipt is null')
+        if (receipt.status !== 1) {
+            throw new Error('Transaction failed or was reverted')
+        }
+    } catch (error: any) {
+        console.log('Transaction MINING failed: ' + error)
+        throw error
+    }
+
+    const logDescription: LogDescription | null = await getEvent(
+        EVENT_NAME,
+        tx,
+        didVerificationMethodFacet
     )
 
-    console.log('\n✅ Verification method added')
-    return { did, vMethodId }
+    if (!logDescription) {
+        throw new Error(`${EVENT_NAME} event not found in transaction logs`)
+    }
+
+    const args = logDescription.args
+
+    if (
+        typeof args.did !== 'string' ||
+        typeof args.vMethodId !== 'string' ||
+        typeof args.publicKey !== 'string' ||
+        (typeof args.ellipticType !== 'number' &&
+            typeof args.ellipticType !== 'bigint')
+    ) {
+        throw new Error('Invalid VerificationMethodAdded event args format')
+    }
+
+    const {
+        did: evDid,
+        vMethodId: evVMethodId,
+        publicKey: evPublicKey,
+        ellipticType: evEllipticType,
+    } = args
+
+    const evEllipticTypeNum =
+        typeof evEllipticType === 'bigint'
+            ? Number(evEllipticType)
+            : evEllipticType
+
+    if (
+        evDid !== did ||
+        evVMethodId !== vMethodId ||
+        evEllipticTypeNum !== ellipticType
+    ) {
+        console.warn(
+            'Warning: Bad state detected. Check manually if operation has been processed correctly.'
+        )
+    }
+
+    console.log(`\n✅ Verification method added successfully:`)
+    console.log(`   DID: ${evDid}`)
+    console.log(`   V-Method ID: ${evVMethodId}`)
+    console.log(`   Public Key: ${evPublicKey.substring(0, 30)}...`)
+    console.log(
+        `   Elliptic Type: ${EllipticTypeNames[evEllipticTypeNum] || evEllipticTypeNum}`
+    )
+
+    return {
+        did: evDid,
+        vMethodId: evVMethodId,
+        publicKey: evPublicKey,
+        ellipticType: evEllipticTypeNum,
+    }
+}
+
+/**
+ * Add verification method using raw transactions for secp256r1 compatibility
+ * Avoids the "Cannot find square root" error by bypassing ethers Contract interface
+ */
+async function addVerificationMethodWithRawTransaction(
+    hre: HardhatRuntimeEnvironment,
+    did: string,
+    vMethodId: string,
+    publicKey: string,
+    ellipticType: number,
+    diamond: string,
+    signatureProvider: ISignatureProvider
+): Promise<VerificationMethodAddedResult> {
+    const { IDidVerificationMethod__factory } =
+        await import('../../typechain-types')
+
+    const contractInterface = IDidVerificationMethod__factory.createInterface()
+
+    // Encode the addVerificationMethod function call
+    const functionData = contractInterface.encodeFunctionData(
+        'addVerificationMethod',
+        [did, vMethodId, publicKey, ellipticType]
+    )
+
+    console.log('📡 Sending addVerificationMethod raw transaction...')
+
+    let txResponse
+    try {
+        // FIRST simulate tx to catch errors early and avoid gas costs
+        await hre.ethers.provider.call({
+            to: diamond,
+            from: await signatureProvider.getAddress(),
+            data: functionData,
+        })
+
+        // Send raw transaction using signature provider
+        txResponse = await signatureProvider.sendTransaction({
+            to: diamond,
+            data: functionData,
+            gasLimit: 800000n, // Reasonable gas limit for addVerificationMethod
+        })
+
+        console.log(`   🔗 Transaction submitted: ${txResponse.hash}`)
+    } catch (error: any) {
+        console.log(error)
+        console.log('❌ Raw transaction failed to submit')
+        if (error?.data) {
+            console.log(
+                '   ❌ Error: ' +
+                    (await decodeError(hre, CONTRACT_NAME, error.data)) +
+                    '\n'
+            )
+        }
+        throw new Error(
+            `Failed to submit addVerificationMethod raw transaction: ${
+                error instanceof Error ? error.message : String(error)
+            }`
+        )
+    }
+
+    console.log('⏳ Waiting for raw transaction to be mined...')
+    let receipt
+    try {
+        receipt = await txResponse.wait()
+        if (!receipt || receipt.status !== 1) {
+            throw new Error('Transaction failed or was reverted')
+        }
+    } catch (error: any) {
+        console.log(`❌ Raw transaction failed to mine`)
+        console.log(`   🔗 Transaction Hash: ${txResponse.hash}`)
+        throw error
+    }
+
+    // Parse VerificationMethodAdded event from the receipt
+    const verificationMethodAddedEvent = receipt.logs
+        .map((log) => {
+            try {
+                return contractInterface.parseLog(log)
+            } catch {
+                return null
+            }
+        })
+        .find((log) => log && log.name === EVENT_NAME)
+
+    if (!verificationMethodAddedEvent) {
+        throw new Error(`${EVENT_NAME} event not found in transaction receipt`)
+    }
+
+    const args = verificationMethodAddedEvent.args
+
+    if (
+        typeof args.did !== 'string' ||
+        typeof args.vMethodId !== 'string' ||
+        typeof args.publicKey !== 'string' ||
+        (typeof args.ellipticType !== 'number' &&
+            typeof args.ellipticType !== 'bigint')
+    ) {
+        throw new Error('Invalid VerificationMethodAdded event args format')
+    }
+
+    const {
+        did: evDid,
+        vMethodId: evVMethodId,
+        publicKey: evPublicKey,
+        ellipticType: evEllipticType,
+    } = args
+
+    const evEllipticTypeNum =
+        typeof evEllipticType === 'bigint'
+            ? Number(evEllipticType)
+            : evEllipticType
+
+    if (
+        evDid !== did ||
+        evVMethodId !== vMethodId ||
+        evEllipticTypeNum !== ellipticType
+    ) {
+        console.warn(
+            'Warning: Bad state detected. Check manually if operation has been processed correctly.'
+        )
+    }
+
+    console.log(`\n✅ Verification method added successfully:`)
+    console.log(`   DID: ${evDid}`)
+    console.log(`   V-Method ID: ${evVMethodId}`)
+    console.log(`   Public Key: ${evPublicKey.substring(0, 30)}...`)
+    console.log(
+        `   Elliptic Type: ${EllipticTypeNames[evEllipticTypeNum] || evEllipticTypeNum}`
+    )
+
+    return {
+        did: evDid,
+        vMethodId: evVMethodId,
+        publicKey: evPublicKey,
+        ellipticType: evEllipticTypeNum,
+    }
 }

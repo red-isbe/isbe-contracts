@@ -108,6 +108,14 @@ echo -e "${YELLOW}⚠️  NOTE: Write operations require the DID to exist first.
 echo -e "${YELLOW}   Run test-did-document.sh first, or these tests will fail.${NC}"
 echo ""
 
+# echo "Initializing DID Registry for testing..."
+# npx hardhat didDocument:initializeDiDRegistry \
+#   --diamond 0x00000000000000000000000000000000000015BE \
+#   --elliptictype 1 \
+#   --network genesis_validation_network_k1
+# echo "DID Registry initialized."
+
+
 # Function to run a test
 run_test() {
     local test_name="$1"
