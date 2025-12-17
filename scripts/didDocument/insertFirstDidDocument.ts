@@ -109,7 +109,7 @@ export async function insertFirstDidDocument(
             alsoKnownAs
         )
         console.log(`   🔗 Transaction submitted: ${tx.hash}`)
-    } catch (error: any) {
+    } catch (error) {
         if (error?.data) {
             console.log(
                 'Transaction SEND failed: ' +
@@ -152,7 +152,9 @@ export async function insertFirstDidDocument(
     console.log(`   baseDocument: ${typeof args.baseDocument}`)
     console.log(`   vMethodId: ${typeof args.vMethodId} - ${args.vMethodId}`)
     console.log(`   publicKey: ${typeof args.publicKey}`)
-    console.log(`   ellipticType: ${typeof args.ellipticType} - ${args.ellipticType}`)
+    console.log(
+        `   ellipticType: ${typeof args.ellipticType} - ${args.ellipticType}`
+    )
     console.log(`   notBefore: ${typeof args.notBefore} - ${args.notBefore}`)
     console.log(`   notAfter: ${typeof args.notAfter} - ${args.notAfter}`)
     console.log(`   alsoKnownAs: ${typeof args.alsoKnownAs}\n`)
@@ -162,7 +164,8 @@ export async function insertFirstDidDocument(
         typeof args.baseDocument !== 'string' ||
         typeof args.vMethodId !== 'string' ||
         typeof args.publicKey !== 'string' ||
-        (typeof args.ellipticType !== 'number' && typeof args.ellipticType !== 'bigint') ||
+        (typeof args.ellipticType !== 'number' &&
+            typeof args.ellipticType !== 'bigint') ||
         typeof args.notBefore !== 'bigint' ||
         typeof args.notAfter !== 'bigint' ||
         typeof args.alsoKnownAs !== 'string'
@@ -175,7 +178,9 @@ export async function insertFirstDidDocument(
     console.log('═══════════════════════════════════════════════════════════')
     console.log(`   DID:           ${args.did}`)
     console.log(`   V-Method ID:   ${args.vMethodId}`)
-    console.log(`   Elliptic Type: ${EllipticTypeNames[args.ellipticType] || args.ellipticType}`)
+    console.log(
+        `   Elliptic Type: ${EllipticTypeNames[args.ellipticType] || args.ellipticType}`
+    )
     console.log(`   Not Before:    ${args.notBefore}`)
     console.log(`   Not After:     ${args.notAfter}`)
     console.log(`   Also Known As: ${args.alsoKnownAs}`)
@@ -185,7 +190,10 @@ export async function insertFirstDidDocument(
         baseDocument: args.baseDocument,
         vMethodId: args.vMethodId,
         publicKey: args.publicKey,
-        ellipticType: typeof args.ellipticType === 'bigint' ? Number(args.ellipticType) : args.ellipticType,
+        ellipticType:
+            typeof args.ellipticType === 'bigint'
+                ? Number(args.ellipticType)
+                : args.ellipticType,
         notBefore: args.notBefore,
         notAfter: args.notAfter,
         alsoKnownAs: args.alsoKnownAs,
@@ -210,9 +218,8 @@ async function insertFirstDidDocumentWithRawTransaction(
     diamond: string,
     signatureProvider: ISignatureProvider
 ): Promise<FirstDidDocumentInsertedResult> {
-    const { DidDocumentDetailedFacet__factory } = await import(
-        '../../typechain-types'
-    )
+    const { DidDocumentDetailedFacet__factory } =
+        await import('../../typechain-types')
 
     const contractInterface =
         DidDocumentDetailedFacet__factory.createInterface()
@@ -252,7 +259,7 @@ async function insertFirstDidDocumentWithRawTransaction(
         })
 
         console.log(`   🔗 Transaction submitted: ${txResponse.hash}`)
-    } catch (error: any) {
+    } catch (error) {
         console.log(error)
         console.log('❌ Raw transaction failed to submit')
         if (error?.data) {
@@ -305,7 +312,9 @@ async function insertFirstDidDocumentWithRawTransaction(
     console.log(`   baseDocument: ${typeof args.baseDocument}`)
     console.log(`   vMethodId: ${typeof args.vMethodId} - ${args.vMethodId}`)
     console.log(`   publicKey: ${typeof args.publicKey}`)
-    console.log(`   ellipticType: ${typeof args.ellipticType} - ${args.ellipticType}`)
+    console.log(
+        `   ellipticType: ${typeof args.ellipticType} - ${args.ellipticType}`
+    )
     console.log(`   notBefore: ${typeof args.notBefore} - ${args.notBefore}`)
     console.log(`   notAfter: ${typeof args.notAfter} - ${args.notAfter}`)
     console.log(`   alsoKnownAs: ${typeof args.alsoKnownAs}\n`)
@@ -315,7 +324,8 @@ async function insertFirstDidDocumentWithRawTransaction(
         typeof args.baseDocument !== 'string' ||
         typeof args.vMethodId !== 'string' ||
         typeof args.publicKey !== 'string' ||
-        (typeof args.ellipticType !== 'number' && typeof args.ellipticType !== 'bigint') ||
+        (typeof args.ellipticType !== 'number' &&
+            typeof args.ellipticType !== 'bigint') ||
         typeof args.notBefore !== 'bigint' ||
         typeof args.notAfter !== 'bigint' ||
         typeof args.alsoKnownAs !== 'string'
@@ -328,7 +338,9 @@ async function insertFirstDidDocumentWithRawTransaction(
     console.log('═══════════════════════════════════════════════════════════')
     console.log(`   DID:           ${args.did}`)
     console.log(`   V-Method ID:   ${args.vMethodId}`)
-    console.log(`   Elliptic Type: ${EllipticTypeNames[args.ellipticType] || args.ellipticType}`)
+    console.log(
+        `   Elliptic Type: ${EllipticTypeNames[args.ellipticType] || args.ellipticType}`
+    )
     console.log(`   Not Before:    ${args.notBefore}`)
     console.log(`   Not After:     ${args.notAfter}`)
     console.log(`   Also Known As: ${args.alsoKnownAs}`)
@@ -338,7 +350,10 @@ async function insertFirstDidDocumentWithRawTransaction(
         baseDocument: args.baseDocument,
         vMethodId: args.vMethodId,
         publicKey: args.publicKey,
-        ellipticType: typeof args.ellipticType === 'bigint' ? Number(args.ellipticType) : args.ellipticType,
+        ellipticType:
+            typeof args.ellipticType === 'bigint'
+                ? Number(args.ellipticType)
+                : args.ellipticType,
         notBefore: args.notBefore,
         notAfter: args.notAfter,
         alsoKnownAs: args.alsoKnownAs,

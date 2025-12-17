@@ -99,7 +99,7 @@ export async function addVerificationRelationship(
             notAfterBigInt
         )
         console.log(`   🔗 Transaction submitted: ${tx.hash}`)
-    } catch (error: any) {
+    } catch (error) {
         if (error?.data) {
             console.log(
                 'Transaction SEND failed: ' +
@@ -119,7 +119,7 @@ export async function addVerificationRelationship(
         if (receipt.status !== 1) {
             throw new Error('Transaction failed or was reverted')
         }
-    } catch (error: any) {
+    } catch (error) {
         console.log('Transaction MINING failed: ' + error)
         throw error
     }
@@ -143,7 +143,9 @@ export async function addVerificationRelationship(
         typeof args.notBefore !== 'bigint' ||
         typeof args.notAfter !== 'bigint'
     ) {
-        throw new Error('Invalid VerificationRelationshipAdded event args format')
+        throw new Error(
+            'Invalid VerificationRelationshipAdded event args format'
+        )
     }
 
     const {
@@ -154,11 +156,7 @@ export async function addVerificationRelationship(
         notAfter: evNotAfter,
     } = args
 
-    if (
-        evDid !== did ||
-        evName !== name ||
-        evVMethodId !== vMethodId
-    ) {
+    if (evDid !== did || evName !== name || evVMethodId !== vMethodId) {
         console.warn(
             'Warning: Bad state detected. Check manually if operation has been processed correctly.'
         )
@@ -225,7 +223,7 @@ async function addVerificationRelationshipWithRawTransaction(
         })
 
         console.log(`   🔗 Transaction submitted: ${txResponse.hash}`)
-    } catch (error: any) {
+    } catch (error) {
         console.log(error)
         console.log('❌ Raw transaction failed to submit')
         if (error?.data) {
@@ -249,7 +247,7 @@ async function addVerificationRelationshipWithRawTransaction(
         if (!receipt || receipt.status !== 1) {
             throw new Error('Transaction failed or was reverted')
         }
-    } catch (error: any) {
+    } catch (error) {
         console.log(`❌ Raw transaction failed to mine`)
         console.log(`   🔗 Transaction Hash: ${txResponse.hash}`)
         throw error
@@ -279,7 +277,9 @@ async function addVerificationRelationshipWithRawTransaction(
         typeof args.notBefore !== 'bigint' ||
         typeof args.notAfter !== 'bigint'
     ) {
-        throw new Error('Invalid VerificationRelationshipAdded event args format')
+        throw new Error(
+            'Invalid VerificationRelationshipAdded event args format'
+        )
     }
 
     const {
@@ -290,11 +290,7 @@ async function addVerificationRelationshipWithRawTransaction(
         notAfter: evNotAfter,
     } = args
 
-    if (
-        evDid !== did ||
-        evName !== name ||
-        evVMethodId !== vMethodId
-    ) {
+    if (evDid !== did || evName !== name || evVMethodId !== vMethodId) {
         console.warn(
             'Warning: Bad state detected. Check manually if operation has been processed correctly.'
         )

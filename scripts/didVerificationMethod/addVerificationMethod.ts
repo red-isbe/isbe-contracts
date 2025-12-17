@@ -56,8 +56,7 @@ export async function addVerificationMethod(
     )
 
     if (signatureProvider.getCurveType() === 'secp256r1') {
-        return await 
-        addVerificationMethodWithRawTransaction(
+        return await addVerificationMethodWithRawTransaction(
             hre,
             did,
             vMethodId,
@@ -85,7 +84,7 @@ export async function addVerificationMethod(
             ellipticType
         )
         console.log(`   🔗 Transaction submitted: ${tx.hash}`)
-    } catch (error: any) {
+    } catch (error) {
         if (error?.data) {
             console.log(
                 'Transaction SEND failed: ' +
@@ -105,7 +104,7 @@ export async function addVerificationMethod(
         if (receipt.status !== 1) {
             throw new Error('Transaction failed or was reverted')
         }
-    } catch (error: any) {
+    } catch (error) {
         console.log('Transaction MINING failed: ' + error)
         throw error
     }
@@ -213,7 +212,7 @@ async function addVerificationMethodWithRawTransaction(
         })
 
         console.log(`   🔗 Transaction submitted: ${txResponse.hash}`)
-    } catch (error: any) {
+    } catch (error) {
         console.log(error)
         console.log('❌ Raw transaction failed to submit')
         if (error?.data) {
@@ -237,7 +236,7 @@ async function addVerificationMethodWithRawTransaction(
         if (!receipt || receipt.status !== 1) {
             throw new Error('Transaction failed or was reverted')
         }
-    } catch (error: any) {
+    } catch (error) {
         console.log(`❌ Raw transaction failed to mine`)
         console.log(`   🔗 Transaction Hash: ${txResponse.hash}`)
         throw error

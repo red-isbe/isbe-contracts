@@ -68,7 +68,7 @@ export async function addController(
     try {
         tx = await didControllerFacet.addController(did, controller)
         console.log(`   🔗 Transaction submitted: ${tx.hash}`)
-    } catch (error: any) {
+    } catch (error) {
         if (error?.data) {
             console.log(
                 'Transaction SEND failed: ' +
@@ -88,7 +88,7 @@ export async function addController(
         if (receipt.status !== 1) {
             throw new Error('Transaction failed or was reverted')
         }
-    } catch (error: any) {
+    } catch (error) {
         console.log('Transaction MINING failed: ' + error)
         throw error
     }
@@ -167,7 +167,7 @@ async function addControllerWithRawTransaction(
         })
 
         console.log(`   🔗 Transaction submitted: ${txResponse.hash}`)
-    } catch (error: any) {
+    } catch (error) {
         console.log(error)
         console.log('❌ Raw transaction failed to submit')
         if (error?.data) {
@@ -191,7 +191,7 @@ async function addControllerWithRawTransaction(
         if (!receipt || receipt.status !== 1) {
             throw new Error('Transaction failed or was reverted')
         }
-    } catch (error: any) {
+    } catch (error) {
         console.log(`❌ Raw transaction failed to mine`)
         console.log(`   🔗 Transaction Hash: ${txResponse.hash}`)
         throw error
