@@ -53,6 +53,7 @@ task('revokeVerificationMethod', 'Revokes a verification method from a DID')
         const signatureProvider = SignatureProviderFactory.create(hre)
 
         return revokeVerificationMethod(
+            hre,
             did,
             vmethodid,
             notafter,

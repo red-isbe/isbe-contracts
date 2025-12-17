@@ -59,6 +59,7 @@ task('addVerificationMethod', 'Adds a verification method to a DID')
         const signatureProvider = SignatureProviderFactory.create(hre)
 
         return addVerificationMethod(
+            hre,
             did,
             vmethodid,
             publickey,

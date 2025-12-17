@@ -55,7 +55,7 @@ fi
 NETWORK="$1"
 
 # Configuration
-DIAMOND="${DIAMOND:-0x9d6cbA688433eB558e91D38061e05aD91fbEE940}"
+DIAMOND="${DIAMOND:-0x00000000000000000000000000000000000015BE}"
 
 # Test data - DID (bytes32 format)
 TEST_DID="0x5d1bbbbb79e76850812569e44716059dab426a5d2f7378881192c73d372331de"
@@ -107,6 +107,14 @@ echo ""
 echo -e "${YELLOW}⚠️  NOTE: Write operations require the DID to exist first.${NC}"
 echo -e "${YELLOW}   Run test-did-document.sh first, or these tests will fail.${NC}"
 echo ""
+
+# echo "Initializing DID Registry for testing..."
+# npx hardhat didDocument:initializeDiDRegistry \
+#   --diamond 0x00000000000000000000000000000000000015BE \
+#   --elliptictype 1 \
+#   --network genesis_validation_network_k1
+# echo "DID Registry initialized."
+
 
 # Function to run a test
 run_test() {

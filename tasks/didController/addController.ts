@@ -45,5 +45,5 @@ task('addController', 'Adds a new controller to a DID')
         const { did, controller, diamond } = taskArgs
         const signatureProvider = SignatureProviderFactory.create(hre)
 
-        return addController(did, controller, diamond, signatureProvider)
+        return addController(hre, did, controller, diamond, signatureProvider)
     })

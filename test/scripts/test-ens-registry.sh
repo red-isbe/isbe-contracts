@@ -50,7 +50,7 @@ fi
 NETWORK="$1"
 
 # Configuration
-DIAMOND="${DIAMOND:-0x9d6cbA688433eB558e91D38061e05aD91fbEE940}"
+DIAMOND="${DIAMOND:-0x00000000000000000000000000000000000015BE}"
 
 # Test data - Node hashes (bytes32 format)
 # Root node (0x0)

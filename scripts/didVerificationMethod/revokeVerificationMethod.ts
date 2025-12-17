@@ -10,8 +10,24 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -------------------------------------------------------------- */
-import { ISignatureProvider } from '../../tasks/deployment/providers/ISignatureProvider'
-import { executeDidWrite } from '../did/utils'
+import { getEvent } from '../utils/getEvent'
+import { decodeError } from '../utils/translateCustomError'
+import { ISignatureProvider } from '../../tasks/index'
+import {
+    ContractTransactionResponse,
+    LogDescription,
+    TransactionReceipt,
+} from 'ethers'
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
+
+const CONTRACT_NAME = 'DidVerificationMethodFacet'
+const EVENT_NAME = 'VerificationMethodRevoked'
+
+export interface VerificationMethodRevokedResult {
+    did: string
+    vMethodId: string
+    notAfter: bigint
+}
 
 async function loadDidVerificationMethodFactory() {
     const { DidVerificationMethodFacet__factory } =
@@ -20,32 +36,228 @@ async function loadDidVerificationMethodFactory() {
 }
 
 export async function revokeVerificationMethod(
+    hre: HardhatRuntimeEnvironment,
     did: string,
     vMethodId: string,
     notAfter: bigint | number,
     diamond: string,
     signatureProvider: ISignatureProvider
-) {
-    console.log('\n🚫 Revoking Verification Method...\n')
-    console.log(`  DID:         ${did}`)
-    console.log(`  V-Method ID: ${vMethodId}`)
-    console.log(`  Not After:   ${notAfter}`)
-    console.log(`  Diamond:     ${diamond}`)
-    console.log(`  Curve:       ${signatureProvider.getCurveType()}`)
-    console.log('')
-
-    const DidVerificationMethodFacet__factory =
-        await loadDidVerificationMethodFactory()
-
-    await executeDidWrite(
-        DidVerificationMethodFacet__factory,
-        diamond,
-        signatureProvider,
-        'revokeVerificationMethod',
-        [did, vMethodId, BigInt(notAfter)],
-        800000n
+): Promise<VerificationMethodRevokedResult> {
+    console.log(
+        `🚫 Using ${signatureProvider.getCurveType()} signature for revoking verification method...`
     )
 
-    console.log('\n✅ Verification method revoked')
-    return { did, vMethodId, notAfter }
+    const notAfterBigInt = BigInt(notAfter)
+
+    if (signatureProvider.getCurveType() === 'secp256r1') {
+        return await revokeVerificationMethodWithRawTransaction(
+            hre,
+            did,
+            vMethodId,
+            notAfterBigInt,
+            diamond,
+            signatureProvider
+        )
+    }
+
+    // For secp256k1, use the standard contract interface
+    const signer = await signatureProvider.getSigner()
+    const DidVerificationMethodFacet__factory =
+        await loadDidVerificationMethodFactory()
+    const didVerificationMethodFacet =
+        DidVerificationMethodFacet__factory.connect(diamond, signer)
+
+    console.log('📡 Sending revokeVerificationMethod transaction...')
+    let tx: ContractTransactionResponse
+    try {
+        tx = await didVerificationMethodFacet.revokeVerificationMethod(
+            did,
+            vMethodId,
+            notAfterBigInt
+        )
+        console.log(`   🔗 Transaction submitted: ${tx.hash}`)
+    } catch (error) {
+        if (error?.data) {
+            console.log(
+                'Transaction SEND failed: ' +
+                    (await decodeError(hre, CONTRACT_NAME, error.data))
+            )
+        } else {
+            console.log('Transaction SEND failed: ' + error)
+        }
+        throw error
+    }
+
+    console.log('⏳ Waiting for transaction to be mined...')
+    let receipt: TransactionReceipt | null
+    try {
+        receipt = await tx.wait()
+        if (!receipt) throw new Error('Transaction receipt is null')
+        if (receipt.status !== 1) {
+            throw new Error('Transaction failed or was reverted')
+        }
+    } catch (error) {
+        console.log('Transaction MINING failed: ' + error)
+        throw error
+    }
+
+    const logDescription: LogDescription | null = await getEvent(
+        EVENT_NAME,
+        tx,
+        didVerificationMethodFacet
+    )
+
+    if (!logDescription) {
+        throw new Error(`${EVENT_NAME} event not found in transaction logs`)
+    }
+
+    const args = logDescription.args
+
+    if (
+        typeof args.did !== 'string' ||
+        typeof args.vMethodId !== 'string' ||
+        typeof args.notAfter !== 'bigint'
+    ) {
+        throw new Error('Invalid VerificationMethodRevoked event args format')
+    }
+
+    const { did: evDid, vMethodId: evVMethodId, notAfter: evNotAfter } = args
+
+    if (
+        evDid !== did ||
+        evVMethodId !== vMethodId ||
+        evNotAfter !== notAfterBigInt
+    ) {
+        console.warn(
+            'Warning: Bad state detected. Check manually if operation has been processed correctly.'
+        )
+    }
+
+    console.log(`\n✅ Verification method revoked successfully:`)
+    console.log(`   DID: ${evDid}`)
+    console.log(`   V-Method ID: ${evVMethodId}`)
+    console.log(`   Not After: ${evNotAfter}`)
+
+    return {
+        did: evDid,
+        vMethodId: evVMethodId,
+        notAfter: evNotAfter,
+    }
+}
+
+/**
+ * Revoke verification method using raw transactions for secp256r1 compatibility
+ * Avoids the "Cannot find square root" error by bypassing ethers Contract interface
+ */
+async function revokeVerificationMethodWithRawTransaction(
+    hre: HardhatRuntimeEnvironment,
+    did: string,
+    vMethodId: string,
+    notAfter: bigint,
+    diamond: string,
+    signatureProvider: ISignatureProvider
+): Promise<VerificationMethodRevokedResult> {
+    const { IDidVerificationMethod__factory } =
+        await import('../../typechain-types')
+
+    const contractInterface = IDidVerificationMethod__factory.createInterface()
+
+    // Encode the revokeVerificationMethod function call
+    const functionData = contractInterface.encodeFunctionData(
+        'revokeVerificationMethod',
+        [did, vMethodId, notAfter]
+    )
+
+    console.log('📡 Sending revokeVerificationMethod raw transaction...')
+
+    let txResponse
+    try {
+        // FIRST simulate tx to catch errors early and avoid gas costs
+        await hre.ethers.provider.call({
+            to: diamond,
+            from: await signatureProvider.getAddress(),
+            data: functionData,
+        })
+
+        // Send raw transaction using signature provider
+        txResponse = await signatureProvider.sendTransaction({
+            to: diamond,
+            data: functionData,
+            gasLimit: 800000n, // Reasonable gas limit for revokeVerificationMethod
+        })
+
+        console.log(`   🔗 Transaction submitted: ${txResponse.hash}`)
+    } catch (error) {
+        console.log(error)
+        console.log('❌ Raw transaction failed to submit')
+        if (error?.data) {
+            console.log(
+                '   ❌ Error: ' +
+                    (await decodeError(hre, CONTRACT_NAME, error.data)) +
+                    '\n'
+            )
+        }
+        throw new Error(
+            `Failed to submit revokeVerificationMethod raw transaction: ${
+                error instanceof Error ? error.message : String(error)
+            }`
+        )
+    }
+
+    console.log('⏳ Waiting for raw transaction to be mined...')
+    let receipt
+    try {
+        receipt = await txResponse.wait()
+        if (!receipt || receipt.status !== 1) {
+            throw new Error('Transaction failed or was reverted')
+        }
+    } catch (error) {
+        console.log(`❌ Raw transaction failed to mine`)
+        console.log(`   🔗 Transaction Hash: ${txResponse.hash}`)
+        throw error
+    }
+
+    // Parse VerificationMethodRevoked event from the receipt
+    const verificationMethodRevokedEvent = receipt.logs
+        .map((log) => {
+            try {
+                return contractInterface.parseLog(log)
+            } catch {
+                return null
+            }
+        })
+        .find((log) => log && log.name === EVENT_NAME)
+
+    if (!verificationMethodRevokedEvent) {
+        throw new Error(`${EVENT_NAME} event not found in transaction receipt`)
+    }
+
+    const args = verificationMethodRevokedEvent.args
+
+    if (
+        typeof args.did !== 'string' ||
+        typeof args.vMethodId !== 'string' ||
+        typeof args.notAfter !== 'bigint'
+    ) {
+        throw new Error('Invalid VerificationMethodRevoked event args format')
+    }
+
+    const { did: evDid, vMethodId: evVMethodId, notAfter: evNotAfter } = args
+
+    if (evDid !== did || evVMethodId !== vMethodId || evNotAfter !== notAfter) {
+        console.warn(
+            'Warning: Bad state detected. Check manually if operation has been processed correctly.'
+        )
+    }
+
+    console.log(`\n✅ Verification method revoked successfully:`)
+    console.log(`   DID: ${evDid}`)
+    console.log(`   V-Method ID: ${evVMethodId}`)
+    console.log(`   Not After: ${evNotAfter}`)
+
+    return {
+        did: evDid,
+        vMethodId: evVMethodId,
+        notAfter: evNotAfter,
+    }
 }

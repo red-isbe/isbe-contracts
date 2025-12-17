@@ -45,5 +45,5 @@ task('revokeController', 'Revokes a controller from a DID')
         const { did, controller, diamond } = taskArgs
         const signatureProvider = SignatureProviderFactory.create(hre)
 
-        return revokeController(did, controller, diamond, signatureProvider)
+        return revokeController(hre, did, controller, diamond, signatureProvider)
     })

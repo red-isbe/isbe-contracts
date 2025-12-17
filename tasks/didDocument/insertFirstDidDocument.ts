@@ -113,6 +113,7 @@ task(
         } = taskArgs
 
         return insertFirstDidDocument(
+            hre,
             did,
             basedocument,
             vmethodid,

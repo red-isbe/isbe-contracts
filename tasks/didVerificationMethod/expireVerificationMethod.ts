@@ -51,6 +51,7 @@ task('expireVerificationMethod', 'Sets expiration for a verification method')
         const signatureProvider = SignatureProviderFactory.create(hre)
 
         return expireVerificationMethod(
+            hre,
             did,
             vmethodid,
             notafter,

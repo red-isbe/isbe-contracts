@@ -50,7 +50,7 @@ fi
 NETWORK="$1"
 
 # Configuration
-DIAMOND="${DIAMOND:-0x9d6cbA688433eB558e91D38061e05aD91fbEE940}"
+DIAMOND="${DIAMOND:-0x00000000000000000000000000000000000015BE}"
 
 # Test data - DIDs (bytes32 format)
 TEST_DID="0x5d1bbbbb79e76850812569e44716059dab426a5d2f7378881192c73d372331de"
@@ -127,6 +127,13 @@ run_test() {
     
     echo ""
 }
+echo "Initializing DID Registry for testing..."
+npx hardhat didDocument:initializeDiDRegistry \
+  --diamond 0x00000000000000000000000000000000000015BE \
+  --elliptictype 1 \
+  --network "${NETWORK}"
+echo "DID Registry initialized."
+
 
 # ============================================
 # Test Suite: didDocument:getNetworkEllipticType

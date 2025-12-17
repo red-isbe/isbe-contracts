@@ -66,6 +66,7 @@ task('addVerificationRelationship', 'Adds a verification relationship to a DID')
         const signatureProvider = SignatureProviderFactory.create(hre)
 
         return addVerificationRelationship(
+            hre,
             did,
             name,
             vmethodid,
