@@ -88,6 +88,7 @@ import './examples/curveAwareDeployAll'
 // Secp256r1 tasks
 import './secp256r1/showAccounts'
 import './secp256r1/generateEnv'
+import './secp256r1/generateEnv.smtp'
 
 // Validation and Verification tasks
 import './validation/validateAccounts'
@@ -150,6 +151,7 @@ import './identity/trustedissuersregistry/setAttributeMetadata'
 
 // shamir secret sharing tooling
 import './secret-sharing/sss.generate'
+import './secret-sharing/sss.generates.smtp'
 import './secret-sharing/sss.recover'
 
 // Genesis
@@ -169,3 +171,6 @@ import './client/anchoring/getLastAnchoredBlock'
 import './client/anchoring/registerChain'
 import './client/anchoring/anchorBlock'
 import './client/anchoring/anchorBlocksBatch'
+
+import './assign-roles'
+import './decode-error'

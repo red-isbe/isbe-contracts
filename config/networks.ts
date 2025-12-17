@@ -40,6 +40,8 @@ const CUSTOM_SECOND_R1_URL =
     process.env.CUSTOM_SECOND_R1_URL || 'http://127.0.0.1:8545'
 const ISBE_LOCAL_DEPLOYER_URL =
     process.env.ISBE_LOCAL_DEPLOYER_URL || 'http://127.0.0.1:8545'
+const ISBE_URL = process.env.ISBE_URL || 'http://localhost:8584'
+const CURVE = process.env.CURVE || 'secp256k1'
 
 /**
  * Gets all network configurations
@@ -51,6 +53,11 @@ export function getNetworkConfigs(): NetworksConfig {
         (account) => `0x${account.privateKey}`
     )
 
+    const buildChainId = (chainId: number): number => {
+        const envChainId = process.env.CHAIN_ID
+        return envChainId !== undefined ? Number(envChainId) : chainId
+    }
+
     return {
         // Local Hardhat network for development
         hardhat: {
@@ -60,7 +67,7 @@ export function getNetworkConfigs(): NetworksConfig {
             },
             blockGasLimit: 30000000,
             allowUnlimitedContractSize: true,
-            curve: 'secp256k1',
+            curve: CURVE,
         } as HardhatNetworkConfig,
 
         // Local test network (secp256k1)
@@ -71,28 +78,39 @@ export function getNetworkConfigs(): NetworksConfig {
             gasPrice: 0,
             gas: 10_000_0000,
             blockGasLimit: 30_000_000,
-            curve: 'secp256k1',
+            curve: CURVE,
         } as NetworkConfigWithCurve,
 
         // ISBE MVP Network (secp256k1)
         dev: {
             url: DEV_URL,
-            chainId: 11073,
+            chainId: buildChainId(11073),
             accounts,
             gasPrice: 2_000,
             gas: 20_000_000,
             blockGasLimit: 0x1e84800, // 32,000,000
-            curve: 'secp256k1',
+            curve: CURVE,
         } as NetworkConfigWithCurve,
 
         bare: {
             url: BARE_URL,
-            chainId: 10962,
+            chainId: buildChainId(10962),
             accounts: secp256r1PrivateKeys,
-            gasPrice: 0,
-            gas: 80_000_000,
-            blockGasLimit: 90_000_000,
-            curve: 'secp256r1',
+            gasPrice: 2_000,
+            gas: 20_000_000,
+            blockGasLimit: 0x1e84800, // 32,000,000
+            curve: CURVE,
+            secp256r1Accounts,
+        } as NetworkConfigWithCurve,
+
+        isbe: {
+            url: ISBE_URL,
+            chainId: buildChainId(0),
+            accounts: CURVE === 'secp256k1' ? accounts : secp256r1PrivateKeys,
+            gasPrice: 2_000,
+            gas: 20_000_000,
+            blockGasLimit: 0x1e84800, // 32,000,000
+            curve: CURVE,
             secp256r1Accounts,
         } as NetworkConfigWithCurve,
 
@@ -104,7 +122,7 @@ export function getNetworkConfigs(): NetworksConfig {
             gasPrice: 0,
             gas: 100000000,
             blockGasLimit: 0x1e84800, // 32,000,000
-            curve: 'secp256k1',
+            curve: CURVE,
         } as NetworkConfigWithCurve,
 
         // Kepler Network (secp256k1)
@@ -115,7 +133,7 @@ export function getNetworkConfigs(): NetworksConfig {
             gasPrice: 0,
             gas: 100000000,
             blockGasLimit: 18800000,
-            curve: 'secp256k1',
+            curve: CURVE,
         } as NetworkConfigWithCurve,
 
         // Custom secp256r1 network
@@ -126,7 +144,7 @@ export function getNetworkConfigs(): NetworksConfig {
             gasPrice: 0,
             gas: 20_000_000,
             blockGasLimit: 0x1e84800, // 32,000,000
-            curve: 'secp256r1',
+            curve: CURVE,
             secp256r1Accounts,
         } as NetworkConfigWithCurve,
 
@@ -140,7 +158,7 @@ export function getNetworkConfigs(): NetworksConfig {
             blockGasLimit: 0x1fffffffffffff,
             timeout: 60000,
             httpTimeout: 60000,
-            curve: 'secp256r1',
+            curve: CURVE,
             secp256r1Accounts,
         } as NetworkConfigWithCurve,
 
@@ -151,14 +169,14 @@ export function getNetworkConfigs(): NetworksConfig {
             gasPrice: 0,
             gas: 100000000,
             blockGasLimit: 0x1e84800,
-            curve: 'secp256k1',
+            curve: CURVE,
         } as NetworkConfigWithCurve,
 
         genesis_validation_network_k1: {
             url: 'http://127.0.0.1:8545',
             accounts,
             gasPrice: 1000000001,
-            curve: 'secp256k1', // Adding the required curve property
+            curve: CURVE, // Adding the required curve property
         },
 
         genesis_validation_network_r1: {
@@ -166,14 +184,14 @@ export function getNetworkConfigs(): NetworksConfig {
             accounts: secp256r1PrivateKeys,
             secp256r1Accounts,
             gasPrice: 1000000001,
-            curve: 'secp256r1', // Adding the required curve property
+            curve: CURVE, // Adding the required curve property
         },
 
         NO_NETWORK: {
             url: 'http://127.0.0.1:8545',
             gasPrice: 1000000001,
             accounts,
-            curve: 'secp256k1', // Adding the required curve property
+            curve: CURVE, // Adding the required curve property
         },
     }
 }

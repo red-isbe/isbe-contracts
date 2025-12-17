@@ -17,6 +17,36 @@ import { randomBytes } from 'crypto'
 import { writeFileSync } from 'fs'
 import { join } from 'path'
 
+const ROLES = [
+    'DEFAULT_ADMIN_ROLE',
+    'GDPR_OPERATIONS',
+    'USE_CASE',
+    'IDENTITY_MANAGEMENT',
+    'OPERATIONAL_MANAGEMENT',
+]
+interface PublicKeyData {
+    publicKey: string
+    address: string
+}
+
+interface AdministrativeData {
+    role: string
+    privateKey: string
+    secp256k1: PublicKeyData
+    secp256r1: PublicKeyData
+}
+
+interface AllocData {
+    balance: string
+    comment: string
+}
+
+const ALLOC = {
+    balance:
+        '0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF',
+    comment: 'ISBE managed ACCOUNT',
+} as AllocData
+
 /**
  * Task to generate a random .env file with configurable parameters
  */
@@ -51,8 +81,8 @@ task(
             throw new Error('Invalid curve. Must be secp256k1 or secp256r1')
         }
 
-        if (count < 1 || count > 100) {
-            throw new Error('Count must be between 1 and 100')
+        if (count < 1 || count > 500) {
+            throw new Error('Count must be between 1 and 200')
         }
 
         // Handle dual mode
@@ -278,12 +308,35 @@ async function handleDualMode(
         // Create secp256k1 accounts
         console.log('🔧 Creating secp256k1 accounts...')
         const k1Accounts = []
+        const alloc = {
+            secp256k1: {},
+            secp256r1: {},
+        }
+        const administrativeAccounts: AdministrativeData[] = []
+        let pos = 0
         for (const privateKey of basePrivateKeys) {
             const wallet = new hre.ethers.Wallet(privateKey)
             k1Accounts.push({
                 privateKey: privateKey,
+                publicKey: wallet.signingKey.publicKey,
                 address: wallet.address,
             })
+            alloc.secp256k1[wallet.address] = ALLOC
+            if (pos < 5) {
+                administrativeAccounts.push({
+                    role: ROLES[pos],
+                    privateKey,
+                    secp256k1: {
+                        publicKey: wallet.signingKey.publicKey,
+                        address: wallet.address,
+                    },
+                    secp256r1: {
+                        publicKey: '',
+                        address: '',
+                    },
+                })
+                ++pos
+            }
         }
 
         // Create secp256r1 accounts with same private keys
@@ -292,6 +345,7 @@ async function handleDualMode(
             await import('../../utils/secp256r1Utils')
 
         const r1Accounts = []
+        pos = 0
         for (const privateKey of basePrivateKeys) {
             try {
                 // For secp256r1, we need to derive the address from the private key
@@ -317,6 +371,13 @@ async function handleDualMode(
                     publicKey: uncompressedPublicKey,
                     compressedPublicKey: compressedPublicKey,
                 })
+                alloc.secp256r1[address] = ALLOC
+                if (pos < 5) {
+                    administrativeAccounts[pos].secp256r1.address = address
+                    administrativeAccounts[pos].secp256r1.publicKey =
+                        '0x'.concat(uncompressedPublicKey)
+                    ++pos
+                }
             } catch (error) {
                 console.warn(
                     `⚠️  Could not generate secp256r1 address for key ${privateKey.substring(0, 8)}...`,
@@ -344,6 +405,14 @@ async function handleDualMode(
         console.log('✅ Successfully generated both .env files!')
         console.log('')
 
+        console.log('GENESIS DATA: ')
+        console.log(JSON.stringify(alloc, null, 2))
+        console.log('')
+
+        console.log('ISBE ADMINISTRATIVE ACCOUNTS: ')
+        console.log(JSON.stringify(administrativeAccounts, null, 2))
+        console.log('')
+
         // Display summary
         console.log('📊 Generated Files Summary:')
         console.log(
@@ -352,21 +421,6 @@ async function handleDualMode(
         console.log(`   • .env.secp256r1: ${count} accounts (experimental)`)
         console.log(`   • Same private keys used for both curves`)
         console.log('')
-
-        // Display account comparison
-        console.log('🔑 Account Comparison (First 3):')
-        for (let i = 0; i < Math.min(3, count); i++) {
-            console.log(`   Account ${i + 1}:`)
-            console.log(`      Private Key: ${k1Accounts[i].privateKey}`)
-            console.log(`      secp256k1 Address: ${k1Accounts[i].address}`)
-            console.log(`      secp256r1 Address: ${r1Accounts[i].address}`)
-            console.log('')
-        }
-
-        if (count > 3) {
-            console.log(`   ... and ${count - 3} more accounts`)
-            console.log('')
-        }
 
         // Usage instructions
         console.log('🎯 Usage Instructions:')
