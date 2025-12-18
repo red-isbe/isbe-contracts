@@ -28,6 +28,20 @@ export async function getTsrRecordFromOriginalHash(
         const [tsrData, authority, requester] =
             await contract.getTsrRecordFromOriginalHash(originalHash)
 
+        // Detecta si el registro es vacío (todos los campos en cero)
+        const isZero = (v: string) =>
+            /^0x0{40,}$/.test(v) || /^0x0{64}$/.test(v)
+        if (
+            isZero(tsrData.originalHash) &&
+            isZero(tsrData.tsaHash) &&
+            isZero(tsrData.externalReferenceId) &&
+            isZero(authority) &&
+            isZero(requester)
+        ) {
+            // No imprimir nada, devolver null
+            return null
+        }
+
         console.log('\n📊 TSR Record:')
         console.log(`   Original Hash: ${tsrData.originalHash}`)
         console.log(`   TSA Hash: ${tsrData.tsaHash}`)
@@ -38,7 +52,7 @@ export async function getTsrRecordFromOriginalHash(
         return { tsrData, authority, requester }
     } catch (error) {
         if (error instanceof Error && error.message.includes('HashNotFound')) {
-            console.log('\n❌ Hash not found in the registry')
+            // No imprimir nada, devolver null
             return null
         }
         throw error

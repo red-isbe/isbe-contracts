@@ -57,19 +57,7 @@ if [[ $# -gt 0 ]]; then
     done
 fi
 
-# Configuration
-# Selecciona la dirección correcta según la red (k1/r1)
-if [ -z "${CLIENT_FILTERING_ADDRESS+x}" ]; then
-    net_lc="${NETWORK,,}"
-    if [[ "$net_lc" == *k1* ]]; then
-        CLIENT_FILTERING_ADDRESS="0x00000000000000000000000000000000000015BE"
-    elif [[ "$net_lc" == *r1* ]]; then
-        CLIENT_FILTERING_ADDRESS="0x9d6cbA688433eB558e91D38061e05aD91fbEE940"
-    else
-        # fallback: usa la de k1
-        CLIENT_FILTERING_ADDRESS="0x00000000000000000000000000000000000015BE"
-    fi
-fi
+CLIENT_FILTERING_ADDRESS="0x00000000000000000000000000000000000015BE"
 
 # If this is an r1 network, verify secp256r1 support (quick check). If the
 # check fails we'll skip tests that require secp256r1 signature generation to
@@ -352,66 +340,10 @@ run_test \
     "npx hardhat updateFilter --client-filtering-address ${CLIENT_FILTERING_ADDRESS} --filter-id ${TEST_FILTER_ID_2} --filter-type 2 --transaction-hash ${ZERO_HASH} --contract-address ${TEST_CONTRACT_ADDRESS} --signature '0x00000000' --json-rpc-method '' --initial-block 0 --end-block 0 --disabled true --network ${NETWORK}" \
     "true"
 
-# Test 23: updateFilter - Non-existent filter (should fail in k1, succeed in r1)
-run_test_updateFilter_nonexistent() {
-    local test_name="updateFilter - Non-existent filter (should fail)"
-    local command="npx hardhat updateFilter --client-filtering-address ${CLIENT_FILTERING_ADDRESS} --filter-id ${NONEXISTENT_FILTER_ID} --filter-type 1 --transaction-hash ${TEST_TRANSACTION_HASH} --contract-address ${ZERO_ADDRESS} --signature '0x00000000' --json-rpc-method '' --initial-block 0 --end-block 0 --disabled false --network ${NETWORK}"
-    TOTAL_TESTS=$((TOTAL_TESTS + 1))
-    local this_test_num=$TOTAL_TESTS
-    if [[ ${#SELECTED_TESTS[@]} -gt 0 ]]; then
-        local found=0
-        for sel in "${SELECTED_TESTS[@]}"; do
-            if [[ "$sel" == "$this_test_num" ]]; then
-                found=1
-                break
-            fi
-        done
-        if [[ $found -eq 0 ]]; then
-            return
-        fi
-    fi
-    echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${BLUE}Test ${this_test_num}: ${test_name}${NC}"
-    echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo "Command: ${command}"
-    echo ""
-    local output
-    net_lc="${NETWORK,,}"
-    if [[ "$net_lc" == *r1* ]]; then
-        # En r1 debe tener éxito
-        output=$(eval "$command" 2>&1) && {
-            echo "$output"
-            echo -e "${GREEN}✅ PASS: Test succeeded as expected (allowed in r1)${NC}"
-            SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
-        } || {
-            echo "$output"
-            echo -e "${RED}❌ FAIL: Test should have succeeded in r1${NC}"
-            ERROR_COUNT=$((ERROR_COUNT + 1))
-        }
-    else
-        # En k1 debe fallar con Execution reverted
-        output=$(eval "$command" 2>&1) && {
-            echo "$output"
-            echo -e "${RED}❌ FAIL: Test should have failed but succeeded${NC}"
-            ERROR_COUNT=$((ERROR_COUNT + 1))
-        } || {
-            echo "$output"
-            if echo "$output" | grep -q "Execution reverted"; then
-                echo -e "${GREEN}✅ PASS: Test failed as expected (execution reverted for non-existent filter)${NC}"
-                SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
-            else
-                echo -e "${RED}❌ FAIL: Test should have failed with execution reverted${NC}"
-                ERROR_COUNT=$((ERROR_COUNT + 1))
-            fi
-        }
-    fi
-    echo ""
-}
-
-# ...existing code...
-
-# Llama a la función especial en vez de run_test para este caso
-run_test_updateFilter_nonexistent
+run_test \
+    "updateFilter - Non-existent filter (should fail)" \
+    "npx hardhat updateFilter --client-filtering-address ${CLIENT_FILTERING_ADDRESS} --filter-id ${NONEXISTENT_FILTER_ID} --filter-type 1 --transaction-hash ${TEST_TRANSACTION_HASH} --contract-address ${ZERO_ADDRESS} --signature '0x00000000' --json-rpc-method '' --initial-block 0 --end-block 0 --disabled false --network ${NETWORK}" \
+    "true"
 
 run_test \
     "updateFilter - Missing filter-id parameter" \

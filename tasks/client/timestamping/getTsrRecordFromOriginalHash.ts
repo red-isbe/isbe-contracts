@@ -32,9 +32,13 @@ task(
     .setAction(async (taskArgs, hre) => {
         const { originalHash, diamond } = taskArgs
 
-        await getTsrRecordFromOriginalHash(
+        const result = await getTsrRecordFromOriginalHash(
             originalHash,
             diamond,
             hre.ethers.provider
         )
+        if (!result) {
+            // No encontrado: salimos con error para que el test lo detecte
+            process.exit(1)
+        }
     })
