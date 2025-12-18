@@ -56,15 +56,58 @@ export async function stamp(
         console.log('📡 Sending stamp raw transaction...')
         try {
             // Simulate call first
-            await hre.ethers.provider.call({
-                to: diamond,
-                from: await signatureProvider.getAddress(),
-                data: functionData,
-            })
+            const provider = hre?.ethers?.provider
+            const senderAddress = await signatureProvider.getAddress()
+            console.log('   🔍 Debug: provider present?', !!provider)
+            console.log('   🔍 Debug: senderAddress:', senderAddress)
+            console.log('   🔍 Debug: diamond:', diamond)
+            console.log(
+                '   🔍 Debug: functionData length:',
+                functionData.length
+            )
+            try {
+                await provider.call({
+                    to: diamond,
+                    data: functionData,
+                })
+                console.log('   ✅ Simulation successful')
+            } catch (simError) {
+                console.log(
+                    '   ⚠️  Simulation failed (continuing):',
+                    simError instanceof Error
+                        ? simError.message
+                        : String(simError)
+                )
+            }
+
+            // Estimate gas for the raw transaction and add a safety buffer
+            let gasLimit
+            try {
+                const estimate = await hre.ethers.provider.estimateGas({
+                    to: diamond,
+                    data: functionData,
+                })
+                // Add 20% buffer to the estimate (estimate is a bigint in ethers v6)
+                gasLimit = (estimate * 120n) / 100n
+                console.log(
+                    '   ⛽ Gas estimate:',
+                    estimate.toString(),
+                    '→ with buffer:',
+                    gasLimit.toString()
+                )
+            } catch {
+                // Fallback to a conservative default if estimation fails
+                gasLimit = 5000000n
+                console.log(
+                    '   ⚠️  Gas estimation failed, using default:',
+                    gasLimit.toString()
+                )
+            }
+
             tx = await signatureProvider.sendTransaction({
                 to: diamond,
                 data: functionData,
-                gasLimit: 200000n,
+                gasLimit,
             })
             console.log(`   🔗 Transaction submitted: ${tx.hash}`)
         } catch (error) {
