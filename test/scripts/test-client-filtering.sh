@@ -343,7 +343,7 @@ run_test \
 run_test \
     "updateFilter - Non-existent filter (should fail)" \
     "npx hardhat updateFilter --client-filtering-address ${CLIENT_FILTERING_ADDRESS} --filter-id ${NONEXISTENT_FILTER_ID} --filter-type 1 --transaction-hash ${TEST_TRANSACTION_HASH} --contract-address ${ZERO_ADDRESS} --signature '0x00000000' --json-rpc-method '' --initial-block 0 --end-block 0 --disabled false --network ${NETWORK}" \
-    "true"
+    "false"
 
 run_test \
     "updateFilter - Missing filter-id parameter" \

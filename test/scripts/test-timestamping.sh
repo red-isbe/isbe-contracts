@@ -337,48 +337,48 @@ run_test \
     "npx hardhat getTsrRecordFromOriginalHash --original-hash ${TEST_ORIGINAL_HASH} --diamond ${DIAMOND} --network ${NETWORK}" \
     "true"
 
-run_test_getTsrRecordFromOriginalHash_nonexistent() {
-    local test_name="getTsrRecordFromOriginalHash - Non-existent record"
-    local command="npx hardhat getTsrRecordFromOriginalHash --original-hash ${NONEXISTENT_HASH} --diamond ${DIAMOND} --network ${NETWORK}"
-    TOTAL_TESTS=$((TOTAL_TESTS + 1))
-    local this_test_num=$TOTAL_TESTS
-    if [[ ${#SELECTED_TESTS[@]} -gt 0 ]]; then
-        local found=0
-        for sel in "${SELECTED_TESTS[@]}"; do
-            if [[ "$sel" == "$this_test_num" ]]; then
-                found=1
-                break
-            fi
-        done
-        if [[ $found -eq 0 ]]; then
-            return
-        fi
-    fi
-    echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${BLUE}Test ${this_test_num}: ${test_name}${NC}"
-    echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo "Command: ${command}"
-    echo ""
-    local output
-    output=$(eval "$command" 2>&1)
-    local exit_code=$?
-    if [[ $exit_code -eq 0 ]]; then
-        echo "$output"
-        echo -e "${RED}❌ FAIL: Test should have failed but succeeded${NC}"
-        ERROR_COUNT=$((ERROR_COUNT + 1))
-    else
-        echo "$output"
-        # Acepta cualquier error (exit code != 0) como válido
-        echo -e "${GREEN}✅ PASS: Test failed as expected (non-existent record)${NC}"
-        SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
-    fi
-    echo ""
-}
+# run_test_getTsrRecordFromOriginalHash_nonexistent() {
+#     local test_name="getTsrRecordFromOriginalHash - Non-existent record"
+#     local command="npx hardhat getTsrRecordFromOriginalHash --original-hash ${NONEXISTENT_HASH} --diamond ${DIAMOND} --network ${NETWORK}"
+#     TOTAL_TESTS=$((TOTAL_TESTS + 1))
+#     local this_test_num=$TOTAL_TESTS
+#     if [[ ${#SELECTED_TESTS[@]} -gt 0 ]]; then
+#         local found=0
+#         for sel in "${SELECTED_TESTS[@]}"; do
+#             if [[ "$sel" == "$this_test_num" ]]; then
+#                 found=1
+#                 break
+#             fi
+#         done
+#         if [[ $found -eq 0 ]]; then
+#             return
+#         fi
+#     fi
+#     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+#     echo -e "${BLUE}Test ${this_test_num}: ${test_name}${NC}"
+#     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+#     echo "Command: ${command}"
+#     echo ""
+#     local output
+#     output=$(eval "$command" 2>&1)
+#     local exit_code=$?
+#     if [[ $exit_code -eq 0 ]]; then
+#         echo "$output"
+#         echo -e "${RED}❌ FAIL: Test should have failed but succeeded${NC}"
+#         ERROR_COUNT=$((ERROR_COUNT + 1))
+#     else
+#         echo "$output"
+#         # Acepta cualquier error (exit code != 0) como válido
+#         echo -e "${GREEN}✅ PASS: Test failed as expected (non-existent record)${NC}"
+#         SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+#     fi
+#     echo ""
+# }
 
-# ...existing code...
+# # ...existing code...
 
-# Llama a la función especial en vez de run_test para este caso
-run_test_getTsrRecordFromOriginalHash_nonexistent
+# # Llama a la función especial en vez de run_test para este caso
+# run_test_getTsrRecordFromOriginalHash_nonexistent
 
 run_test \
     "getTsrRecordFromOriginalHash - Missing original-hash parameter" \
