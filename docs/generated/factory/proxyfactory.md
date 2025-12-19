@@ -224,21 +224,6 @@ _Inherits from ProxyFactoryInternal and implements the IProxyFactory
 interface. Provides role-based access control for proxy deployment
 and configuration management functionality_
 
-### onlyValidConfiguration
-
-```solidity
-modifier onlyValidConfiguration(bytes32 _configurationId, uint256 _version)
-```
-
-_Modifier to validate that a configuration exists and is valid_
-
-#### Parameters
-
-| Name              | Type    | Description                                 |
-| ----------------- | ------- | ------------------------------------------- |
-| \_configurationId | bytes32 | The unique identifier for the configuration |
-| \_version         | uint256 | The version number to validate              |
-
 ### deployUseCase
 
 ```solidity
@@ -416,22 +401,37 @@ struct ProxyFactoryStorage {
 }
 ```
 
+### onlyValidConfiguration
+
+```solidity
+modifier onlyValidConfiguration(bytes32 _configurationId, uint256 _version)
+```
+
+_Modifier to validate that a configuration exists and is valid_
+
+#### Parameters
+
+| Name              | Type    | Description                                 |
+| ----------------- | ------- | ------------------------------------------- |
+| \_configurationId | bytes32 | The unique identifier for the configuration |
+| \_version         | uint256 | The version number to validate              |
+
 ### \_deployUseCase
 
 ```solidity
 function _deployUseCase(bytes32 _configurationId, uint256 _version, struct IAccessControlEoa.Rbac[] _rbacs, bool _initPause, bytes32[] _initBusinessIds, bytes[] _initData, bool createTo, bytes32 _salt) internal returns (address proxyAddress_)
 ```
 
-### \_initializeUseCase
+### \_computeAddress
 
 ```solidity
-function _initializeUseCase(address _proxyAddress, struct IAccessControlEoa.Rbac[] _rbacs, bool _initPause) internal
+function _computeAddress(bytes32 _configurationId, uint256 _version, bytes32[] _initBusinessIds, bytes[] _initData, struct IAccessControlEoa.Rbac[] _rbacs, bool _initPause, bytes32 _salt) internal view returns (address)
 ```
 
 ### \_buildUseCaseDeployArgs
 
 ```solidity
-function _buildUseCaseDeployArgs(bytes32 _configurationId, uint256 _version, bytes32[] _initBusinessIds, bytes[] _initData) internal view returns (struct IsbeProxy.IsbeProxyArgs args_)
+function _buildUseCaseDeployArgs(bytes32 _configurationId, uint256 _version, bytes32[] _initBusinessIds, bytes[] _initData, struct IAccessControlEoa.Rbac[] _rbacs, bool _initPause) internal view returns (struct IsbeProxy.IsbeProxyArgs args_)
 ```
 
 ### \_getDeployedProxiesByConfiguration

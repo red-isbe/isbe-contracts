@@ -24,6 +24,7 @@ import {ITimeStampingRegistry} from '../client/tsr/ITimeStampingRegistry.sol';
 import {IClientFiltering} from '../client/filtering/IClientFiltering.sol';
 import {IAnchoringCore} from '../client/anchoring/IAnchoringCore.sol';
 import {INetworkDirectory} from '../client/networkdirectory/INetworkDirectory.sol';
+import {ISmartAccountFactory} from '../accountabstraction/smartaccount/factory/ISmartAccountFactory.sol';
 
 /**
  * @title ISBE Factory Interface
@@ -44,5 +45,6 @@ interface IIsbeFactory is
     IClientFiltering,
     ITimeStampingRegistry,
     IAnchoringCore,
-    INetworkDirectory
+    INetworkDirectory,
+    ISmartAccountFactory
 {}

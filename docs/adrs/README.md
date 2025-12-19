@@ -14,3 +14,4 @@
 | ADR_010    | Modularization of IERC3643 Interface in ERC-3643 Architecture                | Implemented | [ADR_010-3643-IERC3643.md](ADR_010-3643-IERC3643.md)                                                                                 |
 | ADR_011    | Whitelist Implementation via Facet Architecture vs Role-Based Access Control | Implemented | [ADR_011-Whitelist-Facet.md](ADR_011-Whitelist-Facet.md)                                                                             |
 | ADR_012    | ADR 012: Post-Network Account Assignment Strategy for the 0x15BE Contract    | Proposal    | [ADR_012-Accounts-Assignments-To-Accounts-Post-Network-Running.md](ADR_012-Accounts-Assignments-To-Accounts-Post-Network-Running.md) |
+| ADR_013    | Account Abstraction                                                          | Proposal    | [ADR_013-AccountAbstraction.md](ADR_013-AccountAbstraction.md)                                                                       |

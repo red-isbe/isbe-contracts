@@ -1,6 +1,6 @@
 {
     "name": "@alastria/isbe-contracts",
-    "version": "0.0.6",
+    "version": "0.2.0",
     "description": "Repository of certified and audited smart contracts for use in the ISBE network",
     "scripts": {
         "compile": "npx hardhat compile",
@@ -117,7 +117,8 @@
         "solidity-docgen": "^0.6.0-beta.36",
         "ts-node": "^10.9.2",
         "typescript": "^5.6.3",
-        "typescript-eslint": "^8.31.1"
+        "typescript-eslint": "^8.31.1",
+        "@account-abstraction/contracts": "0.8.0"
     },
     "overrides": {
         "solhint-plugin-prettier": "^0.1.0",

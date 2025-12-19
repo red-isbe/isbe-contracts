@@ -29,19 +29,6 @@ import {_PROXY_DEPLOYER_ROLE} from '../../constants/roles.sol';
  *      and configuration management functionality
  */
 abstract contract ProxyFactory is ProxyFactoryInternal, IProxyFactory {
-    /**
-     * @dev Modifier to validate that a configuration exists and is valid
-     * @param _configurationId The unique identifier for the configuration
-     * @param _version The version number to validate
-     */
-    modifier onlyValidConfiguration(
-        bytes32 _configurationId,
-        uint256 _version
-    ) {
-        _checkConfiguration(_configurationId, _version);
-        _;
-    }
-
     function deployUseCase(
         bytes32 _configurationId,
         uint256 _version,

@@ -65,7 +65,7 @@ describe('Pause', function () {
             globalIsbePause: result.globalIsbePause,
             accessControl: result.accessControl,
             pauseFacet: result.pauseFacet,
-            accessControlFacet: result.accessControlFacet,
+            accessControlFacet: result.accessControlGovernanceFacet,
             transparentProxyFactory: transparentFactory,
         }
     }
@@ -96,7 +96,7 @@ describe('Pause', function () {
             globalIsbePause: result.globalIsbePause,
             accessControl: result.accessControl,
             pauseFacet: result.pauseFacet,
-            accessControlFacet: result.accessControlFacet,
+            accessControlFacet: result.accessControlGovernanceFacet,
             transparentProxyFactory: transparentFactory,
         }
     }
@@ -127,7 +127,7 @@ describe('Pause', function () {
             globalIsbePause: result.globalIsbePause,
             accessControl: result.accessControl,
             pauseFacet: result.pauseFacet,
-            accessControlFacet: result.accessControlFacet,
+            accessControlFacet: result.accessControlGovernanceFacet,
             transparentProxyFactory: transparentFactory,
         }
     }
@@ -158,7 +158,7 @@ describe('Pause', function () {
             globalIsbePause: result.globalIsbePause,
             accessControl: result.accessControl,
             pauseFacet: result.pauseFacet,
-            accessControlFacet: result.accessControlFacet,
+            accessControlFacet: result.accessControlGovernanceFacet,
             transparentProxyFactory: transparentFactory,
         }
     }
@@ -189,7 +189,7 @@ describe('Pause', function () {
             globalIsbePause: result.globalIsbePause,
             accessControl: result.accessControl,
             pauseFacet: result.pauseFacet,
-            accessControlFacet: result.accessControlFacet,
+            accessControlFacet: result.accessControlGovernanceFacet,
             transparentProxyFactory: transparentFactory,
         }
     }

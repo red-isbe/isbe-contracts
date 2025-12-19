@@ -178,6 +178,9 @@ bytes32 constant _ENS_PUBLIC_RESOLVER_RESOLVER_KEY = 0x01286e867987641a8805e8007
 // keccak256('isbe.contracts.timestamping.registry.resolver.key');
 bytes32 constant _TIMESTAMPING_REGISTRY_RESOLVER_KEY = 0xc96c356b7532d6eba398b97f362b68829d7392627c879e8ba5909c4810ca7ad5;
 
+// keccak256('isbe.contracts.accountabstraction.smartaccount.factory.resolver.key');
+bytes32 constant _ACCOUNT_ABSTRACTION_SMART_ACCOUNT_FACTORY_RESOLVER_KEY = 0x69fcc18ef12498a467c42a433c081bebae6d4329d3699d7af37e58a388af04f0;
+
 // keccak256('BESU_NODE_MANAGER')
 bytes32 constant _BESU_NODE_MANAGER_RESOLVER_KEY = 0xed251ea052ffafa4903db889a3309600adf2ac15456e02760c1221ea3792c1ca;
 
@@ -198,5 +201,17 @@ bytes32 constant _ERC203543_CAPPED_SIGNED_RESOLVER_KEY = 0x7c097c4fd1aad0f9803e6
 
 // keccak256('isbe.contracts.erc20.burnable.signed.resolver.key');
 bytes32 constant _ERC20_BURNABLE_SIGNED_RESOLVER_KEY = 0x5f8ef61cf4f1fd1ccee74532a80e88a92a4ad8ee5602b44f9bef12409368c7db;
+
+// keccak256('isbe.contracts.accountabstraction.resolver.key');
+bytes32 constant _ACCOUNT_ABSTRACTION_RESOLVER_KEY = 0xeec0dce628f0eb37f035e1a3f9b9d983da3e9a2e7fcf09e1dcfb8630bf7e9c72;
+
+// keccak256('isbe.contracts.accountabstraction.entrypoint.resolver.key');
+bytes32 constant _ACCOUNT_ABSTRACTION_ENTRYPOINT_RESOLVER_KEY = 0x509b8bdfa4753d211aaf1cd92156c6c5d3ff56a3ad8d5533c9021acda4525ce0;
+
+// keccak256('isbe.contracts.accountabstraction.smartaccount.resolver.key');
+bytes32 constant _ACCOUNT_ABSTRACTION_SMART_ACCOUNT_RESOLVER_KEY = 0x57876e40acb603eb4558aec823c2ca73d5bc934402bcb441f7e6bc5874a6e547;
+
+// keccak256('isbe.contracts.account.abstraction.paymaster.paymaster.key');
+bytes32 constant _AA_PAYMASTER_PAYMASTER_KEY = 0x3b133fbb2a5301959c9d14293df1370f4f47c0bc94efc5443e10584be097309d;
 
 // solhint-enable max-line-length

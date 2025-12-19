@@ -152,6 +152,18 @@ bytes32 constant _TIMESTAMPING_REGISTRY_STORAGE_POSITION = 0x7bea5e2e127c51f0457
 // keccak256('isbe.contracts.network.directory.storage');
 bytes32 constant _NETWORK_DIRECTORY_STORAGE_POSITION = 0x3a0420dd147d7cf5a565887fe2c7ea7e96d447cad78f400d62fac5802d1cec34;
 
+// keccak256('isbe.contracts.accountabstraction.smartaccount.storage');
+bytes32 constant _ACCOUNT_ABSTRACTION_SMART_ACCOUNT_STORAGE_POSITION = 0x08b1a88f6d4f9bd4b5e54ea613cf4d25682438e7843cfb0b2ff4b7ea1200f210;
+
+// keccak256('isbe.contracts.accountabstraction.entrypoint.storage');
+bytes32 constant _ACCOUNT_ABSTRACTION_ENTRY_POINT_STORAGE_POSITION = 0x74a306e08663d2a3938fe831e6153e4965e3deeddcdd07bd3ef1d176dadbb9c0;
+
+// keccak256('isbe.contracts.accountabstraction.stakemanager.storage');
+bytes32 constant _ACCOUNT_ABSTRACTION_STAKE_MANAGER_STORAGE_POSITION = 0x23bc7f9e877f6c626e6c3b449264d0825a91de68705ddf68c0c481c9d0f46b6b;
+
+// keccak256('isbe.contracts.accountabstraction.noncemanager.storage');
+bytes32 constant _ACCOUNT_ABSTRACTION_NONCE_MANAGER_STORAGE_POSITION = 0x3e262832d6a4d790081b7364026fa846010143a6402ee7d0481555fa5a041bde;
+
 // BesuNodeManager - Core layer (shared enodes)
 // keccak256('com.isbe.besu.node.manager.core.storage')
 bytes32 constant _BESU_NODE_MANAGER_CORE_STORAGE_POSITION = 0x11ac89760e0337d7c2f84ee9741ea0ddac3e0d00723ece28a875d7acffbb14d1;

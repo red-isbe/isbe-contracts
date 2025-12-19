@@ -104,7 +104,7 @@ describe('Access Control', function () {
             account_2Address: account2Address,
             accessControl: result.accessControl,
             accessControlGovernance: result.accessControlGovernance,
-            accessControlFacet: result.accessControlFacet,
+            accessControlFacet: result.accessControlGovernanceFacet,
             transparentProxyFactory: transparentFactory,
             didRegistry: result.didRegistry,
             mockTimestamp: result.mockTimestamp,
@@ -142,7 +142,7 @@ describe('Access Control', function () {
             ...contracts,
             accessControl: result.accessControl,
             accessControlGovernance: result.accessControlGovernance,
-            accessControlFacet: result.accessControlFacet,
+            accessControlFacet: result.accessControlGovernanceFacet,
         }
     }
 

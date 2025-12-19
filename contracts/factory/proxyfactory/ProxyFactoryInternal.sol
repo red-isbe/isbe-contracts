@@ -28,6 +28,10 @@ import {
 import {IsbeProxy} from '../../proxies/isbeproxy/IsbeProxy.sol';
 import {IConfigurationManagement} from '../configurationmanagement/IConfigurationManagement.sol';
 import {ConfigurationManagementInternal} from '../configurationmanagement/ConfigurationManagementInternal.sol';
+import {
+    _ACCESS_CONTROL_RESOLVER_KEY,
+    _PAUSE_RESOLVER_KEY
+} from '../../constants/resolverKeys.sol';
 
 /**
  * @title Proxy Factory Internal
@@ -44,6 +48,19 @@ abstract contract ProxyFactoryInternal is ConfigurationManagementInternal {
         mapping(bytes32 => mapping(uint256 => EnumerableSet.AddressSet)) configurationToProxyAddress;
         mapping(address => bytes32) proxyAddressToConfigurationId;
         mapping(address => uint256) proxyAddressToVersion;
+    }
+
+    /**
+     * @dev Modifier to validate that a configuration exists and is valid
+     * @param _configurationId The unique identifier for the configuration
+     * @param _version The version number to validate
+     */
+    modifier onlyValidConfiguration(
+        bytes32 _configurationId,
+        uint256 _version
+    ) {
+        _checkConfiguration(_configurationId, _version);
+        _;
     }
 
     function _deployUseCase(
@@ -63,43 +80,63 @@ abstract contract ProxyFactoryInternal is ConfigurationManagementInternal {
                 _configurationId,
                 _version,
                 _initBusinessIds,
-                _initData
+                _initData,
+                _rbacs,
+                _initPause
             )
         );
 
         proxyAddress_ = address(proxy);
 
-        _initializeUseCase(proxyAddress_, _rbacs, _initPause);
-
-        // TODO: ensure the roles aren't changed by external initializers.
         _storeDeployedDiamond(_configurationId, _version, proxyAddress_);
     }
 
-    function _initializeUseCase(
-        address _proxyAddress,
+    function _computeAddress(
+        bytes32 _configurationId,
+        uint256 _version,
+        bytes32[] memory _initBusinessIds,
+        bytes[] memory _initData,
         IAccessControlEoa.Rbac[] memory _rbacs,
-        bool _initPause
-    ) internal {
-        IAccessControlEoa(_proxyAddress).initializeAccessControl(
-            _adaptRbacWithIsbeRoles(_rbacs)
+        bool _initPause,
+        bytes32 _salt
+    ) internal view returns (address) {
+        IsbeProxy.IsbeProxyArgs memory args = _buildUseCaseDeployArgs(
+            _configurationId,
+            _version,
+            _initBusinessIds,
+            _initData,
+            _rbacs,
+            _initPause
         );
-        IPause(_proxyAddress).initializePause(_initPause);
+
+        return _predictAddress(_salt, args);
     }
 
     function _buildUseCaseDeployArgs(
         bytes32 _configurationId,
         uint256 _version,
         bytes32[] memory _initBusinessIds,
-        bytes[] memory _initData
+        bytes[] memory _initData,
+        IAccessControlEoa.Rbac[] memory _rbacs,
+        bool _initPause
     ) internal view returns (IsbeProxy.IsbeProxyArgs memory args_) {
-        uint256 length = _initBusinessIds.length;
+        bytes[] memory initData_ = _addDefaultInitData(
+            _initData,
+            _rbacs,
+            _initPause
+        );
+        bytes32[] memory initBusinessIds_ = _addDefaultBusinessIds(
+            _initBusinessIds
+        );
+
+        uint256 length = initBusinessIds_.length;
         address[] memory _initBusinessAddresses = new address[](length);
 
         for (uint256 i; i < length; ) {
             _initBusinessAddresses[i] = _getFacetAddress(
                 _configurationId,
                 _version,
-                _initBusinessIds[i]
+                initBusinessIds_[i]
             );
             unchecked {
                 ++i;
@@ -111,7 +148,7 @@ abstract contract ProxyFactoryInternal is ConfigurationManagementInternal {
             configurationId: _configurationId,
             version: _version,
             init: _initBusinessAddresses,
-            data: _initData
+            data: initData_
         });
     }
 
@@ -159,25 +196,7 @@ abstract contract ProxyFactoryInternal is ConfigurationManagementInternal {
         IsbeProxy.IsbeProxyArgs memory _args
     ) private returns (IsbeProxy proxy_) {
         if (_createTo) {
-            address predicted = address(
-                uint160(
-                    uint256(
-                        keccak256(
-                            abi.encodePacked(
-                                bytes1(0xFF),
-                                address(this),
-                                _salt,
-                                keccak256(
-                                    abi.encodePacked(
-                                        type(IsbeProxy).creationCode,
-                                        abi.encode(_args)
-                                    )
-                                )
-                            )
-                        )
-                    )
-                )
-            );
+            address predicted = _predictAddress(_salt, _args);
             require(
                 predicted.code.length == 0,
                 IProxyFactory.AddressAlreadyDeployed(predicted)
@@ -204,6 +223,57 @@ abstract contract ProxyFactoryInternal is ConfigurationManagementInternal {
         $.proxyAddressToVersion[_deployedProxyAddress] = _version;
     }
 
+    function _predictAddress(
+        bytes32 _salt,
+        IsbeProxy.IsbeProxyArgs memory _args
+    ) private view returns (address) {
+        return
+            address(
+                uint160(
+                    uint256(
+                        keccak256(
+                            abi.encodePacked(
+                                bytes1(0xFF),
+                                address(this),
+                                _salt,
+                                keccak256(
+                                    abi.encodePacked(
+                                        type(IsbeProxy).creationCode,
+                                        abi.encode(_args)
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            );
+    }
+
+    function _addDefaultInitData(
+        bytes[] memory _initData,
+        IAccessControlEoa.Rbac[] memory _rbacs,
+        bool _initPause
+    ) private view returns (bytes[] memory initData_) {
+        uint256 initialLength = _initData.length;
+        unchecked {
+            initData_ = new bytes[](initialLength + 2);
+        }
+        for (uint256 index; index < initialLength; ) {
+            initData_[index] = _initData[index];
+            unchecked {
+                ++index;
+            }
+        }
+        initData_[initialLength] = abi.encodeWithSelector(
+            IPause.initializePause.selector,
+            _initPause
+        );
+        initData_[initialLength + 1] = abi.encodeWithSelector(
+            IAccessControlEoa.initializeAccessControl.selector,
+            _adaptRbacWithIsbeRoles(_rbacs)
+        );
+    }
+
     function _adaptRbacWithIsbeRoles(
         IAccessControlEoa.Rbac[] memory _rbacs
     ) private view returns (IAccessControlEoa.Rbac[] memory rbacs_) {
@@ -213,6 +283,24 @@ abstract contract ProxyFactoryInternal is ConfigurationManagementInternal {
             _buildDefaultAdminRoleMembers(_msgSender(), address(this)),
             _buildIsbeRoleMembers(address(this))
         );
+    }
+
+    function _addDefaultBusinessIds(
+        bytes32[] memory _initBusinessIds
+    ) private pure returns (bytes32[] memory initBusinessId_) {
+        uint256 length = _initBusinessIds.length;
+        unchecked {
+            initBusinessId_ = new bytes32[](length + 2);
+        }
+        for (uint256 index; index < length; ) {
+            initBusinessId_[index] = _initBusinessIds[index];
+            unchecked {
+                ++index;
+            }
+        }
+
+        initBusinessId_[length] = _PAUSE_RESOLVER_KEY;
+        initBusinessId_[length + 1] = _ACCESS_CONTROL_RESOLVER_KEY;
     }
 
     function _validateRolesThatCantBeInitializedByUser(
@@ -281,9 +369,14 @@ abstract contract ProxyFactoryInternal is ConfigurationManagementInternal {
         address _sender,
         address _proxy
     ) private pure returns (address[] memory defaultAdminRoleMembers_) {
-        defaultAdminRoleMembers_ = new address[](2);
-        defaultAdminRoleMembers_[0] = _sender;
-        defaultAdminRoleMembers_[1] = _proxy;
+        if (_sender == _proxy) {
+            defaultAdminRoleMembers_ = new address[](1);
+            defaultAdminRoleMembers_[0] = _sender;
+        } else {
+            defaultAdminRoleMembers_ = new address[](2);
+            defaultAdminRoleMembers_[0] = _sender;
+            defaultAdminRoleMembers_[1] = _proxy;
+        }
     }
 
     function _buildIsbeRoleMembers(

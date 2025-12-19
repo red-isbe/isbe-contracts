@@ -108,4 +108,7 @@ bytes32 constant _WHITELIST_ROLE = 0xded7ba58b0451b60e5cc01e919d11ddff88fe87bbc5
 // keccak256('isbe.contracts.role.sponsor');
 bytes32 constant _SPONSOR_ROLE = 0x4f3d2e1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d3c2b1a0f9e8d7c6b5a4f3e;
 
+// keccak256('isbe.contracts.role.smartaccount.deployer');
+bytes32 constant _SMART_ACCOUNT_DEPLOYER_ROLE = 0xc82bafb97c8757411def6a32e63ae58cadbfb00b30028cc12639d661664df042;
+
 // solhint-enable max-line-length

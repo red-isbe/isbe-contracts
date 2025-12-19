@@ -20,6 +20,8 @@ import {
     GlobalIsbePauseFacet__factory,
     ProxyFactoryFacet,
     ProxyFactoryFacet__factory,
+    SmartAccountFactoryFacet,
+    SmartAccountFactoryFacet__factory,
     ConfigurationManagementFacet,
     ConfigurationManagementFacet__factory,
     DiamondCutAccessControlFacet,
@@ -65,6 +67,8 @@ import {
     AnchoringCoreFacet,
     NetworkDirectoryFacet,
     NetworkDirectoryFacet__factory,
+    EntryPointFacet__factory,
+    EntryPointFacet,
 } from '../../typechain-types'
 import {
     DEFAULT_ADMIN_ROLE,
@@ -92,9 +96,11 @@ import {
     CONFIGURATION_ID_PROXY_TESTS,
     CONFIGURATION_ID_KNOWN_DID_TEST,
     CONFIGURATION_ID_BESU_NODE_MANAGER,
+    CONFIGURATION_ID_ACCOUNT_ABSTRACTION_SMART_ACCOUNT,
     ANCHORER_ROLE,
     METADATA_MANAGER_ROLE,
     CONFIGURATION_ID_NETWORK_DIRECTORY,
+    SMART_ACCOUNT_DEPLOYER_ROLE,
 } from '../../utils/constants'
 import { getIsbeFactory } from '../../scripts/utils/getIsbeFactory'
 import {
@@ -103,6 +109,7 @@ import {
 } from './erc20'
 import { deployERC721UseCasesFacets } from './erc721'
 import { deployKnownDidTestWrapperUseCaseFacets } from './knownDid'
+import { deploySmartAccountUseCaseFacets } from './smartaccount'
 
 let BusinessLogicFactoryFacetFactory: BusinessLogicFactoryFacet__factory
 let EIP2535AccessControlFactory: EIP2535AccessControl__factory
@@ -111,6 +118,7 @@ let DiamondCutAccessControlFacetFactory: DiamondCutAccessControlFacet__factory
 let DiamondLoupeFacetFactory: DiamondLoupeFacet__factory
 let GlobalIsbePauseFacetFactory: GlobalIsbePauseFacet__factory
 let ProxyFactoryFacetFactory: ProxyFactoryFacet__factory
+let SmartAccountFactoryFacetFactory: SmartAccountFactoryFacet__factory
 let ConfigMgmtFacetFactory: ConfigurationManagementFacet__factory
 let DidDocumentDetailedFacetFactory: DidDocumentDetailedFacet__factory
 let DidControllerFacetFactory: DidControllerFacet__factory
@@ -126,6 +134,7 @@ let BesuNodeManagerFacetFactory: BesuNodeManagerFacetTestWrapper__factory
 let AnchoringCoreFacetFactory: AnchoringCoreFacet__factory
 let NetworkDirectoryFacetFactory: NetworkDirectoryFacet__factory
 let isbeFactory: IIsbeFactory
+let EntryPointFacetFactory: EntryPointFacet__factory
 
 export async function deployGovernance(
     owner: Signer,
@@ -180,6 +189,7 @@ export async function deployGovernance(
         { role: ANCHORER_ROLE, members: [ownerAddress] },
         { role: METADATA_MANAGER_ROLE, members: [ownerAddress] },
         { role: NETWORK_DIRECTORY_ROLE, members: [ownerAddress] },
+        { role: SMART_ACCOUNT_DEPLOYER_ROLE, members: [ownerAddress] },
     ]
 
     BusinessLogicFactoryFacetFactory = await ethers.getContractFactory(
@@ -193,7 +203,9 @@ export async function deployGovernance(
     )
     ProxyFactoryFacetFactory =
         await ethers.getContractFactory('ProxyFactoryFacet')
-
+    SmartAccountFactoryFacetFactory = await ethers.getContractFactory(
+        'SmartAccountFactoryFacet'
+    )
     ConfigMgmtFacetFactory = await ethers.getContractFactory(
         'ConfigurationManagementFacet'
     )
@@ -246,6 +258,8 @@ export async function deployGovernance(
         await ethers.getContractFactory('AccessControlDidGovernanceFacet')
     ISBEPauseFacetFactory = await ethers.getContractFactory('ISBEPauseFacet')
 
+    EntryPointFacetFactory = await ethers.getContractFactory('EntryPointFacet')
+
     const businessLogicFactoryFacet: BusinessLogicFactoryFacet =
         await BusinessLogicFactoryFacetFactory.deploy()
     await businessLogicFactoryFacet.waitForDeployment()
@@ -257,6 +271,10 @@ export async function deployGovernance(
     const proxyFactoryFacet: ProxyFactoryFacet =
         await ProxyFactoryFacetFactory.deploy()
     await proxyFactoryFacet.waitForDeployment()
+
+    const smartAccountFactoryFacet: SmartAccountFactoryFacet =
+        await SmartAccountFactoryFacetFactory.deploy()
+    await smartAccountFactoryFacet.waitForDeployment()
 
     const configMgmtFacet: ConfigurationManagementFacet =
         await ConfigMgmtFacetFactory.deploy()
@@ -321,10 +339,16 @@ export async function deployGovernance(
     await anchoringCoreFacet.waitForDeployment()
     await networkDirectoryFacet.waitForDeployment()
 
+    const entryPointFacet: EntryPointFacet =
+        await EntryPointFacetFactory.deploy()
+    await entryPointFacet.waitForDeployment()
+
     const governanceFacets = [
+        await entryPointFacet.getAddress(),
         await businessLogicFactoryFacet.getAddress(),
         await globalIsbePauseFacet.getAddress(),
         await proxyFactoryFacet.getAddress(),
+        await smartAccountFactoryFacet.getAddress(),
         await configMgmtFacet.getAddress(),
         await diamondCutAccessControlFacet.getAddress(),
         await diamondLoupeFacet.getAddress(),
@@ -377,6 +401,16 @@ export async function deployGovernance(
                 )
             case CONFIGURATION_ID_PROXY_TESTS:
                 return await deployProxyTestsUseCaseFacets(
+                    isbeFactory,
+                    ISBEPauseFacetFactory,
+                    owner,
+                    rbacsUseCase,
+                    init_pause,
+                    init_BusinessId_UseCase,
+                    init_CallData_UseCase
+                )
+            case CONFIGURATION_ID_ACCOUNT_ABSTRACTION_SMART_ACCOUNT:
+                return await deploySmartAccountUseCaseFacets(
                     isbeFactory,
                     ISBEPauseFacetFactory,
                     owner,
@@ -448,6 +482,7 @@ export async function deployGovernance(
         configMgmtFacet,
         globalIsbePauseFacet,
         proxyFactoryFacet,
+        smartAccountFactoryFacet,
         diamondCutAccessControlFacet,
         diamondLoupeFacet,
         accessControlGovernanceFacet,
@@ -522,7 +557,12 @@ export async function deployGovernance(
         ...(useCaseDeployment || {}),
         // Access Control (for tests that don't use a use case)
         accessControl: accessControlFromUseCase ?? accessControlInstance,
-        accessControlFacet: accessControlGovernanceFacet,
         useCaseProxy: useCaseDeployment?.proxy,
+
+        // AA
+        entryPointFacet: entryPointFacet,
+        entryPoint: EntryPointFacetFactory.attach(
+            governanceAddress
+        ) as EntryPointFacet,
     }
 }

@@ -44,6 +44,8 @@ describe('ProxyFactory', function () {
     let nonAdminAddress: string
     let isbeFactory: IIsbeFactory
     let accessControl: AccessControl
+    let accessControlFacetAddress: string
+    let pauseFacetAddress: string
 
     async function deployFixture() {
         const [adminSigner, nonAdminSigner] = await ethers.getSigners()
@@ -72,6 +74,8 @@ describe('ProxyFactory', function () {
                 await result.governanceContract.getAddress()
             ),
             proxyFactoryFacet: result.proxyFactoryFacet,
+            accessControlFacet: result.accessControlFacet,
+            pauseFacet: result.pauseFacet,
         }
 
         expect(
@@ -89,6 +93,9 @@ describe('ProxyFactory', function () {
         nonAdminAddress = contracts.nonAdminAddress
         isbeFactory = contracts.isbeFactory
         accessControl = contracts.accessControl
+        accessControlFacetAddress =
+            await contracts.accessControlFacet.getAddress()
+        pauseFacetAddress = await contracts.pauseFacet.getAddress()
     })
 
     describe('ProxyFactory', () => {
@@ -776,12 +783,43 @@ describe('ProxyFactory', function () {
 
                 const deployer = await isbeFactory.getAddress()
 
+                const { ISBEPauseFacet__factory, IAccessControlEoa__factory } =
+                    await import('../../typechain-types')
+
                 const args = {
                     configurationManagement: deployer,
                     configurationId: RANDOM_HASH_FOR_CONFIGURATION_ID,
                     version: _VERSION,
-                    init: [], // empty array since _initBusinessIds = []
-                    data: [], // empty array since _initData = []
+                    init: [pauseFacetAddress, accessControlFacetAddress],
+                    data: [
+                        ISBEPauseFacet__factory.createInterface().encodeFunctionData(
+                            'initializePause',
+                            [false]
+                        ),
+                        IAccessControlEoa__factory.createInterface().encodeFunctionData(
+                            'initializeAccessControl',
+                            [
+                                [
+                                    {
+                                        role: DEFAULT_ADMIN_ROLE,
+                                        members: [
+                                            adminAddress.toLowerCase(),
+                                            deployer.toLowerCase(),
+                                        ],
+                                    },
+                                    {
+                                        role: ISBE_ROLE,
+                                        members: [deployer.toLowerCase()],
+                                    },
+                                    {
+                                        role: CONFIGURATION_MANAGER_ROLE,
+                                        members: [deployer.toLowerCase()],
+                                    },
+                                    ..._RBACS,
+                                ],
+                            ]
+                        ),
+                    ],
                 }
 
                 // Get the IsbeProxy contract factory to access creation code
