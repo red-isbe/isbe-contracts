@@ -91,6 +91,7 @@
     },
     "homepage": "https://github.com/alastria/isbe-contracts#readme",
     "devDependencies": {
+        "@account-abstraction/contracts": "0.8.0",
         "@commitlint/cli": "^20.1.0",
         "@commitlint/config-conventional": "^20.0.0",
         "@eslint/js": "^9.25.1",
@@ -98,6 +99,7 @@
         "@openzeppelin/contracts": "^4.9.6",
         "@types/node": "^25.0.0",
         "@types/nodemailer": "^7.0.4",
+        "@types/p-limit": "^2.1.0",
         "@vonage/messages": "^1.22.1",
         "@vonage/server-sdk": "^3.25.1",
         "crypto-es": "^3.1.2",
@@ -108,6 +110,7 @@
         "husky": "^9.1.7",
         "lint-staged": "^15.5.1",
         "nodemailer": "^7.0.11",
+        "p-limit": "^7.2.0",
         "prettier": "^3.5.3",
         "prettier-plugin-solidity": "^2.0.0",
         "shamirs-secret-sharing": "^2.0.1",
@@ -117,8 +120,7 @@
         "solidity-docgen": "^0.6.0-beta.36",
         "ts-node": "^10.9.2",
         "typescript": "^5.6.3",
-        "typescript-eslint": "^8.31.1",
-        "@account-abstraction/contracts": "0.8.0"
+        "typescript-eslint": "^8.31.1"
     },
     "overrides": {
         "solhint-plugin-prettier": "^0.1.0",
@@ -142,7 +144,7 @@
         ]
     },
     "publishConfig": {
-        "registry": "https://npm.pkg.github.com/"
+        "registry": "https://registry.npmjs.org/"
     },
     "files": [
         "artifacts",
