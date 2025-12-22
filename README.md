@@ -1384,7 +1384,7 @@ The project uses Husky hooks that automatically run:
 To use ISBE contracts as a dependency in your project:
 
 ```bash
-npm install @alastria/isbe-contracts
+npm install @red-isbe/isbe-contracts
 ```
 
 For detailed installation and usage instructions, visit the [package documentation](https://github.com/alastria/isbe-contracts/pkgs/npm/isbe-contracts).

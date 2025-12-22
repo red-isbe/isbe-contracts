@@ -5,7 +5,7 @@ WORKDIR /app
 
 # Copy package files and install dependencies
 COPY package*.json ./
-RUN npm ci
+RUN npm i
 
 # Copy Hardhat configuration and task definitions
 COPY hardhat.config.ts ./

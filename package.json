@@ -1,5 +1,5 @@
 {
-    "name": "@alastria/isbe-contracts",
+    "name": "@red-isbe/isbe-contracts",
     "version": "0.2.0",
     "description": "Repository of certified and audited smart contracts for use in the ISBE network",
     "scripts": {
