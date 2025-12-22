@@ -67,12 +67,12 @@ describe('Access Control', function () {
         // Initialize DID registry
         await result.didRegistry.initializeDiDRegistry(EllipticType.SECP_256_K1)
 
-        // Create DID document for admin account
+        // Create DID document for admin account - Use fixed timestamp in the past to avoid race conditions
         const adminWallet = walletOfFirstSigner()
         const adminDid = ethers.id('did:admin:account')
 
-        const notBefore = Math.floor(Date.now() / 1000)
-        const notAfter = notBefore + 365 * 24 * 60 * 60
+        const notBefore = 5
+        const notAfter = notBefore + 1000000000000 // Very large to never expire
 
         const publicKey = adminWallet.signingKey.publicKey
         const vMethodId = ethers.id(`vmethod:${adminDid}`)
@@ -503,9 +503,9 @@ describe('Access Control', function () {
             const d2 = ethers.id('did:test:2')
             const d3 = ethers.id('did:test:3')
 
-            // Insert DID documents
-            const notBefore = Math.floor(Date.now() / 1000)
-            const notAfter = notBefore + 365 * 24 * 60 * 60
+            // Insert DID documents - Use fixed timestamp in the past to avoid race conditions
+            const notBefore = 5
+            const notAfter = notBefore + 1000000000000 // Very large to never expire
 
             for (const [wallet, did] of [
                 [w1, d1],

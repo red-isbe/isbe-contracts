@@ -76,11 +76,11 @@ describe('Asset Event Tracker', function () {
             EllipticType.SECP_256_K1
         )
 
-        // Register admin as DID
+        // Register admin as DID - Use fixed timestamp in the past to avoid race conditions
         const baseWallet = walletOfFirstSigner()
         const adminDidId = ethers.id('did:assetevent:admin:1')
-        const notBefore = Math.floor(Date.now() / 1000)
-        const notAfter = notBefore + 365 * 24 * 60 * 60
+        const notBefore = 5
+        const notAfter = notBefore + 1000000000000 // Very large to never expire
 
         const publicKey = baseWallet.signingKey.publicKey
         const vMethodId = ethers.id(`vmethod:${adminDidId}`)
@@ -305,9 +305,9 @@ describe('Asset Event Tracker', function () {
                 EllipticType.SECP_256_K1
             )
 
-            // Insert DID document
-            const notBefore = Math.floor(Date.now() / 1000)
-            const notAfter = notBefore + 365 * 24 * 60 * 60
+            // Insert DID document - Use fixed timestamp in the past to avoid race conditions
+            const notBefore = 5
+            const notAfter = notBefore + 1000000000000 // Very large to never expire
 
             const publicKey = wallet.signingKey.publicKey
             const vMethodId = ethers.id(`vmethod:${didId}`)
@@ -535,9 +535,9 @@ describe('Asset Event Tracker', function () {
                 EllipticType.SECP_256_K1
             )
 
-            // Insert DID document
-            const notBefore = Math.floor(Date.now() / 1000)
-            const notAfter = notBefore + 365 * 24 * 60 * 60
+            // Insert DID document - Use fixed timestamp in the past to avoid race conditions
+            const notBefore = 5
+            const notAfter = notBefore + 1000000000000 // Very large to never expire
 
             const publicKey = wallet.signingKey.publicKey
             const vMethodId = ethers.id(`vmethod:${didId}`)

@@ -138,12 +138,12 @@ describe('KnownDidTestWrapper', function () {
         })
 
         it('GIVEN address with registered DID WHEN calling testOnlyKnownDid THEN it succeeds and emits DidVerified', async function () {
-            // Register a DID for admin
+            // Register a DID for admin - Use fixed timestamp in the past to avoid race conditions
             const adminDid = randomDid()
             const publicKey = wallet.signingKey.publicKey
             const vMethodId = ethers.id(`vmethod:${adminDid}`)
-            const notBefore = Math.floor(Date.now() / 1000)
-            const notAfter = notBefore + 365 * 24 * 60 * 60
+            const notBefore = 5
+            const notAfter = notBefore + 1000000000000 // Very large to never expire
 
             const message = ethers.keccak256(
                 ethers.solidityPacked(['bytes'], [publicKey])
@@ -173,12 +173,12 @@ describe('KnownDidTestWrapper', function () {
         })
 
         it('GIVEN address with DID but inactive capability invocation WHEN calling testOnlyKnownDid THEN it fails with AddressNotKnown', async function () {
-            // Register a DID for admin
+            // Register a DID for admin - Use fixed future timestamp
             const adminDid = randomDid()
             const publicKey = wallet.signingKey.publicKey
             const vMethodId = ethers.id(`vmethod:${adminDid}`)
-            const notBefore = Math.floor(Date.now() / 1000) + 10000 // Future timestamp this does not work propperly in coverage tests
-            const notAfter = notBefore + 365 * 24 * 60 * 60
+            const notBefore = 100000 // Future timestamp
+            const notAfter = notBefore + 1000000000000 // Very large to never expire
 
             const message = ethers.keccak256(
                 ethers.solidityPacked(['bytes'], [publicKey])
@@ -198,7 +198,9 @@ describe('KnownDidTestWrapper', function () {
                 ''
             )
 
-            // Don't set timestamp - capability invocation is not active yet
+            // Set timestamp to a time BEFORE notBefore so capability invocation is not active
+            await mockTimestamp.setMockedTimestamp(notBefore - 1000)
+
             await expect(knownDidTestWrapper.connect(admin).testOnlyKnownDid())
                 .to.be.revertedWithCustomError(
                     knownDidTestWrapper,
@@ -208,12 +210,12 @@ describe('KnownDidTestWrapper', function () {
         })
 
         it('GIVEN multiple addresses with DIDs WHEN calling testOnlyKnownDid THEN all succeed', async function () {
-            // Register DID for admin
+            // Register DID for admin - Use fixed timestamp in the past to avoid race conditions
             const adminDid = randomDid()
             const adminPublicKey = wallet.signingKey.publicKey
             const adminVMethodId = ethers.id(`vmethod:${adminDid}`)
-            const notBefore = Math.floor(Date.now() / 1000)
-            const notAfter = notBefore + 365 * 24 * 60 * 60
+            const notBefore = 5
+            const notAfter = notBefore + 1000000000000 // Very large to never expire
 
             const adminMessage = ethers.keccak256(
                 ethers.solidityPacked(['bytes'], [adminPublicKey])

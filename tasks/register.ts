@@ -97,10 +97,11 @@ import './verification/deploymentStatus'
 import './verification/governanceRoles'
 
 // Client filtering
-import './client/registerFilter'
-import './client/getFiltersLength'
-import './client/getFiltersByPage'
-import './client/isFilterRegistered'
+import './client/filtering/registerFilter'
+import './client/filtering/updateFilter'
+import './client/filtering/getFiltersLength'
+import './client/filtering/getFiltersByPage'
+import './client/filtering/isFilterRegistered'
 
 import './utils/buildConfigurationId'
 
@@ -139,6 +140,101 @@ import './client/besuNodeManager/quarantineValidator'
 import './client/besuNodeManager/unquarantineValidator'
 import './client/besuNodeManager/standbyValidator'
 import './client/besuNodeManager/promoteValidator'
+
+// Network Directory - Write Operations
+import './client/networkDirectory/createNetwork'
+import './client/networkDirectory/updateNetwork'
+import './client/networkDirectory/deleteNetwork'
+import './client/networkDirectory/setResource'
+import './client/networkDirectory/deleteResource'
+
+// Network Directory - Read Operations
+import './client/networkDirectory/getNetwork'
+import './client/networkDirectory/getAllNetworks'
+import './client/networkDirectory/getNetworksByAlgorithm'
+import './client/networkDirectory/getNetworksCount'
+import './client/networkDirectory/getNetworksPaginated'
+import './client/networkDirectory/getResourceKeys'
+import './client/networkDirectory/getResourceKeysPaginated'
+import './client/networkDirectory/getResourceCount'
+
+// TimeStamping Registry - Write Operations
+import './client/timestamping/stamp'
+import './client/timestamping/stampWithSignature'
+
+// TimeStamping Registry - Read Operations
+import './client/timestamping/isOriginalHashRegistered'
+import './client/timestamping/isTsaHashRegistered'
+import './client/timestamping/isExternalReferenceIdRegistered'
+import './client/timestamping/getTsrRecordFromOriginalHash'
+import './client/timestamping/getStampedSize'
+import './client/timestamping/getPaginatedStamped'
+
+// ENS Registry - Read Operations
+import './ens/owner'
+import './ens/resolver'
+import './ens/ttl'
+import './ens/recordExists'
+import './ens/isApprovedForAll'
+
+// ENS Registry - Write Operations
+import './ens/setOwner'
+import './ens/setResolver'
+import './ens/setTTL'
+import './ens/setApprovalForAll'
+import './ens/setSubnodeOwner'
+import './ens/setSubnodeRecord'
+import './ens/setRecord'
+
+// DID Document Detailed - Read Operations
+import './didDocument/getDidDocument'
+import './didDocument/getDidDocumentByTimestamp'
+import './didDocument/getDids'
+import './didDocument/getNetworkEllipticType'
+
+// DID Document Detailed - Initialization
+import './didDocument/initializeDiDRegistry'
+
+// DID Document Detailed - Write Operations
+import './didDocument/updateAlsoKnownAs'
+import './didDocument/updateBaseDocument'
+import './didDocument/insertDidDocument'
+import './didDocument/insertFirstDidDocument'
+
+// Access Control DID - Read Operations
+import './accessControlDid/hasRoleForDid'
+import './accessControlDid/getRolesByDid'
+import './accessControlDid/getRolesByDidLength'
+import './accessControlDid/getDidRoleMembers'
+import './accessControlDid/getRoleMembersCountForDids'
+
+// Access Control DID - Write Operations
+import './accessControlDid/grantDidRole'
+import './accessControlDid/revokeDidRole'
+
+// DID Controller - Read Operations
+import './didController/checkControllerByBytes'
+import './didController/checkControllerByDid'
+import './didController/getDidsByController'
+
+// DID Controller - Write Operations
+import './didController/addController'
+import './didController/revokeController'
+
+// DID Verification Method - Write Operations
+import './didVerificationMethod/addVerificationMethod'
+import './didVerificationMethod/revokeVerificationMethod'
+import './didVerificationMethod/expireVerificationMethod'
+import './didVerificationMethod/rollVerificationMethod'
+
+// DID Verification Relationship - Read/Write Operations
+import './didVerificationRelationship/addVerificationRelationship'
+import './didVerificationRelationship/getDidsByVerificationRelationship'
+
+// DID Registry Query - Read Operations
+import './didRegistryQuery/didOf'
+import './didRegistryQuery/isKnownDid'
+
 // Trusted Issuers Registry
 import './identity/trustedissuersregistry/getIssuer'
 import './identity/trustedissuersregistry/getIssuerAttributeRevisions'

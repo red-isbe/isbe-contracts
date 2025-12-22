@@ -1,0 +1,363 @@
+/* -----------------------------------------------------------------------------------
+Copyright (c) 2025 Comunidad de Madrid & Alastria
+Licensed under the Apache License, Version 2.0 (the "License");
+You may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-------------------------------------------------------------- */
+import { getEvent } from '../utils/getEvent'
+import { decodeError } from '../utils/translateCustomError'
+import { ISignatureProvider } from '../../tasks/index'
+import {
+    ContractTransactionResponse,
+    LogDescription,
+    TransactionReceipt,
+} from 'ethers'
+import { HardhatRuntimeEnvironment } from 'hardhat/types'
+
+const CONTRACT_NAME = 'DidVerificationMethodFacet'
+const EVENT_NAME = 'VerificationMethodRolled'
+
+const EllipticTypeNames: Record<number, string> = {
+    0: 'NONE',
+    1: 'SECP_256_K1',
+    2: 'SECP_256_R1',
+}
+
+export interface VerificationMethodRolledResult {
+    did: string
+    vMethodId: string
+    publicKey: string
+    ellipticType: number
+    notBefore: bigint
+    notAfter: bigint
+    oldVMethodId: string
+    duration: bigint
+}
+
+async function loadDidVerificationMethodFactory() {
+    const { DidVerificationMethodFacet__factory } =
+        await import('../../typechain-types')
+    return DidVerificationMethodFacet__factory
+}
+
+export async function rollVerificationMethod(
+    hre: HardhatRuntimeEnvironment,
+    did: string,
+    vMethodId: string,
+    publicKey: string,
+    ellipticType: number,
+    notBefore: bigint | number,
+    notAfter: bigint | number,
+    oldVMethodId: string,
+    duration: bigint | number,
+    diamond: string,
+    signatureProvider: ISignatureProvider
+): Promise<VerificationMethodRolledResult> {
+    console.log(
+        `🔄 Using ${signatureProvider.getCurveType()} signature for rolling verification method...`
+    )
+
+    const notBeforeBigInt = BigInt(notBefore)
+    const notAfterBigInt = BigInt(notAfter)
+    const durationBigInt = BigInt(duration)
+
+    const args = {
+        did,
+        vMethodId,
+        publicKey,
+        ellipticType,
+        notBefore: notBeforeBigInt,
+        notAfter: notAfterBigInt,
+        oldVMethodId,
+        duration: durationBigInt,
+    }
+
+    if (signatureProvider.getCurveType() === 'secp256r1') {
+        return await rollVerificationMethodWithRawTransaction(
+            hre,
+            args,
+            diamond,
+            signatureProvider
+        )
+    }
+
+    // For secp256k1, use the standard contract interface
+    const signer = await signatureProvider.getSigner()
+    const DidVerificationMethodFacet__factory =
+        await loadDidVerificationMethodFactory()
+    const didVerificationMethodFacet =
+        DidVerificationMethodFacet__factory.connect(diamond, signer)
+
+    console.log('📡 Sending rollVerificationMethod transaction...')
+    let tx: ContractTransactionResponse
+    try {
+        tx = await didVerificationMethodFacet.rollVerificationMethod(args)
+        console.log(`   🔗 Transaction submitted: ${tx.hash}`)
+    } catch (error) {
+        if (error?.data) {
+            console.log(
+                'Transaction SEND failed: ' +
+                    (await decodeError(hre, CONTRACT_NAME, error.data))
+            )
+        } else {
+            console.log('Transaction SEND failed: ' + error)
+        }
+        throw error
+    }
+
+    console.log('⏳ Waiting for transaction to be mined...')
+    let receipt: TransactionReceipt | null
+    try {
+        receipt = await tx.wait()
+        if (!receipt) throw new Error('Transaction receipt is null')
+        if (receipt.status !== 1) {
+            throw new Error('Transaction failed or was reverted')
+        }
+    } catch (error) {
+        console.log('Transaction MINING failed: ' + error)
+        throw error
+    }
+
+    const logDescription: LogDescription | null = await getEvent(
+        EVENT_NAME,
+        tx,
+        didVerificationMethodFacet
+    )
+
+    if (!logDescription) {
+        throw new Error(`${EVENT_NAME} event not found in transaction logs`)
+    }
+
+    const eventArgs = logDescription.args
+
+    if (
+        typeof eventArgs.did !== 'string' ||
+        typeof eventArgs.vMethodId !== 'string' ||
+        typeof eventArgs.publicKey !== 'string' ||
+        (typeof eventArgs.ellipticType !== 'number' &&
+            typeof eventArgs.ellipticType !== 'bigint') ||
+        typeof eventArgs.notBefore !== 'bigint' ||
+        typeof eventArgs.notAfter !== 'bigint' ||
+        typeof eventArgs.oldVMethodId !== 'string' ||
+        typeof eventArgs.duration !== 'bigint'
+    ) {
+        throw new Error('Invalid VerificationMethodRolled event args format')
+    }
+
+    const {
+        did: evDid,
+        vMethodId: evVMethodId,
+        publicKey: evPublicKey,
+        ellipticType: evEllipticType,
+        notBefore: evNotBefore,
+        notAfter: evNotAfter,
+        oldVMethodId: evOldVMethodId,
+        duration: evDuration,
+    } = eventArgs
+
+    const evEllipticTypeNum =
+        typeof evEllipticType === 'bigint'
+            ? Number(evEllipticType)
+            : evEllipticType
+
+    if (
+        evDid !== did ||
+        evVMethodId !== vMethodId ||
+        evOldVMethodId !== oldVMethodId ||
+        evEllipticTypeNum !== ellipticType
+    ) {
+        console.warn(
+            'Warning: Bad state detected. Check manually if operation has been processed correctly.'
+        )
+    }
+
+    console.log(`\n✅ Verification method rolled successfully:`)
+    console.log(`   DID: ${evDid}`)
+    console.log(`   New V-Method ID: ${evVMethodId}`)
+    console.log(`   Old V-Method ID: ${evOldVMethodId}`)
+    console.log(`   Public Key: ${evPublicKey.substring(0, 30)}...`)
+    console.log(
+        `   Elliptic Type: ${EllipticTypeNames[evEllipticTypeNum] || evEllipticTypeNum}`
+    )
+    console.log(`   Not Before: ${evNotBefore}`)
+    console.log(`   Not After: ${evNotAfter}`)
+    console.log(`   Duration: ${evDuration}`)
+
+    return {
+        did: evDid,
+        vMethodId: evVMethodId,
+        publicKey: evPublicKey,
+        ellipticType: evEllipticTypeNum,
+        notBefore: evNotBefore,
+        notAfter: evNotAfter,
+        oldVMethodId: evOldVMethodId,
+        duration: evDuration,
+    }
+}
+
+/**
+ * Roll verification method using raw transactions for secp256r1 compatibility
+ * Avoids the "Cannot find square root" error by bypassing ethers Contract interface
+ */
+async function rollVerificationMethodWithRawTransaction(
+    hre: HardhatRuntimeEnvironment,
+    args: {
+        did: string
+        vMethodId: string
+        publicKey: string
+        ellipticType: number
+        notBefore: bigint
+        notAfter: bigint
+        oldVMethodId: string
+        duration: bigint
+    },
+    diamond: string,
+    signatureProvider: ISignatureProvider
+): Promise<VerificationMethodRolledResult> {
+    const { IDidVerificationMethod__factory } =
+        await import('../../typechain-types')
+
+    const contractInterface = IDidVerificationMethod__factory.createInterface()
+
+    // Encode the rollVerificationMethod function call
+    const functionData = contractInterface.encodeFunctionData(
+        'rollVerificationMethod',
+        [args]
+    )
+
+    console.log('📡 Sending rollVerificationMethod raw transaction...')
+
+    let txResponse
+    try {
+        // FIRST simulate tx to catch errors early and avoid gas costs
+        await hre.ethers.provider.call({
+            to: diamond,
+            from: await signatureProvider.getAddress(),
+            data: functionData,
+        })
+
+        // Send raw transaction using signature provider
+        txResponse = await signatureProvider.sendTransaction({
+            to: diamond,
+            data: functionData,
+            gasLimit: 1200000n, // Reasonable gas limit for rollVerificationMethod
+        })
+
+        console.log(`   🔗 Transaction submitted: ${txResponse.hash}`)
+    } catch (error) {
+        console.log(error)
+        console.log('❌ Raw transaction failed to submit')
+        if (error?.data) {
+            console.log(
+                '   ❌ Error: ' +
+                    (await decodeError(hre, CONTRACT_NAME, error.data)) +
+                    '\n'
+            )
+        }
+        throw new Error(
+            `Failed to submit rollVerificationMethod raw transaction: ${
+                error instanceof Error ? error.message : String(error)
+            }`
+        )
+    }
+
+    console.log('⏳ Waiting for raw transaction to be mined...')
+    let receipt
+    try {
+        receipt = await txResponse.wait()
+        if (!receipt || receipt.status !== 1) {
+            throw new Error('Transaction failed or was reverted')
+        }
+    } catch (error) {
+        console.log(`❌ Raw transaction failed to mine`)
+        console.log(`   🔗 Transaction Hash: ${txResponse.hash}`)
+        throw error
+    }
+
+    // Parse VerificationMethodRolled event from the receipt
+    const verificationMethodRolledEvent = receipt.logs
+        .map((log) => {
+            try {
+                return contractInterface.parseLog(log)
+            } catch {
+                return null
+            }
+        })
+        .find((log) => log && log.name === EVENT_NAME)
+
+    if (!verificationMethodRolledEvent) {
+        throw new Error(`${EVENT_NAME} event not found in transaction receipt`)
+    }
+
+    const eventArgs = verificationMethodRolledEvent.args
+
+    if (
+        typeof eventArgs.did !== 'string' ||
+        typeof eventArgs.vMethodId !== 'string' ||
+        typeof eventArgs.publicKey !== 'string' ||
+        (typeof eventArgs.ellipticType !== 'number' &&
+            typeof eventArgs.ellipticType !== 'bigint') ||
+        typeof eventArgs.notBefore !== 'bigint' ||
+        typeof eventArgs.notAfter !== 'bigint' ||
+        typeof eventArgs.oldVMethodId !== 'string' ||
+        typeof eventArgs.duration !== 'bigint'
+    ) {
+        throw new Error('Invalid VerificationMethodRolled event args format')
+    }
+
+    const {
+        did: evDid,
+        vMethodId: evVMethodId,
+        publicKey: evPublicKey,
+        ellipticType: evEllipticType,
+        notBefore: evNotBefore,
+        notAfter: evNotAfter,
+        oldVMethodId: evOldVMethodId,
+        duration: evDuration,
+    } = eventArgs
+
+    const evEllipticTypeNum =
+        typeof evEllipticType === 'bigint'
+            ? Number(evEllipticType)
+            : evEllipticType
+
+    if (
+        evDid !== args.did ||
+        evVMethodId !== args.vMethodId ||
+        evOldVMethodId !== args.oldVMethodId ||
+        evEllipticTypeNum !== args.ellipticType
+    ) {
+        console.warn(
+            'Warning: Bad state detected. Check manually if operation has been processed correctly.'
+        )
+    }
+
+    console.log(`\n✅ Verification method rolled successfully:`)
+    console.log(`   DID: ${evDid}`)
+    console.log(`   New V-Method ID: ${evVMethodId}`)
+    console.log(`   Old V-Method ID: ${evOldVMethodId}`)
+    console.log(`   Public Key: ${evPublicKey.substring(0, 30)}...`)
+    console.log(
+        `   Elliptic Type: ${EllipticTypeNames[evEllipticTypeNum] || evEllipticTypeNum}`
+    )
+    console.log(`   Not Before: ${evNotBefore}`)
+    console.log(`   Not After: ${evNotAfter}`)
+    console.log(`   Duration: ${evDuration}`)
+
+    return {
+        did: evDid,
+        vMethodId: evVMethodId,
+        publicKey: evPublicKey,
+        ellipticType: evEllipticTypeNum,
+        notBefore: evNotBefore,
+        notAfter: evNotAfter,
+        oldVMethodId: evOldVMethodId,
+        duration: evDuration,
+    }
+}
