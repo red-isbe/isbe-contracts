@@ -1,6 +1,6 @@
 {
     "name": "@red-isbe/isbe-contracts",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "description": "Repository of certified and audited smart contracts for use in the ISBE network",
     "scripts": {
         "compile": "npx hardhat compile",
@@ -144,7 +144,10 @@
         ]
     },
     "publishConfig": {
-        "registry": "https://registry.npmjs.org/"
+        "registry": "https://registry.npmjs.org/",
+        "publishConfig": {
+            "access": "public"
+        }
     },
     "files": [
         "artifacts",
