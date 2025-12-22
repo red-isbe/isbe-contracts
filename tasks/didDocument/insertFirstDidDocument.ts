@@ -17,7 +17,7 @@ limitations under the License.
  */
 
 /** Grant Role First
- * 
+ *
   npx hardhat grantRole \
   --network localhost \
   --role "0xaf2da20f2930ba6162489e7dc51c672f0482cbdc3b62d16063683f2d23f0a973" \

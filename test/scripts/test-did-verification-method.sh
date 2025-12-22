@@ -17,7 +17,7 @@ set -euo pipefail
 # ----------------------------------------
 # DID Verification Method Facet Tasks Test Script
 # ----------------------------------------
-# This script tests all DID Verification Method tasks with both valid 
+# This script tests all DID Verification Method tasks with both valid
 # and invalid inputs to verify error handling and success scenarios.
 #
 # PREREQUISITES:
@@ -121,15 +121,15 @@ run_test() {
     local test_name="$1"
     local command="$2"
     local expect_success="$3"  # "true" or "false"
-    
+
     TOTAL_TESTS=$((TOTAL_TESTS + 1))
-    
+
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "${BLUE}Test ${TOTAL_TESTS}: ${test_name}${NC}"
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo "Command: ${command}"
     echo ""
-    
+
     if eval "$command" 2>&1; then
         if [[ "$expect_success" == "true" ]]; then
             echo -e "${GREEN}✅ PASS: Test succeeded as expected${NC}"
@@ -147,7 +147,7 @@ run_test() {
             ERROR_COUNT=$((ERROR_COUNT + 1))
         fi
     fi
-    
+
     echo ""
 }
 

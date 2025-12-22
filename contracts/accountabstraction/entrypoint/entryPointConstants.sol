@@ -39,6 +39,8 @@ string constant DOMAIN_NAME = 'ERC4337';
 // Ensures typed data hash consistency across upgrades
 string constant DOMAIN_VERSION = '1';
 
+// solhint-disable max-line-length
+
 // keccak256('AA98 invalid paymaster')
 bytes32 constant INVALID_PAYMASTER = 0xf9536df38dadd0adc0dd82ff451fa98fdb25dd85d5d1444e7831058b8468ec43; //AA98
 
@@ -86,3 +88,5 @@ bytes32 constant GAS_VALUES_OVERFLOW = 0x2454d602dd1245dd701375973b2bac347a9e27d
 
 // keccak256('AA95 out of gas')
 bytes32 constant OUT_OF_GAS = 0xeb8aae105b33b8e3029845f6a1359760a9480648cd982f4e1c37f01a5ceaf980; //AA95
+
+// solhint-enable max-line-length

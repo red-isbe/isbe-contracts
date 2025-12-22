@@ -94,6 +94,10 @@ export async function createNetwork(
         throw new Error('Invalid symbol: cannot be empty')
     }
 
+    console.log(
+        `🌐 Using ${signatureProvider.getCurveType()} signature for network creation...`
+    )
+
     // For secp256r1, use raw transactions
     if (signatureProvider.getCurveType() === 'secp256r1') {
         return await createNetworkWithRawTransaction(
@@ -107,6 +111,49 @@ export async function createNetwork(
     // For secp256k1, use the standard contract interface
     const signer = await signatureProvider.getSigner()
     const networkDirectory = await getNetworkDirectory(diamond, signer)
+
+    // Debug: Log the encoded function data
+    const iface = networkDirectory.interface
+    const encodedData = iface.encodeFunctionData('createNetwork', [network])
+    console.log(`   📦 Encoded data length: ${encodedData.length} bytes`)
+    console.log(`   📦 Encoded data preview: ${encodedData.slice(0, 74)}...`)
+
+    // Pre-flight check: simulate the transaction to get better error messages
+    console.log('🔍 Simulating transaction (staticCall)...')
+    try {
+        await networkDirectory.createNetwork.staticCall(network)
+        console.log('   ✅ Simulation successful')
+    } catch (simulationError: unknown) {
+        console.log('   ❌ Simulation failed - transaction will likely revert')
+
+        // Try to extract detailed error information
+        const err = simulationError as {
+            reason?: string
+            code?: string
+            data?: string
+            revert?: { name: string; args: unknown[] }
+            message?: string
+            shortMessage?: string
+        }
+
+        console.log(`   📋 Error code: ${err.code || 'unknown'}`)
+        console.log(`   📋 Error reason: ${err.reason || 'unknown'}`)
+        console.log(`   📋 Error data: ${err.data || 'none'}`)
+        console.log(`   📋 Short message: ${err.shortMessage || 'none'}`)
+
+        if (err.revert) {
+            console.log(`   📋 Revert name: ${err.revert.name}`)
+            console.log(`   📋 Revert args: ${JSON.stringify(err.revert.args)}`)
+        }
+
+        const errorMessage =
+            simulationError instanceof Error
+                ? simulationError.message
+                : String(simulationError)
+        console.log(`   📋 Full error: ${errorMessage}`)
+
+        throw new Error(`Transaction would revert: ${errorMessage}`)
+    }
 
     console.log('📡 Sending createNetwork transaction...')
     let tx: ContractTransactionResponse
@@ -212,6 +259,14 @@ async function createNetworkWithRawTransaction(
     ])
 
     console.log('📡 Sending createNetwork raw transaction...')
+    console.log(`   📍 Target contract: ${diamond}`)
+    console.log(`   📄 Function data: ${functionData.slice(0, 66)}...`)
+    console.log(`   🔗 Chain ID: ${network.chainId}`)
+    console.log(`   📛 Name: ${network.name}`)
+    console.log(`   🏷️  Symbol: ${network.symbol}`)
+    console.log(`   🔐 Algorithm: ${Algorithm[network.algorithm]}`)
+    console.log(`   📊 Stage: ${Stage[network.stage]}`)
+    console.log(`   📦 Resources: ${network.resources.length}`)
 
     let txResponse
     try {
@@ -256,6 +311,11 @@ async function createNetworkWithRawTransaction(
         if (!receipt || receipt.status !== 1) {
             throw new Error('Transaction failed or was reverted')
         }
+        console.log(`   📄 Transaction Receipt Details:`)
+        console.log(`      • Status: ${receipt.status}`)
+        console.log(`      • Block: ${receipt.blockNumber}`)
+        console.log(`      • Gas Used: ${receipt.gasUsed.toString()}`)
+        console.log(`      • Logs Count: ${receipt.logs.length}`)
     } catch (error) {
         console.log(`❌ Raw transaction failed to mine`)
         console.log(`   🔗 Transaction Hash: ${txResponse.hash}`)

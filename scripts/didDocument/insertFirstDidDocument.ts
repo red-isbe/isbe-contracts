@@ -71,6 +71,7 @@ export async function insertFirstDidDocument(
     console.log(`  Not After:     ${notAfter} (${notAfterDate})`)
     console.log(`  Also Known As: ${alsoKnownAs}`)
     console.log(`  Diamond:       ${diamond}`)
+    console.log(`  Curve:         ${signatureProvider.getCurveType()}`)
     console.log('')
 
     if (signatureProvider.getCurveType() === 'secp256r1') {

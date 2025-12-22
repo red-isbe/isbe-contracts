@@ -111,7 +111,7 @@ run_test() {
     local test_name="$1"
     local command="$2"
     local expect_success="$3"  # "true" or "false"
-    
+
     TOTAL_TESTS=$((TOTAL_TESTS + 1))
     local this_test_num=$TOTAL_TESTS
     # If SELECTED_TESTS is not empty, only run if this_test_num is in the list
@@ -132,6 +132,7 @@ run_test() {
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo "Command: ${command}"
     echo ""
+
     if eval "$command" 2>&1; then
         if [[ "$expect_success" == "true" ]]; then
             echo -e "${GREEN}✅ PASS: Test succeeded as expected${NC}"
@@ -149,6 +150,7 @@ run_test() {
             ERROR_COUNT=$((ERROR_COUNT + 1))
         fi
     fi
+
     echo ""
 }
 

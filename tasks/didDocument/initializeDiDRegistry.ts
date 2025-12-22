@@ -45,6 +45,7 @@ task(
     .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
         const { diamond, elliptictype } = taskArgs
         return initializeDiDRegistry(
+            elliptictype,
             diamond,
             elliptictype,
             await getSignatureProvider(hre)

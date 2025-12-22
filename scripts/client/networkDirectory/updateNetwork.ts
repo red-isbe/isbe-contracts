@@ -80,6 +80,7 @@ export async function updateNetwork(
             `Invalid algorithm: ${networkData.algorithm}. Must be 0 (NONE), 1 (SECP256K1), or 2 (SECP256R1)`
         )
     }
+
     if (networkData.stage < 0 || networkData.stage > 3) {
         throw new Error(
             `Invalid stage: ${networkData.stage}. Must be 0 (NONE), 1 (DEV), 2 (PRE), or 3 (PROD)`
