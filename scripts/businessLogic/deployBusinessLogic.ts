@@ -56,7 +56,7 @@ export async function deployBusinessLogic(
     console.log('📡 Sending deployBusinessLogic transaction...')
     // Add explicit gas limit to prevent "Internal error" on non-validator nodes
     const tx = await businessLogicFactory.deploy(businessId, bytecode, {
-        gasLimit: 25_000_000, // Set high gas limit for contract deployment
+        gasLimit: 15_000_000, // Set high gas limit for contract deployment (Hardhat cap ~50% of blockGasLimit)
     })
 
     console.log('⏳ Waiting for transaction to be mined...')
@@ -191,7 +191,7 @@ export async function deployBusinessLogicLegacy(
     const businessLogicFactory = await getIsbeFactory(factory, signer)
     // Add explicit gas limit to prevent "Internal error" on non-validator nodes
     const tx = await businessLogicFactory.deploy(businessId, bytecode, {
-        gasLimit: 25_000_000, // Set high gas limit for contract deployment
+        gasLimit: 15_000_000, // Set high gas limit for contract deployment (Hardhat cap ~50% of blockGasLimit)
     })
     const deployedEvent = await getEvent('Deployed', tx, businessLogicFactory)
 

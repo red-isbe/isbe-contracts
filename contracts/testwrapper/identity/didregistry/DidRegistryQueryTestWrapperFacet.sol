@@ -14,7 +14,9 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 pragma solidity ^0.8.28;
 
-import {DidRegistryQueryFacet} from '../../../identity/didregistry/facets/DidRegistryQueryFacet.sol';
+import {
+    DidRegistryQueryFacet
+} from '../../../identity/didregistry/facets/DidRegistryQueryFacet.sol';
 import {MockTimestamp} from '../../mockTimestamp/MockTimestamp.sol';
 import {ISBEContext} from '../../../utils/ISBEContext.sol';
 

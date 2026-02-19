@@ -12,10 +12,10 @@ Emitted when the owner is changed
 
 #### Parameters
 
-| Name     | Type    | Description                       |
-| -------- | ------- | --------------------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | operator | address | The account transfering the owner |
-| newOwner | address | The new owner                     |
+| newOwner | address | The new owner |
 
 ### OwnershipRenounced
 
@@ -27,8 +27,8 @@ Emitted when ownership is renounced
 
 #### Parameters
 
-| Name     | Type    | Description                          |
-| -------- | ------- | ------------------------------------ |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | operator | address | The account that renounced ownership |
 
 ### AccountIsNotOwner
@@ -41,8 +41,8 @@ Reverts when a non-owner account attempts an owner-only operation
 
 #### Parameters
 
-| Name    | Type    | Description                          |
-| ------- | ------- | ------------------------------------ |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | account | address | The account that triggered the error |
 
 ### renounceOwnership
@@ -65,9 +65,9 @@ Transfers ownership of the contract to a new account
 
 #### Parameters
 
-| Name       | Type    | Description                  |
-| ---------- | ------- | ---------------------------- |
-| \_newOwner | address | The address of the new owner |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _newOwner | address | The address of the new owner |
 
 ### owner
 
@@ -79,9 +79,11 @@ Returns the current owner of the contract
 
 #### Return Values
 
-| Name | Type    | Description                      |
-| ---- | ------- | -------------------------------- |
-| [0]  | address | The address of the current owner |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | address | The address of the current owner |
+
+
 
 ---
 
@@ -99,9 +101,9 @@ Emitted when ownership transfer is initiated
 
 #### Parameters
 
-| Name            | Type    | Description                                  |
-| --------------- | ------- | -------------------------------------------- |
-| operator        | address | The current owner initiating the transfer    |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operator | address | The current owner initiating the transfer |
 | newPendingOwner | address | The address proposed to become the new owner |
 
 ### OwnershipAccepted
@@ -114,8 +116,8 @@ Emitted when the pending owner accepts and becomes the new owner
 
 #### Parameters
 
-| Name     | Type    | Description                         |
-| -------- | ------- | ----------------------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | operator | address | The account that accepted ownership |
 
 ### AccountIsNotPendingOwner
@@ -128,8 +130,8 @@ Reverts when an account that is not the pending owner tries to accept ownership
 
 #### Parameters
 
-| Name    | Type    | Description                          |
-| ------- | ------- | ------------------------------------ |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | account | address | The account that triggered the error |
 
 ### acceptOwnership
@@ -152,9 +154,11 @@ Returns the address of the pending owner
 
 #### Return Values
 
-| Name | Type    | Description                                                |
-| ---- | ------- | ---------------------------------------------------------- |
-| [0]  | address | The address that has been proposed to become the new owner |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | address | The address that has been proposed to become the new owner |
+
+
 
 ---
 
@@ -174,9 +178,11 @@ Transfers ownership of the contract to a new account
 
 #### Parameters
 
-| Name       | Type    | Description                  |
-| ---------- | ------- | ---------------------------- |
-| \_newOwner | address | The address of the new owner |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _newOwner | address | The address of the new owner |
+
+
 
 ---
 
@@ -196,9 +202,9 @@ Initiates ownership transfer to a new address
 
 #### Parameters
 
-| Name       | Type    | Description                      |
-| ---------- | ------- | -------------------------------- |
-| \_newOwner | address | Address to transfer ownership to |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _newOwner | address | Address to transfer ownership to |
 
 ### acceptOwnership
 
@@ -218,11 +224,11 @@ Returns the pending owner address
 
 #### Return Values
 
-| Name | Type    | Description                      |
-| ---- | ------- | -------------------------------- |
-| [0]  | address | The address of the pending owner |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | address | The address of the pending owner |
 
-### \_implementedInterfaces
+### _implementedInterfaces
 
 ```solidity
 function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
@@ -232,9 +238,11 @@ Returns the interfaces implemented by this contract
 
 #### Return Values
 
-| Name         | Type     | Description            |
-| ------------ | -------- | ---------------------- |
-| interfaces\_ | bytes4[] | Array of interface IDs |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | Array of interface IDs |
+
+
 
 ---
 
@@ -256,9 +264,9 @@ _A pure function that returns an array of supported `bytes4` IDs._
 
 #### Return Values
 
-| Name         | Type     | Description                                  |
-| ------------ | -------- | -------------------------------------------- |
-| interfaces\_ | bytes4[] | An array of supported interface identifiers. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | An array of supported interface identifiers. |
 
 ### businessIdIntrospection
 
@@ -272,9 +280,9 @@ _Returns a `bytes32` key identifying the facet's purpose._
 
 #### Return Values
 
-| Name         | Type    | Description                              |
-| ------------ | ------- | ---------------------------------------- |
-| businessId\_ | bytes32 | The `bytes32` ID for the business logic. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| businessId_ | bytes32 | The `bytes32` ID for the business logic. |
 
 ### selectorsIntrospection
 
@@ -288,9 +296,11 @@ _A pure function that returns a `bytes4[]` array of selectors._
 
 #### Return Values
 
-| Name        | Type     | Description                              |
-| ----------- | -------- | ---------------------------------------- |
-| selectors\_ | bytes4[] | An array of `bytes4` function selectors. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| selectors_ | bytes4[] | An array of `bytes4` function selectors. |
+
+
 
 ---
 
@@ -304,7 +314,7 @@ Struct storing the pending owner
 
 ```solidity
 struct Ownable2StepStorage {
-    address pendingOwner;
+  address pendingOwner;
 }
 ```
 
@@ -318,35 +328,37 @@ Modifier to restrict function execution to the pending owner account
 
 _Reverts with `AccountIsNotPendingOwner` error if the account is not the pending owner_
 
-### \_initiateTransferOwnership
+### _initiateTransferOwnership
 
 ```solidity
 function _initiateTransferOwnership(address _newOwner) internal virtual
 ```
 
-### \_acceptOwnership
+### _acceptOwnership
 
 ```solidity
 function _acceptOwnership() internal virtual
 ```
 
-### \_pendingOwner
+### _pendingOwner
 
 ```solidity
 function _pendingOwner() internal view virtual returns (address)
 ```
 
-### \_checkPendingOwner
+### _checkPendingOwner
 
 ```solidity
 function _checkPendingOwner() internal view virtual
 ```
 
-### \_ownable2StepStorage
+### _ownable2StepStorage
 
 ```solidity
 function _ownable2StepStorage() internal pure returns (struct Ownable2StepInternal.Ownable2StepStorage storage_)
 ```
+
+
 
 ---
 
@@ -374,9 +386,9 @@ Initializes the ownership contract
 
 #### Parameters
 
-| Name    | Type    | Description               |
-| ------- | ------- | ------------------------- |
-| \_admin | address | The initial owner address |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _admin | address | The initial owner address |
 
 ### renounceOwnership
 
@@ -396,11 +408,11 @@ Returns the current owner address
 
 #### Return Values
 
-| Name | Type    | Description                      |
-| ---- | ------- | -------------------------------- |
-| [0]  | address | The address of the current owner |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | address | The address of the current owner |
 
-### \_implementedInterfaces
+### _implementedInterfaces
 
 ```solidity
 function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
@@ -410,9 +422,11 @@ Returns the interfaces implemented by this contract
 
 #### Return Values
 
-| Name         | Type     | Description            |
-| ------------ | -------- | ---------------------- |
-| interfaces\_ | bytes4[] | Array of interface IDs |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | Array of interface IDs |
+
+
 
 ---
 
@@ -434,9 +448,9 @@ _A pure function that returns an array of supported `bytes4` IDs._
 
 #### Return Values
 
-| Name         | Type     | Description                                  |
-| ------------ | -------- | -------------------------------------------- |
-| interfaces\_ | bytes4[] | An array of supported interface identifiers. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | An array of supported interface identifiers. |
 
 ### businessIdIntrospection
 
@@ -450,9 +464,9 @@ _Returns a `bytes32` key identifying the facet's purpose._
 
 #### Return Values
 
-| Name         | Type    | Description                              |
-| ------------ | ------- | ---------------------------------------- |
-| businessId\_ | bytes32 | The `bytes32` ID for the business logic. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| businessId_ | bytes32 | The `bytes32` ID for the business logic. |
 
 ### selectorsIntrospection
 
@@ -466,9 +480,11 @@ _A pure function that returns a `bytes4[]` array of selectors._
 
 #### Return Values
 
-| Name        | Type     | Description                              |
-| ----------- | -------- | ---------------------------------------- |
-| selectors\_ | bytes4[] | An array of `bytes4` function selectors. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| selectors_ | bytes4[] | An array of `bytes4` function selectors. |
+
+
 
 ---
 
@@ -482,7 +498,7 @@ Struct storing the owner
 
 ```solidity
 struct OwnableStorage {
-    address owner;
+  address owner;
 }
 ```
 
@@ -496,26 +512,27 @@ Modifier to restrict function execution to the owner account
 
 _Reverts with `AccountIsNotOwner` error if the account is not the owner_
 
-### \_transferOwnership
+### _transferOwnership
 
 ```solidity
 function _transferOwnership(address _newOwner) internal virtual
 ```
 
-### \_owner
+### _owner
 
 ```solidity
 function _owner() internal view virtual returns (address)
 ```
 
-### \_checkOwner
+### _checkOwner
 
 ```solidity
 function _checkOwner() internal view virtual
 ```
 
-### \_ownableStorage
+### _ownableStorage
 
 ```solidity
 function _ownableStorage() internal pure returns (struct OwnableInternal.OwnableStorage storage_)
 ```
+

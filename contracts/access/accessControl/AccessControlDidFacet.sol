@@ -14,9 +14,13 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 pragma solidity ^0.8.28;
 
-import {_ACCESS_CONTROL_DID_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
+import {
+    _ACCESS_CONTROL_DID_RESOLVER_KEY
+} from '../../constants/resolverKeys.sol';
 import {AccessControlDid} from './AccessControlDid.sol';
-import {IEIP2535Introspection} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {
+    IEIP2535Introspection
+} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 
 /// @title AccessControlDidFacet
 /// @notice Access Control DID Facet smart contract

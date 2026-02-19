@@ -21,8 +21,12 @@ import {
     TimestampOverflow,
     InvalidStateTransition
 } from './Types.sol';
-import {_BESU_NODE_MANAGER_CORE_STORAGE_POSITION} from '../../../../constants/storagePositions.sol';
-import {DidDocumentDetailedInternal} from '../../../../identity/didregistry/DidDocumentDetailedInternal.sol';
+import {
+    _BESU_NODE_MANAGER_CORE_STORAGE_POSITION
+} from '../../../../constants/storagePositions.sol';
+import {
+    DidDocumentDetailedInternal
+} from '../../../../identity/didregistry/DidDocumentDetailedInternal.sol';
 
 /// @title BesuNodeManagerInternalCore
 /// @notice Core storage layer for managing enodes across all node categories

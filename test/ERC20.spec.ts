@@ -40,6 +40,7 @@ import { deployGovernance } from './fixtures/governance'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { EllipticType } from './types/identity'
 import { config } from 'hardhat'
+import { generateProof, proofToDid } from './support'
 
 describe('ERC20', function () {
     const decimals = 2
@@ -2443,7 +2444,6 @@ describe('ERC20', function () {
             // Create test wallet and DID
             const baseWallet = walletOfFirstSigner()
             const wallet = baseWallet.derivePath('302')
-            const didId = ethers.id('did:erc20:test:1')
 
             // Deploy ERC20 with initialization
             const ERC20Factory = await ethers.getContractFactory('ERC20Facet')
@@ -2499,12 +2499,9 @@ describe('ERC20', function () {
             const notAfter = notBefore + 1000000000000 // Very large to never expire
 
             const publicKey = wallet.signingKey.publicKey
+            const proof = generateProof(wallet)
+            const didId = proofToDid(proof)
             const vMethodId = ethers.id(`vmethod:${didId}`)
-            const message = ethers.keccak256(
-                ethers.solidityPacked(['bytes'], [publicKey])
-            )
-            const signature = wallet.signingKey.sign(message)
-            const proof = ethers.Signature.from(signature).serialized
 
             await didRegistryWithSigner.insertFirstDidDocument(
                 didId,

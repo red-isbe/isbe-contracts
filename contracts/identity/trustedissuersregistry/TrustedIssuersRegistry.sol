@@ -14,10 +14,14 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 pragma solidity ^0.8.28;
 
-import {TrustedIssuersRegistryInternal} from './TrustedIssuersRegistryInternal.sol';
+import {
+    TrustedIssuersRegistryInternal
+} from './TrustedIssuersRegistryInternal.sol';
 import {ITrustedIssuersRegistry} from './ITrustedIssuersRegistry.sol';
 import {IssuerType, Attribute, TaoHierarchy} from './Types.sol';
-import {_TRUSTED_ISSUERS_REGISTRY_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
+import {
+    _TRUSTED_ISSUERS_REGISTRY_RESOLVER_KEY
+} from '../../constants/resolverKeys.sol';
 
 abstract contract TrustedIssuersRegistry is
     TrustedIssuersRegistryInternal,

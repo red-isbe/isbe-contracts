@@ -15,11 +15,17 @@ limitations under the License.
 pragma solidity 0.8.28;
 
 import {BesuNodeManagerCommon} from './internal/BesuNodeManagerCommon.sol';
-import {IEIP2535Introspection} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
-import {_BESU_NODE_MANAGER_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
+import {
+    IEIP2535Introspection
+} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {
+    _BESU_NODE_MANAGER_RESOLVER_KEY
+} from '../../constants/resolverKeys.sol';
 import {IValidatorManager} from './internal/validators/IValidatorManager.sol';
 import {IBootNodeManager} from './internal/bootnodes/IBootNodeManager.sol';
-import {IExecutionNodeManager} from './internal/executionnodes/IExecutionNodeManager.sol';
+import {
+    IExecutionNodeManager
+} from './internal/executionnodes/IExecutionNodeManager.sol';
 import {IBesuNodeManagerCommon} from './internal/IBesuNodeManagerCommon.sol';
 
 /// @title BesuNodeManagerFacet

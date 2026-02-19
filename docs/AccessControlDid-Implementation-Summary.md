@@ -1,8 +1,8 @@
 # AccessControlDid Implementation Summary
 
-**Date**: 2025-10-28  
-**Status**: ✅ Implemented and Tested  
-**Related ADR**: [ADR_00X-AccessControl-Did-integration.md](./adrs/ADR_00X-AccessControl-Did-integration.md)
+**Date**: 2025-10-28
+**Status**: ✅ Implemented and Tested
+**Related Docs**: [DID Registry API](./generated/identity/didregistry.md) | [Access Control API](./generated/access/accessControl.md)
 
 ---
 

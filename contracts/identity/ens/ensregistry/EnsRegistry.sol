@@ -17,7 +17,9 @@ pragma solidity ^0.8.28;
 import {ENS} from './ENS.sol';
 import {EnsRegistryInternal} from './EnsRegistryInternal.sol';
 import {_ENS_REGISTRY_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
-import {_ENS_REGISTRY_FACET_VERSION} from '../../../constants/facetVersions.sol';
+import {
+    _ENS_REGISTRY_FACET_VERSION
+} from '../../../constants/facetVersions.sol';
 
 /**
  * @title ENS Registry External Interface

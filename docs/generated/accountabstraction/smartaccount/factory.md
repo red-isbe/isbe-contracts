@@ -9,12 +9,12 @@ error EntryPointInterfaceMismatch(address entryPoint)
 Thrown when the provided address does not implement the required {IEntryPoint} interface.
 
 _Should be raised during initialisation or update if the ERC-165
-interface check for {IEntryPoint} fails._
+     interface check for {IEntryPoint} fails._
 
 #### Parameters
 
-| Name       | Type    | Description                                     |
-| ---------- | ------- | ----------------------------------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | entryPoint | address | The non-conforming EntryPoint contract address. |
 
 ### createAccount
@@ -27,10 +27,12 @@ Deploys a SmartAccount.
 
 #### Parameters
 
-| Name  | Type    | Description                                     |
-| ----- | ------- | ----------------------------------------------- |
-| owner | address | The owner of the to-be-deployed SmartAccount.   |
-| salt  | bytes32 | The salt to be used when deploying the account. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| owner | address | The owner of the to-be-deployed SmartAccount. |
+| salt | bytes32 | The salt to be used when deploying the account. |
+
+
 
 ---
 
@@ -48,12 +50,12 @@ Deploys a SmartAccount.
 
 #### Parameters
 
-| Name  | Type    | Description                                     |
-| ----- | ------- | ----------------------------------------------- |
-| owner | address | The owner of the to-be-deployed SmartAccount.   |
-| salt  | bytes32 | The salt to be used when deploying the account. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| owner | address | The owner of the to-be-deployed SmartAccount. |
+| salt | bytes32 | The salt to be used when deploying the account. |
 
-### \_implementedInterfaces
+### _implementedInterfaces
 
 ```solidity
 function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
@@ -63,9 +65,11 @@ Declares supported interfaces for ERC-165 discovery.
 
 #### Return Values
 
-| Name         | Type     | Description                               |
-| ------------ | -------- | ----------------------------------------- |
-| interfaces\_ | bytes4[] | Array of supported interface identifiers. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | Array of supported interface identifiers. |
+
+
 
 ---
 
@@ -74,9 +78,9 @@ Declares supported interfaces for ERC-165 discovery.
 EIP-2535 facet that exposes ERC-4337 smart account factory functionality for modular proxy systems.
 
 _Implements introspection for diamond compatibility and delegates core logic to
-the {SmartAccountFactory} base contract. Provides metadata about supported interfaces,
-business identifiers, and exposed function selectors. Enables dynamic discovery
-and upgrade management within a facet-based architecture._
+     the {SmartAccountFactory} base contract. Provides metadata about supported interfaces,
+     business identifiers, and exposed function selectors. Enables dynamic discovery
+     and upgrade management within a facet-based architecture._
 
 ### constructor
 
@@ -96,9 +100,9 @@ _Returns a `bytes32` key identifying the facet's purpose._
 
 #### Return Values
 
-| Name         | Type    | Description                              |
-| ------------ | ------- | ---------------------------------------- |
-| businessId\_ | bytes32 | The `bytes32` ID for the business logic. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| businessId_ | bytes32 | The `bytes32` ID for the business logic. |
 
 ### selectorsIntrospection
 
@@ -112,9 +116,9 @@ _A pure function that returns a `bytes4[]` array of selectors._
 
 #### Return Values
 
-| Name        | Type     | Description                              |
-| ----------- | -------- | ---------------------------------------- |
-| selectors\_ | bytes4[] | An array of `bytes4` function selectors. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| selectors_ | bytes4[] | An array of `bytes4` function selectors. |
 
 ### interfacesIntrospection
 
@@ -128,9 +132,11 @@ _A pure function that returns an array of supported `bytes4` IDs._
 
 #### Return Values
 
-| Name         | Type     | Description                                  |
-| ------------ | -------- | -------------------------------------------- |
-| interfaces\_ | bytes4[] | An array of supported interface identifiers. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | An array of supported interface identifiers. |
+
+
 
 ---
 
@@ -138,7 +144,7 @@ _A pure function that returns an array of supported `bytes4` IDs._
 
 Provides core internal functionality for deploying ERC-4337 smart accounts.
 
-### \_createAccount
+### _createAccount
 
 ```solidity
 function _createAccount(address owner, bytes32 salt) internal returns (address)
@@ -148,7 +154,8 @@ Deploys a SmartAccount.
 
 #### Parameters
 
-| Name  | Type    | Description                                   |
-| ----- | ------- | --------------------------------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | owner | address | The owner of the to-be-deployed SmartAccount. |
-| salt  | bytes32 |                                               |
+| salt | bytes32 |  |
+

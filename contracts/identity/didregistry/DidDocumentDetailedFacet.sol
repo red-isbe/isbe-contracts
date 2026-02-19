@@ -16,8 +16,12 @@ pragma solidity ^0.8.28;
 
 import {DidDocumentDetailed} from './DidDocumentDetailed.sol';
 import {IDidDocumentDetailed} from './interfaces/IDidDocumentDetailed.sol';
-import {IEIP2535Introspection} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
-import {_DID_DOCUMENT_DETAILED_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
+import {
+    IEIP2535Introspection
+} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {
+    _DID_DOCUMENT_DETAILED_RESOLVER_KEY
+} from '../../constants/resolverKeys.sol';
 
 /**
  * @title Decentralised Identity Document Diamond Facet

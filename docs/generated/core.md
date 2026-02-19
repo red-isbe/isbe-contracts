@@ -17,9 +17,9 @@ _Checks if an address equals to zero address_
 
 #### Parameters
 
-| Name   | Type    | Description          |
-| ------ | ------- | -------------------- |
-| \_addr | address | The address to check |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _addr | address | The address to check |
 
 ### bytes32IsNotZero
 
@@ -45,6 +45,8 @@ modifier emptyString(string _string)
 modifier emptyUint(uint256 _uint)
 ```
 
+
+
 ---
 
 ## ERC165
@@ -63,6 +65,8 @@ query the supported interfaces of a contract._
 function supportsInterface(bytes4 _interfaceId) external pure returns (bool)
 ```
 
+
+
 ---
 
 ## ERC165Internal
@@ -75,35 +79,37 @@ within an array, and aggregate multiple interface lists. Contracts inheriting fr
 implement the `_implementedInterfaces` function to declare which interfaces they support,
 enabling standardised interface detection._
 
-### \_isERC165ForbiddenInterfaces
+### _isERC165ForbiddenInterfaces
 
 ```solidity
 function _isERC165ForbiddenInterfaces(bytes4 _interfaceId) internal pure virtual returns (bool)
 ```
 
-### \_supportsERC165Interface
+### _supportsERC165Interface
 
 ```solidity
 function _supportsERC165Interface(bytes4 _interfaceId) internal pure virtual returns (bool)
 ```
 
-### \_supportsInterface
+### _supportsInterface
 
 ```solidity
 function _supportsInterface(bytes4 _interfaceId, bytes4[] _interfaces) internal pure virtual returns (bool supported_)
 ```
 
-### \_aggregateInterfaces
+### _aggregateInterfaces
 
 ```solidity
 function _aggregateInterfaces(bytes4[][] _interfacesArrays, bytes4[] _interfaces) internal pure returns (bytes4[] interfaces_)
 ```
 
-### \_implementedInterfaces
+### _implementedInterfaces
 
 ```solidity
 function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
 ```
+
+
 
 ---
 
@@ -121,11 +127,11 @@ _Used to prevent replay attacks by ensuring each transaction is unique_
 
 ```solidity
 struct NonceStorage {
-    mapping(address => uint256) nonces;
+  mapping(address => uint256) nonces;
 }
 ```
 
-### \_checkSignedTransaction
+### _checkSignedTransaction
 
 ```solidity
 function _checkSignedTransaction(address _sender, uint256 _expirationTimestamp, uint256 _nonce, bytes32 _functionHash, bytes _signature, bytes32 _contractName, bytes32 _contractVersion, uint256 _chainId) internal
@@ -137,18 +143,18 @@ _Performs nonce and deadline checks, verifies signature, and increments nonce_
 
 #### Parameters
 
-| Name                  | Type    | Description                                           |
-| --------------------- | ------- | ----------------------------------------------------- |
-| \_sender              | address | Address of the transaction sender                     |
-| \_expirationTimestamp | uint256 | Deadline timestamp for the transaction                |
-| \_nonce               | uint256 | Transaction nonce to prevent replay attacks           |
-| \_functionHash        | bytes32 | Hash of the function call data                        |
-| \_signature           | bytes   | Signature provided by the sender                      |
-| \_contractName        | bytes32 | Name of the contract for EIP-712 domain separation    |
-| \_contractVersion     | bytes32 | Version of the contract for EIP-712 domain separation |
-| \_chainId             | uint256 | Identifier of the network                             |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _sender | address | Address of the transaction sender |
+| _expirationTimestamp | uint256 | Deadline timestamp for the transaction |
+| _nonce | uint256 | Transaction nonce to prevent replay attacks |
+| _functionHash | bytes32 | Hash of the function call data |
+| _signature | bytes | Signature provided by the sender |
+| _contractName | bytes32 | Name of the contract for EIP-712 domain separation |
+| _contractVersion | bytes32 | Version of the contract for EIP-712 domain separation |
+| _chainId | uint256 | Identifier of the network |
 
-### \_noncesStorage
+### _noncesStorage
 
 ```solidity
 function _noncesStorage() internal pure returns (struct ERC712Internal.NonceStorage storage_)
@@ -160,9 +166,11 @@ _Returns a reference to the storage location for nonces_
 
 #### Return Values
 
-| Name      | Type                               | Description                    |
-| --------- | ---------------------------------- | ------------------------------ |
-| storage\_ | struct ERC712Internal.NonceStorage | Reference to the nonce storage |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| storage_ | struct ERC712Internal.NonceStorage | Reference to the nonce storage |
+
+
 
 ---
 
@@ -170,22 +178,20 @@ _Returns a reference to the storage location for nonces_
 
 Provides a versioned mechanism to ensure initialisation functions are executed properly per facet.
 
-\_This abstract contract manages the initialisation state of contracts with version control,
+_This abstract contract manages the initialisation state of contracts with version control,
 particularly for facets within a diamond proxy pattern. It employs a unique key (`_facetKey`)
 combined with version tracking to manage initialisation state across contract upgrades.
 
 Key features:
-
 - Version-based initialisation tracking
 - Support for contract reinitialisation during upgrades
 - Version-gated function access control
 - Prevention of re-entrancy and unauthorised re-initialisation
 
 The contract provides three main modifiers:
-
 - `initializer`: For initial deployment (can only be called once per version)
 - `reinitializer`: For contract upgrades (allows migration to new versions)
-- `onlyFromVersion`: For version-dependent access control\_
+- `onlyFromVersion`: For version-dependent access control_
 
 ### InitializableStorage
 
@@ -193,7 +199,7 @@ _Storage structure for tracking initialisation versions per facet._
 
 ```solidity
 struct InitializableStorage {
-    mapping(bytes32 => uint256) initialized;
+  mapping(bytes32 => uint256) initialized;
 }
 ```
 
@@ -207,10 +213,10 @@ _Emitted when a facet is initialised for the first time._
 
 #### Parameters
 
-| Name     | Type    | Description                         |
-| -------- | ------- | ----------------------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | facetKey | bytes32 | The unique identifier for the facet |
-| version  | uint256 | The version that was initialised    |
+| version | uint256 | The version that was initialised |
 
 ### Reinitialized
 
@@ -222,11 +228,11 @@ _Emitted when a facet is reinitialised to a new version._
 
 #### Parameters
 
-| Name            | Type    | Description                            |
-| --------------- | ------- | -------------------------------------- |
-| facetKey        | bytes32 | The unique identifier for the facet    |
-| previousVersion | uint256 | The version before reinitialisation    |
-| newVersion      | uint256 | The new version after reinitialisation |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| facetKey | bytes32 | The unique identifier for the facet |
+| previousVersion | uint256 | The version before reinitialisation |
+| newVersion | uint256 | The new version after reinitialisation |
 
 ### ContractIsAlreadyInitialized
 
@@ -238,10 +244,10 @@ _Error thrown when attempting to initialise an already initialised facet._
 
 #### Parameters
 
-| Name             | Type    | Description                              |
-| ---------------- | ------- | ---------------------------------------- |
-| facetKey         | bytes32 | The facet that is already initialised    |
-| currentVersion   | uint256 | The current version of the facet         |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| facetKey | bytes32 | The facet that is already initialised |
+| currentVersion | uint256 | The current version of the facet |
 | attemptedVersion | uint256 | The version that was attempted to be set |
 
 ### InvalidReinitializerVersion
@@ -254,11 +260,11 @@ _Error thrown when attempting to reinitialise with an invalid version._
 
 #### Parameters
 
-| Name             | Type    | Description                      |
-| ---------------- | ------- | -------------------------------- |
-| facetKey         | bytes32 | The facet being reinitialised    |
-| currentVersion   | uint256 | The current version of the facet |
-| attemptedVersion | uint256 | The version that was attempted   |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| facetKey | bytes32 | The facet being reinitialised |
+| currentVersion | uint256 | The current version of the facet |
+| attemptedVersion | uint256 | The version that was attempted |
 
 ### InsufficientVersion
 
@@ -270,11 +276,11 @@ _Error thrown when attempting to call a function before required version._
 
 #### Parameters
 
-| Name            | Type    | Description                      |
-| --------------- | ------- | -------------------------------- |
-| facetKey        | bytes32 | The facet being accessed         |
-| currentVersion  | uint256 | The current version of the facet |
-| requiredVersion | uint256 | The minimum version required     |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| facetKey | bytes32 | The facet being accessed |
+| currentVersion | uint256 | The current version of the facet |
+| requiredVersion | uint256 | The minimum version required |
 
 ### InvalidVersionZero
 
@@ -290,7 +296,7 @@ _Error thrown when attempting to use version 0 (reserved for uninitialised state
 modifier initializer(bytes32 _facetKey, uint256 _version)
 ```
 
-\_Modifier to protect an initialisation function so that it can only be invoked once
+_Modifier to protect an initialisation function so that it can only be invoked once
 on a fresh, never-before-initialised contract.
 
 **CRITICAL:** This modifier can ONLY be used when the stored version is 0 (never initialised).
@@ -298,20 +304,17 @@ After the first successful call, the stored version will be set to `_version`, a
 modifier will always revert on subsequent calls.
 
 Use this for:
-
 - Initial contract deployment
 - Fresh proxy initialization
 
 DO NOT use this for:
-
 - Contract upgrades (use `reinitializer` instead)
 - Subsequent initializations after deployment
 
 Emits an {Initialized} event upon successful initialisation.
 
 Example:
-
-````solidity
+```solidity
 // Initial deployment: stored version = 0
 function initialize(bytes32 data)
     external
@@ -340,17 +343,17 @@ function initialize(bytes32 data)
 
 ```solidity
 modifier reinitializer(bytes32 _facetKey, uint256 _version)
-````
+```
 
 _Modifier to allow reinitialisation of a contract during upgrades.
 This enables contracts to be upgraded with new state variables or logic._
 
 #### Parameters
 
-| Name       | Type    | Description                                                                                                                                                                                                                     |
-| ---------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| \_facetKey | bytes32 | The unique identifier for the facet being reinitialised                                                                                                                                                                         |
-| \_version  | uint256 | The new version being set (must be > current version) Requirements: - The new version must be greater than the current version - Version must be greater than 0 Emits a {Reinitialized} event upon successful reinitialisation. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _facetKey | bytes32 | The unique identifier for the facet being reinitialised |
+| _version | uint256 | The new version being set (must be > current version) Requirements: - The new version must be greater than the current version - Version must be greater than 0 Emits a {Reinitialized} event upon successful reinitialisation. |
 
 ### onlyAfterVersion
 
@@ -363,10 +366,10 @@ the specified version. This enables version-dependent feature gating._
 
 #### Parameters
 
-| Name         | Type    | Description                                                                                                               |
-| ------------ | ------- | ------------------------------------------------------------------------------------------------------------------------- |
-| \_facetKey   | bytes32 | The unique identifier for the facet                                                                                       |
-| \_minVersion | uint256 | The minimum version required to call this function Requirements: - The facet must be initialised to at least \_minVersion |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _facetKey | bytes32 | The unique identifier for the facet |
+| _minVersion | uint256 | The minimum version required to call this function Requirements: - The facet must be initialised to at least _minVersion |
 
 ### onlyBeforeVersion
 
@@ -380,12 +383,12 @@ _Used to deprecate features or restrict access in newer versions._
 
 #### Parameters
 
-| Name         | Type    | Description                              |
-| ------------ | ------- | ---------------------------------------- |
-| \_facetKey   | bytes32 | The unique identifier for the facet.     |
-| \_minVersion | uint256 | The maximum allowed version (inclusive). |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _facetKey | bytes32 | The unique identifier for the facet. |
+| _minVersion | uint256 | The maximum allowed version (inclusive). |
 
-### \_disableInitializers
+### _disableInitializers
 
 ```solidity
 function _disableInitializers(bytes32 _facetKey) internal
@@ -397,11 +400,11 @@ them from being initialised directly (they should only be used through proxies).
 
 #### Parameters
 
-| Name       | Type    | Description                                                                                                                                                                                                          |
-| ---------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| \_facetKey | bytes32 | The unique identifier for the facet to lock Note: This sets the version to type(uint256).max, effectively disabling all initialisation and reinitialisation attempts. Emits an {Initialized} event with max version. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _facetKey | bytes32 | The unique identifier for the facet to lock Note: This sets the version to type(uint256).max, effectively disabling all initialisation and reinitialisation attempts. Emits an {Initialized} event with max version. |
 
-### \_getInitializedVersion
+### _getInitializedVersion
 
 ```solidity
 function _getInitializedVersion(bytes32 _facetKey) internal view returns (uint256)
@@ -411,15 +414,17 @@ _Returns the current initialised version for a facet._
 
 #### Parameters
 
-| Name       | Type    | Description                         |
-| ---------- | ------- | ----------------------------------- |
-| \_facetKey | bytes32 | The unique identifier for the facet |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _facetKey | bytes32 | The unique identifier for the facet |
 
 #### Return Values
 
-| Name | Type    | Description                                  |
-| ---- | ------- | -------------------------------------------- |
-| [0]  | uint256 | The current version (0 if never initialised) |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 | The current version (0 if never initialised) |
+
+
 
 ---
 
@@ -460,3 +465,4 @@ function getStartAndEnd(uint256 _pageIndex, uint256 _pageLength) internal pure r
 ```solidity
 function getPaginationParameters(uint256 _total, uint256 _page, uint256 _pageSize) internal pure returns (uint256 cursor_, uint256 howMany_, uint256 prev_, uint256 next_)
 ```
+

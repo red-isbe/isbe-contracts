@@ -3,7 +3,7 @@
 Interface for managing reverse DNS resolution within the Ethereum Name Service
 
 _Provides functionality to associate human-readable names with ENS nodes for
-reverse lookup operations as specified in EIP-181_
+     reverse lookup operations as specified in EIP-181_
 
 ### NameChanged
 
@@ -15,10 +15,10 @@ Emitted when a name is associated with an ENS node
 
 #### Parameters
 
-| Name | Type    | Description                                          |
-| ---- | ------- | ---------------------------------------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | node | bytes32 | The ENS node hash receiving the new name association |
-| name | string  | The human-readable name being assigned to the node   |
+| name | string | The human-readable name being assigned to the node |
 
 ### setName
 
@@ -32,10 +32,10 @@ _Enables reverse DNS lookups by storing the canonical name for a given node_
 
 #### Parameters
 
-| Name    | Type    | Description                                                  |
-| ------- | ------- | ------------------------------------------------------------ |
-| node    | bytes32 | The ENS node hash to receive the name association            |
-| newName | string  | The human-readable name to associate with the specified node |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| node | bytes32 | The ENS node hash to receive the name association |
+| newName | string | The human-readable name to associate with the specified node |
 
 ### name
 
@@ -49,15 +49,17 @@ _Returns the canonical name for reverse DNS resolution as defined in EIP-181_
 
 #### Parameters
 
-| Name | Type    | Description                                        |
-| ---- | ------- | -------------------------------------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | node | bytes32 | The ENS node hash to query for its associated name |
 
 #### Return Values
 
-| Name           | Type   | Description                                          |
-| -------------- | ------ | ---------------------------------------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | associatedName | string | The human-readable name linked to the specified node |
+
+
 
 ---
 
@@ -66,8 +68,8 @@ _Returns the canonical name for reverse DNS resolution as defined in EIP-181_
 External implementation of ENS name resolver providing reverse DNS functionality
 
 _Abstract contract that exposes the INameResolver interface whilst delegating core logic
-to internal functions. Applies pause protection on write operations, authorisation checks,
-and role-based access control. Extends NameResolverInternal for storage management_
+     to internal functions. Applies pause protection on write operations, authorisation checks,
+     and role-based access control. Extends NameResolverInternal for storage management_
 
 ### setName
 
@@ -81,10 +83,10 @@ _Enables reverse DNS lookups by storing the canonical name for a given node_
 
 #### Parameters
 
-| Name    | Type    | Description                                                  |
-| ------- | ------- | ------------------------------------------------------------ |
-| node    | bytes32 | The ENS node hash to receive the name association            |
-| newName | string  | The human-readable name to associate with the specified node |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| node | bytes32 | The ENS node hash to receive the name association |
+| newName | string | The human-readable name to associate with the specified node |
 
 ### name
 
@@ -98,17 +100,17 @@ _Returns the canonical name for reverse DNS resolution as defined in EIP-181_
 
 #### Parameters
 
-| Name | Type    | Description                                        |
-| ---- | ------- | -------------------------------------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | node | bytes32 | The ENS node hash to query for its associated name |
 
 #### Return Values
 
-| Name           | Type   | Description                                          |
-| -------------- | ------ | ---------------------------------------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | associatedName | string | The human-readable name linked to the specified node |
 
-### \_implementedInterfaces
+### _implementedInterfaces
 
 ```solidity
 function _implementedInterfaces() internal pure returns (bytes4[] interfaces_)
@@ -117,13 +119,15 @@ function _implementedInterfaces() internal pure returns (bytes4[] interfaces_)
 Provides interface introspection support for ENS name resolver compatibility
 
 _Internal pure function enabling ERC-165 interface detection for ENS name resolver.
-Returns only INameResolver interface support_
+     Returns only INameResolver interface support_
 
 #### Return Values
 
-| Name         | Type     | Description                                                           |
-| ------------ | -------- | --------------------------------------------------------------------- |
-| interfaces\_ | bytes4[] | Array containing the interface identifiers supported by this resolver |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | Array containing the interface identifiers supported by this resolver |
+
+
 
 ---
 
@@ -145,9 +149,9 @@ _Provides ERC-165 interface introspection for ENS name resolver compatibility_
 
 #### Return Values
 
-| Name         | Type     | Description                                                        |
-| ------------ | -------- | ------------------------------------------------------------------ |
-| interfaces\_ | bytes4[] | Array containing the interface identifiers supported by this facet |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | Array containing the interface identifiers supported by this facet |
 
 ### businessIdIntrospection
 
@@ -161,9 +165,9 @@ _Provides the unique resolver key that identifies this business logic component_
 
 #### Return Values
 
-| Name         | Type    | Description                                                                     |
-| ------------ | ------- | ------------------------------------------------------------------------------- |
-| businessId\_ | bytes32 | The resolver key that uniquely identifies this ENS name resolver implementation |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| businessId_ | bytes32 | The resolver key that uniquely identifies this ENS name resolver implementation |
 
 ### selectorsIntrospection
 
@@ -177,9 +181,11 @@ _Lists all external functions available through this facet for diamond proxy int
 
 #### Return Values
 
-| Name        | Type     | Description                                                 |
-| ----------- | -------- | ----------------------------------------------------------- |
-| selectors\_ | bytes4[] | Array of function selectors that this facet makes available |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| selectors_ | bytes4[] | Array of function selectors that this facet makes available |
+
+
 
 ---
 
@@ -188,8 +194,8 @@ _Lists all external functions available through this facet for diamond proxy int
 Internal implementation contract providing ENS name resolution functionality
 
 _Abstract contract implementing the core logic for ENS name resolution (reverse DNS).
-Extends EnsResolverInternal to inherit authorization and delegation capabilities.
-Uses unstructured storage to enable upgradeable proxy patterns_
+     Extends EnsResolverInternal to inherit authorization and delegation capabilities.
+     Uses unstructured storage to enable upgradeable proxy patterns_
 
 ### NameResolverStorage
 
@@ -202,11 +208,11 @@ Storage structure containing ENS name resolver state data
 
 ```solidity
 struct NameResolverStorage {
-    mapping(bytes32 => string) names;
+  mapping(bytes32 => string) names;
 }
 ```
 
-### \_setName
+### _setName
 
 ```solidity
 function _setName(bytes32 _node, string _newName) internal
@@ -218,12 +224,12 @@ _Internal function storing canonical name for reverse DNS resolution_
 
 #### Parameters
 
-| Name      | Type    | Description                                        |
-| --------- | ------- | -------------------------------------------------- |
-| \_node    | bytes32 | The ENS node hash to receive the name association  |
-| \_newName | string  | The human-readable name to associate with the node |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _node | bytes32 | The ENS node hash to receive the name association |
+| _newName | string | The human-readable name to associate with the node |
 
-### \_name
+### _name
 
 ```solidity
 function _name(bytes32 _node) internal view returns (string)
@@ -235,12 +241,13 @@ _Internal view function providing access to stored name data for reverse resolut
 
 #### Parameters
 
-| Name   | Type    | Description                                        |
-| ------ | ------- | -------------------------------------------------- |
-| \_node | bytes32 | The ENS node hash to query for its associated name |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _node | bytes32 | The ENS node hash to query for its associated name |
 
 #### Return Values
 
-| Name | Type   | Description                                          |
-| ---- | ------ | ---------------------------------------------------- |
-| [0]  | string | The human-readable name linked to the specified node |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | string | The human-readable name linked to the specified node |
+

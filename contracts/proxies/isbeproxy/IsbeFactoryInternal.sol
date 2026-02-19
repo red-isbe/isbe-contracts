@@ -14,7 +14,9 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 pragma solidity ^0.8.28;
 
-import {_ISBE_FACTORY_STORAGE_POSITION} from '../../constants/storagePositions.sol';
+import {
+    _ISBE_FACTORY_STORAGE_POSITION
+} from '../../constants/storagePositions.sol';
 import {IIsbeFactory} from '../../factory/IIsbeFactory.sol';
 
 // solhint-disable no-inline-assembly

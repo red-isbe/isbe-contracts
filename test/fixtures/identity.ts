@@ -24,6 +24,7 @@ import {
     randomDid,
     randomVerificationMethodId,
     randomBaseDocument,
+    proofToDid,
 } from '../support'
 import { EllipticType } from '../types/identity'
 
@@ -175,13 +176,13 @@ export async function deployStandardDidFixture() {
     // Register admin's DID first so admin can call setMockedTimestamp
     // Use the actual admin signer's wallet (which is the first signer)
     const adminPublicKey = wallet.signingKey.publicKey
-    const adminDid = randomDid()
     const adminVMethodId = randomVerificationMethodId()
     const adminMessage = ethers.keccak256(
         ethers.solidityPacked(['bytes'], [adminPublicKey])
     )
     const adminSignature = wallet.signingKey.sign(adminMessage)
     const adminProof = ethers.Signature.from(adminSignature).serialized
+    const adminDid = proofToDid(adminProof)
 
     await baseFixture.didRegistry.insertFirstDidDocument(
         adminDid,

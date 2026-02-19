@@ -3,7 +3,7 @@
 Interface for deploying and managing diamond proxy contracts
 
 _Provides functionality to deploy use-case proxies with business logic
-facets and manage their configurations through diamond patterns_
+     facets and manage their configurations through diamond patterns_
 
 ### UseCaseDeployed
 
@@ -15,12 +15,12 @@ Emitted when a new use-case proxy is successfully deployed
 
 #### Parameters
 
-| Name            | Type                            | Description                                       |
-| --------------- | ------------------------------- | ------------------------------------------------- |
-| configurationId | bytes32                         | The unique identifier for the configuration       |
-| version         | uint256                         | The version number of the configuration used      |
-| rbacs           | struct IAccessControlEoa.Rbac[] | Array of role-based access control configurations |
-| proxy           | address                         | The address of the deployed proxy contract        |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| configurationId | bytes32 | The unique identifier for the configuration |
+| version | uint256 | The version number of the configuration used |
+| rbacs | struct IAccessControlEoa.Rbac[] | Array of role-based access control configurations |
+| proxy | address | The address of the deployed proxy contract |
 
 ### NotEmptyBusinessIds
 
@@ -29,7 +29,7 @@ error NotEmptyBusinessIds()
 ```
 
 Reverted when attempting to deploy a diamond proxy with an
-empty list of business IDs
+        empty list of business IDs
 
 ### ForbiddenRole
 
@@ -38,12 +38,12 @@ error ForbiddenRole(bytes32 role)
 ```
 
 Reverted when a caller attempts an action with a role that is
-not permitted
+        not permitted
 
 #### Parameters
 
-| Name | Type    | Description                                         |
-| ---- | ------- | --------------------------------------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | role | bytes32 | The specific role that was found to be unauthorised |
 
 ### FacetNotPermitted
@@ -53,12 +53,12 @@ error FacetNotPermitted(bytes32 businessId)
 ```
 
 Reverted if a requested facet is not on the list of permitted
-facets for deployment
+        facets for deployment
 
 #### Parameters
 
-| Name       | Type    | Description                                       |
-| ---------- | ------- | ------------------------------------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | businessId | bytes32 | The identifier of the facet that is not permitted |
 
 ### DuplicatedBusinessId
@@ -68,12 +68,12 @@ error DuplicatedBusinessId(bytes32 businessId)
 ```
 
 Reverted if the list of business logic identifiers contains
-a duplicate entry
+        a duplicate entry
 
 #### Parameters
 
-| Name       | Type    | Description                                    |
-| ---------- | ------- | ---------------------------------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | businessId | bytes32 | The identifier that was duplicated in the list |
 
 ### CurrentIdNotRegistered
@@ -83,12 +83,12 @@ error CurrentIdNotRegistered(bytes32 businessId)
 ```
 
 Reverted if a specified business logic identifier has not been
-registered with the factory
+        registered with the factory
 
 #### Parameters
 
-| Name       | Type    | Description                 |
-| ---------- | ------- | --------------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | businessId | bytes32 | The unregistered identifier |
 
 ### FacetNotFound
@@ -98,13 +98,13 @@ error FacetNotFound(bytes32 businessId)
 ```
 
 Reverted during diamond deployment if the specified
-initialisation facet is not in the list of facets being deployed
+        initialisation facet is not in the list of facets being deployed
 
 #### Parameters
 
-| Name       | Type    | Description                                                   |
-| ---------- | ------- | ------------------------------------------------------------- |
-| businessId | bytes32 | The identifier of the initialisation facet that was not found |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| businessId | bytes32 | The identifier of the initialisation facet that was                   not found |
 
 ### AddressAlreadyDeployed
 
@@ -113,12 +113,12 @@ error AddressAlreadyDeployed(address addr)
 ```
 
 Reverted if attempting to deploy a proxy to an address that
-has already been used for a previous deployment
+        has already been used for a previous deployment
 
 #### Parameters
 
-| Name | Type    | Description                                   |
-| ---- | ------- | --------------------------------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | addr | address | The address that has already been deployed to |
 
 ### deployUseCase
@@ -130,18 +130,18 @@ function deployUseCase(bytes32 _configurationId, uint256 _version, struct IAcces
 Deploys a new use-case proxy with the specified configuration
 
 _Creates a diamond proxy with business logic facets and access
-control, then initialises it with the provided data_
+     control, then initialises it with the provided data_
 
 #### Parameters
 
-| Name              | Type                            | Description                                            |
-| ----------------- | ------------------------------- | ------------------------------------------------------ |
-| \_configurationId | bytes32                         | The unique identifier for the configuration            |
-| \_version         | uint256                         | The version number of the configuration (0 for latest) |
-| \_rbacs           | struct IAccessControlEoa.Rbac[] | Array of role-based access control configurations      |
-| \_initPause       | bool                            | use case is initialized paused or not                  |
-| \_initBusinessIds | bytes32[]                       | The business IDs of the facets to use for init         |
-| \_initData        | bytes[]                         | The calldata for the initialisation function           |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _configurationId | bytes32 | The unique identifier for the configuration |
+| _version | uint256 | The version number of the configuration (0 for latest) |
+| _rbacs | struct IAccessControlEoa.Rbac[] | Array of role-based access control configurations |
+| _initPause | bool | use case is initialized paused or not |
+| _initBusinessIds | bytes32[] | The business IDs of the facets to use for init |
+| _initData | bytes[] | The calldata for the initialisation function |
 
 ### deployUseCaseTo
 
@@ -152,19 +152,19 @@ function deployUseCaseTo(bytes32 _configurationId, uint256 _version, struct IAcc
 Identical to deployUseCase but deploys to a specific address (CREATE2)
 
 _Creates a diamond proxy with business logic facets and access
-control, then initialises it with the provided data_
+     control, then initialises it with the provided data_
 
 #### Parameters
 
-| Name              | Type                            | Description                                                  |
-| ----------------- | ------------------------------- | ------------------------------------------------------------ |
-| \_configurationId | bytes32                         | The unique identifier for the configuration                  |
-| \_version         | uint256                         | The version number of the configuration (0 for latest)       |
-| \_rbacs           | struct IAccessControlEoa.Rbac[] | Array of role-based access control configurations            |
-| \_initPause       | bool                            | use case is initialized paused or not                        |
-| \_initBusinessIds | bytes32[]                       | The business IDs of the facets to use for init               |
-| \_initData        | bytes[]                         | The calldata for the initialisation function                 |
-| \_salt            | bytes32                         | The salt used to determine the deployed address with CREATE2 |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _configurationId | bytes32 | The unique identifier for the configuration |
+| _version | uint256 | The version number of the configuration (0 for latest) |
+| _rbacs | struct IAccessControlEoa.Rbac[] | Array of role-based access control configurations |
+| _initPause | bool | use case is initialized paused or not |
+| _initBusinessIds | bytes32[] | The business IDs of the facets to use for init |
+| _initData | bytes[] | The calldata for the initialisation function |
+| _salt | bytes32 | The salt used to determine the deployed address with CREATE2 |
 
 ### getDeployedProxiesByConfiguration
 
@@ -175,20 +175,20 @@ function getDeployedProxiesByConfiguration(bytes32 _configurationId, uint256 _ve
 Retrieves all deployed proxies for a specific configuration
 
 _Returns an array of proxy addresses that were deployed with the
-given configuration and version_
+     given configuration and version_
 
 #### Parameters
 
-| Name              | Type    | Description                                 |
-| ----------------- | ------- | ------------------------------------------- |
-| \_configurationId | bytes32 | The unique identifier for the configuration |
-| \_version         | uint256 | The version number of the configuration     |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _configurationId | bytes32 | The unique identifier for the configuration |
+| _version | uint256 | The version number of the configuration |
 
 #### Return Values
 
-| Name      | Type      | Description                       |
-| --------- | --------- | --------------------------------- |
-| proxies\_ | address[] | Array of deployed proxy addresses |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| proxies_ | address[] | Array of deployed proxy addresses |
 
 ### getConfigurationByProxy
 
@@ -202,27 +202,29 @@ _Returns the configuration ID and version used to deploy the proxy_
 
 #### Parameters
 
-| Name    | Type    | Description                                |
-| ------- | ------- | ------------------------------------------ |
-| \_proxy | address | The address of the deployed proxy contract |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _proxy | address | The address of the deployed proxy contract |
 
 #### Return Values
 
-| Name              | Type    | Description                                 |
-| ----------------- | ------- | ------------------------------------------- |
-| configurationId\_ | bytes32 | The unique identifier for the configuration |
-| version\_         | uint256 | The version number of the configuration     |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| configurationId_ | bytes32 | The unique identifier for the configuration |
+| version_ | uint256 | The version number of the configuration |
+
+
 
 ---
 
 ## ProxyFactory
 
 Main contract for deploying diamond proxy contracts with business
-logic configurations
+        logic configurations
 
 _Inherits from ProxyFactoryInternal and implements the IProxyFactory
-interface. Provides role-based access control for proxy deployment
-and configuration management functionality_
+     interface. Provides role-based access control for proxy deployment
+     and configuration management functionality_
 
 ### deployUseCase
 
@@ -233,18 +235,18 @@ function deployUseCase(bytes32 _configurationId, uint256 _version, struct IAcces
 Deploys a new use-case proxy with the specified configuration
 
 _Creates a diamond proxy with business logic facets and access
-control, then initialises it with the provided data_
+     control, then initialises it with the provided data_
 
 #### Parameters
 
-| Name              | Type                            | Description                                            |
-| ----------------- | ------------------------------- | ------------------------------------------------------ |
-| \_configurationId | bytes32                         | The unique identifier for the configuration            |
-| \_version         | uint256                         | The version number of the configuration (0 for latest) |
-| \_rbacs           | struct IAccessControlEoa.Rbac[] | Array of role-based access control configurations      |
-| \_initPause       | bool                            | use case is initialized paused or not                  |
-| \_initBusinessIds | bytes32[]                       | The business IDs of the facets to use for init         |
-| \_initData        | bytes[]                         | The calldata for the initialisation function           |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _configurationId | bytes32 | The unique identifier for the configuration |
+| _version | uint256 | The version number of the configuration (0 for latest) |
+| _rbacs | struct IAccessControlEoa.Rbac[] | Array of role-based access control configurations |
+| _initPause | bool | use case is initialized paused or not |
+| _initBusinessIds | bytes32[] | The business IDs of the facets to use for init |
+| _initData | bytes[] | The calldata for the initialisation function |
 
 ### deployUseCaseTo
 
@@ -255,19 +257,19 @@ function deployUseCaseTo(bytes32 _configurationId, uint256 _version, struct IAcc
 Identical to deployUseCase but deploys to a specific address (CREATE2)
 
 _Creates a diamond proxy with business logic facets and access
-control, then initialises it with the provided data_
+     control, then initialises it with the provided data_
 
 #### Parameters
 
-| Name              | Type                            | Description                                                  |
-| ----------------- | ------------------------------- | ------------------------------------------------------------ |
-| \_configurationId | bytes32                         | The unique identifier for the configuration                  |
-| \_version         | uint256                         | The version number of the configuration (0 for latest)       |
-| \_rbacs           | struct IAccessControlEoa.Rbac[] | Array of role-based access control configurations            |
-| \_initPause       | bool                            | use case is initialized paused or not                        |
-| \_initBusinessIds | bytes32[]                       | The business IDs of the facets to use for init               |
-| \_initData        | bytes[]                         | The calldata for the initialisation function                 |
-| \_salt            | bytes32                         | The salt used to determine the deployed address with CREATE2 |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _configurationId | bytes32 | The unique identifier for the configuration |
+| _version | uint256 | The version number of the configuration (0 for latest) |
+| _rbacs | struct IAccessControlEoa.Rbac[] | Array of role-based access control configurations |
+| _initPause | bool | use case is initialized paused or not |
+| _initBusinessIds | bytes32[] | The business IDs of the facets to use for init |
+| _initData | bytes[] | The calldata for the initialisation function |
+| _salt | bytes32 | The salt used to determine the deployed address with CREATE2 |
 
 ### getDeployedProxiesByConfiguration
 
@@ -278,20 +280,20 @@ function getDeployedProxiesByConfiguration(bytes32 _configurationId, uint256 _ve
 Retrieves all deployed proxies for a specific configuration
 
 _Returns an array of proxy addresses that were deployed with the
-given configuration and version_
+     given configuration and version_
 
 #### Parameters
 
-| Name              | Type    | Description                                 |
-| ----------------- | ------- | ------------------------------------------- |
-| \_configurationId | bytes32 | The unique identifier for the configuration |
-| \_version         | uint256 | The version number of the configuration     |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _configurationId | bytes32 | The unique identifier for the configuration |
+| _version | uint256 | The version number of the configuration |
 
 #### Return Values
 
-| Name      | Type      | Description                       |
-| --------- | --------- | --------------------------------- |
-| proxies\_ | address[] | Array of deployed proxy addresses |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| proxies_ | address[] | Array of deployed proxy addresses |
 
 ### getConfigurationByProxy
 
@@ -305,16 +307,18 @@ _Returns the configuration ID and version used to deploy the proxy_
 
 #### Parameters
 
-| Name    | Type    | Description                                |
-| ------- | ------- | ------------------------------------------ |
-| \_proxy | address | The address of the deployed proxy contract |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _proxy | address | The address of the deployed proxy contract |
 
 #### Return Values
 
-| Name              | Type    | Description                                 |
-| ----------------- | ------- | ------------------------------------------- |
-| configurationId\_ | bytes32 | The unique identifier for the configuration |
-| version\_         | uint256 | The version number of the configuration     |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| configurationId_ | bytes32 | The unique identifier for the configuration |
+| version_ | uint256 | The version number of the configuration |
+
+
 
 ---
 
@@ -323,9 +327,9 @@ _Returns the configuration ID and version used to deploy the proxy_
 EIP-2535 diamond facet for proxy factory functionality
 
 _Inherits from ProxyFactory and implements IEIP2535Introspection
-interface. Designed to be deployed as a logic contract (facet) that
-can be added to a diamond proxy. The constructor disables the
-initialiser to prevent direct initialisation of this implementation_
+     interface. Designed to be deployed as a logic contract (facet) that
+     can be added to a diamond proxy. The constructor disables the
+     initialiser to prevent direct initialisation of this implementation_
 
 ### constructor
 
@@ -345,9 +349,9 @@ _Returns a `bytes32` key identifying the facet's purpose._
 
 #### Return Values
 
-| Name         | Type    | Description                              |
-| ------------ | ------- | ---------------------------------------- |
-| businessId\_ | bytes32 | The `bytes32` ID for the business logic. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| businessId_ | bytes32 | The `bytes32` ID for the business logic. |
 
 ### selectorsIntrospection
 
@@ -361,9 +365,9 @@ _A pure function that returns a `bytes4[]` array of selectors._
 
 #### Return Values
 
-| Name        | Type     | Description                              |
-| ----------- | -------- | ---------------------------------------- |
-| selectors\_ | bytes4[] | An array of `bytes4` function selectors. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| selectors_ | bytes4[] | An array of `bytes4` function selectors. |
 
 ### interfacesIntrospection
 
@@ -377,9 +381,11 @@ _A pure function that returns an array of supported `bytes4` IDs._
 
 #### Return Values
 
-| Name         | Type     | Description                                  |
-| ------------ | -------- | -------------------------------------------- |
-| interfaces\_ | bytes4[] | An array of supported interface identifiers. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | An array of supported interface identifiers. |
+
+
 
 ---
 
@@ -388,8 +394,8 @@ _A pure function that returns an array of supported `bytes4` IDs._
 Abstract contract providing internal proxy factory functionality
 
 _Inherits from ConfigurationManagementInternal and provides core
-logic for deploying and managing ISBE proxy contracts. Contains
-storage mappings and internal functions for proxy deployment_
+     logic for deploying and managing ISBE proxy contracts. Contains
+     storage mappings and internal functions for proxy deployment_
 
 ### ProxyFactoryStorage
 
@@ -411,49 +417,50 @@ _Modifier to validate that a configuration exists and is valid_
 
 #### Parameters
 
-| Name              | Type    | Description                                 |
-| ----------------- | ------- | ------------------------------------------- |
-| \_configurationId | bytes32 | The unique identifier for the configuration |
-| \_version         | uint256 | The version number to validate              |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _configurationId | bytes32 | The unique identifier for the configuration |
+| _version | uint256 | The version number to validate |
 
-### \_deployUseCase
+### _deployUseCase
 
 ```solidity
 function _deployUseCase(bytes32 _configurationId, uint256 _version, struct IAccessControlEoa.Rbac[] _rbacs, bool _initPause, bytes32[] _initBusinessIds, bytes[] _initData, bool createTo, bytes32 _salt) internal returns (address proxyAddress_)
 ```
 
-### \_computeAddress
+### _computeAddress
 
 ```solidity
 function _computeAddress(bytes32 _configurationId, uint256 _version, bytes32[] _initBusinessIds, bytes[] _initData, struct IAccessControlEoa.Rbac[] _rbacs, bool _initPause, bytes32 _salt) internal view returns (address)
 ```
 
-### \_buildUseCaseDeployArgs
+### _buildUseCaseDeployArgs
 
 ```solidity
 function _buildUseCaseDeployArgs(bytes32 _configurationId, uint256 _version, bytes32[] _initBusinessIds, bytes[] _initData, struct IAccessControlEoa.Rbac[] _rbacs, bool _initPause) internal view returns (struct IsbeProxy.IsbeProxyArgs args_)
 ```
 
-### \_getDeployedProxiesByConfiguration
+### _getDeployedProxiesByConfiguration
 
 ```solidity
 function _getDeployedProxiesByConfiguration(bytes32 _configurationId, uint256 _version) internal view returns (address[] proxies_)
 ```
 
-### \_getConfigurationByProxy
+### _getConfigurationByProxy
 
 ```solidity
 function _getConfigurationByProxy(address _proxy) internal view returns (bytes32 configurationId_, uint256 version_)
 ```
 
-### \_isProxyDeployed
+### _isProxyDeployed
 
 ```solidity
 function _isProxyDeployed(address _proxy) internal view returns (bool deployed_)
 ```
 
-### \_implementedInterfaces
+### _implementedInterfaces
 
 ```solidity
 function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
 ```
+

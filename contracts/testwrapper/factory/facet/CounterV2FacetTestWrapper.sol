@@ -14,10 +14,14 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 pragma solidity ^0.8.28;
 
-import {IEIP2535Introspection} from '../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {
+    IEIP2535Introspection
+} from '../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 import {_RESOLVER_KEY, CounterFacetInternal} from './CounterFacetInternal.sol';
 import {_DEFAULT_ADMIN_ROLE} from '../../../constants/roles.sol';
-import {_INITIALIZABLE_STORAGE_POSITION} from '../../../constants/storagePositions.sol';
+import {
+    _INITIALIZABLE_STORAGE_POSITION
+} from '../../../constants/storagePositions.sol';
 uint256 constant _COUNTER_FACET_VERSION = 2;
 
 contract CounterV2FacetTestWrapper is

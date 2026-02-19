@@ -16,7 +16,9 @@ pragma solidity ^0.8.28;
 
 import {IDidController} from './interfaces/IDidController.sol';
 import {DidDocumentDetailedInternal} from './DidDocumentDetailedInternal.sol';
-import {_DID_CONTROLLERS_STORAGE_POSITION} from '../../constants/storagePositions.sol';
+import {
+    _DID_CONTROLLERS_STORAGE_POSITION
+} from '../../constants/storagePositions.sol';
 import {LibCommon} from '../../core/LibCommon.sol';
 
 /**

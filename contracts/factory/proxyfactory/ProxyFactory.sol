@@ -43,7 +43,7 @@ abstract contract ProxyFactory is ProxyFactoryInternal, IProxyFactory {
         bytes32IsNotZero(_configurationId)
         onlyValidConfiguration(_configurationId, _version)
     {
-        (address proxyAddress) = _deployUseCase(
+        address proxyAddress = _deployUseCase(
             _configurationId,
             _version,
             _rbacs,
@@ -71,7 +71,7 @@ abstract contract ProxyFactory is ProxyFactoryInternal, IProxyFactory {
         bytes32IsNotZero(_configurationId)
         onlyValidConfiguration(_configurationId, _version)
     {
-        (address proxyAddress) = _deployUseCase(
+        address proxyAddress = _deployUseCase(
             _configurationId,
             _version,
             _rbacs,

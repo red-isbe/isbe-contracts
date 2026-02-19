@@ -17,7 +17,9 @@ pragma solidity ^0.8.28;
 import {_CLIENT_FILTERING_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
 import {IClientFiltering} from './IClientFiltering.sol';
 import {ClientFiltering} from './ClientFiltering.sol';
-import {IEIP2535Introspection} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {
+    IEIP2535Introspection
+} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 
 contract ClientFilteringFacet is ClientFiltering, IEIP2535Introspection {
     function interfacesIntrospection()

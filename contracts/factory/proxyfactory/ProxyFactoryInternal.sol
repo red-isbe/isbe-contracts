@@ -15,8 +15,12 @@ limitations under the License.
 pragma solidity ^0.8.28;
 
 import {IsbeProxy} from '../../proxies/isbeproxy/IsbeProxy.sol';
-import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
-import {_PROXY_FACTORY_STORAGE_POSITION} from '../../constants/storagePositions.sol';
+import {
+    EnumerableSet
+} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
+import {
+    _PROXY_FACTORY_STORAGE_POSITION
+} from '../../constants/storagePositions.sol';
 import {IAccessControlEoa} from '../../access/accessControl/IAccessControl.sol';
 import {IPause} from '../../pause/IPause.sol';
 import {IProxyFactory} from './IProxyFactory.sol';
@@ -26,8 +30,12 @@ import {
     _CONFIGURATION_MANAGER_ROLE
 } from '../../constants/roles.sol';
 import {IsbeProxy} from '../../proxies/isbeproxy/IsbeProxy.sol';
-import {IConfigurationManagement} from '../configurationmanagement/IConfigurationManagement.sol';
-import {ConfigurationManagementInternal} from '../configurationmanagement/ConfigurationManagementInternal.sol';
+import {
+    IConfigurationManagement
+} from '../configurationmanagement/IConfigurationManagement.sol';
+import {
+    ConfigurationManagementInternal
+} from '../configurationmanagement/ConfigurationManagementInternal.sol';
 import {
     _ACCESS_CONTROL_RESOLVER_KEY,
     _PAUSE_RESOLVER_KEY
@@ -55,10 +63,8 @@ abstract contract ProxyFactoryInternal is ConfigurationManagementInternal {
      * @param _configurationId The unique identifier for the configuration
      * @param _version The version number to validate
      */
-    modifier onlyValidConfiguration(
-        bytes32 _configurationId,
-        uint256 _version
-    ) {
+    modifier onlyValidConfiguration(bytes32 _configurationId, uint256 _version)
+    {
         _checkConfiguration(_configurationId, _version);
         _;
     }
@@ -157,8 +163,7 @@ abstract contract ProxyFactoryInternal is ConfigurationManagementInternal {
         uint256 _version
     ) internal view returns (address[] memory proxies_) {
         proxies_ = _proxyFactoryStorage()
-            .configurationToProxyAddress[_configurationId][_version]
-            .values();
+        .configurationToProxyAddress[_configurationId][_version].values();
     }
 
     function _getConfigurationByProxy(
@@ -175,7 +180,8 @@ abstract contract ProxyFactoryInternal is ConfigurationManagementInternal {
         deployed_ =
             uint256(
                 _proxyFactoryStorage().proxyAddressToConfigurationId[_proxy]
-            ) > 0;
+            ) >
+            0;
     }
 
     function _implementedInterfaces()

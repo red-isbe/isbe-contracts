@@ -17,8 +17,12 @@ pragma solidity ^0.8.28;
 import {ENS} from '../../ensregistry/ENS.sol';
 import {IEnsResolver} from './IEnsResolver.sol';
 import {EnsResolverInternal} from './EnsResolverInternal.sol';
-import {_ENS_RESOLVER_RESOLVER_KEY} from '../../../../constants/resolverKeys.sol';
-import {_ENS_RESOLVER_FACET_VERSION} from '../../../../constants/facetVersions.sol';
+import {
+    _ENS_RESOLVER_RESOLVER_KEY
+} from '../../../../constants/resolverKeys.sol';
+import {
+    _ENS_RESOLVER_FACET_VERSION
+} from '../../../../constants/facetVersions.sol';
 
 /**
  * @title ENS Resolver External Interface

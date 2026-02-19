@@ -13,7 +13,9 @@ limitations under the License.
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {PackedUserOperation} from '@account-abstraction/contracts/interfaces/PackedUserOperation.sol';
+import {
+    PackedUserOperation
+} from '@account-abstraction/contracts/interfaces/PackedUserOperation.sol';
 import {IEntryPoint} from './IEntryPoint.sol';
 import {EntryPointInternal} from './EntryPointInternal.sol';
 import {INonceManager} from './noncemanager/INonceManager.sol';

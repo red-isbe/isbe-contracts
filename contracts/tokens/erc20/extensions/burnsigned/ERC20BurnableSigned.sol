@@ -15,7 +15,9 @@ limitations under the License.
 pragma solidity ^0.8.28;
 
 import {ERC712Internal} from '../../../../core/ERC712Internal.sol';
-import {ERC203643InternalCommon} from '../../../erc203643/ERC203643InternalCommon.sol';
+import {
+    ERC203643InternalCommon
+} from '../../../erc203643/ERC203643InternalCommon.sol';
 import {
     _CONTRACT_NAME_ERC203643,
     _CONTRACT_VERSION_ERC203643
@@ -25,7 +27,9 @@ import {
     _getMessageHashBurnFrom
 } from '../../../../core/signatureVerification.sol';
 import {IERC20BurnableSigned} from './IERC20BurnableSigned.sol';
-import {_ERC20_BURNABLE_SIGNED_RESOLVER_KEY} from '../../../../constants/resolverKeys.sol';
+import {
+    _ERC20_BURNABLE_SIGNED_RESOLVER_KEY
+} from '../../../../constants/resolverKeys.sol';
 import {_SPONSOR_ROLE} from '../../../../constants/roles.sol';
 
 /**

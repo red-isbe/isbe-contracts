@@ -148,6 +148,15 @@ interface IDidDocumentDetailed {
     error DidAlreadyExists(bytes32 did);
 
     /**
+     * @notice Raised when the DID is not derived from the provided proof
+     * @dev This error prevents vanity DID attacks by ensuring the DID has the correct
+     *      structure: [13 zero bytes | 19 payload bytes] where the payload matches
+     *      the last 19 bytes of the proof (signature)
+     * @param did The decentralised identifier that was provided
+     */
+    error DidNotDerivedFromProof(bytes32 did);
+
+    /**
      * @notice Raised when attempting to use a DID that does not exist in the registry
      * @dev This error ensures operations target valid DIDs and prevents unauthorised access
      * @param did The decentralised identifier string that does not exist

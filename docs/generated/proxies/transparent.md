@@ -1,5 +1,7 @@
 ## IsbeProxyAdmin
 
+
+
 ---
 
 ## IsbeTransparentProxy
@@ -9,3 +11,4 @@
 ```solidity
 constructor(address _logic, address _admin) public
 ```
+

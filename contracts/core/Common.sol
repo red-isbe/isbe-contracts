@@ -14,12 +14,16 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 pragma solidity ^0.8.28;
 
-import {AccessControlInternal} from '../access/accessControl/AccessControlInternal.sol';
+import {
+    AccessControlInternal
+} from '../access/accessControl/AccessControlInternal.sol';
 import {ERC165Internal} from './ERC165Internal.sol';
 import {Initializable} from './Initializable.sol';
 import {OwnableInternal} from '../access/ownable/OwnableInternal.sol';
 import {PauseInternalCommon} from '../pause/PauseInternalCommon.sol';
-import {BasicWhitelistInternal} from '../access/whitelist/basic/BasicWhitelistInternal.sol';
+import {
+    BasicWhitelistInternal
+} from '../access/whitelist/basic/BasicWhitelistInternal.sol';
 
 /**
  * @title Common

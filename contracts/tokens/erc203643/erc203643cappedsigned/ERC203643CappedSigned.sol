@@ -16,7 +16,9 @@ pragma solidity ^0.8.28;
 
 import {ERC203643InternalCommon} from '../ERC203643InternalCommon.sol';
 import {_SPONSOR_ROLE, _MINTER_ROLE} from '../../../constants/roles.sol';
-import {_ERC203543_CAPPED_SIGNED_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
+import {
+    _ERC203543_CAPPED_SIGNED_RESOLVER_KEY
+} from '../../../constants/resolverKeys.sol';
 import {IERC203643CappedSigned} from './IERC203643CappedSigned.sol';
 import {ERC712Internal} from '../../../core/ERC712Internal.sol';
 import {

@@ -67,6 +67,8 @@ export function getNetworkConfigs(): NetworksConfig {
             },
             blockGasLimit: 30000000,
             allowUnlimitedContractSize: true,
+            initialBaseFeePerGas: 0,
+            gasPrice: 0,
             curve: CURVE,
         } as HardhatNetworkConfig,
 

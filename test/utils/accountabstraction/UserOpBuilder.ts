@@ -40,14 +40,18 @@ type UserOpOverrides = {
 type UserOp = Required<UserOpOverrides> & { sender: string }
 
 export class UserOpBuilder {
+    private readonly entryPoint: IEntryPoint
+    private readonly signer: Signer
     private op: UserOp
 
     constructor(
-        private readonly entryPoint: IEntryPoint,
-        private readonly signer: Signer,
+        entryPoint: IEntryPoint,
+        signer: Signer,
         sender: string,
         overrides: UserOpOverrides = {}
     ) {
+        this.entryPoint = entryPoint
+        this.signer = signer
         this.op = {
             ...UserOpBuilder.defaults(),
             sender,

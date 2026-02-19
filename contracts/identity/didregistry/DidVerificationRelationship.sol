@@ -14,7 +14,9 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 pragma solidity ^0.8.28;
 
-import {IDidVerificationRelationship} from './interfaces/IDidVerificationRelationship.sol';
+import {
+    IDidVerificationRelationship
+} from './interfaces/IDidVerificationRelationship.sol';
 import {DidControllerInternal} from './DidControllerInternal.sol';
 
 /**

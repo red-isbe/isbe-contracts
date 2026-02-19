@@ -16,7 +16,9 @@ pragma solidity ^0.8.28;
 
 import {IERC721Consecutive} from './IERC721Consecutive.sol';
 import {ERC721InternalCommon} from '../ERC721InternalCommon.sol';
-import {_ERC721_CONSECUTIVE_RESOLVER_KEY} from '../../../../constants/resolverKeys.sol';
+import {
+    _ERC721_CONSECUTIVE_RESOLVER_KEY
+} from '../../../../constants/resolverKeys.sol';
 import {_MINTER_ROLE} from '../../../../constants/roles.sol';
 
 /// @title ERC721Consecutive

@@ -12,9 +12,9 @@ Record a new state for the asset
 
 #### Parameters
 
-| Name       | Type    | Description             |
-| ---------- | ------- | ----------------------- |
-| \_newState | uint256 | The new state to record |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _newState | uint256 | The new state to record |
 
 ### getAssetEvents
 
@@ -26,16 +26,16 @@ Get paginated list of asset events
 
 #### Parameters
 
-| Name             | Type    | Description                        |
-| ---------------- | ------- | ---------------------------------- |
-| \_pageNumber     | uint256 | The page number to fetch (0-based) |
-| \_resultsPerPage | uint256 | Number of results per page         |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _pageNumber | uint256 | The page number to fetch (0-based) |
+| _resultsPerPage | uint256 | Number of results per page |
 
 #### Return Values
 
-| Name          | Type                                   | Description                                  |
-| ------------- | -------------------------------------- | -------------------------------------------- |
-| assetEvents\_ | struct IAssetEventTracker.AssetEvent[] | Array of asset events for the requested page |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| assetEvents_ | struct IAssetEventTracker.AssetEvent[] | Array of asset events for the requested page |
 
 ### getLatestAssetEvent
 
@@ -47,9 +47,9 @@ Get the most recent asset event
 
 #### Return Values
 
-| Name | Type                                 | Description                 |
-| ---- | ------------------------------------ | --------------------------- |
-| [0]  | struct IAssetEventTracker.AssetEvent | Latest recorded asset event |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | struct IAssetEventTracker.AssetEvent | Latest recorded asset event |
 
 ### getCurrentState
 
@@ -61,9 +61,9 @@ Get the current state of the asset
 
 #### Return Values
 
-| Name | Type    | Description         |
-| ---- | ------- | ------------------- |
-| [0]  | uint256 | Current state value |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 | Current state value |
 
 ### isStateChangeAllowed
 
@@ -75,17 +75,17 @@ Check if transitioning to a new state is allowed
 
 #### Parameters
 
-| Name       | Type    | Description        |
-| ---------- | ------- | ------------------ |
-| \_newState | uint256 | The state to check |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _newState | uint256 | The state to check |
 
 #### Return Values
 
-| Name | Type | Description                         |
-| ---- | ---- | ----------------------------------- |
-| [0]  | bool | Whether the state change is allowed |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bool | Whether the state change is allowed |
 
-### \_implementedInterfaces
+### _implementedInterfaces
 
 ```solidity
 function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
@@ -95,9 +95,11 @@ Get the list of implemented interfaces
 
 #### Return Values
 
-| Name         | Type     | Description            |
-| ------------ | -------- | ---------------------- |
-| interfaces\_ | bytes4[] | Array of interface IDs |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | Array of interface IDs |
+
+
 
 ---
 
@@ -117,9 +119,9 @@ Get the list of interfaces implemented by this facet
 
 #### Return Values
 
-| Name         | Type     | Description            |
-| ------------ | -------- | ---------------------- |
-| interfaces\_ | bytes4[] | Array of interface IDs |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | Array of interface IDs |
 
 ### businessIdIntrospection
 
@@ -131,9 +133,9 @@ Get the business ID associated with this facet
 
 #### Return Values
 
-| Name         | Type    | Description                |
-| ------------ | ------- | -------------------------- |
-| businessId\_ | bytes32 | Business ID for this facet |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| businessId_ | bytes32 | Business ID for this facet |
 
 ### selectorsIntrospection
 
@@ -145,9 +147,11 @@ Get the list of function selectors for this facet
 
 #### Return Values
 
-| Name        | Type     | Description                 |
-| ----------- | -------- | --------------------------- |
-| selectors\_ | bytes4[] | Array of function selectors |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| selectors_ | bytes4[] | Array of function selectors |
+
+
 
 ---
 
@@ -175,11 +179,11 @@ Modifier to validate state change is allowed
 
 #### Parameters
 
-| Name       | Type    | Description            |
-| ---------- | ------- | ---------------------- |
-| \_newState | uint256 | The new state to check |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _newState | uint256 | The new state to check |
 
-### \_recordState
+### _recordState
 
 ```solidity
 function _recordState(uint256 _newState) internal virtual
@@ -189,11 +193,11 @@ Record a new state in storage and emit an event
 
 #### Parameters
 
-| Name       | Type    | Description                  |
-| ---------- | ------- | ---------------------------- |
-| \_newState | uint256 | The new state to be recorded |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _newState | uint256 | The new state to be recorded |
 
-### \_getAssetEvents
+### _getAssetEvents
 
 ```solidity
 function _getAssetEvents(uint256 _pageNumber, uint256 _resultsPerPage) internal view virtual returns (struct IAssetEventTracker.AssetEvent[] assetEvents_)
@@ -203,18 +207,18 @@ Get a paginated slice of asset events
 
 #### Parameters
 
-| Name             | Type    | Description                |
-| ---------------- | ------- | -------------------------- |
-| \_pageNumber     | uint256 | Page number (0-based)      |
-| \_resultsPerPage | uint256 | Number of results per page |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _pageNumber | uint256 | Page number (0-based) |
+| _resultsPerPage | uint256 | Number of results per page |
 
 #### Return Values
 
-| Name          | Type                                   | Description                            |
-| ------------- | -------------------------------------- | -------------------------------------- |
-| assetEvents\_ | struct IAssetEventTracker.AssetEvent[] | Slice of events for the requested page |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| assetEvents_ | struct IAssetEventTracker.AssetEvent[] | Slice of events for the requested page |
 
-### \_getLatestAssetEvent
+### _getLatestAssetEvent
 
 ```solidity
 function _getLatestAssetEvent() internal view virtual returns (struct IAssetEventTracker.AssetEvent assetEvent_)
@@ -224,11 +228,11 @@ Get the latest stored asset event
 
 #### Return Values
 
-| Name         | Type                                 | Description                     |
-| ------------ | ------------------------------------ | ------------------------------- |
-| assetEvent\_ | struct IAssetEventTracker.AssetEvent | Latest event or default if none |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| assetEvent_ | struct IAssetEventTracker.AssetEvent | Latest event or default if none |
 
-### \_getCurrentState
+### _getCurrentState
 
 ```solidity
 function _getCurrentState() internal view virtual returns (uint256)
@@ -238,11 +242,11 @@ Get the current state from the latest event
 
 #### Return Values
 
-| Name | Type    | Description         |
-| ---- | ------- | ------------------- |
-| [0]  | uint256 | Current state value |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 | Current state value |
 
-### \_getAssetEventByIndex
+### _getAssetEventByIndex
 
 ```solidity
 function _getAssetEventByIndex(uint256 _index) internal view returns (struct IAssetEventTracker.AssetEvent assetEvent_)
@@ -252,17 +256,17 @@ Returns an asset event by index
 
 #### Parameters
 
-| Name    | Type    | Description         |
-| ------- | ------- | ------------------- |
-| \_index | uint256 | The index to obtain |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _index | uint256 | The index to obtain |
 
 #### Return Values
 
-| Name         | Type                                 | Description          |
-| ------------ | ------------------------------------ | -------------------- |
-| assetEvent\_ | struct IAssetEventTracker.AssetEvent | Asset event obtained |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| assetEvent_ | struct IAssetEventTracker.AssetEvent | Asset event obtained |
 
-### \_checkStateChange
+### _checkStateChange
 
 ```solidity
 function _checkStateChange(uint256 _newState) internal view virtual
@@ -272,11 +276,11 @@ Check if state change is allowed
 
 #### Parameters
 
-| Name       | Type    | Description             |
-| ---------- | ------- | ----------------------- |
-| \_newState | uint256 | The new state to change |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _newState | uint256 | The new state to change |
 
-### \_isStateChangeAllowed
+### _isStateChangeAllowed
 
 ```solidity
 function _isStateChangeAllowed(uint256 _currentState, uint256 _newState) internal pure virtual returns (bool)
@@ -286,18 +290,18 @@ Check if a state transition is allowed
 
 #### Parameters
 
-| Name           | Type    | Description           |
-| -------------- | ------- | --------------------- |
-| \_currentState | uint256 | Current state         |
-| \_newState     | uint256 | New state to validate |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _currentState | uint256 | Current state |
+| _newState | uint256 | New state to validate |
 
 #### Return Values
 
-| Name | Type | Description                             |
-| ---- | ---- | --------------------------------------- |
-| [0]  | bool | Whether the state transition is allowed |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bool | Whether the state transition is allowed |
 
-### \_assetEventTrackerStorage
+### _assetEventTrackerStorage
 
 ```solidity
 function _assetEventTrackerStorage() internal pure returns (struct AssetEventTrackerInternal.AssetEventTrackerStorage storage_)
@@ -309,9 +313,11 @@ _Uses inline assembly to return storage struct at predefined slot_
 
 #### Return Values
 
-| Name      | Type                                                      | Description                            |
-| --------- | --------------------------------------------------------- | -------------------------------------- |
-| storage\_ | struct AssetEventTrackerInternal.AssetEventTrackerStorage | The asset event tracker storage struct |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| storage_ | struct AssetEventTrackerInternal.AssetEventTrackerStorage | The asset event tracker storage struct |
+
+
 
 ---
 
@@ -323,8 +329,8 @@ Interface to track asset events
 
 ```solidity
 struct AssetEvent {
-    uint256 state;
-    uint256 timestamp;
+  uint256 state;
+  uint256 timestamp;
 }
 ```
 
@@ -338,11 +344,11 @@ Emitted when a state is recorded
 
 #### Parameters
 
-| Name      | Type    | Description                                         |
-| --------- | ------- | --------------------------------------------------- |
-| state     | uint256 | The state that was recorded                         |
-| timestamp | uint256 | The block timestamp when the state was recorded     |
-| sender    | address | The address that submitted the state to be recorded |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| state | uint256 | The state that was recorded |
+| timestamp | uint256 | The block timestamp when the state was recorded |
+| sender | address | The address that submitted the state to be recorded |
 
 ### StateChangeNotAllowed
 
@@ -360,9 +366,9 @@ Register new asset event
 
 #### Parameters
 
-| Name       | Type    | Description                    |
-| ---------- | ------- | ------------------------------ |
-| \_newState | uint256 | New asset state for this event |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _newState | uint256 | New asset state for this event |
 
 ### getAssetEvents
 
@@ -374,16 +380,16 @@ Return paginated events based on page number and results per page
 
 #### Parameters
 
-| Name             | Type    | Description                   |
-| ---------------- | ------- | ----------------------------- |
-| \_pageNumber     | uint256 | Page number (starting with 0) |
-| \_resultsPerPage | uint256 | Number of results per page    |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _pageNumber | uint256 | Page number (starting with 0) |
+| _resultsPerPage | uint256 | Number of results per page |
 
 #### Return Values
 
-| Name          | Type                                   | Description        |
-| ------------- | -------------------------------------- | ------------------ |
-| assetEvents\_ | struct IAssetEventTracker.AssetEvent[] | Asset events array |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| assetEvents_ | struct IAssetEventTracker.AssetEvent[] | Asset events array |
 
 ### getLatestAssetEvent
 
@@ -395,9 +401,9 @@ Return latest asset event
 
 #### Return Values
 
-| Name | Type                                 | Description                   |
-| ---- | ------------------------------------ | ----------------------------- |
-| [0]  | struct IAssetEventTracker.AssetEvent | Latest asset event registered |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | struct IAssetEventTracker.AssetEvent | Latest asset event registered |
 
 ### getCurrentState
 
@@ -409,9 +415,9 @@ Return current state
 
 #### Return Values
 
-| Name | Type    | Description             |
-| ---- | ------- | ----------------------- |
-| [0]  | uint256 | Latest state registered |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 | Latest state registered |
 
 ### isStateChangeAllowed
 
@@ -423,12 +429,13 @@ Return if state change is allowed
 
 #### Parameters
 
-| Name       | Type    | Description               |
-| ---------- | ------- | ------------------------- |
-| \_newState | uint256 | New asset state to change |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _newState | uint256 | New asset state to change |
 
 #### Return Values
 
-| Name | Type | Description                 |
-| ---- | ---- | --------------------------- |
-| [0]  | bool | True or false if is allowed |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bool | True or false if is allowed |
+

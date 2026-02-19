@@ -15,7 +15,9 @@ limitations under the License.
 pragma solidity ^0.8.28;
 
 import {ERC203643InternalCommon} from '../ERC203643InternalCommon.sol';
-import {_ERC203643_CAPPED_STORAGE_POSITION} from '../../../constants/storagePositions.sol';
+import {
+    _ERC203643_CAPPED_STORAGE_POSITION
+} from '../../../constants/storagePositions.sol';
 import {IERC203643Capped} from './IERC203643Capped.sol';
 
 /**

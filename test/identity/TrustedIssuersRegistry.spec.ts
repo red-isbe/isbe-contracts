@@ -344,11 +344,7 @@ describe('TrustedIssuersRegistry', () => {
                     const { rootTaoRevisionId, tiRevisionId } =
                         await builder.createCompleteHierarchy()
 
-                    // Add admin as controller of Alice
-                    await ctx.didRegistry.addController(
-                        ctx.aliceDid,
-                        ctx.adminDid
-                    )
+                    // Admin is already controller of Alice (from fixture)
 
                     // Admin (ROOT_TAO) updates Alice's attribute
                     await expect(

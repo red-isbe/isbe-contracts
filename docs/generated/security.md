@@ -4,7 +4,7 @@
 
 ```solidity
 struct ReentrancyGuardStorage {
-    mapping(bytes32 => uint256) status;
+  mapping(bytes32 => uint256) status;
 }
 ```
 
@@ -20,14 +20,15 @@ error ReentrantNotAllowed(bytes32 reentrantKey)
 modifier nonReentrant(bytes32 _reentrantKey)
 ```
 
-### \_nonReentrantBefore
+### _nonReentrantBefore
 
 ```solidity
 function _nonReentrantBefore(bytes32 _reentrantKey) internal
 ```
 
-### \_nonReentrantAfter
+### _nonReentrantAfter
 
 ```solidity
 function _nonReentrantAfter(bytes32 _reentrantKey) internal
 ```
+

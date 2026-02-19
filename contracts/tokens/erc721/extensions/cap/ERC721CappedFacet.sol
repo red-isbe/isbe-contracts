@@ -22,9 +22,13 @@ pragma solidity ^0.8.28;
  *      - Should be registered in the diamond with all required selectors.
  */
 
-import {_ERC721_CAPPED_RESOLVER_KEY} from '../../../../constants/resolverKeys.sol';
+import {
+    _ERC721_CAPPED_RESOLVER_KEY
+} from '../../../../constants/resolverKeys.sol';
 import {ERC721Capped} from './ERC721Capped.sol';
-import {IEIP2535Introspection} from '../../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {
+    IEIP2535Introspection
+} from '../../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 
 contract ERC721CappedFacet is ERC721Capped, IEIP2535Introspection {
     function interfacesIntrospection()

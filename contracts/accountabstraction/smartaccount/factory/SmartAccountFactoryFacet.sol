@@ -13,9 +13,13 @@ limitations under the License.
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {_ACCOUNT_ABSTRACTION_SMART_ACCOUNT_FACTORY_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
+import {
+    _ACCOUNT_ABSTRACTION_SMART_ACCOUNT_FACTORY_RESOLVER_KEY
+} from '../../../constants/resolverKeys.sol';
 import {SmartAccountFactory} from './SmartAccountFactory.sol';
-import {IEIP2535Introspection} from '../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {
+    IEIP2535Introspection
+} from '../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 
 /**
  * @title ERC-4337 Smart account factory facet

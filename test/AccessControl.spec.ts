@@ -33,6 +33,7 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { EllipticType } from './types/identity'
 import { HDNodeWallet } from 'ethers'
 import { config } from 'hardhat'
+import { generateProof, proofToDid } from './support'
 
 describe('Access Control', function () {
     let adminAccount: Signer
@@ -69,18 +70,14 @@ describe('Access Control', function () {
 
         // Create DID document for admin account - Use fixed timestamp in the past to avoid race conditions
         const adminWallet = walletOfFirstSigner()
-        const adminDid = ethers.id('did:admin:account')
 
         const notBefore = 5
         const notAfter = notBefore + 1000000000000 // Very large to never expire
 
         const publicKey = adminWallet.signingKey.publicKey
+        const proof = generateProof(adminWallet)
+        const adminDid = proofToDid(proof)
         const vMethodId = ethers.id(`vmethod:${adminDid}`)
-        const message = ethers.keccak256(
-            ethers.solidityPacked(['bytes'], [publicKey])
-        )
-        const signature = adminWallet.signingKey.sign(message)
-        const proof = ethers.Signature.from(signature).serialized
 
         await result.didRegistry.insertFirstDidDocument(
             adminDid,
@@ -499,27 +496,25 @@ describe('Access Control', function () {
             const w2 = baseWallet.derivePath('101')
             const w3 = baseWallet.derivePath('102')
 
-            const d1 = ethers.id('did:test:1')
-            const d2 = ethers.id('did:test:2')
-            const d3 = ethers.id('did:test:3')
+            const p1 = generateProof(w1)
+            const p2 = generateProof(w2)
+            const p3 = generateProof(w3)
+
+            const d1 = proofToDid(p1)
+            const d2 = proofToDid(p2)
+            const d3 = proofToDid(p3)
 
             // Insert DID documents - Use fixed timestamp in the past to avoid race conditions
             const notBefore = 5
             const notAfter = notBefore + 1000000000000 // Very large to never expire
 
-            for (const [wallet, did] of [
-                [w1, d1],
-                [w2, d2],
-                [w3, d3],
+            for (const [wallet, proof, did] of [
+                [w1, p1, d1],
+                [w2, p2, d2],
+                [w3, p3, d3],
             ]) {
                 const publicKey = wallet.signingKey.publicKey
                 const vMethodId = ethers.id(`vmethod:${did}`)
-                const message = ethers.keccak256(
-                    ethers.solidityPacked(['bytes'], [publicKey])
-                )
-                const signature = wallet.signingKey.sign(message)
-                const proof = ethers.Signature.from(signature).serialized
-
                 await result.didRegistry.insertFirstDidDocument(
                     did,
                     `document:${did}`,

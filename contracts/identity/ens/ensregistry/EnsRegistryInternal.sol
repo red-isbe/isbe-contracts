@@ -15,9 +15,13 @@ limitations under the License.
 pragma solidity ^0.8.28;
 
 import {ENS} from './ENS.sol';
-import {_ENS_REGISTRY_STORAGE_POSITION} from '../../../constants/storagePositions.sol';
+import {
+    _ENS_REGISTRY_STORAGE_POSITION
+} from '../../../constants/storagePositions.sol';
 import {_ENS_MANAGER_ROLE} from '../../../constants/roles.sol';
-import {DidDocumentDetailedInternal} from '../../didregistry/DidDocumentDetailedInternal.sol';
+import {
+    DidDocumentDetailedInternal
+} from '../../didregistry/DidDocumentDetailedInternal.sol';
 
 /**
  * @title ENS Registry Internal Implementation

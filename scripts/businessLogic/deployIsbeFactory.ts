@@ -184,7 +184,8 @@ async function deployInitial(ethers: any) {
         await ethers.getContractFactory('AnchoringCoreFacet')
 
     // Add explicit gas limit to fix Internal error with non-validator nodes
-    const deployOptions = { gasLimit: 25_000_000 }
+    // Note: Hardhat caps transaction gas at ~50% of blockGasLimit (30M) = 15M max
+    const deployOptions = { gasLimit: 15_000_000 }
 
     businessLogicFactoryFacet =
         await BusinessLogicFactoryFactory.deploy(deployOptions)
@@ -349,7 +350,7 @@ export async function deployIsbeFactory(
             initCalldata: initCalldata,
         },
         // Add explicit gas limit to fix Internal error with non-validator nodes
-        { gasLimit: 25_000_000 }
+        { gasLimit: 15_000_000 }
     )
 
     await diamondProxy.waitForDeployment()

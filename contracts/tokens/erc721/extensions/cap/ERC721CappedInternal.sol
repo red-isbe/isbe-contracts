@@ -15,7 +15,9 @@ limitations under the License.
 pragma solidity ^0.8.28;
 
 import {ERC721Internal} from '../../ERC721Internal.sol';
-import {_ERC721_CAPPED_STORAGE_POSITION} from '../../../../constants/storagePositions.sol';
+import {
+    _ERC721_CAPPED_STORAGE_POSITION
+} from '../../../../constants/storagePositions.sol';
 import {IERC721Capped} from './IERC721Capped.sol';
 
 /**

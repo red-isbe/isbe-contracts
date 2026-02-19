@@ -14,7 +14,9 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 pragma solidity ^0.8.28;
 
-import {AccessControlDidFacet} from '../../access/accessControl/AccessControlDidFacet.sol';
+import {
+    AccessControlDidFacet
+} from '../../access/accessControl/AccessControlDidFacet.sol';
 
 /// @title AccessControlDidGovernanceFacet
 /// @notice DID Access Control facet for governance Diamonds (EIP2535AccessControl)

@@ -14,7 +14,9 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 pragma solidity ^0.8.28;
 
-import {BesuNodeManagerFacet} from '../../client/besuNodeManager/BesuNodeManagerFacet.sol';
+import {
+    BesuNodeManagerFacet
+} from '../../client/besuNodeManager/BesuNodeManagerFacet.sol';
 import {ISBEContext} from '../../utils/ISBEContext.sol';
 import {MockTimestamp} from '../mockTimestamp/MockTimestamp.sol';
 

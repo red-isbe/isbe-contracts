@@ -16,8 +16,12 @@ pragma solidity ^0.8.28;
 /* solhint-disable reason-string */
 /* solhint-disable gas-custom-errors */
 
-import {PackedUserOperation} from '@account-abstraction/contracts/interfaces/PackedUserOperation.sol';
-import {ISmartAccount} from '../../accountabstraction/smartaccount/ISmartAccount.sol';
+import {
+    PackedUserOperation
+} from '@account-abstraction/contracts/interfaces/PackedUserOperation.sol';
+import {
+    ISmartAccount
+} from '../../accountabstraction/smartaccount/ISmartAccount.sol';
 
 contract SmartAccountMock is ISmartAccount {
     uint256 public validateUserOpCalls;

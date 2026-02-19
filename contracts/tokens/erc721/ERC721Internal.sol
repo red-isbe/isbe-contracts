@@ -24,7 +24,9 @@ pragma solidity ^0.8.28;
  *      - Uses a custom storage slot for upgradeable compatibility.
  *      - Relies on hooks (_beforeTokenTransfer, _afterTokenTransfer) for extensibility.
  */
-import {DidDocumentDetailedInternal} from '../../identity/didregistry/DidDocumentDetailedInternal.sol';
+import {
+    DidDocumentDetailedInternal
+} from '../../identity/didregistry/DidDocumentDetailedInternal.sol';
 import {IERC721Isbe} from './IERC721Isbe.sol';
 import {_ERC721_STORAGE_POSITION} from '../../constants/storagePositions.sol';
 import {IERC721} from '@openzeppelin/contracts/token/ERC721/IERC721.sol';

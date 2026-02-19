@@ -15,12 +15,22 @@ limitations under the License.
 pragma solidity ^0.8.28;
 
 import {_ERC20_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
-import {ERC203643Capped} from '../../../tokens/erc203643/erc203643capped/ERC203643Capped.sol';
-import {ERC20Burnable} from '../../../tokens/erc20/extensions/burn/ERC20Burnable.sol';
-import {ERC203643Controller} from '../../../tokens/erc203643/erc203643controller/ERC203643Controller.sol';
-import {ERC20Snapshot} from '../../../tokens/erc20/extensions/snapshot/ERC20Snapshot.sol';
+import {
+    ERC203643Capped
+} from '../../../tokens/erc203643/erc203643capped/ERC203643Capped.sol';
+import {
+    ERC20Burnable
+} from '../../../tokens/erc20/extensions/burn/ERC20Burnable.sol';
+import {
+    ERC203643Controller
+} from '../../../tokens/erc203643/erc203643controller/ERC203643Controller.sol';
+import {
+    ERC20Snapshot
+} from '../../../tokens/erc20/extensions/snapshot/ERC20Snapshot.sol';
 import {ERC20} from '../../../tokens/erc20/ERC20.sol';
-import {IEIP2535Introspection} from '../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {
+    IEIP2535Introspection
+} from '../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 
 // solhint-disable-next-line
 contract ERC20TestWrapper is

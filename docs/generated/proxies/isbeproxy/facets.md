@@ -16,13 +16,13 @@ _Updates the proxy configuration using the specified management contract_
 
 #### Parameters
 
-| Name                      | Type                              | Description                                      |
-| ------------------------- | --------------------------------- | ------------------------------------------------ |
-| \_configurationManagement | contract IConfigurationManagement | The configuration management contract instance   |
-| \_configurationId         | bytes32                           | The identifier of the configuration to set       |
-| \_version                 | uint256                           | The version number of the configuration to apply |
-| \_init                    | address[]                         |                                                  |
-| \_data                    | bytes[]                           |                                                  |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _configurationManagement | contract IConfigurationManagement | The configuration management contract instance |
+| _configurationId | bytes32 | The identifier of the configuration to set |
+| _version | uint256 | The version number of the configuration to apply |
+| _init | address[] |  |
+| _data | bytes[] |  |
 
 ### interfacesIntrospection
 
@@ -36,9 +36,9 @@ _A pure function that returns an array of supported `bytes4` IDs._
 
 #### Return Values
 
-| Name         | Type     | Description                                  |
-| ------------ | -------- | -------------------------------------------- |
-| interfaces\_ | bytes4[] | An array of supported interface identifiers. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | An array of supported interface identifiers. |
 
 ### businessIdIntrospection
 
@@ -52,9 +52,9 @@ _Returns a `bytes32` key identifying the facet's purpose._
 
 #### Return Values
 
-| Name         | Type    | Description                              |
-| ------------ | ------- | ---------------------------------------- |
-| businessId\_ | bytes32 | The `bytes32` ID for the business logic. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| businessId_ | bytes32 | The `bytes32` ID for the business logic. |
 
 ### selectorsIntrospection
 
@@ -68,9 +68,11 @@ _A pure function that returns a `bytes4[]` array of selectors._
 
 #### Return Values
 
-| Name        | Type     | Description                              |
-| ----------- | -------- | ---------------------------------------- |
-| selectors\_ | bytes4[] | An array of `bytes4` function selectors. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| selectors_ | bytes4[] | An array of `bytes4` function selectors. |
+
+
 
 ---
 
@@ -96,9 +98,9 @@ Gets all facets and their selectors.
 
 #### Return Values
 
-| Name     | Type                         | Description |
-| -------- | ---------------------------- | ----------- |
-| facets\_ | struct IDiamondLoupe.Facet[] | Facet       |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| facets_ | struct IDiamondLoupe.Facet[] | Facet |
 
 ### facetFunctionSelectors
 
@@ -110,15 +112,15 @@ Gets all the function selectors supported by a specific facet.
 
 #### Parameters
 
-| Name    | Type    | Description        |
-| ------- | ------- | ------------------ |
-| \_facet | address | The facet address. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _facet | address | The facet address. |
 
 #### Return Values
 
-| Name                | Type     | Description                                    |
-| ------------------- | -------- | ---------------------------------------------- |
-| functionSelectors\_ | bytes4[] | The selectors associated with a facet address. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| functionSelectors_ | bytes4[] | The selectors associated with a facet address. |
 
 ### facetAddresses
 
@@ -130,9 +132,9 @@ Get all the facet addresses used by a diamond.
 
 #### Return Values
 
-| Name             | Type      | Description |
-| ---------------- | --------- | ----------- |
-| facetAddresses\_ | address[] |             |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| facetAddresses_ | address[] |  |
 
 ### facetAddress
 
@@ -146,15 +148,15 @@ _If facet is not found return address(0)._
 
 #### Parameters
 
-| Name               | Type   | Description            |
-| ------------------ | ------ | ---------------------- |
-| \_functionSelector | bytes4 | The function selector. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _functionSelector | bytes4 | The function selector. |
 
 #### Return Values
 
-| Name           | Type    | Description        |
-| -------------- | ------- | ------------------ |
-| facetAddress\_ | address | The facet address. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| facetAddress_ | address | The facet address. |
 
 ### facetVersion
 
@@ -166,15 +168,15 @@ Retrieves the version of a specific facet key.
 
 #### Parameters
 
-| Name       | Type    | Description                                             |
-| ---------- | ------- | ------------------------------------------------------- |
-| \_facetKey | bytes32 | The target facet key for which to retrieve the version. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _facetKey | bytes32 | The target facet key for which to retrieve the version. |
 
 #### Return Values
 
-| Name      | Type    | Description                                         |
-| --------- | ------- | --------------------------------------------------- |
-| version\_ | uint256 | The initialized version of the specified facet key. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| version_ | uint256 | The initialized version of the specified facet key. |
 
 ### supportsInterface
 
@@ -183,19 +185,19 @@ function supportsInterface(bytes4 _interfaceId) external view virtual returns (b
 ```
 
 Checks if a contract supports an interface.
-Returns false for forbidden interfaces, otherwise checks using ERC-165 method.
+        Returns false for forbidden interfaces, otherwise checks using ERC-165 method.
 
 #### Parameters
 
-| Name          | Type   | Description                                   |
-| ------------- | ------ | --------------------------------------------- |
-| \_interfaceId | bytes4 | The target interface ID to check support for. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _interfaceId | bytes4 | The target interface ID to check support for. |
 
 #### Return Values
 
-| Name | Type | Description                                                               |
-| ---- | ---- | ------------------------------------------------------------------------- |
-| [0]  | bool | True if the contract supports the provided interface ID, otherwise false. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bool | True if the contract supports the provided interface ID, otherwise false. |
 
 ### interfacesIntrospection
 
@@ -209,9 +211,9 @@ _A pure function that returns an array of supported `bytes4` IDs._
 
 #### Return Values
 
-| Name         | Type     | Description                                  |
-| ------------ | -------- | -------------------------------------------- |
-| interfaces\_ | bytes4[] | An array of supported interface identifiers. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | An array of supported interface identifiers. |
 
 ### businessIdIntrospection
 
@@ -225,9 +227,9 @@ _Returns a `bytes32` key identifying the facet's purpose._
 
 #### Return Values
 
-| Name         | Type    | Description                              |
-| ------------ | ------- | ---------------------------------------- |
-| businessId\_ | bytes32 | The `bytes32` ID for the business logic. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| businessId_ | bytes32 | The `bytes32` ID for the business logic. |
 
 ### selectorsIntrospection
 
@@ -241,12 +243,13 @@ _A pure function that returns a `bytes4[]` array of selectors._
 
 #### Return Values
 
-| Name        | Type     | Description                              |
-| ----------- | -------- | ---------------------------------------- |
-| selectors\_ | bytes4[] | An array of `bytes4` function selectors. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| selectors_ | bytes4[] | An array of `bytes4` function selectors. |
 
-### \_implementedInterfaces
+### _implementedInterfaces
 
 ```solidity
 function _implementedInterfaces() internal pure returns (bytes4[] interfaces_)
 ```
+

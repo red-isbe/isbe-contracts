@@ -16,7 +16,9 @@ pragma solidity 0.8.28;
 
 import {IBesuNodeManagerCommon} from './IBesuNodeManagerCommon.sol';
 import {NodeDTO} from './core/Types.sol';
-import {BesuNodeManagerCommonInternal} from './BesuNodeManagerCommonInternal.sol';
+import {
+    BesuNodeManagerCommonInternal
+} from './BesuNodeManagerCommonInternal.sol';
 
 /// @title BesuNodeManagerCommon
 /// @notice Common contract implementing cross-category utility functions

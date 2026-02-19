@@ -16,7 +16,9 @@ pragma solidity 0.8.28;
 
 import {IValidatorManager} from './internal/validators/IValidatorManager.sol';
 import {IBootNodeManager} from './internal/bootnodes/IBootNodeManager.sol';
-import {IExecutionNodeManager} from './internal/executionnodes/IExecutionNodeManager.sol';
+import {
+    IExecutionNodeManager
+} from './internal/executionnodes/IExecutionNodeManager.sol';
 import {IBesuNodeManagerCommon} from './internal/IBesuNodeManagerCommon.sol';
 
 /**

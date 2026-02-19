@@ -15,16 +15,24 @@ limitations under the License.
 pragma solidity ^0.8.28;
 
 import {IBusinessLogicFactory} from './businesslogic/IBusinessLogicFactory.sol';
-import {IConfigurationManagement} from './configurationmanagement/IConfigurationManagement.sol';
+import {
+    IConfigurationManagement
+} from './configurationmanagement/IConfigurationManagement.sol';
 import {IDidRegistry} from '../identity/didregistry/IDidRegistry.sol';
-import {IEnsResolver} from '../identity/ens/publicresolver/ensresolver/IEnsResolver.sol';
+import {
+    IEnsResolver
+} from '../identity/ens/publicresolver/ensresolver/IEnsResolver.sol';
 import {IGlobalIsbePause} from './globalisbepause/IGlobalIsbePause.sol';
 import {IProxyFactory} from './proxyfactory/IProxyFactory.sol';
 import {ITimeStampingRegistry} from '../client/tsr/ITimeStampingRegistry.sol';
 import {IClientFiltering} from '../client/filtering/IClientFiltering.sol';
 import {IAnchoringCore} from '../client/anchoring/IAnchoringCore.sol';
-import {INetworkDirectory} from '../client/networkdirectory/INetworkDirectory.sol';
-import {ISmartAccountFactory} from '../accountabstraction/smartaccount/factory/ISmartAccountFactory.sol';
+import {
+    INetworkDirectory
+} from '../client/networkdirectory/INetworkDirectory.sol';
+import {
+    ISmartAccountFactory
+} from '../accountabstraction/smartaccount/factory/ISmartAccountFactory.sol';
 
 /**
  * @title ISBE Factory Interface

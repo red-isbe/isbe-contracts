@@ -51,6 +51,8 @@ import {
     randomInt,
     randomDid,
     randomBaseDocument,
+    proofToDid,
+    generateProof,
     EMPTY_VALUES,
 } from '../support'
 import { EllipticType, ContractDidDocumentResult } from '../types/identity'
@@ -92,6 +94,9 @@ const walletToPublicKey = (wallet: HDNodeWallet): string => {
     return wallet.signingKey.publicKey
 }
 
+// publicKeyToDid removed — DID now derives from proof, not public key
+// Use proofToDid(proof) from test/support instead
+
 // --- Test Data Generation ---
 let baseDocument: string
 let vMethodId: string
@@ -127,18 +132,15 @@ let didRegistryQueryFacet: DidRegistryQueryFacet
  * - Sets the mock timestamp to notBefore + 1
  * - Returns wallet for tests that need it
  */
-async function createStandardFixture(did: string) {
+async function createStandardFixture() {
     const wallet = walletOfFirstSigner()
     randomizeDidDocument(wallet)
 
     await didRegistry.initializeDiDRegistry(EllipticType.SECP_256_K1)
 
-    // Sign the proof for insertFirstDidDocument (sign raw hash, not prefixed message)
-    const message = ethers.keccak256(
-        ethers.solidityPacked(['bytes'], [publicKey65])
-    )
-    const signature = wallet.signingKey.sign(message)
-    const proof = ethers.Signature.from(signature).serialized
+    // Generate proof and derive DID from it
+    const proof = generateProof(wallet)
+    const did = proofToDid(proof)
 
     await didRegistry.insertFirstDidDocument(
         did,
@@ -153,29 +155,26 @@ async function createStandardFixture(did: string) {
     )
     await mockTimestamp.setMockedTimestamp(notBefore + 1n)
 
-    return { wallet }
+    return { wallet, did }
 }
 
 /**
  * Helper function to insert a controller DID document with random data
  * Uses insertFirstDidDocument to create a new DID for a controller
+ * Returns the proof-derived DID
  */
-async function insertControllerDocument(controllerId: string): Promise<void> {
-    // Get a new wallet for the controller
+async function insertControllerDocument(): Promise<string> {
     const controllerWallet = ethers.Wallet.createRandom()
     const controllerPublicKey = controllerWallet.signingKey.publicKey
     const controllerVMethodId = randomDid()
     const controllerBaseDocument = randomBaseDocument()
 
-    // Sign the proof for insertFirstDidDocument
-    const message = ethers.keccak256(
-        ethers.solidityPacked(['bytes'], [controllerPublicKey])
-    )
-    const signature = controllerWallet.signingKey.sign(message)
-    const proof = ethers.Signature.from(signature).serialized
+    // Generate proof and derive DID from it
+    const proof = generateProof(controllerWallet)
+    const did = proofToDid(proof)
 
     await didRegistry.insertFirstDidDocument(
-        controllerId,
+        did,
         controllerBaseDocument,
         controllerVMethodId,
         proof,
@@ -185,6 +184,8 @@ async function insertControllerDocument(controllerId: string): Promise<void> {
         notAfter,
         ''
     )
+
+    return did
 }
 
 // --- Assertion Helpers ---
@@ -279,8 +280,7 @@ async function addMultipleControllers(
 ): Promise<string[]> {
     const controllers: string[] = []
     for (let i = 0; i < count; i++) {
-        const controller = randomDid()
-        await insertControllerDocument(controller)
+        const controller = await insertControllerDocument()
         await didRegistry.addController(didId, controller)
         controllers.push(controller)
     }
@@ -417,18 +417,14 @@ describe('DiDRegistry', function () {
             beforeEach(async () => {
                 wallet = walletOfFirstSigner()
                 randomizeDidDocument(wallet)
-                did = randomDid()
 
                 await didRegistry.initializeDiDRegistry(
                     EllipticType.SECP_256_K1
                 )
 
-                // Create valid proof for tests
-                const message = ethers.keccak256(
-                    ethers.solidityPacked(['bytes'], [publicKey65])
-                )
-                const signature = wallet.signingKey.sign(message)
-                proof = ethers.Signature.from(signature).serialized
+                // Create valid proof and derive DID from it
+                proof = generateProof(wallet)
+                did = proofToDid(proof)
             })
 
             describe('Authorization', () => {
@@ -718,11 +714,15 @@ describe('DiDRegistry', function () {
 
             describe('Proof Validation', () => {
                 it('GIVEN invalid proof length WHEN calling insertFirstDidDocument THEN it fails', async () => {
+                    // Generate valid proof-derived DID
+                    const validProof = generateProof(wallet)
+                    const validDid = proofToDid(validProof)
+
                     const invalidProof = randomHex(32)
 
                     await expect(
                         didRegistry.insertFirstDidDocument(
-                            did,
+                            validDid,
                             baseDocument,
                             vMethodId,
                             invalidProof,
@@ -739,11 +739,15 @@ describe('DiDRegistry', function () {
                 })
 
                 it('GIVEN invalid proof signature WHEN calling insertFirstDidDocument THEN it fails', async () => {
+                    // Generate valid proof-derived DID
+                    const validProof = generateProof(wallet)
+                    const validDid = proofToDid(validProof)
+
                     const invalidProof = randomHex(65)
 
                     await expect(
                         didRegistry.insertFirstDidDocument(
-                            did,
+                            validDid,
                             baseDocument,
                             vMethodId,
                             invalidProof,
@@ -770,9 +774,13 @@ describe('DiDRegistry', function () {
                     const invalidProof =
                         ethers.Signature.from(invalidSignature).serialized
 
+                    // Generate valid proof-derived DID for a different proof
+                    const validProof = generateProof(wallet)
+                    const validDid = proofToDid(validProof)
+
                     await expect(
                         didRegistry.insertFirstDidDocument(
-                            did,
+                            validDid,
                             baseDocument,
                             vMethodId,
                             invalidProof,
@@ -786,6 +794,70 @@ describe('DiDRegistry', function () {
                         didDocumentDetailedFacet,
                         'InvalidControlBytes'
                     )
+                })
+
+                it('GIVEN a proof that is valid for the publicKey BUT a DID not derived from that proof WHEN calling insertFirstDidDocument THEN it fails with DidNotDerivedFromProof', async () => {
+                    // GIVEN: a valid proof/publicKey pair and its correct DID
+                    const validProof = generateProof(wallet)
+                    const validDid = proofToDid(validProof)
+
+                    // Create a DID that is guaranteed to be different while keeping valid proof/publicKey
+                    const badDid = ethers.toBeHex(
+                        ethers.toBigInt(validDid) ^ 1n,
+                        32
+                    )
+
+                    // WHEN/THEN: insertion must revert because DID payload is not derived from proof
+                    await expect(
+                        didRegistry.insertFirstDidDocument(
+                            badDid,
+                            baseDocument,
+                            vMethodId,
+                            validProof,
+                            publicKey65,
+                            EllipticType.SECP_256_K1,
+                            notBefore,
+                            notAfter,
+                            ALSO_KNOWN_AS_EXAMPLE
+                        )
+                    )
+                        .to.be.revertedWithCustomError(
+                            didDocumentDetailedFacet,
+                            'DidNotDerivedFromProof'
+                        )
+                        .withArgs(badDid)
+                })
+
+                it('GIVEN a proof that is valid for the publicKey BUT a DID with a non-zero 13-byte prefix WHEN calling insertFirstDidDocument THEN it fails with DidNotDerivedFromProof', async () => {
+                    // GIVEN: a valid proof/publicKey pair and its correct DID (which has 13 zero prefix bytes)
+                    const validProof = generateProof(wallet)
+                    const validDid = proofToDid(validProof)
+
+                    // Make the prefix invalid by setting the most-significant bit (stays in the first 13 bytes)
+                    const badDidPrefix = ethers.toBeHex(
+                        ethers.toBigInt(validDid) | (1n << 255n),
+                        32
+                    )
+
+                    // WHEN/THEN: insertion must revert because DID prefix is not 13 zero bytes
+                    await expect(
+                        didRegistry.insertFirstDidDocument(
+                            badDidPrefix,
+                            baseDocument,
+                            vMethodId,
+                            validProof,
+                            publicKey65,
+                            EllipticType.SECP_256_K1,
+                            notBefore,
+                            notAfter,
+                            ALSO_KNOWN_AS_EXAMPLE
+                        )
+                    )
+                        .to.be.revertedWithCustomError(
+                            didDocumentDetailedFacet,
+                            'DidNotDerivedFromProof'
+                        )
+                        .withArgs(badDidPrefix)
                 })
             })
 
@@ -850,17 +922,13 @@ describe('DiDRegistry', function () {
             beforeEach(async () => {
                 wallet = walletOfFirstSigner()
                 randomizeDidDocument(wallet)
-                did = randomDid()
 
                 await didRegistry.initializeDiDRegistry(
                     EllipticType.SECP_256_K1
                 )
 
-                const message = ethers.keccak256(
-                    ethers.solidityPacked(['bytes'], [publicKey65])
-                )
-                const signature = wallet.signingKey.sign(message)
-                proof = ethers.Signature.from(signature).serialized
+                proof = generateProof(wallet)
+                did = proofToDid(proof)
 
                 await didRegistry.insertFirstDidDocument(
                     did,
@@ -991,12 +1059,8 @@ describe('DiDRegistry', function () {
                     )
 
                     // Insert first DID for the test caller so they can use insertDidDocument
-                    callerDid = randomDid()
-                    const message = ethers.keccak256(
-                        ethers.solidityPacked(['bytes'], [publicKey65])
-                    )
-                    const signature = wallet.signingKey.sign(message)
-                    const proof = ethers.Signature.from(signature).serialized
+                    const proof = generateProof(wallet)
+                    callerDid = proofToDid(proof)
 
                     await didRegistry.insertFirstDidDocument(
                         callerDid,
@@ -1243,8 +1307,7 @@ describe('DiDRegistry', function () {
 
         describe('updateDidDocument', () => {
             beforeEach(async () => {
-                did = randomDid()
-                await createStandardFixture(did)
+                ;({ did } = await createStandardFixture())
             })
 
             it('GIVEN an inserted document WHEN try to update with empty did THEN it fails', async () => {
@@ -1304,8 +1367,8 @@ describe('DiDRegistry', function () {
             let wallet: HDNodeWallet
 
             beforeEach(async () => {
-                did = randomDid()
-                const fixtures = await createStandardFixture(did)
+                const fixtures = await createStandardFixture()
+                did = fixtures.did
                 wallet = fixtures.wallet
             })
 
@@ -1452,8 +1515,7 @@ describe('DiDRegistry', function () {
 
         describe('revokeVerificationMethod', () => {
             beforeEach(async () => {
-                did = randomDid()
-                await createStandardFixture(did)
+                ;({ did } = await createStandardFixture())
             })
 
             it('GIVEN an inserted document WHEN try to revoke V.M. with empty did THEN it fails', async () => {
@@ -1555,8 +1617,8 @@ describe('DiDRegistry', function () {
             let wallet: HDNodeWallet
 
             beforeEach(async () => {
-                did = randomDid()
-                const fixtures = await createStandardFixture(did)
+                const fixtures = await createStandardFixture()
+                did = fixtures.did
                 wallet = fixtures.wallet
             })
 
@@ -1688,8 +1750,8 @@ describe('DiDRegistry', function () {
             let rollArgs: IDidVerificationMethod.RollArgsStruct
 
             beforeEach(async () => {
-                did = randomDid()
-                const fixtures = await createStandardFixture(did)
+                const fixtures = await createStandardFixture()
+                did = fixtures.did
                 wallet = fixtures.wallet
 
                 // Additional setup specific to roll tests
@@ -1958,8 +2020,8 @@ describe('DiDRegistry', function () {
             let wallet: HDNodeWallet
 
             beforeEach(async () => {
-                did = randomDid()
-                const fixtures = await createStandardFixture(did)
+                const fixtures = await createStandardFixture()
+                did = fixtures.did
                 wallet = fixtures.wallet
             })
 
@@ -2292,8 +2354,7 @@ describe('DiDRegistry', function () {
 
         describe('addController', () => {
             beforeEach(async () => {
-                did = randomDid()
-                await createStandardFixture(did)
+                ;({ did } = await createStandardFixture())
             })
 
             it('GIVEN deployed DiDRegistry WHEN try to add empty did THEN it fails', async () => {
@@ -2340,8 +2401,7 @@ describe('DiDRegistry', function () {
             })
             it('GIVEN two inserted documents WHEN try to add controller THEN it success', async () => {
                 // GIVEN
-                const controller = randomDid()
-                await insertControllerDocument(controller)
+                const controller = await insertControllerDocument()
                 await mockTimestamp.setMockedTimestamp(notBefore + 1n)
 
                 // WHEN
@@ -2353,15 +2413,13 @@ describe('DiDRegistry', function () {
 
         describe('revokeController', () => {
             async function addNewController() {
-                const controller = randomDid()
-                await insertControllerDocument(controller)
+                const controller = await insertControllerDocument()
                 await didRegistry.addController(did, controller)
                 return controller
             }
 
             beforeEach(async () => {
-                did = randomDid()
-                await createStandardFixture(did)
+                ;({ did } = await createStandardFixture())
             })
 
             it('GIVEN deployed DiDRegistry WHEN try to revoke empty did THEN it fails', async () => {
@@ -2402,8 +2460,7 @@ describe('DiDRegistry', function () {
             })
             it('GIVEN deployed DiDRegistry WHEN try to revoke not linked controller THEN it fails', async () => {
                 // GIVEN
-                const controller = randomDid()
-                await insertControllerDocument(controller)
+                const controller = await insertControllerDocument()
 
                 // WHEN
                 await expect(didRegistry.revokeController(did, controller))
@@ -2426,28 +2483,20 @@ describe('DiDRegistry', function () {
         })
 
         describe('getDids', () => {
-            const insertedDids = [
-                randomDid(),
-                randomDid(),
-                randomDid(),
-                randomDid(),
-                randomDid(),
-            ]
+            let insertedDids: string[]
 
             beforeEach(async () => {
                 const wallet = walletOfFirstSigner()
                 randomizeDidDocument(wallet)
+                insertedDids = []
                 const fixture = async () => {
                     await didRegistry.initializeDiDRegistry(
                         EllipticType.SECP_256_K1
                     )
-                    // Insert first DID with proof
-                    const firstDid = insertedDids[0]
-                    const message = ethers.keccak256(
-                        ethers.solidityPacked(['bytes'], [publicKey65])
-                    )
-                    const signature = wallet.signingKey.sign(message)
-                    const proof = ethers.Signature.from(signature).serialized
+                    // Insert first DID with proof (DID derives from proof)
+                    const proof = generateProof(wallet)
+                    const firstDid = proofToDid(proof)
+                    insertedDids.push(firstDid)
 
                     await didRegistry.insertFirstDidDocument(
                         firstDid,
@@ -2461,27 +2510,23 @@ describe('DiDRegistry', function () {
                         ''
                     )
 
-                    // Insert remaining DIDs using insertFirstDidDocument (each needs their own proof)
-                    for (let i = 1; i < insertedDids.length; i++) {
-                        const did = insertedDids[i]
-                        const vMethodIdFor = randomDid()
-                        const message = ethers.keccak256(
-                            ethers.solidityPacked(['bytes'], [publicKey65])
-                        )
-                        const signature = wallet.signingKey.sign(message)
-                        const proof =
-                            ethers.Signature.from(signature).serialized
+                    // Set timestamp so caller can use insertDidDocument
+                    await mockTimestamp.setMockedTimestamp(notBefore + 1n)
 
-                        await didRegistry.insertFirstDidDocument(
+                    // Insert remaining DIDs using insertDidDocument (random DIDs allowed)
+                    for (let i = 1; i < 5; i++) {
+                        const did = randomDid()
+                        insertedDids.push(did)
+                        const vMethodIdFor = randomDid()
+
+                        await didRegistry.insertDidDocument(
                             did,
                             baseDocument,
                             vMethodIdFor,
-                            proof,
                             publicKey65,
                             EllipticType.SECP_256_K1,
                             notBefore,
-                            notAfter,
-                            ''
+                            notAfter
                         )
                     }
                 }
@@ -2528,29 +2573,21 @@ describe('DiDRegistry', function () {
 
         describe('getDidsByVerificationRelationship', () => {
             let wallet: HDNodeWallet
-            const insertedDids = [
-                randomDid(),
-                randomDid(),
-                randomDid(),
-                randomDid(),
-                randomDid(),
-            ]
+            let insertedDids: string[]
             before(async () => {
                 wallet = walletOfFirstSigner()
                 randomizeDidDocument(wallet)
             })
             beforeEach(async () => {
+                insertedDids = []
                 const fixture = async () => {
                     await didRegistry.initializeDiDRegistry(
                         EllipticType.SECP_256_K1
                     )
-                    // Insert first DID with proof
-                    const firstDid = insertedDids[0]
-                    const message = ethers.keccak256(
-                        ethers.solidityPacked(['bytes'], [publicKey65])
-                    )
-                    const signature = wallet.signingKey.sign(message)
-                    const proof = ethers.Signature.from(signature).serialized
+                    // Insert first DID with proof (DID derives from proof)
+                    const proof = generateProof(wallet)
+                    const firstDid = proofToDid(proof)
+                    insertedDids.push(firstDid)
 
                     await didRegistry.insertFirstDidDocument(
                         firstDid,
@@ -2564,30 +2601,25 @@ describe('DiDRegistry', function () {
                         ''
                     )
 
-                    // Insert remaining DIDs using insertFirstDidDocument (each needs their own proof)
-                    // Note: All DIDs use the same vMethodId so they can be queried by verification relationship
-                    for (let i = 1; i < insertedDids.length; i++) {
-                        const did = insertedDids[i]
-                        const message = ethers.keccak256(
-                            ethers.solidityPacked(['bytes'], [publicKey65])
-                        )
-                        const signature = wallet.signingKey.sign(message)
-                        const proof =
-                            ethers.Signature.from(signature).serialized
+                    // Set timestamp so caller can use insertDidDocument
+                    await mockTimestamp.setMockedTimestamp(notBefore + 1n)
 
-                        await didRegistry.insertFirstDidDocument(
+                    // Insert remaining DIDs using insertDidDocument (random DIDs allowed)
+                    // Note: All DIDs use the same vMethodId so they can be queried by verification relationship
+                    for (let i = 1; i < 5; i++) {
+                        const did = randomDid()
+                        insertedDids.push(did)
+
+                        await didRegistry.insertDidDocument(
                             did,
                             baseDocument,
                             vMethodId,
-                            proof,
                             publicKey65,
                             EllipticType.SECP_256_K1,
                             notBefore,
-                            notAfter,
-                            ''
+                            notAfter
                         )
                     }
-                    await mockTimestamp.setMockedTimestamp(notBefore + 1n)
                 }
                 await loadFixture(fixture)
             })
@@ -2692,7 +2724,6 @@ describe('DiDRegistry', function () {
             beforeEach(async () => {
                 const wallet = walletOfFirstSigner()
                 randomizeDidDocument(wallet)
-                controller = randomDid()
                 insertedDids = [
                     randomDid(),
                     randomDid(),
@@ -2705,12 +2736,9 @@ describe('DiDRegistry', function () {
                     )
                     await mockTimestamp.setMockedTimestamp(notBefore + 1n)
 
-                    // Insert controller DID first with proof
-                    const message = ethers.keccak256(
-                        ethers.solidityPacked(['bytes'], [publicKey65])
-                    )
-                    const signature = wallet.signingKey.sign(message)
-                    const proof = ethers.Signature.from(signature).serialized
+                    // Insert controller DID first with proof-derived DID
+                    const proof = generateProof(wallet)
+                    controller = proofToDid(proof)
 
                     await didRegistry.insertFirstDidDocument(
                         controller,
@@ -2796,8 +2824,7 @@ describe('DiDRegistry', function () {
 
         describe('Controller Management with Last Controller Protection', () => {
             beforeEach(async () => {
-                did = randomDid()
-                await createStandardFixture(did)
+                ;({ did } = await createStandardFixture())
             })
 
             it('FIXED: Should fail when trying to revoke the only controller', async () => {
@@ -2940,7 +2967,6 @@ describe('DiDRegistry', function () {
 
         describe('getDidDocument', () => {
             beforeEach(async () => {
-                did = randomDid()
                 const wallet = walletOfFirstSigner()
                 randomizeDidDocument(wallet)
                 const fixture = async () => {
@@ -2948,12 +2974,8 @@ describe('DiDRegistry', function () {
                         EllipticType.SECP_256_K1
                     )
 
-                    // Sign the proof for insertFirstDidDocument
-                    const message = ethers.keccak256(
-                        ethers.solidityPacked(['bytes'], [publicKey65])
-                    )
-                    const signature = wallet.signingKey.sign(message)
-                    const proof = ethers.Signature.from(signature).serialized
+                    const proof = generateProof(wallet)
+                    did = proofToDid(proof)
 
                     await didRegistry.insertFirstDidDocument(
                         did,
@@ -3006,7 +3028,6 @@ describe('DiDRegistry', function () {
 
         describe('getDidDocumentByTimestamp', () => {
             beforeEach(async () => {
-                did = randomDid()
                 const wallet = walletOfFirstSigner()
                 randomizeDidDocument(wallet)
                 const fixture = async () => {
@@ -3014,12 +3035,8 @@ describe('DiDRegistry', function () {
                         EllipticType.SECP_256_K1
                     )
 
-                    // Sign the proof for insertFirstDidDocument
-                    const message = ethers.keccak256(
-                        ethers.solidityPacked(['bytes'], [publicKey65])
-                    )
-                    const signature = wallet.signingKey.sign(message)
-                    const proof = ethers.Signature.from(signature).serialized
+                    const proof = generateProof(wallet)
+                    did = proofToDid(proof)
 
                     await didRegistry.insertFirstDidDocument(
                         did,
@@ -3079,7 +3096,6 @@ describe('DiDRegistry', function () {
         describe('checkController', () => {
             let wallet: HDNodeWallet
             beforeEach(async () => {
-                did = randomDid()
                 wallet = walletOfFirstSigner()
                 randomizeDidDocument(wallet)
                 const fixture = async () => {
@@ -3087,12 +3103,8 @@ describe('DiDRegistry', function () {
                         EllipticType.SECP_256_K1
                     )
 
-                    // Sign the proof for insertFirstDidDocument
-                    const message = ethers.keccak256(
-                        ethers.solidityPacked(['bytes'], [publicKey65])
-                    )
-                    const signature = wallet.signingKey.sign(message)
-                    const proof = ethers.Signature.from(signature).serialized
+                    const proof = generateProof(wallet)
+                    did = proofToDid(proof)
 
                     await didRegistry.insertFirstDidDocument(
                         did,
@@ -3250,8 +3262,8 @@ describe('DiDRegistry', function () {
             let wallet: HDNodeWallet
 
             beforeEach(async () => {
-                did = randomDid()
-                const fixture = await createStandardFixture(did)
+                const fixture = await createStandardFixture()
+                did = fixture.did
                 wallet = fixture.wallet
             })
 
