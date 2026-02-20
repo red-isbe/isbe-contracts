@@ -412,6 +412,25 @@ constructor() internal
 function setAttributeMetadata(bytes32 _did, enum IssuerType _issuerType, bytes32 _revisionId, bytes32 _taoDid, bytes32 _attributeIdTao) external
 ```
 
+Sets metadata for an issuer's attribute (Phase 1 of accreditation)
+
+_Access control is handled by _checkEligibility in the internal function.
+     The caller must be:
+     - ISBE admin with _TRUSTED_ISSUERS_REGISTRY_ROLE, OR
+     - A TAO/RTAO that controls _taoDid
+     NOTE: _did is the RECIPIENT of the accreditation (the issuer being created/updated),
+           not the caller. The caller's authorization is validated via _taoDid in _checkEligibility._
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _did | bytes32 | Issuer DID (recipient of the accreditation) |
+| _issuerType | enum IssuerType | Type of issuer (ROOT_TAO, TAO, TI) |
+| _revisionId | bytes32 | Attribute revision identifier |
+| _taoDid | bytes32 | TAO DID that is creating/authorizing this accreditation (caller's TAO) |
+| _attributeIdTao | bytes32 | Attribute ID for TAO validation |
+
 ### setAttributeData
 
 ```solidity

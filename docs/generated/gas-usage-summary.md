@@ -1,6 +1,6 @@
 # ⛽ Gas Usage Report
 
-> Generated on 2026-02-19
+> Generated on 2026-02-20
 
 ## Configuration
 
@@ -19,7 +19,7 @@
 | BusinessLogicFactory(F)        | `deploy(b32,b)`                                                     | 280,440 | 2,935,402 | 1,457,478 | █░░░░░░░░░░░░░░░░░4.86░░░░░░░░░░░░░░░░░░ | 5,801 |
 | ProxyFactory(F)                | `deployUseCaseTo(b32,u256,(b32,adr[])[],bool,b32[],b[],b32)`        | 0 | 0 | 1,088,907 | █░░░░░░░░░░░░░░░░░3.63░░░░░░░░░░░░░░░░░░ | 4 |
 | ProxyFactory(F)                | `deployUseCase(b32,u256,(b32,adr[])[],bool,b32[],b[])`              | 943,602 | 1,319,633 | 1,072,507 | █░░░░░░░░░░░░░░░░░3.58░░░░░░░░░░░░░░░░░░ | 354 |
-| DidDocumentDetailed(F)         | `insertFirstDidDocument(b32,str,b32,b,b,u8,u256,u256,str)`          | 920,704 | 1,006,096 | 965,323 | █░░░░░░░░░░░░░░░░░3.22░░░░░░░░░░░░░░░░░░ | 321 |
+| DidDocumentDetailed(F)         | `insertFirstDidDocument(b32,str,b32,b,b,u8,u256,u256,str)`          | 920,692 | 1,006,096 | 965,324 | █░░░░░░░░░░░░░░░░░3.22░░░░░░░░░░░░░░░░░░ | 321 |
 | DidDocumentDetailed(F)         | `insertDidDocument(b32,str,b32,b,u8,u256,u256)`                     | 884,114 | 952,763 | 913,248 | █░░░░░░░░░░░░░░░░░3.04░░░░░░░░░░░░░░░░░░ | 43 |
 | SmartAccountFactory(F)         | `createAccount(adr,b32)`                                            | 105,691 | 1,014,137 | 559,914 | ░░░░░░░░░░░░░░░░░░1.87░░░░░░░░░░░░░░░░░░ | 4 |
 | MaliciousAccount               | `setReenterCalldata(b)`                                             | 0 | 0 | 532,025 | ░░░░░░░░░░░░░░░░░░1.77░░░░░░░░░░░░░░░░░░ | 1 |
@@ -29,21 +29,21 @@
 | DiamondCutAccessControl(F)     | `facetUpdates(adr[],adr,b)`                                         | 293,962 | 691,957 | 346,885 | ░░░░░░░░░░░░░░░░░░1.16░░░░░░░░░░░░░░░░░░ | 10 |
 | AccessControlDid(F)            | `initializeDidAccessControl((b32,b32[])[])`                         | 192,573 | 423,352 | 346,426 | ░░░░░░░░░░░░░░░░░░1.15░░░░░░░░░░░░░░░░░░ | 3 |
 | TimeStampingRegistry(F)        | `stampWithSignature(((b32,b32,b32),adr,u256,u256),b)`               | 312,211 | 312,223 | 312,215 | ░░░░░░░░░░░░░░░░░░1.04░░░░░░░░░░░░░░░░░░ | 3 |
-| DidVerificationRelationship(F) | `addVerificationRelationship(b32,str,b32,u256,u256)`                | 305,997 | 323,085 | 312,196 | ░░░░░░░░░░░░░░░░░░1.04░░░░░░░░░░░░░░░░░░ | 6 |
-| TrustedIssuersRegistry(F)      | `setAttributeMetadata(b32,u8,b32,b32,b32)`                          | 185,911 | 373,555 | 304,737 | ░░░░░░░░░░░░░░░░░░1.02░░░░░░░░░░░░░░░░░░ | 62 |
+| DidVerificationRelationship(F) | `addVerificationRelationship(b32,str,b32,u256,u256)`                | 305,997 | 323,097 | 312,198 | ░░░░░░░░░░░░░░░░░░1.04░░░░░░░░░░░░░░░░░░ | 6 |
 | TimeStampingRegistry(F)        | `stamp(b32,b32,b32)`                                                | 264,750 | 281,862 | 277,399 | ░░░░░░░░░░░░░░░░░░0.92░░░░░░░░░░░░░░░░░░ | 23 |
-| ERC20(TW)                      | `batchMint(adr[],u256[])`                                           | 54,182 | 1,810,370 | 243,653 | ░░░░░░░░░░░░░░░░░░0.81░░░░░░░░░░░░░░░░░░ | 36 |
+| TrustedIssuersRegistry(F)      | `setAttributeMetadata(b32,u8,b32,b32,b32)`                          | 158,159 | 352,246 | 274,409 | ░░░░░░░░░░░░░░░░░░0.91░░░░░░░░░░░░░░░░░░ | 62 |
+| ERC20(TW)                      | `batchMint(adr[],u256[])`                                           | 54,182 | 1,810,430 | 243,657 | ░░░░░░░░░░░░░░░░░░0.81░░░░░░░░░░░░░░░░░░ | 36 |
 | BesuNodeManager(F)             | `addBootNode(str)`                                                  | 224,483 | 241,583 | 240,547 | ░░░░░░░░░░░░░░░░░░0.80░░░░░░░░░░░░░░░░░░ | 33 |
 | BesuNodeManager(F)             | `addExecutionNode(str)`                                             | 224,473 | 241,573 | 240,504 | ░░░░░░░░░░░░░░░░░░0.80░░░░░░░░░░░░░░░░░░ | 32 |
 | BesuNodeManager(F)             | `addValidator(str)`                                                 | 224,558 | 241,658 | 240,492 | ░░░░░░░░░░░░░░░░░░0.80░░░░░░░░░░░░░░░░░░ | 44 |
 | BesuNodeManager(F)             | `addValidatorStandby(str)`                                          | 224,557 | 241,669 | 239,358 | ░░░░░░░░░░░░░░░░░░0.80░░░░░░░░░░░░░░░░░░ | 37 |
 | EntryPoint(F)                  | `handleOps((adr,u256,b,b,b32,u256,b32,b,b)[],adr)`                  | 137,108 | 1,126,473 | 228,522 | ░░░░░░░░░░░░░░░░░░0.76░░░░░░░░░░░░░░░░░░ | 38 |
-| DidVerificationMethod(F)       | `addVerificationMethod(b32,b32,b,u8)`                               | 177,748 | 247,441 | 218,395 | ░░░░░░░░░░░░░░░░░░0.73░░░░░░░░░░░░░░░░░░ | 12 |
+| DidVerificationMethod(F)       | `addVerificationMethod(b32,b32,b,u8)`                               | 177,748 | 247,441 | 218,396 | ░░░░░░░░░░░░░░░░░░0.73░░░░░░░░░░░░░░░░░░ | 12 |
 | AccessControl(F)               | `initializeAccessControl((b32,adr[])[])`                            | 174,746 | 413,173 | 215,031 | ░░░░░░░░░░░░░░░░░░0.72░░░░░░░░░░░░░░░░░░ | 16 |
-| ClientFiltering(F)             | `registerFilter((b32,u8,b32,adr,b4,b32,u256,u256,bool))`            | 183,827 | 227,509 | 209,531 | ░░░░░░░░░░░░░░░░░░0.70░░░░░░░░░░░░░░░░░░ | 34 |
-| AnchoringCore(F)               | `anchorBlock(u256,u256,b32,b32)`                                    | 201,715 | 216,406 | 207,137 | ░░░░░░░░░░░░░░░░░░0.69░░░░░░░░░░░░░░░░░░ | 95 |
-| TrustedIssuersRegistry(F)      | `setAttributeData(b32,b32,b)`                                       | 203,460 | 209,496 | 204,475 | ░░░░░░░░░░░░░░░░░░0.68░░░░░░░░░░░░░░░░░░ | 12 |
-| ERC3643Freeze(F)               | `batchSetAddressFrozen(adr[],bool[])`                               | 49,694 | 852,442 | 192,816 | ░░░░░░░░░░░░░░░░░░0.64░░░░░░░░░░░░░░░░░░ | 13 |
+| ClientFiltering(F)             | `registerFilter((b32,u8,b32,adr,b4,b32,u256,u256,bool))`            | 183,815 | 227,584 | 209,527 | ░░░░░░░░░░░░░░░░░░0.70░░░░░░░░░░░░░░░░░░ | 34 |
+| AnchoringCore(F)               | `anchorBlock(u256,u256,b32,b32)`                                    | 201,703 | 216,406 | 207,135 | ░░░░░░░░░░░░░░░░░░0.69░░░░░░░░░░░░░░░░░░ | 95 |
+| TrustedIssuersRegistry(F)      | `setAttributeData(b32,b32,b)`                                       | 203,460 | 209,496 | 204,476 | ░░░░░░░░░░░░░░░░░░0.68░░░░░░░░░░░░░░░░░░ | 12 |
+| ERC3643Freeze(F)               | `batchSetAddressFrozen(adr[],bool[])`                               | 49,694 | 852,502 | 192,825 | ░░░░░░░░░░░░░░░░░░0.64░░░░░░░░░░░░░░░░░░ | 13 |
 | ERC20(TW)                      | `batchForceTransfer(adr[],adr[],u256[])`                            | 51,175 | 361,224 | 192,465 | ░░░░░░░░░░░░░░░░░░0.64░░░░░░░░░░░░░░░░░░ | 23 |
 | NetworkDirectory(F)            | `createNetwork((u256,b32,b32,u8,u8,(b32,str)[]))`                   | 159,825 | 582,439 | 185,853 | ░░░░░░░░░░░░░░░░░░0.62░░░░░░░░░░░░░░░░░░ | 93 |
 | DiamondCutAccessControl(F)     | `diamondCut((adr,u8,b4[])[],adr,b)`                                 | 48,543 | 340,367 | 169,119 | ░░░░░░░░░░░░░░░░░░0.56░░░░░░░░░░░░░░░░░░ | 7 |
@@ -66,7 +66,7 @@
 | NetworkDirectory(F)            | `setResource(u256,b32,str)`                                         | 45,390 | 863,918 | 132,177 | ░░░░░░░░░░░░░░░░░░0.44░░░░░░░░░░░░░░░░░░ | 54 |
 | ERC20BurnableSigned(F)         | `burnFromWithSignature(adr,adr,u256,u256,u256,b)`                   | 0 | 0 | 130,283 | ░░░░░░░░░░░░░░░░░░0.43░░░░░░░░░░░░░░░░░░ | 3 |
 | AssetEventTracker(TW)          | `recordState(u256)`                                                 | 117,295 | 152,520 | 130,138 | ░░░░░░░░░░░░░░░░░░0.43░░░░░░░░░░░░░░░░░░ | 20 |
-| EnsRegistry(F)                 | `setSubnodeRecord(b32,b32,adr,adr,u64)`                             | 0 | 0 | 127,558 | ░░░░░░░░░░░░░░░░░░0.43░░░░░░░░░░░░░░░░░░ | 5 |
+| EnsRegistry(F)                 | `setSubnodeRecord(b32,b32,adr,adr,u64)`                             | 127,558 | 127,570 | 127,565 | ░░░░░░░░░░░░░░░░░░0.43░░░░░░░░░░░░░░░░░░ | 5 |
 | ERC20BurnableSigned(F)         | `burnWithSignature(adr,u256,u256,u256,b)`                           | 0 | 0 | 121,911 | ░░░░░░░░░░░░░░░░░░0.41░░░░░░░░░░░░░░░░░░ | 3 |
 | ERC20(TW)                      | `forceTransfer(adr,adr,u256)`                                       | 89,747 | 214,340 | 121,824 | ░░░░░░░░░░░░░░░░░░0.41░░░░░░░░░░░░░░░░░░ | 37 |
 | GlobalIsbePause(F)             | `pauseIsbe(adr)`                                                    | 0 | 0 | 117,980 | ░░░░░░░░░░░░░░░░░░0.39░░░░░░░░░░░░░░░░░░ | 4 |
@@ -96,16 +96,16 @@
 | ISBEPause(F)                   | `initializePause(bool)`                                             | 0 | 0 | 88,947 | ░░░░░░░░░░░░░░░░░░0.30░░░░░░░░░░░░░░░░░░ | 1 |
 | HashTimestamp(F)               | `timestampHash(b32)`                                                | 72,936 | 108,261 | 88,680 | ░░░░░░░░░░░░░░░░░░0.30░░░░░░░░░░░░░░░░░░ | 9 |
 | ERC3643ComplianceMaxBalance(F) | `initializeERC3643ComplianceMaxBalance(u256)`                       | 68,736 | 88,660 | 88,265 | ░░░░░░░░░░░░░░░░░░0.29░░░░░░░░░░░░░░░░░░ | 101 |
-| PubkeyResolver(F)              | `setPubkey(b32,b32,b32)`                                            | 56,507 | 108,120 | 88,018 | ░░░░░░░░░░░░░░░░░░0.29░░░░░░░░░░░░░░░░░░ | 11 |
+| PubkeyResolver(F)              | `setPubkey(b32,b32,b32)`                                            | 56,507 | 108,120 | 88,020 | ░░░░░░░░░░░░░░░░░░0.29░░░░░░░░░░░░░░░░░░ | 11 |
 | DiamondCutAccessControl(F)     | `interfaceCut((adr,u8,b4[])[])`                                     | 71,485 | 132,041 | 87,246 | ░░░░░░░░░░░░░░░░░░0.29░░░░░░░░░░░░░░░░░░ | 4 |
 | ERC3643Freeze(F)               | `batchFreezePartialTokens(adr[],u256[])`                            | 49,739 | 176,489 | 87,210 | ░░░░░░░░░░░░░░░░░░0.29░░░░░░░░░░░░░░░░░░ | 10 |
 | DidVerificationMethod(F)       | `revokeVerificationMethod(b32,b32,u256)`                            | 44,048 | 100,100 | 86,078 | ░░░░░░░░░░░░░░░░░░0.29░░░░░░░░░░░░░░░░░░ | 8 |
-| EnsRegistry(F)                 | `setRecord(b32,adr,adr,u64)`                                        | 0 | 0 | 84,597 | ░░░░░░░░░░░░░░░░░░0.28░░░░░░░░░░░░░░░░░░ | 2 |
+| EnsRegistry(F)                 | `setRecord(b32,adr,adr,u64)`                                        | 0 | 0 | 84,609 | ░░░░░░░░░░░░░░░░░░0.28░░░░░░░░░░░░░░░░░░ | 2 |
 | ERC20(TW)                      | `burn(u256)`                                                        | 79,580 | 102,251 | 84,590 | ░░░░░░░░░░░░░░░░░░0.28░░░░░░░░░░░░░░░░░░ | 9 |
 | SmartAccount(TW)               | `initializeSmartAccount(adr,adr)`                                   | 0 | 0 | 82,150 | ░░░░░░░░░░░░░░░░░░0.27░░░░░░░░░░░░░░░░░░ | 2 |
 | ERC721Royalty(F)               | `setDefaultRoyalty(adr,u96)`                                        | 71,309 | 106,642 | 80,142 | ░░░░░░░░░░░░░░░░░░0.27░░░░░░░░░░░░░░░░░░ | 4 |
+| TextResolver(F)                | `setText(b32,str,str)`                                              | 59,748 | 89,262 | 77,929 | ░░░░░░░░░░░░░░░░░░0.26░░░░░░░░░░░░░░░░░░ | 15 |
 | EnsResolver(F)                 | `approve(b32,adr,bool)`                                             | 60,650 | 82,562 | 77,084 | ░░░░░░░░░░░░░░░░░░0.26░░░░░░░░░░░░░░░░░░ | 8 |
-| TextResolver(F)                | `setText(b32,str,str)`                                              | 59,808 | 89,322 | 76,832 | ░░░░░░░░░░░░░░░░░░0.26░░░░░░░░░░░░░░░░░░ | 15 |
 | KnownDid(TW)                   | `testOnlyKnownDid()`                                                | 0 | 0 | 75,334 | ░░░░░░░░░░░░░░░░░░0.25░░░░░░░░░░░░░░░░░░ | 4 |
 | DidVerificationMethod(F)       | `expireVerificationMethod(b32,b32,u256)`                            | 40,751 | 96,803 | 74,369 | ░░░░░░░░░░░░░░░░░░0.25░░░░░░░░░░░░░░░░░░ | 5 |
 | GlobalIsbePause(F)             | `unpauseIsbe(adr)`                                                  | 0 | 0 | 74,268 | ░░░░░░░░░░░░░░░░░░0.25░░░░░░░░░░░░░░░░░░ | 2 |
@@ -197,7 +197,7 @@
 | NetworkDirectory(F)                | 2,646,262 | ███░░░░░░░░░░░░░░░8.82░░░░░░░░░░░░░░░░░░ |
 | ProxyFactory(F)                    | 2,478,545 | ███░░░░░░░░░░░░░░░8.26░░░░░░░░░░░░░░░░░░ |
 | SmartAccountFactory(F)             | 2,190,072 | ██░░░░░░░░░░░░░░░░7.30░░░░░░░░░░░░░░░░░░ |
-| TrustedIssuersRegistry(TW)(F)      | 2,169,932 | ██░░░░░░░░░░░░░░░░7.23░░░░░░░░░░░░░░░░░░ |
+| TrustedIssuersRegistry(TW)(F)      | 2,167,556 | ██░░░░░░░░░░░░░░░░7.23░░░░░░░░░░░░░░░░░░ |
 | ConfigurationManagement(F)         | 2,073,965 | ██░░░░░░░░░░░░░░░░6.91░░░░░░░░░░░░░░░░░░ |
 | DidVerificationMethod(TW)(F)       | 1,926,273 | ██░░░░░░░░░░░░░░░░6.42░░░░░░░░░░░░░░░░░░ |
 | AnchoringCore(F)                   | 1,775,887 | ██░░░░░░░░░░░░░░░░5.92░░░░░░░░░░░░░░░░░░ |

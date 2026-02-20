@@ -31,6 +31,20 @@ abstract contract TrustedIssuersRegistry is
         _disableInitializers(_TRUSTED_ISSUERS_REGISTRY_RESOLVER_KEY);
     }
 
+    /**
+     * @notice Sets metadata for an issuer's attribute (Phase 1 of accreditation)
+     * @dev Access control is handled by _checkEligibility in the internal function.
+     *      The caller must be:
+     *      - ISBE admin with _TRUSTED_ISSUERS_REGISTRY_ROLE, OR
+     *      - A TAO/RTAO that controls _taoDid
+     *      NOTE: _did is the RECIPIENT of the accreditation (the issuer being created/updated),
+     *            not the caller. The caller's authorization is validated via _taoDid in _checkEligibility.
+     * @param _did Issuer DID (recipient of the accreditation)
+     * @param _issuerType Type of issuer (ROOT_TAO, TAO, TI)
+     * @param _revisionId Attribute revision identifier
+     * @param _taoDid TAO DID that is creating/authorizing this accreditation (caller's TAO)
+     * @param _attributeIdTao Attribute ID for TAO validation
+     */
     function setAttributeMetadata(
         bytes32 _did,
         IssuerType _issuerType,
@@ -41,7 +55,6 @@ abstract contract TrustedIssuersRegistry is
         external
         override
         whenNotPaused
-        onlyControllerOrAuth(_did)
         onlyValidIssuerType(_issuerType)
         bytes32IsNotZero(_revisionId)
         onlyBySameIssuer(_did, _revisionId)
