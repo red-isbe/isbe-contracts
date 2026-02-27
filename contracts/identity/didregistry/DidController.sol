@@ -35,6 +35,7 @@ abstract contract DidController is DidControllerInternal, IDidController {
         bytes32IsNotZero(controller)
         onlyDidExists(did)
         onlyDidExists(controller)
+        onlyControllerOrAuth(did)
         onlyNotController(did, controller)
         returns (bool)
     {

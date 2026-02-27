@@ -2409,6 +2409,57 @@ describe('DiDRegistry', function () {
                     .to.emit(didRegistry, 'ControllerAdded')
                     .withArgs(did, controller)
             })
+
+            it('GIVEN a DID with owner WHEN a non-controller account tries to add controller THEN it fails with ControllerNotAuthorized', async () => {
+                // GIVEN
+                const [, otherSigner] = await ethers.getSigners()
+                const controller = await insertControllerDocument()
+                await mockTimestamp.setMockedTimestamp(notBefore + 1n)
+
+                // WHEN/THEN - Other account (non-controller) cannot add controller
+                await expect(
+                    didRegistry
+                        .connect(otherSigner)
+                        .addController(did, controller)
+                )
+                    .to.be.revertedWithCustomError(
+                        didControllerFacet,
+                        'ControllerNotAuthorized'
+                    )
+                    .withArgs(did, await otherSigner.getAddress())
+            })
+
+            it('GIVEN a DID with existing controller WHEN owner adds another controller THEN it succeeds', async () => {
+                // GIVEN - Add first controller as owner
+                const firstController = await insertControllerDocument()
+                await mockTimestamp.setMockedTimestamp(notBefore + 1n)
+                await didRegistry.addController(did, firstController)
+
+                // GIVEN - Second controller document
+                const secondControllerWallet = ethers.Wallet.createRandom()
+                const secondControllerProof = generateProof(
+                    secondControllerWallet
+                )
+                const secondControllerDid = proofToDid(secondControllerProof)
+                await didRegistry.insertFirstDidDocument(
+                    secondControllerDid,
+                    randomBaseDocument(),
+                    randomHex(32),
+                    secondControllerProof,
+                    secondControllerWallet.signingKey.publicKey,
+                    EllipticType.SECP_256_K1,
+                    notBefore,
+                    notAfter,
+                    ''
+                )
+
+                // WHEN/THEN - Owner can still add more controllers
+                expect(
+                    await didRegistry.addController(did, secondControllerDid)
+                )
+                    .to.emit(didRegistry, 'ControllerAdded')
+                    .withArgs(did, secondControllerDid)
+            })
         })
 
         describe('revokeController', () => {
