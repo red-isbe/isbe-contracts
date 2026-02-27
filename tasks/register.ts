@@ -76,6 +76,8 @@ import './proxyFactory/getDeployedProxiesByConfiguration'
 import './deployTest'
 import './deployAll'
 import './deployAllClean'
+import './deployment/updateDiamondFacets'
+import './deployment/upgradeDiamondE2E'
 
 // Extract/Utility tasks
 import './extract/byteCode'

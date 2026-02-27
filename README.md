@@ -1015,6 +1015,8 @@ npx hardhat has-role --role <role> --account <address> --contract <address> --ne
 
 ### Diamond Pattern Tasks
 
+#### Diamond Inspection
+
 ```bash
 # Get all facets
 npx hardhat getFacets --diamond <address> --network <network>
@@ -1025,9 +1027,42 @@ npx hardhat getFacetAddress --selector <selector> --diamond <address> --network 
 # Get facet selectors
 npx hardhat getFacetSelectors --facet <address> --diamond <address> --network <network>
 
-# Perform diamond cut
+# Show current diamond facet configuration
+npx hardhat showDiamondFacets --network <network>
+# Custom diamond address:
+npx hardhat showDiamondFacets --diamond 0x123... --network <network>
+```
+
+#### Diamond Updates
+
+```bash
+# Deploy all ISBE facets and update the diamond
+npx hardhat updateDiamondFacets --network <network>
+
+# Dry-run to preview changes without executing
+npx hardhat updateDiamondFacets --network <network> --dry-run
+
+# Deploy only specific facets
+npx hardhat updateDiamondFacets --network <network> \
+  --facets '["DiamondCutAccessControlFacet","DiamondLoupeFacet"]'
+
+# Use pre-deployed facet addresses (skip deployment)
+npx hardhat updateDiamondFacets --network <network> \
+  --facet-addresses '["0x...","0x..."]'
+
+# Deploy facets without updating diamond (just deployment)
+npx hardhat deployFacets --network <network>
+
+# Save deployed facet addresses to file
+npx hardhat deployFacets --network <network> --save-addresses
+
+# Perform diamond cut (advanced)
 npx hardhat diamondCut --cuts <cuts> --diamond <address> --network <network>
 ```
+
+#### Default Diamond Address
+
+The default diamond address for ISBE networks is `0x00000000000000000000000000000000000015BE`. This address is used automatically when `--diamond` is not specified.
 
 ### Access Control
 
