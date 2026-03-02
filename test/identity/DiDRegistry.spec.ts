@@ -343,7 +343,7 @@ describe('DiDRegistry', function () {
         ).to.be.equal(DID_VERIFICATION_RELATIONSHIP_RESOLVER_KEY)
         expect(
             await gov.didDocumentDetailedFacet.interfacesIntrospection()
-        ).to.be.deep.equal(['0x4338e3f7'])
+        ).to.be.deep.equal(['0x10e047f4'])
 
         return {
             admin: adminSigner,
@@ -1048,6 +1048,7 @@ describe('DiDRegistry', function () {
             const ALSO_KNOWN_AS_EXAMPLE = 'irn:orgs:inetum'
             let wallet: HDNodeWallet
             let callerDid: string
+            let proof: string
 
             beforeEach(async () => {
                 const fixture = async () => {
@@ -1059,14 +1060,14 @@ describe('DiDRegistry', function () {
                     )
 
                     // Insert first DID for the test caller so they can use insertDidDocument
-                    const proof = generateProof(wallet)
-                    callerDid = proofToDid(proof)
+                    const callerProof = generateProof(wallet)
+                    callerDid = proofToDid(callerProof)
 
                     await didRegistry.insertFirstDidDocument(
                         callerDid,
                         randomBaseDocument(),
                         randomDid(),
-                        proof,
+                        callerProof,
                         publicKey65,
                         EllipticType.SECP_256_K1,
                         notBefore,
@@ -1078,7 +1079,10 @@ describe('DiDRegistry', function () {
                     await mockTimestamp.setMockedTimestamp(notBefore + 1n)
                 }
                 await loadFixture(fixture)
-                did = randomDid()
+                // Generate proof-derived DID for insertDidDocument tests
+                const secondWallet = deriveWallet(wallet, '2')
+                proof = generateProof(secondWallet)
+                did = proofToDid(proof)
             })
 
             describe('Requires Known DID', () => {
@@ -1093,6 +1097,7 @@ describe('DiDRegistry', function () {
                                 did,
                                 baseDocument,
                                 vMethodId,
+                                proof,
                                 newPublicKey,
                                 EllipticType.SECP_256_K1,
                                 notBefore,
@@ -1116,6 +1121,7 @@ describe('DiDRegistry', function () {
                             did,
                             baseDocument,
                             newVMethodId,
+                            proof,
                             newPublicKey,
                             EllipticType.SECP_256_K1,
                             notBefore,
@@ -1136,6 +1142,7 @@ describe('DiDRegistry', function () {
                         did,
                         baseDocument,
                         newVMethodId,
+                        proof,
                         newPublicKey,
                         EllipticType.SECP_256_K1,
                         notBefore,
@@ -1148,6 +1155,7 @@ describe('DiDRegistry', function () {
                             did,
                             baseDocument,
                             newVMethodId,
+                            proof,
                             newPublicKey,
                             EllipticType.SECP_256_K1,
                             notBefore,
@@ -1173,6 +1181,7 @@ describe('DiDRegistry', function () {
                             did,
                             baseDocument,
                             newVMethodId,
+                            proof,
                             newPublicKey,
                             EllipticType.SECP_256_R1,
                             notBefore,
@@ -1196,6 +1205,7 @@ describe('DiDRegistry', function () {
                             did,
                             baseDocument,
                             newVMethodId,
+                            proof,
                             newPublicKey,
                             EllipticTypeTest.NONE,
                             notBefore,
@@ -1216,6 +1226,7 @@ describe('DiDRegistry', function () {
                             did,
                             baseDocument,
                             newVMethodId,
+                            proof,
                             emptyBytes,
                             EllipticType.SECP_256_K1,
                             notBefore,
@@ -1238,6 +1249,7 @@ describe('DiDRegistry', function () {
                         did,
                         baseDocument,
                         newVMethodId,
+                        proof,
                         newPublicKey,
                         EllipticType.SECP_256_K1,
                         notBefore,
@@ -1260,6 +1272,7 @@ describe('DiDRegistry', function () {
                         did,
                         baseDocument,
                         newVMethodId,
+                        proof,
                         newPublicKey,
                         EllipticType.SECP_256_K1,
                         notBefore,
@@ -1288,6 +1301,7 @@ describe('DiDRegistry', function () {
                             did,
                             baseDocument,
                             newVMethodId,
+                            proof,
                             newPublicKey,
                             EllipticType.SECP_256_K1,
                             notBefore,
@@ -1304,6 +1318,35 @@ describe('DiDRegistry', function () {
                             notBefore,
                             notAfter
                         )
+                })
+            })
+
+            describe('Proof Validation', () => {
+                it('GIVEN a DID not derived from proof WHEN calling insertDidDocument THEN it fails', async () => {
+                    const newVMethodId = randomHex(32)
+
+                    // Generate valid proof and public key from the SAME wallet
+                    const testWallet = deriveWallet(wallet, '4')
+                    const validProof = generateProof(testWallet)
+                    const testPublicKey = walletToPublicKey(testWallet)
+                    // Use a random DID that doesn't match the proof
+                    const wrongDid = randomDid()
+
+                    await expect(
+                        didRegistry.insertDidDocument(
+                            wrongDid,
+                            baseDocument,
+                            newVMethodId,
+                            validProof,
+                            testPublicKey,
+                            EllipticType.SECP_256_K1,
+                            notBefore,
+                            notAfter
+                        )
+                    ).to.be.revertedWithCustomError(
+                        didDocumentDetailedFacet,
+                        'DidNotDerivedFromProof'
+                    )
                 })
             })
         })
@@ -2567,9 +2610,12 @@ describe('DiDRegistry', function () {
                     // Set timestamp so caller can use insertDidDocument
                     await mockTimestamp.setMockedTimestamp(notBefore + 1n)
 
-                    // Insert remaining DIDs using insertDidDocument (random DIDs allowed)
+                    // Insert remaining DIDs using insertDidDocument (proof-derived DIDs)
                     for (let i = 1; i < 5; i++) {
-                        const did = randomDid()
+                        const loopWallet = deriveWallet(wallet, `${i + 10}`)
+                        const loopProof = generateProof(loopWallet)
+                        const did = proofToDid(loopProof)
+                        const loopPublicKey = walletToPublicKey(loopWallet)
                         insertedDids.push(did)
                         const vMethodIdFor = randomDid()
 
@@ -2577,7 +2623,8 @@ describe('DiDRegistry', function () {
                             did,
                             baseDocument,
                             vMethodIdFor,
-                            publicKey65,
+                            loopProof,
+                            loopPublicKey,
                             EllipticType.SECP_256_K1,
                             notBefore,
                             notAfter
@@ -2658,17 +2705,21 @@ describe('DiDRegistry', function () {
                     // Set timestamp so caller can use insertDidDocument
                     await mockTimestamp.setMockedTimestamp(notBefore + 1n)
 
-                    // Insert remaining DIDs using insertDidDocument (random DIDs allowed)
+                    // Insert remaining DIDs using insertDidDocument (proof-derived DIDs)
                     // Note: All DIDs use the same vMethodId so they can be queried by verification relationship
                     for (let i = 1; i < 5; i++) {
-                        const did = randomDid()
+                        const loopWallet = deriveWallet(wallet, `${i + 20}`)
+                        const loopProof = generateProof(loopWallet)
+                        const did = proofToDid(loopProof)
+                        const loopPublicKey = walletToPublicKey(loopWallet)
                         insertedDids.push(did)
 
                         await didRegistry.insertDidDocument(
                             did,
                             baseDocument,
                             vMethodId,
-                            publicKey65,
+                            loopProof,
+                            loopPublicKey,
                             EllipticType.SECP_256_K1,
                             notBefore,
                             notAfter
@@ -2814,6 +2865,7 @@ describe('DiDRegistry', function () {
                             did,
                             baseDocument,
                             vMethodId,
+                            didProof,
                             didPublicKey,
                             EllipticType.SECP_256_K1,
                             notBefore,
