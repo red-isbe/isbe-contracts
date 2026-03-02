@@ -1251,7 +1251,7 @@ describe('DiDRegistry', function () {
             })
 
             describe('Controller Setup', () => {
-                it('GIVEN a successful insertion WHEN checking controllers THEN new DID is its own controller', async () => {
+                it('GIVEN a successful insertion WHEN checking controllers THEN new DID is its own controller and caller is controller', async () => {
                     const newPublicKey = walletToPublicKey(
                         deriveWallet(wallet, '2')
                     )
@@ -1269,8 +1269,11 @@ describe('DiDRegistry', function () {
                     const didDocument = await didRegistry.getDidDocument(did)
                     const controllers = didDocument[2]
 
-                    expect(controllers).to.have.lengthOf(1)
-                    expect(controllers[0]).to.equal(did)
+                    // After ISBE-84 fix: DID is linked to itself AND caller via _insertAndLink
+                    const callerDid = proofToDid(generateProof(wallet))
+                    expect(controllers).to.have.lengthOf(2)
+                    expect(controllers).to.include(did)
+                    expect(controllers).to.include(callerDid)
                 })
             })
 
@@ -2770,29 +2773,24 @@ describe('DiDRegistry', function () {
 
         describe('getDidsByController', () => {
             let insertedDids: string[]
-            let controller: string
+            let controllerDid: string
+            let controllerWallet: HDNodeWallet
 
             beforeEach(async () => {
-                const wallet = walletOfFirstSigner()
-                randomizeDidDocument(wallet)
-                insertedDids = [
-                    randomDid(),
-                    randomDid(),
-                    randomDid(),
-                    randomDid(),
-                ]
+                controllerWallet = walletOfFirstSigner()
+                randomizeDidDocument(controllerWallet)
+                insertedDids = []
                 const fixture = async () => {
                     await didRegistry.initializeDiDRegistry(
                         EllipticType.SECP_256_K1
                     )
                     await mockTimestamp.setMockedTimestamp(notBefore + 1n)
 
-                    // Insert controller DID first with proof-derived DID
-                    const proof = generateProof(wallet)
-                    controller = proofToDid(proof)
+                    const proof = generateProof(controllerWallet)
+                    controllerDid = proofToDid(proof)
 
                     await didRegistry.insertFirstDidDocument(
-                        controller,
+                        controllerDid,
                         baseDocument,
                         vMethodId,
                         proof,
@@ -2803,27 +2801,33 @@ describe('DiDRegistry', function () {
                         ''
                     )
 
-                    // Insert remaining DIDs using insertDidDocument
-                    for (const did of insertedDids) {
+                    for (let i = 0; i < 4; i++) {
+                        const currentWallet = deriveWallet(
+                            controllerWallet,
+                            (i + 100).toString()
+                        )
+                        const didProof = generateProof(currentWallet)
+                        const didPublicKey = walletToPublicKey(currentWallet)
+                        const did = proofToDid(didProof)
+                        insertedDids.push(did)
                         await didRegistry.insertDidDocument(
                             did,
                             baseDocument,
                             vMethodId,
-                            publicKey64,
+                            didPublicKey,
                             EllipticType.SECP_256_K1,
                             notBefore,
                             notAfter
                         )
-                        await didRegistry.addController(did, controller)
                     }
                 }
                 await loadFixture(fixture)
-                insertedDids = [controller].concat(insertedDids)
+                insertedDids = [controllerDid].concat(insertedDids)
             })
             it('GIVEN controlled documents WHEN try to get more than exists THEN returns full list', async () => {
                 const dids: ContractGetDidsResult =
                     (await didRegistry.getDidsByController(
-                        controller,
+                        controllerDid,
                         1,
                         insertedDids.length * 2
                     )) as unknown as ContractGetDidsResult
@@ -2838,7 +2842,7 @@ describe('DiDRegistry', function () {
             it('GIVEN controlled documents WHEN try to get bit by bit THEN returns little lists', async () => {
                 DidsResultValidator.validate(
                     (await didRegistry.getDidsByController(
-                        controller,
+                        controllerDid,
                         1,
                         2
                     )) as ContractGetDidsResult
@@ -2848,7 +2852,7 @@ describe('DiDRegistry', function () {
                     .expectPaginationInfo(1n, 2n)
                 DidsResultValidator.validate(
                     (await didRegistry.getDidsByController(
-                        controller,
+                        controllerDid,
                         2,
                         2
                     )) as ContractGetDidsResult
@@ -2857,7 +2861,7 @@ describe('DiDRegistry', function () {
                     .expectCounts(insertedDids.length, 2)
                     .expectPaginationInfo(1n, 3n)
                 DidsResultValidator.validate(
-                    await didRegistry.getDidsByController(controller, 3, 2)
+                    await didRegistry.getDidsByController(controllerDid, 3, 2)
                 )
                     .expectDidsArray(insertedDids.slice(4))
                     .expectCounts(insertedDids.length, 1)
@@ -2865,7 +2869,7 @@ describe('DiDRegistry', function () {
             })
             it('GIVEN controlled documents WHEN try to get out of the list THEN returns emtpy list', async () => {
                 DidsResultValidator.validate(
-                    await didRegistry.getDidsByController(controller, 2, 5)
+                    await didRegistry.getDidsByController(controllerDid, 2, 5)
                 )
                     .expectDidsArray([])
                     .expectCounts(insertedDids.length, 0)

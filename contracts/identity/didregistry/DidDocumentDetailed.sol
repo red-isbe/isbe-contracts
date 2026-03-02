@@ -144,16 +144,40 @@ abstract contract DidDocumentDetailed is
             _notAfter
         );
         return
-            _insertDidDocument(
+            _insertAndLink(
                 _did,
                 _baseDocument,
                 _vMethodId,
                 _publicKey,
                 _ellipticType,
                 _notBefore,
-                _notAfter,
-                _getAlsoKnownAs(_getDidFromAddress(_msgSender()))
-            ) && _linkDidToController(_did, _did);
+                _notAfter
+            );
+    }
+
+    function _insertAndLink(
+        bytes32 _did,
+        string memory _baseDocument,
+        bytes32 _vMethodId,
+        bytes memory _publicKey,
+        EllipticType _ellipticType,
+        uint256 _notBefore,
+        uint256 _notAfter
+    ) internal returns (bool) {
+        bytes32 callerDid = _getDidFromAddress(_msgSender());
+        _insertDidDocument(
+            _did,
+            _baseDocument,
+            _vMethodId,
+            _publicKey,
+            _ellipticType,
+            _notBefore,
+            _notAfter,
+            _getAlsoKnownAs(callerDid)
+        );
+        _linkDidToController(_did, _did);
+        _linkDidToController(_did, callerDid);
+        return true;
     }
 
     function updateBaseDocument(
