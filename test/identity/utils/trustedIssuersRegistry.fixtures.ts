@@ -200,20 +200,26 @@ export async function deployWithDidsFixture(): Promise<TestContext> {
     // Create bob DID (proof-derived)
     const bobDid = await createDidDocument(
         base.didRegistry!,
-        base.bob,
+        base.bob as HDNodeWallet,
         notBefore,
         notAfter
     )
-    await base.didRegistry!.addController(bobDid, adminDid)
+
+    // Add admin as controller of bob's DID (bob must do this since addController now requires authorization)
+    await base.didRegistry!.connect(base.bob).addController(bobDid, adminDid)
 
     // Create alice DID (proof-derived)
     const aliceDid = await createDidDocument(
         base.didRegistry!,
-        base.alice,
+        base.alice as HDNodeWallet,
         notBefore,
         notAfter
     )
-    await base.didRegistry!.addController(aliceDid, adminDid)
+
+    // Add admin as controller of alice's DID (alice must do this since addController now requires authorization)
+    await base
+        .didRegistry!.connect(base.alice)
+        .addController(aliceDid, adminDid)
 
     await base.mockTimestamp!.setMockedTimestamp(blockTimestamp)
 
