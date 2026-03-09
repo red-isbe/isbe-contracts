@@ -1657,6 +1657,22 @@ describe('DiDRegistry', function () {
                     false
                 )
             })
+            it('GIVEN a DID with verification method WHEN non-controller tries to revoke V.M. THEN it fails with ControllerNotAuthorized', async () => {
+                // GIVEN
+                const [, otherSigner] = await ethers.getSigners()
+
+                // WHEN/THEN - Unauthorized account tries to revoke verification method
+                await expect(
+                    didRegistry
+                        .connect(otherSigner)
+                        .revokeVerificationMethod(did, vMethodId, notBefore)
+                )
+                    .to.be.revertedWithCustomError(
+                        didControllerFacet,
+                        'ControllerNotAuthorized'
+                    )
+                    .withArgs(did, await otherSigner.getAddress())
+            })
         })
 
         describe('expireVerificationMethod', () => {
@@ -1741,6 +1757,26 @@ describe('DiDRegistry', function () {
                     didVerificationMethodFacet,
                     'InvalidNotAfter'
                 )
+            })
+            it('GIVEN a DID with verification method WHEN non-controller tries to expire V.M. THEN it fails with ControllerNotAuthorized', async () => {
+                // GIVEN
+                const [, otherSigner] = await ethers.getSigners()
+
+                // WHEN/THEN - Unauthorized account tries to expire verification method
+                await expect(
+                    didRegistry
+                        .connect(otherSigner)
+                        .expireVerificationMethod(
+                            did,
+                            vMethodId,
+                            notBefore + 2n
+                        )
+                )
+                    .to.be.revertedWithCustomError(
+                        didControllerFacet,
+                        'ControllerNotAuthorized'
+                    )
+                    .withArgs(did, await otherSigner.getAddress())
             })
             it('GIVEN an inserted document WHEN try to expire V.M. of same elliptic type than NW THEN it success', async () => {
                 await expect(
