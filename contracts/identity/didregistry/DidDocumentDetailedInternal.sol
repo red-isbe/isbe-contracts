@@ -895,6 +895,8 @@ abstract contract DidDocumentDetailedInternal is
                 vRelationship.indexDid,
                 _notAfter
             );
+            // FIX: Update notAfter in document storage for getDidDocument()
+            vRelationship.notAfter = _notAfter;
         }
     }
 
@@ -920,6 +922,8 @@ abstract contract DidDocumentDetailedInternal is
             capabilityInvocation.indexDid,
             _notAfter
         );
+        // FIX: Update notAfter in document storage for getDidDocument()
+        capabilityInvocation.notAfter = _notAfter;
     }
 
     function _cleanupAddressMappingIfNeeded(

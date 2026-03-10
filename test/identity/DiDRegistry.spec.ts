@@ -1560,8 +1560,12 @@ describe('DiDRegistry', function () {
         })
 
         describe('revokeVerificationMethod', () => {
+            let wallet: HDNodeWallet
+
             beforeEach(async () => {
-                ;({ did } = await createStandardFixture())
+                const fixtures = await createStandardFixture()
+                did = fixtures.did
+                wallet = fixtures.wallet
             })
 
             it('GIVEN an inserted document WHEN try to revoke V.M. with empty did THEN it fails', async () => {
@@ -1672,6 +1676,73 @@ describe('DiDRegistry', function () {
                         'ControllerNotAuthorized'
                     )
                     .withArgs(did, await otherSigner.getAddress())
+            })
+            it('GIVEN a revoked V.M. WHEN getDidDocumentByTimestamp THEN notAfter is updated in vRelationships', async () => {
+                // Revoke the verification method using notBefore (timestamp 5)
+                // After revocation, notAfter becomes notBefore, making the period just one moment
+                await didRegistry.revokeVerificationMethod(
+                    did,
+                    vMethodId,
+                    notBefore
+                )
+
+                // Verify the notAfter date is updated in vRelationships via getDidDocumentByTimestamp
+                // We use notBefore as timestamp because the valid period ends at notAfter = notBefore
+                const result = await didRegistry.getDidDocumentByTimestamp(
+                    did,
+                    notBefore
+                )
+                const vRelationships = result[5] // vRelationships is the 6th return value
+
+                // Find the capabilityInvocation relationship
+                const capInvocation = vRelationships.find(
+                    (r: VRelationshipStructoutput) =>
+                        r?.name === 'capabilityInvocation'
+                )
+                expect(capInvocation).to.not.be.undefined
+                // ISBE-116: Verify notAfter is updated to the revocation timestamp
+                expect(capInvocation.notAfter).to.equal(notBefore)
+
+                // Find the authentication relationship
+                const authRelation = vRelationships.find(
+                    (r: VRelationshipStructoutput) =>
+                        r.name === 'authentication'
+                )
+                expect(authRelation).to.not.be.undefined
+                // ISBE-116: Verify notAfter is updated to the revocation timestamp
+                expect(authRelation.notAfter).to.equal(notBefore)
+            })
+            it('GIVEN a V.M. without capabilityInvocation WHEN revoke THEN early return in _revokeCapabilityInvocation', async () => {
+                // Add a new verification method without capabilityInvocation
+                // This tests the branch: if (!document.capabilityInvocationMethodIdExist[_vMethodId]) return;
+                // addVerificationMethod only adds the vMethod, not capabilityInvocation relationship
+                const newVMethodId = randomDid()
+                const newPublicKey = walletToPublicKey(
+                    deriveWallet(wallet, '1')
+                )
+                await didRegistry.addVerificationMethod(
+                    did,
+                    newVMethodId,
+                    newPublicKey,
+                    EllipticType.SECP_256_R1
+                )
+
+                // Revoke the new vMethod (which has no capabilityInvocation)
+                // This should trigger the early return in _revokeCapabilityInvocation
+                // but still work because _revokeAllVerificationRelationships handles other relationships
+                const revokeNotAfter = notBefore
+                await didRegistry.revokeVerificationMethod(
+                    did,
+                    newVMethodId,
+                    revokeNotAfter
+                )
+
+                // Verify main vMethodId still works (the one with capabilityInvocation)
+                await expectControllerStatus(
+                    did,
+                    await admin.getAddress(),
+                    true
+                )
             })
         })
 
@@ -1823,6 +1894,38 @@ describe('DiDRegistry', function () {
                     await admin.getAddress(),
                     true
                 )
+            })
+            it('GIVEN an expired V.M. WHEN getDidDocument THEN notAfter is updated in vRelationships', async () => {
+                // Expire the verification method with a future timestamp
+                // Using a future timestamp ensures the relationship is still visible in getDidDocument
+                const newNotAfter = notBefore + 1000n
+                await didRegistry.expireVerificationMethod(
+                    did,
+                    vMethodId,
+                    newNotAfter
+                )
+
+                // Verify the notAfter date is updated in vRelationships via getDidDocument
+                const result = await didRegistry.getDidDocument(did)
+                const vRelationships = result[5] // vRelationships is the 6th return value
+
+                // Find the capabilityInvocation relationship
+                const capInvocation = vRelationships.find(
+                    (r: VRelationshipStructoutput) =>
+                        r.name === 'capabilityInvocation'
+                )
+                expect(capInvocation).to.not.be.undefined
+                // ISBE-116: Verify notAfter is updated to the expiration timestamp
+                expect(capInvocation.notAfter).to.equal(newNotAfter)
+
+                // Find the authentication relationship
+                const authRelation = vRelationships.find(
+                    (r: VRelationshipStructoutput) =>
+                        r.name === 'authentication'
+                )
+                expect(authRelation).to.not.be.undefined
+                // ISBE-116: Verify notAfter is updated to the expiration timestamp
+                expect(authRelation.notAfter).to.equal(newNotAfter)
             })
         })
 
