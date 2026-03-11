@@ -274,4 +274,8 @@ import './client/anchoring/anchorBlock'
 import './client/anchoring/anchorBlocksBatch'
 
 import './assign-roles'
-import './decode-error'
+
+// Blockscout verification tasks
+
+// Blockscout unified facets generation task
+import './blockscout/generate-unified-facets'
