@@ -55,7 +55,11 @@ import {
     generateProof,
     EMPTY_VALUES,
 } from '../support'
-import { EllipticType, ContractDidDocumentResult } from '../types/identity'
+import {
+    EllipticType,
+    ContractDidDocumentResult,
+    ContractVRelationshipTuple,
+} from '../types/identity'
 
 // EllipticType enum values for testing
 const EllipticTypeTest = {
@@ -1696,21 +1700,92 @@ describe('DiDRegistry', function () {
 
                 // Find the capabilityInvocation relationship
                 const capInvocation = vRelationships.find(
-                    (r: VRelationshipStructoutput) =>
+                    (r: ContractVRelationshipTuple) =>
                         r?.name === 'capabilityInvocation'
                 )
                 expect(capInvocation).to.not.be.undefined
                 // ISBE-116: Verify notAfter is updated to the revocation timestamp
-                expect(capInvocation.notAfter).to.equal(notBefore)
+                expect(capInvocation!.notAfter).to.equal(notBefore)
 
                 // Find the authentication relationship
                 const authRelation = vRelationships.find(
-                    (r: VRelationshipStructoutput) =>
+                    (r: ContractVRelationshipTuple) =>
                         r.name === 'authentication'
                 )
                 expect(authRelation).to.not.be.undefined
                 // ISBE-116: Verify notAfter is updated to the revocation timestamp
-                expect(authRelation.notAfter).to.equal(notBefore)
+                expect(authRelation!.notAfter).to.equal(notBefore)
+            })
+            it('GIVEN a revoked V.M. WHEN getDidDocumentByTimestamp after revocation THEN V.M. is not returned', async () => {
+                // This test verifies that after revoking a VM, it doesn't appear in queries
+                // made AFTER the revocation timestamp (notAfter)
+
+                // Revoke the verification method at notBefore timestamp
+                // After revocation: notBefore <= valid period < notAfter (where notAfter = notBefore)
+                // So the VM is only valid AT notBefore, not after
+                await didRegistry.revokeVerificationMethod(
+                    did,
+                    vMethodId,
+                    notBefore
+                )
+
+                // Query the document AFTER the revocation (notBefore + 1)
+                // The VM should NOT be returned because timestamp > notAfter
+                const timestampAfterRevocation = notBefore + 1n
+                const result = await didRegistry.getDidDocumentByTimestamp(
+                    did,
+                    timestampAfterRevocation
+                )
+
+                const vMethodIds = result[3] // vMethodIds is the 4th return value
+                const vRelationships = result[5] // vRelationships is the 6th return value
+
+                // Verify the revoked vMethodId is NOT in the returned list
+                expect(vMethodIds).to.not.include(vMethodId)
+
+                // Verify capabilityInvocation relationship is NOT returned
+                const capInvocation = vRelationships.find(
+                    (r: ContractVRelationshipTuple) =>
+                        r?.name === 'capabilityInvocation' &&
+                        r?.vMethodId === vMethodId
+                )
+                expect(capInvocation).to.be.undefined
+
+                // Verify authentication relationship is NOT returned
+                const authRelation = vRelationships.find(
+                    (r: ContractVRelationshipTuple) =>
+                        r?.name === 'authentication' &&
+                        r?.vMethodId === vMethodId
+                )
+                expect(authRelation).to.be.undefined
+            })
+            it('GIVEN a revoked V.M. WHEN getDidDocument (current time) after revocation THEN V.M. is not returned', async () => {
+                // Similar to previous test, but using getDidDocument() which uses current block timestamp
+                // This simulates the real-world scenario where time has passed after revocation
+
+                // Revoke at notBefore (which becomes the new notAfter)
+                await didRegistry.revokeVerificationMethod(
+                    did,
+                    vMethodId,
+                    notBefore
+                )
+
+                // Advance time to ensure we're after the revocation
+                // notBefore is typically a small value (5), so current block time will be much later
+                const result = await didRegistry.getDidDocument(did)
+
+                const vMethodIds = result[3]
+                const vRelationships = result[5]
+
+                // The revoked VM should NOT appear in current document
+                expect(vMethodIds).to.not.include(vMethodId)
+
+                // No relationships for this VM should be returned
+                const relationsForRevokedVM = vRelationships.filter(
+                    (r: ContractVRelationshipTuple) =>
+                        r?.vMethodId === vMethodId
+                )
+                expect(relationsForRevokedVM).to.have.lengthOf(0)
             })
             it('GIVEN a V.M. without capabilityInvocation WHEN revoke THEN early return in _revokeCapabilityInvocation', async () => {
                 // Add a new verification method without capabilityInvocation
@@ -1911,21 +1986,74 @@ describe('DiDRegistry', function () {
 
                 // Find the capabilityInvocation relationship
                 const capInvocation = vRelationships.find(
-                    (r: VRelationshipStructoutput) =>
+                    (r: ContractVRelationshipTuple) =>
                         r.name === 'capabilityInvocation'
                 )
                 expect(capInvocation).to.not.be.undefined
                 // ISBE-116: Verify notAfter is updated to the expiration timestamp
-                expect(capInvocation.notAfter).to.equal(newNotAfter)
+                expect(capInvocation!.notAfter).to.equal(newNotAfter)
 
                 // Find the authentication relationship
                 const authRelation = vRelationships.find(
-                    (r: VRelationshipStructoutput) =>
+                    (r: ContractVRelationshipTuple) =>
                         r.name === 'authentication'
                 )
                 expect(authRelation).to.not.be.undefined
                 // ISBE-116: Verify notAfter is updated to the expiration timestamp
-                expect(authRelation.notAfter).to.equal(newNotAfter)
+                expect(authRelation!.notAfter).to.equal(newNotAfter)
+            })
+            it('GIVEN an expired V.M. WHEN getDidDocumentByTimestamp after expiration THEN V.M. is not returned', async () => {
+                const expirationTimestamp = notBefore + 100n
+                await didRegistry.expireVerificationMethod(
+                    did,
+                    vMethodId,
+                    expirationTimestamp
+                )
+
+                const timestampAfterExpiration = expirationTimestamp + 1n
+                const result = await didRegistry.getDidDocumentByTimestamp(
+                    did,
+                    timestampAfterExpiration
+                )
+
+                const vMethodIds = result[3]
+                const vRelationships = result[5]
+
+                expect(vMethodIds).to.not.include(vMethodId)
+
+                const capInvocation = vRelationships.find(
+                    (r: ContractVRelationshipTuple) =>
+                        r?.name === 'capabilityInvocation' &&
+                        r?.vMethodId === vMethodId
+                )
+                expect(capInvocation).to.be.undefined
+
+                const authRelation = vRelationships.find(
+                    (r: ContractVRelationshipTuple) =>
+                        r?.name === 'authentication' &&
+                        r?.vMethodId === vMethodId
+                )
+                expect(authRelation).to.be.undefined
+            })
+            it('GIVEN an expired V.M. WHEN getDidDocument before expiration THEN V.M. is still returned', async () => {
+                const futureExpirationTimestamp = notBefore + 10000n
+                await didRegistry.expireVerificationMethod(
+                    did,
+                    vMethodId,
+                    futureExpirationTimestamp
+                )
+
+                const result = await didRegistry.getDidDocument(did)
+                const vMethodIds = result[3]
+                const vRelationships = result[5]
+
+                expect(vMethodIds).to.include(vMethodId)
+
+                const relationsForVM = vRelationships.filter(
+                    (r: ContractVRelationshipTuple) =>
+                        r?.vMethodId === vMethodId
+                )
+                expect(relationsForVM.length).to.be.greaterThan(0)
             })
         })
 

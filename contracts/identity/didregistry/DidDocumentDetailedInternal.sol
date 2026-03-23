@@ -819,8 +819,8 @@ abstract contract DidDocumentDetailedInternal is
             if and(didPrefixCheck, didPayloadCheck) {
                 isValid := 1
             }
-            // If condition fails, isValid stays 0 (default)
         }
+        // If condition fails, isValid stays 0 (default)
         // slither-disable-end assembly
         require(isValid, IDidDocumentDetailed.DidNotDerivedFromProof(_did));
     }
