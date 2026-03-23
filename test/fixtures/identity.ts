@@ -25,6 +25,7 @@ import {
     randomVerificationMethodId,
     randomBaseDocument,
     proofToDid,
+    generateProof,
 } from '../support'
 import { EllipticType } from '../types/identity'
 
@@ -146,6 +147,7 @@ export class DidTestHelpers {
 export async function insertControllerDocument(
     didRegistry: IDidRegistry,
     controllerId: string,
+    proof: string,
     publicKey64: string,
     notBefore: bigint,
     notAfter: bigint
@@ -154,6 +156,7 @@ export async function insertControllerDocument(
         controllerId,
         randomDid(),
         randomDid(),
+        proof,
         publicKey64,
         EllipticType.SECP_256_K1,
         notBefore,
@@ -196,13 +199,18 @@ export async function deployStandardDidFixture() {
         ''
     )
 
-    const did = randomDid()
+    // Generate proof-derived DID for insertDidDocument
+    const secondWallet = DidTestHelpers.deriveWallet(wallet, '2')
+    const proof = generateProof(secondWallet)
+    const did = proofToDid(proof)
+    const secondPublicKey = secondWallet.signingKey.publicKey
 
     await baseFixture.didRegistry.insertDidDocument(
         did,
         didData.baseDocument,
         didData.vMethodId,
-        didData.publicKey65,
+        proof,
+        secondPublicKey,
         EllipticType.SECP_256_K1,
         didData.notBefore,
         didData.notAfter

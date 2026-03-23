@@ -298,7 +298,7 @@ function insertFirstDidDocument(bytes32 _did, string _baseDocument, bytes32 _vMe
 ### insertDidDocument
 
 ```solidity
-function insertDidDocument(bytes32 _did, string _baseDocument, bytes32 _vMethodId, bytes _publicKey, enum IDidDocumentDetailed.EllipticType _ellipticType, uint256 _notBefore, uint256 _notAfter) external returns (bool)
+function insertDidDocument(bytes32 _did, string _baseDocument, bytes32 _vMethodId, bytes _proof, bytes _publicKey, enum IDidDocumentDetailed.EllipticType _ellipticType, uint256 _notBefore, uint256 _notAfter) external returns (bool)
 ```
 
 ### updateBaseDocument
@@ -347,6 +347,12 @@ function getDidDocument(bytes32 _did) external view returns (string baseDocument
 
 ```solidity
 function getDidDocumentByTimestamp(bytes32 _did, uint256 _timestamp) external view returns (string baseDocument_, string[] alsoKnownAs_, bytes32[] controllers_, bytes32[] vMethodIds_, struct IDidDocumentDetailed.VMethod[] vMethods_, struct IDidDocumentDetailed.VRelationship[] vRelationships_)
+```
+
+### _insertAndLink
+
+```solidity
+function _insertAndLink(bytes32 _did, string _baseDocument, bytes32 _vMethodId, bytes _publicKey, enum IDidDocumentDetailed.EllipticType _ellipticType, uint256 _notBefore, uint256 _notAfter) internal returns (bool)
 ```
 
 

@@ -55,7 +55,11 @@ import {
     generateProof,
     EMPTY_VALUES,
 } from '../support'
-import { EllipticType, ContractDidDocumentResult } from '../types/identity'
+import {
+    EllipticType,
+    ContractDidDocumentResult,
+    ContractVRelationshipTuple,
+} from '../types/identity'
 
 // EllipticType enum values for testing
 const EllipticTypeTest = {
@@ -343,7 +347,7 @@ describe('DiDRegistry', function () {
         ).to.be.equal(DID_VERIFICATION_RELATIONSHIP_RESOLVER_KEY)
         expect(
             await gov.didDocumentDetailedFacet.interfacesIntrospection()
-        ).to.be.deep.equal(['0x4338e3f7'])
+        ).to.be.deep.equal(['0x10e047f4'])
 
         return {
             admin: adminSigner,
@@ -1048,6 +1052,7 @@ describe('DiDRegistry', function () {
             const ALSO_KNOWN_AS_EXAMPLE = 'irn:orgs:inetum'
             let wallet: HDNodeWallet
             let callerDid: string
+            let proof: string
 
             beforeEach(async () => {
                 const fixture = async () => {
@@ -1059,14 +1064,14 @@ describe('DiDRegistry', function () {
                     )
 
                     // Insert first DID for the test caller so they can use insertDidDocument
-                    const proof = generateProof(wallet)
-                    callerDid = proofToDid(proof)
+                    const callerProof = generateProof(wallet)
+                    callerDid = proofToDid(callerProof)
 
                     await didRegistry.insertFirstDidDocument(
                         callerDid,
                         randomBaseDocument(),
                         randomDid(),
-                        proof,
+                        callerProof,
                         publicKey65,
                         EllipticType.SECP_256_K1,
                         notBefore,
@@ -1078,7 +1083,10 @@ describe('DiDRegistry', function () {
                     await mockTimestamp.setMockedTimestamp(notBefore + 1n)
                 }
                 await loadFixture(fixture)
-                did = randomDid()
+                // Generate proof-derived DID for insertDidDocument tests
+                const secondWallet = deriveWallet(wallet, '2')
+                proof = generateProof(secondWallet)
+                did = proofToDid(proof)
             })
 
             describe('Requires Known DID', () => {
@@ -1093,6 +1101,7 @@ describe('DiDRegistry', function () {
                                 did,
                                 baseDocument,
                                 vMethodId,
+                                proof,
                                 newPublicKey,
                                 EllipticType.SECP_256_K1,
                                 notBefore,
@@ -1116,6 +1125,7 @@ describe('DiDRegistry', function () {
                             did,
                             baseDocument,
                             newVMethodId,
+                            proof,
                             newPublicKey,
                             EllipticType.SECP_256_K1,
                             notBefore,
@@ -1136,6 +1146,7 @@ describe('DiDRegistry', function () {
                         did,
                         baseDocument,
                         newVMethodId,
+                        proof,
                         newPublicKey,
                         EllipticType.SECP_256_K1,
                         notBefore,
@@ -1148,6 +1159,7 @@ describe('DiDRegistry', function () {
                             did,
                             baseDocument,
                             newVMethodId,
+                            proof,
                             newPublicKey,
                             EllipticType.SECP_256_K1,
                             notBefore,
@@ -1173,6 +1185,7 @@ describe('DiDRegistry', function () {
                             did,
                             baseDocument,
                             newVMethodId,
+                            proof,
                             newPublicKey,
                             EllipticType.SECP_256_R1,
                             notBefore,
@@ -1196,6 +1209,7 @@ describe('DiDRegistry', function () {
                             did,
                             baseDocument,
                             newVMethodId,
+                            proof,
                             newPublicKey,
                             EllipticTypeTest.NONE,
                             notBefore,
@@ -1216,6 +1230,7 @@ describe('DiDRegistry', function () {
                             did,
                             baseDocument,
                             newVMethodId,
+                            proof,
                             emptyBytes,
                             EllipticType.SECP_256_K1,
                             notBefore,
@@ -1238,6 +1253,7 @@ describe('DiDRegistry', function () {
                         did,
                         baseDocument,
                         newVMethodId,
+                        proof,
                         newPublicKey,
                         EllipticType.SECP_256_K1,
                         notBefore,
@@ -1251,7 +1267,7 @@ describe('DiDRegistry', function () {
             })
 
             describe('Controller Setup', () => {
-                it('GIVEN a successful insertion WHEN checking controllers THEN new DID is its own controller', async () => {
+                it('GIVEN a successful insertion WHEN checking controllers THEN new DID is its own controller and caller is controller', async () => {
                     const newPublicKey = walletToPublicKey(
                         deriveWallet(wallet, '2')
                     )
@@ -1260,6 +1276,7 @@ describe('DiDRegistry', function () {
                         did,
                         baseDocument,
                         newVMethodId,
+                        proof,
                         newPublicKey,
                         EllipticType.SECP_256_K1,
                         notBefore,
@@ -1269,8 +1286,11 @@ describe('DiDRegistry', function () {
                     const didDocument = await didRegistry.getDidDocument(did)
                     const controllers = didDocument[2]
 
-                    expect(controllers).to.have.lengthOf(1)
-                    expect(controllers[0]).to.equal(did)
+                    // After ISBE-84 fix: DID is linked to itself AND caller via _insertAndLink
+                    const callerDid = proofToDid(generateProof(wallet))
+                    expect(controllers).to.have.lengthOf(2)
+                    expect(controllers).to.include(did)
+                    expect(controllers).to.include(callerDid)
                 })
             })
 
@@ -1285,6 +1305,7 @@ describe('DiDRegistry', function () {
                             did,
                             baseDocument,
                             newVMethodId,
+                            proof,
                             newPublicKey,
                             EllipticType.SECP_256_K1,
                             notBefore,
@@ -1301,6 +1322,35 @@ describe('DiDRegistry', function () {
                             notBefore,
                             notAfter
                         )
+                })
+            })
+
+            describe('Proof Validation', () => {
+                it('GIVEN a DID not derived from proof WHEN calling insertDidDocument THEN it fails', async () => {
+                    const newVMethodId = randomHex(32)
+
+                    // Generate valid proof and public key from the SAME wallet
+                    const testWallet = deriveWallet(wallet, '4')
+                    const validProof = generateProof(testWallet)
+                    const testPublicKey = walletToPublicKey(testWallet)
+                    // Use a random DID that doesn't match the proof
+                    const wrongDid = randomDid()
+
+                    await expect(
+                        didRegistry.insertDidDocument(
+                            wrongDid,
+                            baseDocument,
+                            newVMethodId,
+                            validProof,
+                            testPublicKey,
+                            EllipticType.SECP_256_K1,
+                            notBefore,
+                            notAfter
+                        )
+                    ).to.be.revertedWithCustomError(
+                        didDocumentDetailedFacet,
+                        'DidNotDerivedFromProof'
+                    )
                 })
             })
         })
@@ -1514,8 +1564,12 @@ describe('DiDRegistry', function () {
         })
 
         describe('revokeVerificationMethod', () => {
+            let wallet: HDNodeWallet
+
             beforeEach(async () => {
-                ;({ did } = await createStandardFixture())
+                const fixtures = await createStandardFixture()
+                did = fixtures.did
+                wallet = fixtures.wallet
             })
 
             it('GIVEN an inserted document WHEN try to revoke V.M. with empty did THEN it fails', async () => {
@@ -1611,6 +1665,160 @@ describe('DiDRegistry', function () {
                     false
                 )
             })
+            it('GIVEN a DID with verification method WHEN non-controller tries to revoke V.M. THEN it fails with ControllerNotAuthorized', async () => {
+                // GIVEN
+                const [, otherSigner] = await ethers.getSigners()
+
+                // WHEN/THEN - Unauthorized account tries to revoke verification method
+                await expect(
+                    didRegistry
+                        .connect(otherSigner)
+                        .revokeVerificationMethod(did, vMethodId, notBefore)
+                )
+                    .to.be.revertedWithCustomError(
+                        didControllerFacet,
+                        'ControllerNotAuthorized'
+                    )
+                    .withArgs(did, await otherSigner.getAddress())
+            })
+            it('GIVEN a revoked V.M. WHEN getDidDocumentByTimestamp THEN notAfter is updated in vRelationships', async () => {
+                // Revoke the verification method using notBefore (timestamp 5)
+                // After revocation, notAfter becomes notBefore, making the period just one moment
+                await didRegistry.revokeVerificationMethod(
+                    did,
+                    vMethodId,
+                    notBefore
+                )
+
+                // Verify the notAfter date is updated in vRelationships via getDidDocumentByTimestamp
+                // We use notBefore as timestamp because the valid period ends at notAfter = notBefore
+                const result = await didRegistry.getDidDocumentByTimestamp(
+                    did,
+                    notBefore
+                )
+                const vRelationships = result[5] // vRelationships is the 6th return value
+
+                // Find the capabilityInvocation relationship
+                const capInvocation = vRelationships.find(
+                    (r: ContractVRelationshipTuple) =>
+                        r?.name === 'capabilityInvocation'
+                )
+                expect(capInvocation).to.not.be.undefined
+                // ISBE-116: Verify notAfter is updated to the revocation timestamp
+                expect(capInvocation!.notAfter).to.equal(notBefore)
+
+                // Find the authentication relationship
+                const authRelation = vRelationships.find(
+                    (r: ContractVRelationshipTuple) =>
+                        r.name === 'authentication'
+                )
+                expect(authRelation).to.not.be.undefined
+                // ISBE-116: Verify notAfter is updated to the revocation timestamp
+                expect(authRelation!.notAfter).to.equal(notBefore)
+            })
+            it('GIVEN a revoked V.M. WHEN getDidDocumentByTimestamp after revocation THEN V.M. is not returned', async () => {
+                // This test verifies that after revoking a VM, it doesn't appear in queries
+                // made AFTER the revocation timestamp (notAfter)
+
+                // Revoke the verification method at notBefore timestamp
+                // After revocation: notBefore <= valid period < notAfter (where notAfter = notBefore)
+                // So the VM is only valid AT notBefore, not after
+                await didRegistry.revokeVerificationMethod(
+                    did,
+                    vMethodId,
+                    notBefore
+                )
+
+                // Query the document AFTER the revocation (notBefore + 1)
+                // The VM should NOT be returned because timestamp > notAfter
+                const timestampAfterRevocation = notBefore + 1n
+                const result = await didRegistry.getDidDocumentByTimestamp(
+                    did,
+                    timestampAfterRevocation
+                )
+
+                const vMethodIds = result[3] // vMethodIds is the 4th return value
+                const vRelationships = result[5] // vRelationships is the 6th return value
+
+                // Verify the revoked vMethodId is NOT in the returned list
+                expect(vMethodIds).to.not.include(vMethodId)
+
+                // Verify capabilityInvocation relationship is NOT returned
+                const capInvocation = vRelationships.find(
+                    (r: ContractVRelationshipTuple) =>
+                        r?.name === 'capabilityInvocation' &&
+                        r?.vMethodId === vMethodId
+                )
+                expect(capInvocation).to.be.undefined
+
+                // Verify authentication relationship is NOT returned
+                const authRelation = vRelationships.find(
+                    (r: ContractVRelationshipTuple) =>
+                        r?.name === 'authentication' &&
+                        r?.vMethodId === vMethodId
+                )
+                expect(authRelation).to.be.undefined
+            })
+            it('GIVEN a revoked V.M. WHEN getDidDocument (current time) after revocation THEN V.M. is not returned', async () => {
+                // Similar to previous test, but using getDidDocument() which uses current block timestamp
+                // This simulates the real-world scenario where time has passed after revocation
+
+                // Revoke at notBefore (which becomes the new notAfter)
+                await didRegistry.revokeVerificationMethod(
+                    did,
+                    vMethodId,
+                    notBefore
+                )
+
+                // Advance time to ensure we're after the revocation
+                // notBefore is typically a small value (5), so current block time will be much later
+                const result = await didRegistry.getDidDocument(did)
+
+                const vMethodIds = result[3]
+                const vRelationships = result[5]
+
+                // The revoked VM should NOT appear in current document
+                expect(vMethodIds).to.not.include(vMethodId)
+
+                // No relationships for this VM should be returned
+                const relationsForRevokedVM = vRelationships.filter(
+                    (r: ContractVRelationshipTuple) =>
+                        r?.vMethodId === vMethodId
+                )
+                expect(relationsForRevokedVM).to.have.lengthOf(0)
+            })
+            it('GIVEN a V.M. without capabilityInvocation WHEN revoke THEN early return in _revokeCapabilityInvocation', async () => {
+                // Add a new verification method without capabilityInvocation
+                // This tests the branch: if (!document.capabilityInvocationMethodIdExist[_vMethodId]) return;
+                // addVerificationMethod only adds the vMethod, not capabilityInvocation relationship
+                const newVMethodId = randomDid()
+                const newPublicKey = walletToPublicKey(
+                    deriveWallet(wallet, '1')
+                )
+                await didRegistry.addVerificationMethod(
+                    did,
+                    newVMethodId,
+                    newPublicKey,
+                    EllipticType.SECP_256_R1
+                )
+
+                // Revoke the new vMethod (which has no capabilityInvocation)
+                // This should trigger the early return in _revokeCapabilityInvocation
+                // but still work because _revokeAllVerificationRelationships handles other relationships
+                const revokeNotAfter = notBefore
+                await didRegistry.revokeVerificationMethod(
+                    did,
+                    newVMethodId,
+                    revokeNotAfter
+                )
+
+                // Verify main vMethodId still works (the one with capabilityInvocation)
+                await expectControllerStatus(
+                    did,
+                    await admin.getAddress(),
+                    true
+                )
+            })
         })
 
         describe('expireVerificationMethod', () => {
@@ -1696,6 +1904,26 @@ describe('DiDRegistry', function () {
                     'InvalidNotAfter'
                 )
             })
+            it('GIVEN a DID with verification method WHEN non-controller tries to expire V.M. THEN it fails with ControllerNotAuthorized', async () => {
+                // GIVEN
+                const [, otherSigner] = await ethers.getSigners()
+
+                // WHEN/THEN - Unauthorized account tries to expire verification method
+                await expect(
+                    didRegistry
+                        .connect(otherSigner)
+                        .expireVerificationMethod(
+                            did,
+                            vMethodId,
+                            notBefore + 2n
+                        )
+                )
+                    .to.be.revertedWithCustomError(
+                        didControllerFacet,
+                        'ControllerNotAuthorized'
+                    )
+                    .withArgs(did, await otherSigner.getAddress())
+            })
             it('GIVEN an inserted document WHEN try to expire V.M. of same elliptic type than NW THEN it success', async () => {
                 await expect(
                     didRegistry.expireVerificationMethod(
@@ -1741,6 +1969,91 @@ describe('DiDRegistry', function () {
                     await admin.getAddress(),
                     true
                 )
+            })
+            it('GIVEN an expired V.M. WHEN getDidDocument THEN notAfter is updated in vRelationships', async () => {
+                // Expire the verification method with a future timestamp
+                // Using a future timestamp ensures the relationship is still visible in getDidDocument
+                const newNotAfter = notBefore + 1000n
+                await didRegistry.expireVerificationMethod(
+                    did,
+                    vMethodId,
+                    newNotAfter
+                )
+
+                // Verify the notAfter date is updated in vRelationships via getDidDocument
+                const result = await didRegistry.getDidDocument(did)
+                const vRelationships = result[5] // vRelationships is the 6th return value
+
+                // Find the capabilityInvocation relationship
+                const capInvocation = vRelationships.find(
+                    (r: ContractVRelationshipTuple) =>
+                        r.name === 'capabilityInvocation'
+                )
+                expect(capInvocation).to.not.be.undefined
+                // ISBE-116: Verify notAfter is updated to the expiration timestamp
+                expect(capInvocation!.notAfter).to.equal(newNotAfter)
+
+                // Find the authentication relationship
+                const authRelation = vRelationships.find(
+                    (r: ContractVRelationshipTuple) =>
+                        r.name === 'authentication'
+                )
+                expect(authRelation).to.not.be.undefined
+                // ISBE-116: Verify notAfter is updated to the expiration timestamp
+                expect(authRelation!.notAfter).to.equal(newNotAfter)
+            })
+            it('GIVEN an expired V.M. WHEN getDidDocumentByTimestamp after expiration THEN V.M. is not returned', async () => {
+                const expirationTimestamp = notBefore + 100n
+                await didRegistry.expireVerificationMethod(
+                    did,
+                    vMethodId,
+                    expirationTimestamp
+                )
+
+                const timestampAfterExpiration = expirationTimestamp + 1n
+                const result = await didRegistry.getDidDocumentByTimestamp(
+                    did,
+                    timestampAfterExpiration
+                )
+
+                const vMethodIds = result[3]
+                const vRelationships = result[5]
+
+                expect(vMethodIds).to.not.include(vMethodId)
+
+                const capInvocation = vRelationships.find(
+                    (r: ContractVRelationshipTuple) =>
+                        r?.name === 'capabilityInvocation' &&
+                        r?.vMethodId === vMethodId
+                )
+                expect(capInvocation).to.be.undefined
+
+                const authRelation = vRelationships.find(
+                    (r: ContractVRelationshipTuple) =>
+                        r?.name === 'authentication' &&
+                        r?.vMethodId === vMethodId
+                )
+                expect(authRelation).to.be.undefined
+            })
+            it('GIVEN an expired V.M. WHEN getDidDocument before expiration THEN V.M. is still returned', async () => {
+                const futureExpirationTimestamp = notBefore + 10000n
+                await didRegistry.expireVerificationMethod(
+                    did,
+                    vMethodId,
+                    futureExpirationTimestamp
+                )
+
+                const result = await didRegistry.getDidDocument(did)
+                const vMethodIds = result[3]
+                const vRelationships = result[5]
+
+                expect(vMethodIds).to.include(vMethodId)
+
+                const relationsForVM = vRelationships.filter(
+                    (r: ContractVRelationshipTuple) =>
+                        r?.vMethodId === vMethodId
+                )
+                expect(relationsForVM.length).to.be.greaterThan(0)
             })
         })
 
@@ -2564,9 +2877,12 @@ describe('DiDRegistry', function () {
                     // Set timestamp so caller can use insertDidDocument
                     await mockTimestamp.setMockedTimestamp(notBefore + 1n)
 
-                    // Insert remaining DIDs using insertDidDocument (random DIDs allowed)
+                    // Insert remaining DIDs using insertDidDocument (proof-derived DIDs)
                     for (let i = 1; i < 5; i++) {
-                        const did = randomDid()
+                        const loopWallet = deriveWallet(wallet, `${i + 10}`)
+                        const loopProof = generateProof(loopWallet)
+                        const did = proofToDid(loopProof)
+                        const loopPublicKey = walletToPublicKey(loopWallet)
                         insertedDids.push(did)
                         const vMethodIdFor = randomDid()
 
@@ -2574,7 +2890,8 @@ describe('DiDRegistry', function () {
                             did,
                             baseDocument,
                             vMethodIdFor,
-                            publicKey65,
+                            loopProof,
+                            loopPublicKey,
                             EllipticType.SECP_256_K1,
                             notBefore,
                             notAfter
@@ -2655,17 +2972,21 @@ describe('DiDRegistry', function () {
                     // Set timestamp so caller can use insertDidDocument
                     await mockTimestamp.setMockedTimestamp(notBefore + 1n)
 
-                    // Insert remaining DIDs using insertDidDocument (random DIDs allowed)
+                    // Insert remaining DIDs using insertDidDocument (proof-derived DIDs)
                     // Note: All DIDs use the same vMethodId so they can be queried by verification relationship
                     for (let i = 1; i < 5; i++) {
-                        const did = randomDid()
+                        const loopWallet = deriveWallet(wallet, `${i + 20}`)
+                        const loopProof = generateProof(loopWallet)
+                        const did = proofToDid(loopProof)
+                        const loopPublicKey = walletToPublicKey(loopWallet)
                         insertedDids.push(did)
 
                         await didRegistry.insertDidDocument(
                             did,
                             baseDocument,
                             vMethodId,
-                            publicKey65,
+                            loopProof,
+                            loopPublicKey,
                             EllipticType.SECP_256_K1,
                             notBefore,
                             notAfter
@@ -2770,29 +3091,24 @@ describe('DiDRegistry', function () {
 
         describe('getDidsByController', () => {
             let insertedDids: string[]
-            let controller: string
+            let controllerDid: string
+            let controllerWallet: HDNodeWallet
 
             beforeEach(async () => {
-                const wallet = walletOfFirstSigner()
-                randomizeDidDocument(wallet)
-                insertedDids = [
-                    randomDid(),
-                    randomDid(),
-                    randomDid(),
-                    randomDid(),
-                ]
+                controllerWallet = walletOfFirstSigner()
+                randomizeDidDocument(controllerWallet)
+                insertedDids = []
                 const fixture = async () => {
                     await didRegistry.initializeDiDRegistry(
                         EllipticType.SECP_256_K1
                     )
                     await mockTimestamp.setMockedTimestamp(notBefore + 1n)
 
-                    // Insert controller DID first with proof-derived DID
-                    const proof = generateProof(wallet)
-                    controller = proofToDid(proof)
+                    const proof = generateProof(controllerWallet)
+                    controllerDid = proofToDid(proof)
 
                     await didRegistry.insertFirstDidDocument(
-                        controller,
+                        controllerDid,
                         baseDocument,
                         vMethodId,
                         proof,
@@ -2803,27 +3119,34 @@ describe('DiDRegistry', function () {
                         ''
                     )
 
-                    // Insert remaining DIDs using insertDidDocument
-                    for (const did of insertedDids) {
+                    for (let i = 0; i < 4; i++) {
+                        const currentWallet = deriveWallet(
+                            controllerWallet,
+                            (i + 100).toString()
+                        )
+                        const didProof = generateProof(currentWallet)
+                        const didPublicKey = walletToPublicKey(currentWallet)
+                        const did = proofToDid(didProof)
+                        insertedDids.push(did)
                         await didRegistry.insertDidDocument(
                             did,
                             baseDocument,
                             vMethodId,
-                            publicKey64,
+                            didProof,
+                            didPublicKey,
                             EllipticType.SECP_256_K1,
                             notBefore,
                             notAfter
                         )
-                        await didRegistry.addController(did, controller)
                     }
                 }
                 await loadFixture(fixture)
-                insertedDids = [controller].concat(insertedDids)
+                insertedDids = [controllerDid].concat(insertedDids)
             })
             it('GIVEN controlled documents WHEN try to get more than exists THEN returns full list', async () => {
                 const dids: ContractGetDidsResult =
                     (await didRegistry.getDidsByController(
-                        controller,
+                        controllerDid,
                         1,
                         insertedDids.length * 2
                     )) as unknown as ContractGetDidsResult
@@ -2838,7 +3161,7 @@ describe('DiDRegistry', function () {
             it('GIVEN controlled documents WHEN try to get bit by bit THEN returns little lists', async () => {
                 DidsResultValidator.validate(
                     (await didRegistry.getDidsByController(
-                        controller,
+                        controllerDid,
                         1,
                         2
                     )) as ContractGetDidsResult
@@ -2848,7 +3171,7 @@ describe('DiDRegistry', function () {
                     .expectPaginationInfo(1n, 2n)
                 DidsResultValidator.validate(
                     (await didRegistry.getDidsByController(
-                        controller,
+                        controllerDid,
                         2,
                         2
                     )) as ContractGetDidsResult
@@ -2857,7 +3180,7 @@ describe('DiDRegistry', function () {
                     .expectCounts(insertedDids.length, 2)
                     .expectPaginationInfo(1n, 3n)
                 DidsResultValidator.validate(
-                    await didRegistry.getDidsByController(controller, 3, 2)
+                    await didRegistry.getDidsByController(controllerDid, 3, 2)
                 )
                     .expectDidsArray(insertedDids.slice(4))
                     .expectCounts(insertedDids.length, 1)
@@ -2865,7 +3188,7 @@ describe('DiDRegistry', function () {
             })
             it('GIVEN controlled documents WHEN try to get out of the list THEN returns emtpy list', async () => {
                 DidsResultValidator.validate(
-                    await didRegistry.getDidsByController(controller, 2, 5)
+                    await didRegistry.getDidsByController(controllerDid, 2, 5)
                 )
                     .expectDidsArray([])
                     .expectCounts(insertedDids.length, 0)

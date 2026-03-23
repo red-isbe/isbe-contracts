@@ -158,5 +158,25 @@ ignition/deployments/chain-31337
 infra_test/qbftConfigFile.json
 infra_test/isbe-contract-registry.json
 
-# Auto-generated MCP server context (added automatically)
+# AI agent files
+.opencode/
 .mcp-server-context.md
+.sync.ffs_db
+
+# Gas reporter output
+gasReporterOutput.json
+
+# macOS resource fork files
+**/._*
+
+# macOS folder metadata
+.DS_Store
+**/.DS_Store
+
+# macOS Extended Attributes
+**/.AppleDouble
+**/.LSOverride
+**/.fseventsd
+
+# NFS/cache files
+.nfs*
