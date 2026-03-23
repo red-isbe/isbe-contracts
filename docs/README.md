@@ -12,6 +12,11 @@
 - [Project Bootstrapping](Project-bootstrapping.md)
 - [Test Template Reference](test-template-reference.md)
 - [Configuration Migration Guide](Configuration-Migration-Guide.md) 🆕
+- [Integration Testing Guide](Integration-Testing.md) 🆕
+- [Hardhat Tasks Reference](Hardhat-Tasks-Reference.md) 🆕
+- [🆕 Guía de Desarrollo Local (Español)](ISBE-Contracts-Guia-Desarrollo-Local.md)
+- [Configuration Migration Guide](Configuration-Migration-Guide.md) 🆕
+- [Integration Testing Guide](Integration-Testing.md) 🆕
 
 ## Deployment Documentation
 
@@ -19,7 +24,6 @@
 - [Deployment Logging Improvements](DEPLOYMENT_LOGGING_IMPROVEMENTS.md) 🆕
 - [TypeScript Code Improvements](TypeScript-Code-Improvements.md) 🆕 (includes test performance optimizations)
 - [ERC20 code improvements](ERC20.spec.improvements.md)
-- [Configuration Migration Guide](Configuration-Migration-Guide.md) 🆕
 
 ## Secp256R1 Documentation
 
