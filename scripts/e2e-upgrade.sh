@@ -286,4 +286,3 @@ if [ "${RUN_R1}" = true ] && [ ${R1_RESULT} -ne 0 ]; then
     exit 1
 fi
 
-exit 0

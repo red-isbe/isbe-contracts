@@ -167,5 +167,16 @@ infra_test/isbe-contract-registry.json
 gasReporterOutput.json
 
 # macOS resource fork files
-._*
-**/.gitignore
+**/._*
+
+# macOS folder metadata
+.DS_Store
+**/.DS_Store
+
+# macOS Extended Attributes
+**/.AppleDouble
+**/.LSOverride
+**/.fseventsd
+
+# NFS/cache files
+.nfs*

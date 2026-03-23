@@ -278,6 +278,7 @@ interface IDidDocumentDetailed {
      * @param did The decentralised identifier string to register
      * @param baseDocument The base JSON-LD document content containing DID metadata
      * @param vMethodId The unique identifier for the initial verification method
+     * @param proof The cryptographic proof that derives the DID (prevents vanity DIDs)
      * @param publicKey The public key bytes for cryptographic verification
      * @param ellipticType The elliptic curve algorithm for the verification method
      * @param notBefore Unix timestamp when the verification method becomes valid
@@ -288,6 +289,7 @@ interface IDidDocumentDetailed {
         bytes32 did,
         string memory baseDocument,
         bytes32 vMethodId,
+        bytes memory proof,
         bytes memory publicKey,
         EllipticType ellipticType,
         uint256 notBefore,
