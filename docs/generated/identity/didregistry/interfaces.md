@@ -615,7 +615,7 @@ _Creates the initial DID document with the DID itself as controller.
 ### insertDidDocument
 
 ```solidity
-function insertDidDocument(bytes32 did, string baseDocument, bytes32 vMethodId, bytes publicKey, enum IDidDocumentDetailed.EllipticType ellipticType, uint256 notBefore, uint256 notAfter) external returns (bool success)
+function insertDidDocument(bytes32 did, string baseDocument, bytes32 vMethodId, bytes proof, bytes publicKey, enum IDidDocumentDetailed.EllipticType ellipticType, uint256 notBefore, uint256 notAfter) external returns (bool success)
 ```
 
 Inserts a new DID document with initial verification method into the registry
@@ -632,6 +632,7 @@ _Creates a complete DID document with cryptographic verification capabilities
 | did | bytes32 | The decentralised identifier string to register |
 | baseDocument | string | The base JSON-LD document content containing DID metadata |
 | vMethodId | bytes32 | The unique identifier for the initial verification method |
+| proof | bytes | The cryptographic proof that derives the DID (prevents vanity DIDs) |
 | publicKey | bytes | The public key bytes for cryptographic verification |
 | ellipticType | enum IDidDocumentDetailed.EllipticType | The elliptic curve algorithm for the verification method |
 | notBefore | uint256 | Unix timestamp when the verification method becomes valid |

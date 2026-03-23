@@ -91,6 +91,17 @@ display_header() {
     echo ""
 }
 
+# Clean up macOS resource fork files that can interfere with Solidity compilation
+cleanup_macos_metadata() {
+    log_info "Cleaning up macOS resource fork files (._*)..."
+    # Clean contracts directory
+    find contracts -name '._*.sol' -type f -delete 2>/dev/null || true
+    find contracts -name '._*' -type f -delete 2>/dev/null || true
+    # Clean artifacts directory to prevent JSON parsing errors
+    find artifacts -name '._*' -type f -delete 2>/dev/null || true
+    log_success "macOS metadata files cleaned"
+}
+
 # Monitor background process and show progress
 monitor_coverage_progress() {
     local pid=$1
@@ -116,9 +127,15 @@ run_phase1() {
 
     log_info "Generating contract documentation..."
     npm run docgen
+    
+    # Clean up macOS metadata files after compilation
+    cleanup_macos_metadata
 
     log_info "Running gas calculation tests..."
     npm run test:gas
+    
+    # Clean up macOS metadata files after gas tests
+    cleanup_macos_metadata
 
     end_phase "Phase 1"
     log_success "License check, compilation and gas calculations completed successfully"
@@ -147,9 +164,15 @@ run_phase2() {
 
     log_info "Formatting code with Prettier..."
     npm run prettier
+    
+    # Clean up macOS metadata files after prettier
+    cleanup_macos_metadata
 
     log_info "Running ESLint checks..."
     npm run lint
+    
+    # Clean up macOS metadata files after lint
+    cleanup_macos_metadata
 
     # Kill monitor if still running
     kill $monitor_pid 2>/dev/null || true
@@ -255,6 +278,9 @@ main() {
 
     # Display header
     display_header
+    
+    # Clean up macOS metadata before any compilation
+    cleanup_macos_metadata
 
     # Execute phases
     run_phase4

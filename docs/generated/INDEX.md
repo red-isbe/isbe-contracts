@@ -77,4 +77,3 @@
 - [tokens/erc721/extensions/enumerable](tokens/erc721/extensions/enumerable.md)
 - [tokens/erc721/extensions/royalty](tokens/erc721/extensions/royalty.md)
 - [tokens/erc721/extensions/snapshot](tokens/erc721/extensions/snapshot.md)
-- [utils](utils.md)

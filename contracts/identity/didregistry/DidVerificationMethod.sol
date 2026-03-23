@@ -73,6 +73,7 @@ abstract contract DidVerificationMethod is
         bytes32IsNotZero(_vMethodId)
         onlyDidExists(_did)
         onlyVMethodIdExists(_did, _vMethodId)
+        onlyControllerOrAuth(_did)
         returns (bool success)
     {
         {
@@ -94,6 +95,7 @@ abstract contract DidVerificationMethod is
         bytes32IsNotZero(_vMethodId)
         onlyDidExists(_did)
         onlyVMethodIdExists(_did, _vMethodId)
+        onlyControllerOrAuth(_did)
         returns (bool success)
     {
         {
