@@ -656,9 +656,15 @@ describe('Asset Event Tracker', function () {
         it('GIVEN address with revoked vMethod WHEN recordState THEN fails with AccountHasNoRole', async function () {
             const contracts = await loadFixture(deployDidValidationFixture)
 
-            // Revoke verification method
+            // Revoke verification method - must use didWallet which is controller of the DID
             const currentTime = Math.floor(Date.now() / 1000)
-            await contracts.didRegistry.revokeVerificationMethod(
+            const didWalletConnected = new ethers.Wallet(
+                contracts.didWallet.privateKey,
+                ethers.provider
+            )
+            const didRegistryWithDidWallet =
+                contracts.didRegistry.connect(didWalletConnected)
+            await didRegistryWithDidWallet.revokeVerificationMethod(
                 contracts.did,
                 contracts.vMethodId,
                 currentTime
@@ -686,7 +692,14 @@ describe('Asset Event Tracker', function () {
             const currentTime = Math.floor(Date.now() / 1000)
             const midTime =
                 currentTime + Math.floor((contracts.notAfter - currentTime) / 2)
-            await contracts.didRegistry.expireVerificationMethod(
+            // Use didWallet which is controller of the DID
+            const didWalletConnected = new ethers.Wallet(
+                contracts.didWallet.privateKey,
+                ethers.provider
+            )
+            const didRegistryWithDidWallet =
+                contracts.didRegistry.connect(didWalletConnected)
+            await didRegistryWithDidWallet.expireVerificationMethod(
                 contracts.did,
                 contracts.vMethodId,
                 midTime
