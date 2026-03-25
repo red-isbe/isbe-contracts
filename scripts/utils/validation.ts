@@ -18,6 +18,11 @@ import { ValidationError } from '../../utils/errors'
  * @returns true if valid hex bytes, false otherwise
  */
 export function isValidBytes(input: string): boolean {
+    // Allow "0x" as valid empty bytes (common for no initialization)
+    if (input === '0x') {
+        return true
+    }
+
     if (!/^0x[0-9a-fA-F]+$/.test(input)) {
         return false
     }

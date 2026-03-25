@@ -13,10 +13,9 @@
 - [Test Template Reference](test-template-reference.md)
 - [Configuration Migration Guide](Configuration-Migration-Guide.md) 🆕
 - [Integration Testing Guide](Integration-Testing.md) 🆕
+- [E2E Testing: Diamond Pattern Architecture](E2E-Testing-Diamond-Pattern.md) 🆕 **CRITICAL**
 - [Hardhat Tasks Reference](Hardhat-Tasks-Reference.md) 🆕
 - [🆕 Guía de Desarrollo Local (Español)](ISBE-Contracts-Guia-Desarrollo-Local.md)
-- [Configuration Migration Guide](Configuration-Migration-Guide.md) 🆕
-- [Integration Testing Guide](Integration-Testing.md) 🆕
 
 ## Deployment Documentation
 
