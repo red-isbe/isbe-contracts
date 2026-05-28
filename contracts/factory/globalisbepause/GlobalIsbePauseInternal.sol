@@ -16,6 +16,7 @@ pragma solidity ^0.8.28;
 
 import {ProxyFactoryInternal} from '../proxyfactory/ProxyFactoryInternal.sol';
 import {IGlobalIsbePause} from './IGlobalIsbePause.sol';
+import {ISBEPause} from '../../pause/ISBEPause.sol';
 import {
     IEIP2535Introspection
 } from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
@@ -24,25 +25,18 @@ import {
  * @title Internal Global ISBE Pausable Logic
  * @author ISBE
  * @notice Abstract contract with the internal logic for global pausing.
- * @dev Provides core functions for pausing and unpausing any deployed proxy.
- *      It relies on `ProxyFactoryInternal` to verify that a given address
- *      is a valid proxy before applying changes. It also implements the
- *      `IEIP2535Introspection` interface for discovery purposes.
+ * @dev Provides core functions for pausing and unpausing any contract that
+ *      implements `ISBEPause`, regardless of whether it is registered as a
+ *      diamond proxy in the factory (modality 1) or deployed as a standalone
+ *      pausable contract (modality 2). Both modalities use the same `ISBEPause`
+ *      interface, so a single try-catch path covers both cases.
+ *
+ *      It also implements the `IEIP2535Introspection` interface for discovery.
  */
 abstract contract GlobalIsbePauseInternal is
     ProxyFactoryInternal,
     IEIP2535Introspection
 {
-    /**
-     * @notice Ensures the function is called for a deployed proxy.
-     * @dev Reverts if `proxyAddress` is not a known, deployed proxy address.
-     * @param _proxyAddress The address of the proxy to be checked.
-     */
-    modifier onlyDeployedProxy(address _proxyAddress) {
-        _checkDeployedProxy(_proxyAddress);
-        _;
-    }
-
     function _implementedInterfaces()
         internal
         pure
@@ -54,10 +48,56 @@ abstract contract GlobalIsbePauseInternal is
         interfaces_[--interfacesLength] = type(IGlobalIsbePause).interfaceId;
     }
 
-    function _checkDeployedProxy(address _proxyAddress) private view {
-        require(
-            _isProxyDeployed(_proxyAddress),
-            IGlobalIsbePause.InvalidProxy(_proxyAddress)
-        );
+    /**
+     * @notice Calls `pause()` on any `ISBEPause`-compliant contract.
+     * @dev Try-catch covers both modality-1 (registered diamond proxy) and
+     *      modality-2 (standalone ISBEPause contract, not in the factory registry).
+     *
+     *      Error semantics:
+     *      - `returnData` empty → address has no `pause()` (EOA, wrong contract)
+     *        → `InvalidProxy`.
+     *      - `returnData` non-empty AND address NOT registered → address is not a
+     *        valid pause target even though it exposes ISBEPause selectors (e.g.
+     *        the governance diamond itself) → `InvalidProxy`.
+     *      - `returnData` non-empty AND address IS registered → a legitimate error
+     *        from the target (e.g. `IsPaused`, `AccountHasNoRole`) → re-bubbled.
+     *
+     * @param _proxyAddress Target contract implementing `ISBEPause`.
+     */
+    function _tryPause(address _proxyAddress) internal {
+        if (_proxyAddress.code.length == 0)
+            revert IGlobalIsbePause.InvalidProxy(_proxyAddress);
+        try ISBEPause(_proxyAddress).pause() {} catch (
+            bytes memory returnData
+        ) {
+            if (returnData.length == 0 || !_isProxyDeployed(_proxyAddress)) {
+                revert IGlobalIsbePause.InvalidProxy(_proxyAddress);
+            }
+            // solhint-disable-next-line no-inline-assembly
+            assembly {
+                revert(add(returnData, 32), mload(returnData))
+            }
+        }
+    }
+
+    /**
+     * @notice Calls `unpause()` on any `ISBEPause`-compliant contract.
+     * @dev Same error semantics as `_tryPause`.
+     * @param _proxyAddress Target contract implementing `ISBEPause`.
+     */
+    function _tryUnpause(address _proxyAddress) internal {
+        if (_proxyAddress.code.length == 0)
+            revert IGlobalIsbePause.InvalidProxy(_proxyAddress);
+        try ISBEPause(_proxyAddress).unpause() {} catch (
+            bytes memory returnData
+        ) {
+            if (returnData.length == 0 || !_isProxyDeployed(_proxyAddress)) {
+                revert IGlobalIsbePause.InvalidProxy(_proxyAddress);
+            }
+            // solhint-disable-next-line no-inline-assembly
+            assembly {
+                revert(add(returnData, 32), mload(returnData))
+            }
+        }
     }
 }

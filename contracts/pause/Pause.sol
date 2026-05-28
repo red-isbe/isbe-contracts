@@ -32,23 +32,20 @@ abstract contract Pause is IPause, PauseInternal {
     function initializePause(
         bool _paused
     ) external initializer(_PAUSE_RESOLVER_KEY, _PAUSE_FACET_VERSION) {
-        if (_paused) _pause();
-        else _unpause();
+        // Use _initPauseState so no Paused / Unpaused event is emitted
+        // during deployment, matching OZ v5 __Pausable_init_unchained behaviour.
+        _initPauseState(_paused);
     }
 
     function pause() external whenNotPaused {
         _checkPauserRoles();
-
-        _pause();
-        emit Paused(_msgSender());
+        _pause(); // emits Paused internally (OZ v5 convention)
     }
 
     function unpause() external whenPaused {
         _checkPauserRoles();
         _checkAuthorityLevel();
-
-        _unpause();
-        emit Unpaused(_msgSender());
+        _unpause(); // emits Unpaused internally (OZ v5 convention)
     }
 
     function paused() external view returns (bool) {
