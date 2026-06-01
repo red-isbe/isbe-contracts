@@ -20,64 +20,31 @@ import {Common} from '../core/Common.sol';
 
 /// @title PauseInternal
 /// @notice Internal logic for pausing mechanism
-/// @dev Aligned with OZ v5 Pausable: `_pause` and `_unpause` now emit the
-///      events themselves so any internal caller (e.g. an emergency recovery
-///      path in a subclass) always produces the corresponding log.
-///      Initialization logic must use `_initPauseState` to set the initial
-///      state without emitting events, mirroring OZ's upgradeable pattern.
 abstract contract PauseInternal is Common {
-    /**
-     * @notice Sets the contract to paused state and records the authority level
-     *         of the caller. Emits `Paused` (OZ v5 convention).
-     * @dev Includes `whenNotPaused` following OZ v5.3 — the modifier on the
-     *      internal function guards any subclass that calls `_pause()` directly,
-     *      not only callers that go through the external `pause()` function.
-     *      Do NOT call from initializers — use `_initPauseState` instead so
-     *      no spurious `Paused` event is emitted at deployment time.
-     */
-    function _pause() internal virtual whenNotPaused {
+    modifier onlySufficientAuthorityLevel() {
+        _checkAuthorityLevel();
+        _;
+    }
+
+    modifier onlyPauserRole() {
+        _checkPauserRoles();
+        _;
+    }
+
+    function _pause() internal virtual {
         PauseStorage storage pauseStorage = _pauseStorage();
         pauseStorage.pause = true;
         pauseStorage.authorityLevel = _getAuthorityLevel(_msgSender());
     }
 
-    /**
-     * @notice Clears the paused state and resets the authority level.
-     *         Emits `Unpaused` (OZ v5 convention).
-     * @dev Includes `whenPaused` following OZ v5.3 — same rationale as `_pause`.
-     *      Do NOT call from initializers — use `_initPauseState` instead.
-     */
-    function _unpause() internal virtual whenPaused {
+    function _unpause() internal virtual {
         PauseStorage storage pauseStorage = _pauseStorage();
         pauseStorage.pause = false;
         pauseStorage.authorityLevel = 0;
     }
 
-    /**
-     * @notice Directly sets the initial pause state without emitting events.
-     * @dev Mirrors OZ v5 `__Pausable_init_unchained`: initialization must not
-     *      produce `Paused` / `Unpaused` logs. Call only from initializers.
-     *      When `_initiallyPaused` is true, the authority level is seeded with
-     *      the caller's level so that `unpause` authority checks behave
-     *      consistently from the very first block.
-     * @param _initiallyPaused Whether the contract should start in a paused state.
-     */
-    function _initPauseState(bool _initiallyPaused) internal {
-        if (_initiallyPaused) {
-            PauseStorage storage pauseStorage = _pauseStorage();
-            pauseStorage.pause = true;
-            pauseStorage.authorityLevel = _getAuthorityLevel(_msgSender());
-        }
-        // false → storage defaults to 0 / false, no action needed
-    }
-
     function _authorityLevel() internal view virtual returns (uint256) {
         return _pauseStorage().authorityLevel;
-    }
-
-    modifier onlySufficientAuthorityLevel() {
-        _checkAuthorityLevel();
-        _;
     }
 
     function _checkAuthorityLevel() internal view {
