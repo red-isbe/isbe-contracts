@@ -39,8 +39,9 @@ abstract contract GlobalIsbePause is GlobalIsbePauseInternal, IGlobalIsbePause {
         override
         onlyRole(_ISBE_PAUSER_ROLE)
         addressIsNotZero(_proxyAddress)
+        onlyContract(_proxyAddress)
     {
-        _tryPause(_proxyAddress);
+        _applyPause(_proxyAddress);
         emit IsbePaused(_proxyAddress, _msgSender());
     }
 
@@ -51,8 +52,9 @@ abstract contract GlobalIsbePause is GlobalIsbePauseInternal, IGlobalIsbePause {
         override
         onlyRole(_ISBE_PAUSER_ROLE)
         addressIsNotZero(_proxyAddress)
+        onlyContract(_proxyAddress)
     {
-        _tryUnpause(_proxyAddress);
+        _applyUnpause(_proxyAddress);
         emit IsbeUnpaused(_proxyAddress, _msgSender());
     }
 }

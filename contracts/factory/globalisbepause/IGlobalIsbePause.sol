@@ -43,6 +43,18 @@ interface IGlobalIsbePause {
     error InvalidProxy(address proxyAddress);
 
     /**
+     * @notice Reverted when a `pause()` or `unpause()` call on a target contract fails.
+     * @dev Carries the raw information needed to audit the failure without requiring
+     *      the governance layer to decode every possible error format (custom errors,
+     *      panics, require strings, etc.). Off-chain tooling can decode `returnData`
+     *      independently.
+     * @param target     The contract that was called.
+     * @param selector   The function selector that was invoked (`pause()` or `unpause()`).
+     * @param returnData The raw revert payload returned by the target.
+     */
+    error PauseCallFailed(address target, bytes4 selector, bytes returnData);
+
+    /**
      * @notice Pauses a specific use-case proxy contract.
      * @dev This can only be called by an account with the appropriate role.
      * @param _proxyAddress The address of the proxy contract to pause.

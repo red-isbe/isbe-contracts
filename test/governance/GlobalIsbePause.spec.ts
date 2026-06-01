@@ -13,6 +13,7 @@ limitations under the License.
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
 import { loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers'
+import { anyValue } from '@nomicfoundation/hardhat-chai-matchers/withArgs'
 import {
     GlobalIsbePauseFacet,
     ISBEPause,
@@ -27,6 +28,10 @@ import {
     ISBE_PAUSER_ROLE,
 } from '../../utils/constants'
 import { deployGovernance } from '../fixtures/governance'
+
+// Function selectors — used to verify the `selector` field of PauseCallFailed
+const PAUSE_SELECTOR = ethers.id('pause()').slice(0, 10) // 0x8456cb59
+const UNPAUSE_SELECTOR = ethers.id('unpause()').slice(0, 10) // 0x3f4ba83a
 
 describe('GlobalIsbePause', function () {
     let admin: Signer
@@ -92,10 +97,10 @@ describe('GlobalIsbePause', function () {
         pause = contracts.pause
     })
 
-    describe('GlboalIsbePauable', () => {
+    describe('GlobalIsbePausable', () => {
         describe('pauseIsbe', () => {
-            // ─── Access control ──────────────────────────────────────────────
-            it('GIVEN governance proxy WHEN try to pause without right THEN it fails', async () => {
+            // ─── Access control ───────────────────────────────────────────────
+            it('GIVEN an account without ISBE_PAUSER_ROLE WHEN pauseIsbe is called THEN it reverts with AccountHasNoRole', async () => {
                 await expect(
                     isbeFactory
                         .connect(nonAdmin)
@@ -108,7 +113,7 @@ describe('GlobalIsbePause', function () {
                     .withArgs(nonAdminAddress, ISBE_PAUSER_ROLE)
             })
 
-            it('GIVEN governance proxy WHEN try to pause a zero address THEN it fails', async () => {
+            it('GIVEN a zero address WHEN pauseIsbe is called THEN it reverts with AddressZero', async () => {
                 await expect(
                     isbeFactory.connect(admin).pauseIsbe(ethers.ZeroAddress)
                 ).to.be.revertedWithCustomError(
@@ -117,8 +122,8 @@ describe('GlobalIsbePause', function () {
                 )
             })
 
-            // ─── InvalidProxy: EOA ────────────────────────────────────────────
-            it('GIVEN an EOA address WHEN try to pause it THEN it fails with InvalidProxy', async () => {
+            // ─── InvalidProxy: EOA caught by onlyContract modifier ────────────
+            it('GIVEN an EOA address WHEN pauseIsbe is called THEN it reverts with InvalidProxy', async () => {
                 await expect(
                     isbeFactory.connect(admin).pauseIsbe(nonAdminAddress)
                 )
@@ -129,57 +134,89 @@ describe('GlobalIsbePause', function () {
                     .withArgs(nonAdminAddress)
             })
 
-            // ─── InvalidProxy: contract without pause() ───────────────────────
-            it('GIVEN a contract without pause() WHEN try to pause it THEN it fails with InvalidProxy', async () => {
-                const NoPauseMockFactory =
+            // ─── PauseCallFailed: unregistered contracts ──────────────────────
+            // For any unregistered contract _execute wraps the failure in
+            // PauseCallFailed(target, selector, returnData).
+            // returnData is verified with anyValue since its encoding depends
+            // on the target implementation.
+
+            it('GIVEN a contract without pause() WHEN pauseIsbe is called THEN it reverts with PauseCallFailed', async () => {
+                const noPauseMock: NoPauseMock = await (
                     await ethers.getContractFactory('NoPauseMock')
-                const noPauseMock: NoPauseMock =
-                    await NoPauseMockFactory.deploy()
-                const noPauseMockAddress = await noPauseMock.getAddress()
+                ).deploy()
+                const addr = await noPauseMock.getAddress()
 
-                await expect(
-                    isbeFactory.connect(admin).pauseIsbe(noPauseMockAddress)
-                )
+                await expect(isbeFactory.connect(admin).pauseIsbe(addr))
                     .to.be.revertedWithCustomError(
                         globalIsbePauseFacet,
-                        'InvalidProxy'
+                        'PauseCallFailed'
                     )
-                    .withArgs(noPauseMockAddress)
+                    .withArgs(addr, PAUSE_SELECTOR, anyValue)
             })
 
-            // ─── InvalidProxy: ISBEPause contract not in registry ─────────────
-            it('GIVEN governance proxy WHEN try to pause a non deployed proxy THEN it fails', async () => {
-                await expect(
-                    isbeFactory
-                        .connect(admin)
-                        .pauseIsbe(await isbeFactory.getAddress())
-                )
+            it('GIVEN the governance diamond (ISBEPause-compliant but unregistered) WHEN pauseIsbe is called on it THEN it reverts with PauseCallFailed', async () => {
+                const govAddr = await isbeFactory.getAddress()
+
+                await expect(isbeFactory.connect(admin).pauseIsbe(govAddr))
                     .to.be.revertedWithCustomError(
                         globalIsbePauseFacet,
-                        'InvalidProxy'
+                        'PauseCallFailed'
                     )
-                    .withArgs(await isbeFactory.getAddress())
+                    .withArgs(govAddr, PAUSE_SELECTOR, anyValue)
             })
 
-            // ─── InvalidProxy: mod2 contract with wrong authorized pauser ─────
-            it('GIVEN a mod2 contract authorized to a different pauser WHEN try to pause it THEN it fails with InvalidProxy', async () => {
-                const Mod2Mock =
+            it('GIVEN a contract with a reverting fallback WHEN pauseIsbe is called THEN it reverts with PauseCallFailed', async () => {
+                const fallbackMock: FallbackRevertMock = await (
+                    await ethers.getContractFactory('FallbackRevertMock')
+                ).deploy()
+                const addr = await fallbackMock.getAddress()
+
+                await expect(isbeFactory.connect(admin).pauseIsbe(addr))
+                    .to.be.revertedWithCustomError(
+                        globalIsbePauseFacet,
+                        'PauseCallFailed'
+                    )
+                    .withArgs(addr, PAUSE_SELECTOR, anyValue)
+            })
+
+            it('GIVEN a mod-2 contract not authorizing governance WHEN pauseIsbe is called THEN it reverts with PauseCallFailed', async () => {
+                const mod2: Mod2PausableMock = await (
                     await ethers.getContractFactory('Mod2PausableMock')
-                // nonAdminAddress as authorized pauser — governance diamond is NOT authorized
-                const mod2: Mod2PausableMock =
-                    await Mod2Mock.deploy(nonAdminAddress)
-                const mod2Address = await mod2.getAddress()
+                ).deploy(nonAdminAddress)
+                const addr = await mod2.getAddress()
 
-                await expect(isbeFactory.connect(admin).pauseIsbe(mod2Address))
+                await expect(isbeFactory.connect(admin).pauseIsbe(addr))
                     .to.be.revertedWithCustomError(
                         globalIsbePauseFacet,
-                        'InvalidProxy'
+                        'PauseCallFailed'
                     )
-                    .withArgs(mod2Address)
+                    .withArgs(addr, PAUSE_SELECTOR, anyValue)
             })
 
-            // ─── Bubbled error: registered proxy already paused ───────────────
-            it('GIVEN a registered proxy that is already paused WHEN try to pause again THEN it bubbles IsPaused', async () => {
+            it('GIVEN a paused mod-2 contract WHEN pauseIsbe is called again THEN it reverts with PauseCallFailed (not IsPaused)', async () => {
+                const governanceAddress = await isbeFactory.getAddress()
+                const mod2: Mod2PausableMock = await (
+                    await ethers.getContractFactory('Mod2PausableMock')
+                ).deploy(governanceAddress)
+                const addr = await mod2.getAddress()
+
+                await isbeFactory.connect(admin).pauseIsbe(addr)
+
+                // mod-2 is unregistered: its IsPaused error is NOT bubbled,
+                // it is wrapped in PauseCallFailed
+                await expect(isbeFactory.connect(admin).pauseIsbe(addr))
+                    .to.be.revertedWithCustomError(
+                        globalIsbePauseFacet,
+                        'PauseCallFailed'
+                    )
+                    .withArgs(addr, PAUSE_SELECTOR, anyValue)
+            })
+
+            // ─── Bubbled error: registered proxy (mod-1) ──────────────────────
+            // For registered proxies ISBEPause(addr).pause() is called directly:
+            // the error bubbles as-is, no wrapping in PauseCallFailed.
+
+            it('GIVEN a registered proxy that is already paused WHEN pauseIsbe is called THEN it bubbles IsPaused', async () => {
                 const contracts = await loadFixture(deployPausedFixture)
                 await expect(
                     contracts.isbeFactory
@@ -188,82 +225,32 @@ describe('GlobalIsbePause', function () {
                 ).to.be.revertedWithCustomError(contracts.pause, 'IsPaused')
             })
 
-            // ─── Success: registered proxy (modality 1) ───────────────────────
-            it('GIVEN governance proxy WHEN try to pause a deployed proxy THEN it is paused', async () => {
+            // ─── Success ──────────────────────────────────────────────────────
+            it('GIVEN a registered proxy WHEN pauseIsbe is called THEN it is paused and IsbePaused is emitted', async () => {
                 await expect(
                     isbeFactory.connect(admin).pauseIsbe(deployedProxyAddress)
                 )
                     .to.emit(isbeFactory, 'IsbePaused')
                     .withArgs(deployedProxyAddress, adminAddress)
+
                 expect(await pause.paused()).to.be.true
             })
 
-            // ─── Success: modality-2 standalone contract ───────────────────────
-            it('GIVEN a mod2 contract authorized to governance WHEN paused THEN it is paused and event is emitted', async () => {
+            it('GIVEN a mod-2 contract authorizing governance WHEN pauseIsbe is called THEN it is paused and IsbePaused is emitted', async () => {
                 const governanceAddress = await isbeFactory.getAddress()
-                const Mod2Mock =
+                const mod2: Mod2PausableMock = await (
                     await ethers.getContractFactory('Mod2PausableMock')
-                const mod2: Mod2PausableMock =
-                    await Mod2Mock.deploy(governanceAddress)
-                const mod2Address = await mod2.getAddress()
+                ).deploy(governanceAddress)
+                const addr = await mod2.getAddress()
 
-                await expect(isbeFactory.connect(admin).pauseIsbe(mod2Address))
+                await expect(isbeFactory.connect(admin).pauseIsbe(addr))
                     .to.emit(isbeFactory, 'IsbePaused')
-                    .withArgs(mod2Address, adminAddress)
+                    .withArgs(addr, adminAddress)
 
                 expect(await mod2.paused()).to.be.true
             })
 
-            // ─── InvalidProxy: mod2 double-pause ─────────────────────────────
-            // NOTE: for an UNREGISTERED (modality-2) contract, a double-pause
-            // does NOT bubble `IsPaused` — it maps to `InvalidProxy` because
-            // `!_isProxyDeployed` is true. Only registered (modality-1) proxies
-            // have their internal errors re-bubbled.
-            it('GIVEN a paused mod2 contract WHEN try to pause again THEN it fails with InvalidProxy (not IsPaused)', async () => {
-                const governanceAddress = await isbeFactory.getAddress()
-                const Mod2Mock =
-                    await ethers.getContractFactory('Mod2PausableMock')
-                const mod2: Mod2PausableMock =
-                    await Mod2Mock.deploy(governanceAddress)
-                const mod2Address = await mod2.getAddress()
-
-                // First pause succeeds
-                await isbeFactory.connect(admin).pauseIsbe(mod2Address)
-
-                // Second pause: mod2 is not registered → error is mapped to InvalidProxy
-                await expect(isbeFactory.connect(admin).pauseIsbe(mod2Address))
-                    .to.be.revertedWithCustomError(
-                        globalIsbePauseFacet,
-                        'InvalidProxy'
-                    )
-                    .withArgs(mod2Address)
-            })
-
-            // ─── InvalidProxy: contract with reverting fallback ───────────────
-            // Exercises the `returnData.length > 0 && !_isProxyDeployed` branch
-            // via a contract that is NOT ISBEPause-compliant but produces
-            // non-empty revert data through its fallback.
-            it('GIVEN a contract with a reverting fallback WHEN try to pause it THEN it fails with InvalidProxy', async () => {
-                const FallbackMock =
-                    await ethers.getContractFactory('FallbackRevertMock')
-                const fallbackMock: FallbackRevertMock =
-                    await FallbackMock.deploy()
-                const fallbackMockAddress = await fallbackMock.getAddress()
-
-                await expect(
-                    isbeFactory.connect(admin).pauseIsbe(fallbackMockAddress)
-                )
-                    .to.be.revertedWithCustomError(
-                        globalIsbePauseFacet,
-                        'InvalidProxy'
-                    )
-                    .withArgs(fallbackMockAddress)
-            })
-
-            // ─── State: authorityLevel is set correctly after pause ───────────
-            // The governance diamond holds _ISBE_ROLE on every proxy it deploys
-            // (see ProxyFactoryInternal._buildIsbeRoleMembers), so its authority
-            // level is always type(uint256).max.
+            // ─── State ────────────────────────────────────────────────────────
             it('GIVEN a registered proxy WHEN paused via pauseIsbe THEN authorityLevel equals ISBE_AUTHORIZATION_LEVEL', async () => {
                 await isbeFactory.connect(admin).pauseIsbe(deployedProxyAddress)
                 expect(await pause.authorityLevel()).to.equal(ethers.MaxUint256)
@@ -271,8 +258,8 @@ describe('GlobalIsbePause', function () {
         })
 
         describe('unpauseIsbe', () => {
-            // ─── Access control ──────────────────────────────────────────────
-            it('GIVEN governance proxy WHEN try to unpause without right THEN it fails', async () => {
+            // ─── Access control ───────────────────────────────────────────────
+            it('GIVEN an account without ISBE_PAUSER_ROLE WHEN unpauseIsbe is called THEN it reverts with AccountHasNoRole', async () => {
                 await expect(
                     isbeFactory
                         .connect(nonAdmin)
@@ -285,7 +272,7 @@ describe('GlobalIsbePause', function () {
                     .withArgs(nonAdminAddress, ISBE_PAUSER_ROLE)
             })
 
-            it('GIVEN governance proxy WHEN try to unpause a zero address THEN it fails', async () => {
+            it('GIVEN a zero address WHEN unpauseIsbe is called THEN it reverts with AddressZero', async () => {
                 await expect(
                     isbeFactory.connect(admin).unpauseIsbe(ethers.ZeroAddress)
                 ).to.be.revertedWithCustomError(
@@ -295,7 +282,7 @@ describe('GlobalIsbePause', function () {
             })
 
             // ─── InvalidProxy: EOA ────────────────────────────────────────────
-            it('GIVEN an EOA address WHEN try to unpause it THEN it fails with InvalidProxy', async () => {
+            it('GIVEN an EOA address WHEN unpauseIsbe is called THEN it reverts with InvalidProxy', async () => {
                 await expect(
                     isbeFactory.connect(admin).unpauseIsbe(nonAdminAddress)
                 )
@@ -306,50 +293,71 @@ describe('GlobalIsbePause', function () {
                     .withArgs(nonAdminAddress)
             })
 
-            // ─── InvalidProxy: ISBEPause contract not in registry ─────────────
-            it('GIVEN governance proxy WHEN try to unpause a non deployed proxy THEN it fails', async () => {
-                await expect(
-                    isbeFactory
-                        .connect(admin)
-                        .unpauseIsbe(await isbeFactory.getAddress())
-                )
+            // ─── PauseCallFailed: unregistered contracts ──────────────────────
+            it('GIVEN a contract without unpause() WHEN unpauseIsbe is called THEN it reverts with PauseCallFailed', async () => {
+                const noPauseMock: NoPauseMock = await (
+                    await ethers.getContractFactory('NoPauseMock')
+                ).deploy()
+                const addr = await noPauseMock.getAddress()
+
+                await expect(isbeFactory.connect(admin).unpauseIsbe(addr))
                     .to.be.revertedWithCustomError(
                         globalIsbePauseFacet,
-                        'InvalidProxy'
+                        'PauseCallFailed'
                     )
-                    .withArgs(await isbeFactory.getAddress())
+                    .withArgs(addr, UNPAUSE_SELECTOR, anyValue)
             })
 
-            // ─── InvalidProxy: mod2 already unpaused (no matching registered entry) ─
-            it('GIVEN an unpaused mod2 contract WHEN try to unpause it THEN it fails with InvalidProxy', async () => {
+            it('GIVEN the governance diamond (unregistered) WHEN unpauseIsbe is called on it THEN it reverts with PauseCallFailed', async () => {
+                const govAddr = await isbeFactory.getAddress()
+
+                await expect(isbeFactory.connect(admin).unpauseIsbe(govAddr))
+                    .to.be.revertedWithCustomError(
+                        globalIsbePauseFacet,
+                        'PauseCallFailed'
+                    )
+                    .withArgs(govAddr, UNPAUSE_SELECTOR, anyValue)
+            })
+
+            it('GIVEN a contract with a reverting fallback WHEN unpauseIsbe is called THEN it reverts with PauseCallFailed', async () => {
+                const fallbackMock: FallbackRevertMock = await (
+                    await ethers.getContractFactory('FallbackRevertMock')
+                ).deploy()
+                const addr = await fallbackMock.getAddress()
+
+                await expect(isbeFactory.connect(admin).unpauseIsbe(addr))
+                    .to.be.revertedWithCustomError(
+                        globalIsbePauseFacet,
+                        'PauseCallFailed'
+                    )
+                    .withArgs(addr, UNPAUSE_SELECTOR, anyValue)
+            })
+
+            it('GIVEN an unpaused mod-2 contract WHEN unpauseIsbe is called THEN it reverts with PauseCallFailed', async () => {
                 const governanceAddress = await isbeFactory.getAddress()
-                const Mod2Mock =
+                const mod2: Mod2PausableMock = await (
                     await ethers.getContractFactory('Mod2PausableMock')
-                const mod2: Mod2PausableMock =
-                    await Mod2Mock.deploy(governanceAddress)
-                const mod2Address = await mod2.getAddress()
+                ).deploy(governanceAddress)
+                const addr = await mod2.getAddress()
 
-                // mod2 starts unpaused — unpause() will revert with IsNotPaused (non-empty),
-                // but since mod2 is not in the registry the catch maps it to InvalidProxy
-                await expect(
-                    isbeFactory.connect(admin).unpauseIsbe(mod2Address)
-                )
+                // mod-2 is unregistered: its IsNotPaused error is wrapped in PauseCallFailed
+                await expect(isbeFactory.connect(admin).unpauseIsbe(addr))
                     .to.be.revertedWithCustomError(
                         globalIsbePauseFacet,
-                        'InvalidProxy'
+                        'PauseCallFailed'
                     )
-                    .withArgs(mod2Address)
+                    .withArgs(addr, UNPAUSE_SELECTOR, anyValue)
             })
 
-            // ─── Bubbled error: registered proxy not paused ───────────────────
-            it('GIVEN an unpaused registered proxy WHEN try to unpause it THEN it bubbles IsNotPaused', async () => {
+            // ─── Bubbled error: registered proxy (mod-1) ──────────────────────
+            it('GIVEN an unpaused registered proxy WHEN unpauseIsbe is called THEN it bubbles IsNotPaused', async () => {
                 await expect(
                     isbeFactory.connect(admin).unpauseIsbe(deployedProxyAddress)
                 ).to.be.revertedWithCustomError(pause, 'IsNotPaused')
             })
 
-            // ─── Success: registered proxy (modality 1) ───────────────────────
-            it('GIVEN governance proxy WHEN try to unpause a deployed proxy THEN it is unpaused', async () => {
+            // ─── Success ──────────────────────────────────────────────────────
+            it('GIVEN a paused registered proxy WHEN unpauseIsbe is called THEN it is unpaused and IsbeUnpaused is emitted', async () => {
                 const contracts = await loadFixture(deployPausedFixture)
 
                 await expect(
@@ -362,75 +370,31 @@ describe('GlobalIsbePause', function () {
                         contracts.deployedProxyAddress,
                         contracts.adminAddress
                     )
+
                 expect(await contracts.pause.paused()).to.be.false
             })
 
-            // ─── Success: modality-2 standalone contract ───────────────────────
-            it('GIVEN a paused mod2 contract authorized to governance WHEN unpaused THEN it is unpaused and event is emitted', async () => {
+            it('GIVEN a paused mod-2 contract authorizing governance WHEN unpauseIsbe is called THEN it is unpaused and IsbeUnpaused is emitted', async () => {
                 const governanceAddress = await isbeFactory.getAddress()
-                const Mod2Mock =
+                const mod2: Mod2PausableMock = await (
                     await ethers.getContractFactory('Mod2PausableMock')
-                const mod2: Mod2PausableMock =
-                    await Mod2Mock.deploy(governanceAddress)
-                const mod2Address = await mod2.getAddress()
+                ).deploy(governanceAddress)
+                const addr = await mod2.getAddress()
 
-                // First pause via governance
-                await isbeFactory.connect(admin).pauseIsbe(mod2Address)
+                await isbeFactory.connect(admin).pauseIsbe(addr)
                 expect(await mod2.paused()).to.be.true
 
-                // Now unpause via governance
-                await expect(
-                    isbeFactory.connect(admin).unpauseIsbe(mod2Address)
-                )
+                await expect(isbeFactory.connect(admin).unpauseIsbe(addr))
                     .to.emit(isbeFactory, 'IsbeUnpaused')
-                    .withArgs(mod2Address, adminAddress)
+                    .withArgs(addr, adminAddress)
 
                 expect(await mod2.paused()).to.be.false
             })
 
-            // ─── InvalidProxy: contract with reverting fallback ───────────────
-            it('GIVEN a contract with a reverting fallback WHEN try to unpause it THEN it fails with InvalidProxy', async () => {
-                const FallbackMock =
-                    await ethers.getContractFactory('FallbackRevertMock')
-                const fallbackMock: FallbackRevertMock =
-                    await FallbackMock.deploy()
-                const fallbackMockAddress = await fallbackMock.getAddress()
-
-                await expect(
-                    isbeFactory.connect(admin).unpauseIsbe(fallbackMockAddress)
-                )
-                    .to.be.revertedWithCustomError(
-                        globalIsbePauseFacet,
-                        'InvalidProxy'
-                    )
-                    .withArgs(fallbackMockAddress)
-            })
-
-            // ─── InvalidProxy: NoPauseMock (returnData empty on unpause) ─────
-            it('GIVEN a contract without unpause() WHEN try to unpause it THEN it fails with InvalidProxy', async () => {
-                const NoPauseMockFactory =
-                    await ethers.getContractFactory('NoPauseMock')
-                const noPauseMock: NoPauseMock =
-                    await NoPauseMockFactory.deploy()
-                const noPauseMockAddress = await noPauseMock.getAddress()
-
-                await expect(
-                    isbeFactory.connect(admin).unpauseIsbe(noPauseMockAddress)
-                )
-                    .to.be.revertedWithCustomError(
-                        globalIsbePauseFacet,
-                        'InvalidProxy'
-                    )
-                    .withArgs(noPauseMockAddress)
-            })
-
-            // ─── State: authorityLevel resets to 0 after unpause ─────────────
-            it('GIVEN a paused registered proxy WHEN unpaused via unpauseIsbe THEN authorityLevel resets to zero', async () => {
+            // ─── State ────────────────────────────────────────────────────────
+            it('GIVEN a paused registered proxy WHEN unpauseIsbe is called THEN authorityLevel resets to zero', async () => {
                 const contracts = await loadFixture(deployPausedFixture)
 
-                // Before unpause: authority level should be ISBE_AUTHORIZATION_LEVEL (max)
-                // because governance (which has _ISBE_ROLE on every proxy it deploys)
-                // performed the initialization pause.
                 expect(await contracts.pause.authorityLevel()).to.equal(
                     ethers.MaxUint256
                 )
@@ -442,14 +406,13 @@ describe('GlobalIsbePause', function () {
                 expect(await contracts.pause.authorityLevel()).to.equal(0)
             })
 
-            // ─── NOTE: InsufficientAuthorityLevel is unreachable via unpauseIsbe ─
-            // The governance diamond always holds `_ISBE_ROLE` on every proxy it
-            // deploys (ProxyFactoryInternal._buildIsbeRoleMembers). Its authority
-            // level on any registered proxy is therefore `type(uint256).max`, which
-            // always satisfies `_checkAuthorityLevel`. This error can only be
-            // triggered by calling `proxy.unpause()` directly from an address that
-            // holds only `PAUSER_ROLE` after a higher-authority pause — it is out of
-            // scope for `GlobalIsbePause` and is covered in the `Pause` unit tests.
+            // ─── NOTE: InsufficientAuthorityLevel es inalcanzable via unpauseIsbe ──
+            // El factory siempre otorga _ISBE_ROLE al governance diamond en cada
+            // proxy que despliega (ProxyFactoryInternal._buildIsbeRoleMembers).
+            // Su authorityLevel = type(uint256).max satisface siempre
+            // _checkAuthorityLevel. Este error solo puede surgir llamando
+            // proxy.unpause() directamente desde una cuenta con PAUSER_ROLE
+            // tras una pausa de mayor autoridad — fuera del scope de GlobalIsbePause.
         })
     })
 })

@@ -39,7 +39,6 @@ abstract contract PauseInternal is Common {
         PauseStorage storage pauseStorage = _pauseStorage();
         pauseStorage.pause = true;
         pauseStorage.authorityLevel = _getAuthorityLevel(_msgSender());
-        emit IPause.Paused(_msgSender());
     }
 
     /**
@@ -52,7 +51,6 @@ abstract contract PauseInternal is Common {
         PauseStorage storage pauseStorage = _pauseStorage();
         pauseStorage.pause = false;
         pauseStorage.authorityLevel = 0;
-        emit IPause.Unpaused(_msgSender());
     }
 
     /**
@@ -75,6 +73,11 @@ abstract contract PauseInternal is Common {
 
     function _authorityLevel() internal view virtual returns (uint256) {
         return _pauseStorage().authorityLevel;
+    }
+
+    modifier onlySufficientAuthorityLevel() {
+        _checkAuthorityLevel();
+        _;
     }
 
     function _checkAuthorityLevel() internal view {

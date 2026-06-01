@@ -31,7 +31,7 @@ limitations under the License.
  */
 
 import { task } from 'hardhat/config'
-import { publicKeyToAddress } from '../../scripts/utils/publicKeyToAddress'
+import { computeAddress } from 'ethers'
 
 task(
     'publicKeyToAddress',
@@ -45,7 +45,17 @@ task(
         const { publickey } = taskArgs as { publickey: string }
 
         try {
-            const address = publicKeyToAddress(publickey)
+            const key = publickey.startsWith('0x')
+                ? publickey
+                : `0x${publickey}`
+
+            // Raw X||Y (128 hex chars, no SEC1 marker) — prepend 0x04 so
+            // computeAddress gets a valid uncompressed key
+            const canonical = /^0x[0-9a-fA-F]{128}$/.test(key)
+                ? `0x04${key.slice(2)}`
+                : key
+
+            const address = computeAddress(canonical)
 
             console.log('')
             console.log(

@@ -39,13 +39,15 @@ abstract contract Pause is IPause, PauseInternal {
 
     function pause() external whenNotPaused {
         _checkPauserRoles();
-        _pause(); // emits Paused internally (OZ v5 convention)
+        _pause();
+        emit IPause.Paused(_msgSender());
     }
 
     function unpause() external whenPaused {
         _checkPauserRoles();
         _checkAuthorityLevel();
-        _unpause(); // emits Unpaused internally (OZ v5 convention)
+        _unpause();
+        emit IPause.Unpaused(_msgSender());
     }
 
     function paused() external view returns (bool) {

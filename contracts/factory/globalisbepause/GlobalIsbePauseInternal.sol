@@ -16,10 +16,12 @@ pragma solidity ^0.8.28;
 
 import {ProxyFactoryInternal} from '../proxyfactory/ProxyFactoryInternal.sol';
 import {IGlobalIsbePause} from './IGlobalIsbePause.sol';
+import {IPause} from '../../pause/IPause.sol';
 import {ISBEPause} from '../../pause/ISBEPause.sol';
 import {
     IEIP2535Introspection
 } from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {Address} from '@openzeppelin/contracts/utils/Address.sol';
 
 /**
  * @title Internal Global ISBE Pausable Logic
@@ -37,6 +39,15 @@ abstract contract GlobalIsbePauseInternal is
     ProxyFactoryInternal,
     IEIP2535Introspection
 {
+    using Address for address;
+
+    modifier onlyContract(address _proxyAddress) {
+        if (!_proxyAddress.isContract()) {
+            revert IGlobalIsbePause.InvalidProxy(_proxyAddress);
+        }
+        _;
+    }
+
     function _implementedInterfaces()
         internal
         pure
@@ -49,55 +60,66 @@ abstract contract GlobalIsbePauseInternal is
     }
 
     /**
-     * @notice Calls `pause()` on any `ISBEPause`-compliant contract.
-     * @dev Try-catch covers both modality-1 (registered diamond proxy) and
-     *      modality-2 (standalone ISBEPause contract, not in the factory registry).
-     *
-     *      Error semantics:
-     *      - `returnData` empty → address has no `pause()` (EOA, wrong contract)
-     *        → `InvalidProxy`.
-     *      - `returnData` non-empty AND address NOT registered → address is not a
-     *        valid pause target even though it exposes ISBEPause selectors (e.g.
-     *        the governance diamond itself) → `InvalidProxy`.
-     *      - `returnData` non-empty AND address IS registered → a legitimate error
-     *        from the target (e.g. `IsPaused`, `AccountHasNoRole`) → re-bubbled.
-     *
+     * @notice Applies the pause action on the target contract.
+     * @dev Registered proxies (modality 1) are called directly — no wrapping.
+     *      If the call fails it is our own code that is broken, the error bubbles
+     *      raw and must be fixed in the contracts.
+     *      Unregistered contracts (modality 2) are wrapped in `_execute` so that
+     *      any failure is surfaced as a structured `PauseCallFailed` error with
+     *      full context to take governance action externally.
      * @param _proxyAddress Target contract implementing `ISBEPause`.
      */
-    function _tryPause(address _proxyAddress) internal {
-        if (_proxyAddress.code.length == 0)
-            revert IGlobalIsbePause.InvalidProxy(_proxyAddress);
-        try ISBEPause(_proxyAddress).pause() {} catch (
-            bytes memory returnData
-        ) {
-            if (returnData.length == 0 || !_isProxyDeployed(_proxyAddress)) {
-                revert IGlobalIsbePause.InvalidProxy(_proxyAddress);
-            }
-            // solhint-disable-next-line no-inline-assembly
-            assembly {
-                revert(add(returnData, 32), mload(returnData))
-            }
+    function _applyPause(address _proxyAddress) internal {
+        if (_isProxyDeployed(_proxyAddress)) {
+            ISBEPause(_proxyAddress).pause();
+            return;
         }
+        _execute(_proxyAddress, IPause.pause.selector);
     }
 
     /**
-     * @notice Calls `unpause()` on any `ISBEPause`-compliant contract.
-     * @dev Same error semantics as `_tryPause`.
+     * @notice Applies the unpause action on the target contract.
+     * @dev Same routing logic as `_applyPause`.
      * @param _proxyAddress Target contract implementing `ISBEPause`.
      */
-    function _tryUnpause(address _proxyAddress) internal {
-        if (_proxyAddress.code.length == 0)
-            revert IGlobalIsbePause.InvalidProxy(_proxyAddress);
-        try ISBEPause(_proxyAddress).unpause() {} catch (
-            bytes memory returnData
-        ) {
-            if (returnData.length == 0 || !_isProxyDeployed(_proxyAddress)) {
-                revert IGlobalIsbePause.InvalidProxy(_proxyAddress);
-            }
-            // solhint-disable-next-line no-inline-assembly
-            assembly {
-                revert(add(returnData, 32), mload(returnData))
-            }
+    function _applyUnpause(address _proxyAddress) internal {
+        if (_isProxyDeployed(_proxyAddress)) {
+            ISBEPause(_proxyAddress).unpause();
+            return;
+        }
+        _execute(_proxyAddress, IPause.unpause.selector);
+    }
+
+    /**
+     * @notice Generic execution handler for governance-initiated pausable actions.
+     * @dev Performs a low-level call with the given selector and, on failure,
+     *      reverts with `PauseCallFailed` carrying three pieces of information:
+     *        - `target`     — the contract that was called.
+     *        - `selector`   — the function that was invoked.
+     *        - `returnData` — the raw revert payload, as-is.
+     *
+     *      The raw payload is intentionally NOT decoded here. Solidity can
+     *      produce many error formats (custom errors, panics, require strings)
+     *      and decoding every possible case is fragile. Off-chain tooling can
+     *      decode `returnData` independently using standard ABI tools.
+     *
+     *      This single function handles both modality-1 and modality-2 targets
+     *      uniformly: any failure from any target is surfaced with full context.
+     *
+     * @param _target    Contract address to invoke.
+     * @param _selector  Function selector (`IPause.pause` or `IPause.unpause`).
+     */
+    function _execute(address _target, bytes4 _selector) private {
+        // solhint-disable-next-line avoid-low-level-calls
+        (bool success, bytes memory returnData) = _target.call(
+            abi.encodePacked(_selector)
+        );
+        if (!success) {
+            revert IGlobalIsbePause.PauseCallFailed(
+                _target,
+                _selector,
+                returnData
+            );
         }
     }
 }
