@@ -37,10 +37,10 @@ interface IGlobalIsbePause {
     event IsbeUnpaused(address indexed proxyAddress, address indexed account);
 
     /**
-     * @notice Reverted if the target address is not a valid or known proxy.
-     * @param proxyAddress The address that was identified as an invalid proxy.
+     * @notice Reverted if the target address is not a valid or known contract.
+     * @param contractAddress The address that was identified as an invalid contract.
      */
-    error InvalidProxy(address proxyAddress);
+    error InvalidContract(address contractAddress);
 
     /**
      * @notice Reverted when a `pause()` or `unpause()` call on a target contract fails.

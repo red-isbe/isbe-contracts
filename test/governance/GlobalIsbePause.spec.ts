@@ -122,14 +122,14 @@ describe('GlobalIsbePause', function () {
                 )
             })
 
-            // ─── InvalidProxy: EOA caught by onlyContract modifier ────────────
-            it('GIVEN an EOA address WHEN pauseIsbe is called THEN it reverts with InvalidProxy', async () => {
+            // ─── InvalidContract: EOA caught by onlyContract modifier ────────────
+            it('GIVEN an EOA address WHEN pauseIsbe is called THEN it reverts with InvalidContract', async () => {
                 await expect(
                     isbeFactory.connect(admin).pauseIsbe(nonAdminAddress)
                 )
                     .to.be.revertedWithCustomError(
                         globalIsbePauseFacet,
-                        'InvalidProxy'
+                        'InvalidContract'
                     )
                     .withArgs(nonAdminAddress)
             })
@@ -281,14 +281,14 @@ describe('GlobalIsbePause', function () {
                 )
             })
 
-            // ─── InvalidProxy: EOA ────────────────────────────────────────────
-            it('GIVEN an EOA address WHEN unpauseIsbe is called THEN it reverts with InvalidProxy', async () => {
+            // ─── InvalidContract: EOA ────────────────────────────────────────────
+            it('GIVEN an EOA address WHEN unpauseIsbe is called THEN it reverts with InvalidContract', async () => {
                 await expect(
                     isbeFactory.connect(admin).unpauseIsbe(nonAdminAddress)
                 )
                     .to.be.revertedWithCustomError(
                         globalIsbePauseFacet,
-                        'InvalidProxy'
+                        'InvalidContract'
                     )
                     .withArgs(nonAdminAddress)
             })

@@ -42,9 +42,7 @@ abstract contract GlobalIsbePauseInternal is
     using Address for address;
 
     modifier onlyContract(address _proxyAddress) {
-        if (!_proxyAddress.isContract()) {
-            revert IGlobalIsbePause.InvalidProxy(_proxyAddress);
-        }
+        _checkIsContract(_proxyAddress);
         _;
     }
 
@@ -120,6 +118,12 @@ abstract contract GlobalIsbePauseInternal is
                 _selector,
                 returnData
             );
+        }
+    }
+
+    function _checkIsContract(address _contractAddress) internal view {
+        if (!_contractAddress.isContract()) {
+            revert IGlobalIsbePause.InvalidContract(_contractAddress);
         }
     }
 }
