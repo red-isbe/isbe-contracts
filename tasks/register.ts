@@ -254,6 +254,7 @@ import './secret-sharing/sss.recover'
 
 // Native Token Operations
 import './native/transfer'
+import './native/showSigner'
 
 // Genesis
 import './genesisGeneration'

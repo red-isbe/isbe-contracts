@@ -35,6 +35,7 @@ export interface Secp256r1Account {
 
 export interface NetworkConfigWithCurve extends NetworkConfig {
     secp256r1Accounts?: Secp256r1Account[]
+    kmsKeyId?: string
 }
 
 export interface HardhatNetworkConfig {
