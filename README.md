@@ -245,7 +245,7 @@ export AWS_PROFILE="isbe-dev"        # or set AWS_ACCESS_KEY_ID / AWS_SECRET_ACC
 export AWS_REGION="eu-west-1"
 export KMS_KEY_ID="alias/your-kms-key-alias"   # key ID or alias
 
-npx hardhat deployAll --network dev
+npx hardhat deployAll --network isbe
 npx hardhat native:transfer --to $ADDRESS --amount "1" --network isbe
 npx hardhat grantRole --role $ROLE --account $ACCOUNT --diamond $DIAMOND --network isbe
 ```
@@ -265,7 +265,7 @@ No other arguments change. The provider selection is logged at startup so you ca
 
 #### Supported networks
 
-KMS signing is supported on: `dev`, `isbe`, `arsys`, `kepler`. The `hardhat` and `localhost` networks always use local keys regardless of `KMS_KEY_ID`.
+KMS signing is supported on the `isbe` network only. All other networks always use local keys regardless of `KMS_KEY_ID`.
 
 #### Selection order
 

@@ -94,7 +94,6 @@ export function getNetworkConfigs(): NetworksConfig {
             gas: 20_000_000,
             blockGasLimit: 0x1e84800, // 32,000,000
             curve: CURVE,
-            ...kmsConfig,
         } as NetworkConfigWithCurve,
 
         bare: {
@@ -129,7 +128,6 @@ export function getNetworkConfigs(): NetworksConfig {
             gas: 100000000,
             blockGasLimit: 0x1e84800, // 32,000,000
             curve: CURVE,
-            ...kmsConfig,
         } as NetworkConfigWithCurve,
 
         // Kepler Network (secp256k1)
@@ -141,7 +139,6 @@ export function getNetworkConfigs(): NetworksConfig {
             gas: 100000000,
             blockGasLimit: 18800000,
             curve: CURVE,
-            ...kmsConfig,
         } as NetworkConfigWithCurve,
 
         // Custom secp256r1 network
