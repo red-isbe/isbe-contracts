@@ -300,12 +300,13 @@ npx hardhat show-signer --network isbe
 ```
 
 Example output:
+
 ```
 === Active Signer ===
    Network: isbe
 
 🔐 Using AWS KMS signature provider (secp256k1)
-   Address: 0x7A79FB3fB774df419833e3C735866De1913462c4
+   Address: 0xf0349d9cCc129b44FF69F2a2250B4AeD0367F86a
    Curve:   secp256k1
    Balance: 115.0 native tokens
 ```
