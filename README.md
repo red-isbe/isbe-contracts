@@ -9,7 +9,9 @@
     - [🔐 Account Management](#-account-management)
         - [secp256k1 Networks (Standard Ethereum)](#secp256k1-networks-standard-ethereum)
         - [secp256r1 Networks (Hyperledger Besu)](#secp256r1-networks-hyperledger-besu)
+        - [AWS KMS Signing (secp256k1)](#aws-kms-signing-secp256k1)
         - [Account Validation](#account-validation)
+        - [Showing the Active Signer](#showing-the-active-signer)
     - [🏗️ Architecture Overview](#-architecture-overview)
         - [Core Components](#core-components)
         - [Key Contracts](#key-contracts)
@@ -227,6 +229,52 @@ cp .env.secp256k1 .env  # For standard networks
 cp .env.secp256r1 .env  # For secp256r1 networks (EXPERIMENTAL)
 ```
 
+### AWS KMS Signing (secp256k1)
+
+Use an AWS KMS key to sign transactions instead of a local private key. No `.env` key changes are required — the factory switches automatically when `KMS_KEY_ID` is set.
+
+#### Prerequisites
+
+- An AWS KMS key of type **`ECC_SECG_P256K1`** (secp256k1, the Ethereum curve).
+- AWS credentials with `kms:Sign` and `kms:GetPublicKey` permissions on that key.
+
+#### Enabling KMS signing
+
+```bash
+export AWS_PROFILE="isbe-dev"        # or set AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY
+export AWS_REGION="eu-west-1"
+export KMS_KEY_ID="alias/your-kms-key-alias"   # key ID or alias
+
+npx hardhat deployAll --network isbe
+npx hardhat native:transfer --to $ADDRESS --amount "1" --network isbe
+npx hardhat grantRole --role $ROLE --account $ACCOUNT --diamond $DIAMOND --network isbe
+```
+
+#### Disabling KMS signing (revert to local key)
+
+```bash
+unset KMS_KEY_ID
+```
+
+No other arguments change. The provider selection is logged at startup so you can always confirm which signer is active:
+
+```
+🔐 Using AWS KMS signature provider (secp256k1)        ← KMS active
+🔐 Using secp256k1 signature provider (standard Ethereum)  ← local key active
+```
+
+#### Supported networks
+
+KMS signing is supported on the `isbe` network only. All other networks always use local keys regardless of `KMS_KEY_ID`.
+
+#### Selection order
+
+```
+secp256r1 → KMS (if KMS_KEY_ID is set) → secp256k1 local key
+```
+
+---
+
 ### Account Validation
 
 ```bash
@@ -241,6 +289,26 @@ npx hardhat show-env-accounts --private
 
 # Show secp256r1 accounts with public keys
 npx hardhat show-secp256r1-accounts
+```
+
+### Showing the Active Signer
+
+`show-signer` resolves the active signing address through `SignatureProviderFactory`, so it correctly reflects whichever provider is in use — KMS, secp256r1, or local secp256k1:
+
+```bash
+npx hardhat show-signer --network isbe
+```
+
+Example output:
+
+```
+=== Active Signer ===
+   Network: isbe
+
+🔐 Using AWS KMS signature provider (secp256k1)
+   Address: 0xf0349d9cCc129b44FF69F2a2250B4AeD0367F86a
+   Curve:   secp256k1
+   Balance: 115.0 native tokens
 ```
 
 ## 🏗️ Architecture Overview

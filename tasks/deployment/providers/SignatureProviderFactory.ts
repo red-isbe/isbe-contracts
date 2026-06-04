@@ -14,6 +14,7 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { ISignatureProvider } from './ISignatureProvider'
 import { Secp256k1SignatureProvider } from './Secp256k1SignatureProvider'
 import { Secp256r1SignatureProvider } from './Secp256r1SignatureProvider'
+import { KmsSignatureProvider } from './KmsSignatureProvider'
 
 /**
  * Factory to create the appropriate signature provider based on network configuration
@@ -29,6 +30,12 @@ export class SignatureProviderFactory {
         if (secp256r1Provider.isCompatibleWith(hre)) {
             console.log('🔐 Using secp256r1 signature provider (NIST P-256)')
             return secp256r1Provider
+        }
+
+        const kmsProvider = new KmsSignatureProvider(hre)
+        if (kmsProvider.isCompatibleWith(hre)) {
+            console.log('🔐 Using AWS KMS signature provider (secp256k1)')
+            return kmsProvider
         }
 
         // Fall back to secp256k1 (standard Ethereum)
@@ -58,6 +65,11 @@ export class SignatureProviderFactory {
         const secp256r1Provider = new Secp256r1SignatureProvider(hre)
         if (secp256r1Provider.isCompatibleWith(hre)) {
             providers.push(secp256r1Provider)
+        }
+
+        const kmsProvider = new KmsSignatureProvider(hre)
+        if (kmsProvider.isCompatibleWith(hre)) {
+            providers.push(kmsProvider)
         }
 
         const secp256k1Provider = new Secp256k1SignatureProvider(hre)
