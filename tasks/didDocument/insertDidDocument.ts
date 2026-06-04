@@ -53,6 +53,12 @@ task(
         types.string
     )
     .addParam(
+        'proof',
+        'Cryptographic proof that derives the DID (65 bytes hex)',
+        undefined,
+        types.string
+    )
+    .addParam(
         'publickey',
         'Public key bytes for cryptographic verification',
         undefined,
@@ -82,6 +88,7 @@ task(
             did,
             basedocument,
             vmethodid,
+            proof,
             publickey,
             elliptictype,
             notbefore,
@@ -93,6 +100,7 @@ task(
             did,
             basedocument,
             vmethodid,
+            proof,
             publickey,
             elliptictype,
             notbefore,

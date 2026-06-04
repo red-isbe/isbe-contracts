@@ -16,8 +16,12 @@ pragma solidity ^0.8.28;
 /* solhint-disable gas-custom-errors */
 /* solhint-disable no-inline-assembly */
 
-import {IEntryPoint} from '@account-abstraction/contracts/interfaces/IEntryPoint.sol';
-import {PackedUserOperation} from '@account-abstraction/contracts/interfaces/PackedUserOperation.sol';
+import {
+    IEntryPoint
+} from '@account-abstraction/contracts/interfaces/IEntryPoint.sol';
+import {
+    PackedUserOperation
+} from '@account-abstraction/contracts/interfaces/PackedUserOperation.sol';
 
 /**
  * @title Validation Account Mock

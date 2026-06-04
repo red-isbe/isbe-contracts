@@ -14,7 +14,9 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 pragma solidity ^0.8.28;
 
-import {TrustedIssuersRegistryFacet} from '../../identity/trustedissuersregistry/TrustedIssuersRegistryFacet.sol';
+import {
+    TrustedIssuersRegistryFacet
+} from '../../identity/trustedissuersregistry/TrustedIssuersRegistryFacet.sol';
 import {MockTimestamp} from '../mockTimestamp/MockTimestamp.sol';
 import {ISBEContext} from '../../utils/ISBEContext.sol';
 

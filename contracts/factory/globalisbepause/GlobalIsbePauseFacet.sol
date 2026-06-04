@@ -15,7 +15,9 @@ limitations under the License.
 pragma solidity ^0.8.28;
 
 import {GlobalIsbePause} from './GlobalIsbePause.sol';
-import {_GLOBAL_ISBE_PAUSABLE_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
+import {
+    _GLOBAL_ISBE_PAUSABLE_RESOLVER_KEY
+} from '../../constants/resolverKeys.sol';
 
 /**
  * @title Global ISBE Pausable Facet

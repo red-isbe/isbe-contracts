@@ -15,10 +15,14 @@ limitations under the License.
 pragma solidity ^0.8.28;
 
 import {ERC721InternalCommon} from '../ERC721InternalCommon.sol';
-import {_ERC721_CAPPED_RESOLVER_KEY} from '../../../../constants/resolverKeys.sol';
+import {
+    _ERC721_CAPPED_RESOLVER_KEY
+} from '../../../../constants/resolverKeys.sol';
 import {IERC721Capped} from './IERC721Capped.sol';
 import {_CAP_ROLE, _MINTER_ROLE} from '../../../../constants/roles.sol';
-import {_ERC721_CAPPED_FACET_VERSION} from '../../../../constants/facetVersions.sol';
+import {
+    _ERC721_CAPPED_FACET_VERSION
+} from '../../../../constants/facetVersions.sol';
 
 /**
  * @title ERC721Capped

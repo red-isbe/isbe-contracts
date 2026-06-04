@@ -3,7 +3,7 @@
 External contract implementing ERC-3643 MaxBalance compliance feature.
 
 _Provides public methods to update and retrieve the max balance restriction.
-Uses COMPLIANCE_ROLE for granular permission control._
+     Uses COMPLIANCE_ROLE for granular permission control._
 
 ### constructor
 
@@ -25,9 +25,9 @@ _Can only be called once via the initializer modifier._
 
 #### Parameters
 
-| Name         | Type    | Description                    |
-| ------------ | ------- | ------------------------------ |
-| \_maxBalance | uint256 | The initial max balance value. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _maxBalance | uint256 | The initial max balance value. |
 
 ### setMaxBalance
 
@@ -41,9 +41,9 @@ _Restricted to compliance role._
 
 #### Parameters
 
-| Name         | Type    | Description                                                                                                                               |
-| ------------ | ------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| \_maxBalance | uint256 | The new max balance value. Requirements: - Caller must have COMPLIANCE_ROLE Emits: - {MaxBalanceSet} event with the new max balance value |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _maxBalance | uint256 | The new max balance value. Requirements: - Caller must have COMPLIANCE_ROLE Emits: - {MaxBalanceSet} event with the new max balance value |
 
 ### maxBalance
 
@@ -55,9 +55,9 @@ Returns the current max balance restriction.
 
 #### Return Values
 
-| Name         | Type    | Description                    |
-| ------------ | ------- | ------------------------------ |
-| \_maxBalance | uint256 | The current max balance value. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _maxBalance | uint256 | The current max balance value. |
 
 ### complianceCheckOnMaxBalance
 
@@ -71,18 +71,18 @@ _Uses ERC20Internal balance primitive for the receiver._
 
 #### Parameters
 
-| Name     | Type    | Description                       |
-| -------- | ------- | --------------------------------- |
-| \_to     | address | The address of the receiver.      |
-| \_amount | uint256 | The amount of tokens to transfer. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _to | address | The address of the receiver. |
+| _amount | uint256 | The amount of tokens to transfer. |
 
 #### Return Values
 
-| Name          | Type | Description                         |
-| ------------- | ---- | ----------------------------------- |
-| \_isCompliant | bool | True if compliant, false otherwise. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _isCompliant | bool | True if compliant, false otherwise. |
 
-### \_implementedInterfaces
+### _implementedInterfaces
 
 ```solidity
 function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
@@ -92,9 +92,11 @@ _Declares the interfaces implemented by this facet._
 
 #### Return Values
 
-| Name         | Type     | Description                               |
-| ------------ | -------- | ----------------------------------------- |
-| interfaces\_ | bytes4[] | Array of supported interface identifiers. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | Array of supported interface identifiers. |
+
+
 
 ---
 
@@ -103,9 +105,9 @@ _Declares the interfaces implemented by this facet._
 Internal contract for managing ERC-3643 MaxBalance restriction.
 
 _Provides internal functions to read and write the max balance field and check compliance for transfers.
-This contract does not emit events or apply access control.
-Balances are read directly from ERC20Internal primitives.
-It is intended to be used by external contracts that handle authorization and event emission._
+     This contract does not emit events or apply access control.
+     Balances are read directly from ERC20Internal primitives.
+     It is intended to be used by external contracts that handle authorization and event emission._
 
 ### ERC3643ComplianceMaxBalanceStorage
 
@@ -113,11 +115,11 @@ _Storage structure for ERC-3643 MaxBalance restriction._
 
 ```solidity
 struct ERC3643ComplianceMaxBalanceStorage {
-    uint256 maxBalance;
+  uint256 maxBalance;
 }
 ```
 
-### \_initializeMaxBalance
+### _initializeMaxBalance
 
 ```solidity
 function _initializeMaxBalance(uint256 _maxBalance) internal
@@ -128,11 +130,11 @@ Sets the initial value for the max balance._
 
 #### Parameters
 
-| Name         | Type    | Description                              |
-| ------------ | ------- | ---------------------------------------- |
-| \_maxBalance | uint256 | The initial max balance value to assign. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _maxBalance | uint256 | The initial max balance value to assign. |
 
-### \_setMaxBalance
+### _setMaxBalance
 
 ```solidity
 function _setMaxBalance(uint256 _maxBalance) internal
@@ -142,11 +144,11 @@ _Internal function to update the max balance value in storage._
 
 #### Parameters
 
-| Name         | Type    | Description                          |
-| ------------ | ------- | ------------------------------------ |
-| \_maxBalance | uint256 | The new max balance value to assign. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _maxBalance | uint256 | The new max balance value to assign. |
 
-### \_getMaxBalance
+### _getMaxBalance
 
 ```solidity
 function _getMaxBalance() internal view returns (uint256)
@@ -156,11 +158,11 @@ _Internal view function to retrieve the current max balance value from storage._
 
 #### Return Values
 
-| Name | Type    | Description                    |
-| ---- | ------- | ------------------------------ |
-| [0]  | uint256 | The current max balance value. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 | The current max balance value. |
 
-### \_complianceCheckOnMaxBalance
+### _complianceCheckOnMaxBalance
 
 ```solidity
 function _complianceCheckOnMaxBalance(address _to, uint256 _amount) internal view returns (bool)
@@ -171,16 +173,18 @@ Uses ERC20Internal balance primitive for the receiver._
 
 #### Parameters
 
-| Name     | Type    | Description                       |
-| -------- | ------- | --------------------------------- |
-| \_to     | address | The address of the receiver.      |
-| \_amount | uint256 | The amount of tokens to transfer. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _to | address | The address of the receiver. |
+| _amount | uint256 | The amount of tokens to transfer. |
 
 #### Return Values
 
-| Name | Type | Description                         |
-| ---- | ---- | ----------------------------------- |
-| [0]  | bool | True if compliant, false otherwise. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bool | True if compliant, false otherwise. |
+
+
 
 ---
 
@@ -200,9 +204,9 @@ Emitted when the max balance is updated.
 
 #### Parameters
 
-| Name         | Type    | Description                |
-| ------------ | ------- | -------------------------- |
-| \_maxBalance | uint256 | The new max balance value. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _maxBalance | uint256 | The new max balance value. |
 
 ### MaxBalanceTransferHook
 
@@ -214,9 +218,9 @@ Emitted when a transfer is checked against the max balance restriction.
 
 #### Parameters
 
-| Name   | Type    | Description                             |
-| ------ | ------- | --------------------------------------- |
-| from   | address | The address sending tokens.             |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| from | address | The address sending tokens. |
 | amount | uint256 | The amount of tokens being transferred. |
 
 ### MaxBalanceCreationHook
@@ -229,10 +233,10 @@ Emitted when tokens are created and checked against the max balance restriction.
 
 #### Parameters
 
-| Name   | Type    | Description                                     |
-| ------ | ------- | ----------------------------------------------- |
-| to     | address | The address receiving the newly created tokens. |
-| amount | uint256 | The amount of tokens created.                   |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| to | address | The address receiving the newly created tokens. |
+| amount | uint256 | The amount of tokens created. |
 
 ### MaxBalanceDestructionHook
 
@@ -244,10 +248,10 @@ Emitted when tokens are destroyed and checked against the max balance restrictio
 
 #### Parameters
 
-| Name   | Type    | Description                                  |
-| ------ | ------- | -------------------------------------------- |
-| from   | address | The address from which tokens are destroyed. |
-| amount | uint256 | The amount of tokens destroyed.              |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| from | address | The address from which tokens are destroyed. |
+| amount | uint256 | The amount of tokens destroyed. |
 
 ### initializeERC3643ComplianceMaxBalance
 
@@ -261,9 +265,9 @@ _Can only be called once via the initializer modifier._
 
 #### Parameters
 
-| Name         | Type    | Description                    |
-| ------------ | ------- | ------------------------------ |
-| \_maxBalance | uint256 | The initial max balance value. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _maxBalance | uint256 | The initial max balance value. |
 
 ### setMaxBalance
 
@@ -275,9 +279,9 @@ Sets the maximum balance allowed per address.
 
 #### Parameters
 
-| Name         | Type    | Description                                       |
-| ------------ | ------- | ------------------------------------------------- |
-| \_maxBalance | uint256 | The maximum amount of tokens an address can hold. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _maxBalance | uint256 | The maximum amount of tokens an address can hold. |
 
 ### maxBalance
 
@@ -289,9 +293,9 @@ Returns the current maximum balance allowed per address.
 
 #### Return Values
 
-| Name         | Type    | Description                |
-| ------------ | ------- | -------------------------- |
-| \_maxBalance | uint256 | The maximum balance value. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _maxBalance | uint256 | The maximum balance value. |
 
 ### complianceCheckOnMaxBalance
 
@@ -303,13 +307,14 @@ Checks if a transfer respects the max balance restriction.
 
 #### Parameters
 
-| Name     | Type    | Description                       |
-| -------- | ------- | --------------------------------- |
-| \_to     | address | The address of the receiver.      |
-| \_amount | uint256 | The amount of tokens to transfer. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _to | address | The address of the receiver. |
+| _amount | uint256 | The amount of tokens to transfer. |
 
 #### Return Values
 
-| Name          | Type | Description                         |
-| ------------- | ---- | ----------------------------------- |
-| \_isCompliant | bool | True if compliant, false otherwise. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _isCompliant | bool | True if compliant, false otherwise. |
+

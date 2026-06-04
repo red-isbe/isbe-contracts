@@ -22,16 +22,18 @@ _Only callable by accounts with the minter role_
 
 #### Parameters
 
-| Name     | Type    | Description                              |
-| -------- | ------- | ---------------------------------------- |
-| to       | address | The address to receive the minted tokens |
-| quantity | uint256 | The number of tokens to mint             |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| to | address | The address to receive the minted tokens |
+| quantity | uint256 | The number of tokens to mint |
 
-### \_implementedInterfaces
+### _implementedInterfaces
 
 ```solidity
 function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
 ```
+
+
 
 ---
 
@@ -53,9 +55,9 @@ _A pure function that returns an array of supported `bytes4` IDs._
 
 #### Return Values
 
-| Name         | Type     | Description                                  |
-| ------------ | -------- | -------------------------------------------- |
-| interfaces\_ | bytes4[] | An array of supported interface identifiers. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | An array of supported interface identifiers. |
 
 ### businessIdIntrospection
 
@@ -69,9 +71,9 @@ _Returns a `bytes32` key identifying the facet's purpose._
 
 #### Return Values
 
-| Name         | Type    | Description                              |
-| ------------ | ------- | ---------------------------------------- |
-| businessId\_ | bytes32 | The `bytes32` ID for the business logic. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| businessId_ | bytes32 | The `bytes32` ID for the business logic. |
 
 ### selectorsIntrospection
 
@@ -85,9 +87,11 @@ _A pure function that returns a `bytes4[]` array of selectors._
 
 #### Return Values
 
-| Name        | Type     | Description                              |
-| ----------- | -------- | ---------------------------------------- |
-| selectors\_ | bytes4[] | An array of `bytes4` function selectors. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| selectors_ | bytes4[] | An array of `bytes4` function selectors. |
+
+
 
 ---
 
@@ -99,17 +103,19 @@ _Internal logic for ERC721 Consecutive extension (EIP-2309)_
 
 ```solidity
 struct ERC721ConsecutiveStorage {
-    uint256 _currentConsecutiveTokenId;
+  uint256 _currentConsecutiveTokenId;
 }
 ```
 
-### \_mintConsecutive
+### _mintConsecutive
 
 ```solidity
 function _mintConsecutive(address to, uint256 quantity) internal
 ```
 
 _Internal mint function for consecutive tokens_
+
+
 
 ---
 
@@ -136,7 +142,8 @@ Mints a consecutive range of tokens to `to`.
 
 #### Parameters
 
-| Name     | Type    | Description                               |
-| -------- | ------- | ----------------------------------------- |
-| to       | address | The address to receive the minted tokens. |
-| quantity | uint256 | The number of tokens to mint.             |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| to | address | The address to receive the minted tokens. |
+| quantity | uint256 | The number of tokens to mint. |
+

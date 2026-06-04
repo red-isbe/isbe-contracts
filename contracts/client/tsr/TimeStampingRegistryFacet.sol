@@ -14,10 +14,14 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 pragma solidity ^0.8.28;
 
-import {_TIMESTAMPING_REGISTRY_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
+import {
+    _TIMESTAMPING_REGISTRY_RESOLVER_KEY
+} from '../../constants/resolverKeys.sol';
 import {TimeStampingRegistry} from './TimeStampingRegistry.sol';
 import {ITimeStampingRegistry} from './ITimeStampingRegistry.sol';
-import {IEIP2535Introspection} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {
+    IEIP2535Introspection
+} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 
 /// @title TimeStampingRegistryFacet
 /// @notice Diamond facet implementing timestamping registry with EIP712 support and originalHash primary key

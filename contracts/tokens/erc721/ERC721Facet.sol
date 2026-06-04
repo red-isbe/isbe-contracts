@@ -20,7 +20,9 @@ import {
     _SAFE_TRANSFER_FROM_SELECTOR_2
 } from '../../constants/selectors.sol';
 import {ERC721} from './ERC721.sol';
-import {IEIP2535Introspection} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {
+    IEIP2535Introspection
+} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 
 /**
  * @title ERC721Facet

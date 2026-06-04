@@ -13,8 +13,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ----------------------------------------------------------------------------------- */
 pragma solidity ^0.8.28;
-import {_ERC3643_COMPLIANCE_BURN_TEST_WRAPPER_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
-import {ERC3643ComplianceBurnTestWrapper} from './ERC3643ComplianceBurnTestWrapper.sol';
+import {
+    _ERC3643_COMPLIANCE_BURN_TEST_WRAPPER_RESOLVER_KEY
+} from '../../../constants/resolverKeys.sol';
+import {
+    ERC3643ComplianceBurnTestWrapper
+} from './ERC3643ComplianceBurnTestWrapper.sol';
 
 /**
  * @title ERC3643ComplianceBurnTestWrapperFacet

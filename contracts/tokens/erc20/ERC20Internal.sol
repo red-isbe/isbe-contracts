@@ -14,7 +14,9 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 pragma solidity ^0.8.28;
 
-import {DidDocumentDetailedInternal} from '../../identity/didregistry/DidDocumentDetailedInternal.sol';
+import {
+    DidDocumentDetailedInternal
+} from '../../identity/didregistry/DidDocumentDetailedInternal.sol';
 import {IERC20Isbe} from './IERC20Isbe.sol';
 import {_ERC20_STORAGE_POSITION} from '../../constants/storagePositions.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';

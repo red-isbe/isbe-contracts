@@ -12,8 +12,8 @@ Emitted when the contract is paused
 
 #### Parameters
 
-| Name    | Type    | Description                          |
-| ------- | ------- | ------------------------------------ |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | account | address | The address that triggered the pause |
 
 ### Unpaused
@@ -26,8 +26,8 @@ Emitted when the contract is unpaused
 
 #### Parameters
 
-| Name    | Type    | Description                            |
-| ------- | ------- | -------------------------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | account | address | The address that triggered the unpause |
 
 ### InsufficientAuthorityLevel
@@ -40,9 +40,9 @@ Thrown when an account's authority level is insufficient
 
 #### Parameters
 
-| Name                   | Type    | Description                                                   |
-| ---------------------- | ------- | ------------------------------------------------------------- |
-| authorityLevel         | uint256 | The caller's current authority level                          |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| authorityLevel | uint256 | The caller's current authority level |
 | requiredAuthorityLevel | uint256 | The minimum required authority level to perform the operation |
 
 ### IsPaused
@@ -73,9 +73,9 @@ _Should be called only once during the contract's initialization_
 
 #### Parameters
 
-| Name     | Type | Description                                         |
-| -------- | ---- | --------------------------------------------------- |
-| \_paused | bool | Whether the contract should start in a paused state |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _paused | bool | Whether the contract should start in a paused state |
 
 ### pause
 
@@ -107,9 +107,9 @@ Returns whether the contract is currently paused
 
 #### Return Values
 
-| Name | Type | Description                                     |
-| ---- | ---- | ----------------------------------------------- |
-| [0]  | bool | True if the contract is paused, false otherwise |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bool | True if the contract is paused, false otherwise |
 
 ### authorityLevel
 
@@ -121,9 +121,11 @@ Returns the authority level of the account that paused the contract
 
 #### Return Values
 
-| Name | Type    | Description                       |
-| ---- | ------- | --------------------------------- |
-| [0]  | uint256 | The last pauser's authority level |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 | The last pauser's authority level |
+
+
 
 ---
 
@@ -133,17 +135,19 @@ Implements pausing mechanism for ISBE project
 
 _Inherits from Pause and implements the abstract methods according to ISBE functional requirements_
 
-### \_checkPauserRoles
+### _checkPauserRoles
 
 ```solidity
 function _checkPauserRoles() internal view
 ```
 
-### \_getAuthorityLevel
+### _getAuthorityLevel
 
 ```solidity
 function _getAuthorityLevel(address _account) internal view returns (uint256)
 ```
+
+
 
 ---
 
@@ -168,9 +172,9 @@ _A pure function that returns an array of supported `bytes4` IDs._
 
 #### Return Values
 
-| Name         | Type     | Description                                  |
-| ------------ | -------- | -------------------------------------------- |
-| interfaces\_ | bytes4[] | An array of supported interface identifiers. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | An array of supported interface identifiers. |
 
 ### businessIdIntrospection
 
@@ -184,9 +188,9 @@ _Returns a `bytes32` key identifying the facet's purpose._
 
 #### Return Values
 
-| Name         | Type    | Description                              |
-| ------------ | ------- | ---------------------------------------- |
-| businessId\_ | bytes32 | The `bytes32` ID for the business logic. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| businessId_ | bytes32 | The `bytes32` ID for the business logic. |
 
 ### selectorsIntrospection
 
@@ -200,9 +204,11 @@ _A pure function that returns a `bytes4[]` array of selectors._
 
 #### Return Values
 
-| Name        | Type     | Description                              |
-| ----------- | -------- | ---------------------------------------- |
-| selectors\_ | bytes4[] | An array of `bytes4` function selectors. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| selectors_ | bytes4[] | An array of `bytes4` function selectors. |
+
+
 
 ---
 
@@ -232,9 +238,9 @@ _Should be called only once during the contract's initialization_
 
 #### Parameters
 
-| Name     | Type | Description                                         |
-| -------- | ---- | --------------------------------------------------- |
-| \_paused | bool | Whether the contract should start in a paused state |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _paused | bool | Whether the contract should start in a paused state |
 
 ### pause
 
@@ -266,9 +272,9 @@ Returns whether the contract is currently paused
 
 #### Return Values
 
-| Name | Type | Description                                     |
-| ---- | ---- | ----------------------------------------------- |
-| [0]  | bool | True if the contract is paused, false otherwise |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bool | True if the contract is paused, false otherwise |
 
 ### authorityLevel
 
@@ -280,15 +286,17 @@ Returns the authority level of the account that paused the contract
 
 #### Return Values
 
-| Name | Type    | Description                       |
-| ---- | ------- | --------------------------------- |
-| [0]  | uint256 | The last pauser's authority level |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 | The last pauser's authority level |
 
-### \_implementedInterfaces
+### _implementedInterfaces
 
 ```solidity
 function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
 ```
+
+
 
 ---
 
@@ -296,47 +304,49 @@ function _implementedInterfaces() internal pure virtual returns (bytes4[] interf
 
 Internal logic for pausing mechanism
 
-### \_pause
+### _pause
 
 ```solidity
 function _pause() internal virtual
 ```
 
-### \_unpause
+### _unpause
 
 ```solidity
 function _unpause() internal virtual
 ```
 
-### \_authorityLevel
+### _authorityLevel
 
 ```solidity
 function _authorityLevel() internal view virtual returns (uint256)
 ```
 
-### \_checkAuthorityLevel
+### _checkAuthorityLevel
 
 ```solidity
 function _checkAuthorityLevel() internal view
 ```
 
-### \_getAuthorityLevel
+### _getAuthorityLevel
 
 ```solidity
 function _getAuthorityLevel(address _account) internal view virtual returns (uint256)
 ```
 
-### \_checkPauserRoles
+### _checkPauserRoles
 
 ```solidity
 function _checkPauserRoles() internal view virtual
 ```
 
-### \_compareAuthorityLevels
+### _compareAuthorityLevels
 
 ```solidity
 function _compareAuthorityLevels(uint256 _newLevel, uint256 _previousLevel) internal pure virtual returns (bool)
 ```
+
+
 
 ---
 
@@ -350,8 +360,8 @@ Structure for storing pause state and authority level
 
 ```solidity
 struct PauseStorage {
-    bool pause;
-    uint256 authorityLevel;
+  bool pause;
+  uint256 authorityLevel;
 }
 ```
 
@@ -375,25 +385,25 @@ Modifier to allow function execution only when the contract is paused
 
 _Reverts with `IsNotPaused` error if the contract is not currently paused_
 
-### \_paused
+### _paused
 
 ```solidity
 function _paused() internal view virtual returns (bool)
 ```
 
-### \_requireNotPaused
+### _requireNotPaused
 
 ```solidity
 function _requireNotPaused() internal view virtual
 ```
 
-### \_requirePaused
+### _requirePaused
 
 ```solidity
 function _requirePaused() internal view virtual
 ```
 
-### \_pauseStorage
+### _pauseStorage
 
 ```solidity
 function _pauseStorage() internal pure returns (struct PauseInternalCommon.PauseStorage pauseStorage_)
@@ -405,6 +415,7 @@ _Uses inline assembly to return storage struct at predefined slot_
 
 #### Return Values
 
-| Name           | Type                                    | Description              |
-| -------------- | --------------------------------------- | ------------------------ |
-| pauseStorage\_ | struct PauseInternalCommon.PauseStorage | The pause storage struct |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| pauseStorage_ | struct PauseInternalCommon.PauseStorage | The pause storage struct |
+

@@ -14,7 +14,9 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 pragma solidity ^0.8.28;
 
-import {_BASIC_WHITELIST_STORAGE_POSITION} from '../../../constants/storagePositions.sol';
+import {
+    _BASIC_WHITELIST_STORAGE_POSITION
+} from '../../../constants/storagePositions.sol';
 import {IBasicWhitelist} from './IBasicWhitelist.sol';
 
 /**

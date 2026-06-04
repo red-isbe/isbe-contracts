@@ -14,7 +14,9 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 pragma solidity ^0.8.28;
 
-import {ERC203643InternalCommon} from '../../../erc203643/ERC203643InternalCommon.sol';
+import {
+    ERC203643InternalCommon
+} from '../../../erc203643/ERC203643InternalCommon.sol';
 import {IERC20Snapshot} from './IERC20Snapshot.sol';
 import {_SNAPSHOT_ROLE} from '../../../../constants/roles.sol';
 

@@ -15,7 +15,9 @@ limitations under the License.
 pragma solidity ^0.8.28;
 
 import {MockTimestamp} from './MockTimestamp.sol';
-import {IEIP2535Introspection} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {
+    IEIP2535Introspection
+} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 import {IMockTimestamp} from './IMockTimestamp.sol';
 
 contract MockTimestampFacet is IEIP2535Introspection, MockTimestamp {

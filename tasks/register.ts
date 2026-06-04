@@ -76,6 +76,8 @@ import './proxyFactory/getDeployedProxiesByConfiguration'
 import './deployTest'
 import './deployAll'
 import './deployAllClean'
+import './deployment/updateDiamondFacets'
+import './deployment/upgradeDiamondE2E'
 
 // Extract/Utility tasks
 import './extract/byteCode'
@@ -275,4 +277,8 @@ import './client/anchoring/anchorBlock'
 import './client/anchoring/anchorBlocksBatch'
 
 import './assign-roles'
-import './decode-error'
+
+// Blockscout verification tasks
+
+// Blockscout unified facets generation task
+import './blockscout/generate-unified-facets'

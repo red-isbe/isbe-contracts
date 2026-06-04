@@ -16,7 +16,9 @@ pragma solidity ^0.8.28;
 
 import {IERC721Consecutive} from './IERC721Consecutive.sol';
 import {ERC721Internal} from '../../ERC721Internal.sol';
-import {_ERC721_CONSECUTIVE_STORAGE_POSITION} from '../../../../constants/storagePositions.sol';
+import {
+    _ERC721_CONSECUTIVE_STORAGE_POSITION
+} from '../../../../constants/storagePositions.sol';
 
 /// @title ERC721ConsecutiveInternal
 /// @dev Internal logic for ERC721 Consecutive extension (EIP-2309)

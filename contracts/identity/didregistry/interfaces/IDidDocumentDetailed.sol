@@ -148,6 +148,15 @@ interface IDidDocumentDetailed {
     error DidAlreadyExists(bytes32 did);
 
     /**
+     * @notice Raised when the DID is not derived from the provided proof
+     * @dev This error prevents vanity DID attacks by ensuring the DID has the correct
+     *      structure: [13 zero bytes | 19 payload bytes] where the payload matches
+     *      the last 19 bytes of the proof (signature)
+     * @param did The decentralised identifier that was provided
+     */
+    error DidNotDerivedFromProof(bytes32 did);
+
+    /**
      * @notice Raised when attempting to use a DID that does not exist in the registry
      * @dev This error ensures operations target valid DIDs and prevents unauthorised access
      * @param did The decentralised identifier string that does not exist
@@ -269,6 +278,7 @@ interface IDidDocumentDetailed {
      * @param did The decentralised identifier string to register
      * @param baseDocument The base JSON-LD document content containing DID metadata
      * @param vMethodId The unique identifier for the initial verification method
+     * @param proof The cryptographic proof that derives the DID (prevents vanity DIDs)
      * @param publicKey The public key bytes for cryptographic verification
      * @param ellipticType The elliptic curve algorithm for the verification method
      * @param notBefore Unix timestamp when the verification method becomes valid
@@ -279,6 +289,7 @@ interface IDidDocumentDetailed {
         bytes32 did,
         string memory baseDocument,
         bytes32 vMethodId,
+        bytes memory proof,
         bytes memory publicKey,
         EllipticType ellipticType,
         uint256 notBefore,

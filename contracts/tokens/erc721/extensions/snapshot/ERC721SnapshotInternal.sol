@@ -18,7 +18,9 @@ import {ERC721Internal} from '../../ERC721Internal.sol';
 import {IERC721Snapshot} from './IERC721Snapshot.sol';
 import {Arrays} from '@openzeppelin/contracts/utils/Arrays.sol';
 import {Counters} from '@openzeppelin/contracts/utils/Counters.sol';
-import {_ERC721_SNAPSHOT_STORAGE_POSITION} from '../../../../constants/storagePositions.sol';
+import {
+    _ERC721_SNAPSHOT_STORAGE_POSITION
+} from '../../../../constants/storagePositions.sol';
 
 /**
  * @title ERC721SnapshotInternal

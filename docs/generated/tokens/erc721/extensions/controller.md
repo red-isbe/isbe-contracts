@@ -13,7 +13,7 @@ function forceTransfer(address from, address to, uint256 tokenId) external
 Transfers a token from one account to another without requiring approval.
 
 _Only callable by accounts with the controller role.
-Emits a ForceTransfer event._
+     Emits a ForceTransfer event._
 
 ### forceBurn
 
@@ -24,13 +24,15 @@ function forceBurn(address from, uint256 tokenId) external
 Burns a token from an account without requiring approval.
 
 _Only callable by accounts with the controller role.
-Emits a ForceBurn event._
+     Emits a ForceBurn event._
 
-### \_implementedInterfaces
+### _implementedInterfaces
 
 ```solidity
 function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
 ```
+
+
 
 ---
 
@@ -52,9 +54,9 @@ _A pure function that returns an array of supported `bytes4` IDs._
 
 #### Return Values
 
-| Name         | Type     | Description                                  |
-| ------------ | -------- | -------------------------------------------- |
-| interfaces\_ | bytes4[] | An array of supported interface identifiers. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | An array of supported interface identifiers. |
 
 ### businessIdIntrospection
 
@@ -68,9 +70,9 @@ _Returns a `bytes32` key identifying the facet's purpose._
 
 #### Return Values
 
-| Name         | Type    | Description                              |
-| ------------ | ------- | ---------------------------------------- |
-| businessId\_ | bytes32 | The `bytes32` ID for the business logic. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| businessId_ | bytes32 | The `bytes32` ID for the business logic. |
 
 ### selectorsIntrospection
 
@@ -84,9 +86,11 @@ _A pure function that returns a `bytes4[]` array of selectors._
 
 #### Return Values
 
-| Name        | Type     | Description                              |
-| ----------- | -------- | ---------------------------------------- |
-| selectors\_ | bytes4[] | An array of `bytes4` function selectors. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| selectors_ | bytes4[] | An array of `bytes4` function selectors. |
+
+
 
 ---
 
@@ -106,12 +110,12 @@ Emitted when a token is forcefully transferred from one account to another
 
 #### Parameters
 
-| Name     | Type    | Description                                |
-| -------- | ------- | ------------------------------------------ |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | operator | address | The address performing the forced transfer |
-| from     | address | The address the token is taken from        |
-| to       | address | The address the token is sent to           |
-| tokenId  | uint256 | The identifier of the token transferred    |
+| from | address | The address the token is taken from |
+| to | address | The address the token is sent to |
+| tokenId | uint256 | The identifier of the token transferred |
 
 ### ForceBurn
 
@@ -123,11 +127,11 @@ Emitted when a token is forcefully burned from an account
 
 #### Parameters
 
-| Name     | Type    | Description                            |
-| -------- | ------- | -------------------------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | operator | address | The address performing the forced burn |
-| from     | address | The address the token is burned from   |
-| tokenId  | uint256 | The identifier of the token burned     |
+| from | address | The address the token is burned from |
+| tokenId | uint256 | The identifier of the token burned |
 
 ### ForceBurnNotTokenOwner
 
@@ -149,10 +153,10 @@ _This function should only be callable by an authorized controller (e.g., regula
 
 #### Parameters
 
-| Name    | Type    | Description                             |
-| ------- | ------- | --------------------------------------- |
-| from    | address | The address to transfer the token from  |
-| to      | address | The address to transfer the token to    |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| from | address | The address to transfer the token from |
+| to | address | The address to transfer the token to |
 | tokenId | uint256 | The identifier of the token to transfer |
 
 ### forceBurn
@@ -167,7 +171,8 @@ _This function should only be callable by an authorized controller (e.g., regula
 
 #### Parameters
 
-| Name    | Type    | Description                         |
-| ------- | ------- | ----------------------------------- |
-| from    | address | The address to burn the token from  |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| from | address | The address to burn the token from |
 | tokenId | uint256 | The identifier of the token to burn |
+

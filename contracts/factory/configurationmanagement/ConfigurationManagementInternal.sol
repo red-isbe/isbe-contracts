@@ -27,14 +27,24 @@ import {
     _GLOBAL_ISBE_PAUSABLE_RESOLVER_KEY,
     _PROXY_FACTORY_RESOLVER_KEY
 } from '../../constants/resolverKeys.sol';
-import {BusinessLogicFactoryInternal} from '../businesslogic/BusinessLogicFactoryInternal.sol';
-import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
+import {
+    BusinessLogicFactoryInternal
+} from '../businesslogic/BusinessLogicFactoryInternal.sol';
+import {
+    EnumerableSet
+} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 import {IConfigurationManagement} from './IConfigurationManagement.sol';
-import {IDiamondLoupe} from '../../proxies/eip2535/interfaces/IDiamondLoupe.sol';
-import {IEIP2535Introspection} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {
+    IDiamondLoupe
+} from '../../proxies/eip2535/interfaces/IDiamondLoupe.sol';
+import {
+    IEIP2535Introspection
+} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 import {IProxyFactory} from '../proxyfactory/IProxyFactory.sol';
 import {InitializeBusinessLogic} from '../../utils/InitializeBusinessLogic.sol';
-import {_CONFIGURATION_MANAGEMENT_STORAGE_POSITION} from '../../constants/storagePositions.sol';
+import {
+    _CONFIGURATION_MANAGEMENT_STORAGE_POSITION
+} from '../../constants/storagePositions.sol';
 
 /**
  * @title Configuration Management Internal
@@ -67,7 +77,8 @@ abstract contract ConfigurationManagementInternal is
         ConfigurationManagementStorage
             storage $ = _configurationManagementStorage();
         (
-            IConfigurationManagement.BusinessData[] memory integratedBusinessData,
+            IConfigurationManagement.BusinessData[]
+                memory integratedBusinessData,
             address[] memory facetAddresses
         ) = _validateAndBuildBusinessAddresses(_businessData);
         version_ = ++$.latestVersion[_configurationId];
@@ -148,9 +159,7 @@ abstract contract ConfigurationManagementInternal is
     ) internal view returns (bool) {
         return
             _configurationManagementStorage()
-                .businessIds[_configurationId][
-                    _latest(_configurationId, _version)
-                ]
+            .businessIds[_configurationId][_latest(_configurationId, _version)]
                 .length() > 0;
     }
 
@@ -183,8 +192,7 @@ abstract contract ConfigurationManagementInternal is
             storage $ = _configurationManagementStorage();
         uint256 version = _latest(_configurationId, _version);
         address[] memory facetAddresses = $
-            .facetAddresses[_configurationId][version]
-            .values();
+        .facetAddresses[_configurationId][version].values();
         uint256 length = facetAddresses.length;
         facets_ = new IDiamondLoupe.Facet[](length);
         for (uint256 index; index < length; ) {
@@ -217,9 +225,7 @@ abstract contract ConfigurationManagementInternal is
         uint256 _version
     ) internal view returns (address[] memory facetAddresses_) {
         facetAddresses_ = _configurationManagementStorage()
-            .facetAddresses[_configurationId][
-                _latest(_configurationId, _version)
-            ]
+        .facetAddresses[_configurationId][_latest(_configurationId, _version)]
             .values();
     }
 
@@ -257,9 +263,7 @@ abstract contract ConfigurationManagementInternal is
         for (uint256 selectorsIndex; selectorsIndex < selectorsLength; ) {
             bytes4 selector = selectors[selectorsIndex];
             _$
-                .functionSelectors[_configurationId][_version][
-                    _currentFacetAddress
-                ]
+            .functionSelectors[_configurationId][_version][_currentFacetAddress]
                 .push(selector);
             _$.selectorToFacet[_configurationId][_version][
                 selector

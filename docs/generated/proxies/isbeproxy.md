@@ -16,13 +16,13 @@ struct IsbeFactoryStorage {
 }
 ```
 
-### \_setIsbeFactory
+### _setIsbeFactory
 
 ```solidity
 function _setIsbeFactory(contract IIsbeFactory _isbeFactory) internal
 ```
 
-### \_getIsbeFactory
+### _getIsbeFactory
 
 ```solidity
 function _getIsbeFactory() internal view returns (contract IIsbeFactory)
@@ -31,19 +31,21 @@ function _getIsbeFactory() internal view returns (contract IIsbeFactory)
 Returns the governance address for DID and other queries
 
 _Overrides GovernanceAddressResolver to return configurationManager
-This enables external DID resolution for business logic proxies_
+     This enables external DID resolution for business logic proxies_
 
 #### Return Values
 
-| Name | Type                  | Description                       |
-| ---- | --------------------- | --------------------------------- |
-| [0]  | contract IIsbeFactory | The configuration manager address |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | contract IIsbeFactory | The configuration manager address |
 
-### \_isUseCase
+### _isUseCase
 
 ```solidity
 function _isUseCase() internal view returns (bool)
 ```
+
+
 
 ---
 
@@ -71,6 +73,8 @@ struct IsbeProxyArgs {
 constructor(struct IsbeProxy.IsbeProxyArgs _args) public
 ```
 
+
+
 ---
 
 ## IsbeProxyInternal
@@ -87,8 +91,8 @@ _Stores configuration manager reference and version information_
 
 ```solidity
 struct IsbeProxyStorage {
-    bytes32 configurationId;
-    uint256 version;
+  bytes32 configurationId;
+  uint256 version;
 }
 ```
 
@@ -104,43 +108,43 @@ _Modifier that checks configuration validity via management contract_
 
 #### Parameters
 
-| Name                   | Type                              | Description                                    |
-| ---------------------- | --------------------------------- | ---------------------------------------------- |
-| \_configurationManager | contract IConfigurationManagement | The configuration management contract instance |
-| \_configurationId      | bytes32                           | The configuration identifier to validate       |
-| \_version              | uint256                           | The configuration version to validate          |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _configurationManager | contract IConfigurationManagement | The configuration management contract instance |
+| _configurationId | bytes32 | The configuration identifier to validate |
+| _version | uint256 | The configuration version to validate |
 
-### \_setIsbeProxyConfiguration
+### _setIsbeProxyConfiguration
 
 ```solidity
 function _setIsbeProxyConfiguration(contract IConfigurationManagement _configurationManager, bytes32 _configurationId, uint256 _version, address[] _initAddresses, bytes[] _initData) internal
 ```
 
-### \_initializeDiamondCut
+### _initializeDiamondCut
 
 ```solidity
 function _initializeDiamondCut(address _init, bytes _calldata) internal
 ```
 
-### \_facets
+### _facets
 
 ```solidity
 function _facets() internal view returns (struct IDiamondLoupe.Facet[] facets_)
 ```
 
-### \_facetFunctionSelectors
+### _facetFunctionSelectors
 
 ```solidity
 function _facetFunctionSelectors(address _facet) internal view returns (bytes4[] functionSelectors_)
 ```
 
-### \_facetAddresses
+### _facetAddresses
 
 ```solidity
 function _facetAddresses() internal view returns (address[] facetAddresses_)
 ```
 
-### \_facetAddress
+### _facetAddress
 
 ```solidity
 function _facetAddress(bytes4 _signature) internal view returns (address)
@@ -152,18 +156,19 @@ _Must be implemented by inheriting contracts to provide resolution logic_
 
 #### Parameters
 
-| Name        | Type   | Description                      |
-| ----------- | ------ | -------------------------------- |
-| \_signature | bytes4 | The function selector to resolve |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _signature | bytes4 | The function selector to resolve |
 
 #### Return Values
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| [0]  | address |             |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | address |  |
 
-### \_supportsInterface
+### _supportsInterface
 
 ```solidity
 function _supportsInterface(bytes4 _interfaceId) internal view virtual returns (bool)
 ```
+

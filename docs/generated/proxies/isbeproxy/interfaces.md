@@ -15,13 +15,13 @@ Emitted when an ISBE proxy configuration is set
 
 #### Parameters
 
-| Name                     | Type      | Description                                   |
-| ------------------------ | --------- | --------------------------------------------- |
-| configumrationManagement | address   | The configuration management contract address |
-| configurationId          | bytes32   | The identifier of the configuration           |
-| version                  | uint256   | The version number of the configuration       |
-| initAddresses            | address[] |                                               |
-| initData                 | bytes[]   |                                               |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| configumrationManagement | address | The configuration management contract address |
+| configurationId | bytes32 | The identifier of the configuration |
+| version | uint256 | The version number of the configuration |
+| initAddresses | address[] |  |
+| initData | bytes[] |  |
 
 ### setIsbeProxyConfiguration
 
@@ -35,10 +35,11 @@ _Updates the proxy configuration using the specified management contract_
 
 #### Parameters
 
-| Name                      | Type                              | Description                                      |
-| ------------------------- | --------------------------------- | ------------------------------------------------ |
-| \_configurationManagement | contract IConfigurationManagement | The configuration management contract instance   |
-| \_configurationId         | bytes32                           | The identifier of the configuration to set       |
-| \_version                 | uint256                           | The version number of the configuration to apply |
-| \_init                    | address[]                         |                                                  |
-| \_data                    | bytes[]                           |                                                  |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _configurationManagement | contract IConfigurationManagement | The configuration management contract instance |
+| _configurationId | bytes32 | The identifier of the configuration to set |
+| _version | uint256 | The version number of the configuration to apply |
+| _init | address[] |  |
+| _data | bytes[] |  |
+

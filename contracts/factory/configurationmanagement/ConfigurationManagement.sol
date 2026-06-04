@@ -14,10 +14,16 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 pragma solidity ^0.8.28;
 
-import {ConfigurationManagementInternal} from './ConfigurationManagementInternal.sol';
+import {
+    ConfigurationManagementInternal
+} from './ConfigurationManagementInternal.sol';
 import {IConfigurationManagement} from './IConfigurationManagement.sol';
-import {IDiamondLoupe} from '../../proxies/eip2535/interfaces/IDiamondLoupe.sol';
-import {_GOVERNANCE_CONFIGURATION_MANAGER_ROLE} from '../../constants/roles.sol';
+import {
+    IDiamondLoupe
+} from '../../proxies/eip2535/interfaces/IDiamondLoupe.sol';
+import {
+    _GOVERNANCE_CONFIGURATION_MANAGER_ROLE
+} from '../../constants/roles.sol';
 
 /**
  * @title Configuration Management

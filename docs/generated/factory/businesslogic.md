@@ -22,10 +22,10 @@ Subsequent deployments for the same `businessId` will increment the version._
 
 #### Parameters
 
-| Name         | Type    | Description                                                  |
-| ------------ | ------- | ------------------------------------------------------------ |
-| \_businessId | bytes32 | The unique identifier for the business logic to be deployed. |
-| \_bytecode   | bytes   | The creation bytecode of the contract to deploy.             |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _businessId | bytes32 | The unique identifier for the business logic to be deployed. |
+| _bytecode | bytes | The creation bytecode of the contract to deploy. |
 
 ### getBusinessLogicAddress
 
@@ -43,9 +43,9 @@ Retrieves a list of all unique business logic identifiers deployed by this facto
 
 #### Return Values
 
-| Name               | Type      | Description                                                     |
-| ------------------ | --------- | --------------------------------------------------------------- |
-| businessLogicIds\_ | bytes32[] | An array of all unique `businessId`s registered in the factory. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| businessLogicIds_ | bytes32[] | An array of all unique `businessId`s registered in the factory. |
 
 ### getBusinessLogicVersions
 
@@ -59,21 +59,23 @@ _Each address in the returned array corresponds to a deployed version of the con
 
 #### Parameters
 
-| Name         | Type    | Description                                  |
-| ------------ | ------- | -------------------------------------------- |
-| \_businessId | bytes32 | The unique identifier of the business logic. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _businessId | bytes32 | The unique identifier of the business logic. |
 
 #### Return Values
 
-| Name       | Type      | Description                                                                      |
-| ---------- | --------- | -------------------------------------------------------------------------------- |
-| versions\_ | address[] | An array of addresses for all deployed versions of the specified business logic. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| versions_ | address[] | An array of addresses for all deployed versions of the specified business logic. |
 
-### \_implementedInterfaces
+### _implementedInterfaces
 
 ```solidity
 function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
 ```
+
+
 
 ---
 
@@ -100,9 +102,9 @@ _A pure function that returns an array of supported `bytes4` IDs._
 
 #### Return Values
 
-| Name         | Type     | Description                                  |
-| ------------ | -------- | -------------------------------------------- |
-| interfaces\_ | bytes4[] | An array of supported interface identifiers. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | An array of supported interface identifiers. |
 
 ### businessIdIntrospection
 
@@ -116,9 +118,9 @@ _Returns a `bytes32` key identifying the facet's purpose._
 
 #### Return Values
 
-| Name         | Type    | Description                              |
-| ------------ | ------- | ---------------------------------------- |
-| businessId\_ | bytes32 | The `bytes32` ID for the business logic. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| businessId_ | bytes32 | The `bytes32` ID for the business logic. |
 
 ### selectorsIntrospection
 
@@ -132,20 +134,22 @@ _A pure function that returns a `bytes4[]` array of selectors._
 
 #### Return Values
 
-| Name        | Type     | Description                              |
-| ----------- | -------- | ---------------------------------------- |
-| selectors\_ | bytes4[] | An array of `bytes4` function selectors. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| selectors_ | bytes4[] | An array of `bytes4` function selectors. |
+
+
 
 ---
 
 ## BusinessLogicFactoryInternal
 
 Abstract contract with internal logic to deploy and manage
-versioned business logic (implementation) contracts.
+        versioned business logic (implementation) contracts.
 
 _Uses unstructured storage to be reusable across different contexts.
-It handles contract deployment via the CREATE opcode and maintains
-a versioned record of each business logic contract._
+     It handles contract deployment via the CREATE opcode and maintains
+     a versioned record of each business logic contract._
 
 ### BusinessLogicStorage
 
@@ -153,9 +157,9 @@ _Holds all data related to business logic deployments._
 
 ```solidity
 struct BusinessLogicStorage {
-    mapping(bytes32 => address) latestVersions;
-    mapping(bytes32 => address[]) businessLogicVersions;
-    bytes32[] businessLogics;
+  mapping(bytes32 => address) latestVersions;
+  mapping(bytes32 => address[]) businessLogicVersions;
+  bytes32[] businessLogics;
 }
 ```
 
@@ -183,39 +187,41 @@ reports the correct identifier via its EIP-2535 introspection function._
 
 #### Parameters
 
-| Name       | Type    | Description                                                       |
-| ---------- | ------- | ----------------------------------------------------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | businessId | bytes32 | The `businessId` that the deployed contract was expected to have. |
 
-### \_deploy
+### _deploy
 
 ```solidity
 function _deploy(bytes32 _businessId, bytes _code) internal returns (address businessLogicAddress_, uint256 currentVersion_)
 ```
 
-### \_getBusinessLogicAddress
+### _getBusinessLogicAddress
 
 ```solidity
 function _getBusinessLogicAddress(bytes32 _businessId, uint256 _versionNumber) internal view returns (address businessLogicAddress_)
 ```
 
-### \_isDeployedBusinessLogic
+### _isDeployedBusinessLogic
 
 ```solidity
 function _isDeployedBusinessLogic(bytes32 _businessId, uint256 _version) internal view returns (bool)
 ```
 
-### \_getBusinessLogics
+### _getBusinessLogics
 
 ```solidity
 function _getBusinessLogics() internal view returns (bytes32[] businessLogicIds_)
 ```
 
-### \_getBusinessLogicVersions
+### _getBusinessLogicVersions
 
 ```solidity
 function _getBusinessLogicVersions(bytes32 _businessId) internal view returns (address[] versions_)
 ```
+
+
 
 ---
 
@@ -240,11 +246,11 @@ Emitted when a new version of a business logic is successfully deployed.
 
 #### Parameters
 
-| Name            | Type    | Description                                                 |
-| --------------- | ------- | ----------------------------------------------------------- |
-| businessId      | bytes32 | The unique identifier of the deployed business logic.       |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| businessId | bytes32 | The unique identifier of the deployed business logic. |
 | businessAddress | address | The address where the new business logic has been deployed. |
-| version         | uint256 | The version number of the newly deployed business logic.    |
+| version | uint256 | The version number of the newly deployed business logic. |
 
 ### deploy
 
@@ -261,10 +267,10 @@ Subsequent deployments for the same `businessId` will increment the version._
 
 #### Parameters
 
-| Name         | Type    | Description                                                  |
-| ------------ | ------- | ------------------------------------------------------------ |
-| \_businessId | bytes32 | The unique identifier for the business logic to be deployed. |
-| \_bytecode   | bytes   | The creation bytecode of the contract to deploy.             |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _businessId | bytes32 | The unique identifier for the business logic to be deployed. |
+| _bytecode | bytes | The creation bytecode of the contract to deploy. |
 
 ### getBusinessLogicAddress
 
@@ -276,16 +282,16 @@ Gets the deployed address for a specific version of a business logic.
 
 #### Parameters
 
-| Name         | Type    | Description                                           |
-| ------------ | ------- | ----------------------------------------------------- |
-| \_businessId | bytes32 | The unique identifier of the business logic.          |
-| \_version    | uint256 | The version number of the business logic to retrieve. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _businessId | bytes32 | The unique identifier of the business logic. |
+| _version | uint256 | The version number of the business logic to retrieve. |
 
 #### Return Values
 
-| Name                   | Type    | Description                                                 |
-| ---------------------- | ------- | ----------------------------------------------------------- |
-| businessLogicAddress\_ | address | The address of the deployed contract for the given version. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| businessLogicAddress_ | address | The address of the deployed contract for the given version. |
 
 ### getBusinessLogics
 
@@ -297,9 +303,9 @@ Retrieves a list of all unique business logic identifiers deployed by this facto
 
 #### Return Values
 
-| Name               | Type      | Description                                                     |
-| ------------------ | --------- | --------------------------------------------------------------- |
-| businessLogicIds\_ | bytes32[] | An array of all unique `businessId`s registered in the factory. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| businessLogicIds_ | bytes32[] | An array of all unique `businessId`s registered in the factory. |
 
 ### getBusinessLogicVersions
 
@@ -313,12 +319,13 @@ _Each address in the returned array corresponds to a deployed version of the con
 
 #### Parameters
 
-| Name         | Type    | Description                                  |
-| ------------ | ------- | -------------------------------------------- |
-| \_businessId | bytes32 | The unique identifier of the business logic. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _businessId | bytes32 | The unique identifier of the business logic. |
 
 #### Return Values
 
-| Name       | Type      | Description                                                                      |
-| ---------- | --------- | -------------------------------------------------------------------------------- |
-| versions\_ | address[] | An array of addresses for all deployed versions of the specified business logic. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| versions_ | address[] | An array of addresses for all deployed versions of the specified business logic. |
+

@@ -15,9 +15,9 @@ upon successful registration_
 
 #### Parameters
 
-| Name     | Type                           | Description                                                                                               |
-| -------- | ------------------------------ | --------------------------------------------------------------------------------------------------------- |
-| \_filter | struct IClientFiltering.Filter | Complete filter configuration structure containing all necessary parameters for the specified filter type |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _filter | struct IClientFiltering.Filter | Complete filter configuration structure containing all necessary parameters for the specified filter type |
 
 ### updateFilter
 
@@ -32,9 +32,9 @@ the filter configuration. Emits FilterUpdated event upon successful update_
 
 #### Parameters
 
-| Name     | Type                           | Description                            |
-| -------- | ------------------------------ | -------------------------------------- |
-| \_filter | struct IClientFiltering.Filter | Updated filter configuration structure |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _filter | struct IClientFiltering.Filter | Updated filter configuration structure |
 
 ### getFiltersLength
 
@@ -49,9 +49,9 @@ for administrative purposes_
 
 #### Return Values
 
-| Name | Type    | Description                       |
-| ---- | ------- | --------------------------------- |
-| [0]  | uint256 | Total count of registered filters |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 | Total count of registered filters |
 
 ### getFiltersByPage
 
@@ -67,16 +67,16 @@ numbers of registered filters. Page numbers are zero-indexed_
 
 #### Parameters
 
-| Name         | Type    | Description                                             |
-| ------------ | ------- | ------------------------------------------------------- |
-| \_pageNumber | uint256 | Zero-indexed page number for pagination (starts from 0) |
-| \_pageSize   | uint256 | Maximum number of filters to return per page            |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _pageNumber | uint256 | Zero-indexed page number for pagination (starts from 0) |
+| _pageSize | uint256 | Maximum number of filters to return per page |
 
 #### Return Values
 
-| Name      | Type                             | Description                                                |
-| --------- | -------------------------------- | ---------------------------------------------------------- |
-| filters\_ | struct IClientFiltering.Filter[] | Array of Filter structures representing the requested page |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| filters_ | struct IClientFiltering.Filter[] | Array of Filter structures representing the requested page |
 
 ### isFilterRegistered
 
@@ -92,15 +92,17 @@ performing operations that require the filter to exist_
 
 #### Parameters
 
-| Name       | Type    | Description                              |
-| ---------- | ------- | ---------------------------------------- |
-| \_filterId | bytes32 | Unique identifier of the filter to check |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _filterId | bytes32 | Unique identifier of the filter to check |
 
 #### Return Values
 
-| Name | Type | Description                                                        |
-| ---- | ---- | ------------------------------------------------------------------ |
-| [0]  | bool | Boolean indicating whether the filter exists (true) or not (false) |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bool | Boolean indicating whether the filter exists (true) or not (false) |
+
+
 
 ---
 
@@ -118,9 +120,9 @@ _A pure function that returns an array of supported `bytes4` IDs._
 
 #### Return Values
 
-| Name         | Type     | Description                                  |
-| ------------ | -------- | -------------------------------------------- |
-| interfaces\_ | bytes4[] | An array of supported interface identifiers. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | An array of supported interface identifiers. |
 
 ### businessIdIntrospection
 
@@ -134,9 +136,9 @@ _Returns a `bytes32` key identifying the facet's purpose._
 
 #### Return Values
 
-| Name         | Type    | Description                              |
-| ------------ | ------- | ---------------------------------------- |
-| businessId\_ | bytes32 | The `bytes32` ID for the business logic. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| businessId_ | bytes32 | The `bytes32` ID for the business logic. |
 
 ### selectorsIntrospection
 
@@ -150,15 +152,17 @@ _A pure function that returns a `bytes4[]` array of selectors._
 
 #### Return Values
 
-| Name        | Type     | Description                              |
-| ----------- | -------- | ---------------------------------------- |
-| selectors\_ | bytes4[] | An array of `bytes4` function selectors. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| selectors_ | bytes4[] | An array of `bytes4` function selectors. |
 
-### \_implementedInterfaces
+### _implementedInterfaces
 
 ```solidity
 function _implementedInterfaces() internal pure returns (bytes4[] interfaces_)
 ```
+
+
 
 ---
 
@@ -192,35 +196,37 @@ modifier onlyUniqueFilterId(bytes32 _filterId)
 modifier filterExists(bytes32 _filterId)
 ```
 
-### \_registerFilter
+### _registerFilter
 
 ```solidity
 function _registerFilter(struct IClientFiltering.Filter _newState) internal virtual
 ```
 
-### \_updateFilter
+### _updateFilter
 
 ```solidity
 function _updateFilter(struct IClientFiltering.Filter _newState) internal virtual
 ```
 
-### \_getFiltersLength
+### _getFiltersLength
 
 ```solidity
 function _getFiltersLength() internal view returns (uint256)
 ```
 
-### \_getFiltersByPage
+### _getFiltersByPage
 
 ```solidity
 function _getFiltersByPage(uint256 _page, uint256 _pageSize) internal view virtual returns (struct IClientFiltering.Filter[] filters_)
 ```
 
-### \_isFilterRegistered
+### _isFilterRegistered
 
 ```solidity
 function _isFilterRegistered(bytes32 _filterId) internal view returns (bool)
 ```
+
+
 
 ---
 
@@ -244,12 +250,12 @@ Enumeration of available filter types for client-side filtering operations
 
 ```solidity
 enum FilterType {
-    NONE,
-    TRANSACTION_HASH,
-    CONTRACT,
-    SIGNATURE,
-    CONTRACT_AND_SIGNATURE,
-    JSONRPC_METHOD
+  NONE,
+  TRANSACTION_HASH,
+  CONTRACT,
+  SIGNATURE,
+  CONTRACT_AND_SIGNATURE,
+  JSONRPC_METHOD
 }
 ```
 
@@ -287,17 +293,17 @@ Emitted when a new filter is successfully registered in the system
 
 #### Parameters
 
-| Name            | Type                             | Description                                                |
-| --------------- | -------------------------------- | ---------------------------------------------------------- |
-| filterId        | bytes32                          | Unique identifier of the registered filter                 |
-| filterType      | enum IClientFiltering.FilterType | Type of filtering applied from FilterType enumeration      |
-| transactionHash | bytes32                          | Transaction hash criteria (if applicable to filter type)   |
-| contractAddress | address                          | Contract address criteria (if applicable to filter type)   |
-| signature       | bytes4                           | Function signature criteria (if applicable to filter type) |
-| jsonRpcMethod   | bytes32                          | JSON-RPC method criteria (if applicable to filter type)    |
-| initialBlock    | uint256                          | Starting block number for the filter's active range        |
-| endBlock        | uint256                          | Ending block number for the filter's active range          |
-| disabled        | bool                             | Flag indicating if the filter is disabled                  |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| filterId | bytes32 | Unique identifier of the registered filter |
+| filterType | enum IClientFiltering.FilterType | Type of filtering applied from FilterType enumeration |
+| transactionHash | bytes32 | Transaction hash criteria (if applicable to filter type) |
+| contractAddress | address | Contract address criteria (if applicable to filter type) |
+| signature | bytes4 | Function signature criteria (if applicable to filter type) |
+| jsonRpcMethod | bytes32 | JSON-RPC method criteria (if applicable to filter type) |
+| initialBlock | uint256 | Starting block number for the filter's active range |
+| endBlock | uint256 | Ending block number for the filter's active range |
+| disabled | bool | Flag indicating if the filter is disabled |
 
 ### FilterUpdated
 
@@ -309,17 +315,17 @@ Emitted when an existing filter is updated in the system
 
 #### Parameters
 
-| Name            | Type                             | Description                                          |
-| --------------- | -------------------------------- | ---------------------------------------------------- |
-| filterId        | bytes32                          | Unique identifier of the updated filter              |
-| filterType      | enum IClientFiltering.FilterType | Updated filter type from FilterType enumeration      |
-| transactionHash | bytes32                          | Updated transaction hash criteria (if applicable)    |
-| contractAddress | address                          | Updated contract address criteria (if applicable)    |
-| signature       | bytes4                           | Updated function signature criteria (if applicable)  |
-| jsonRpcMethod   | bytes32                          | Updated JSON-RPC method criteria (if applicable)     |
-| initialBlock    | uint256                          | Updated starting block number for the filter's range |
-| endBlock        | uint256                          | Updated ending block number for the filter's range   |
-| disabled        | bool                             | Updated flag indicating if the filter is disabled    |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| filterId | bytes32 | Unique identifier of the updated filter |
+| filterType | enum IClientFiltering.FilterType | Updated filter type from FilterType enumeration |
+| transactionHash | bytes32 | Updated transaction hash criteria (if applicable) |
+| contractAddress | address | Updated contract address criteria (if applicable) |
+| signature | bytes4 | Updated function signature criteria (if applicable) |
+| jsonRpcMethod | bytes32 | Updated JSON-RPC method criteria (if applicable) |
+| initialBlock | uint256 | Updated starting block number for the filter's range |
+| endBlock | uint256 | Updated ending block number for the filter's range |
+| disabled | bool | Updated flag indicating if the filter is disabled |
 
 ### InvalidFilter
 
@@ -335,17 +341,17 @@ are populated based on the selected FilterType_
 
 #### Parameters
 
-| Name            | Type                             | Description                                  |
-| --------------- | -------------------------------- | -------------------------------------------- |
-| filterId        | bytes32                          | The filter identifier that failed validation |
-| filterType      | enum IClientFiltering.FilterType | The attempted filter type                    |
-| transactionHash | bytes32                          | Transaction hash parameter provided          |
-| contractAddress | address                          | Contract address parameter provided          |
-| signature       | bytes4                           | Function signature parameter provided        |
-| jsonRpcMethod   | bytes32                          | JSON-RPC method parameter provided           |
-| initialBlock    | uint256                          | Initial block parameter provided             |
-| endBlock        | uint256                          | End block parameter provided                 |
-| disabled        | bool                             | Disabled flag parameter provided             |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| filterId | bytes32 | The filter identifier that failed validation |
+| filterType | enum IClientFiltering.FilterType | The attempted filter type |
+| transactionHash | bytes32 | Transaction hash parameter provided |
+| contractAddress | address | Contract address parameter provided |
+| signature | bytes4 | Function signature parameter provided |
+| jsonRpcMethod | bytes32 | JSON-RPC method parameter provided |
+| initialBlock | uint256 | Initial block parameter provided |
+| endBlock | uint256 | End block parameter provided |
+| disabled | bool | Disabled flag parameter provided |
 
 ### FilterIdExists
 
@@ -361,8 +367,8 @@ filter configurations_
 
 #### Parameters
 
-| Name     | Type    | Description                                               |
-| -------- | ------- | --------------------------------------------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | filterId | bytes32 | The duplicate filter identifier that caused the collision |
 
 ### FilterNotFound
@@ -375,8 +381,8 @@ Thrown when attempting to access or modify a filter that does not exist
 
 #### Parameters
 
-| Name     | Type    | Description                        |
-| -------- | ------- | ---------------------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | filterId | bytes32 | The non-existent filter identifier |
 
 ### registerFilter
@@ -394,9 +400,9 @@ upon successful registration_
 
 #### Parameters
 
-| Name     | Type                           | Description                                                                                               |
-| -------- | ------------------------------ | --------------------------------------------------------------------------------------------------------- |
-| \_filter | struct IClientFiltering.Filter | Complete filter configuration structure containing all necessary parameters for the specified filter type |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _filter | struct IClientFiltering.Filter | Complete filter configuration structure containing all necessary parameters for the specified filter type |
 
 ### updateFilter
 
@@ -411,9 +417,9 @@ the filter configuration. Emits FilterUpdated event upon successful update_
 
 #### Parameters
 
-| Name     | Type                           | Description                            |
-| -------- | ------------------------------ | -------------------------------------- |
-| \_filter | struct IClientFiltering.Filter | Updated filter configuration structure |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _filter | struct IClientFiltering.Filter | Updated filter configuration structure |
 
 ### getFiltersLength
 
@@ -428,9 +434,9 @@ for administrative purposes_
 
 #### Return Values
 
-| Name | Type    | Description                       |
-| ---- | ------- | --------------------------------- |
-| [0]  | uint256 | Total count of registered filters |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 | Total count of registered filters |
 
 ### getFiltersByPage
 
@@ -446,16 +452,16 @@ numbers of registered filters. Page numbers are zero-indexed_
 
 #### Parameters
 
-| Name         | Type    | Description                                             |
-| ------------ | ------- | ------------------------------------------------------- |
-| \_pageNumber | uint256 | Zero-indexed page number for pagination (starts from 0) |
-| \_pageSize   | uint256 | Maximum number of filters to return per page            |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _pageNumber | uint256 | Zero-indexed page number for pagination (starts from 0) |
+| _pageSize | uint256 | Maximum number of filters to return per page |
 
 #### Return Values
 
-| Name      | Type                             | Description                                                |
-| --------- | -------------------------------- | ---------------------------------------------------------- |
-| filters\_ | struct IClientFiltering.Filter[] | Array of Filter structures representing the requested page |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| filters_ | struct IClientFiltering.Filter[] | Array of Filter structures representing the requested page |
 
 ### isFilterRegistered
 
@@ -471,12 +477,13 @@ performing operations that require the filter to exist_
 
 #### Parameters
 
-| Name       | Type    | Description                              |
-| ---------- | ------- | ---------------------------------------- |
-| \_filterId | bytes32 | Unique identifier of the filter to check |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _filterId | bytes32 | Unique identifier of the filter to check |
 
 #### Return Values
 
-| Name | Type | Description                                                        |
-| ---- | ---- | ------------------------------------------------------------------ |
-| [0]  | bool | Boolean indicating whether the filter exists (true) or not (false) |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bool | Boolean indicating whether the filter exists (true) or not (false) |
+

@@ -1,11 +1,11 @@
 ## ERC20
 
 This contract implements the standard ERC20 token functionality, including initialization,
-token transfers, allowances, and balance queries.
+        token transfers, allowances, and balance queries.
 
 _This contract extends from `ERC20Internal` and adheres to the ERC20 standard defined in the
-OpenZeppelin interfaces. It includes additional helper functions such as `increaseAllowance` and
-`decreaseAllowance` for more granular control over token allowances._
+     OpenZeppelin interfaces. It includes additional helper functions such as `increaseAllowance` and
+     `decreaseAllowance` for more granular control over token allowances._
 
 ### constructor
 
@@ -25,11 +25,11 @@ Initializes the ERC20 token with the given name, symbol, and decimals.
 
 #### Parameters
 
-| Name          | Type   | Description                                       |
-| ------------- | ------ | ------------------------------------------------- |
-| \_newName     | string | The name of the ERC20 token to be initialized.    |
-| \_newSymbol   | string | The symbol of the ERC20 token to be initialized.  |
-| \_newDecimals | uint8  | The number of decimal places for the ERC20 token. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _newName | string | The name of the ERC20 token to be initialized. |
+| _newSymbol | string | The symbol of the ERC20 token to be initialized. |
+| _newDecimals | uint8 | The number of decimal places for the ERC20 token. |
 
 ### transfer
 
@@ -37,12 +37,12 @@ Initializes the ERC20 token with the given name, symbol, and decimals.
 function transfer(address _to, uint256 _amount) external returns (bool)
 ```
 
-\_See {IERC20-transfer}.
+_See {IERC20-transfer}.
 
 Requirements:
 
 - `to` cannot be the zero address.
-- the caller must have a balance of at least `amount`.\_
+- the caller must have a balance of at least `amount`._
 
 ### batchTransfer
 
@@ -52,7 +52,7 @@ function batchTransfer(address[] _toList, uint256[] _amounts) external
 
 Transfer tokens to multiple addresses in a single transaction (batch operation)
 
-\_Transfers tokens from the caller's account to multiple recipients.
+_Transfers tokens from the caller's account to multiple recipients.
 
      **ERC20 Mode:** Simple batch transfers without additional validations
      **ERC3643 Mode:** Requires all recipients to be verified and sender/recipients not frozen
@@ -62,10 +62,10 @@ Transfer tokens to multiple addresses in a single transaction (batch operation)
 
 #### Parameters
 
-| Name      | Type      | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| --------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| \_toList  | address[] | The addresses of the receivers (all must be verified for ERC3643)                                                                                                                                                                                                                                                                                                                                                                                                                |
-| \_amounts | uint256[] | The number of tokens to transfer to each corresponding receiver Requirements: - Caller must have sufficient balance for the total amount - Arrays must have the same length - For ERC3643: all addresses in `_toList` must be verified in Identity Registry - For ERC3643: caller and all recipients must not be frozen Emits: - {Transfer} event for each transfer via internal transfer mechanism Reverts: - {TransferAmountExceedsBalance} if caller has insufficient balance |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _toList | address[] | The addresses of the receivers (all must be verified for ERC3643) |
+| _amounts | uint256[] | The number of tokens to transfer to each corresponding receiver Requirements: - Caller must have sufficient balance for the total amount - Arrays must have the same length - For ERC3643: all addresses in `_toList` must be verified in Identity Registry - For ERC3643: caller and all recipients must not be frozen Emits: - {Transfer} event for each transfer via internal transfer mechanism Reverts: - {TransferAmountExceedsBalance} if caller has insufficient balance |
 
 ### approve
 
@@ -73,14 +73,14 @@ Transfer tokens to multiple addresses in a single transaction (batch operation)
 function approve(address _spender, uint256 _amount) external returns (bool)
 ```
 
-\_See {IERC20-approve}.
+_See {IERC20-approve}.
 
 NOTE: If `amount` is the maximum `uint256`, the allowance is not updated on
 `transferFrom`. This is semantically equivalent to an infinite approval.
 
 Requirements:
 
-- `spender` cannot be the zero address.\_
+- `spender` cannot be the zero address._
 
 ### transferFrom
 
@@ -88,7 +88,7 @@ Requirements:
 function transferFrom(address _from, address _to, uint256 _amount) external returns (bool)
 ```
 
-\_See {IERC20-transferFrom}.
+_See {IERC20-transferFrom}.
 
 Emits an {Approval} event indicating the updated allowance. This is not
 required by the EIP. See the note at the beginning of {ERC20}.
@@ -100,8 +100,8 @@ Requirements:
 
 - `from` and `to` cannot be the zero address.
 - `from` must have a balance of at least `amount`.
-- the caller must have allowance for `from`'s tokens of at least
-  `amount`.\_
+- the caller must have allowance for ``from``'s tokens of at least
+`amount`._
 
 ### increaseAllowance
 
@@ -109,7 +109,7 @@ Requirements:
 function increaseAllowance(address _spender, uint256 _addedValue) external returns (bool)
 ```
 
-\_Atomically increases the allowance granted to `spender` by the caller.
+_Atomically increases the allowance granted to `spender` by the caller.
 
 This is an alternative to {approve} that can be used as a mitigation for
 problems described in {IERC20-approve}.
@@ -118,7 +118,7 @@ Emits an {Approval} event indicating the updated allowance.
 
 Requirements:
 
-- `spender` cannot be the zero address.\_
+- `spender` cannot be the zero address._
 
 ### decreaseAllowance
 
@@ -126,7 +126,7 @@ Requirements:
 function decreaseAllowance(address _spender, uint256 _subtractedValue) external returns (bool)
 ```
 
-\_Atomically decreases the allowance granted to `spender` by the caller.
+_Atomically decreases the allowance granted to `spender` by the caller.
 
 This is an alternative to {approve} that can be used as a mitigation for
 problems described in {IERC20-approve}.
@@ -137,7 +137,7 @@ Requirements:
 
 - `spender` cannot be the zero address.
 - `spender` must have allowance for the caller of at least
-  `subtractedValue`.\_
+`subtractedValue`._
 
 ### allowance
 
@@ -149,16 +149,16 @@ Get the amount of tokens that an owner allowed a spender to manage
 
 #### Parameters
 
-| Name      | Type    | Description                           |
-| --------- | ------- | ------------------------------------- |
-| \_owner   | address | The address which owns the funds      |
-| \_spender | address | The address which can spend the funds |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _owner | address | The address which owns the funds |
+| _spender | address | The address which can spend the funds |
 
 #### Return Values
 
-| Name | Type    | Description          |
-| ---- | ------- | -------------------- |
-| [0]  | uint256 | The allowance amount |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 | The allowance amount |
 
 ### decimals
 
@@ -170,9 +170,9 @@ Returns the number of decimals used for token amounts
 
 #### Return Values
 
-| Name | Type  | Description        |
-| ---- | ----- | ------------------ |
-| [0]  | uint8 | The token decimals |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint8 | The token decimals |
 
 ### symbol
 
@@ -184,9 +184,9 @@ Returns the token symbol
 
 #### Return Values
 
-| Name | Type   | Description             |
-| ---- | ------ | ----------------------- |
-| [0]  | string | The symbol of the token |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | string | The symbol of the token |
 
 ### name
 
@@ -198,9 +198,9 @@ Returns the token name
 
 #### Return Values
 
-| Name | Type   | Description           |
-| ---- | ------ | --------------------- |
-| [0]  | string | The name of the token |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | string | The name of the token |
 
 ### totalSupply
 
@@ -212,9 +212,9 @@ Returns the total supply of tokens
 
 #### Return Values
 
-| Name | Type    | Description            |
-| ---- | ------- | ---------------------- |
-| [0]  | uint256 | The total token supply |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 | The total token supply |
 
 ### balanceOf
 
@@ -226,17 +226,17 @@ Returns the token balance of an account
 
 #### Parameters
 
-| Name      | Type    | Description                     |
-| --------- | ------- | ------------------------------- |
-| \_account | address | Address of the account to query |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _account | address | Address of the account to query |
 
 #### Return Values
 
-| Name | Type    | Description                 |
-| ---- | ------- | --------------------------- |
-| [0]  | uint256 | The account's token balance |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 | The account's token balance |
 
-### \_implementedInterfaces
+### _implementedInterfaces
 
 ```solidity
 function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
@@ -246,9 +246,11 @@ Returns the list of interfaces implemented by this contract
 
 #### Return Values
 
-| Name         | Type     | Description            |
-| ------------ | -------- | ---------------------- |
-| interfaces\_ | bytes4[] | Array of interface IDs |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | Array of interface IDs |
+
+
 
 ---
 
@@ -266,9 +268,9 @@ _A pure function that returns an array of supported `bytes4` IDs._
 
 #### Return Values
 
-| Name         | Type     | Description                                  |
-| ------------ | -------- | -------------------------------------------- |
-| interfaces\_ | bytes4[] | An array of supported interface identifiers. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | An array of supported interface identifiers. |
 
 ### businessIdIntrospection
 
@@ -282,9 +284,9 @@ _Returns a `bytes32` key identifying the facet's purpose._
 
 #### Return Values
 
-| Name         | Type    | Description                              |
-| ------------ | ------- | ---------------------------------------- |
-| businessId\_ | bytes32 | The `bytes32` ID for the business logic. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| businessId_ | bytes32 | The `bytes32` ID for the business logic. |
 
 ### selectorsIntrospection
 
@@ -298,41 +300,43 @@ _A pure function that returns a `bytes4[]` array of selectors._
 
 #### Return Values
 
-| Name        | Type     | Description                              |
-| ----------- | -------- | ---------------------------------------- |
-| selectors\_ | bytes4[] | An array of `bytes4` function selectors. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| selectors_ | bytes4[] | An array of `bytes4` function selectors. |
+
+
 
 ---
 
 ## ERC20Internal
 
 Abstract contract providing internal functionality for ERC20 tokens.
-Contains common mechanisms for transferring, minting, burning, and managing allowances.
-This is not a deployable contract but serves as a helper for extending ERC20 logic.
+        Contains common mechanisms for transferring, minting, burning, and managing allowances.
+        This is not a deployable contract but serves as a helper for extending ERC20 logic.
 
 _This contract defines internal functions that form the backbone of ERC20 token operations.
-It adheres to the ERC20 standard and provides reusable methods for advanced token management._
+     It adheres to the ERC20 standard and provides reusable methods for advanced token management._
 
 ### ERC20Storage
 
 ```solidity
 struct ERC20Storage {
-    mapping(address => uint256) balances;
-    mapping(address => mapping(address => uint256)) allowances;
-    uint256 totalSupply;
-    uint8 decimals;
-    string name;
-    string symbol;
+  mapping(address => uint256) balances;
+  mapping(address => mapping(address => uint256)) allowances;
+  uint256 totalSupply;
+  uint8 decimals;
+  string name;
+  string symbol;
 }
 ```
 
-### \_initialize
+### _initialize
 
 ```solidity
 function _initialize(string _newName, string _newSymbol, uint8 _newDecimals) internal
 ```
 
-### \_setName
+### _setName
 
 ```solidity
 function _setName(string _newName) internal
@@ -343,11 +347,11 @@ Applies the {emptyString} modifier to ensure the input is not an empty string._
 
 #### Parameters
 
-| Name      | Type   | Description                          |
-| --------- | ------ | ------------------------------------ |
-| \_newName | string | The new name to assign to the token. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _newName | string | The new name to assign to the token. |
 
-### \_setSymbol
+### _setSymbol
 
 ```solidity
 function _setSymbol(string _newSymbol) internal
@@ -358,17 +362,17 @@ Applies the {emptyString} modifier to ensure the input is not an empty string._
 
 #### Parameters
 
-| Name        | Type   | Description                            |
-| ----------- | ------ | -------------------------------------- |
-| \_newSymbol | string | The new symbol to assign to the token. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _newSymbol | string | The new symbol to assign to the token. |
 
-### \_transfer
+### _transfer
 
 ```solidity
 function _transfer(address _from, address _to, uint256 _amount) internal virtual
 ```
 
-\_Moves `amount` of tokens from `from` to `to`.
+_Moves `amount` of tokens from `from` to `to`.
 
 This internal function is equivalent to {transfer}, and can be used to
 e.g. implement automatic token fees, slashing mechanisms, etc.
@@ -379,30 +383,30 @@ Requirements:
 
 - `from` cannot be the zero address.
 - `to` cannot be the zero address.
-- `from` must have a balance of at least `amount`.\_
+- `from` must have a balance of at least `amount`._
 
-### \_mint
+### _mint
 
 ```solidity
 function _mint(address _account, uint256 _amount) internal virtual
 ```
 
-\_Creates `amount` tokens and assigns them to `account`, increasing
+_Creates `amount` tokens and assigns them to `account`, increasing
 the total supply.
 
 Emits a {Transfer} event with `from` set to the zero address.
 
 Requirements:
 
-- `account` cannot be the zero address.\_
+- `account` cannot be the zero address._
 
-### \_burn
+### _burn
 
 ```solidity
 function _burn(address _account, uint256 _amount) internal virtual
 ```
 
-\_Destroys `amount` tokens from `account`, reducing the
+_Destroys `amount` tokens from `account`, reducing the
 total supply.
 
 Emits a {Transfer} event with `to` set to the zero address.
@@ -410,15 +414,15 @@ Emits a {Transfer} event with `to` set to the zero address.
 Requirements:
 
 - `account` cannot be the zero address.
-- `account` must have at least `amount` tokens.\_
+- `account` must have at least `amount` tokens._
 
-### \_approve
+### _approve
 
 ```solidity
 function _approve(address _owner, address _spender, uint256 _amount) internal virtual
 ```
 
-\_Sets `amount` as the allowance of `spender` over the `owner` s tokens.
+_Sets `amount` as the allowance of `spender` over the `owner` s tokens.
 
 This internal function is equivalent to `approve`, and can be used to
 e.g. set automatic allowances for certain subsystems, etc.
@@ -428,96 +432,96 @@ Emits an {Approval} event.
 Requirements:
 
 - `owner` cannot be the zero address.
-- `spender` cannot be the zero address.\_
+- `spender` cannot be the zero address._
 
-### \_spendAllowance
+### _spendAllowance
 
 ```solidity
 function _spendAllowance(address _owner, address _spender, uint256 _amount) internal virtual
 ```
 
-\_Updates `owner` s allowance for `spender` based on spent `amount`.
+_Updates `owner` s allowance for `spender` based on spent `amount`.
 
 Does not update the allowance amount in case of infinite allowance.
 Revert if not enough allowance is available.
 
-Might emit an {Approval} event.\_
+Might emit an {Approval} event._
 
-### \_beforeTokenTransfer
+### _beforeTokenTransfer
 
 ```solidity
 function _beforeTokenTransfer(address _from, address _to, uint256 _amount) internal virtual
 ```
 
-\_Hook that is called before any transfer of tokens. This includes
+_Hook that is called before any transfer of tokens. This includes
 minting and burning.
 
 Calling conditions:
 
-- when `from` and `to` are both non-zero, `amount` of `from`'s tokens
-  will be transferred to `to`.
+- when `from` and `to` are both non-zero, `amount` of ``from``'s tokens
+will be transferred to `to`.
 - when `from` is zero, `amount` tokens will be minted for `to`.
-- when `to` is zero, `amount` of `from`'s tokens will be burned.
+- when `to` is zero, `amount` of ``from``'s tokens will be burned.
 - `from` and `to` are never both zero.
 
-To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].\_
+To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks]._
 
-### \_afterTokenTransfer
+### _afterTokenTransfer
 
 ```solidity
 function _afterTokenTransfer(address _from, address _to, uint256 _amount) internal virtual
 ```
 
-\_Hook that is called after any transfer of tokens. This includes
+_Hook that is called after any transfer of tokens. This includes
 minting and burning.
 
 Calling conditions:
 
-- when `from` and `to` are both non-zero, `amount` of `from`'s tokens
-  has been transferred to `to`.
+- when `from` and `to` are both non-zero, `amount` of ``from``'s tokens
+has been transferred to `to`.
 - when `from` is zero, `amount` tokens have been minted for `to`.
-- when `to` is zero, `amount` of `from`'s tokens have been burned.
+- when `to` is zero, `amount` of ``from``'s tokens have been burned.
 - `from` and `to` are never both zero.
 
-To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks].\_
+To learn more about hooks, head to xref:ROOT:extending-contracts.adoc#using-hooks[Using Hooks]._
 
-### \_decimals
+### _decimals
 
 ```solidity
 function _decimals() internal view returns (uint8)
 ```
 
-### \_symbol
+### _symbol
 
 ```solidity
 function _symbol() internal view returns (string)
 ```
 
-### \_name
+### _name
 
 ```solidity
 function _name() internal view returns (string)
 ```
 
-### \_totalSupply
+### _totalSupply
 
 ```solidity
 function _totalSupply() internal view returns (uint256)
 ```
 
-### \_balanceOf
+### _balanceOf
 
 ```solidity
 function _balanceOf(address account) internal view returns (uint256)
 ```
 
-### \_allowance
+### _allowance
 
 ```solidity
 function _allowance(address owner, address spender) internal view returns (uint256)
 ```
 
-### \_calculateTotalAmount
+### _calculateTotalAmount
 
 ```solidity
 function _calculateTotalAmount(uint256[] _amounts) internal pure returns (uint256 totalAmount_)
@@ -527,26 +531,28 @@ _Calculates the total of all entries in `_amounts`._
 
 #### Parameters
 
-| Name      | Type      | Description              |
-| --------- | --------- | ------------------------ |
-| \_amounts | uint256[] | Array of amounts to sum. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _amounts | uint256[] | Array of amounts to sum. |
 
 #### Return Values
 
-| Name          | Type    | Description                  |
-| ------------- | ------- | ---------------------------- |
-| totalAmount\_ | uint256 | The total sum of `_amounts`. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| totalAmount_ | uint256 | The total sum of `_amounts`. |
+
+
 
 ---
 
 ## IERC20Isbe
 
 This interface defines the standard functions, events, and errors for an ERC20 token,
-extending the standard ERC20 and ERC20Metadata interfaces.
+        extending the standard ERC20 and ERC20Metadata interfaces.
 
 _This interface introduces the `initializeErc20` function and custom errors specific to
-this implementation. It serves as a blueprint for implementing contract functionality while
-adhering to the ERC20 specification._
+     this implementation. It serves as a blueprint for implementing contract functionality while
+     adhering to the ERC20 specification._
 
 ### Erc20Initialized
 
@@ -558,11 +564,11 @@ Emitted when the ERC20 token is initialized with a name, symbol, and decimals.
 
 #### Parameters
 
-| Name     | Type   | Description                                                   |
-| -------- | ------ | ------------------------------------------------------------- |
-| name     | string | The name of the initialized ERC20 token.                      |
-| symbol   | string | The symbol of the initialized ERC20 token.                    |
-| decimals | uint8  | The number of decimal places for the initialized ERC20 token. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| name | string | The name of the initialized ERC20 token. |
+| symbol | string | The symbol of the initialized ERC20 token. |
+| decimals | uint8 | The number of decimal places for the initialized ERC20 token. |
 
 ### BatchTransferExecuted
 
@@ -574,11 +580,11 @@ Emitted after executing a batch transfer operation.
 
 #### Parameters
 
-| Name       | Type      | Description                                              |
-| ---------- | --------- | -------------------------------------------------------- |
-| sender     | address   | The address initiating the batch transfer.               |
-| recipients | address[] | The list of recipient addresses.                         |
-| amounts    | uint256[] | The list of token amounts transferred to each recipient. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| sender | address | The address initiating the batch transfer. |
+| recipients | address[] | The list of recipient addresses. |
+| amounts | uint256[] | The list of token amounts transferred to each recipient. |
 
 ### TransferFromExecuted
 
@@ -590,12 +596,12 @@ Emitted when `transferFrom` successfully transfers tokens.
 
 #### Parameters
 
-| Name     | Type    | Description                                  |
-| -------- | ------- | -------------------------------------------- |
-| operator | address | The address executing the transfer.          |
-| from     | address | The address the tokens are transferred from. |
-| to       | address | The address receiving the tokens.            |
-| amount   | uint256 | The amount of tokens transferred.            |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operator | address | The address executing the transfer. |
+| from | address | The address the tokens are transferred from. |
+| to | address | The address receiving the tokens. |
+| amount | uint256 | The amount of tokens transferred. |
 
 ### AllowanceIncreased
 
@@ -607,11 +613,11 @@ Emitted when `increaseAllowance` raises a spender's allowance.
 
 #### Parameters
 
-| Name         | Type    | Description                                 |
-| ------------ | ------- | ------------------------------------------- |
-| owner        | address | The address granting the allowance.         |
-| spender      | address | The address whose allowance increases.      |
-| addedValue   | uint256 | The amount added to the allowance.          |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| owner | address | The address granting the allowance. |
+| spender | address | The address whose allowance increases. |
+| addedValue | uint256 | The amount added to the allowance. |
 | newAllowance | uint256 | The resulting allowance after the increase. |
 
 ### AllowanceDecreased
@@ -624,12 +630,12 @@ Emitted when `decreaseAllowance` reduces a spender's allowance.
 
 #### Parameters
 
-| Name            | Type    | Description                                 |
-| --------------- | ------- | ------------------------------------------- |
-| owner           | address | The address granting the allowance.         |
-| spender         | address | The address whose allowance decreases.      |
-| subtractedValue | uint256 | The amount subtracted from the allowance.   |
-| newAllowance    | uint256 | The resulting allowance after the decrease. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| owner | address | The address granting the allowance. |
+| spender | address | The address whose allowance decreases. |
+| subtractedValue | uint256 | The amount subtracted from the allowance. |
+| newAllowance | uint256 | The resulting allowance after the decrease. |
 
 ### DecreasedAllowanceBellowZero
 
@@ -671,7 +677,7 @@ function batchTransfer(address[] _toList, uint256[] _amounts) external
 
 Transfer tokens to multiple addresses in a single transaction (batch operation)
 
-\_Transfers tokens from the caller's account to multiple recipients.
+_Transfers tokens from the caller's account to multiple recipients.
 
      **ERC20 Mode:** Simple batch transfers without additional validations
      **ERC3643 Mode:** Requires all recipients to be verified and sender/recipients not frozen
@@ -681,10 +687,10 @@ Transfer tokens to multiple addresses in a single transaction (batch operation)
 
 #### Parameters
 
-| Name      | Type      | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| --------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| \_toList  | address[] | The addresses of the receivers (all must be verified for ERC3643)                                                                                                                                                                                                                                                                                                                                                                                                                |
-| \_amounts | uint256[] | The number of tokens to transfer to each corresponding receiver Requirements: - Caller must have sufficient balance for the total amount - Arrays must have the same length - For ERC3643: all addresses in `_toList` must be verified in Identity Registry - For ERC3643: caller and all recipients must not be frozen Emits: - {Transfer} event for each transfer via internal transfer mechanism Reverts: - {TransferAmountExceedsBalance} if caller has insufficient balance |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _toList | address[] | The addresses of the receivers (all must be verified for ERC3643) |
+| _amounts | uint256[] | The number of tokens to transfer to each corresponding receiver Requirements: - Caller must have sufficient balance for the total amount - Arrays must have the same length - For ERC3643: all addresses in `_toList` must be verified in Identity Registry - For ERC3643: caller and all recipients must not be frozen Emits: - {Transfer} event for each transfer via internal transfer mechanism Reverts: - {TransferAmountExceedsBalance} if caller has insufficient balance |
 
 ### initializeErc20
 
@@ -696,8 +702,9 @@ Initializes the ERC20 token with the given name, symbol, and decimals.
 
 #### Parameters
 
-| Name          | Type   | Description                                       |
-| ------------- | ------ | ------------------------------------------------- |
-| \_newName     | string | The name of the ERC20 token to be initialized.    |
-| \_newSymbol   | string | The symbol of the ERC20 token to be initialized.  |
-| \_newDecimals | uint8  | The number of decimal places for the ERC20 token. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _newName | string | The name of the ERC20 token to be initialized. |
+| _newSymbol | string | The symbol of the ERC20 token to be initialized. |
+| _newDecimals | uint8 | The number of decimal places for the ERC20 token. |
+

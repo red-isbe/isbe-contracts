@@ -22,10 +22,11 @@ import { HDNodeWallet, Signer, ZeroHash } from 'ethers'
 import { CONFIGURATION_ID_DID_REGISTRY } from '../../../utils/constants'
 import { deployGovernance } from '../../fixtures/governance'
 import {
-    randomDid,
     randomBaseDocument,
     randomBytes32,
     randomHex,
+    proofToDid,
+    generateProof,
 } from '../../support'
 import { EllipticType } from '../../types/identity'
 
@@ -86,32 +87,29 @@ export function walletOfFirstSigner(): HDNodeWallet {
             path: string
         }
     ).mnemonic
+    return HDNodeWallet.fromPhrase(mnemonic)
+}
+
+export function walletFromMnemonic(mnemonic: string): HDNodeWallet {
     return ethers.Wallet.fromPhrase(mnemonic)
 }
 
-export async function recoverPublicKeyFromSignature(
-    signer: Signer,
-    message: string = 'test'
-): Promise<string> {
-    const signature = await signer.signMessage(message)
-    const messageHash = ethers.hashMessage(message)
-    const publicKey = ethers.SigningKey.recoverPublicKey(messageHash, signature)
-    return publicKey
+export async function getSignersWithProvider(): Promise<
+    [Signer, Signer, Signer]
+> {
+    const [admin, bob, alice] = await ethers.getSigners()
+    return [admin, bob, alice]
 }
 
 export async function createDidDocument(
     didRegistry: IDidRegistry,
-    did: string,
     wallet: HDNodeWallet,
     notBefore: bigint,
     notAfter: bigint
-): Promise<void> {
+): Promise<string> {
+    const proof = generateProof(wallet)
+    const did = proofToDid(proof)
     const publicKey65 = wallet.signingKey.publicKey
-    const message = ethers.keccak256(
-        ethers.solidityPacked(['bytes'], [publicKey65])
-    )
-    const signature = wallet.signingKey.sign(message)
-    const proof = ethers.Signature.from(signature).serialized
 
     await didRegistry.insertFirstDidDocument(
         did,
@@ -124,25 +122,8 @@ export async function createDidDocument(
         notAfter,
         ''
     )
-}
 
-export async function createDidDocumentForSigner(
-    didRegistry: IDidRegistry,
-    did: string,
-    signer: Signer,
-    notBefore: bigint,
-    notAfter: bigint
-): Promise<void> {
-    const publicKey = await recoverPublicKeyFromSignature(signer)
-    await didRegistry.insertDidDocument(
-        did,
-        randomBaseDocument(),
-        randomBytes32(),
-        '0x'.concat(publicKey.slice(4)),
-        EllipticType.SECP_256_K1,
-        notBefore,
-        notAfter
-    )
+    return did
 }
 
 // ============================================================================
@@ -154,9 +135,29 @@ export async function createDidDocumentForSigner(
  * Use this for tests that don't need DIDs (e.g., access control, paused state)
  */
 export async function deployContractsFixture(): Promise<Partial<TestContext>> {
-    const [admin, bob, alice] = await ethers.getSigners()
+    // Get signers with providers for deployment
+    const [adminSigner, bobSigner, aliceSigner] = await getSignersWithProvider()
+    const adminWallet = walletOfFirstSigner().connect(ethers.provider)
+    const accountsConfig = config.networks.hardhat.accounts as {
+        mnemonic: string
+        path: string
+    }
+    const bobWallet = HDNodeWallet.fromPhrase(
+        accountsConfig.mnemonic,
+        '',
+        "m/44'/60'/0'/0/1"
+    ).connect(ethers.provider)
+    const aliceWallet = HDNodeWallet.fromPhrase(
+        accountsConfig.mnemonic,
+        '',
+        "m/44'/60'/0'/0/2"
+    ).connect(ethers.provider)
 
-    const gov = await deployGovernance(admin, [], CONFIGURATION_ID_DID_REGISTRY)
+    const gov = await deployGovernance(
+        adminSigner,
+        [],
+        CONFIGURATION_ID_DID_REGISTRY
+    )
 
     return {
         didRegistry: gov.didRegistry,
@@ -164,12 +165,13 @@ export async function deployContractsFixture(): Promise<Partial<TestContext>> {
         trustedIssuersRegistry: gov.trustedIssuersRegistry,
         trustedIssuersRegistryFacet: gov.trustedIssuersRegistryFacet,
         mockTimestamp: gov.mockTimestamp,
-        admin,
-        bob,
-        alice,
-        adminAddress: await admin.getAddress(),
-        bobAddress: await bob.getAddress(),
-        aliceAddress: await alice.getAddress(),
+        admin: adminWallet,
+        bob: bobWallet,
+        alice: aliceWallet,
+        wallet: adminWallet,
+        adminAddress: await adminSigner.getAddress(),
+        bobAddress: await bobSigner.getAddress(),
+        aliceAddress: await aliceSigner.getAddress(),
     }
 }
 
@@ -179,7 +181,7 @@ export async function deployContractsFixture(): Promise<Partial<TestContext>> {
  */
 export async function deployWithDidsFixture(): Promise<TestContext> {
     const base = await deployContractsFixture()
-    const wallet = walletOfFirstSigner()
+    const adminWallet = base.wallet!
 
     const notBefore = 5n
     const notAfter = notBefore + TEST_VALIDITY_DURATION
@@ -187,34 +189,43 @@ export async function deployWithDidsFixture(): Promise<TestContext> {
 
     await base.didRegistry!.initializeDiDRegistry(EllipticType.SECP_256_K1)
 
-    const adminDid = randomDid()
-    const bobDid = randomDid()
-    const aliceDid = randomDid()
-
-    // Create admin DID
-    await createDidDocument(
+    // Create admin DID (proof-derived)
+    const adminDid = await createDidDocument(
         base.didRegistry!,
-        adminDid,
-        wallet,
+        adminWallet,
         notBefore,
         notAfter
     )
 
-    // Create bob DID
-    await createDidDocumentForSigner(
+    // Create bob DID (proof-derived)
+    const bobDid = await createDidDocument(
         base.didRegistry!,
-        bobDid,
-        base.bob!,
+        base.bob as HDNodeWallet,
         notBefore,
         notAfter
     )
-    await base.didRegistry!.addController(bobDid, adminDid)
+
+    // Add admin as controller of bob's DID (bob must do this since addController now requires authorization)
+    await base.didRegistry!.connect(base.bob).addController(bobDid, adminDid)
+
+    // Create alice DID (proof-derived)
+    const aliceDid = await createDidDocument(
+        base.didRegistry!,
+        base.alice as HDNodeWallet,
+        notBefore,
+        notAfter
+    )
+
+    // Add admin as controller of alice's DID (alice must do this since addController now requires authorization)
+    await base
+        .didRegistry!.connect(base.alice)
+        .addController(aliceDid, adminDid)
 
     await base.mockTimestamp!.setMockedTimestamp(blockTimestamp)
 
     return {
         ...base,
-        wallet,
+        wallet: adminWallet,
         adminDid,
         bobDid,
         aliceDid,

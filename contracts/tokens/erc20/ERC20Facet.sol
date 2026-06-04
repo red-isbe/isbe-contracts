@@ -16,7 +16,9 @@ pragma solidity ^0.8.28;
 
 import {_ERC20_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
 import {ERC20} from './ERC20.sol';
-import {IEIP2535Introspection} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {
+    IEIP2535Introspection
+} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 
 contract ERC20Facet is ERC20, IEIP2535Introspection {
     function interfacesIntrospection()

@@ -14,12 +14,22 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 pragma solidity ^0.8.28;
 
-import {ERC3643ComplianceMaxBalInternal} from './erc3643compliancemaxbalance/ERC3643ComplianceMaxBalInternal.sol';
-import {ERC3643ComplianceDMLimInternal} from './erc3643compliancedaymonthlimits/ERC3643ComplianceDMLimInternal.sol';
-import {_ERC3643_COMPLIANCE_STORAGE_POSITION} from '../../../constants/storagePositions.sol';
+import {
+    ERC3643ComplianceMaxBalInternal
+} from './erc3643compliancemaxbalance/ERC3643ComplianceMaxBalInternal.sol';
+import {
+    ERC3643ComplianceDMLimInternal
+} from './erc3643compliancedaymonthlimits/ERC3643ComplianceDMLimInternal.sol';
+import {
+    _ERC3643_COMPLIANCE_STORAGE_POSITION
+} from '../../../constants/storagePositions.sol';
 import {ICompliance} from './ICompliance.sol';
-import {IERC3643ComplianceDMLim} from './erc3643compliancedaymonthlimits/IERC3643ComplianceDMLim.sol';
-import {IERC3643ComplianceMaxBal} from './erc3643compliancemaxbalance/IERC3643ComplianceMaxBal.sol';
+import {
+    IERC3643ComplianceDMLim
+} from './erc3643compliancedaymonthlimits/IERC3643ComplianceDMLim.sol';
+import {
+    IERC3643ComplianceMaxBal
+} from './erc3643compliancemaxbalance/IERC3643ComplianceMaxBal.sol';
 import {
     _FLAG_MAX_BALANCE,
     _FLAG_DAILY_MONTH

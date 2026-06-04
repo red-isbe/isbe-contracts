@@ -14,7 +14,9 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 pragma solidity ^0.8.28;
 
-import {AccessControlFacet} from '../../access/accessControl/AccessControlFacet.sol';
+import {
+    AccessControlFacet
+} from '../../access/accessControl/AccessControlFacet.sol';
 
 contract AccessControlGovernanceFacet is AccessControlFacet {
     // solhint-disable-next-line no-empty-blocks

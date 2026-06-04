@@ -13,15 +13,23 @@ limitations under the License.
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {PackedUserOperation} from '@account-abstraction/contracts/interfaces/PackedUserOperation.sol';
+import {
+    PackedUserOperation
+} from '@account-abstraction/contracts/interfaces/PackedUserOperation.sol';
 import {ECDSA} from '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
 import {IERC165} from '@openzeppelin/contracts/utils/introspection/IERC165.sol';
 import {IEntryPoint} from '../entrypoint/IEntryPoint.sol';
 import {ISmartAccount} from './ISmartAccount.sol';
 import {MessageHashUtils} from '../MessageHashUtils.sol';
-import {_ACCOUNT_ABSTRACTION_SMART_ACCOUNT_STORAGE_POSITION} from '../../constants/storagePositions.sol';
-import {ERC165Checker} from '@openzeppelin/contracts/utils/introspection/ERC165Checker.sol';
-import {DidDocumentDetailedInternal} from '../../identity/didregistry/DidDocumentDetailedInternal.sol';
+import {
+    _ACCOUNT_ABSTRACTION_SMART_ACCOUNT_STORAGE_POSITION
+} from '../../constants/storagePositions.sol';
+import {
+    ERC165Checker
+} from '@openzeppelin/contracts/utils/introspection/ERC165Checker.sol';
+import {
+    DidDocumentDetailedInternal
+} from '../../identity/didregistry/DidDocumentDetailedInternal.sol';
 
 /**
  * @title ERC-4337 smart account internals

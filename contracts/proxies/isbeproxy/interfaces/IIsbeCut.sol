@@ -14,7 +14,9 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 pragma solidity ^0.8.28;
 
-import {IConfigurationManagement} from '../../../factory/configurationmanagement/IConfigurationManagement.sol';
+import {
+    IConfigurationManagement
+} from '../../../factory/configurationmanagement/IConfigurationManagement.sol';
 
 /**
  * @title IIsbeCut

@@ -15,8 +15,12 @@ limitations under the License.
 pragma solidity ^0.8.28;
 
 import {IERC3643Freeze} from './IERC3643Freeze.sol';
-import {_ERC3643_FREEZE_STORAGE_POSITION} from '../../../../constants/storagePositions.sol';
-import {DidDocumentDetailedInternal} from '../../../../identity/didregistry/DidDocumentDetailedInternal.sol';
+import {
+    _ERC3643_FREEZE_STORAGE_POSITION
+} from '../../../../constants/storagePositions.sol';
+import {
+    DidDocumentDetailedInternal
+} from '../../../../identity/didregistry/DidDocumentDetailedInternal.sol';
 
 /**
  * @title ERC3643FreezeInternal

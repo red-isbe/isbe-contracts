@@ -14,7 +14,9 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 pragma solidity ^0.8.28;
 
-import {ERC721InternalCommon} from '../../../tokens/erc721/extensions/ERC721InternalCommon.sol';
+import {
+    ERC721InternalCommon
+} from '../../../tokens/erc721/extensions/ERC721InternalCommon.sol';
 
 /**
  * @title ERC721TestWrapper

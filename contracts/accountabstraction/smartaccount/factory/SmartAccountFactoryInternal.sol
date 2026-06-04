@@ -16,12 +16,16 @@ pragma solidity ^0.8.28;
 import '../../../factory/proxyfactory/ProxyFactoryInternal.sol';
 import '../SmartAccount.sol';
 import '../../entrypoint/IEntryPoint.sol';
-import {ERC165Checker} from '@openzeppelin/contracts/utils/introspection/ERC165Checker.sol';
+import {
+    ERC165Checker
+} from '@openzeppelin/contracts/utils/introspection/ERC165Checker.sol';
 import {
     _OWNABLE_RESOLVER_KEY,
     _ACCOUNT_ABSTRACTION_SMART_ACCOUNT_RESOLVER_KEY
 } from '../../../constants/resolverKeys.sol';
-import {DidDocumentDetailedInternal} from '../../../identity/didregistry/DidDocumentDetailedInternal.sol';
+import {
+    DidDocumentDetailedInternal
+} from '../../../identity/didregistry/DidDocumentDetailedInternal.sol';
 import {
     _SMART_ACCOUNT_CONFIGURATION_ID,
     _SMART_ACCOUNT_VERSION

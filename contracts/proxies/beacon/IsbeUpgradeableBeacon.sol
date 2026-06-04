@@ -14,7 +14,9 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 pragma solidity ^0.8.28;
 
-import {UpgradeableBeacon} from '@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol';
+import {
+    UpgradeableBeacon
+} from '@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol';
 
 // solhint-disable-next-line
 contract IsbeUpgradeableBeacon is UpgradeableBeacon {

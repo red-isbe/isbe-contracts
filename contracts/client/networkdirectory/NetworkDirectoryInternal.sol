@@ -29,10 +29,16 @@ import {
     ResourceNotFound,
     _fromNetworkDataToNetworkStorageData
 } from './Types.sol';
-import {DidDocumentDetailedInternal} from '../../identity/didregistry/DidDocumentDetailedInternal.sol';
-import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
+import {
+    DidDocumentDetailedInternal
+} from '../../identity/didregistry/DidDocumentDetailedInternal.sol';
+import {
+    EnumerableSet
+} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 import {LibCommon} from '../../core/LibCommon.sol';
-import {_NETWORK_DIRECTORY_STORAGE_POSITION} from '../../constants/storagePositions.sol';
+import {
+    _NETWORK_DIRECTORY_STORAGE_POSITION
+} from '../../constants/storagePositions.sol';
 
 /**
  * @title NetworkDirectoryInternal

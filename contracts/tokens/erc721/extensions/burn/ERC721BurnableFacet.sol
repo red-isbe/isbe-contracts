@@ -14,9 +14,13 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 pragma solidity ^0.8.28;
 
-import {_ERC721_BURNABLE_RESOLVER_KEY} from '../../../../constants/resolverKeys.sol';
+import {
+    _ERC721_BURNABLE_RESOLVER_KEY
+} from '../../../../constants/resolverKeys.sol';
 import {ERC721Burnable} from './ERC721Burnable.sol';
-import {IEIP2535Introspection} from '../../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {
+    IEIP2535Introspection
+} from '../../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 
 /**
  * @title ERC721BurnableFacet

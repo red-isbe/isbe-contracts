@@ -3,8 +3,8 @@
 Abstract contract implementing signed minting functionality for ERC203543 capped tokens
 
 _Extends ERC203643InternalCommon and ERC721Internal to provide signature-based minting mechanisms.
-Requires \_SPONSOR_ROLE for external function access. Integrates with signature verification utilities.
-Enforces cap limits on total supply._
+     Requires _SPONSOR_ROLE for external function access. Integrates with signature verification utilities.
+     Enforces cap limits on total supply._
 
 ### constructor
 
@@ -21,22 +21,22 @@ function mintWithSignature(address _to, uint256 _amount, address _sender, uint25
 Mints new tokens based on a signed message
 
 _Verifies the signature using EIP-712 typed data before executing the mint.
-Only callable when not paused and by accounts with \_SPONSOR_ROLE.
-Enforces cap limits on total supply.
-Emits a WithSignatureMinted event upon successful minting._
+     Only callable when not paused and by accounts with _SPONSOR_ROLE.
+     Enforces cap limits on total supply.
+     Emits a WithSignatureMinted event upon successful minting._
 
 #### Parameters
 
-| Name        | Type    | Description                                         |
-| ----------- | ------- | --------------------------------------------------- |
-| \_to        | address | The address to mint tokens to                       |
-| \_amount    | uint256 | The amount of tokens to mint                        |
-| \_sender    | address | The address of the token minter (signer)            |
-| \_deadline  | uint256 | Unix timestamp after which the signature is invalid |
-| \_nonce     | uint256 | Unique number to prevent replay attacks             |
-| \_signature | bytes   | Signature of the minting data                       |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _to | address | The address to mint tokens to |
+| _amount | uint256 | The amount of tokens to mint |
+| _sender | address | The address of the token minter (signer) |
+| _deadline | uint256 | Unix timestamp after which the signature is invalid |
+| _nonce | uint256 | Unique number to prevent replay attacks |
+| _signature | bytes | Signature of the minting data |
 
-### \_implementedInterfaces
+### _implementedInterfaces
 
 ```solidity
 function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
@@ -48,9 +48,11 @@ _Overrides the base implementation to specify IERC203543CappedSigned interface s
 
 #### Return Values
 
-| Name         | Type     | Description                                               |
-| ------------ | -------- | --------------------------------------------------------- |
-| interfaces\_ | bytes4[] | Array of interface identifiers supported by this contract |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | Array of interface identifiers supported by this contract |
+
+
 
 ---
 
@@ -59,7 +61,7 @@ _Overrides the base implementation to specify IERC203543CappedSigned interface s
 Implements EIP-2535 introspection for the ERC203543 capped signed module
 
 _Provides interface and selector introspection capabilities for diamond proxy integration.
-Inherits ERC203543CappedSigned functionality and implements IEIP2535Introspection._
+     Inherits ERC203543CappedSigned functionality and implements IEIP2535Introspection._
 
 ### interfacesIntrospection
 
@@ -73,9 +75,9 @@ _Overrides the base implementation to specify supported interface identifiers_
 
 #### Return Values
 
-| Name         | Type     | Description                                               |
-| ------------ | -------- | --------------------------------------------------------- |
-| interfaces\_ | bytes4[] | Array of interface identifiers supported by this contract |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | Array of interface identifiers supported by this contract |
 
 ### businessIdIntrospection
 
@@ -89,9 +91,9 @@ _Returns the resolver key constant used to identify this module in the diamond p
 
 #### Return Values
 
-| Name         | Type    | Description                                      |
-| ------------ | ------- | ------------------------------------------------ |
-| businessId\_ | bytes32 | The business identifier for this contract module |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| businessId_ | bytes32 | The business identifier for this contract module |
 
 ### selectorsIntrospection
 
@@ -105,9 +107,11 @@ _Overrides the base implementation to specify supported function selectors_
 
 #### Return Values
 
-| Name        | Type     | Description                                            |
-| ----------- | -------- | ------------------------------------------------------ |
-| selectors\_ | bytes4[] | Array of function selectors supported by this contract |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| selectors_ | bytes4[] | Array of function selectors supported by this contract |
+
+
 
 ---
 
@@ -127,14 +131,14 @@ Event emitted when tokens are minted using a signature
 
 #### Parameters
 
-| Name      | Type    | Description                                           |
-| --------- | ------- | ----------------------------------------------------- |
-| to        | address | Recipient address (indexed)                           |
-| amount    | uint256 | Amount of tokens minted                               |
-| sender    | address | Original signer who authorised the minting (indexed)  |
-| deadline  | uint256 | Timestamp after which the signature is invalid        |
-| nonce     | uint256 | Unique identifier for this specific minting operation |
-| signature | bytes   | Cryptographic signature authorising the minting       |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| to | address | Recipient address (indexed) |
+| amount | uint256 | Amount of tokens minted |
+| sender | address | Original signer who authorised the minting (indexed) |
+| deadline | uint256 | Timestamp after which the signature is invalid |
+| nonce | uint256 | Unique identifier for this specific minting operation |
+| signature | bytes | Cryptographic signature authorising the minting |
 
 ### mintWithSignature
 
@@ -148,11 +152,12 @@ _Allows off-chain signing for decentralised minting without direct role requirem
 
 #### Parameters
 
-| Name        | Type    | Description                                           |
-| ----------- | ------- | ----------------------------------------------------- |
-| \_to        | address | Recipient address                                     |
-| \_amount    | uint256 | Amount to mint                                        |
-| \_sender    | address | Original signer who authorised the minting            |
-| \_deadline  | uint256 | Timestamp after which signature becomes invalid       |
-| \_nonce     | uint256 | Unique identifier for this specific minting operation |
-| \_signature | bytes   | Cryptographic signature authorising the minting       |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _to | address | Recipient address |
+| _amount | uint256 | Amount to mint |
+| _sender | address | Original signer who authorised the minting |
+| _deadline | uint256 | Timestamp after which signature becomes invalid |
+| _nonce | uint256 | Unique identifier for this specific minting operation |
+| _signature | bytes | Cryptographic signature authorising the minting |
+

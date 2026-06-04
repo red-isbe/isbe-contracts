@@ -14,11 +14,17 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 pragma solidity ^0.8.28;
 
-import {_ERC3643_COMPLIANCE_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
-import {_ERC3643_COMPLIANCE_FACET_VERSION} from '../../../constants/facetVersions.sol';
+import {
+    _ERC3643_COMPLIANCE_RESOLVER_KEY
+} from '../../../constants/resolverKeys.sol';
+import {
+    _ERC3643_COMPLIANCE_FACET_VERSION
+} from '../../../constants/facetVersions.sol';
 import {_COMPLIANCE_ROLE} from '../../../constants/roles.sol';
 import {ICompliance} from './ICompliance.sol';
-import {ERC203643InternalCommon} from '../../erc203643/ERC203643InternalCommon.sol';
+import {
+    ERC203643InternalCommon
+} from '../../erc203643/ERC203643InternalCommon.sol';
 
 /**
  * @title ERC3643Compliance

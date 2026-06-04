@@ -14,8 +14,12 @@ limitations under the License.
 pragma solidity ^0.8.28;
 
 import {SmartAccount} from './SmartAccount.sol';
-import {IEIP2535Introspection} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
-import {_ACCOUNT_ABSTRACTION_SMART_ACCOUNT_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
+import {
+    IEIP2535Introspection
+} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {
+    _ACCOUNT_ABSTRACTION_SMART_ACCOUNT_RESOLVER_KEY
+} from '../../constants/resolverKeys.sol';
 
 /**
  * @title ERC-4337 Smart account Facet

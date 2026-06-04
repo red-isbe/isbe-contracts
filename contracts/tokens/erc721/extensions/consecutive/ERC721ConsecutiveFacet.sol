@@ -14,9 +14,13 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 pragma solidity ^0.8.28;
 
-import {_ERC721_CONSECUTIVE_RESOLVER_KEY} from '../../../../constants/resolverKeys.sol';
+import {
+    _ERC721_CONSECUTIVE_RESOLVER_KEY
+} from '../../../../constants/resolverKeys.sol';
 import {ERC721Consecutive} from './ERC721Consecutive.sol';
-import {IEIP2535Introspection} from '../../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {
+    IEIP2535Introspection
+} from '../../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 
 /// @title ERC721ConsecutiveFacet
 /// @notice Facet for ERC721 consecutive minting (EIP-2309) in diamond/facet architectures

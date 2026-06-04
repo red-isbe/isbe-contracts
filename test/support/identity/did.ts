@@ -10,10 +10,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ----------------------------------------------------------------------------------- */
+import { ethers } from 'hardhat'
 import { randomBytes32, randomString, randomInt } from '../generators'
 
 /**
- * DID-specific random data generators
+ * DID-specific random data generators and proof utilities
  */
 
 /**
@@ -22,6 +23,41 @@ import { randomBytes32, randomString, randomInt } from '../generators'
  */
 export function randomDid(): string {
     return randomBytes32()
+}
+
+/**
+ * Derive a DID from a proof (65-byte signature)
+ * DID = [13 zero bytes | last 19 bytes of proof]
+ *
+ * @param proof - The 65-byte serialized signature (0x-prefixed hex)
+ * @returns bytes32 DID hex string
+ */
+export function proofToDid(proof: string): string {
+    const proofClean = proof.startsWith('0x') ? proof.slice(2) : proof
+    const payload = proofClean.slice(-38) // last 19 bytes = 38 hex chars
+    const zeroPrefix = '0'.repeat(26) // 13 zero bytes = 26 hex chars
+    return '0x' + zeroPrefix + payload
+}
+
+/**
+ * Generate proof from a wallet (sign keccak256 of public key)
+ * proof = Signature.from(wallet.signingKey.sign(keccak256(publicKey65))).serialized
+ *
+ * @param wallet - Wallet with signingKey
+ * @returns proof hex string (65 bytes, 0x-prefixed)
+ */
+export function generateProof(wallet: {
+    signingKey: {
+        publicKey: string
+        sign: (digest: string) => ethers.SignatureLike
+    }
+}): string {
+    const publicKey65 = wallet.signingKey.publicKey
+    const message = ethers.keccak256(
+        ethers.solidityPacked(['bytes'], [publicKey65])
+    )
+    const signature = wallet.signingKey.sign(message)
+    return ethers.Signature.from(signature).serialized
 }
 
 /**

@@ -16,7 +16,9 @@ pragma solidity ^0.8.28;
 
 import {IDidDocumentDetailed} from './interfaces/IDidDocumentDetailed.sol';
 import {IDidController} from './interfaces/IDidController.sol';
-import {IDidVerificationRelationship} from './interfaces/IDidVerificationRelationship.sol';
+import {
+    IDidVerificationRelationship
+} from './interfaces/IDidVerificationRelationship.sol';
 import {IDidVerificationMethod} from './interfaces/IDidVerificationMethod.sol';
 import {IDidRegistryQuery} from './interfaces/IDidRegistryQuery.sol';
 

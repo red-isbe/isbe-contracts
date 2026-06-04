@@ -16,7 +16,9 @@ pragma solidity ^0.8.28;
 
 import {ERC721Internal} from '../../ERC721Internal.sol';
 import {IERC721Royalty} from './IERC721Royalty.sol';
-import {_ERC721_ROYALTY_STORAGE_POSITION} from '../../../../constants/storagePositions.sol';
+import {
+    _ERC721_ROYALTY_STORAGE_POSITION
+} from '../../../../constants/storagePositions.sol';
 
 /**
  * @title ERC721RoyaltyInternal

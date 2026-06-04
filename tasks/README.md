@@ -43,6 +43,9 @@ Run Hardhat tasks directly from the command line:
 npx hardhat deployAll --precommit
 npx hardhat grantRole --role "0x..." --account "0x..." --diamond "0x..."
 npx hardhat diamondCut --facet-addresses '["0x..."]' --actions '[1]'
+
+# Blockscout verification - Generate unified JSON
+npx hardhat blockscout:generate
 ```
 
 ## Organization
@@ -68,11 +71,17 @@ The index provides documentation for all Hardhat tasks organized by category:
 - **businessLogic**: Business logic deployment and management
 - **configMgmt**: Configuration and facet management
 - **diamond**: Diamond proxy pattern operations
+    - `updateDiamondFacets`: Deploy all ISBE facets and update the diamond
+    - `deployFacets`: Deploy facet contracts without updating diamond
+    - `showDiamondFacets`: Display current diamond facet configuration
+    - `getFacets`, `getFacetAddress`, `getFacetSelectors`: Diamond inspection
+    - `diamondCut`: Advanced diamond cut operations
 - **pause**: Contract pause/unpause operations
 - **proxyFactory**: Proxy factory deployment
 - **secp256r1**: Secp256r1 curve specific tasks
 - **validation**: Contract validation and verification
 - **examples**: Example implementations
+- **blockscout**: Blockscout verification tasks (blockscout:generate)
 
 ## Pattern Consistency
 

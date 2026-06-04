@@ -16,7 +16,9 @@ pragma solidity ^0.8.28;
 
 import {AnchoringCore} from './AnchoringCore.sol';
 import {_ANCHORING_CORE_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
-import {IEIP2535Introspection} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {
+    IEIP2535Introspection
+} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 
 /**
  * @title AnchoringCoreFacet

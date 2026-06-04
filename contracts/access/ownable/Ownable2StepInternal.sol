@@ -16,7 +16,9 @@ pragma solidity ^0.8.28;
 
 import {OwnableInternal} from './OwnableInternal.sol';
 import {IOwnable2Step} from './IOwnable2Step.sol';
-import {_OWNABLE2STEP_STORAGE_POSITION} from '../../constants/storagePositions.sol';
+import {
+    _OWNABLE2STEP_STORAGE_POSITION
+} from '../../constants/storagePositions.sol';
 
 /// @title Ownable2StepInternal
 /// @notice Internal logic for 2 step owner control

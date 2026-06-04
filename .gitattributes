@@ -1,0 +1,12 @@
+# Git Attributes - NFS/Mac compatibility
+* filter=clean_mac -crlf
+*.sol binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.pdf binary
+*.wasm binary
+.DS_Store export-ignore
+**/.DS_Store export-ignore
+**/._* export-ignore

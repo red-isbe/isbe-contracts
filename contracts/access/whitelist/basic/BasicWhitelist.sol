@@ -16,8 +16,12 @@ pragma solidity ^0.8.28;
 
 import {Common} from '../../../core/Common.sol';
 import {IBasicWhitelist} from './IBasicWhitelist.sol';
-import {_BASIC_WHITELIST_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
-import {_BASIC_WHITELIST_FACET_VERSION} from '../../../constants/facetVersions.sol';
+import {
+    _BASIC_WHITELIST_RESOLVER_KEY
+} from '../../../constants/resolverKeys.sol';
+import {
+    _BASIC_WHITELIST_FACET_VERSION
+} from '../../../constants/facetVersions.sol';
 import {_WHITELIST_ROLE} from '../../../constants/roles.sol';
 
 /**

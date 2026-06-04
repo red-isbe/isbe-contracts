@@ -14,16 +14,30 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 pragma solidity ^0.8.28;
 
-import {ERC203643Capped} from '../../../tokens/erc203643/erc203643capped/ERC203643Capped.sol';
-import {ERC20Burnable} from '../../../tokens/erc20/extensions/burn/ERC20Burnable.sol';
-import {ERC203643Controller} from '../../../tokens/erc203643/erc203643controller/ERC203643Controller.sol';
-import {ERC20Snapshot} from '../../../tokens/erc20/extensions/snapshot/ERC20Snapshot.sol';
+import {
+    ERC203643Capped
+} from '../../../tokens/erc203643/erc203643capped/ERC203643Capped.sol';
+import {
+    ERC20Burnable
+} from '../../../tokens/erc20/extensions/burn/ERC20Burnable.sol';
+import {
+    ERC203643Controller
+} from '../../../tokens/erc203643/erc203643controller/ERC203643Controller.sol';
+import {
+    ERC20Snapshot
+} from '../../../tokens/erc20/extensions/snapshot/ERC20Snapshot.sol';
 import {ERC20} from '../../../tokens/erc20/ERC20.sol';
 import {ISBEPause} from '../../../pause/ISBEPause.sol';
 import {AccessControl} from '../../../access/accessControl/AccessControl.sol';
-import {AccessControlInternal} from '../../../access/accessControl/AccessControlInternal.sol';
-import {DidDocumentDetailedInternal} from '../../../identity/didregistry/DidDocumentDetailedInternal.sol';
-import {IsbeUUPSUpgradeable} from '../../../proxies/utils/IsbeUUPSUpgradeable.sol';
+import {
+    AccessControlInternal
+} from '../../../access/accessControl/AccessControlInternal.sol';
+import {
+    DidDocumentDetailedInternal
+} from '../../../identity/didregistry/DidDocumentDetailedInternal.sol';
+import {
+    IsbeUUPSUpgradeable
+} from '../../../proxies/utils/IsbeUUPSUpgradeable.sol';
 import {Pause} from '../../../pause/Pause.sol';
 
 // solhint-disable-next-line

@@ -14,7 +14,9 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 pragma solidity 0.8.28;
 
-import {BesuNodeManagerInternalCore} from '../core/BesuNodeManagerInternalCore.sol';
+import {
+    BesuNodeManagerInternalCore
+} from '../core/BesuNodeManagerInternalCore.sol';
 import {
     ValidatorState,
     ValidatorData,
@@ -22,8 +24,12 @@ import {
     _buildValidatorData,
     _buildNodeDTO
 } from '../core/Types.sol';
-import {_VALIDATOR_MANAGER_STORAGE_POSITION} from '../../../../constants/storagePositions.sol';
-import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
+import {
+    _VALIDATOR_MANAGER_STORAGE_POSITION
+} from '../../../../constants/storagePositions.sol';
+import {
+    EnumerableSet
+} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 import {LibCommon} from '../../../../core/LibCommon.sol';
 
 /// @title ValidatorManagerInternal

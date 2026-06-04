@@ -16,7 +16,9 @@ pragma solidity ^0.8.28;
 
 import {ProxyFactoryInternal} from '../proxyfactory/ProxyFactoryInternal.sol';
 import {IGlobalIsbePause} from './IGlobalIsbePause.sol';
-import {IEIP2535Introspection} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {
+    IEIP2535Introspection
+} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 
 /**
  * @title Internal Global ISBE Pausable Logic
