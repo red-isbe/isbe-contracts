@@ -68,10 +68,8 @@ abstract contract GlobalIsbePauseInternal is
      * @param _proxyAddress Target contract implementing `ISBEPause`.
      */
     function _applyPause(address _proxyAddress) internal {
-        if (_isProxyDeployed(_proxyAddress)) {
-            ISBEPause(_proxyAddress).pause();
-            return;
-        }
+        // prettier-ignore
+        if (_isProxyDeployed(_proxyAddress)) { ISBEPause(_proxyAddress).pause(); return; }
         _execute(_proxyAddress, IPause.pause.selector);
     }
 
@@ -81,10 +79,8 @@ abstract contract GlobalIsbePauseInternal is
      * @param _proxyAddress Target contract implementing `ISBEPause`.
      */
     function _applyUnpause(address _proxyAddress) internal {
-        if (_isProxyDeployed(_proxyAddress)) {
-            ISBEPause(_proxyAddress).unpause();
-            return;
-        }
+        // prettier-ignore
+        if (_isProxyDeployed(_proxyAddress)) { ISBEPause(_proxyAddress).unpause(); return; }
         _execute(_proxyAddress, IPause.unpause.selector);
     }
 
