@@ -106,6 +106,7 @@ import './client/filtering/getFiltersByPage'
 import './client/filtering/isFilterRegistered'
 
 import './utils/buildConfigurationId'
+import './utils/publicKeyToAddress'
 
 // Besu Node Manager
 import './client/besuNodeManager/getNode'

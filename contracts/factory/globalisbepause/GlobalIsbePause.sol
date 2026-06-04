@@ -16,7 +16,6 @@ pragma solidity ^0.8.28;
 
 import {GlobalIsbePauseInternal} from './GlobalIsbePauseInternal.sol';
 import {IGlobalIsbePause} from './IGlobalIsbePause.sol';
-import {ISBEPause} from '../../pause/ISBEPause.sol';
 import {_ISBE_PAUSER_ROLE} from '../../constants/roles.sol';
 
 /**
@@ -26,7 +25,11 @@ import {_ISBE_PAUSER_ROLE} from '../../constants/roles.sol';
  * @dev This abstract contract implements the `IGlobalIsbePause` interface.
  *      It secures the pause and unpause functions with role-based access
  *      control, ensuring only authorised accounts (`_ISBE_PAUSER_ROLE`)
- *      can manage the state of registered proxies.
+ *      can manage the state of any `ISBEPause`-compliant contract, whether
+ *      it is a registered diamond proxy (modality 1) or a standalone pausable
+ *      contract (modality 2). Both modalities use the same `ISBEPause`
+ *      interface; the try-catch in the internal helpers provides the
+ *      necessary safety net for unregistered addresses.
  */
 abstract contract GlobalIsbePause is GlobalIsbePauseInternal, IGlobalIsbePause {
     function pauseIsbe(
@@ -36,9 +39,9 @@ abstract contract GlobalIsbePause is GlobalIsbePauseInternal, IGlobalIsbePause {
         override
         onlyRole(_ISBE_PAUSER_ROLE)
         addressIsNotZero(_proxyAddress)
-        onlyDeployedProxy(_proxyAddress)
+        onlyContract(_proxyAddress)
     {
-        ISBEPause(_proxyAddress).pause();
+        _applyPause(_proxyAddress);
         emit IsbePaused(_proxyAddress, _msgSender());
     }
 
@@ -49,9 +52,9 @@ abstract contract GlobalIsbePause is GlobalIsbePauseInternal, IGlobalIsbePause {
         override
         onlyRole(_ISBE_PAUSER_ROLE)
         addressIsNotZero(_proxyAddress)
-        onlyDeployedProxy(_proxyAddress)
+        onlyContract(_proxyAddress)
     {
-        ISBEPause(_proxyAddress).unpause();
+        _applyUnpause(_proxyAddress);
         emit IsbeUnpaused(_proxyAddress, _msgSender());
     }
 }
