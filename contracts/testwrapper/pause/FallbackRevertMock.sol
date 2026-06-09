@@ -28,7 +28,7 @@ pragma solidity ^0.8.28;
 contract FallbackRevertMock {
     error FallbackReverted();
 
-    fallback() external {
+    fallback() external payable {
         revert FallbackReverted();
     }
 }

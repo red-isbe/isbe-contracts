@@ -46,17 +46,6 @@ abstract contract GlobalIsbePauseInternal is
         _;
     }
 
-    function _implementedInterfaces()
-        internal
-        pure
-        override
-        returns (bytes4[] memory interfaces_)
-    {
-        uint256 interfacesLength = 1;
-        interfaces_ = new bytes4[](interfacesLength);
-        interfaces_[--interfacesLength] = type(IGlobalIsbePause).interfaceId;
-    }
-
     /**
      * @notice Applies the pause action on the target contract.
      * @dev Registered proxies (modality 1) are called directly — no wrapping.
@@ -82,6 +71,23 @@ abstract contract GlobalIsbePauseInternal is
         // prettier-ignore
         if (_isProxyDeployed(_proxyAddress)) { ISBEPause(_proxyAddress).unpause(); return; }
         _execute(_proxyAddress, IPause.unpause.selector);
+    }
+
+    function _checkIsContract(address _contractAddress) internal view {
+        if (!_contractAddress.isContract()) {
+            revert IGlobalIsbePause.InvalidContract(_contractAddress);
+        }
+    }
+
+    function _implementedInterfaces()
+        internal
+        pure
+        override
+        returns (bytes4[] memory interfaces_)
+    {
+        uint256 interfacesLength = 1;
+        interfaces_ = new bytes4[](interfacesLength);
+        interfaces_[--interfacesLength] = type(IGlobalIsbePause).interfaceId;
     }
 
     /**
@@ -114,12 +120,6 @@ abstract contract GlobalIsbePauseInternal is
                 _selector,
                 returnData
             );
-        }
-    }
-
-    function _checkIsContract(address _contractAddress) internal view {
-        if (!_contractAddress.isContract()) {
-            revert IGlobalIsbePause.InvalidContract(_contractAddress);
         }
     }
 }
