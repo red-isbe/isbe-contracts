@@ -26,11 +26,12 @@ import {IPause} from '../../pause/IPause.sol';
  *      call `pause` or `unpause`; all other callers receive `NotAuthorized`.
  */
 contract Mod2PausableMock {
+    // solhint-disable-next-line immutable-vars-naming
+    address private immutable _authorizedPauser;
+    bool private _paused;
+
     /// @notice Thrown when an unauthorised account tries to pause or unpause.
     error NotAuthorized(address caller, address expected);
-
-    bool private _paused;
-    address private immutable _authorizedPauser;
 
     constructor(address authorizedPauser_) {
         _authorizedPauser = authorizedPauser_;

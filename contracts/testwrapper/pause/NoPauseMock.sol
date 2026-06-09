@@ -23,4 +23,7 @@ pragma solidity ^0.8.28;
  *      to revert with empty return data, which `_tryPause`/`_tryUnpause` maps to
  *      `InvalidProxy`.
  */
-contract NoPauseMock {}
+// solhint-disable-next-line no-empty-blocks
+contract NoPauseMock {
+    // Intentionally empty — no pause/unpause functions to trigger empty-returnData revert
+}
