@@ -24,7 +24,7 @@ import {
     type DeployAllFacetsResult,
 } from './deployAllFacets'
 import { facetUpdates } from '../diamond/cut/facetUpdates'
-import { getFacets } from '../configMgmt/getFacets'
+import { getDiamondLoupe } from '../utils/getDiamondLoupe'
 import { checkFacetVersions, printVersionResults } from './checkFacetVersions'
 import { SignatureProviderFactory } from '../../tasks/deployment/providers/SignatureProviderFactory'
 import { NetworkConfigWithCurve } from '../../types/hardhat'
@@ -337,7 +337,7 @@ export async function upgradeDiamondE2E(
 
         try {
             const signer = await signatureProvider.getSigner()
-            const loupe = await getFacets(diamond, signer)
+            const loupe = await getDiamondLoupe(diamond, signer)
             const configuredFacets = await loupe.facets()
 
             console.log(`   📊 Facets in diamond: ${configuredFacets.length}`)
