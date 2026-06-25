@@ -30,12 +30,12 @@ task('getConfig', 'Returns full config')
         async (
             taskArgs: {
                 configId: string
-                version: number
+                configVersion: number
                 factory: string
             },
             hre
         ) => {
-            const { configId, version, factory } = taskArgs
+            const { configId, configVersion: version, factory } = taskArgs
 
             const signer = await getSigner(hre)
 

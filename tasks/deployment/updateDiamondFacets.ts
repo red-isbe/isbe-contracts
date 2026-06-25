@@ -20,7 +20,7 @@ import {
     validateFacetList,
     type DeployAllFacetsResult,
 } from '../../scripts/deployment/deployAllFacets'
-import { getFacets } from '../../scripts/configMgmt/getFacets'
+import { getDiamondLoupe } from '../../scripts/utils/getDiamondLoupe'
 import { NetworkConfigWithCurve } from '../../types/hardhat'
 
 /**
@@ -282,7 +282,7 @@ task(
                     )
 
                     const signer = await signatureProvider.getSigner()
-                    const diamondLoupe = await getFacets(diamond, signer)
+                    const diamondLoupe = await getDiamondLoupe(diamond, signer)
 
                     console.log('🔍 Verifying diamond configuration...')
                     const configuredFacets = await diamondLoupe.facets()
@@ -493,7 +493,7 @@ task('showDiamondFacets', 'Display current facet configuration of the diamond')
 
             try {
                 const [signer] = await hre.ethers.getSigners()
-                const diamondLoupe = await getFacets(diamond, signer)
+                const diamondLoupe = await getDiamondLoupe(diamond, signer)
                 const facets = await diamondLoupe.facets()
 
                 console.log(`\n📊 Current Facets: ${facets.length}`)

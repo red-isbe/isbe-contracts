@@ -18,7 +18,7 @@ import { ValidationError } from '../../utils/errors'
  * @returns true if valid hex bytes, false otherwise
  */
 export function isValidBytes(input: string): boolean {
-    if (!/^0x[0-9a-fA-F]+$/.test(input)) {
+    if (!/^0x[0-9a-fA-F]*$/.test(input)) {
         return false
     }
 
