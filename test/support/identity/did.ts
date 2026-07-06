@@ -27,7 +27,8 @@ export function randomDid(): string {
 
 /**
  * Derive a DID from a proof (65-byte signature)
- * DID = [13 zero bytes | last 19 bytes of proof]
+ * DID = [1 version byte (0x00) | last 19 bytes of proof | 12 zero bytes]
+ * (matches the encoding produced by did-isbe-registry)
  *
  * @param proof - The 65-byte serialized signature (0x-prefixed hex)
  * @returns bytes32 DID hex string
@@ -35,8 +36,9 @@ export function randomDid(): string {
 export function proofToDid(proof: string): string {
     const proofClean = proof.startsWith('0x') ? proof.slice(2) : proof
     const payload = proofClean.slice(-38) // last 19 bytes = 38 hex chars
-    const zeroPrefix = '0'.repeat(26) // 13 zero bytes = 26 hex chars
-    return '0x' + zeroPrefix + payload
+    const versionByte = '00' // did:isbe version byte
+    const zeroSuffix = '0'.repeat(24) // 12 zero bytes = 24 hex chars
+    return '0x' + versionByte + payload + zeroSuffix
 }
 
 /**

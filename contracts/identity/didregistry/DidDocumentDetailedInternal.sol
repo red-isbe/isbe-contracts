@@ -761,13 +761,16 @@ abstract contract DidDocumentDetailedInternal is
      * @dev Validates that:
      *      1. The signature (proof) was created by the private key corresponding
      *         to the provided public key
-     *      2. The DID has the correct structure: [13 zero bytes | 19 payload bytes]
-     *         where the payload matches the last 19 bytes of the proof (signature)
+     *      2. The DID has the correct structure:
+     *         [1 version byte (0x00) | 19 payload bytes | 12 zero bytes]
+     *         where the payload matches the last 19 bytes of the proof (signature).
+     *      This layout matches the encoding produced by did-isbe-registry
+     *      (base58-decoded method-specific id, left-aligned in the bytes32).
      *      This prevents vanity DID attacks by ensuring the DID is cryptographically
      *      linked to the proof.
      *      Currently only supports secp256k1 (standard ECDSA).
      *      Elliptic curve type validation is performed by modifiers before this function.
-     * @param _did The decentralised identifier to validate (must have 13 zero prefix + 19 payload)
+     * @param _did The decentralised identifier to validate (version byte 0x00 + 19-byte payload + 12 zero bytes)
      * @param _proof The signature proving ownership (65 bytes for ECDSA: r:32 + s:32 + v:1)
      * @param _publicKey The public key to validate against
      */
@@ -791,15 +794,16 @@ abstract contract DidDocumentDetailedInternal is
         );
 
         // Validate DID structure using assembly:
-        // - Bytes 0-12 (13 bytes) must be zeros
-        // - Bytes 13-31 (19 bytes) must match last 19 bytes of proof
+        // - Byte 0 must be the version byte 0x00
+        // - Bytes 1-19 (19 bytes) must match last 19 bytes of proof
+        // - Bytes 20-31 (12 bytes) must be zeros
         bool isValid;
         // slither-disable-start assembly
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            // Check prefix: upper 13 bytes of DID must be zeros
-            // shr(152, _did) isolates bytes [0..12]; must equal 0
-            let didPrefixCheck := eq(shr(152, _did), 0)
+            // Check suffix: lower 12 bytes of DID must be zeros
+            // shr(160, not(0)) builds a mask for the lower 12 bytes
+            let didSuffixCheck := iszero(and(_did, shr(160, not(0))))
 
             // Load last 32 bytes of proof (proof is 65 bytes in memory)
             // Memory layout: [length @ _proof] [data @ _proof+32 ... _proof+96]
@@ -810,13 +814,14 @@ abstract contract DidDocumentDetailedInternal is
             // Mask for lower 19 bytes: 0x00(x13) FF(x19)
             let mask := shr(104, not(0))
 
-            // Compare lower 19 bytes of DID with lower 19 bytes of proofWord
-            // DID lower 19 bytes   = DID[13..31]   = the payload
-            // proofWord lower 19   = proof[46..64]  = last 19 bytes of proof
-            let didPayloadCheck := eq(and(_did, mask), and(proofWord, mask))
+            // Compare DID bytes [0..19] with the last 19 bytes of the proof.
+            // shr(96, _did) isolates bytes [0..19] = [version byte | payload].
+            // Since the payload is 19 bytes (152 bits), equality also forces
+            // the version byte (bits 152-159 of the shifted value) to be 0x00.
+            let didPayloadCheck := eq(shr(96, _did), and(proofWord, mask))
 
             // Both checks must pass
-            if and(didPrefixCheck, didPayloadCheck) {
+            if and(didSuffixCheck, didPayloadCheck) {
                 isValid := 1
             }
         }

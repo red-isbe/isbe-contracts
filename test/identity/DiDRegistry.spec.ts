@@ -806,8 +806,9 @@ describe('DiDRegistry', function () {
                     const validDid = proofToDid(validProof)
 
                     // Create a DID that is guaranteed to be different while keeping valid proof/publicKey
+                    // Flip the lowest bit of the 19-byte payload (payload occupies bits 96..247)
                     const badDid = ethers.toBeHex(
-                        ethers.toBigInt(validDid) ^ 1n,
+                        ethers.toBigInt(validDid) ^ (1n << 96n),
                         32
                     )
 
@@ -832,18 +833,18 @@ describe('DiDRegistry', function () {
                         .withArgs(badDid)
                 })
 
-                it('GIVEN a proof that is valid for the publicKey BUT a DID with a non-zero 13-byte prefix WHEN calling insertFirstDidDocument THEN it fails with DidNotDerivedFromProof', async () => {
-                    // GIVEN: a valid proof/publicKey pair and its correct DID (which has 13 zero prefix bytes)
+                it('GIVEN a proof that is valid for the publicKey BUT a DID with a non-zero version byte WHEN calling insertFirstDidDocument THEN it fails with DidNotDerivedFromProof', async () => {
+                    // GIVEN: a valid proof/publicKey pair and its correct DID (whose first byte is the version byte 0x00)
                     const validProof = generateProof(wallet)
                     const validDid = proofToDid(validProof)
 
-                    // Make the prefix invalid by setting the most-significant bit (stays in the first 13 bytes)
+                    // Make the version byte invalid by setting the most-significant bit (stays in the first byte)
                     const badDidPrefix = ethers.toBeHex(
                         ethers.toBigInt(validDid) | (1n << 255n),
                         32
                     )
 
-                    // WHEN/THEN: insertion must revert because DID prefix is not 13 zero bytes
+                    // WHEN/THEN: insertion must revert because the version byte is not 0x00
                     await expect(
                         didRegistry.insertFirstDidDocument(
                             badDidPrefix,
@@ -862,6 +863,38 @@ describe('DiDRegistry', function () {
                             'DidNotDerivedFromProof'
                         )
                         .withArgs(badDidPrefix)
+                })
+
+                it('GIVEN a proof that is valid for the publicKey BUT a DID with a non-zero 12-byte suffix WHEN calling insertFirstDidDocument THEN it fails with DidNotDerivedFromProof', async () => {
+                    // GIVEN: a valid proof/publicKey pair and its correct DID (whose last 12 bytes are zeros)
+                    const validProof = generateProof(wallet)
+                    const validDid = proofToDid(validProof)
+
+                    // Make the suffix invalid by setting the least-significant bit (stays in the last 12 bytes)
+                    const badDidSuffix = ethers.toBeHex(
+                        ethers.toBigInt(validDid) | 1n,
+                        32
+                    )
+
+                    // WHEN/THEN: insertion must revert because the DID suffix is not 12 zero bytes
+                    await expect(
+                        didRegistry.insertFirstDidDocument(
+                            badDidSuffix,
+                            baseDocument,
+                            vMethodId,
+                            validProof,
+                            publicKey65,
+                            EllipticType.SECP_256_K1,
+                            notBefore,
+                            notAfter,
+                            ALSO_KNOWN_AS_EXAMPLE
+                        )
+                    )
+                        .to.be.revertedWithCustomError(
+                            didDocumentDetailedFacet,
+                            'DidNotDerivedFromProof'
+                        )
+                        .withArgs(badDidSuffix)
                 })
             })
 
