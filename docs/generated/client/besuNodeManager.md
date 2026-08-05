@@ -2,8 +2,11 @@
 
 Diamond facet for comprehensive Besu node management
 
-_Concrete facet inheriting from: - BesuNodeManagerCommon (combines all manager facades + implementations) - DidDocumentDetailedInternal (provides DID document functionality) - IEIP2535Introspection (provides Diamond introspection)
-All facade functions with RBAC already defined in manager facades_
+_Concrete facet inheriting from:
+     - BesuNodeManagerCommon (combines all manager facades + implementations)
+     - DidDocumentDetailedInternal (provides DID document functionality)
+     - IEIP2535Introspection (provides Diamond introspection)
+     All facade functions with RBAC already defined in manager facades_
 
 ### businessIdIntrospection
 
@@ -17,9 +20,9 @@ _Used by the Diamond pattern for facet identification and routing_
 
 #### Return Values
 
-| Name | Type    | Description                                                           |
-| ---- | ------- | --------------------------------------------------------------------- |
-| [0]  | bytes32 | The resolver key for BesuNodeManager (keccak256('BESU_NODE_MANAGER')) |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bytes32 | The resolver key for BesuNodeManager (keccak256('BESU_NODE_MANAGER')) |
 
 ### interfacesIntrospection
 
@@ -33,9 +36,9 @@ _Used for EIP-165 interface detection_
 
 #### Return Values
 
-| Name         | Type     | Description                      |
-| ------------ | -------- | -------------------------------- |
-| interfaces\_ | bytes4[] | Array of supported interface IDs |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | Array of supported interface IDs |
 
 ### selectorsIntrospection
 
@@ -49,11 +52,11 @@ _Required by IEIP2535Introspection_
 
 #### Return Values
 
-| Name        | Type     | Description                 |
-| ----------- | -------- | --------------------------- |
-| selectors\_ | bytes4[] | Array of function selectors |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| selectors_ | bytes4[] | Array of function selectors |
 
-### \_implementedInterfaces
+### _implementedInterfaces
 
 ```solidity
 function _implementedInterfaces() internal pure returns (bytes4[] interfaces_)
@@ -62,13 +65,15 @@ function _implementedInterfaces() internal pure returns (bytes4[] interfaces_)
 Internal function to return implemented interfaces
 
 _Returns the IBesuNodeManager interface ID
-IBesuNodeManager includes all specialized interfaces via inheritance_
+     IBesuNodeManager includes all specialized interfaces via inheritance_
 
 #### Return Values
 
-| Name         | Type     | Description                      |
-| ------------ | -------- | -------------------------------- |
-| interfaces\_ | bytes4[] | Array of supported interface IDs |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | Array of supported interface IDs |
+
+
 
 ---
 
@@ -76,6 +81,11 @@ IBesuNodeManager includes all specialized interfaces via inheritance_
 
 Unified interface for managing Hyperledger Besu network nodes
 
-_Inherits from all specialized interfaces: - IValidatorManager (validator lifecycle and queries) - IBootNodeManager (boot node lifecycle and queries) - IExecutionNodeManager (execution node lifecycle and queries) - IBesuNodeManagerCommon (cross-category utility: getNode)
-All types (enums, structs, errors) are defined in Types library
-All functions, events, and pagination inherited from specialized interfaces_
+_Inherits from all specialized interfaces:
+     - IValidatorManager (validator lifecycle and queries)
+     - IBootNodeManager (boot node lifecycle and queries)
+     - IExecutionNodeManager (execution node lifecycle and queries)
+     - IBesuNodeManagerCommon (cross-category utility: getNode)
+     All types (enums, structs, errors) are defined in Types library
+     All functions, events, and pagination inherited from specialized interfaces_
+

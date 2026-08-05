@@ -16,9 +16,13 @@ pragma solidity ^0.8.28;
 
 import {ENS} from '../../ensregistry/ENS.sol';
 import {IEnsResolver} from './IEnsResolver.sol';
-import {DidDocumentDetailedInternal} from '../../../../identity/didregistry/DidDocumentDetailedInternal.sol';
-// solhint-disable-next-line no-unused-import
-import {_ENS_RESOLVER_STORAGE_POSITION} from '../../../../constants/storagePositions.sol';
+import {
+    DidDocumentDetailedInternal
+} from '../../../../identity/didregistry/DidDocumentDetailedInternal.sol';
+// prettier-ignore
+import {
+    _ENS_RESOLVER_STORAGE_POSITION // solhint-disable-line no-unused-import
+} from '../../../../constants/storagePositions.sol';
 import {_ENS_MANAGER_ROLE} from '../../../../constants/roles.sol';
 
 /**

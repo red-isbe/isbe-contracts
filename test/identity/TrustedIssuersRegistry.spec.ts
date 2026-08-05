@@ -63,25 +63,31 @@ describe('TrustedIssuersRegistry', () => {
                 ).to.be.revertedWithCustomError(ctx.pause!, 'IsPaused')
             })
 
-            it('reverts when caller is not a controller', async () => {
+            it('access control is via _checkEligibility, not _did controller check', async () => {
+                // NOTE: setAttributeMetadata access control is handled by _checkEligibility
+                // which validates that the caller controls _taoDid (the accreditor's DID),
+                // NOT _did (the recipient's DID). This allows a TAO to create an accreditation
+                // for an issuer whose DID the TAO doesn't control.
+                // The ControllerNotAuthorized error is NOT expected here - the test
+                // 'reverts when sender does not control the TAO DID' in 'TAO/TI Controller Validation'
+                // tests the correct access control behavior.
                 const ctx = await loadFixture(deployWithDidsFixture)
 
+                // Non-admin cannot create ROOT_TAO (validated by _checkEligibility)
                 await expect(
                     ctx.trustedIssuersRegistry
                         .connect(ctx.alice)
                         .setAttributeMetadata(
-                            ctx.adminDid,
+                            ctx.aliceDid,
                             IssuerType.ROOT_TAO,
                             randomBytes32(),
                             ZeroHash,
                             ZeroHash
                         )
+                ).to.be.revertedWithCustomError(
+                    ctx.trustedIssuersRegistryFacet,
+                    'SenderCannotInteractWithRootTao'
                 )
-                    .to.be.revertedWithCustomError(
-                        ctx.trustedIssuersRegistryFacet,
-                        'ControllerNotAuthorized'
-                    )
-                    .withArgs(ctx.adminDid, ctx.aliceAddress)
             })
         })
 
@@ -344,11 +350,7 @@ describe('TrustedIssuersRegistry', () => {
                     const { rootTaoRevisionId, tiRevisionId } =
                         await builder.createCompleteHierarchy()
 
-                    // Add admin as controller of Alice
-                    await ctx.didRegistry.addController(
-                        ctx.aliceDid,
-                        ctx.adminDid
-                    )
+                    // Admin is already controller of Alice (from fixture)
 
                     // Admin (ROOT_TAO) updates Alice's attribute
                     await expect(

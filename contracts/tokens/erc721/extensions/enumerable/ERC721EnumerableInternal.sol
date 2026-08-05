@@ -15,7 +15,9 @@ limitations under the License.
 pragma solidity ^0.8.28;
 
 import {ERC721Internal} from '../../ERC721Internal.sol';
-import {_ERC721_ENUMERABLE_STORAGE_POSITION} from '../../../../constants/storagePositions.sol';
+import {
+    _ERC721_ENUMERABLE_STORAGE_POSITION
+} from '../../../../constants/storagePositions.sol';
 import {IERC721Enumerable} from './IERC721Enumerable.sol';
 
 /**

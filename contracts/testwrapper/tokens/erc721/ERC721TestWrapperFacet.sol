@@ -14,8 +14,12 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 pragma solidity ^0.8.28;
 
-import {IEIP2535Introspection} from '../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
-import {_ERC721_TEST_WRAPPER_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
+import {
+    IEIP2535Introspection
+} from '../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {
+    _ERC721_TEST_WRAPPER_RESOLVER_KEY
+} from '../../../constants/resolverKeys.sol';
 import {ERC721TestWrapper} from './ERC721TestWrapper.sol';
 
 /**

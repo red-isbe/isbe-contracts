@@ -3,7 +3,7 @@
 Abstract contract implementing signed burn functionality for ERC203643 tokens
 
 _Extends ERC203643InternalCommon and ERC721Internal to provide signature-based burn mechanisms.
-Requires \_SPONSOR_ROLE for external function access. Integrates with signature verification utilities._
+     Requires _SPONSOR_ROLE for external function access. Integrates with signature verification utilities._
 
 ### constructor
 
@@ -20,18 +20,18 @@ function burnWithSignature(address _account, uint256 _amount, uint256 _deadline,
 Burns tokens from the caller's account based on a signed message
 
 _Verifies the signature using EIP-712 typed data before executing the burn.
-Only callable when not paused and by accounts with \_SPONSOR_ROLE.
-Emits a WithSignatureBurned event upon successful burn._
+     Only callable when not paused and by accounts with _SPONSOR_ROLE.
+     Emits a WithSignatureBurned event upon successful burn._
 
 #### Parameters
 
-| Name        | Type    | Description                                         |
-| ----------- | ------- | --------------------------------------------------- |
-| \_account   | address | The address whose tokens are being burned           |
-| \_amount    | uint256 | The amount of tokens to burn                        |
-| \_deadline  | uint256 | Unix timestamp after which the signature is invalid |
-| \_nonce     | uint256 | Unique number to prevent replay attacks             |
-| \_signature | bytes   | Signature of the transaction data                   |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _account | address | The address whose tokens are being burned |
+| _amount | uint256 | The amount of tokens to burn |
+| _deadline | uint256 | Unix timestamp after which the signature is invalid |
+| _nonce | uint256 | Unique number to prevent replay attacks |
+| _signature | bytes | Signature of the transaction data |
 
 ### burnFromWithSignature
 
@@ -42,21 +42,21 @@ function burnFromWithSignature(address _sender, address _account, uint256 _amoun
 Burns tokens from a specific account using a signed message (pull payment)
 
 _Verifies the signature using EIP-712 typed data, spends the sender's allowance,
-then executes the burn. Only callable when not paused and by accounts with \_SPONSOR_ROLE.
-Emits a WithSignatureBurnedFrom event upon successful burn._
+     then executes the burn. Only callable when not paused and by accounts with _SPONSOR_ROLE.
+     Emits a WithSignatureBurnedFrom event upon successful burn._
 
 #### Parameters
 
-| Name        | Type    | Description                                         |
-| ----------- | ------- | --------------------------------------------------- |
-| \_sender    | address | The address of the transaction sponsor (signer)     |
-| \_account   | address | The address whose tokens are being burned           |
-| \_amount    | uint256 | The amount of tokens to burn                        |
-| \_deadline  | uint256 | Unix timestamp after which the signature is invalid |
-| \_nonce     | uint256 | Unique number to prevent replay attacks             |
-| \_signature | bytes   | Signature of the transaction data                   |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _sender | address | The address of the transaction sponsor (signer) |
+| _account | address | The address whose tokens are being burned |
+| _amount | uint256 | The amount of tokens to burn |
+| _deadline | uint256 | Unix timestamp after which the signature is invalid |
+| _nonce | uint256 | Unique number to prevent replay attacks |
+| _signature | bytes | Signature of the transaction data |
 
-### \_implementedInterfaces
+### _implementedInterfaces
 
 ```solidity
 function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
@@ -68,9 +68,11 @@ _Overrides the base implementation to specify IERC20BurnableSigned interface sup
 
 #### Return Values
 
-| Name         | Type     | Description                                               |
-| ------------ | -------- | --------------------------------------------------------- |
-| interfaces\_ | bytes4[] | Array of interface identifiers supported by this contract |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | Array of interface identifiers supported by this contract |
+
+
 
 ---
 
@@ -79,7 +81,7 @@ _Overrides the base implementation to specify IERC20BurnableSigned interface sup
 Implements EIP-2535 introspection for the ERC203643 burnable signed module
 
 _Provides interface and selector introspection capabilities for diamond proxy integration.
-Inherits ERC20BurnableSigned functionality and implements IEIP2535Introspection._
+     Inherits ERC20BurnableSigned functionality and implements IEIP2535Introspection._
 
 ### interfacesIntrospection
 
@@ -93,9 +95,9 @@ _Overrides the base implementation to specify supported interface identifiers_
 
 #### Return Values
 
-| Name         | Type     | Description                                               |
-| ------------ | -------- | --------------------------------------------------------- |
-| interfaces\_ | bytes4[] | Array of interface identifiers supported by this contract |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | Array of interface identifiers supported by this contract |
 
 ### businessIdIntrospection
 
@@ -109,9 +111,9 @@ _Returns the resolver key constant used to identify this module in the diamond p
 
 #### Return Values
 
-| Name         | Type    | Description                                      |
-| ------------ | ------- | ------------------------------------------------ |
-| businessId\_ | bytes32 | The business identifier for this contract module |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| businessId_ | bytes32 | The business identifier for this contract module |
 
 ### selectorsIntrospection
 
@@ -125,9 +127,11 @@ _Overrides the base implementation to specify supported function selectors_
 
 #### Return Values
 
-| Name        | Type     | Description                                            |
-| ----------- | -------- | ------------------------------------------------------ |
-| selectors\_ | bytes4[] | Array of function selectors supported by this contract |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| selectors_ | bytes4[] | Array of function selectors supported by this contract |
+
+
 
 ---
 
@@ -147,13 +151,13 @@ Event emitted when a burn is executed using a signature
 
 #### Parameters
 
-| Name      | Type    | Description                                        |
-| --------- | ------- | -------------------------------------------------- |
-| account   | address | Address whose tokens are being burned (indexed)    |
-| amount    | uint256 | Amount of tokens burned                            |
-| deadline  | uint256 | Timestamp after which the signature is invalid     |
-| nonce     | uint256 | Unique identifier for this specific burn operation |
-| signature | bytes   | Cryptographic signature authorising the burn       |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| account | address | Address whose tokens are being burned (indexed) |
+| amount | uint256 | Amount of tokens burned |
+| deadline | uint256 | Timestamp after which the signature is invalid |
+| nonce | uint256 | Unique identifier for this specific burn operation |
+| signature | bytes | Cryptographic signature authorising the burn |
 
 ### WithSignatureBurnedFrom
 
@@ -165,14 +169,14 @@ Event emitted when a burnFrom is executed using a signature
 
 #### Parameters
 
-| Name      | Type    | Description                                              |
-| --------- | ------- | -------------------------------------------------------- |
-| sender    | address | Original signer who authorised the transaction (indexed) |
-| account   | address | Address whose tokens are being burned (indexed)          |
-| amount    | uint256 | Amount of tokens burned                                  |
-| deadline  | uint256 | Timestamp after which the signature is invalid           |
-| nonce     | uint256 | Unique identifier for this specific burn operation       |
-| signature | bytes   | Cryptographic signature authorising the burn             |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| sender | address | Original signer who authorised the transaction (indexed) |
+| account | address | Address whose tokens are being burned (indexed) |
+| amount | uint256 | Amount of tokens burned |
+| deadline | uint256 | Timestamp after which the signature is invalid |
+| nonce | uint256 | Unique identifier for this specific burn operation |
+| signature | bytes | Cryptographic signature authorising the burn |
 
 ### burnWithSignature
 
@@ -186,13 +190,13 @@ _Allows off-chain signing for decentralised token burning without prior allowanc
 
 #### Parameters
 
-| Name        | Type    | Description                                        |
-| ----------- | ------- | -------------------------------------------------- |
-| \_account   | address | Address whose tokens are being burned              |
-| \_amount    | uint256 | Amount to burn                                     |
-| \_deadline  | uint256 | Timestamp after which signature becomes invalid    |
-| \_nonce     | uint256 | Unique identifier for this specific burn operation |
-| \_signature | bytes   | Cryptographic signature authorising the burn       |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _account | address | Address whose tokens are being burned |
+| _amount | uint256 | Amount to burn |
+| _deadline | uint256 | Timestamp after which signature becomes invalid |
+| _nonce | uint256 | Unique identifier for this specific burn operation |
+| _signature | bytes | Cryptographic signature authorising the burn |
 
 ### burnFromWithSignature
 
@@ -203,15 +207,16 @@ function burnFromWithSignature(address _sender, address _account, uint256 _amoun
 Burns tokens from a specific account using a cryptographic signature (pull payment)
 
 _Allows off-chain signing for decentralised token burning without prior allowance
-Similar to burnWithSignature but with explicit account specification_
+     Similar to burnWithSignature but with explicit account specification_
 
 #### Parameters
 
-| Name        | Type    | Description                                        |
-| ----------- | ------- | -------------------------------------------------- |
-| \_sender    | address | Original signer who authorised the transaction     |
-| \_account   | address | Address whose tokens are being burned              |
-| \_amount    | uint256 | Amount to burn                                     |
-| \_deadline  | uint256 | Timestamp after which signature becomes invalid    |
-| \_nonce     | uint256 | Unique identifier for this specific burn operation |
-| \_signature | bytes   | Cryptographic signature authorising the burn       |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _sender | address | Original signer who authorised the transaction |
+| _account | address | Address whose tokens are being burned |
+| _amount | uint256 | Amount to burn |
+| _deadline | uint256 | Timestamp after which signature becomes invalid |
+| _nonce | uint256 | Unique identifier for this specific burn operation |
+| _signature | bytes | Cryptographic signature authorising the burn |
+

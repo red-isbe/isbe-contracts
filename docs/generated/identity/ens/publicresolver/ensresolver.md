@@ -3,9 +3,9 @@
 External implementation of ENS resolver providing comprehensive delegation and approval management
 
 _Abstract contract that exposes the IEnsResolver interface whilst delegating core logic to internal
-functions. Applies pause protection on write operations, authorisation checks, and
-role-based access control for administrative operations. Implements ERC-165 interface
-introspection for ENS resolver compatibility_
+     functions. Applies pause protection on write operations, authorisation checks, and
+     role-based access control for administrative operations. Implements ERC-165 interface
+     introspection for ENS resolver compatibility_
 
 ### initializePublicResolver
 
@@ -19,9 +19,9 @@ _Establishes the connection to the ENS registry for ownership verification_
 
 #### Parameters
 
-| Name  | Type         | Description                                                |
-| ----- | ------------ | ---------------------------------------------------------- |
-| \_ens | contract ENS | The ENS registry contract address for resolver integration |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _ens | contract ENS | The ENS registry contract address for resolver integration |
 
 ### setApprovalForAll
 
@@ -35,10 +35,10 @@ _Provides comprehensive access control for resolver operations across all nodes_
 
 #### Parameters
 
-| Name     | Type    | Description                                               |
-| -------- | ------- | --------------------------------------------------------- |
-| operator | address | The address to grant or revoke operator permissions for   |
-| approved | bool    | Boolean indicating whether to grant or revoke permissions |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operator | address | The address to grant or revoke operator permissions for |
+| approved | bool | Boolean indicating whether to grant or revoke permissions |
 
 ### approve
 
@@ -52,11 +52,11 @@ _Enables fine-grained access control for individual node operations_
 
 #### Parameters
 
-| Name     | Type    | Description                                               |
-| -------- | ------- | --------------------------------------------------------- |
-| node     | bytes32 | The ENS node hash to manage delegate permissions for      |
-| delegate | address | The address to grant or revoke delegate permissions for   |
-| approved | bool    | Boolean indicating whether to grant or revoke permissions |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| node | bytes32 | The ENS node hash to manage delegate permissions for |
+| delegate | address | The address to grant or revoke delegate permissions for |
+| approved | bool | Boolean indicating whether to grant or revoke permissions |
 
 ### isApprovedForAll
 
@@ -70,15 +70,15 @@ _Verifies comprehensive operator status across all nodes for an account_
 
 #### Parameters
 
-| Name     | Type    | Description                                           |
-| -------- | ------- | ----------------------------------------------------- |
-| account  | address | The account address to check operator permissions for |
-| operator | address | The address to verify as an operator                  |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| account | address | The account address to check operator permissions for |
+| operator | address | The address to verify as an operator |
 
 #### Return Values
 
-| Name       | Type | Description                                            |
-| ---------- | ---- | ------------------------------------------------------ |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | isApproved | bool | Boolean indicating if operator permissions are granted |
 
 ### isApprovedFor
@@ -93,19 +93,19 @@ _Verifies node-specific delegate status for targeted access control_
 
 #### Parameters
 
-| Name     | Type    | Description                                              |
-| -------- | ------- | -------------------------------------------------------- |
-| owner    | address | The owner address to check delegate permissions for      |
-| node     | bytes32 | The ENS node hash to verify delegate permissions against |
-| delegate | address | The address to verify as a delegate                      |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| owner | address | The owner address to check delegate permissions for |
+| node | bytes32 | The ENS node hash to verify delegate permissions against |
+| delegate | address | The address to verify as a delegate |
 
 #### Return Values
 
-| Name       | Type | Description                                            |
-| ---------- | ---- | ------------------------------------------------------ |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | isApproved | bool | Boolean indicating if delegate permissions are granted |
 
-### \_implementedInterfaces
+### _implementedInterfaces
 
 ```solidity
 function _implementedInterfaces() internal pure returns (bytes4[] interfaces_)
@@ -114,13 +114,15 @@ function _implementedInterfaces() internal pure returns (bytes4[] interfaces_)
 Provides interface introspection support for ENS resolver compatibility
 
 _Internal pure function enabling ERC-165 interface detection for ENS resolver.
-Allows upper layers or facets to announce ENS resolver interface support_
+     Allows upper layers or facets to announce ENS resolver interface support_
 
 #### Return Values
 
-| Name         | Type     | Description                                                              |
-| ------------ | -------- | ------------------------------------------------------------------------ |
-| interfaces\_ | bytes4[] | Array containing the ENS resolver interface identifier for introspection |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | Array containing the ENS resolver interface identifier for introspection |
+
+
 
 ---
 
@@ -142,9 +144,9 @@ _Provides ERC-165 interface introspection for ENS resolver compatibility_
 
 #### Return Values
 
-| Name         | Type     | Description                                                        |
-| ------------ | -------- | ------------------------------------------------------------------ |
-| interfaces\_ | bytes4[] | Array containing the interface identifiers supported by this facet |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | Array containing the interface identifiers supported by this facet |
 
 ### businessIdIntrospection
 
@@ -158,9 +160,9 @@ _Provides the unique resolver key that identifies this business logic component_
 
 #### Return Values
 
-| Name         | Type    | Description                                                                |
-| ------------ | ------- | -------------------------------------------------------------------------- |
-| businessId\_ | bytes32 | The resolver key that uniquely identifies this ENS resolver implementation |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| businessId_ | bytes32 | The resolver key that uniquely identifies this ENS resolver implementation |
 
 ### selectorsIntrospection
 
@@ -174,9 +176,11 @@ _Lists all external functions available through this facet for diamond proxy int
 
 #### Return Values
 
-| Name        | Type     | Description                                                 |
-| ----------- | -------- | ----------------------------------------------------------- |
-| selectors\_ | bytes4[] | Array of function selectors that this facet makes available |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| selectors_ | bytes4[] | Array of function selectors that this facet makes available |
+
+
 
 ---
 
@@ -185,9 +189,9 @@ _Lists all external functions available through this facet for diamond proxy int
 Root internal implementation contract providing core ENS resolver functionality
 
 _Abstract contract implementing the core logic for ENS resolution with delegation,
-approval management, and ENS registry integration. Uses unstructured storage to
-enable upgradeable proxy patterns with role-based access control. This serves as
-the base for all resolver profile implementations (Name, Text, Pubkey, etc.)_
+     approval management, and ENS registry integration. Uses unstructured storage to
+     enable upgradeable proxy patterns with role-based access control. This serves as
+     the base for all resolver profile implementations (Name, Text, Pubkey, etc.)_
 
 ### EnsResolverStorage
 
@@ -215,15 +219,15 @@ modifier onlyAuthorised(bytes32 _node)
 Restricts function access to authorised parties only
 
 _Validates that the caller is authorised to modify the specified node through
-node ownership, operator delegation, node-specific delegation, or ENS manager role_
+     node ownership, operator delegation, node-specific delegation, or ENS manager role_
 
 #### Parameters
 
-| Name   | Type    | Description                                      |
-| ------ | ------- | ------------------------------------------------ |
-| \_node | bytes32 | The ENS node hash to check authorisation against |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _node | bytes32 | The ENS node hash to check authorisation against |
 
-### \_initializeEnsResolver
+### _initializeEnsResolver
 
 ```solidity
 function _initializeEnsResolver(contract ENS _ensRegistry) internal
@@ -235,11 +239,11 @@ _Internal function establishing connection to ENS registry for ownership verific
 
 #### Parameters
 
-| Name          | Type         | Description                                                |
-| ------------- | ------------ | ---------------------------------------------------------- |
-| \_ensRegistry | contract ENS | The ENS registry contract address for resolver integration |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _ensRegistry | contract ENS | The ENS registry contract address for resolver integration |
 
-### \_setApprovalForAll
+### _setApprovalForAll
 
 ```solidity
 function _setApprovalForAll(address _owner, address _operator, bool _approved) internal
@@ -251,13 +255,13 @@ _Internal function managing comprehensive access control across all nodes_
 
 #### Parameters
 
-| Name       | Type    | Description                                               |
-| ---------- | ------- | --------------------------------------------------------- |
-| \_owner    | address | The address granting or revoking operator permissions     |
-| \_operator | address | The address to grant or revoke operator permissions for   |
-| \_approved | bool    | Boolean indicating whether to grant or revoke permissions |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _owner | address | The address granting or revoking operator permissions |
+| _operator | address | The address to grant or revoke operator permissions for |
+| _approved | bool | Boolean indicating whether to grant or revoke permissions |
 
-### \_approve
+### _approve
 
 ```solidity
 function _approve(address _owner, bytes32 _node, address _delegate, bool _approved) internal
@@ -269,14 +273,14 @@ _Internal function enabling fine-grained access control for individual nodes_
 
 #### Parameters
 
-| Name       | Type    | Description                                               |
-| ---------- | ------- | --------------------------------------------------------- |
-| \_owner    | address | The address granting or revoking delegate permissions     |
-| \_node     | bytes32 | The ENS node hash to manage delegate permissions for      |
-| \_delegate | address | The address to grant or revoke delegate permissions for   |
-| \_approved | bool    | Boolean indicating whether to grant or revoke permissions |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _owner | address | The address granting or revoking delegate permissions |
+| _node | bytes32 | The ENS node hash to manage delegate permissions for |
+| _delegate | address | The address to grant or revoke delegate permissions for |
+| _approved | bool | Boolean indicating whether to grant or revoke permissions |
 
-### \_ens
+### _ens
 
 ```solidity
 function _ens() internal view returns (contract ENS)
@@ -288,11 +292,11 @@ _Internal view function providing access to the ENS registry for ownership queri
 
 #### Return Values
 
-| Name | Type         | Description                        |
-| ---- | ------------ | ---------------------------------- |
-| [0]  | contract ENS | The ENS registry contract instance |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | contract ENS | The ENS registry contract instance |
 
-### \_isApprovedForAll
+### _isApprovedForAll
 
 ```solidity
 function _isApprovedForAll(address _account, address _operator) internal view returns (bool)
@@ -304,18 +308,18 @@ _Internal view function verifying comprehensive operator status across all nodes
 
 #### Parameters
 
-| Name       | Type    | Description                                           |
-| ---------- | ------- | ----------------------------------------------------- |
-| \_account  | address | The account address to check operator permissions for |
-| \_operator | address | The address to verify as an operator                  |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _account | address | The account address to check operator permissions for |
+| _operator | address | The address to verify as an operator |
 
 #### Return Values
 
-| Name | Type | Description                                            |
-| ---- | ---- | ------------------------------------------------------ |
-| [0]  | bool | Boolean indicating if operator permissions are granted |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bool | Boolean indicating if operator permissions are granted |
 
-### \_isApprovedFor
+### _isApprovedFor
 
 ```solidity
 function _isApprovedFor(address _owner, bytes32 _node, address _delegate) internal view returns (bool)
@@ -327,19 +331,19 @@ _Internal view function verifying node-specific delegate status_
 
 #### Parameters
 
-| Name       | Type    | Description                                              |
-| ---------- | ------- | -------------------------------------------------------- |
-| \_owner    | address | The owner address to check delegate permissions for      |
-| \_node     | bytes32 | The ENS node hash to verify delegate permissions against |
-| \_delegate | address | The address to verify as a delegate                      |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _owner | address | The owner address to check delegate permissions for |
+| _node | bytes32 | The ENS node hash to verify delegate permissions against |
+| _delegate | address | The address to verify as a delegate |
 
 #### Return Values
 
-| Name | Type | Description                                            |
-| ---- | ---- | ------------------------------------------------------ |
-| [0]  | bool | Boolean indicating if delegate permissions are granted |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bool | Boolean indicating if delegate permissions are granted |
 
-### \_isAuthorised
+### _isAuthorised
 
 ```solidity
 function _isAuthorised(bytes32 _node, address _caller) internal view returns (bool)
@@ -351,16 +355,18 @@ _Internal view function checking comprehensive authorisation through multiple me
 
 #### Parameters
 
-| Name     | Type    | Description                                      |
-| -------- | ------- | ------------------------------------------------ |
-| \_node   | bytes32 | The ENS node hash to check authorisation against |
-| \_caller | address | The address to validate authorisation for        |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _node | bytes32 | The ENS node hash to check authorisation against |
+| _caller | address | The address to validate authorisation for |
 
 #### Return Values
 
-| Name | Type | Description                                                 |
-| ---- | ---- | ----------------------------------------------------------- |
-| [0]  | bool | Boolean indicating if the caller is authorised for the node |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bool | Boolean indicating if the caller is authorised for the node |
+
+
 
 ---
 
@@ -376,11 +382,11 @@ Emitted when an operator is granted or revoked comprehensive permissions
 
 #### Parameters
 
-| Name     | Type    | Description                                                 |
-| -------- | ------- | ----------------------------------------------------------- |
-| owner    | address | The address granting or revoking operator permissions       |
-| operator | address | The address receiving or losing operator permissions        |
-| approved | bool    | Boolean indicating whether operator permissions are granted |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| owner | address | The address granting or revoking operator permissions |
+| operator | address | The address receiving or losing operator permissions |
+| approved | bool | Boolean indicating whether operator permissions are granted |
 
 ### Approved
 
@@ -392,12 +398,12 @@ Emitted when a delegate is approved or revoked for specific node operations
 
 #### Parameters
 
-| Name     | Type    | Description                                                 |
-| -------- | ------- | ----------------------------------------------------------- |
-| owner    | address | The address granting or revoking delegate permissions       |
-| node     | bytes32 | The ENS node hash for which delegation is being managed     |
-| delegate | address | The address receiving or losing delegate permissions        |
-| approved | bool    | Boolean indicating whether delegate permissions are granted |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| owner | address | The address granting or revoking delegate permissions |
+| node | bytes32 | The ENS node hash for which delegation is being managed |
+| delegate | address | The address receiving or losing delegate permissions |
+| approved | bool | Boolean indicating whether delegate permissions are granted |
 
 ### PublicResolverInitialized
 
@@ -409,9 +415,9 @@ Emitted when the public resolver is initialised with ENS registry reference
 
 #### Parameters
 
-| Name  | Type    | Description                                               |
-| ----- | ------- | --------------------------------------------------------- |
-| \_ens | address | The address of the ENS registry contract being associated |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _ens | address | The address of the ENS registry contract being associated |
 
 ### NotAuthorisedForNode
 
@@ -425,10 +431,10 @@ _Triggered when the caller lacks ownership, operator, or delegate permissions fo
 
 #### Parameters
 
-| Name   | Type    | Description                                       |
-| ------ | ------- | ------------------------------------------------- |
-| node   | bytes32 | The node hash that the caller attempted to modify |
-| caller | address | The address that made the unauthorised attempt    |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| node | bytes32 | The node hash that the caller attempted to modify |
+| caller | address | The address that made the unauthorised attempt |
 
 ### initializePublicResolver
 
@@ -442,9 +448,9 @@ _Establishes the connection to the ENS registry for ownership verification_
 
 #### Parameters
 
-| Name  | Type         | Description                                                |
-| ----- | ------------ | ---------------------------------------------------------- |
-| \_ens | contract ENS | The ENS registry contract address for resolver integration |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _ens | contract ENS | The ENS registry contract address for resolver integration |
 
 ### setApprovalForAll
 
@@ -458,10 +464,10 @@ _Provides comprehensive access control for resolver operations across all nodes_
 
 #### Parameters
 
-| Name     | Type    | Description                                               |
-| -------- | ------- | --------------------------------------------------------- |
-| operator | address | The address to grant or revoke operator permissions for   |
-| approved | bool    | Boolean indicating whether to grant or revoke permissions |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operator | address | The address to grant or revoke operator permissions for |
+| approved | bool | Boolean indicating whether to grant or revoke permissions |
 
 ### approve
 
@@ -475,11 +481,11 @@ _Enables fine-grained access control for individual node operations_
 
 #### Parameters
 
-| Name     | Type    | Description                                               |
-| -------- | ------- | --------------------------------------------------------- |
-| node     | bytes32 | The ENS node hash to manage delegate permissions for      |
-| delegate | address | The address to grant or revoke delegate permissions for   |
-| approved | bool    | Boolean indicating whether to grant or revoke permissions |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| node | bytes32 | The ENS node hash to manage delegate permissions for |
+| delegate | address | The address to grant or revoke delegate permissions for |
+| approved | bool | Boolean indicating whether to grant or revoke permissions |
 
 ### isApprovedForAll
 
@@ -493,15 +499,15 @@ _Verifies comprehensive operator status across all nodes for an account_
 
 #### Parameters
 
-| Name     | Type    | Description                                           |
-| -------- | ------- | ----------------------------------------------------- |
-| account  | address | The account address to check operator permissions for |
-| operator | address | The address to verify as an operator                  |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| account | address | The account address to check operator permissions for |
+| operator | address | The address to verify as an operator |
 
 #### Return Values
 
-| Name       | Type | Description                                            |
-| ---------- | ---- | ------------------------------------------------------ |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | isApproved | bool | Boolean indicating if operator permissions are granted |
 
 ### isApprovedFor
@@ -516,14 +522,15 @@ _Verifies node-specific delegate status for targeted access control_
 
 #### Parameters
 
-| Name     | Type    | Description                                              |
-| -------- | ------- | -------------------------------------------------------- |
-| owner    | address | The owner address to check delegate permissions for      |
-| node     | bytes32 | The ENS node hash to verify delegate permissions against |
-| delegate | address | The address to verify as a delegate                      |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| owner | address | The owner address to check delegate permissions for |
+| node | bytes32 | The ENS node hash to verify delegate permissions against |
+| delegate | address | The address to verify as a delegate |
 
 #### Return Values
 
-| Name       | Type | Description                                            |
-| ---------- | ---- | ------------------------------------------------------ |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | isApproved | bool | Boolean indicating if delegate permissions are granted |
+

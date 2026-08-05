@@ -3,7 +3,7 @@
 Interface for managing arbitrary text metadata records within ENS nodes
 
 _Provides functionality to store and retrieve key-value text data pairs for
-flexible metadata management and decentralised identity information storage_
+     flexible metadata management and decentralised identity information storage_
 
 ### TextChanged
 
@@ -15,12 +15,12 @@ Emitted when text data is associated with an ENS node and key
 
 #### Parameters
 
-| Name       | Type    | Description                                              |
-| ---------- | ------- | -------------------------------------------------------- |
-| node       | bytes32 | The ENS node hash receiving the text data assignment     |
-| indexedKey | string  | The text data key indexed for efficient filtering        |
-| key        | string  | The text data key identifier for metadata categorisation |
-| value      | string  | The text data value being stored for the specified key   |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| node | bytes32 | The ENS node hash receiving the text data assignment |
+| indexedKey | string | The text data key indexed for efficient filtering |
+| key | string | The text data key identifier for metadata categorisation |
+| value | string | The text data value being stored for the specified key |
 
 ### setText
 
@@ -34,11 +34,11 @@ _Stores arbitrary text metadata for flexible information management_
 
 #### Parameters
 
-| Name  | Type    | Description                                              |
-| ----- | ------- | -------------------------------------------------------- |
-| node  | bytes32 | The ENS node hash to receive the text data assignment    |
-| key   | string  | The text data key identifier for metadata categorisation |
-| value | string  | The text data value to store for the specified key       |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| node | bytes32 | The ENS node hash to receive the text data assignment |
+| key | string | The text data key identifier for metadata categorisation |
+| value | string | The text data value to store for the specified key |
 
 ### text
 
@@ -52,16 +52,18 @@ _Returns the stored text metadata for the specified node and key combination_
 
 #### Parameters
 
-| Name | Type    | Description                                            |
-| ---- | ------- | ------------------------------------------------------ |
-| node | bytes32 | The ENS node hash to query for text data               |
-| key  | string  | The text data key identifier to retrieve the value for |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| node | bytes32 | The ENS node hash to query for text data |
+| key | string | The text data key identifier to retrieve the value for |
 
 #### Return Values
 
-| Name      | Type   | Description                                          |
-| --------- | ------ | ---------------------------------------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | textValue | string | The text data value associated with the node and key |
+
+
 
 ---
 
@@ -70,8 +72,8 @@ _Returns the stored text metadata for the specified node and key combination_
 External implementation of ENS text resolver providing key-value text record management
 
 _Abstract contract that exposes the ITextResolver interface whilst delegating core logic
-to internal functions. Applies pause protection on write operations, authorisation checks,
-and role-based access control. Extends TextResolverInternal for storage management_
+     to internal functions. Applies pause protection on write operations, authorisation checks,
+     and role-based access control. Extends TextResolverInternal for storage management_
 
 ### setText
 
@@ -85,11 +87,11 @@ _Stores arbitrary text metadata for flexible information management_
 
 #### Parameters
 
-| Name  | Type    | Description                                              |
-| ----- | ------- | -------------------------------------------------------- |
-| node  | bytes32 | The ENS node hash to receive the text data assignment    |
-| key   | string  | The text data key identifier for metadata categorisation |
-| value | string  | The text data value to store for the specified key       |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| node | bytes32 | The ENS node hash to receive the text data assignment |
+| key | string | The text data key identifier for metadata categorisation |
+| value | string | The text data value to store for the specified key |
 
 ### text
 
@@ -103,18 +105,18 @@ _Returns the stored text metadata for the specified node and key combination_
 
 #### Parameters
 
-| Name | Type    | Description                                            |
-| ---- | ------- | ------------------------------------------------------ |
-| node | bytes32 | The ENS node hash to query for text data               |
-| key  | string  | The text data key identifier to retrieve the value for |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| node | bytes32 | The ENS node hash to query for text data |
+| key | string | The text data key identifier to retrieve the value for |
 
 #### Return Values
 
-| Name      | Type   | Description                                          |
-| --------- | ------ | ---------------------------------------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | textValue | string | The text data value associated with the node and key |
 
-### \_implementedInterfaces
+### _implementedInterfaces
 
 ```solidity
 function _implementedInterfaces() internal pure returns (bytes4[] interfaces_)
@@ -123,13 +125,15 @@ function _implementedInterfaces() internal pure returns (bytes4[] interfaces_)
 Provides interface introspection support for ENS text resolver compatibility
 
 _Internal pure function enabling ERC-165 interface detection for ENS text resolver.
-Returns only ITextResolver interface support_
+     Returns only ITextResolver interface support_
 
 #### Return Values
 
-| Name         | Type     | Description                                                           |
-| ------------ | -------- | --------------------------------------------------------------------- |
-| interfaces\_ | bytes4[] | Array containing the interface identifiers supported by this resolver |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | Array containing the interface identifiers supported by this resolver |
+
+
 
 ---
 
@@ -138,7 +142,7 @@ Returns only ITextResolver interface support_
 EIP-2535 facet that exposes the ENS text resolver functionality
 
 _Inherits from TextResolver and provides introspection of interfaces, business logic, and selectors.
-Only exposes ITextResolver functions, not IEnsResolver functions which are handled by EnsResolverFacet_
+     Only exposes ITextResolver functions, not IEnsResolver functions which are handled by EnsResolverFacet_
 
 ### interfacesIntrospection
 
@@ -152,9 +156,9 @@ _Provides ERC-165 interface introspection for ENS text resolver compatibility_
 
 #### Return Values
 
-| Name         | Type     | Description                                                        |
-| ------------ | -------- | ------------------------------------------------------------------ |
-| interfaces\_ | bytes4[] | Array containing the interface identifiers supported by this facet |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | Array containing the interface identifiers supported by this facet |
 
 ### businessIdIntrospection
 
@@ -168,9 +172,9 @@ _Provides the unique resolver key that identifies this business logic component_
 
 #### Return Values
 
-| Name         | Type    | Description                                                                     |
-| ------------ | ------- | ------------------------------------------------------------------------------- |
-| businessId\_ | bytes32 | The resolver key that uniquely identifies this ENS text resolver implementation |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| businessId_ | bytes32 | The resolver key that uniquely identifies this ENS text resolver implementation |
 
 ### selectorsIntrospection
 
@@ -184,9 +188,11 @@ _Lists only ITextResolver functions available through this facet for diamond pro
 
 #### Return Values
 
-| Name        | Type     | Description                                                 |
-| ----------- | -------- | ----------------------------------------------------------- |
-| selectors\_ | bytes4[] | Array of function selectors that this facet makes available |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| selectors_ | bytes4[] | Array of function selectors that this facet makes available |
+
+
 
 ---
 
@@ -195,8 +201,8 @@ _Lists only ITextResolver functions available through this facet for diamond pro
 Internal implementation contract providing ENS text resolution functionality
 
 _Abstract contract implementing the core logic for ENS text record management.
-Extends EnsResolverInternal to inherit authorization and delegation capabilities.
-Uses unstructured storage to enable upgradeable proxy patterns_
+     Extends EnsResolverInternal to inherit authorization and delegation capabilities.
+     Uses unstructured storage to enable upgradeable proxy patterns_
 
 ### TextResolverStorage
 
@@ -209,11 +215,11 @@ Storage structure containing ENS text resolver state data
 
 ```solidity
 struct TextResolverStorage {
-    mapping(bytes32 => mapping(string => string)) texts;
+  mapping(bytes32 => mapping(string => string)) texts;
 }
 ```
 
-### \_setText
+### _setText
 
 ```solidity
 function _setText(bytes32 _node, string _key, string _value) internal
@@ -225,13 +231,13 @@ _Internal function storing arbitrary text metadata for flexible information mana
 
 #### Parameters
 
-| Name    | Type    | Description                                              |
-| ------- | ------- | -------------------------------------------------------- |
-| \_node  | bytes32 | The ENS node hash to receive the text data assignment    |
-| \_key   | string  | The text data key identifier for metadata categorisation |
-| \_value | string  | The text data value to store for the specified key       |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _node | bytes32 | The ENS node hash to receive the text data assignment |
+| _key | string | The text data key identifier for metadata categorisation |
+| _value | string | The text data value to store for the specified key |
 
-### \_text
+### _text
 
 ```solidity
 function _text(bytes32 _node, string _key) internal view returns (string)
@@ -243,13 +249,14 @@ _Internal view function providing access to stored text metadata_
 
 #### Parameters
 
-| Name   | Type    | Description                                            |
-| ------ | ------- | ------------------------------------------------------ |
-| \_node | bytes32 | The ENS node hash to query for text data               |
-| \_key  | string  | The text data key identifier to retrieve the value for |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _node | bytes32 | The ENS node hash to query for text data |
+| _key | string | The text data key identifier to retrieve the value for |
 
 #### Return Values
 
-| Name | Type   | Description                                          |
-| ---- | ------ | ---------------------------------------------------- |
-| [0]  | string | The text data value associated with the node and key |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | string | The text data value associated with the node and key |
+

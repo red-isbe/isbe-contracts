@@ -16,7 +16,9 @@ pragma solidity ^0.8.28;
 
 import {IKnownDidTestWrapper} from './IKnownDidTestWrapper.sol';
 import {ISBEContext} from '../../utils/ISBEContext.sol';
-import {DidDocumentDetailedInternal} from '../../identity/didregistry/DidDocumentDetailedInternal.sol';
+import {
+    DidDocumentDetailedInternal
+} from '../../identity/didregistry/DidDocumentDetailedInternal.sol';
 
 /**
  * @title KnownDidTestWrapper

@@ -15,7 +15,9 @@ limitations under the License.
 pragma solidity ^0.8.28;
 
 import {ERC20Internal} from '../../../erc20/ERC20Internal.sol';
-import {_ERC3643_COMPLIANCE_MAXBALANCE_STORAGE_POSITION} from '../../../../constants/storagePositions.sol';
+import {
+    _ERC3643_COMPLIANCE_MAXBALANCE_STORAGE_POSITION
+} from '../../../../constants/storagePositions.sol';
 /**
  * @title ERC3643ComplianceMaxBalanceInternal
  * @notice Internal contract for managing ERC-3643 MaxBalance restriction.

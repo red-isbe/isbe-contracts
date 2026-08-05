@@ -76,6 +76,8 @@ import './proxyFactory/getDeployedProxiesByConfiguration'
 import './deployTest'
 import './deployAll'
 import './deployAllClean'
+import './deployment/updateDiamondFacets'
+import './deployment/upgradeDiamondE2E'
 
 // Extract/Utility tasks
 import './extract/byteCode'
@@ -104,6 +106,7 @@ import './client/filtering/getFiltersByPage'
 import './client/filtering/isFilterRegistered'
 
 import './utils/buildConfigurationId'
+import './utils/publicKeyToAddress'
 
 // Besu Node Manager
 import './client/besuNodeManager/getNode'
@@ -254,6 +257,7 @@ import './secret-sharing/sss.recover'
 
 // Native Token Operations
 import './native/transfer'
+import './native/showSigner'
 
 // Genesis
 import './genesisGeneration'
@@ -274,4 +278,8 @@ import './client/anchoring/anchorBlock'
 import './client/anchoring/anchorBlocksBatch'
 
 import './assign-roles'
-import './decode-error'
+
+// Blockscout verification tasks
+
+// Blockscout unified facets generation task
+import './blockscout/generate-unified-facets'

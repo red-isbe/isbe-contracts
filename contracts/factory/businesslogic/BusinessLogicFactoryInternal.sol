@@ -14,9 +14,15 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 pragma solidity ^0.8.28;
 
-import {IEIP2535Introspection} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
-import {_BUSINESS_LOGIC_STORAGE_POSITION} from '../../constants/storagePositions.sol';
-import {DidDocumentDetailedInternal} from '../../identity/didregistry/DidDocumentDetailedInternal.sol';
+import {
+    IEIP2535Introspection
+} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {
+    _BUSINESS_LOGIC_STORAGE_POSITION
+} from '../../constants/storagePositions.sol';
+import {
+    DidDocumentDetailedInternal
+} from '../../identity/didregistry/DidDocumentDetailedInternal.sol';
 
 /**
  * @title Business Logic Factory Internal

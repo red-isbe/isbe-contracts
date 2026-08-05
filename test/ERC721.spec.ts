@@ -42,6 +42,7 @@ import {
 } from '../utils/constants'
 import { EllipticType } from './types/identity'
 import { config } from 'hardhat'
+import { generateProof, proofToDid } from './support'
 
 describe('ERC721', function () {
     const name = 'ISBE NFT'
@@ -1413,7 +1414,6 @@ describe('ERC721', function () {
             // Create test wallet and DID
             const baseWallet = walletOfFirstSigner()
             const wallet = baseWallet.derivePath('303')
-            const didId = ethers.id('did:erc721:test:1')
 
             // Deploy ERC721 use case
             const govResult = await deployGovernance(
@@ -1448,12 +1448,9 @@ describe('ERC721', function () {
             const notAfter = notBefore + 1000000000000 // Very large to never expire
 
             const publicKey = wallet.signingKey.publicKey
+            const proof = generateProof(wallet)
+            const didId = proofToDid(proof)
             const vMethodId = ethers.id(`vmethod:${didId}`)
-            const message = ethers.keccak256(
-                ethers.solidityPacked(['bytes'], [publicKey])
-            )
-            const signature = wallet.signingKey.sign(message)
-            const proof = ethers.Signature.from(signature).serialized
 
             await didRegistryWithSigner.insertFirstDidDocument(
                 didId,

@@ -14,8 +14,12 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 pragma solidity ^0.8.28;
 
-import {_CLIENT_FILTERING_STORAGE_POSITION} from '../../constants/storagePositions.sol';
-import {DidDocumentDetailedInternal} from '../../identity/didregistry/DidDocumentDetailedInternal.sol';
+import {
+    _CLIENT_FILTERING_STORAGE_POSITION
+} from '../../constants/storagePositions.sol';
+import {
+    DidDocumentDetailedInternal
+} from '../../identity/didregistry/DidDocumentDetailedInternal.sol';
 import {LibCommon} from '../../core/LibCommon.sol';
 import {IClientFiltering} from './IClientFiltering.sol';
 

@@ -6,6 +6,8 @@
 constructor(address _beacon) public
 ```
 
+
+
 ---
 
 ## IsbeUpgradeableBeacon
@@ -15,3 +17,4 @@ constructor(address _beacon) public
 ```solidity
 constructor(address _implementation) public
 ```
+

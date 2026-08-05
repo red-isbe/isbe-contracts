@@ -13,8 +13,12 @@ limitations under the License.
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {DidDocumentDetailedInternal} from '../../../identity/didregistry/DidDocumentDetailedInternal.sol';
-import {_ACCOUNT_ABSTRACTION_NONCE_MANAGER_STORAGE_POSITION} from '../../../constants/storagePositions.sol';
+import {
+    DidDocumentDetailedInternal
+} from '../../../identity/didregistry/DidDocumentDetailedInternal.sol';
+import {
+    _ACCOUNT_ABSTRACTION_NONCE_MANAGER_STORAGE_POSITION
+} from '../../../constants/storagePositions.sol';
 
 /**
  * @title NonceManagerInternal

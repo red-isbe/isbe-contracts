@@ -14,6 +14,19 @@ export default tseslint.config(
         '**/*.js',
     ]),
     {
+        // * Overrides: allow _-prefixed variables to be intentionally unused
+        rules: {
+            '@typescript-eslint/no-unused-vars': [
+                'error',
+                {
+                    argsIgnorePattern: '^_',
+                    varsIgnorePattern: '^_',
+                    ignoreRestSiblings: true,
+                },
+            ],
+        },
+    },
+    {
         // * Overrides: Remove no-unused-expressions rule for test files
         files: ['**/*.test.ts', '**/*.spec.ts', 'test/**/*', 'tests/**/*'], // File patterns for test files
         rules: {

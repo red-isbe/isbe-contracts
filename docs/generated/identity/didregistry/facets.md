@@ -16,9 +16,9 @@ _A pure function that returns an array of supported `bytes4` IDs._
 
 #### Return Values
 
-| Name         | Type     | Description                                  |
-| ------------ | -------- | -------------------------------------------- |
-| interfaces\_ | bytes4[] | An array of supported interface identifiers. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | An array of supported interface identifiers. |
 
 ### businessIdIntrospection
 
@@ -32,9 +32,9 @@ _Returns a `bytes32` key identifying the facet's purpose._
 
 #### Return Values
 
-| Name         | Type    | Description                              |
-| ------------ | ------- | ---------------------------------------- |
-| businessId\_ | bytes32 | The `bytes32` ID for the business logic. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| businessId_ | bytes32 | The `bytes32` ID for the business logic. |
 
 ### selectorsIntrospection
 
@@ -48,12 +48,13 @@ _A pure function that returns a `bytes4[]` array of selectors._
 
 #### Return Values
 
-| Name        | Type     | Description                              |
-| ----------- | -------- | ---------------------------------------- |
-| selectors\_ | bytes4[] | An array of `bytes4` function selectors. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| selectors_ | bytes4[] | An array of `bytes4` function selectors. |
 
-### \_implementedInterfaces
+### _implementedInterfaces
 
 ```solidity
 function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
 ```
+

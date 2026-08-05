@@ -16,7 +16,9 @@ pragma solidity ^0.8.28;
 
 import {_ISBE_LOUPE_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
 import {IsbeProxyInternal} from '../IsbeProxyInternal.sol';
-import {IEIP2535Introspection} from '../../eip2535/interfaces/IEIP2535Introspection.sol';
+import {
+    IEIP2535Introspection
+} from '../../eip2535/interfaces/IEIP2535Introspection.sol';
 import {IDiamondLoupe} from '../../eip2535/interfaces/IDiamondLoupe.sol';
 import {IERC165} from '@openzeppelin/contracts/utils/introspection/IERC165.sol';
 import {ERC165Internal} from '../../../core/ERC165Internal.sol';

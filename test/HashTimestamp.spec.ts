@@ -28,7 +28,7 @@ import {
 } from '../utils/constants'
 import { deployGovernance } from './fixtures/governance'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
-import { randomBytes32 } from './support'
+import { randomBytes32, proofToDid, generateProof } from './support'
 import { EllipticType } from './types/identity'
 import { config } from 'hardhat'
 
@@ -148,7 +148,6 @@ describe('Hash Timestamp', function () {
             // Create test wallet and DID
             const baseWallet = walletOfFirstSigner()
             const wallet = baseWallet.derivePath('300')
-            const didId = ethers.id('did:hashtimestamp:test:1')
 
             // Deploy governance with DID registry AND use case
             const govResult = await deployGovernance(
@@ -179,12 +178,9 @@ describe('Hash Timestamp', function () {
             const notAfter = notBefore + 1000000000000 // Very large to never expire
 
             const publicKey = wallet.signingKey.publicKey
+            const proof = generateProof(wallet)
+            const didId = proofToDid(proof)
             const vMethodId = ethers.id(`vmethod:${didId}`)
-            const message = ethers.keccak256(
-                ethers.solidityPacked(['bytes'], [publicKey])
-            )
-            const signature = wallet.signingKey.sign(message)
-            const proof = ethers.Signature.from(signature).serialized
 
             await didRegistryWithSigner.insertFirstDidDocument(
                 didId,

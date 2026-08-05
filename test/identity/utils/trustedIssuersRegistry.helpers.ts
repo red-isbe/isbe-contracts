@@ -18,11 +18,7 @@ import {
     ZeroHash,
 } from 'ethers'
 import { TrustedIssuersRegistryFacetInterface } from '../../../typechain-types/contracts/identity/trustedissuersregistry/TrustedIssuersRegistryFacet'
-import {
-    TestContext,
-    IssuerType,
-    createDidDocumentForSigner,
-} from './trustedIssuersRegistry.fixtures'
+import { TestContext, IssuerType } from './trustedIssuersRegistry.fixtures'
 import { randomBytes32 } from '../../support'
 
 // ============================================================================
@@ -262,15 +258,8 @@ export class TrustedIssuerTestBuilder {
      * Ensures Alice has a DID registered and Bob controls it
      */
     async ensureAliceDid(): Promise<void> {
-        // Always create Alice's DID with Bob as controller
-        // This is safe because each test gets a fresh fixture with unique DIDs
-        await createDidDocumentForSigner(
-            this.ctx.didRegistry,
-            this.ctx.aliceDid,
-            this.ctx.alice,
-            this.ctx.notBefore,
-            this.ctx.notAfter
-        )
+        // Alice's DID is already created with proof derivation in the fixture
+        // No need to recreate it - just ensure Bob controls it
         await this.ctx.didRegistry.addController(
             this.ctx.aliceDid,
             this.ctx.bobDid

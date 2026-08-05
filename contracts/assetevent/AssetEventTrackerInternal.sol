@@ -14,8 +14,12 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 pragma solidity ^0.8.28;
 
-import {_ASSET_EVENT_TRACKER_STORAGE_POSITION} from '../constants/storagePositions.sol';
-import {DidDocumentDetailedInternal} from '../identity/didregistry/DidDocumentDetailedInternal.sol';
+import {
+    _ASSET_EVENT_TRACKER_STORAGE_POSITION
+} from '../constants/storagePositions.sol';
+import {
+    DidDocumentDetailedInternal
+} from '../identity/didregistry/DidDocumentDetailedInternal.sol';
 import {LibCommon} from '../core/LibCommon.sol';
 import {IAssetEventTracker} from './IAssetEventTracker.sol';
 

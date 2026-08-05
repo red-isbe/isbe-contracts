@@ -14,9 +14,13 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 pragma solidity ^0.8.28;
 
-import {_ERC203643_TRANSFER_SIGNED_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
+import {
+    _ERC203643_TRANSFER_SIGNED_RESOLVER_KEY
+} from '../../../constants/resolverKeys.sol';
 import {ERC203643TransferSigned} from './ERC203643TransferSigned.sol';
-import {IEIP2535Introspection} from '../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {
+    IEIP2535Introspection
+} from '../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 
 /**
  * @title ERC203643 Transfer Signed Facet

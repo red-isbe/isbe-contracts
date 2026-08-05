@@ -32,13 +32,18 @@ task('facetSelectors', 'Returns facet selectors from config management')
         async (
             taskArgs: {
                 configId: string
-                version: number
+                configVersion: number
                 factory: string
                 facetAddress: string
             },
             hre
         ) => {
-            const { configId, version, factory, facetAddress } = taskArgs
+            const {
+                configId,
+                configVersion: version,
+                factory,
+                facetAddress,
+            } = taskArgs
 
             const signer = await getSigner(hre)
 

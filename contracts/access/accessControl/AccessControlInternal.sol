@@ -14,13 +14,19 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 pragma solidity ^0.8.28;
 
-import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
+import {
+    EnumerableSet
+} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 import {IAccessControlDid} from './IAccessControlDid.sol';
 import {IAccessControlEoa} from './IAccessControlEoa.sol';
 import {ISBEContext} from '../../utils/ISBEContext.sol';
-import {IsbeFactoryInternal} from '../../proxies/isbeproxy/IsbeFactoryInternal.sol';
+import {
+    IsbeFactoryInternal
+} from '../../proxies/isbeproxy/IsbeFactoryInternal.sol';
 import {LibCommon} from '../../core/LibCommon.sol';
-import {_ACCESS_CONTROL_STORAGE_POSITION} from '../../constants/storagePositions.sol';
+import {
+    _ACCESS_CONTROL_STORAGE_POSITION
+} from '../../constants/storagePositions.sol';
 import {_DEFAULT_ADMIN_ROLE, _ISBE_ROLE} from '../../constants/roles.sol';
 
 /// @title AccessControlInternal

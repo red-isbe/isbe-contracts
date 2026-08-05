@@ -16,8 +16,12 @@ pragma solidity ^0.8.28;
 
 import {ERC203643CappedInternal} from './ERC203643CappedInternal.sol';
 import {IERC203643Capped} from './IERC203643Capped.sol';
-import {_ERC203643_CAPPED_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
-import {_ERC203643_CAPPED_FACET_VERSION} from '../../../constants/facetVersions.sol';
+import {
+    _ERC203643_CAPPED_RESOLVER_KEY
+} from '../../../constants/resolverKeys.sol';
+import {
+    _ERC203643_CAPPED_FACET_VERSION
+} from '../../../constants/facetVersions.sol';
 import {_CAP_ROLE, _MINTER_ROLE} from '../../../constants/roles.sol';
 
 /// @title ERC203643Capped

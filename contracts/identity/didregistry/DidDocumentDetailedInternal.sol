@@ -25,10 +25,14 @@ import {
 import {Common} from '../../core/Common.sol';
 import {IDidDocumentDetailed} from './interfaces/IDidDocumentDetailed.sol';
 import {IDidVerificationMethod} from './interfaces/IDidVerificationMethod.sol';
-import {IDidVerificationRelationship} from './interfaces/IDidVerificationRelationship.sol';
+import {
+    IDidVerificationRelationship
+} from './interfaces/IDidVerificationRelationship.sol';
 import {LibCommon} from '../../core/LibCommon.sol';
 import {VRelationshipsInternal} from './VRelationshipsInternal.sol';
-import {_DID_DOCUMENT_DETAILED_STORAGE_POSITION} from '../../constants/storagePositions.sol';
+import {
+    _DID_DOCUMENT_DETAILED_STORAGE_POSITION
+} from '../../constants/storagePositions.sol';
 
 /**
  * @title Decentralised Identity Document Internal Implementation
@@ -754,16 +758,29 @@ abstract contract DidDocumentDetailedInternal is
 
     /**
      * @notice Validates cryptographic proof of ownership for a DID
-     * @dev Validates that the signature (proof) was created by the private key corresponding
-     *      to the provided public key. Currently only supports secp256k1 (standard ECDSA).
+     * @dev Validates that:
+     *      1. The signature (proof) was created by the private key corresponding
+     *         to the provided public key
+     *      2. The DID has the correct structure:
+     *         [1 version byte (0x00) | 19 payload bytes | 12 zero bytes]
+     *         where the payload matches the last 19 bytes of the proof (signature).
+     *      This layout matches the encoding produced by did-isbe-registry
+     *      (base58-decoded method-specific id, left-aligned in the bytes32).
+     *      This prevents vanity DID attacks by ensuring the DID is cryptographically
+     *      linked to the proof.
+     *      Currently only supports secp256k1 (standard ECDSA).
      *      Elliptic curve type validation is performed by modifiers before this function.
-     * @param _proof The signature proving ownership (65 bytes for ECDSA)
+     * @param _did The decentralised identifier to validate (version byte 0x00 + 19-byte payload + 12 zero bytes)
+     * @param _proof The signature proving ownership (65 bytes for ECDSA: r:32 + s:32 + v:1)
      * @param _publicKey The public key to validate against
      */
     function _validateProof(
+        bytes32 _did,
         bytes memory _proof,
         bytes memory _publicKey
     ) internal pure {
+        // First, validate the proof itself (length, signature recovery, control bytes)
+        // This ensures proper error messages for malformed proofs
         // Recover signer address from signature
         address recoveredSigner = _recoverSigner(
             keccak256(abi.encodePacked(_publicKey)),
@@ -775,6 +792,42 @@ abstract contract DidDocumentDetailedInternal is
             recoveredSigner == _getAddress(_publicKey),
             InvalidSignature(recoveredSigner)
         );
+
+        // Validate DID structure using assembly:
+        // - Byte 0 must be the version byte 0x00
+        // - Bytes 1-19 (19 bytes) must match last 19 bytes of proof
+        // - Bytes 20-31 (12 bytes) must be zeros
+        bool isValid;
+        // slither-disable-start assembly
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            // Check suffix: lower 12 bytes of DID must be zeros
+            // shr(160, not(0)) builds a mask for the lower 12 bytes
+            let didSuffixCheck := iszero(and(_did, shr(160, not(0))))
+
+            // Load last 32 bytes of proof (proof is 65 bytes in memory)
+            // Memory layout: [length @ _proof] [data @ _proof+32 ... _proof+96]
+            // mload(add(_proof, 65)) loads proof data bytes [33..64]
+            // In this word, the lower 19 bytes = proof[46..64] = last 19 bytes of proof
+            let proofWord := mload(add(_proof, 65))
+
+            // Mask for lower 19 bytes: 0x00(x13) FF(x19)
+            let mask := shr(104, not(0))
+
+            // Compare DID bytes [0..19] with the last 19 bytes of the proof.
+            // shr(96, _did) isolates bytes [0..19] = [version byte | payload].
+            // Since the payload is 19 bytes (152 bits), equality also forces
+            // the version byte (bits 152-159 of the shifted value) to be 0x00.
+            let didPayloadCheck := eq(shr(96, _did), and(proofWord, mask))
+
+            // Both checks must pass
+            if and(didSuffixCheck, didPayloadCheck) {
+                isValid := 1
+            }
+        }
+        // If condition fails, isValid stays 0 (default)
+        // slither-disable-end assembly
+        require(isValid, IDidDocumentDetailed.DidNotDerivedFromProof(_did));
     }
 
     function _addCapabilityInvocationRelationship(
@@ -847,6 +900,8 @@ abstract contract DidDocumentDetailedInternal is
                 vRelationship.indexDid,
                 _notAfter
             );
+            // FIX: Update notAfter in document storage for getDidDocument()
+            vRelationship.notAfter = _notAfter;
         }
     }
 
@@ -872,6 +927,8 @@ abstract contract DidDocumentDetailedInternal is
             capabilityInvocation.indexDid,
             _notAfter
         );
+        // FIX: Update notAfter in document storage for getDidDocument()
+        capabilityInvocation.notAfter = _notAfter;
     }
 
     function _cleanupAddressMappingIfNeeded(
@@ -975,12 +1032,12 @@ abstract contract DidDocumentDetailedInternal is
             vMethods_,
             vRelationships_
         ) = _copyAuxiliaryArraysToResult(
-                vMethodIds_,
-                vMethods_,
-                vRelationships_,
-                sizeVMethods,
-                sizeVRelationships
-            );
+            vMethodIds_,
+            vMethods_,
+            vRelationships_,
+            sizeVMethods,
+            sizeVRelationships
+        );
     }
 
     function _processDocumentRelationships(

@@ -13,14 +13,22 @@ limitations under the License.
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {PackedUserOperation} from '@account-abstraction/contracts/interfaces/PackedUserOperation.sol';
-import {IERC1155Receiver} from '@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol';
+import {
+    PackedUserOperation
+} from '@account-abstraction/contracts/interfaces/PackedUserOperation.sol';
+import {
+    IERC1155Receiver
+} from '@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol';
 import {IERC721Receiver} from '../../tokens/erc721/IERC721Receiver.sol';
 import {ISmartAccount} from './ISmartAccount.sol';
 import {IEntryPoint} from '../entrypoint/IEntryPoint.sol';
 import {SmartAccountInternal} from './SmartAccountInternal.sol';
-import {_ACCOUNT_ABSTRACTION_SMART_ACCOUNT_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
-import {_ACCOUNT_ABSTRACTION_SMART_ACCOUNT_VERSION} from '../../constants/facetVersions.sol';
+import {
+    _ACCOUNT_ABSTRACTION_SMART_ACCOUNT_RESOLVER_KEY
+} from '../../constants/resolverKeys.sol';
+import {
+    _ACCOUNT_ABSTRACTION_SMART_ACCOUNT_VERSION
+} from '../../constants/facetVersions.sol';
 import {ERC165} from '../../core/ERC165.sol';
 import {_DEFAULT_ADMIN_ROLE} from '../../constants/roles.sol';
 

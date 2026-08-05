@@ -14,9 +14,9 @@ Timestamps a given hash
 
 #### Parameters
 
-| Name   | Type    | Description                |
-| ------ | ------- | -------------------------- |
-| \_hash | bytes32 | The hash to be timestamped |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _hash | bytes32 | The hash to be timestamped |
 
 ### exists
 
@@ -28,15 +28,15 @@ Checks whether a hash has been timestamped
 
 #### Parameters
 
-| Name   | Type    | Description       |
-| ------ | ------- | ----------------- |
-| \_hash | bytes32 | The hash to check |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _hash | bytes32 | The hash to check |
 
 #### Return Values
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| [0]  | bool |             |
+| [0] | bool |  |
 
 ### getTimestamp
 
@@ -48,21 +48,23 @@ Returns the timestamp when a hash was recorded
 
 #### Parameters
 
-| Name   | Type    | Description       |
-| ------ | ------- | ----------------- |
-| \_hash | bytes32 | The hash to query |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _hash | bytes32 | The hash to query |
 
 #### Return Values
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| [0]  | uint256 |             |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | uint256 |  |
 
-### \_implementedInterfaces
+### _implementedInterfaces
 
 ```solidity
 function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
 ```
+
+
 
 ---
 
@@ -84,9 +86,9 @@ _A pure function that returns an array of supported `bytes4` IDs._
 
 #### Return Values
 
-| Name         | Type     | Description                                  |
-| ------------ | -------- | -------------------------------------------- |
-| interfaces\_ | bytes4[] | An array of supported interface identifiers. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | An array of supported interface identifiers. |
 
 ### businessIdIntrospection
 
@@ -100,9 +102,9 @@ _Returns a `bytes32` key identifying the facet's purpose._
 
 #### Return Values
 
-| Name         | Type    | Description                              |
-| ------------ | ------- | ---------------------------------------- |
-| businessId\_ | bytes32 | The `bytes32` ID for the business logic. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| businessId_ | bytes32 | The `bytes32` ID for the business logic. |
 
 ### selectorsIntrospection
 
@@ -116,9 +118,11 @@ _A pure function that returns a `bytes4[]` array of selectors._
 
 #### Return Values
 
-| Name        | Type     | Description                              |
-| ----------- | -------- | ---------------------------------------- |
-| selectors\_ | bytes4[] | An array of `bytes4` function selectors. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| selectors_ | bytes4[] | An array of `bytes4` function selectors. |
+
+
 
 ---
 
@@ -134,7 +138,7 @@ Struct storing timestamped hashes
 
 ```solidity
 struct HashTimestampStorage {
-    mapping(bytes32 => uint256) hashTimestamps;
+  mapping(bytes32 => uint256) hashTimestamps;
 }
 ```
 
@@ -148,35 +152,35 @@ Modifier to validate that provided hash
 
 #### Parameters
 
-| Name   | Type    | Description       |
-| ------ | ------- | ----------------- |
-| \_hash | bytes32 | The hash to check |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _hash | bytes32 | The hash to check |
 
-### \_timestampHash
+### _timestampHash
 
 ```solidity
 function _timestampHash(bytes32 _hash) internal virtual
 ```
 
-### \_exists
+### _exists
 
 ```solidity
 function _exists(bytes32 _hash) internal view virtual returns (bool)
 ```
 
-### \_getTimestamp
+### _getTimestamp
 
 ```solidity
 function _getTimestamp(bytes32 _hash) internal view virtual returns (uint256)
 ```
 
-### \_checkHash
+### _checkHash
 
 ```solidity
 function _checkHash(bytes32 _hash) internal view virtual
 ```
 
-### \_hashTimestampStorage
+### _hashTimestampStorage
 
 ```solidity
 function _hashTimestampStorage() internal pure returns (struct HashTimestampInternal.HashTimestampStorage storage_)
@@ -188,9 +192,11 @@ _Uses inline assembly to return storage struct at predefined slot_
 
 #### Return Values
 
-| Name      | Type                                              | Description                       |
-| --------- | ------------------------------------------------- | --------------------------------- |
-| storage\_ | struct HashTimestampInternal.HashTimestampStorage | The hash timestamp storage struct |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| storage_ | struct HashTimestampInternal.HashTimestampStorage | The hash timestamp storage struct |
+
+
 
 ---
 
@@ -208,11 +214,11 @@ Emitted when a hash is timestamped
 
 #### Parameters
 
-| Name      | Type    | Description                                      |
-| --------- | ------- | ------------------------------------------------ |
-| hash      | bytes32 | The hash that was timestamped                    |
-| sender    | address | The address that submitted the hash to timestamp |
-| timestamp | uint256 | The block timestamp when the hash was recorded   |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| hash | bytes32 | The hash that was timestamped |
+| sender | address | The address that submitted the hash to timestamp |
+| timestamp | uint256 | The block timestamp when the hash was recorded |
 
 ### HashAlreadyExists
 
@@ -230,9 +236,9 @@ Timestamps a given hash
 
 #### Parameters
 
-| Name   | Type    | Description                |
-| ------ | ------- | -------------------------- |
-| \_hash | bytes32 | The hash to be timestamped |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _hash | bytes32 | The hash to be timestamped |
 
 ### exists
 
@@ -244,15 +250,15 @@ Checks whether a hash has been timestamped
 
 #### Parameters
 
-| Name   | Type    | Description       |
-| ------ | ------- | ----------------- |
-| \_hash | bytes32 | The hash to check |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _hash | bytes32 | The hash to check |
 
 #### Return Values
 
-| Name     | Type | Description                                             |
-| -------- | ---- | ------------------------------------------------------- |
-| exists\_ | bool | True if the hash has been recorded, false in other case |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| exists_ | bool | True if the hash has been recorded, false in other case |
 
 ### getTimestamp
 
@@ -264,12 +270,13 @@ Returns the timestamp when a hash was recorded
 
 #### Parameters
 
-| Name   | Type    | Description       |
-| ------ | ------- | ----------------- |
-| \_hash | bytes32 | The hash to query |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _hash | bytes32 | The hash to query |
 
 #### Return Values
 
-| Name        | Type    | Description                              |
-| ----------- | ------- | ---------------------------------------- |
-| timestamp\_ | uint256 | The timestamp when the hash was recorded |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| timestamp_ | uint256 | The timestamp when the hash was recorded |
+

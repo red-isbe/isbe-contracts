@@ -14,9 +14,13 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 pragma solidity ^0.8.28;
 
-import {_HASH_TIMESTAMP_STORAGE_POSITION} from '../constants/storagePositions.sol';
+import {
+    _HASH_TIMESTAMP_STORAGE_POSITION
+} from '../constants/storagePositions.sol';
 import {IHashTimestamp} from './IHashTimestamp.sol';
-import {DidDocumentDetailedInternal} from '../identity/didregistry/DidDocumentDetailedInternal.sol';
+import {
+    DidDocumentDetailedInternal
+} from '../identity/didregistry/DidDocumentDetailedInternal.sol';
 
 /// @title HashTimestampInternal
 /// @notice Internal logic for hash timestamp

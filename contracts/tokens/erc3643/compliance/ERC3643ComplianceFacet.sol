@@ -14,9 +14,13 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 pragma solidity ^0.8.28;
 
-import {_ERC3643_COMPLIANCE_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
+import {
+    _ERC3643_COMPLIANCE_RESOLVER_KEY
+} from '../../../constants/resolverKeys.sol';
 import {ERC3643Compliance} from './ERC3643Compliance.sol';
-import {IEIP2535Introspection} from '../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {
+    IEIP2535Introspection
+} from '../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 
 contract ERC3643ComplianceFacet is ERC3643Compliance, IEIP2535Introspection {
     function interfacesIntrospection()

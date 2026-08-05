@@ -13,7 +13,9 @@ limitations under the License.
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import {PackedUserOperation} from '@account-abstraction/contracts/interfaces/PackedUserOperation.sol';
+import {
+    PackedUserOperation
+} from '@account-abstraction/contracts/interfaces/PackedUserOperation.sol';
 import {calldataKeccak} from '@account-abstraction/contracts/core/Helpers.sol';
 
 /**

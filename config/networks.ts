@@ -42,6 +42,8 @@ const ISBE_LOCAL_DEPLOYER_URL =
     process.env.ISBE_LOCAL_DEPLOYER_URL || 'http://127.0.0.1:8545'
 const ISBE_URL = process.env.ISBE_URL || 'http://localhost:8584'
 const CURVE = process.env.CURVE || 'secp256k1'
+const KMS_KEY_ID = process.env.KMS_KEY_ID
+const kmsConfig = KMS_KEY_ID ? { kmsKeyId: KMS_KEY_ID } : {}
 
 /**
  * Gets all network configurations
@@ -67,6 +69,8 @@ export function getNetworkConfigs(): NetworksConfig {
             },
             blockGasLimit: 30000000,
             allowUnlimitedContractSize: true,
+            initialBaseFeePerGas: 0,
+            gasPrice: 0,
             curve: CURVE,
         } as HardhatNetworkConfig,
 
@@ -112,6 +116,7 @@ export function getNetworkConfigs(): NetworksConfig {
             blockGasLimit: 0x1e84800, // 32,000,000
             curve: CURVE,
             secp256r1Accounts,
+            ...kmsConfig,
         } as NetworkConfigWithCurve,
 
         // ISBE Arsys Network (secp256k1)

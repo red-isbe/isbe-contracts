@@ -15,10 +15,14 @@ limitations under the License.
 pragma solidity ^0.8.28;
 
 import {IDidDocumentDetailed} from './interfaces/IDidDocumentDetailed.sol';
-import {_DID_DOCUMENT_DETAILED_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
+import {
+    _DID_DOCUMENT_DETAILED_RESOLVER_KEY
+} from '../../constants/resolverKeys.sol';
 import {DidControllerInternal} from './DidControllerInternal.sol';
 import {_DID_REGISTRY_ROLE} from '../../constants/roles.sol';
-import {_DID_DOCUMENT_DETAILED_FACET_VERSION} from '../../constants/facetVersions.sol';
+import {
+    _DID_DOCUMENT_DETAILED_FACET_VERSION
+} from '../../constants/facetVersions.sol';
 
 /**
  * @title Decentralised Identity Document Management System
@@ -78,7 +82,7 @@ abstract contract DidDocumentDetailed is
             _checkUintIsNotZero(_notBefore);
             _checkUintIsNotZero(_notAfter);
             _checkValidDates(_notBefore, _notAfter);
-            _validateProof(_proof, _publicKey);
+            _validateProof(_did, _proof, _publicKey);
         }
         emit FirstDidDocumentInserted(
             _did,
@@ -107,6 +111,7 @@ abstract contract DidDocumentDetailed is
         bytes32 _did,
         string memory _baseDocument,
         bytes32 _vMethodId,
+        bytes memory _proof,
         bytes memory _publicKey,
         EllipticType _ellipticType,
         uint256 _notBefore,
@@ -128,6 +133,7 @@ abstract contract DidDocumentDetailed is
             _checkUintIsNotZero(_notBefore);
             _checkUintIsNotZero(_notAfter);
             _checkValidDates(_notBefore, _notAfter);
+            _validateProof(_did, _proof, _publicKey);
         }
 
         emit DidDocumentInserted(
@@ -140,16 +146,15 @@ abstract contract DidDocumentDetailed is
             _notAfter
         );
         return
-            _insertDidDocument(
+            _insertAndLink(
                 _did,
                 _baseDocument,
                 _vMethodId,
                 _publicKey,
                 _ellipticType,
                 _notBefore,
-                _notAfter,
-                _getAlsoKnownAs(_getDidFromAddress(_msgSender()))
-            ) && _linkDidToController(_did, _did);
+                _notAfter
+            );
     }
 
     function updateBaseDocument(
@@ -236,5 +241,30 @@ abstract contract DidDocumentDetailed is
         )
     {
         return _getDidDocumentByTimestamp(_did, _timestamp);
+    }
+
+    function _insertAndLink(
+        bytes32 _did,
+        string memory _baseDocument,
+        bytes32 _vMethodId,
+        bytes memory _publicKey,
+        EllipticType _ellipticType,
+        uint256 _notBefore,
+        uint256 _notAfter
+    ) internal returns (bool) {
+        bytes32 callerDid = _getDidFromAddress(_msgSender());
+        _insertDidDocument(
+            _did,
+            _baseDocument,
+            _vMethodId,
+            _publicKey,
+            _ellipticType,
+            _notBefore,
+            _notAfter,
+            _getAlsoKnownAs(callerDid)
+        );
+        _linkDidToController(_did, _did);
+        _linkDidToController(_did, callerDid);
+        return true;
     }
 }

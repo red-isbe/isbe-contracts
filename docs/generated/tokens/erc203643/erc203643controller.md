@@ -3,7 +3,7 @@
 Implements unified force mechanism for both ERC20 and ERC3643 tokens
 
 _Inherits from IERC203643Controller and ERC203643InternalCommon
-Behavior adapts automatically based on token type through internal logic_
+     Behavior adapts automatically based on token type through internal logic_
 
 ### forceTransfer
 
@@ -13,9 +13,9 @@ function forceTransfer(address _from, address _to, uint256 _amount) external ret
 
 Forces a transfer of tokens between two addresses
 
-\_Works for both ERC20 and ERC3643 tokens with automatic behavior adaptation.
-For ERC3643: If `_from` lacks enough free (unfrozen) balance but has sufficient total
-balance, it automatically unfreezes the missing portion to complete the transfer.
+_Works for both ERC20 and ERC3643 tokens with automatic behavior adaptation.
+     For ERC3643: If `_from` lacks enough free (unfrozen) balance but has sufficient total
+     balance, it automatically unfreezes the missing portion to complete the transfer.
 
      Emits a {ForcedTransfer} event.
      Emits a {TokensUnfrozen} event if `_amount` exceeds the free balance of `_from` (ERC3643 only).
@@ -23,16 +23,16 @@ balance, it automatically unfreezes the missing portion to complete the transfer
 
 #### Parameters
 
-| Name     | Type    | Description                                                      |
-| -------- | ------- | ---------------------------------------------------------------- |
-| \_from   | address | The address to transfer tokens from                              |
-| \_to     | address | The address to transfer tokens to (must be verified for ERC3643) |
-| \_amount | uint256 | The number of tokens to transfer                                 |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _from | address | The address to transfer tokens from |
+| _to | address | The address to transfer tokens to (must be verified for ERC3643) |
+| _amount | uint256 | The number of tokens to transfer |
 
 #### Return Values
 
-| Name    | Type | Description                              |
-| ------- | ---- | ---------------------------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | success | bool | Always returns true (reverts on failure) |
 
 ### forceBurn
@@ -43,9 +43,9 @@ function forceBurn(address _from, uint256 _amount) external
 
 Forces a burn of tokens from an address
 
-\_Works for both ERC20 and ERC3643 tokens with automatic behavior adaptation.
-For ERC3643: If `_from` lacks enough free (unfrozen) balance but has sufficient total
-balance, it automatically unfreezes the missing portion to complete the burn.
+_Works for both ERC20 and ERC3643 tokens with automatic behavior adaptation.
+     For ERC3643: If `_from` lacks enough free (unfrozen) balance but has sufficient total
+     balance, it automatically unfreezes the missing portion to complete the burn.
 
      Emits a {ForcedBurn} event.
      Emits a {TokensUnfrozen} event if `_amount` exceeds the free balance of `_from` (ERC3643 only).
@@ -53,10 +53,10 @@ balance, it automatically unfreezes the missing portion to complete the burn.
 
 #### Parameters
 
-| Name     | Type    | Description                     |
-| -------- | ------- | ------------------------------- |
-| \_from   | address | The address to burn tokens from |
-| \_amount | uint256 | The number of tokens to burn    |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _from | address | The address to burn tokens from |
+| _amount | uint256 | The number of tokens to burn |
 
 ### batchForceBurn
 
@@ -66,8 +66,8 @@ function batchForceBurn(address[] _userAddresses, uint256[] _amounts) external
 
 Burns tokens from multiple accounts by an authorized controller (batch operation)
 
-\_This function should only be callable by an authorized controller (e.g., regulator or admin contract).
-No approval required from token holders.
+_This function should only be callable by an authorized controller (e.g., regulator or admin contract).
+     No approval required from token holders.
 
      For ERC3643 tokens: tokens may be unfrozen if needed.
      In case any `_userAddresses[i]` has not enough free tokens (unfrozen tokens)
@@ -79,10 +79,10 @@ No approval required from token holders.
 
 #### Parameters
 
-| Name            | Type      | Description                                                                                                                                                                                                                                                                      |
-| --------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| \_userAddresses | address[] | The addresses to burn tokens from                                                                                                                                                                                                                                                |
-| \_amounts       | uint256[] | The number of tokens to burn from each corresponding address Emits a `ForcedBurn` event for each burn Emits a `TokensUnfrozen` event if `_amounts[i]` is higher than the free balance of `_userAddresses[i]` (ERC3643 only) Emits a `Transfer` event to address(0) for each burn |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _userAddresses | address[] | The addresses to burn tokens from |
+| _amounts | uint256[] | The number of tokens to burn from each corresponding address Emits a `ForcedBurn` event for each burn Emits a `TokensUnfrozen` event if `_amounts[i]` is higher than the free balance of `_userAddresses[i]` (ERC3643 only) Emits a `Transfer` event to address(0) for each burn |
 
 ### batchForceTransfer
 
@@ -93,8 +93,8 @@ function batchForceTransfer(address[] _fromList, address[] _toList, uint256[] _a
 Transfers tokens from multiple accounts to multiple recipients
 by an authorized controller (batch operation)
 
-\_This function should only be callable by an authorized controller (e.g., regulator or admin contract).
-No approval required from token holders.
+_This function should only be callable by an authorized controller (e.g., regulator or admin contract).
+     No approval required from token holders.
 
      For ERC3643 tokens: recipients must be verified and tokens may be unfrozen if needed.
      In case any `_fromList[i]` address has not enough free tokens (unfrozen tokens)
@@ -106,13 +106,13 @@ No approval required from token holders.
 
 #### Parameters
 
-| Name       | Type      | Description                                                                                                                                                                                                                                                               |
-| ---------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| \_fromList | address[] | The addresses to transfer tokens from                                                                                                                                                                                                                                     |
-| \_toList   | address[] | The addresses to transfer tokens to                                                                                                                                                                                                                                       |
-| \_amounts  | uint256[] | The number of tokens to transfer for each corresponding pair Emits a `ForcedTransfer` event for each transfer Emits a `TokensUnfrozen` event if `_amounts[i]` is higher than the free balance of `_fromList[i]` (ERC3643 only) Emits a `Transfer` event for each transfer |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _fromList | address[] | The addresses to transfer tokens from |
+| _toList | address[] | The addresses to transfer tokens to |
+| _amounts | uint256[] | The number of tokens to transfer for each corresponding pair Emits a `ForcedTransfer` event for each transfer Emits a `TokensUnfrozen` event if `_amounts[i]` is higher than the free balance of `_fromList[i]` (ERC3643 only) Emits a `Transfer` event for each transfer |
 
-### \_implementedInterfaces
+### _implementedInterfaces
 
 ```solidity
 function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
@@ -122,9 +122,11 @@ _Declares the interfaces implemented by this facet._
 
 #### Return Values
 
-| Name         | Type     | Description                               |
-| ------------ | -------- | ----------------------------------------- |
-| interfaces\_ | bytes4[] | Array of supported interface identifiers. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | Array of supported interface identifiers. |
+
+
 
 ---
 
@@ -144,9 +146,9 @@ _Returns the interfaces implemented by this facet_
 
 #### Return Values
 
-| Name         | Type     | Description                    |
-| ------------ | -------- | ------------------------------ |
-| interfaces\_ | bytes4[] | Array of interface identifiers |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | Array of interface identifiers |
 
 ### businessIdIntrospection
 
@@ -158,9 +160,9 @@ _Returns the business identifier for this facet_
 
 #### Return Values
 
-| Name         | Type    | Description                     |
-| ------------ | ------- | ------------------------------- |
-| businessId\_ | bytes32 | The resolver key for this facet |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| businessId_ | bytes32 | The resolver key for this facet |
 
 ### selectorsIntrospection
 
@@ -172,9 +174,11 @@ _Returns the function selectors exposed by this facet_
 
 #### Return Values
 
-| Name        | Type     | Description                 |
-| ----------- | -------- | --------------------------- |
-| selectors\_ | bytes4[] | Array of function selectors |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| selectors_ | bytes4[] | Array of function selectors |
+
+
 
 ---
 
@@ -183,19 +187,21 @@ _Returns the function selectors exposed by this facet_
 Implements unified force mechanism for both ERC20 and ERC3643 tokens
 
 _Inherits from IERC203643Controller and ERC203643InternalCommon
-Behavior adapts automatically based on token type through internal logic_
+     Behavior adapts automatically based on token type through internal logic_
 
-### \_forceBurn
+### _forceBurn
 
 ```solidity
 function _forceBurn(address _from, uint256 _amount) internal
 ```
 
-### \_forceTransfer
+### _forceTransfer
 
 ```solidity
 function _forceTransfer(address _from, address _to, uint256 _amount) internal returns (bool success)
 ```
+
+
 
 ---
 
@@ -204,7 +210,7 @@ function _forceTransfer(address _from, address _to, uint256 _amount) internal re
 Interface for administrative control over ERC20 and ERC3643 tokens, allowing forced transfers and burns
 
 _Intended for use in regulated environments or asset-backed tokens where such functionality is required.
-Behavior adapts automatically based on token type (ERC20 vs ERC3643)._
+     Behavior adapts automatically based on token type (ERC20 vs ERC3643)._
 
 ### ForcedTransfer
 
@@ -216,12 +222,12 @@ Emitted when tokens are forcefully transferred from one account to another
 
 #### Parameters
 
-| Name     | Type    | Description                                |
-| -------- | ------- | ------------------------------------------ |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | operator | address | The address performing the forced transfer |
-| from     | address | The address the tokens are taken from      |
-| to       | address | The address the tokens are sent to         |
-| amount   | uint256 | The number of tokens transferred           |
+| from | address | The address the tokens are taken from |
+| to | address | The address the tokens are sent to |
+| amount | uint256 | The number of tokens transferred |
 
 ### ForcedBurn
 
@@ -233,11 +239,11 @@ Emitted when tokens are forcefully burned from an account
 
 #### Parameters
 
-| Name     | Type    | Description                            |
-| -------- | ------- | -------------------------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | operator | address | The address performing the forced burn |
-| from     | address | The address the tokens are burned from |
-| amount   | uint256 | The number of tokens burned            |
+| from | address | The address the tokens are burned from |
+| amount | uint256 | The number of tokens burned |
 
 ### BatchForcedBurn
 
@@ -249,11 +255,11 @@ Emitted when tokens are forcefully burned from multiple accounts in a batch
 
 #### Parameters
 
-| Name            | Type      | Description                                                |
-| --------------- | --------- | ---------------------------------------------------------- |
-| operator        | address   | The address performing the forced burn                     |
-| \_userAddresses | address[] | The list of addresses the tokens are burned from           |
-| \_amounts       | uint256[] | The number of tokens burned for each corresponding address |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operator | address | The address performing the forced burn |
+| _userAddresses | address[] | The list of addresses the tokens are burned from |
+| _amounts | uint256[] | The number of tokens burned for each corresponding address |
 
 ### BatchForcedTransfer
 
@@ -265,12 +271,12 @@ Emitted when tokens are forcefully transferred between multiple accounts in a ba
 
 #### Parameters
 
-| Name       | Type      | Description                                                  |
-| ---------- | --------- | ------------------------------------------------------------ |
-| operator   | address   | The address performing the forced transfer                   |
-| \_fromList | address[] | The list of addresses the tokens are taken from              |
-| \_toList   | address[] | The list of addresses the tokens are sent to                 |
-| \_amounts  | uint256[] | The number of tokens transferred for each corresponding pair |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operator | address | The address performing the forced transfer |
+| _fromList | address[] | The list of addresses the tokens are taken from |
+| _toList | address[] | The list of addresses the tokens are sent to |
+| _amounts | uint256[] | The number of tokens transferred for each corresponding pair |
 
 ### forceTransfer
 
@@ -280,8 +286,8 @@ function forceTransfer(address _from, address _to, uint256 _amount) external ret
 
 Transfers tokens from one account to another by an authorized controller
 
-\_This function should only be callable by an authorized controller (e.g., regulator or admin contract).
-No approval required from token holder.
+_This function should only be callable by an authorized controller (e.g., regulator or admin contract).
+     No approval required from token holder.
 
      For ERC3643 tokens: recipient must be verified and tokens may be unfrozen if needed.
      In case the `_from` address has not enough free tokens (unfrozen tokens)
@@ -289,17 +295,17 @@ No approval required from token holder.
 
 #### Parameters
 
-| Name     | Type    | Description                         |
-| -------- | ------- | ----------------------------------- |
-| \_from   | address | The address to transfer tokens from |
-| \_to     | address | The address to transfer tokens to   |
-| \_amount | uint256 | The number of tokens to transfer    |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _from | address | The address to transfer tokens from |
+| _to | address | The address to transfer tokens to |
+| _amount | uint256 | The number of tokens to transfer |
 
 #### Return Values
 
-| Name | Type | Description                                                                                                                                                                                           |
-| ---- | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [0]  | bool | `true` if successful, otherwise reverts Emits a `ForcedTransfer` event Emits a `TokensUnfrozen` event if `_amount` is higher than the free balance of `_from` (ERC3643 only) Emits a `Transfer` event |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | bool | `true` if successful, otherwise reverts Emits a `ForcedTransfer` event Emits a `TokensUnfrozen` event if `_amount` is higher than the free balance of `_from` (ERC3643 only) Emits a `Transfer` event |
 
 ### forceBurn
 
@@ -309,8 +315,8 @@ function forceBurn(address _from, uint256 _amount) external
 
 Burns tokens from an account by an authorized controller
 
-\_This function should only be callable by an authorized controller (e.g., regulator or admin contract).
-No approval required from token holder.
+_This function should only be callable by an authorized controller (e.g., regulator or admin contract).
+     No approval required from token holder.
 
      For ERC3643 tokens: tokens may be unfrozen if needed.
      In case the `_from` address has not enough free tokens (unfrozen tokens)
@@ -319,10 +325,10 @@ No approval required from token holder.
 
 #### Parameters
 
-| Name     | Type    | Description                                                                                                                                                                                          |
-| -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| \_from   | address | The address to burn tokens from                                                                                                                                                                      |
-| \_amount | uint256 | The number of tokens to burn Emits a `ForcedBurn` event Emits a `TokensUnfrozen` event if `_amount` is higher than the free balance of `_from` (ERC3643 only) Emits a `Transfer` event to address(0) |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _from | address | The address to burn tokens from |
+| _amount | uint256 | The number of tokens to burn Emits a `ForcedBurn` event Emits a `TokensUnfrozen` event if `_amount` is higher than the free balance of `_from` (ERC3643 only) Emits a `Transfer` event to address(0) |
 
 ### batchForceBurn
 
@@ -332,8 +338,8 @@ function batchForceBurn(address[] _userAddresses, uint256[] _amounts) external
 
 Burns tokens from multiple accounts by an authorized controller (batch operation)
 
-\_This function should only be callable by an authorized controller (e.g., regulator or admin contract).
-No approval required from token holders.
+_This function should only be callable by an authorized controller (e.g., regulator or admin contract).
+     No approval required from token holders.
 
      For ERC3643 tokens: tokens may be unfrozen if needed.
      In case any `_userAddresses[i]` has not enough free tokens (unfrozen tokens)
@@ -345,10 +351,10 @@ No approval required from token holders.
 
 #### Parameters
 
-| Name            | Type      | Description                                                                                                                                                                                                                                                                           |
-| --------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| \_userAddresses | address[] | The addresses to burn tokens from                                                                                                                                                                                                                                                     |
-| \_amounts       | uint256[] | The number of tokens to burn from each corresponding address Emits a `BatchForcedBurn` event for each burn Emits a `TokensUnfrozen` event if `_amounts[i]` is higher than the free balance of `_userAddresses[i]` (ERC3643 only) Emits a `Transfer` event to address(0) for each burn |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _userAddresses | address[] | The addresses to burn tokens from |
+| _amounts | uint256[] | The number of tokens to burn from each corresponding address Emits a `BatchForcedBurn` event for each burn Emits a `TokensUnfrozen` event if `_amounts[i]` is higher than the free balance of `_userAddresses[i]` (ERC3643 only) Emits a `Transfer` event to address(0) for each burn |
 
 ### batchForceTransfer
 
@@ -359,9 +365,9 @@ function batchForceTransfer(address[] _fromList, address[] _toList, uint256[] _a
 Transfers tokens from multiple accounts to multiple recipients
 by an authorized controller (batch operation)
 
-\_This function should only be callable by
+_This function should only be callable by
 an authorized controller (e.g., regulator or admin contract).
-No approval required from token holders.
+     No approval required from token holders.
 
      For ERC3643 tokens: recipients must be verified and tokens may be unfrozen if needed.
      In case any `_fromList[i]` address has not enough free tokens (unfrozen tokens)
@@ -373,8 +379,9 @@ No approval required from token holders.
 
 #### Parameters
 
-| Name       | Type      | Description                                                                                                                                                                                                                                                                    |
-| ---------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| \_fromList | address[] | The addresses to transfer tokens from                                                                                                                                                                                                                                          |
-| \_toList   | address[] | The addresses to transfer tokens to                                                                                                                                                                                                                                            |
-| \_amounts  | uint256[] | The number of tokens to transfer for each corresponding pair Emits a `BatchForcedTransfer` event for each transfer Emits a `TokensUnfrozen` event if `_amounts[i]` is higher than the free balance of `_fromList[i]` (ERC3643 only) Emits a `Transfer` event for each transfer |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _fromList | address[] | The addresses to transfer tokens from |
+| _toList | address[] | The addresses to transfer tokens to |
+| _amounts | uint256[] | The number of tokens to transfer for each corresponding pair Emits a `BatchForcedTransfer` event for each transfer Emits a `TokensUnfrozen` event if `_amounts[i]` is higher than the free balance of `_fromList[i]` (ERC3643 only) Emits a `Transfer` event for each transfer |
+

@@ -15,7 +15,9 @@ limitations under the License.
 pragma solidity ^0.8.28;
 
 import {ERC20Internal} from '../../ERC20Internal.sol';
-import {_ERC20_SNAPSHOT_STORAGE_POSITION} from '../../../../constants/storagePositions.sol';
+import {
+    _ERC20_SNAPSHOT_STORAGE_POSITION
+} from '../../../../constants/storagePositions.sol';
 import {IERC20Snapshot} from './IERC20Snapshot.sol';
 import {Arrays} from '@openzeppelin/contracts/utils/Arrays.sol';
 import {Counters} from '@openzeppelin/contracts/utils/Counters.sol';

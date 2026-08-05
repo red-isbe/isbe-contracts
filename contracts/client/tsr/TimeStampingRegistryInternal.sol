@@ -25,10 +25,16 @@ import {
     _CONTRACT_VERSION_ISBE
 } from '../../constants/values.sol';
 import {_getMessageHashStampTsr} from '../../core/signatureVerification.sol';
-import {DidDocumentDetailedInternal} from '../../identity/didregistry/DidDocumentDetailedInternal.sol';
-import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
+import {
+    DidDocumentDetailedInternal
+} from '../../identity/didregistry/DidDocumentDetailedInternal.sol';
+import {
+    EnumerableSet
+} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 import {LibCommon} from '../../core/LibCommon.sol';
-import {_TIMESTAMPING_REGISTRY_STORAGE_POSITION} from '../../constants/storagePositions.sol';
+import {
+    _TIMESTAMPING_REGISTRY_STORAGE_POSITION
+} from '../../constants/storagePositions.sol';
 import {ERC712Internal} from '../../core/ERC712Internal.sol';
 
 /// @title TimeStampingRegistryInternal

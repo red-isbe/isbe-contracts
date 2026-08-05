@@ -14,10 +14,14 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 pragma solidity ^0.8.28;
 
-import {_NETWORK_DIRECTORY_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
+import {
+    _NETWORK_DIRECTORY_RESOLVER_KEY
+} from '../../constants/resolverKeys.sol';
 import {INetworkDirectory} from './INetworkDirectory.sol';
 import {NetworkDirectory} from './NetworkDirectory.sol';
-import {IEIP2535Introspection} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {
+    IEIP2535Introspection
+} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 
 /**
  * @title NetworkDirectoryFacet

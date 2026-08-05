@@ -20,6 +20,7 @@ import '@typechain/hardhat'
 import 'hardhat-contract-sizer'
 import 'solidity-docgen'
 import 'hardhat-gas-reporter'
+import '@rumblefishdev/hardhat-kms-signer'
 
 // Configure dotenv globally without verbose logging
 import 'dotenv/config'

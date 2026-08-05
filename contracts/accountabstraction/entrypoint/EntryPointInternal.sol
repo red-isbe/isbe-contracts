@@ -24,7 +24,9 @@ import {
     min
 } from '@account-abstraction/contracts/core/Helpers.sol';
 import {Exec} from '@account-abstraction/contracts/utils/Exec.sol';
-import {PackedUserOperation} from '@account-abstraction/contracts/interfaces/PackedUserOperation.sol';
+import {
+    PackedUserOperation
+} from '@account-abstraction/contracts/interfaces/PackedUserOperation.sol';
 import {NonceManagerInternal} from './noncemanager/NonceManagerInternal.sol';
 import {StakeManagerInternal} from './stakemanager/StakeManagerInternal.sol';
 import {EntryPointMemoryUtils} from './EntryPointMemoryUtils.sol';

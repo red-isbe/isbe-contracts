@@ -16,8 +16,12 @@ pragma solidity ^0.8.28;
 
 import {Common} from '../../core/Common.sol';
 import {IAccessControlDid} from './IAccessControlDid.sol';
-import {_ACCESS_CONTROL_DID_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
-import {_ACCESS_CONTROL_DID_FACET_VERSION} from '../../constants/facetVersions.sol';
+import {
+    _ACCESS_CONTROL_DID_RESOLVER_KEY
+} from '../../constants/resolverKeys.sol';
+import {
+    _ACCESS_CONTROL_DID_FACET_VERSION
+} from '../../constants/facetVersions.sol';
 
 /// @title AccessControlDid
 /// @notice Implements DID-based role access control mechanisms

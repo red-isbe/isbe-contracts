@@ -121,6 +121,11 @@ function shouldSkipFile(filePath: string): boolean {
     if (filePath.endsWith('.min.js')) {
         return true
     }
+    // Skip macOS resource fork files (._*)
+    const basename = path.basename(filePath)
+    if (basename.startsWith('._')) {
+        return true
+    }
     return false
 }
 

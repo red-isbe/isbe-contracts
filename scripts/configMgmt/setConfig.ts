@@ -51,7 +51,7 @@ export async function setConfig(
         configId,
         businessDataInput,
         {
-            gasLimit: 25_000_000, // Set high gas limit to avoid estimation issues
+            gasLimit: 15_000_000, // Set high gas limit to avoid estimation issues (Hardhat cap ~50% of blockGasLimit)
         }
     )
 

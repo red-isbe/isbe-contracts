@@ -28,6 +28,7 @@ import {
     IIsbeFactory,
 } from '../typechain-types'
 import { HDNodeWallet } from 'ethers'
+import { generateProof, proofToDid } from './support'
 
 describe('Use Case DID Resolution via Factory', function () {
     let adminAddress: string
@@ -53,7 +54,6 @@ describe('Use Case DID Resolution via Factory', function () {
         // Create test wallet and DID
         const baseWallet = walletOfFirstSigner()
         const w1 = baseWallet.derivePath('200')
-        const d1 = ethers.id('did:usecase:test:1')
 
         // Deploy governance with DID registry AND ERC20 use case
         const govResult = await deployGovernance(
@@ -84,12 +84,9 @@ describe('Use Case DID Resolution via Factory', function () {
         const notAfter = notBefore + 1000000000000 // Very large to never expire
 
         const publicKey = w1.signingKey.publicKey
+        const proof = generateProof(w1)
+        const d1 = proofToDid(proof)
         const vMethodId = ethers.id(`vmethod:${d1}`)
-        const message = ethers.keccak256(
-            ethers.solidityPacked(['bytes'], [publicKey])
-        )
-        const signature = w1.signingKey.sign(message)
-        const proof = ethers.Signature.from(signature).serialized
 
         await didRegistryWithSigner.insertFirstDidDocument(
             d1,

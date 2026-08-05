@@ -3,9 +3,9 @@
 Abstract contract implementing basic whitelist functionality with role-based access control.
 
 _This contract provides the external interface for whitelist management.
-It inherits from BasicWhitelistInternal for storage and helper functions.
-Access control is enforced using ISBE's role-based system.
-This is designed to be used in diamond proxy patterns via BasicWhitelistFacet._
+     It inherits from BasicWhitelistInternal for storage and helper functions.
+     Access control is enforced using ISBE's role-based system.
+     This is designed to be used in diamond proxy patterns via BasicWhitelistFacet._
 
 ### constructor
 
@@ -29,9 +29,9 @@ _Can only be called once. Uses the initializer modifier to prevent re-initializa
 
 #### Parameters
 
-| Name      | Type | Description                                                       |
-| --------- | ---- | ----------------------------------------------------------------- |
-| \_enabled | bool | Initial state of the whitelist (true to enable, false to disable) |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _enabled | bool | Initial state of the whitelist (true to enable, false to disable) |
 
 ### addToWhitelist
 
@@ -45,9 +45,9 @@ _Requires WHITELIST_ROLE. Reverts if address is already whitelisted._
 
 #### Parameters
 
-| Name      | Type    | Description                         |
-| --------- | ------- | ----------------------------------- |
-| \_account | address | The address to add to the whitelist |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _account | address | The address to add to the whitelist |
 
 ### removeFromWhitelist
 
@@ -61,9 +61,9 @@ _Requires WHITELIST_ROLE. Reverts if address is not whitelisted._
 
 #### Parameters
 
-| Name      | Type    | Description                              |
-| --------- | ------- | ---------------------------------------- |
-| \_account | address | The address to remove from the whitelist |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _account | address | The address to remove from the whitelist |
 
 ### enableWhitelist
 
@@ -97,15 +97,15 @@ _Returns true if whitelist is disabled OR address is whitelisted_
 
 #### Parameters
 
-| Name      | Type    | Description          |
-| --------- | ------- | -------------------- |
-| \_account | address | The address to check |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _account | address | The address to check |
 
 #### Return Values
 
-| Name            | Type | Description                                                 |
-| --------------- | ---- | ----------------------------------------------------------- |
-| isWhitelisted\_ | bool | True if the address is whitelisted or whitelist is disabled |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| isWhitelisted_ | bool | True if the address is whitelisted or whitelist is disabled |
 
 ### isWhitelistEnabled
 
@@ -117,11 +117,11 @@ Checks if the whitelist is currently enabled
 
 #### Return Values
 
-| Name      | Type | Description                                   |
-| --------- | ---- | --------------------------------------------- |
-| enabled\_ | bool | True if whitelist is enabled, false otherwise |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| enabled_ | bool | True if whitelist is enabled, false otherwise |
 
-### \_implementedInterfaces
+### _implementedInterfaces
 
 ```solidity
 function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
@@ -133,9 +133,11 @@ _Used for ERC165 introspection_
 
 #### Return Values
 
-| Name         | Type     | Description            |
-| ------------ | -------- | ---------------------- |
-| interfaces\_ | bytes4[] | Array of interface IDs |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | Array of interface IDs |
+
+
 
 ---
 
@@ -144,8 +146,8 @@ _Used for ERC165 introspection_
 Facet contract for BasicWhitelist functionality in ISBE diamond architecture
 
 _This contract acts as the entry point for the BasicWhitelist functionality in a diamond proxy.
-It implements IEIP2535Introspection for diamond-specific introspection capabilities.
-Exposes all BasicWhitelist methods and provides selector/interface discovery._
+     It implements IEIP2535Introspection for diamond-specific introspection capabilities.
+     Exposes all BasicWhitelist methods and provides selector/interface discovery._
 
 ### interfacesIntrospection
 
@@ -159,9 +161,9 @@ _Used for ERC165 introspection in diamond pattern_
 
 #### Return Values
 
-| Name         | Type     | Description                                      |
-| ------------ | -------- | ------------------------------------------------ |
-| interfaces\_ | bytes4[] | Array of interface IDs implemented by this facet |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | Array of interface IDs implemented by this facet |
 
 ### businessIdIntrospection
 
@@ -175,9 +177,9 @@ _Used by ISBE's BusinessLogicFactory to identify this facet_
 
 #### Return Values
 
-| Name         | Type    | Description                         |
-| ------------ | ------- | ----------------------------------- |
-| businessId\_ | bytes32 | The resolver key for BasicWhitelist |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| businessId_ | bytes32 | The resolver key for BasicWhitelist |
 
 ### selectorsIntrospection
 
@@ -188,13 +190,15 @@ function selectorsIntrospection() external pure returns (bytes4[] selectors_)
 Returns the list of function selectors implemented by this facet
 
 _Used by diamond to route function calls to the correct facet.
-Must include ALL external functions from BasicWhitelist._
+     Must include ALL external functions from BasicWhitelist._
 
 #### Return Values
 
-| Name        | Type     | Description                        |
-| ----------- | -------- | ---------------------------------- |
-| selectors\_ | bytes4[] | Array of 4-byte function selectors |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| selectors_ | bytes4[] | Array of 4-byte function selectors |
+
+
 
 ---
 
@@ -203,8 +207,8 @@ Must include ALL external functions from BasicWhitelist._
 Internal abstract contract providing storage and helper functions for whitelist management.
 
 _This contract defines the storage structure and internal functions for managing a basic whitelist.
-It uses unstructured storage to avoid storage collisions in diamond proxy patterns.
-Inherits from DidDocumentDetailedInternal to access common ISBE functionality._
+     It uses unstructured storage to avoid storage collisions in diamond proxy patterns.
+     Inherits from DidDocumentDetailedInternal to access common ISBE functionality._
 
 ### BasicWhitelistStorage
 
@@ -219,8 +223,8 @@ _Uses unstructured storage pattern for diamond compatibility_
 
 ```solidity
 struct BasicWhitelistStorage {
-    mapping(address => bool) whitelisted;
-    bool enabled;
+  mapping(address => bool) whitelisted;
+  bool enabled;
 }
 ```
 
@@ -236,9 +240,9 @@ _Checks if the provided account is not whitelisted before allowing execution._
 
 #### Parameters
 
-| Name      | Type    | Description                                 |
-| --------- | ------- | ------------------------------------------- |
-| \_account | address | The address to check against the whitelist. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _account | address | The address to check against the whitelist. |
 
 ### onlyNotWhitelisted
 
@@ -252,9 +256,9 @@ _Checks if the provided account is already whitelisted before allowing execution
 
 #### Parameters
 
-| Name      | Type    | Description                                 |
-| --------- | ------- | ------------------------------------------- |
-| \_account | address | The address to check against the whitelist. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _account | address | The address to check against the whitelist. |
 
 ### batchOnlyWhitelisted
 
@@ -268,11 +272,11 @@ _Checks if all provided accounts are not whitelisted before allowing execution._
 
 #### Parameters
 
-| Name       | Type      | Description                                           |
-| ---------- | --------- | ----------------------------------------------------- |
-| \_accounts | address[] | An array of addresses to check against the whitelist. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _accounts | address[] | An array of addresses to check against the whitelist. |
 
-### \_initialize
+### _initialize
 
 ```solidity
 function _initialize(bool _enabled) internal
@@ -284,11 +288,11 @@ _Internal function to be called during contract initialization_
 
 #### Parameters
 
-| Name      | Type | Description                                                       |
-| --------- | ---- | ----------------------------------------------------------------- |
-| \_enabled | bool | Initial state of the whitelist (true to enable, false to disable) |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _enabled | bool | Initial state of the whitelist (true to enable, false to disable) |
 
-### \_enableWhitelist
+### _enableWhitelist
 
 ```solidity
 function _enableWhitelist() internal
@@ -298,7 +302,7 @@ Enables the whitelist enforcement
 
 _Internal function callable by authorized contracts_
 
-### \_disableWhitelist
+### _disableWhitelist
 
 ```solidity
 function _disableWhitelist() internal
@@ -308,7 +312,7 @@ Disables the whitelist enforcement
 
 _Internal function callable by authorized contracts_
 
-### \_addToWhitelist
+### _addToWhitelist
 
 ```solidity
 function _addToWhitelist(address _account) internal
@@ -320,11 +324,11 @@ _Internal function that reverts if address is already whitelisted_
 
 #### Parameters
 
-| Name      | Type    | Description                         |
-| --------- | ------- | ----------------------------------- |
-| \_account | address | The address to add to the whitelist |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _account | address | The address to add to the whitelist |
 
-### \_removeFromWhitelist
+### _removeFromWhitelist
 
 ```solidity
 function _removeFromWhitelist(address _account) internal
@@ -336,11 +340,11 @@ _Internal function that reverts if address is not whitelisted_
 
 #### Parameters
 
-| Name      | Type    | Description                              |
-| --------- | ------- | ---------------------------------------- |
-| \_account | address | The address to remove from the whitelist |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _account | address | The address to remove from the whitelist |
 
-### \_isWhitelisted
+### _isWhitelisted
 
 ```solidity
 function _isWhitelisted(address _account) internal view returns (bool isWhitelisted_)
@@ -352,17 +356,17 @@ _Internal view function that returns true if whitelist is disabled OR address is
 
 #### Parameters
 
-| Name      | Type    | Description          |
-| --------- | ------- | -------------------- |
-| \_account | address | The address to check |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _account | address | The address to check |
 
 #### Return Values
 
-| Name            | Type | Description                                             |
-| --------------- | ---- | ------------------------------------------------------- |
-| isWhitelisted\_ | bool | True if address is whitelisted or whitelist is disabled |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| isWhitelisted_ | bool | True if address is whitelisted or whitelist is disabled |
 
-### \_isWhitelistEnabled
+### _isWhitelistEnabled
 
 ```solidity
 function _isWhitelistEnabled() internal view returns (bool enabled_)
@@ -374,9 +378,11 @@ _Internal view function_
 
 #### Return Values
 
-| Name      | Type | Description                                   |
-| --------- | ---- | --------------------------------------------- |
-| enabled\_ | bool | True if whitelist is enabled, false otherwise |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| enabled_ | bool | True if whitelist is enabled, false otherwise |
+
+
 
 ---
 
@@ -385,7 +391,7 @@ _Internal view function_
 Interface for basic whitelist functionality
 
 _Defines the external functions and events for managing a whitelist of addresses.
-This interface is designed to be used in diamond proxy patterns._
+     This interface is designed to be used in diamond proxy patterns._
 
 ### WhitelistInitialized
 
@@ -397,8 +403,8 @@ Emitted when the whitelist is initialized
 
 #### Parameters
 
-| Name    | Type | Description                    |
-| ------- | ---- | ------------------------------ |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | enabled | bool | Initial state of the whitelist |
 
 ### WhitelistStatusChanged
@@ -411,8 +417,8 @@ Emitted when the whitelist status is changed
 
 #### Parameters
 
-| Name    | Type | Description                |
-| ------- | ---- | -------------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | enabled | bool | New state of the whitelist |
 
 ### AddedToWhitelist
@@ -425,8 +431,8 @@ Emitted when an address is added to the whitelist
 
 #### Parameters
 
-| Name    | Type    | Description                |
-| ------- | ------- | -------------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | account | address | The address that was added |
 
 ### RemovedFromWhitelist
@@ -439,8 +445,8 @@ Emitted when an address is removed from the whitelist
 
 #### Parameters
 
-| Name    | Type    | Description                  |
-| ------- | ------- | ---------------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | account | address | The address that was removed |
 
 ### AlreadyWhitelisted
@@ -453,8 +459,8 @@ Error thrown when attempting to add an address that is already whitelisted
 
 #### Parameters
 
-| Name    | Type    | Description                             |
-| ------- | ------- | --------------------------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | account | address | The address that is already whitelisted |
 
 ### NotWhitelisted
@@ -467,8 +473,8 @@ Error thrown when attempting to remove an address that is not whitelisted
 
 #### Parameters
 
-| Name    | Type    | Description                              |
-| ------- | ------- | ---------------------------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | account | address | The address that is not in the whitelist |
 
 ### NotWhitelistedInBatch
@@ -481,8 +487,8 @@ Error thrown when a batch operation includes a non-whitelisted address
 
 #### Parameters
 
-| Name    | Type    | Description                            |
-| ------- | ------- | -------------------------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | account | address | The offending address within the batch |
 
 ### initializeBasicWhitelist
@@ -497,9 +503,9 @@ _Can only be called once during contract initialization_
 
 #### Parameters
 
-| Name      | Type | Description                                                       |
-| --------- | ---- | ----------------------------------------------------------------- |
-| \_enabled | bool | Initial state of the whitelist (true to enable, false to disable) |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _enabled | bool | Initial state of the whitelist (true to enable, false to disable) |
 
 ### addToWhitelist
 
@@ -513,9 +519,9 @@ _Requires WHITELIST_ROLE_
 
 #### Parameters
 
-| Name      | Type    | Description                         |
-| --------- | ------- | ----------------------------------- |
-| \_account | address | The address to add to the whitelist |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _account | address | The address to add to the whitelist |
 
 ### removeFromWhitelist
 
@@ -529,9 +535,9 @@ _Requires WHITELIST_ROLE_
 
 #### Parameters
 
-| Name      | Type    | Description                              |
-| --------- | ------- | ---------------------------------------- |
-| \_account | address | The address to remove from the whitelist |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _account | address | The address to remove from the whitelist |
 
 ### enableWhitelist
 
@@ -565,15 +571,15 @@ _Returns true if whitelist is disabled OR address is whitelisted_
 
 #### Parameters
 
-| Name      | Type    | Description          |
-| --------- | ------- | -------------------- |
-| \_account | address | The address to check |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _account | address | The address to check |
 
 #### Return Values
 
-| Name            | Type | Description                                                 |
-| --------------- | ---- | ----------------------------------------------------------- |
-| isWhitelisted\_ | bool | True if the address is whitelisted or whitelist is disabled |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| isWhitelisted_ | bool | True if the address is whitelisted or whitelist is disabled |
 
 ### isWhitelistEnabled
 
@@ -585,6 +591,7 @@ Checks if the whitelist is currently enabled
 
 #### Return Values
 
-| Name      | Type | Description                                   |
-| --------- | ---- | --------------------------------------------- |
-| enabled\_ | bool | True if whitelist is enabled, false otherwise |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| enabled_ | bool | True if whitelist is enabled, false otherwise |
+

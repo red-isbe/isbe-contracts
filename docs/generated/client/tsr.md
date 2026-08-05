@@ -3,7 +3,7 @@
 Interface for TimeStamping Registry contract providing hash registry services
 
 _Defines the standard interface for timestamping registry operations including
-hash stamping, signature-based operations, and data retrieval with originalHash as primary key_
+     hash stamping, signature-based operations, and data retrieval with originalHash as primary key_
 
 ### Stamped
 
@@ -15,10 +15,10 @@ Event emitted when a TSR hash set is successfully stamped
 
 #### Parameters
 
-| Name                | Type    | Description                                          |
-| ------------------- | ------- | ---------------------------------------------------- |
-| originalHash        | bytes32 | The original hash that was stamped (primary key)     |
-| tsaHash             | bytes32 | The TSA hash that was stamped                        |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| originalHash | bytes32 | The original hash that was stamped (primary key) |
+| tsaHash | bytes32 | The TSA hash that was stamped |
 | externalReferenceId | bytes32 | The external reference ID associated with the hashes |
 
 ### HashNotFound
@@ -31,8 +31,8 @@ Error thrown when a hash is not found in the registry
 
 #### Parameters
 
-| Name | Type    | Description                 |
-| ---- | ------- | --------------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | hash | bytes32 | The hash that was not found |
 
 ### HashAlreadyExists
@@ -45,8 +45,8 @@ Error thrown when a hash already exists in the registry
 
 #### Parameters
 
-| Name | Type    | Description                  |
-| ---- | ------- | ---------------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | hash | bytes32 | The hash that already exists |
 
 ### ExternalReferenceIdAlreadyExists
@@ -59,8 +59,8 @@ Error thrown when an external reference ID already exists in the registry
 
 #### Parameters
 
-| Name                | Type    | Description                                   |
-| ------------------- | ------- | --------------------------------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | externalReferenceId | bytes32 | The external reference ID that already exists |
 
 ### stamp
@@ -75,11 +75,11 @@ _Creates a new timestamp record for the given hashes (authority = requester = ms
 
 #### Parameters
 
-| Name                  | Type    | Description                                          |
-| --------------------- | ------- | ---------------------------------------------------- |
-| \_originalHash        | bytes32 | The original hash to be stamped (primary key)        |
-| \_tsaHash             | bytes32 | The TimeStamping Authority response hash             |
-| \_externalReferenceId | bytes32 | The external reference ID associated with the hashes |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _originalHash | bytes32 | The original hash to be stamped (primary key) |
+| _tsaHash | bytes32 | The TimeStamping Authority response hash |
+| _externalReferenceId | bytes32 | The external reference ID associated with the hashes |
 
 ### stampWithSignature
 
@@ -90,14 +90,14 @@ function stampWithSignature(struct SignedTsrData _tsrData, bytes _signature) ext
 Stamp the provided TSR data with a signature
 
 _Creates a new timestamp record using EIP712 signature verification
-(authority = msg.sender, requester = SignedTsrData.sender)_
+     (authority = msg.sender, requester = SignedTsrData.sender)_
 
 #### Parameters
 
-| Name        | Type                 | Description                                  |
-| ----------- | -------------------- | -------------------------------------------- |
-| \_tsrData   | struct SignedTsrData | The TimeStamping Registry data to be stamped |
-| \_signature | bytes                | The signature associated with the TSR data   |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _tsrData | struct SignedTsrData | The TimeStamping Registry data to be stamped |
+| _signature | bytes | The signature associated with the TSR data |
 
 ### isOriginalHashRegistered
 
@@ -111,15 +111,15 @@ _Returns true if the original hash exists in the registry_
 
 #### Parameters
 
-| Name           | Type    | Description                |
-| -------------- | ------- | -------------------------- |
-| \_originalHash | bytes32 | The original hash to check |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _originalHash | bytes32 | The original hash to check |
 
 #### Return Values
 
-| Name     | Type | Description                                                  |
-| -------- | ---- | ------------------------------------------------------------ |
-| exists\_ | bool | A boolean indicating whether the original hash is registered |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| exists_ | bool | A boolean indicating whether the original hash is registered |
 
 ### isTsaHashRegistered
 
@@ -133,15 +133,15 @@ _Returns true if the TSA hash exists in the registry_
 
 #### Parameters
 
-| Name      | Type    | Description                              |
-| --------- | ------- | ---------------------------------------- |
-| \_tsaHash | bytes32 | The TimeStamping Authority hash to check |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _tsaHash | bytes32 | The TimeStamping Authority hash to check |
 
 #### Return Values
 
-| Name     | Type | Description                                             |
-| -------- | ---- | ------------------------------------------------------- |
-| exists\_ | bool | A boolean indicating whether the TSA hash is registered |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| exists_ | bool | A boolean indicating whether the TSA hash is registered |
 
 ### getTsrRecordFromOriginalHash
 
@@ -155,17 +155,17 @@ _Returns the TSR data along with authority and requester information_
 
 #### Parameters
 
-| Name           | Type    | Description                              |
-| -------------- | ------- | ---------------------------------------- |
-| \_originalHash | bytes32 | The original hash to query (primary key) |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _originalHash | bytes32 | The original hash to query (primary key) |
 
 #### Return Values
 
-| Name      | Type           | Description                             |
-| --------- | -------------- | --------------------------------------- |
-| tsrData   | struct TsrData | The TSR data associated with the hash   |
-| authority | address        | The address that stamped the hash       |
-| requester | address        | The address that requested the stamping |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| tsrData | struct TsrData | The TSR data associated with the hash |
+| authority | address | The address that stamped the hash |
+| requester | address | The address that requested the stamping |
 
 ### isExternalReferenceIdRegistered
 
@@ -179,15 +179,15 @@ _Returns true if the external reference ID exists in the registry_
 
 #### Parameters
 
-| Name                  | Type    | Description                        |
-| --------------------- | ------- | ---------------------------------- |
-| \_externalReferenceId | bytes32 | The external reference ID to check |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _externalReferenceId | bytes32 | The external reference ID to check |
 
 #### Return Values
 
-| Name     | Type | Description                                                          |
-| -------- | ---- | -------------------------------------------------------------------- |
-| exists\_ | bool | A boolean indicating whether the external reference ID is registered |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| exists_ | bool | A boolean indicating whether the external reference ID is registered |
 
 ### getStampedSize
 
@@ -201,9 +201,9 @@ _Returns the size of the stamped data registry_
 
 #### Return Values
 
-| Name   | Type    | Description                         |
-| ------ | ------- | ----------------------------------- |
-| size\_ | uint256 | The total number of stamped entries |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| size_ | uint256 | The total number of stamped entries |
 
 ### getPaginatedStamped
 
@@ -217,16 +217,18 @@ _Returns TSR data for the specified page with pagination support_
 
 #### Parameters
 
-| Name        | Type    | Description                                 |
-| ----------- | ------- | ------------------------------------------- |
-| \_pageSize  | uint256 | The number of items to retrieve per page    |
-| \_pageIndex | uint256 | The index of the page to retrieve (0-based) |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _pageSize | uint256 | The number of items to retrieve per page |
+| _pageIndex | uint256 | The index of the page to retrieve (0-based) |
 
 #### Return Values
 
-| Name    | Type             | Description                                                  |
-| ------- | ---------------- | ------------------------------------------------------------ |
-| datas\_ | struct TsrData[] | An array of TimeStamping Registry data on the specified page |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| datas_ | struct TsrData[] | An array of TimeStamping Registry data on the specified page |
+
+
 
 ---
 
@@ -235,8 +237,8 @@ _Returns TSR data for the specified page with pagination support_
 Abstract contract implementing timestamping registry with EIP712 support and originalHash as primary key
 
 _Provides external interface for TSR operations including hash stamping,
-signature-based operations, and data retrieval. Extends TimeStampingRegistryInternal
-and implements ITimeStampingRegistry interface with optimized storage for originalHash queries_
+     signature-based operations, and data retrieval. Extends TimeStampingRegistryInternal
+     and implements ITimeStampingRegistry interface with optimized storage for originalHash queries_
 
 ### stamp
 
@@ -250,11 +252,11 @@ _Creates a new timestamp record with role-based access control (authority = requ
 
 #### Parameters
 
-| Name                  | Type    | Description                                          |
-| --------------------- | ------- | ---------------------------------------------------- |
-| \_originalHash        | bytes32 | The original hash to be stamped (primary key)        |
-| \_tsaHash             | bytes32 | The TimeStamping Authority response hash             |
-| \_externalReferenceId | bytes32 | The external reference ID associated with the hashes |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _originalHash | bytes32 | The original hash to be stamped (primary key) |
+| _tsaHash | bytes32 | The TimeStamping Authority response hash |
+| _externalReferenceId | bytes32 | The external reference ID associated with the hashes |
 
 ### stampWithSignature
 
@@ -265,14 +267,14 @@ function stampWithSignature(struct SignedTsrData _tsrData, bytes _signature) ext
 Stamp the provided TSR data with a signature
 
 _Creates a new timestamp record using EIP712 signature verification
-(authority = msg.sender, requester = SignedTsrData.sender)_
+     (authority = msg.sender, requester = SignedTsrData.sender)_
 
 #### Parameters
 
-| Name        | Type                 | Description                                  |
-| ----------- | -------------------- | -------------------------------------------- |
-| \_tsrData   | struct SignedTsrData | The TimeStamping Registry data to be stamped |
-| \_signature | bytes                | The signature associated with the TSR data   |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _tsrData | struct SignedTsrData | The TimeStamping Registry data to be stamped |
+| _signature | bytes | The signature associated with the TSR data |
 
 ### isOriginalHashRegistered
 
@@ -286,15 +288,15 @@ _Returns true if the original hash exists in the registry_
 
 #### Parameters
 
-| Name           | Type    | Description                |
-| -------------- | ------- | -------------------------- |
-| \_originalHash | bytes32 | The original hash to check |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _originalHash | bytes32 | The original hash to check |
 
 #### Return Values
 
-| Name     | Type | Description                                                  |
-| -------- | ---- | ------------------------------------------------------------ |
-| exists\_ | bool | A boolean indicating whether the original hash is registered |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| exists_ | bool | A boolean indicating whether the original hash is registered |
 
 ### isTsaHashRegistered
 
@@ -308,15 +310,15 @@ _Returns true if the TSA hash exists in the registry_
 
 #### Parameters
 
-| Name      | Type    | Description                              |
-| --------- | ------- | ---------------------------------------- |
-| \_tsaHash | bytes32 | The TimeStamping Authority hash to check |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _tsaHash | bytes32 | The TimeStamping Authority hash to check |
 
 #### Return Values
 
-| Name     | Type | Description                                             |
-| -------- | ---- | ------------------------------------------------------- |
-| exists\_ | bool | A boolean indicating whether the TSA hash is registered |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| exists_ | bool | A boolean indicating whether the TSA hash is registered |
 
 ### getTsrRecordFromOriginalHash
 
@@ -330,17 +332,17 @@ _Returns the TSR data along with authority and requester information_
 
 #### Parameters
 
-| Name           | Type    | Description                              |
-| -------------- | ------- | ---------------------------------------- |
-| \_originalHash | bytes32 | The original hash to query (primary key) |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _originalHash | bytes32 | The original hash to query (primary key) |
 
 #### Return Values
 
-| Name      | Type           | Description                             |
-| --------- | -------------- | --------------------------------------- |
-| tsrData   | struct TsrData | The TSR data associated with the hash   |
-| authority | address        | The address that stamped the hash       |
-| requester | address        | The address that requested the stamping |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| tsrData | struct TsrData | The TSR data associated with the hash |
+| authority | address | The address that stamped the hash |
+| requester | address | The address that requested the stamping |
 
 ### isExternalReferenceIdRegistered
 
@@ -354,15 +356,15 @@ _Returns true if the external reference ID exists in the registry_
 
 #### Parameters
 
-| Name                  | Type    | Description                        |
-| --------------------- | ------- | ---------------------------------- |
-| \_externalReferenceId | bytes32 | The external reference ID to check |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _externalReferenceId | bytes32 | The external reference ID to check |
 
 #### Return Values
 
-| Name     | Type | Description                                                          |
-| -------- | ---- | -------------------------------------------------------------------- |
-| exists\_ | bool | A boolean indicating whether the external reference ID is registered |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| exists_ | bool | A boolean indicating whether the external reference ID is registered |
 
 ### getStampedSize
 
@@ -376,9 +378,9 @@ _Returns the size of the stamped data registry_
 
 #### Return Values
 
-| Name   | Type    | Description                         |
-| ------ | ------- | ----------------------------------- |
-| size\_ | uint256 | The total number of stamped entries |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| size_ | uint256 | The total number of stamped entries |
 
 ### getPaginatedStamped
 
@@ -392,18 +394,18 @@ _Returns TSR data for the specified page with pagination support_
 
 #### Parameters
 
-| Name        | Type    | Description                                 |
-| ----------- | ------- | ------------------------------------------- |
-| \_pageSize  | uint256 | The number of items to retrieve per page    |
-| \_pageIndex | uint256 | The index of the page to retrieve (0-based) |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _pageSize | uint256 | The number of items to retrieve per page |
+| _pageIndex | uint256 | The index of the page to retrieve (0-based) |
 
 #### Return Values
 
-| Name    | Type             | Description                                                  |
-| ------- | ---------------- | ------------------------------------------------------------ |
-| datas\_ | struct TsrData[] | An array of TimeStamping Registry data on the specified page |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| datas_ | struct TsrData[] | An array of TimeStamping Registry data on the specified page |
 
-### \_implementedInterfaces
+### _implementedInterfaces
 
 ```solidity
 function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
@@ -413,9 +415,11 @@ Returns the implemented interfaces
 
 #### Return Values
 
-| Name         | Type     | Description                      |
-| ------------ | -------- | -------------------------------- |
-| interfaces\_ | bytes4[] | Array of supported interface IDs |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | Array of supported interface IDs |
+
+
 
 ---
 
@@ -424,8 +428,8 @@ Returns the implemented interfaces
 Diamond facet implementing timestamping registry with EIP712 support and originalHash primary key
 
 _Provides external interface for TSR operations within the diamond architecture.
-Inherits from TimeStampingRegistry and implements IEIP2535Introspection for
-diamond introspection capabilities with optimized storage for originalHash queries_
+     Inherits from TimeStampingRegistry and implements IEIP2535Introspection for
+     diamond introspection capabilities with optimized storage for originalHash queries_
 
 ### interfacesIntrospection
 
@@ -439,9 +443,9 @@ _Implements IEIP2535Introspection interface for diamond compatibility_
 
 #### Return Values
 
-| Name         | Type     | Description                      |
-| ------------ | -------- | -------------------------------- |
-| interfaces\_ | bytes4[] | Array of supported interface IDs |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | Array of supported interface IDs |
 
 ### businessIdIntrospection
 
@@ -455,9 +459,9 @@ _Returns the resolver key used to identify this facet in the diamond_
 
 #### Return Values
 
-| Name         | Type    | Description                     |
-| ------------ | ------- | ------------------------------- |
-| businessId\_ | bytes32 | The resolver key for this facet |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| businessId_ | bytes32 | The resolver key for this facet |
 
 ### selectorsIntrospection
 
@@ -471,9 +475,11 @@ _Implements IEIP2535Introspection to return all function selectors for TSR opera
 
 #### Return Values
 
-| Name        | Type     | Description                                         |
-| ----------- | -------- | --------------------------------------------------- |
-| selectors\_ | bytes4[] | Array of function selectors supported by this facet |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| selectors_ | bytes4[] | Array of function selectors supported by this facet |
+
+
 
 ---
 
@@ -482,8 +488,8 @@ _Implements IEIP2535Introspection to return all function selectors for TSR opera
 Internal logic for timestamping registry operations with originalHash as primary key
 
 _Provides core functionality for TSR operations including optimized storage management,
-signature verification, and data retrieval. Uses originalHash as primary key for efficient queries.
-Enforces uniqueness on all three hash fields: originalHash, tsaHash, externalReferenceId._
+     signature verification, and data retrieval. Uses originalHash as primary key for efficient queries.
+     Enforces uniqueness on all three hash fields: originalHash, tsaHash, externalReferenceId._
 
 ### TimestampingRegistryStorage
 
@@ -527,9 +533,9 @@ _Reverts if the original hash already exists in the registry_
 
 #### Parameters
 
-| Name           | Type    | Description                |
-| -------------- | ------- | -------------------------- |
-| \_originalHash | bytes32 | The original hash to check |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _originalHash | bytes32 | The original hash to check |
 
 ### onlyNonExistentTsaHash
 
@@ -543,9 +549,9 @@ _Reverts if the TSA hash already exists in the registry_
 
 #### Parameters
 
-| Name      | Type    | Description           |
-| --------- | ------- | --------------------- |
-| \_tsaHash | bytes32 | The TSA hash to check |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _tsaHash | bytes32 | The TSA hash to check |
 
 ### onlyNonExistentExternalReferenceId
 
@@ -559,11 +565,11 @@ _Reverts if the external reference ID already exists in the registry_
 
 #### Parameters
 
-| Name                  | Type    | Description                        |
-| --------------------- | ------- | ---------------------------------- |
-| \_externalReferenceId | bytes32 | The external reference ID to check |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _externalReferenceId | bytes32 | The external reference ID to check |
 
-### \_stamp
+### _stamp
 
 ```solidity
 function _stamp(bytes32 _originalHash, bytes32 _tsaHash, bytes32 _externalReferenceId, address _authority, address _requester) internal
@@ -575,15 +581,15 @@ _Creates a new timestamp record and updates all relevant storage structures with
 
 #### Parameters
 
-| Name                  | Type    | Description                                                              |
-| --------------------- | ------- | ------------------------------------------------------------------------ |
-| \_originalHash        | bytes32 | The original hash (primary key)                                          |
-| \_tsaHash             | bytes32 | The TSA hash to be stamped                                               |
-| \_externalReferenceId | bytes32 | The external reference ID associated with the hashes                     |
-| \_authority           | address | The address of the authority performing the stamp (msg.sender)           |
-| \_requester           | address | The address requesting the stamping (msg.sender or SignedTsrData.sender) |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _originalHash | bytes32 | The original hash (primary key) |
+| _tsaHash | bytes32 | The TSA hash to be stamped |
+| _externalReferenceId | bytes32 | The external reference ID associated with the hashes |
+| _authority | address | The address of the authority performing the stamp (msg.sender) |
+| _requester | address | The address requesting the stamping (msg.sender or SignedTsrData.sender) |
 
-### \_stampWithSignature
+### _stampWithSignature
 
 ```solidity
 function _stampWithSignature(struct SignedTsrData _tsrData, bytes _signature) internal
@@ -595,12 +601,12 @@ _Validates signature and nonce before stamping, then increments nonce_
 
 #### Parameters
 
-| Name        | Type                 | Description                       |
-| ----------- | -------------------- | --------------------------------- |
-| \_tsrData   | struct SignedTsrData | The signed TSR data to be stamped |
-| \_signature | bytes                | The signature to verify           |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _tsrData | struct SignedTsrData | The signed TSR data to be stamped |
+| _signature | bytes | The signature to verify |
 
-### \_isOriginalHashRegistered
+### _isOriginalHashRegistered
 
 ```solidity
 function _isOriginalHashRegistered(bytes32 _originalHash) internal view returns (bool exists_)
@@ -612,17 +618,17 @@ _Returns true if the original hash exists in the original hashes set_
 
 #### Parameters
 
-| Name           | Type    | Description                |
-| -------------- | ------- | -------------------------- |
-| \_originalHash | bytes32 | The original hash to check |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _originalHash | bytes32 | The original hash to check |
 
 #### Return Values
 
-| Name     | Type | Description                                              |
-| -------- | ---- | -------------------------------------------------------- |
-| exists\_ | bool | True if the original hash is registered, false otherwise |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| exists_ | bool | True if the original hash is registered, false otherwise |
 
-### \_isTsaHashRegistered
+### _isTsaHashRegistered
 
 ```solidity
 function _isTsaHashRegistered(bytes32 _tsaHash) internal view returns (bool exists_)
@@ -634,17 +640,17 @@ _Returns true if the TSA hash exists in the reverse mapping_
 
 #### Parameters
 
-| Name      | Type    | Description           |
-| --------- | ------- | --------------------- |
-| \_tsaHash | bytes32 | The TSA hash to check |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _tsaHash | bytes32 | The TSA hash to check |
 
 #### Return Values
 
-| Name     | Type | Description                                         |
-| -------- | ---- | --------------------------------------------------- |
-| exists\_ | bool | True if the TSA hash is registered, false otherwise |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| exists_ | bool | True if the TSA hash is registered, false otherwise |
 
-### \_getTsrRecordFromOriginalHash
+### _getTsrRecordFromOriginalHash
 
 ```solidity
 function _getTsrRecordFromOriginalHash(bytes32 _originalHash) internal view returns (struct TsrData tsrData, address authority, address requester)
@@ -656,19 +662,19 @@ _Returns the TSR data along with authority and requester information_
 
 #### Parameters
 
-| Name           | Type    | Description                              |
-| -------------- | ------- | ---------------------------------------- |
-| \_originalHash | bytes32 | The original hash to query (primary key) |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _originalHash | bytes32 | The original hash to query (primary key) |
 
 #### Return Values
 
-| Name      | Type           | Description                             |
-| --------- | -------------- | --------------------------------------- |
-| tsrData   | struct TsrData | The TSR data associated with the hash   |
-| authority | address        | The address that stamped the hash       |
-| requester | address        | The address that requested the stamping |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| tsrData | struct TsrData | The TSR data associated with the hash |
+| authority | address | The address that stamped the hash |
+| requester | address | The address that requested the stamping |
 
-### \_isExternalReferenceIdRegistered
+### _isExternalReferenceIdRegistered
 
 ```solidity
 function _isExternalReferenceIdRegistered(bytes32 _externalReferenceId) internal view returns (bool exists_)
@@ -680,17 +686,17 @@ _Returns true if the external reference ID exists in the reverse mapping_
 
 #### Parameters
 
-| Name                  | Type    | Description                        |
-| --------------------- | ------- | ---------------------------------- |
-| \_externalReferenceId | bytes32 | The external reference ID to check |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _externalReferenceId | bytes32 | The external reference ID to check |
 
 #### Return Values
 
-| Name     | Type | Description                                                      |
-| -------- | ---- | ---------------------------------------------------------------- |
-| exists\_ | bool | True if the external reference ID is registered, false otherwise |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| exists_ | bool | True if the external reference ID is registered, false otherwise |
 
-### \_getStampedSize
+### _getStampedSize
 
 ```solidity
 function _getStampedSize() internal view returns (uint256 size_)
@@ -702,11 +708,11 @@ _Returns the length of the original hashes enumerable set_
 
 #### Return Values
 
-| Name   | Type    | Description                         |
-| ------ | ------- | ----------------------------------- |
-| size\_ | uint256 | The total number of stamped entries |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| size_ | uint256 | The total number of stamped entries |
 
-### \_getPaginatedStamped
+### _getPaginatedStamped
 
 ```solidity
 function _getPaginatedStamped(uint256 _pageSize, uint256 _pageIndex) internal view returns (struct TsrData[] datas_)
@@ -718,18 +724,18 @@ _Uses LibCommon for pagination calculations and returns TSR data array based on 
 
 #### Parameters
 
-| Name        | Type    | Description                                 |
-| ----------- | ------- | ------------------------------------------- |
-| \_pageSize  | uint256 | The number of items to retrieve per page    |
-| \_pageIndex | uint256 | The index of the page to retrieve (1-based) |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _pageSize | uint256 | The number of items to retrieve per page |
+| _pageIndex | uint256 | The index of the page to retrieve (1-based) |
 
 #### Return Values
 
-| Name    | Type             | Description                                 |
-| ------- | ---------------- | ------------------------------------------- |
-| datas\_ | struct TsrData[] | An array of TSR data for the specified page |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| datas_ | struct TsrData[] | An array of TSR data for the specified page |
 
-### \_checkOriginalHash
+### _checkOriginalHash
 
 ```solidity
 function _checkOriginalHash(bytes32 _originalHash) internal view
@@ -741,11 +747,11 @@ _Reverts with HashAlreadyExists error if the hash is already registered_
 
 #### Parameters
 
-| Name           | Type    | Description                |
-| -------------- | ------- | -------------------------- |
-| \_originalHash | bytes32 | The original hash to check |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _originalHash | bytes32 | The original hash to check |
 
-### \_checkTsaHash
+### _checkTsaHash
 
 ```solidity
 function _checkTsaHash(bytes32 _tsaHash) internal view
@@ -757,11 +763,11 @@ _Reverts with HashAlreadyExists error if the hash is already registered_
 
 #### Parameters
 
-| Name      | Type    | Description           |
-| --------- | ------- | --------------------- |
-| \_tsaHash | bytes32 | The TSA hash to check |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _tsaHash | bytes32 | The TSA hash to check |
 
-### \_checkExternalReferenceId
+### _checkExternalReferenceId
 
 ```solidity
 function _checkExternalReferenceId(bytes32 _externalReferenceId) internal view
@@ -773,6 +779,7 @@ _Reverts with ExternalReferenceIdAlreadyExists error if the ID is already regist
 
 #### Parameters
 
-| Name                  | Type    | Description                        |
-| --------------------- | ------- | ---------------------------------- |
-| \_externalReferenceId | bytes32 | The external reference ID to check |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _externalReferenceId | bytes32 | The external reference ID to check |
+

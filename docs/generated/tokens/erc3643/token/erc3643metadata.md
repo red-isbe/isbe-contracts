@@ -3,7 +3,7 @@
 External contract implementing ERC-3643 metadata management.
 
 _Provides public methods to update and retrieve token metadata such as name, symbol,
-onchain identity, and version. Uses METADATA_ROLE for granular permission control._
+     onchain identity, and version. Uses METADATA_ROLE for granular permission control._
 
 ### setName
 
@@ -14,13 +14,13 @@ function setName(string _newName) external
 Updates the token name.
 
 _Restricted to metadata role. Requires non-empty input and unpaused state.
-Updates the ERC20 name storage and emits regulatory compliance event._
+     Updates the ERC20 name storage and emits regulatory compliance event._
 
 #### Parameters
 
-| Name      | Type   | Description                                                                                                                                                                                                              |
-| --------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| \_newName | string | The new name to assign to the token. Requirements: - Caller must have METADATA_ROLE - Contract must not be paused - \_newName must not be empty Emits: - {UpdatedTokenInformation} event with all current token metadata |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _newName | string | The new name to assign to the token. Requirements: - Caller must have METADATA_ROLE - Contract must not be paused - _newName must not be empty Emits: - {UpdatedTokenInformation} event with all current token metadata |
 
 ### setSymbol
 
@@ -31,15 +31,15 @@ function setSymbol(string _newSymbol) external
 Updates the token symbol.
 
 _Restricted to metadata role. Requires non-empty input and unpaused state.
-Updates the ERC20 symbol storage and emits regulatory compliance event._
+     Updates the ERC20 symbol storage and emits regulatory compliance event._
 
 #### Parameters
 
-| Name        | Type   | Description                                                                                                                                                                                                                  |
-| ----------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| \_newSymbol | string | The new symbol to assign to the token. Requirements: - Caller must have METADATA_ROLE - Contract must not be paused - \_newSymbol must not be empty Emits: - {UpdatedTokenInformation} event with all current token metadata |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _newSymbol | string | The new symbol to assign to the token. Requirements: - Caller must have METADATA_ROLE - Contract must not be paused - _newSymbol must not be empty Emits: - {UpdatedTokenInformation} event with all current token metadata |
 
-### \_implementedInterfaces
+### _implementedInterfaces
 
 ```solidity
 function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
@@ -49,9 +49,11 @@ _Declares the interfaces implemented by this facet._
 
 #### Return Values
 
-| Name         | Type     | Description                               |
-| ------------ | -------- | ----------------------------------------- |
-| interfaces\_ | bytes4[] | Array of supported interface identifiers. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | Array of supported interface identifiers. |
+
+
 
 ---
 
@@ -69,9 +71,9 @@ _A pure function that returns an array of supported `bytes4` IDs._
 
 #### Return Values
 
-| Name         | Type     | Description                                  |
-| ------------ | -------- | -------------------------------------------- |
-| interfaces\_ | bytes4[] | An array of supported interface identifiers. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | An array of supported interface identifiers. |
 
 ### businessIdIntrospection
 
@@ -85,9 +87,9 @@ _Returns a `bytes32` key identifying the facet's purpose._
 
 #### Return Values
 
-| Name         | Type    | Description                              |
-| ------------ | ------- | ---------------------------------------- |
-| businessId\_ | bytes32 | The `bytes32` ID for the business logic. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| businessId_ | bytes32 | The `bytes32` ID for the business logic. |
 
 ### selectorsIntrospection
 
@@ -101,9 +103,11 @@ _A pure function that returns a `bytes4[]` array of selectors._
 
 #### Return Values
 
-| Name        | Type     | Description                              |
-| ----------- | -------- | ---------------------------------------- |
-| selectors\_ | bytes4[] | An array of `bytes4` function selectors. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| selectors_ | bytes4[] | An array of `bytes4` function selectors. |
+
+
 
 ---
 
@@ -112,9 +116,9 @@ _A pure function that returns a `bytes4[]` array of selectors._
 Interface for updating and retrieving extended metadata in ERC-3643 tokens.
 
 _Provides setter functions for name, symbol, and onchain identity.
-Includes read-only access to version and onchainID.
-This interface does not expose getters for name or symbol; those are expected
-to be available via the base ERC-20 interface._
+     Includes read-only access to version and onchainID.
+     This interface does not expose getters for name or symbol; those are expected
+     to be available via the base ERC-20 interface._
 
 ### UpdatedTokenInformation
 
@@ -123,10 +127,10 @@ event UpdatedTokenInformation(string _newName, string _newSymbol, uint8 _newDeci
 ```
 
 this event is emitted when the token information is updated.
-the event is emitted by the token init function and by the setTokenInformation function
-`_newName` is the name of the token
-`_newSymbol` is the symbol of the token
-`_newDecimals` is the decimals of the token
+ the event is emitted by the token init function and by the setTokenInformation function
+ `_newName` is the name of the token
+ `_newSymbol` is the symbol of the token
+ `_newDecimals` is the decimals of the token
 
 ### NameSet
 
@@ -138,10 +142,10 @@ Emitted when the token name is updated via {setName}.
 
 #### Parameters
 
-| Name     | Type    | Description                        |
-| -------- | ------- | ---------------------------------- |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
 | operator | address | The account performing the update. |
-| newName  | string  | The new token name.                |
+| newName | string | The new token name. |
 
 ### SymbolSet
 
@@ -153,10 +157,10 @@ Emitted when the token symbol is updated via {setSymbol}.
 
 #### Parameters
 
-| Name      | Type    | Description                        |
-| --------- | ------- | ---------------------------------- |
-| operator  | address | The account performing the update. |
-| newSymbol | string  | The new token symbol.              |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| operator | address | The account performing the update. |
+| newSymbol | string | The new token symbol. |
 
 ### setName
 
@@ -165,9 +169,9 @@ function setName(string _name) external
 ```
 
 @dev sets the token name
-@param \_name the name of token to set
-Only the owner of the token smart contract can call this function
-emits `UpdatedTokenInformation` and `NameSet` events
+ @param _name the name of token to set
+ Only the owner of the token smart contract can call this function
+ emits `UpdatedTokenInformation` and `NameSet` events
 
 ### setSymbol
 
@@ -176,6 +180,7 @@ function setSymbol(string _symbol) external
 ```
 
 @dev sets the token symbol
-@param \_symbol the token symbol to set
-Only the owner of the token smart contract can call this function
-emits `UpdatedTokenInformation` and `SymbolSet` events
+ @param _symbol the token symbol to set
+ Only the owner of the token smart contract can call this function
+ emits `UpdatedTokenInformation` and `SymbolSet` events
+

@@ -33,22 +33,21 @@ abstract contract Pause is IPause, PauseInternal {
         bool _paused
     ) external initializer(_PAUSE_RESOLVER_KEY, _PAUSE_FACET_VERSION) {
         if (_paused) _pause();
-        else _unpause();
     }
 
-    function pause() external whenNotPaused {
-        _checkPauserRoles();
-
+    function pause() external whenNotPaused onlyPauserRole {
         _pause();
-        emit Paused(_msgSender());
+        emit IPause.Paused(_msgSender());
     }
 
-    function unpause() external whenPaused {
-        _checkPauserRoles();
-        _checkAuthorityLevel();
-
+    function unpause()
+        external
+        whenPaused
+        onlyPauserRole
+        onlySufficientAuthorityLevel
+    {
         _unpause();
-        emit Unpaused(_msgSender());
+        emit IPause.Unpaused(_msgSender());
     }
 
     function paused() external view returns (bool) {

@@ -16,7 +16,9 @@ pragma solidity ^0.8.28;
 
 import {DidController} from './DidController.sol';
 import {IDidController} from './interfaces/IDidController.sol';
-import {IEIP2535Introspection} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {
+    IEIP2535Introspection
+} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 import {_DID_CONTROLLER_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
 import {
     _CHECK_CONTROLLER_SELECTOR_1,

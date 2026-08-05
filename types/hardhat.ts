@@ -39,6 +39,7 @@ export interface NetworkConfigWithCurve {
         address: string
         privateKey: string
     }>
+    kmsKeyId?: string
     [key: string]: unknown
 }
 

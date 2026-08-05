@@ -21,6 +21,16 @@ import {Common} from '../core/Common.sol';
 /// @title PauseInternal
 /// @notice Internal logic for pausing mechanism
 abstract contract PauseInternal is Common {
+    modifier onlySufficientAuthorityLevel() {
+        _checkAuthorityLevel();
+        _;
+    }
+
+    modifier onlyPauserRole() {
+        _checkPauserRoles();
+        _;
+    }
+
     function _pause() internal virtual {
         PauseStorage storage pauseStorage = _pauseStorage();
         pauseStorage.pause = true;

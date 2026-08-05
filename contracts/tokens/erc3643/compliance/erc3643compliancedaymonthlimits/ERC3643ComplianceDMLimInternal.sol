@@ -14,8 +14,12 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 pragma solidity ^0.8.28;
 
-import {_ERC3643_COMPLIANCE_DMLIM_STORAGE_POSITION} from '../../../../constants/storagePositions.sol';
-import {DidDocumentDetailedInternal} from '../../../../identity/didregistry/DidDocumentDetailedInternal.sol';
+import {
+    _ERC3643_COMPLIANCE_DMLIM_STORAGE_POSITION
+} from '../../../../constants/storagePositions.sol';
+import {
+    DidDocumentDetailedInternal
+} from '../../../../identity/didregistry/DidDocumentDetailedInternal.sol';
 /**
  * @title ERC3643ComplianceDMLimInternal
  * @notice Internal contract for managing ERC-3643 daily/monthly transfer limits.

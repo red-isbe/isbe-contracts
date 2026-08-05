@@ -14,11 +14,15 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 pragma solidity ^0.8.28;
 
-import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
+import {
+    EnumerableSet
+} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 import {IAnchoringCore, BlockInfo, _buildBlockInfo} from './IAnchoringCore.sol';
 import {Common} from '../../core/Common.sol';
 import {LibCommon} from '../../core/LibCommon.sol';
-import {_ANCHORING_STORAGE_POSITION} from '../../constants/storagePositions.sol';
+import {
+    _ANCHORING_STORAGE_POSITION
+} from '../../constants/storagePositions.sol';
 
 /**
  * @title AnchoringCoreInternal

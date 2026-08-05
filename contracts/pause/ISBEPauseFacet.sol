@@ -16,7 +16,9 @@ pragma solidity ^0.8.28;
 
 import {_PAUSE_RESOLVER_KEY} from '../constants/resolverKeys.sol';
 import {ISBEPause} from './ISBEPause.sol';
-import {IEIP2535Introspection} from '../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {
+    IEIP2535Introspection
+} from '../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 
 /**
  * @title ISBE Pause Facet

@@ -16,7 +16,9 @@ pragma solidity ^0.8.28;
 
 import {ERC203643InternalCommon} from '../ERC203643InternalCommon.sol';
 import {_SPONSOR_ROLE} from '../../../constants/roles.sol';
-import {_ERC203643_TRANSFER_SIGNED_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
+import {
+    _ERC203643_TRANSFER_SIGNED_RESOLVER_KEY
+} from '../../../constants/resolverKeys.sol';
 import {IERC203643TransferSigned} from './IERC203643TransferSigned.sol';
 import {ERC712Internal} from '../../../core/ERC712Internal.sol';
 import {

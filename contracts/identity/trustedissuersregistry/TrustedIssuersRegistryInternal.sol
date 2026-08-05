@@ -112,11 +112,11 @@ abstract contract TrustedIssuersRegistryInternal is DidControllerInternal {
             lastRevisionId,
             newRevisionId_
         ) = _initializeAttributeRevisions(
-                _did,
-                _revisionId,
-                $.attributeMetadataStore[_revisionId],
-                entity.attributes
-            );
+            _did,
+            _revisionId,
+            $.attributeMetadataStore[_revisionId],
+            entity.attributes
+        );
 
         // Resolve TAO hierarchy
         taoHierarchy_ = _resolveTaoHierarchy(

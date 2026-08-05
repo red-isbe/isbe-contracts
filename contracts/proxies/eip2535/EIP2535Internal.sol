@@ -123,7 +123,8 @@ abstract contract EIP2535Internal is
 
     function _itemCut(
         IDiamondCut.ItemCut[] memory _itemCuts,
-        mapping(bytes4 => FacetAddressAndItemPosition) storage _facetAddressAndItemPosition,
+        mapping(bytes4 => FacetAddressAndItemPosition)
+            storage _facetAddressAndItemPosition,
         bytes4[] storage _items
     ) internal {
         uint256 length = _itemCuts.length;
@@ -211,7 +212,8 @@ abstract contract EIP2535Internal is
     function _addItems(
         address _newFacetAddress,
         bytes4[] memory _newItems,
-        mapping(bytes4 => FacetAddressAndItemPosition) storage _facetAddressAndItemPosition,
+        mapping(bytes4 => FacetAddressAndItemPosition)
+            storage _facetAddressAndItemPosition,
         bytes4[] storage _items
     ) internal {
         if (_newFacetAddress == address(0)) {
@@ -246,7 +248,8 @@ abstract contract EIP2535Internal is
     function _replaceItems(
         address _newFacetAddress,
         bytes4[] memory _items,
-        mapping(bytes4 => FacetAddressAndItemPosition) storage _facetAddressAndItemPosition
+        mapping(bytes4 => FacetAddressAndItemPosition)
+            storage _facetAddressAndItemPosition
     ) internal {
         if (_newFacetAddress == address(0)) {
             revert CannotReplaceItemsFromFacetWithZeroAddress(_items);
@@ -282,7 +285,8 @@ abstract contract EIP2535Internal is
     function _removeItems(
         address _emptyAddress,
         bytes4[] memory _oldItems,
-        mapping(bytes4 => FacetAddressAndItemPosition) storage _facetAddressAndItemPosition,
+        mapping(bytes4 => FacetAddressAndItemPosition)
+            storage _facetAddressAndItemPosition,
         bytes4[] storage _items
     ) internal {
         uint256 itemCount = _items.length;
@@ -497,7 +501,8 @@ abstract contract EIP2535Internal is
     }
 
     function _removeAllItems(
-        mapping(bytes4 => FacetAddressAndItemPosition) storage _facetAddressAndItemPosition,
+        mapping(bytes4 => FacetAddressAndItemPosition)
+            storage _facetAddressAndItemPosition,
         bytes4[] storage _items
     ) private {
         uint256 itemsLength = _items.length;

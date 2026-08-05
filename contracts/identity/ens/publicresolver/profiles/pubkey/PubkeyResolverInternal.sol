@@ -15,8 +15,10 @@ limitations under the License.
 pragma solidity ^0.8.28;
 
 import {EnsResolverInternal} from '../../ensresolver/EnsResolverInternal.sol';
-// solhint-disable-next-line no-unused-import
-import {_ENS_PUBKEY_RESOLVER_STORAGE_POSITION} from '../../../../../constants/storagePositions.sol';
+// prettier-ignore
+import {
+    _ENS_PUBKEY_RESOLVER_STORAGE_POSITION // solhint-disable-line no-unused-import
+} from '../../../../../constants/storagePositions.sol';
 
 /**
  * @title ENS Public Key Resolver Internal Implementation

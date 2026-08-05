@@ -13,14 +13,14 @@ function burn(uint256 _amount) external
 Burns a specific amount of tokens from the caller's account.
 
 _Reduces the caller's token balance and the total supply by the specified `amount`.
-The caller must have at least the specified `amount` of tokens in their account.
-Implementations should emit a `Transfer` event to indicate tokens were burned._
+     The caller must have at least the specified `amount` of tokens in their account.
+     Implementations should emit a `Transfer` event to indicate tokens were burned._
 
 #### Parameters
 
-| Name     | Type    | Description                   |
-| -------- | ------- | ----------------------------- |
-| \_amount | uint256 | The amount of tokens to burn. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _amount | uint256 | The amount of tokens to burn. |
 
 ### burnFrom
 
@@ -31,21 +31,23 @@ function burnFrom(address _account, uint256 _amount) external
 Burns a specific amount of tokens from another account, using an allowance.
 
 _Reduces the balance of `account` and the total supply by the specified `amount`.
-The caller must be allowed to spend at least `amount` of tokens on behalf of `account`.
-Implementations should emit a `Transfer` event to indicate tokens were burned._
+     The caller must be allowed to spend at least `amount` of tokens on behalf of `account`.
+     Implementations should emit a `Transfer` event to indicate tokens were burned._
 
 #### Parameters
 
-| Name      | Type    | Description                                               |
-| --------- | ------- | --------------------------------------------------------- |
-| \_account | address | The address of the account whose tokens are to be burned. |
-| \_amount  | uint256 | The amount of tokens to burn.                             |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _account | address | The address of the account whose tokens are to be burned. |
+| _amount | uint256 | The amount of tokens to burn. |
 
-### \_implementedInterfaces
+### _implementedInterfaces
 
 ```solidity
 function _implementedInterfaces() internal pure virtual returns (bytes4[] interfaces_)
 ```
+
+
 
 ---
 
@@ -63,9 +65,9 @@ _A pure function that returns an array of supported `bytes4` IDs._
 
 #### Return Values
 
-| Name         | Type     | Description                                  |
-| ------------ | -------- | -------------------------------------------- |
-| interfaces\_ | bytes4[] | An array of supported interface identifiers. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| interfaces_ | bytes4[] | An array of supported interface identifiers. |
 
 ### businessIdIntrospection
 
@@ -79,9 +81,9 @@ _Returns a `bytes32` key identifying the facet's purpose._
 
 #### Return Values
 
-| Name         | Type    | Description                              |
-| ------------ | ------- | ---------------------------------------- |
-| businessId\_ | bytes32 | The `bytes32` ID for the business logic. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| businessId_ | bytes32 | The `bytes32` ID for the business logic. |
 
 ### selectorsIntrospection
 
@@ -95,20 +97,24 @@ _A pure function that returns a `bytes4[]` array of selectors._
 
 #### Return Values
 
-| Name        | Type     | Description                              |
-| ----------- | -------- | ---------------------------------------- |
-| selectors\_ | bytes4[] | An array of `bytes4` function selectors. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| selectors_ | bytes4[] | An array of `bytes4` function selectors. |
+
+
 
 ---
 
 ## IERC20Burnable
 
 Interface for ERC20 tokens that support token burning.
-Allows users or approved accounts to reduce the total token supply.
+        Allows users or approved accounts to reduce the total token supply.
 
-_This interface defines two methods: - `burn`: Burns a specific amount of tokens from the caller's account. - `burnFrom`: Burns a specific amount of tokens from another account, using an allowance mechanism.
-Implementing contracts are expected to handle the necessary checks and emissions of events
-like `Transfer` to reflect changes in token balances and total supply._
+_This interface defines two methods:
+     - `burn`: Burns a specific amount of tokens from the caller's account.
+     - `burnFrom`: Burns a specific amount of tokens from another account, using an allowance mechanism.
+     Implementing contracts are expected to handle the necessary checks and emissions of events
+     like `Transfer` to reflect changes in token balances and total supply._
 
 ### Burned
 
@@ -120,10 +126,10 @@ Emitted when tokens are burned from the caller's balance.
 
 #### Parameters
 
-| Name      | Type    | Description                           |
-| --------- | ------- | ------------------------------------- |
-| \_account | address | The address whose tokens were burned. |
-| \_amount  | uint256 | The amount of tokens burned.          |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _account | address | The address whose tokens were burned. |
+| _amount | uint256 | The amount of tokens burned. |
 
 ### BurnedFrom
 
@@ -135,11 +141,11 @@ Emitted when tokens are burned from another account via allowance.
 
 #### Parameters
 
-| Name       | Type    | Description                           |
-| ---------- | ------- | ------------------------------------- |
-| \_operator | address | The address executing the burn.       |
-| \_account  | address | The address whose tokens were burned. |
-| \_amount   | uint256 | The amount of tokens burned.          |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _operator | address | The address executing the burn. |
+| _account | address | The address whose tokens were burned. |
+| _amount | uint256 | The amount of tokens burned. |
 
 ### burn
 
@@ -150,14 +156,14 @@ function burn(uint256 _amount) external
 Burns a specific amount of tokens from the caller's account.
 
 _Reduces the caller's token balance and the total supply by the specified `amount`.
-The caller must have at least the specified `amount` of tokens in their account.
-Implementations should emit a `Transfer` event to indicate tokens were burned._
+     The caller must have at least the specified `amount` of tokens in their account.
+     Implementations should emit a `Transfer` event to indicate tokens were burned._
 
 #### Parameters
 
-| Name     | Type    | Description                   |
-| -------- | ------- | ----------------------------- |
-| \_amount | uint256 | The amount of tokens to burn. |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _amount | uint256 | The amount of tokens to burn. |
 
 ### burnFrom
 
@@ -168,12 +174,13 @@ function burnFrom(address _account, uint256 _amount) external
 Burns a specific amount of tokens from another account, using an allowance.
 
 _Reduces the balance of `account` and the total supply by the specified `amount`.
-The caller must be allowed to spend at least `amount` of tokens on behalf of `account`.
-Implementations should emit a `Transfer` event to indicate tokens were burned._
+     The caller must be allowed to spend at least `amount` of tokens on behalf of `account`.
+     Implementations should emit a `Transfer` event to indicate tokens were burned._
 
 #### Parameters
 
-| Name      | Type    | Description                                               |
-| --------- | ------- | --------------------------------------------------------- |
-| \_account | address | The address of the account whose tokens are to be burned. |
-| \_amount  | uint256 | The amount of tokens to burn.                             |
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| _account | address | The address of the account whose tokens are to be burned. |
+| _amount | uint256 | The amount of tokens to burn. |
+

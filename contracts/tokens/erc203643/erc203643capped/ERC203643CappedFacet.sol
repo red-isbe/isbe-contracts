@@ -14,9 +14,13 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 pragma solidity ^0.8.28;
 
-import {_ERC203643_CAPPED_RESOLVER_KEY} from '../../../constants/resolverKeys.sol';
+import {
+    _ERC203643_CAPPED_RESOLVER_KEY
+} from '../../../constants/resolverKeys.sol';
 import {ERC203643Capped} from './ERC203643Capped.sol';
-import {IEIP2535Introspection} from '../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {
+    IEIP2535Introspection
+} from '../../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 
 /// @title ERC203643CappedFacet
 /// @notice Diamond facet for unified ERC20/ERC3643 capped token functionality

@@ -16,7 +16,9 @@ pragma solidity ^0.8.28;
 
 import {_ACCESS_CONTROL_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
 import {AccessControl} from './AccessControl.sol';
-import {IEIP2535Introspection} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {
+    IEIP2535Introspection
+} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 
 /// @title AccessControlFacet
 /// @notice Access Control EOA Facet smart contract

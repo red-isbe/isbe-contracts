@@ -13,9 +13,13 @@ limitations under the License.
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.28;
 
-import {SmartAccountInternal} from '../../accountabstraction/smartaccount/SmartAccountInternal.sol';
+import {
+    SmartAccountInternal
+} from '../../accountabstraction/smartaccount/SmartAccountInternal.sol';
 import {IEntryPoint} from '../../accountabstraction/entrypoint/IEntryPoint.sol';
-import {PackedUserOperation} from '@account-abstraction/contracts/interfaces/PackedUserOperation.sol';
+import {
+    PackedUserOperation
+} from '@account-abstraction/contracts/interfaces/PackedUserOperation.sol';
 
 contract SmartAccountTestWrapper is SmartAccountInternal {
     event UserOpValidated(uint256 result);
@@ -56,5 +60,7 @@ contract SmartAccountTestWrapper is SmartAccountInternal {
         override
         returns (bytes4[] memory interfaces_)
     // solhint-disable-next-line no-empty-blocks
-    {}
+    {
+
+    }
 }

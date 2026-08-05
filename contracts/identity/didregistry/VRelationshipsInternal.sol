@@ -14,7 +14,9 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 pragma solidity ^0.8.28;
 
-import {_DID_VRELATIONSHIPS_STORAGE_POSITION} from '../../constants/storagePositions.sol';
+import {
+    _DID_VRELATIONSHIPS_STORAGE_POSITION
+} from '../../constants/storagePositions.sol';
 import {
     _AUTHENTICATION_RELATIONSHIP,
     _ASSERTION_RELATIONSHIP,
@@ -26,8 +28,12 @@ import {ISBEContext} from '../../utils/ISBEContext.sol';
 import {LibCommon} from '../../core/LibCommon.sol';
 import {IDidDocumentDetailed} from './interfaces/IDidDocumentDetailed.sol';
 import {IDidVerificationMethod} from './interfaces/IDidVerificationMethod.sol';
-import {IDidVerificationRelationship} from './interfaces/IDidVerificationRelationship.sol';
-import {_DID_VRELATIONSHIPS_STORAGE_POSITION} from '../../constants/storagePositions.sol';
+import {
+    IDidVerificationRelationship
+} from './interfaces/IDidVerificationRelationship.sol';
+import {
+    _DID_VRELATIONSHIPS_STORAGE_POSITION
+} from '../../constants/storagePositions.sol';
 
 /**
  * @title Verification Relationships Internal Management
@@ -71,10 +77,9 @@ abstract contract VRelationshipsInternal is ISBEContext {
         uint256 _notAfter
     ) internal {
         _vRelationshipsStorage()
-            .didsByVRelationship[
-                _buildVerificationRelationshipId(_name, _vMethodId)
-            ][_indexDid]
-            .notAfter = _notAfter;
+        .didsByVRelationship[
+            _buildVerificationRelationshipId(_name, _vMethodId)
+        ][_indexDid].notAfter = _notAfter;
     }
 
     function _getDidsByVerificationRelationship(

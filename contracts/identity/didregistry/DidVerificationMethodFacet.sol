@@ -16,8 +16,12 @@ pragma solidity ^0.8.28;
 
 import {DidVerificationMethod} from './DidVerificationMethod.sol';
 import {IDidVerificationMethod} from './interfaces/IDidVerificationMethod.sol';
-import {IEIP2535Introspection} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
-import {_DID_VERIFICATION_METHOD_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
+import {
+    IEIP2535Introspection
+} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {
+    _DID_VERIFICATION_METHOD_RESOLVER_KEY
+} from '../../constants/resolverKeys.sol';
 
 /**
  * @title DID Verification Method Facet

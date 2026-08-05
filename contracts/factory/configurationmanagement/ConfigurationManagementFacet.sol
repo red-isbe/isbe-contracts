@@ -15,8 +15,12 @@ limitations under the License.
 pragma solidity ^0.8.28;
 
 import {ConfigurationManagement} from './ConfigurationManagement.sol';
-import {IEIP2535Introspection} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
-import {_CONFIGURATION_MANAGEMENT_RESOLVER_KEY} from '../../constants/resolverKeys.sol';
+import {
+    IEIP2535Introspection
+} from '../../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
+import {
+    _CONFIGURATION_MANAGEMENT_RESOLVER_KEY
+} from '../../constants/resolverKeys.sol';
 
 /**
  * @title Configuration Management Facet
