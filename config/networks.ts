@@ -109,10 +109,8 @@ export function getNetworkConfigs(): NetworksConfig {
 
         isbe: {
             url: ISBE_URL,
-            chainId: buildChainId(0),
+            chainId: buildChainId(11073),
             accounts: CURVE === 'secp256k1' ? accounts : secp256r1PrivateKeys,
-            gasPrice: 2_000,
-            gas: 20_000_000,
             blockGasLimit: 0x1e84800, // 32,000,000
             curve: CURVE,
             secp256r1Accounts,
