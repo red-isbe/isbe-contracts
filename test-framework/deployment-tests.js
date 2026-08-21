@@ -412,7 +412,7 @@ localhost: {
     chainId: ${chainId},
     accounts: ${curve === 'secp256r1' ? 'SECP256R1_ACCOUNT_KEYS' : 'ACCOUNTS'},
     gasPrice: 0,
-    gas: 100000000,
+    gas: 10_000_000,
     curve: '${curve}',
     ${curve === 'secp256r1' ? 'secp256r1Accounts: SECP256R1_ACCOUNTS,' : ''}
 }`

@@ -1,3 +1,4 @@
 npm run license:check
+npm run gas:check
 npx lint-staged
 npx hardhat test --parallel

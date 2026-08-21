@@ -19,8 +19,12 @@ import {
 } from 'ethers'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { KMSClient } from '@aws-sdk/client-kms'
-import { getEthAddressFromKMS, createSignature } from '@rumblefishdev/eth-signer-kms'
+import {
+    getEthAddressFromKMS,
+    createSignature,
+} from '@rumblefishdev/eth-signer-kms'
 import { ISignatureProvider } from './ISignatureProvider'
+import { DEFAULT_TX_GAS_LIMIT } from '../../../utils/constants'
 
 /**
  * Ethers v6 signer backed by AWS KMS.
@@ -59,19 +63,25 @@ class KmsEthersSigner extends ethers.AbstractSigner {
         const { from: _from, ...txWithoutFrom } = populated
         const transaction = ethers.Transaction.from(txWithoutFrom)
         // createSignature returns { r, s, v } where v is 0 or 1 (recovery param)
-        const sig = await createSignature({
+        const sig = (await createSignature({
             kmsInstance: this.kmsClient,
             keyId: this.kmsKeyId,
             message: transaction.unsignedHash,
             address,
-        }) as { r: string; s: string; v: number }
-        transaction.signature = ethers.Signature.from({ r: sig.r, s: sig.s, yParity: sig.v as 0 | 1 })
+        })) as { r: string; s: string; v: number }
+        transaction.signature = ethers.Signature.from({
+            r: sig.r,
+            s: sig.s,
+            yParity: sig.v as 0 | 1,
+        })
         return transaction.serialized
     }
 
-    async sendTransaction(tx: TransactionRequest): Promise<TransactionResponse> {
+    async sendTransaction(
+        tx: TransactionRequest
+    ): Promise<TransactionResponse> {
         if (!tx.gasLimit) {
-            tx = { ...tx, gasLimit: 25_000_000 }
+            tx = { ...tx, gasLimit: DEFAULT_TX_GAS_LIMIT }
         }
         const signedTx = await this.signTransaction(tx)
         return this.provider!.broadcastTransaction(signedTx)
@@ -106,8 +116,13 @@ export class KmsSignatureProvider implements ISignatureProvider {
 
     async getSigner(): Promise<Signer> {
         if (!this.signer) {
-            const kmsKeyId = (this.hre.network.config as unknown as Record<string, unknown>)['kmsKeyId'] as string
-            this.signer = new KmsEthersSigner(kmsKeyId, this.hre.ethers.provider)
+            const kmsKeyId = (
+                this.hre.network.config as unknown as Record<string, unknown>
+            )['kmsKeyId'] as string
+            this.signer = new KmsEthersSigner(
+                kmsKeyId,
+                this.hre.ethers.provider
+            )
         }
         return this.signer
     }
@@ -130,12 +145,17 @@ export class KmsSignatureProvider implements ISignatureProvider {
         let deployData = bytecode
         if (constructorArgs.length > 0 && constructorTypes.length > 0) {
             const abiCoder = ethers.AbiCoder.defaultAbiCoder()
-            const encodedArgs = abiCoder.encode(constructorTypes, constructorArgs)
+            const encodedArgs = abiCoder.encode(
+                constructorTypes,
+                constructorArgs
+            )
             deployData = bytecode + encodedArgs.slice(2)
         }
 
         const factory = new ethers.ContractFactory([], deployData, signer)
-        const contract = await factory.deploy({ gasLimit: 25_000_000 })
+        const contract = await factory.deploy({
+            gasLimit: DEFAULT_TX_GAS_LIMIT,
+        })
         await contract.waitForDeployment()
 
         const address = await contract.getAddress()
@@ -171,7 +191,9 @@ export class KmsSignatureProvider implements ISignatureProvider {
         // @rumblefishdev/hardhat-kms-signer's extendConfig copies kmsKeyId from
         // userConfig into hre.network.config, so we can read it from the resolved config.
         return Boolean(
-            (hre.network.config as unknown as Record<string, unknown>)['kmsKeyId']
+            (hre.network.config as unknown as Record<string, unknown>)[
+                'kmsKeyId'
+            ]
         )
     }
 }

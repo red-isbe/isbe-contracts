@@ -236,8 +236,13 @@ run_phase3() {
 
 # Phase 4: Final License Check
 run_phase4() {
-    log_phase "[PHASE 4] Final license verification..."
+    log_phase "[PHASE 4] Final license and gas limit verification..."
     start_phase
+
+    # EIP-7825 (Osaka): no transaction may declare more than 2^24 gas.
+    # Cheap, fail-fast check: it only reads files.
+    log_info "Checking transaction gas limits (EIP-7825)..."
+    npm run gas:check
 
     log_info "Running final license check..."
     

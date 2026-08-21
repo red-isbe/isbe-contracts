@@ -319,3 +319,20 @@ export const OPTIMISM_CHAIN = 10
 
 // Hardhat local network
 export const HARDHAT_CHAIN = 31337
+
+// ---------------------------------------------------------------------------
+// Transaction gas limits (EIP-7825, Osaka hard fork)
+// ---------------------------------------------------------------------------
+// EIP-7825 caps the gas limit of a single transaction at 2^24 gas units.
+// From the Osaka activation onwards, any transaction declaring a gas limit
+// above this value is rejected by the node, regardless of the block gas limit.
+// See https://eips.ethereum.org/EIPS/eip-7825
+export const MAX_TX_GAS_LIMIT = 16_777_216
+
+// Default gas limit for deployment and governance transactions.
+// Kept well below MAX_TX_GAS_LIMIT while leaving headroom over the most
+// expensive observed operations (worst deployment ~7.3M, worst call ~5.6M,
+// see docs/generated/gas-usage-summary.md). The migration documentation
+// warns that 5M is not enough for some transactions, so do not lower this
+// value without re-validating the governance bootstrap.
+export const DEFAULT_TX_GAS_LIMIT = 10_000_000

@@ -14,6 +14,7 @@ import { Signer, TransactionRequest, TransactionResponse, ethers } from 'ethers'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { ISignatureProvider } from './ISignatureProvider'
 import { NetworkConfigWithCurve } from '../../../types/hardhat'
+import { DEFAULT_TX_GAS_LIMIT } from '../../../utils/constants'
 
 /**
  * Standard secp256k1 signature provider using Hardhat's built-in signers
@@ -65,7 +66,7 @@ export class Secp256k1SignatureProvider implements ISignatureProvider {
         }
 
         // Deploy using ContractFactory with explicit gas limit to prevent "Internal error" on non-validator nodes
-        const deployOptions = { gasLimit: 25_000_000 }
+        const deployOptions = { gasLimit: DEFAULT_TX_GAS_LIMIT }
         const factory = new ethers.ContractFactory([], deployData, signer)
         const contract = await factory.deploy(deployOptions)
         await contract.waitForDeployment()
@@ -82,7 +83,7 @@ export class Secp256k1SignatureProvider implements ISignatureProvider {
         const signer = await this.getSigner()
         // Add explicit gas limit if not already set to prevent "Internal error" on non-validator nodes
         if (!transaction.gasLimit) {
-            transaction.gasLimit = 25_000_000
+            transaction.gasLimit = DEFAULT_TX_GAS_LIMIT
         }
         return await signer.sendTransaction(transaction)
     }

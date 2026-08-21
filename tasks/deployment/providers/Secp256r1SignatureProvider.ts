@@ -15,6 +15,7 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { ISignatureProvider } from './ISignatureProvider'
 import { NetworkConfigWithCurve } from '../../../types/hardhat'
 import { Secp256r1Wallet } from '../../../utils/Secp256r1Wallet'
+import { DEFAULT_TX_GAS_LIMIT } from '../../../utils/constants'
 
 /**
  * Secp256r1 signature provider using raw transactions
@@ -101,7 +102,7 @@ export class Secp256r1SignatureProvider implements ISignatureProvider {
         const deployTx = {
             nonce: nonce,
             gasPrice: hre.config.networks[hre.network.name].gasPrice,
-            gasLimit: 20_000_000n,
+            gasLimit: BigInt(DEFAULT_TX_GAS_LIMIT),
             to: undefined, // Contract deployment
             value: 0n,
             data: deployData,

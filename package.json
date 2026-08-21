@@ -72,7 +72,8 @@
         "deployAll": "npx hardhat deployAllClean --nodeployusecases",
         "toc:generate": "npx ts-node scripts/generate-toc.ts",
         "license:check": "npx ts-node scripts/licenseManagement.ts check",
-        "license:generate": "npx ts-node scripts/licenseManagement.ts addlicense"
+        "license:generate": "npx ts-node scripts/licenseManagement.ts addlicense",
+        "gas:check": "npx ts-node scripts/checkGasLimits.ts"
     },
     "repository": {
         "type": "git",
