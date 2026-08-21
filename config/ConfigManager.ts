@@ -14,6 +14,7 @@ import { AccountManager } from './AccountManager'
 import { getNetworkSummary } from './networks'
 import { ValidationError, ConfigurationError } from '../utils/errors'
 import { logger } from '../utils/logger'
+import { DEFAULT_TX_GAS_LIMIT } from '../utils/constants'
 
 /**
  * Environment-specific configuration settings
@@ -72,7 +73,7 @@ export interface AppConfig {
  */
 const environments: Record<string, EnvironmentConfig> = {
     development: {
-        gasLimit: 30000000,
+        gasLimit: DEFAULT_TX_GAS_LIMIT,
         gasPrice: 0,
         timeout: 60000,
         retries: 1,
@@ -84,7 +85,7 @@ const environments: Record<string, EnvironmentConfig> = {
         },
     },
     testing: {
-        gasLimit: 30000000,
+        gasLimit: DEFAULT_TX_GAS_LIMIT,
         gasPrice: 1,
         timeout: 60000,
         retries: 3,

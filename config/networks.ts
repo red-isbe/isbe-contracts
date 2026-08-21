@@ -11,6 +11,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ----------------------------------------------------------------------------------- */
 import { AccountManager } from './AccountManager'
+import { DEFAULT_TX_GAS_LIMIT } from '../utils/constants'
 import type {
     NetworkConfigWithCurve,
     HardhatNetworkConfig,
@@ -80,7 +81,7 @@ export function getNetworkConfigs(): NetworksConfig {
             chainId: 2222,
             accounts,
             gasPrice: 0,
-            gas: 10_000_0000,
+            gas: DEFAULT_TX_GAS_LIMIT,
             blockGasLimit: 30_000_000,
             curve: CURVE,
         } as NetworkConfigWithCurve,
@@ -91,7 +92,7 @@ export function getNetworkConfigs(): NetworksConfig {
             chainId: buildChainId(11073),
             accounts,
             gasPrice: 2_000,
-            gas: 20_000_000,
+            gas: DEFAULT_TX_GAS_LIMIT,
             blockGasLimit: 0x1e84800, // 32,000,000
             curve: CURVE,
         } as NetworkConfigWithCurve,
@@ -101,7 +102,7 @@ export function getNetworkConfigs(): NetworksConfig {
             chainId: buildChainId(10962),
             accounts: secp256r1PrivateKeys,
             gasPrice: 2_000,
-            gas: 20_000_000,
+            gas: DEFAULT_TX_GAS_LIMIT,
             blockGasLimit: 0x1e84800, // 32,000,000
             curve: CURVE,
             secp256r1Accounts,
@@ -123,7 +124,7 @@ export function getNetworkConfigs(): NetworksConfig {
             chainId: 2024,
             accounts,
             gasPrice: 0,
-            gas: 100000000,
+            gas: DEFAULT_TX_GAS_LIMIT,
             blockGasLimit: 0x1e84800, // 32,000,000
             curve: CURVE,
         } as NetworkConfigWithCurve,
@@ -134,7 +135,7 @@ export function getNetworkConfigs(): NetworksConfig {
             chainId: 1003,
             accounts,
             gasPrice: 0,
-            gas: 100000000,
+            gas: DEFAULT_TX_GAS_LIMIT,
             blockGasLimit: 18800000,
             curve: CURVE,
         } as NetworkConfigWithCurve,
@@ -145,7 +146,7 @@ export function getNetworkConfigs(): NetworksConfig {
             chainId: 2222,
             accounts: secp256r1PrivateKeys,
             gasPrice: 0,
-            gas: 20_000_000,
+            gas: DEFAULT_TX_GAS_LIMIT,
             blockGasLimit: 0x1e84800, // 32,000,000
             curve: CURVE,
             secp256r1Accounts,
@@ -157,7 +158,7 @@ export function getNetworkConfigs(): NetworksConfig {
             chainId: 2222,
             accounts: secp256r1PrivateKeys,
             gasPrice: 0,
-            gas: 50000000,
+            gas: DEFAULT_TX_GAS_LIMIT,
             blockGasLimit: 0x1fffffffffffff,
             timeout: 60000,
             httpTimeout: 60000,
@@ -170,7 +171,7 @@ export function getNetworkConfigs(): NetworksConfig {
             chainId: 2222,
             accounts,
             gasPrice: 0,
-            gas: 100000000,
+            gas: DEFAULT_TX_GAS_LIMIT,
             blockGasLimit: 0x1e84800,
             curve: CURVE,
         } as NetworkConfigWithCurve,

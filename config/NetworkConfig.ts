@@ -31,6 +31,7 @@ import type {
     Secp256r1Account,
 } from '../types/networks'
 import { ValidationError } from '../utils/errors'
+import { DEFAULT_TX_GAS_LIMIT } from '../utils/constants'
 import { logger } from '../utils/logger'
 
 /**
@@ -194,7 +195,7 @@ export class NetworkConfigManager {
             chainId: config.chainId,
             accounts,
             gasPrice: config.gasPrice ?? 0,
-            gas: config.gas ?? 100000000,
+            gas: config.gas ?? DEFAULT_TX_GAS_LIMIT,
             blockGasLimit: config.blockGasLimit ?? 30000000,
             curve: config.curve,
         }

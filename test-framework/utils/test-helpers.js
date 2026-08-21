@@ -33,7 +33,7 @@ class TestHelpers {
         chainId: ${chainId},
         accounts: SECP256R1_ACCOUNT_KEYS,
         gasPrice: 0,
-        gas: 100000000,
+        gas: 10_000_000,
         curve: 'secp256r1',
         secp256r1Accounts: SECP256R1_ACCOUNTS,
     }`
@@ -43,7 +43,7 @@ class TestHelpers {
         chainId: ${chainId},
         accounts: ACCOUNTS,
         gasPrice: 0,
-        gas: 100000000,
+        gas: 10_000_000,
         curve: 'secp256k1',
     }`
         }
