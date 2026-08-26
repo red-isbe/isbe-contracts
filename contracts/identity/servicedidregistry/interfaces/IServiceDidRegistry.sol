@@ -350,6 +350,30 @@ interface IServiceDidRegistry {
     ) external view returns (bool active);
 
     /**
+     * @notice Derives the address of the signing key of a service identity
+     * @dev The record stores coordinates, not an address, because a resolver needs `x`
+     *      and `y` to emit a verification method on either curve. This getter derives
+     *      the address the organisational registry would assign to the same key, so
+     *      that a consumer reading the contract directly — a block explorer, an
+     *      external verifier — can build `blockchainAccountId` without hashing the
+     *      coordinates itself. Nothing is stored: deriving on read makes it impossible
+     *      for the address to drift from the key it belongs to.
+     *
+     *      The value is only meaningful when `ellipticType` is the curve the network
+     *      operates on. For a key on any other curve no account can transact with it,
+     *      and a resolver must emit `JsonWebKey2020` with the coordinates instead of a
+     *      `blockchainAccountId`.
+     *
+     *      Reverts with `ServiceDidNotFound` for unregistered identifiers, matching
+     *      `getServiceDid`.
+     * @param serviceDid The service identifier to look up
+     * @return signingKeyAddress The address derived from the stored coordinates
+     */
+    function signingKeyAddressOf(
+        bytes32 serviceDid
+    ) external view returns (address signingKeyAddress);
+
+    /**
      * @notice Derives the identifier that a controller and nonce produce
      * @dev Exposed so that libraries and clients can reproduce a known identifier
      *      off-chain. Nonces start at one. The derivation is

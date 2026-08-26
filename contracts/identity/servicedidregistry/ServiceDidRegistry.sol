@@ -243,6 +243,18 @@ abstract contract ServiceDidRegistry is
         return _isActiveServiceDid(_serviceDid);
     }
 
+    function signingKeyAddressOf(
+        bytes32 _serviceDid
+    )
+        external
+        view
+        override
+        onlyServiceDidExists(_serviceDid)
+        returns (address signingKeyAddress)
+    {
+        return _signingKeyAddressOf(_serviceDid);
+    }
+
     function computeServiceDid(
         bytes32 _controllerDid,
         uint64 _nonce

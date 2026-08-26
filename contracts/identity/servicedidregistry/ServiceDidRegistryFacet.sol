@@ -55,7 +55,7 @@ contract ServiceDidRegistryFacet is ServiceDidRegistry, IEIP2535Introspection {
     }
 
     /**
-     * @dev Nine selectors. `getServiceDidCountByController` was dropped because
+     * @dev Ten selectors. `getServiceDidCountByController` was dropped because
      *      `getServiceDidsByController` already returns `total`, which is the
      *      convention of this repository: a five-tuple getter carries no companion
      *      counter, a bare-array one does. Each selector is frozen into the Diamond's
@@ -67,8 +67,9 @@ contract ServiceDidRegistryFacet is ServiceDidRegistry, IEIP2535Introspection {
         override
         returns (bytes4[] memory selectors_)
     {
-        uint256 selectorsLength = 9;
+        uint256 selectorsLength = 10;
         selectors_ = new bytes4[](selectorsLength);
+        selectors_[--selectorsLength] = this.signingKeyAddressOf.selector;
         selectors_[--selectorsLength] = this
             .initializeServiceDidRegistry
             .selector;

@@ -679,6 +679,70 @@ describe('ServiceDidRegistry', () => {
         })
     })
 
+    describe('signingKeyAddressOf', () => {
+        it('GIVEN a registered service WHEN asking THEN it is the address of the key that was registered', async () => {
+            const { serviceDidRegistry, parentDid } = await registryFixture()
+            const key = freeKey(40)
+
+            await serviceDidRegistry.registerServiceDid(
+                parentDid,
+                key.publicKey,
+                EllipticType.SECP_256_K1,
+                ethers.id('con direccion'),
+                NEVER_EXPIRES
+            )
+            const serviceDid = await serviceDidRegistry.computeServiceDid(
+                parentDid,
+                1
+            )
+
+            // Derived, never stored — so it cannot drift from the coordinates.
+            expect(
+                await serviceDidRegistry.signingKeyAddressOf(serviceDid)
+            ).to.equal(key.wallet.address)
+        })
+
+        it('GIVEN a rotation WHEN asking THEN it follows the new key', async () => {
+            const { serviceDidRegistry, parentDid } = await registryFixture()
+            const original = freeKey(41)
+            const replacement = freeKey(42)
+
+            await serviceDidRegistry.registerServiceDid(
+                parentDid,
+                original.publicKey,
+                EllipticType.SECP_256_K1,
+                ethers.id('a rotar'),
+                NEVER_EXPIRES
+            )
+            const serviceDid = await serviceDidRegistry.computeServiceDid(
+                parentDid,
+                1
+            )
+            await serviceDidRegistry.rotateSigningKey(
+                serviceDid,
+                replacement.publicKey,
+                EllipticType.SECP_256_K1
+            )
+
+            expect(
+                await serviceDidRegistry.signingKeyAddressOf(serviceDid)
+            ).to.equal(replacement.wallet.address)
+        })
+
+        it('GIVEN an unknown identifier WHEN asking THEN it reverts', async () => {
+            const { serviceDidRegistry } = await registryFixture()
+
+            await expect(
+                serviceDidRegistry.signingKeyAddressOf(
+                    ethers.id('no registrado')
+                )
+            ).to.be.revertedWithCustomError(
+                serviceDidRegistry,
+                'ServiceDidNotFound'
+            )
+        })
+    })
+
     describe('initializeServiceDidRegistry', () => {
         async function uninitialised() {
             const base = await loadFixture(deployServiceDidRegistryFixture)

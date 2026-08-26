@@ -282,6 +282,24 @@ abstract contract ServiceDidRegistryInternal is DidControllerInternal {
         return record.expiresAt == 0 || _blockTimestamp() < record.expiresAt;
     }
 
+    /**
+     * @notice Derives the address of the signing key of a service identity
+     * @dev Derived on read rather than stored: the address is a function of the
+     *      coordinates, so keeping a copy would only create a second source of truth
+     *      that a faulty rotation could leave disagreeing with the key itself. It would
+     *      also cost a seventh storage slot, since neither packed slot has room for
+     *      another 160 bits
+     * @param _serviceDid The service identifier to look up
+     * @return address The address derived from the stored coordinates
+     */
+    function _signingKeyAddressOf(
+        bytes32 _serviceDid
+    ) internal view returns (address) {
+        IServiceDidRegistry.ServiceDidRecord
+            storage record = _serviceDidRegistryStorage().records[_serviceDid];
+        return _signingKeyAddress(record.pubKeyX, record.pubKeyY);
+    }
+
     function _checkServiceDidExists(bytes32 _serviceDid) internal view {
         require(
             _serviceDidRegistryStorage().records[_serviceDid].exists,
