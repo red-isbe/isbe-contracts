@@ -53,6 +53,7 @@ import {
     randomBaseDocument,
     proofToDid,
     generateProof,
+    generateEip191Proof,
     EMPTY_VALUES,
 } from '../support'
 import {
@@ -1078,6 +1079,156 @@ describe('DiDRegistry', function () {
                         .to.emit(didRegistry, 'AlsoKnownAsUpdated')
                         .withArgs(did, ALSO_KNOWN_AS_UPDATED)
                 })
+            })
+        })
+
+        describe('insertFirstDidDocument with an ERC-191 proof', () => {
+            const ALSO_KNOWN_AS_EXAMPLE = 'irn:orgs:inetum'
+            let wallet: HDNodeWallet
+            let rawProof: string
+            let eip191Proof: string
+
+            beforeEach(async () => {
+                wallet = walletOfFirstSigner()
+                randomizeDidDocument(wallet)
+
+                await didRegistry.initializeDiDRegistry(
+                    EllipticType.SECP_256_K1
+                )
+
+                rawProof = generateProof(wallet)
+                eip191Proof = await generateEip191Proof(wallet)
+            })
+
+            it('GIVEN a proof wrapped in the ERC-191 personal_sign envelope WHEN calling insertFirstDidDocument THEN it succeeds', async () => {
+                await expect(
+                    didRegistry.insertFirstDidDocument(
+                        proofToDid(eip191Proof),
+                        baseDocument,
+                        vMethodId,
+                        eip191Proof,
+                        publicKey65,
+                        EllipticType.SECP_256_K1,
+                        notBefore,
+                        notAfter,
+                        ALSO_KNOWN_AS_EXAMPLE
+                    )
+                ).to.not.be.reverted
+            })
+
+            it('GIVEN a DID created from an ERC-191 proof WHEN querying the registry THEN the signing address resolves to that DID', async () => {
+                const eip191Did = proofToDid(eip191Proof)
+
+                await didRegistry.insertFirstDidDocument(
+                    eip191Did,
+                    baseDocument,
+                    vMethodId,
+                    eip191Proof,
+                    publicKey65,
+                    EllipticType.SECP_256_K1,
+                    notBefore,
+                    notAfter,
+                    ALSO_KNOWN_AS_EXAMPLE
+                )
+                await mockTimestamp.setMockedTimestamp(notBefore + 1n)
+
+                expect(await didRegistry.isKnownDid(wallet.address)).to.be.true
+                expect(await didRegistry.didOf(wallet.address)).to.be.equal(
+                    eip191Did
+                )
+            })
+
+            it('GIVEN a bare-digest proof WHEN calling insertFirstDidDocument THEN it still succeeds', async () => {
+                await expect(
+                    didRegistry.insertFirstDidDocument(
+                        proofToDid(rawProof),
+                        baseDocument,
+                        vMethodId,
+                        rawProof,
+                        publicKey65,
+                        EllipticType.SECP_256_K1,
+                        notBefore,
+                        notAfter,
+                        ALSO_KNOWN_AS_EXAMPLE
+                    )
+                ).to.not.be.reverted
+            })
+
+            it('GIVEN an ERC-191 proof BUT a DID not derived from it WHEN calling insertFirstDidDocument THEN it fails with DidNotDerivedFromProof', async () => {
+                await expect(
+                    didRegistry.insertFirstDidDocument(
+                        proofToDid(rawProof),
+                        baseDocument,
+                        vMethodId,
+                        eip191Proof,
+                        publicKey65,
+                        EllipticType.SECP_256_K1,
+                        notBefore,
+                        notAfter,
+                        ALSO_KNOWN_AS_EXAMPLE
+                    )
+                ).to.be.revertedWithCustomError(
+                    didDocumentDetailedFacet,
+                    'DidNotDerivedFromProof'
+                )
+            })
+
+            it('GIVEN an ERC-191 proof signed by a different key WHEN calling insertFirstDidDocument THEN it fails with InvalidSignature', async () => {
+                const otherWallet = ethers.Wallet.createRandom()
+                const foreignProof = await generateEip191Proof(otherWallet)
+
+                await expect(
+                    didRegistry.insertFirstDidDocument(
+                        proofToDid(foreignProof),
+                        baseDocument,
+                        vMethodId,
+                        foreignProof,
+                        publicKey65,
+                        EllipticType.SECP_256_K1,
+                        notBefore,
+                        notAfter,
+                        ALSO_KNOWN_AS_EXAMPLE
+                    )
+                ).to.be.revertedWithCustomError(
+                    didDocumentDetailedFacet,
+                    'InvalidSignature'
+                )
+            })
+
+            it('GIVEN a public key already bound to a DID WHEN inserting a second DID with the same key THEN it fails with PublicKeyAlreadyInUse', async () => {
+                await didRegistry.insertFirstDidDocument(
+                    proofToDid(rawProof),
+                    baseDocument,
+                    vMethodId,
+                    rawProof,
+                    publicKey65,
+                    EllipticType.SECP_256_K1,
+                    notBefore,
+                    notAfter,
+                    ALSO_KNOWN_AS_EXAMPLE
+                )
+
+                // The same key yields a second, different DID through the
+                // ERC-191 encoding. Registering it would silently overwrite the
+                // address-to-DID mapping of the first one, so it is rejected.
+                await expect(
+                    didRegistry.insertFirstDidDocument(
+                        proofToDid(eip191Proof),
+                        baseDocument,
+                        randomHex(32),
+                        eip191Proof,
+                        publicKey65,
+                        EllipticType.SECP_256_K1,
+                        notBefore,
+                        notAfter,
+                        ALSO_KNOWN_AS_EXAMPLE
+                    )
+                )
+                    .to.be.revertedWithCustomError(
+                        didDocumentDetailedFacet,
+                        'PublicKeyAlreadyInUse'
+                    )
+                    .withArgs(publicKey65)
             })
         })
 

@@ -83,6 +83,7 @@ abstract contract DidDocumentDetailed is
             _checkUintIsNotZero(_notAfter);
             _checkValidDates(_notBefore, _notAfter);
             _validateProof(_did, _proof, _publicKey);
+            _checkPublicKeyNotRegistered(_publicKey, _ellipticType);
         }
         emit FirstDidDocumentInserted(
             _did,
@@ -134,6 +135,7 @@ abstract contract DidDocumentDetailed is
             _checkUintIsNotZero(_notAfter);
             _checkValidDates(_notBefore, _notAfter);
             _validateProof(_did, _proof, _publicKey);
+            _checkPublicKeyNotRegistered(_publicKey, _ellipticType);
         }
 
         emit DidDocumentInserted(
