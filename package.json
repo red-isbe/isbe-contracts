@@ -156,6 +156,7 @@
         "contracts"
     ],
     "dependencies": {
+        "@aws-sdk/client-kms": "^3.1134.0",
         "@noble/secp256k1": "^3.0.0",
         "@rumblefishdev/hardhat-kms-signer": "^2.0.0",
         "@solidity-parser/parser": "^0.20.2",

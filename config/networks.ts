@@ -106,6 +106,7 @@ export function getNetworkConfigs(): NetworksConfig {
             blockGasLimit: 0x1e84800, // 32,000,000
             curve: CURVE,
             secp256r1Accounts,
+            ...kmsConfig,
         } as NetworkConfigWithCurve,
 
         isbe: {

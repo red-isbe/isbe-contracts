@@ -15,6 +15,7 @@ import { ISignatureProvider } from './ISignatureProvider'
 import { Secp256k1SignatureProvider } from './Secp256k1SignatureProvider'
 import { Secp256r1SignatureProvider } from './Secp256r1SignatureProvider'
 import { KmsSignatureProvider } from './KmsSignatureProvider'
+import { KmsSecp256r1SignatureProvider } from './KmsSecp256r1SignatureProvider'
 
 /**
  * Factory to create the appropriate signature provider based on network configuration
@@ -25,7 +26,18 @@ export class SignatureProviderFactory {
      * Creates the appropriate signature provider for the current network
      */
     static create(hre: HardhatRuntimeEnvironment): ISignatureProvider {
-        // Try secp256r1 first (more specific)
+        // Try KMS + secp256r1 first (most specific: requires curve AND kmsKeyId,
+        // so it also settles precedence when a network configures both a KMS key
+        // and local secp256r1Accounts — KMS wins)
+        const kmsSecp256r1Provider = new KmsSecp256r1SignatureProvider(hre)
+        if (kmsSecp256r1Provider.isCompatibleWith(hre)) {
+            console.log(
+                '🔐 Using AWS KMS signature provider (secp256r1 / NIST P-256)'
+            )
+            return kmsSecp256r1Provider
+        }
+
+        // Local-key secp256r1 (more specific than the curve-agnostic k1 KMS check below)
         const secp256r1Provider = new Secp256r1SignatureProvider(hre)
         if (secp256r1Provider.isCompatibleWith(hre)) {
             console.log('🔐 Using secp256r1 signature provider (NIST P-256)')
@@ -61,6 +73,11 @@ export class SignatureProviderFactory {
         hre: HardhatRuntimeEnvironment
     ): ISignatureProvider[] {
         const providers: ISignatureProvider[] = []
+
+        const kmsSecp256r1Provider = new KmsSecp256r1SignatureProvider(hre)
+        if (kmsSecp256r1Provider.isCompatibleWith(hre)) {
+            providers.push(kmsSecp256r1Provider)
+        }
 
         const secp256r1Provider = new Secp256r1SignatureProvider(hre)
         if (secp256r1Provider.isCompatibleWith(hre)) {
