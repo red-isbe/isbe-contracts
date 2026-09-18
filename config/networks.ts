@@ -101,7 +101,7 @@ export function getNetworkConfigs(): NetworksConfig {
             url: BARE_URL,
             chainId: buildChainId(10962),
             accounts: secp256r1PrivateKeys,
-            gasPrice: 2_000,
+            gasPrice: 1_000_000_001,
             gas: DEFAULT_TX_GAS_LIMIT,
             blockGasLimit: 0x1e84800, // 32,000,000
             curve: CURVE,
