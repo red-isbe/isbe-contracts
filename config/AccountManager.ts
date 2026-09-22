@@ -11,10 +11,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ----------------------------------------------------------------------------------- */
 import { randomBytes } from 'crypto'
-import { ethers } from 'ethers'
 import type { Secp256r1Account } from '../types/networks'
 import { ValidationError, ConfigurationError } from '../utils/errors'
 import { logger } from '../utils/logger'
+import { deriveAddressFromUncompressedPoint } from '../utils/kmsSecp256r1Utils'
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const EC = require('elliptic').ec
+
+const ec = new EC('p256')
 
 /**
  * AccountManager handles the creation, validation, and management of accounts
@@ -115,7 +119,10 @@ export class AccountManager {
      *
      * This method:
      * 1. Gets private keys using getAccounts()
-     * 2. Creates Ethereum wallets to derive addresses
+     * 2. Derives the P-256 public key for each and computes its Ethereum-style
+     *    address (keccak256(X||Y), same scheme as Secp256r1Wallet) — NOT
+     *    ethers.Wallet's secp256k1 derivation, which produces a different,
+     *    unusable address for these curve-r1 accounts
      * 3. Returns account objects with address and private key (without 0x for r1)
      *
      * @returns Array of secp256r1 account objects
@@ -125,12 +132,18 @@ export class AccountManager {
 
         try {
             return keys.map((privateKey) => {
-                const wallet = new ethers.Wallet(privateKey)
+                const normalizedKey = privateKey.startsWith('0x')
+                    ? privateKey.slice(2)
+                    : privateKey
+                const keyPair = ec.keyFromPrivate(normalizedKey, 'hex')
+                const publicKeyBytes = new Uint8Array(
+                    keyPair.getPublic().encode('array', false)
+                )
+                const address =
+                    deriveAddressFromUncompressedPoint(publicKeyBytes)
                 return {
-                    address: wallet.address,
-                    privateKey: privateKey.startsWith('0x')
-                        ? privateKey.slice(2)
-                        : privateKey,
+                    address,
+                    privateKey: normalizedKey,
                 }
             })
         } catch (error) {

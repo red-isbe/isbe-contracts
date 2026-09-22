@@ -89,6 +89,7 @@ import './examples/curveAwareDeployAll'
 
 // Secp256r1 tasks
 import './secp256r1/showAccounts'
+import './secp256r1/showKmsAccount'
 import './secp256r1/generateEnv'
 import './secp256r1/generateEnv.smtp'
 
