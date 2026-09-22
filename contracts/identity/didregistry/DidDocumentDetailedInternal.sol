@@ -29,6 +29,7 @@ import {
     IDidVerificationRelationship
 } from './interfaces/IDidVerificationRelationship.sol';
 import {LibCommon} from '../../core/LibCommon.sol';
+import {MessageHashUtils} from '../../accountabstraction/MessageHashUtils.sol';
 import {VRelationshipsInternal} from './VRelationshipsInternal.sol';
 import {
     _DID_DOCUMENT_DETAILED_STORAGE_POSITION
@@ -596,6 +597,32 @@ abstract contract DidDocumentDetailedInternal is
     }
 
     /**
+     * @notice Ensures the invocation address of a public key is not already bound to a DID
+     * @dev The registry keeps a single global address-to-DID mapping, so registering the
+     *      same key under a second DID would silently overwrite the first one's entry.
+     *      The check only applies when the key uses the network elliptic curve, because
+     *      that is the only case in which the mapping is written. Revoked keys release
+     *      their entry and may therefore be registered again.
+     *      Reuses the existing PublicKeyAlreadyInUse error rather than declaring a new
+     *      one, so the facet ABI is left completely unchanged.
+     * @param _publicKey The public key whose derived address is checked
+     * @param _ellipticType The elliptic curve type of the provided public key
+     */
+    function _checkPublicKeyNotRegistered(
+        bytes memory _publicKey,
+        IDidDocumentDetailed.EllipticType _ellipticType
+    ) internal view {
+        DidDocumentsStorage storage $ = _didDocumentsStorage();
+        if ($.networkEllipticType != _ellipticType) return;
+        require(
+            !_isNotEmptyBytes32(
+                $.invocationAddressToDid[_getAddress(_publicKey)]
+            ),
+            IDidVerificationMethod.PublicKeyAlreadyInUse(_publicKey)
+        );
+    }
+
+    /**
      * @notice Validates that an address is known in the DID registry with active capability invocation
      * @param _address The address to validate
      */
@@ -768,6 +795,10 @@ abstract contract DidDocumentDetailedInternal is
      *      (base58-decoded method-specific id, left-aligned in the bytes32).
      *      This prevents vanity DID attacks by ensuring the DID is cryptographically
      *      linked to the proof.
+     *      The signature is accepted in either of two encodings: over the bare
+     *      digest (original ISBE format) or over the ERC-191 `personal_sign`
+     *      envelope of that digest (the only format hardware and browser wallets
+     *      can produce). Both prove control of the same private key.
      *      Currently only supports secp256k1 (standard ECDSA).
      *      Elliptic curve type validation is performed by modifiers before this function.
      * @param _did The decentralised identifier to validate (version byte 0x00 + 19-byte payload + 12 zero bytes)
@@ -781,15 +812,29 @@ abstract contract DidDocumentDetailedInternal is
     ) internal pure {
         // First, validate the proof itself (length, signature recovery, control bytes)
         // This ensures proper error messages for malformed proofs
-        // Recover signer address from signature
-        address recoveredSigner = _recoverSigner(
-            keccak256(abi.encodePacked(_publicKey)),
-            _proof
-        );
+        bytes32 digest = keccak256(abi.encodePacked(_publicKey));
+        address expectedSigner = _getAddress(_publicKey);
+
+        // Format 1: signature over the bare digest. This is the original ISBE
+        // encoding, produced by software signers such as the DID CLI.
+        address recoveredSigner = _recoverSigner(digest, _proof);
+
+        // Format 2: signature over the ERC-191 `personal_sign` envelope. Hardware
+        // wallets and browser wallets never sign a bare digest -- they always
+        // prepend the personal_sign prefix as a protection against blind signing.
+        // Accepting this variant lets those devices produce a valid proof without
+        // ever exporting the private key. Both formats bind the DID to the same
+        // key, and the DID is still derived from the proof bytes below.
+        if (recoveredSigner != expectedSigner) {
+            recoveredSigner = _recoverSigner(
+                MessageHashUtils.toEthSignedMessageHash(digest),
+                _proof
+            );
+        }
 
         // Validate that recovered signer matches the public key owner
         require(
-            recoveredSigner == _getAddress(_publicKey),
+            recoveredSigner == expectedSigner,
             InvalidSignature(recoveredSigner)
         );
 
