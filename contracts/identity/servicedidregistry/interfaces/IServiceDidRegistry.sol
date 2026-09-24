@@ -182,11 +182,13 @@ interface IServiceDidRegistry {
     error ServiceDidIsDeactivated(bytes32 serviceDid);
 
     /**
-     * @notice Raised when the signing key has already been claimed by a service
-     * @dev Prevents two service identities from sharing cryptographic material, which
-     *      would make signatures ambiguous as to their originating identity. The binding
-     *      is permanent: a key that has been rotated away from, or that belonged to a
-     *      service that was later deactivated, can never be claimed again
+     * @notice Raised when the signing key has already been claimed by a service of
+     *         another controller, or when a rotation targets the key already in force
+     * @dev A key is bound to the controller of the first service that claimed it.
+     *      Services of that controller may share it; a service of another controller
+     *      sharing it would make signatures ambiguous as to the organisation they come
+     *      from. The binding is permanent: it survives rotation away from the key and
+     *      deactivation of the service that held it
      * @param pubKeyX The `x` coordinate of the public key that is already claimed
      * @param pubKeyY The `y` coordinate of the public key that is already claimed
      */

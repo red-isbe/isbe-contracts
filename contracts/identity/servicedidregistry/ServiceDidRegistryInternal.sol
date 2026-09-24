@@ -54,9 +54,10 @@ abstract contract ServiceDidRegistryInternal is DidControllerInternal {
      *        pre-incremented, so the first service identity of a controller carries
      *        nonce one and the counter always equals the last nonce consumed
      * @param serviceDidByPublicKeyHash Reverse index from the digest of the signing
-     *        public key coordinates to the service identifier that claimed it. Entries
-     *        are never removed, so key material is permanently bound to the first
-     *        service identity that used it and can never be adopted by another one
+     *        public key coordinates to the first service identifier that claimed it.
+     *        Entries are never removed nor overwritten, so key material is permanently
+     *        bound to the controller of that first service: other services of the same
+     *        controller may share it, a service of any other controller never can
      */
     struct ServiceDidRegistryStorage {
         // solhint-disable-next-line max-line-length
@@ -156,9 +157,7 @@ abstract contract ServiceDidRegistryInternal is DidControllerInternal {
         _serviceDidRegistryStorage()
             .serviceDidsByController[_controllerDid]
             .push(serviceDid_);
-        _serviceDidRegistryStorage().serviceDidByPublicKeyHash[
-            _publicKeyHash(_pubKeyX, _pubKeyY)
-        ] = serviceDid_;
+        _bindSigningKey(_pubKeyX, _pubKeyY, serviceDid_);
     }
 
     /**
@@ -180,16 +179,33 @@ abstract contract ServiceDidRegistryInternal is DidControllerInternal {
         (rotation_.newPubKeyX, rotation_.newPubKeyY) = _splitPublicKey(
             _newPublicKey
         );
-        _checkSigningKeyIsFree(rotation_.newPubKeyX, rotation_.newPubKeyY);
 
         IServiceDidRegistry.ServiceDidRecord
             storage record = _serviceDidRegistryStorage().records[_serviceDid];
         rotation_.oldPubKeyX = record.pubKeyX;
         rotation_.oldPubKeyY = record.pubKeyY;
 
-        _serviceDidRegistryStorage().serviceDidByPublicKeyHash[
-            _publicKeyHash(rotation_.newPubKeyX, rotation_.newPubKeyY)
-        ] = _serviceDid;
+        // Rotating onto the key already in force would be a no-op that still emits a
+        // rotation event, so it keeps failing as it did when keys were exclusive.
+        require(
+            rotation_.newPubKeyX != rotation_.oldPubKeyX ||
+                rotation_.newPubKeyY != rotation_.oldPubKeyY,
+            IServiceDidRegistry.SigningKeyAlreadyInUse(
+                rotation_.newPubKeyX,
+                rotation_.newPubKeyY
+            )
+        );
+        _checkSigningKeyIsFree(
+            record.controllerDid,
+            rotation_.newPubKeyX,
+            rotation_.newPubKeyY
+        );
+
+        _bindSigningKey(
+            rotation_.newPubKeyX,
+            rotation_.newPubKeyY,
+            _serviceDid
+        );
         record.pubKeyX = rotation_.newPubKeyX;
         record.pubKeyY = rotation_.newPubKeyY;
         record.ellipticType = _newEllipticType;
@@ -355,11 +371,15 @@ abstract contract ServiceDidRegistryInternal is DidControllerInternal {
     }
 
     /**
-     * @notice Validates that the signing key is free of any prior binding
-     * @dev Two bindings are checked. The first is within this registry: a key claimed by
-     *      any service identity, including one it has since rotated away from or one
-     *      belonging to a deactivated service, can never be claimed again, which keeps
-     *      historical signatures unambiguously attributable.
+     * @notice Validates that the signing key may be used by a service of the given
+     *         controller
+     * @dev Two bindings are checked. The first is within this registry: a key is bound
+     *      to the controller of the first service identity that claimed it, including a
+     *      service that has since rotated away from it or been deactivated. Services of
+     *      that same controller may share it; a service of any other controller can
+     *      never claim it. Signatures therefore stay unambiguously attributable to one
+     *      organisation, although not to one service of it: a verifier that must tell
+     *      two services apart needs each to hold its own key.
      *
      *      The second crosses into the organisational registry: a key that is an active
      *      capability invocation of a `did:isbe` cannot become a service signing key,
@@ -369,17 +389,22 @@ abstract contract ServiceDidRegistryInternal is DidControllerInternal {
      *      coordinate bytes. That index only ever holds keys on the network curve, so a
      *      service key on any other curve simply never matches — which is correct,
      *      since such a key could not be a capability invocation in the first place
+     * @param _controllerDid The organisational identifier of the service that will
+     *        hold the key
      * @param _pubKeyX The `x` coordinate of the signing public key
      * @param _pubKeyY The `y` coordinate of the signing public key
      */
     function _checkSigningKeyIsFree(
+        bytes32 _controllerDid,
         bytes32 _pubKeyX,
         bytes32 _pubKeyY
     ) internal view {
         bytes32 claimedBy = _serviceDidRegistryStorage()
             .serviceDidByPublicKeyHash[_publicKeyHash(_pubKeyX, _pubKeyY)];
         require(
-            !_isNotEmptyBytes32(claimedBy),
+            !_isNotEmptyBytes32(claimedBy) ||
+                _serviceDidRegistryStorage().records[claimedBy].controllerDid ==
+                _controllerDid,
             IServiceDidRegistry.SigningKeyAlreadyInUse(_pubKeyX, _pubKeyY)
         );
 
@@ -393,6 +418,28 @@ abstract contract ServiceDidRegistryInternal is DidControllerInternal {
                 organisationalDid
             )
         );
+    }
+
+    /**
+     * @notice Records the first service identity to claim a signing key
+     * @dev Written only while the entry is empty. The entry is what binds the key to a
+     *      controller, so later services of that controller sharing the key must not
+     *      overwrite it: the binding stays with the first claimant, forever
+     * @param _pubKeyX The `x` coordinate of the signing public key
+     * @param _pubKeyY The `y` coordinate of the signing public key
+     * @param _serviceDid The service identifier now holding the key
+     */
+    function _bindSigningKey(
+        bytes32 _pubKeyX,
+        bytes32 _pubKeyY,
+        bytes32 _serviceDid
+    ) internal {
+        mapping(bytes32 => bytes32) storage index = _serviceDidRegistryStorage()
+            .serviceDidByPublicKeyHash;
+        bytes32 keyHash = _publicKeyHash(_pubKeyX, _pubKeyY);
+        if (!_isNotEmptyBytes32(index[keyHash])) {
+            index[keyHash] = _serviceDid;
+        }
     }
 
     /**

@@ -326,26 +326,90 @@ describe('ServiceDidRegistry', () => {
     })
 
     describe('Uniqueness of the signing key', () => {
-        it('GIVEN a key already claimed by a service WHEN registering another THEN it fails', async () => {
+        // A second organisation, backed by signer 1, with nothing to do with the parent.
+        async function withOtherOrganisation() {
+            const base = await registryFixture()
+            const otherOrg = await insertOrganisationalDid(
+                base.didRegistry as never,
+                1,
+                'otra-organizacion'
+            )
+            return { ...base, otherDid: otherOrg.did }
+        }
+
+        async function register(
+            registry: Contract,
+            controllerDid: string,
+            publicKey: string,
+            label: string
+        ) {
+            await (
+                await registry.registerServiceDid(
+                    controllerDid,
+                    publicKey,
+                    EllipticType.SECP_256_K1,
+                    ethers.id(label),
+                    NEVER_EXPIRES
+                )
+            ).wait()
+        }
+
+        it('GIVEN a key already used by a service WHEN the same controller registers another with it THEN it succeeds', async () => {
             const { serviceDidRegistry, parentDid } = await registryFixture()
             const { publicKey } = freeKey(7)
 
-            await serviceDidRegistry.registerServiceDid(
+            await register(
+                serviceDidRegistry as never,
                 parentDid,
                 publicKey,
-                EllipticType.SECP_256_K1,
-                ethers.id('primero'),
-                NEVER_EXPIRES
+                'primero'
             )
-
             await expect(
                 serviceDidRegistry.registerServiceDid(
                     parentDid,
                     publicKey,
                     EllipticType.SECP_256_K1,
-                    ethers.id('duplicado'),
+                    ethers.id('segundo'),
                     NEVER_EXPIRES
                 )
+            ).to.emit(serviceDidRegistry, 'ServiceDidRegistered')
+
+            const first = await serviceDidRegistry.computeServiceDid(
+                parentDid,
+                1
+            )
+            const second = await serviceDidRegistry.computeServiceDid(
+                parentDid,
+                2
+            )
+            expect(
+                await serviceDidRegistry.signingKeyAddressOf(first)
+            ).to.equal(await serviceDidRegistry.signingKeyAddressOf(second))
+        })
+
+        it('GIVEN a key used by a service WHEN another controller registers a service with it THEN it fails', async () => {
+            const { serviceDidRegistry, parentDid, otherDid, other } =
+                await withOtherOrganisation()
+            const { publicKey } = freeKey(11)
+
+            await register(
+                serviceDidRegistry as never,
+                parentDid,
+                publicKey,
+                'de alastria'
+            )
+
+            // Otherwise signatures by this key would be attributable to both organisations.
+            await expect(
+                serviceDidRegistry
+                    .connect(other)
+                    .registerServiceDid(
+                        otherDid,
+                        publicKey,
+                        EllipticType.SECP_256_K1,
+                        ethers.id('ajena'),
+                        NEVER_EXPIRES
+                    )
             ).to.be.revertedWithCustomError(
                 serviceDidRegistry,
                 'SigningKeyAlreadyInUse'
@@ -378,16 +442,16 @@ describe('ServiceDidRegistry', () => {
                 )
         })
 
-        it('GIVEN a key rotated away from WHEN claiming it again THEN it fails', async () => {
-            const { serviceDidRegistry, parentDid } = await registryFixture()
+        it('GIVEN a key rotated away from WHEN claimed again THEN the same controller may and another may not', async () => {
+            const { serviceDidRegistry, parentDid, otherDid, other } =
+                await withOtherOrganisation()
             const original = freeKey(8).publicKey
 
-            await serviceDidRegistry.registerServiceDid(
+            await register(
+                serviceDidRegistry as never,
                 parentDid,
                 original,
-                EllipticType.SECP_256_K1,
-                ethers.id('rotable'),
-                NEVER_EXPIRES
+                'rotable'
             )
             const serviceDid = await serviceDidRegistry.computeServiceDid(
                 parentDid,
@@ -399,14 +463,132 @@ describe('ServiceDidRegistry', () => {
                 EllipticType.SECP_256_K1
             )
 
-            // The binding is permanent, so historical signatures stay attributable.
+            // The binding outlives the rotation: it stays with the controller.
+            await expect(
+                serviceDidRegistry
+                    .connect(other)
+                    .registerServiceDid(
+                        otherDid,
+                        original,
+                        EllipticType.SECP_256_K1,
+                        ethers.id('reclamando la vieja'),
+                        NEVER_EXPIRES
+                    )
+            ).to.be.revertedWithCustomError(
+                serviceDidRegistry,
+                'SigningKeyAlreadyInUse'
+            )
             await expect(
                 serviceDidRegistry.registerServiceDid(
                     parentDid,
                     original,
                     EllipticType.SECP_256_K1,
-                    ethers.id('reclamando la vieja'),
+                    ethers.id('reutilizando la vieja'),
                     NEVER_EXPIRES
+                )
+            ).to.emit(serviceDidRegistry, 'ServiceDidRegistered')
+        })
+
+        it('GIVEN the key of a deactivated service WHEN another controller claims it THEN it fails', async () => {
+            const { serviceDidRegistry, parentDid, otherDid, other } =
+                await withOtherOrganisation()
+            const { publicKey } = freeKey(12)
+
+            await register(
+                serviceDidRegistry as never,
+                parentDid,
+                publicKey,
+                'efimero'
+            )
+            await serviceDidRegistry.deactivateServiceDid(
+                await serviceDidRegistry.computeServiceDid(parentDid, 1)
+            )
+
+            await expect(
+                serviceDidRegistry
+                    .connect(other)
+                    .registerServiceDid(
+                        otherDid,
+                        publicKey,
+                        EllipticType.SECP_256_K1,
+                        ethers.id('heredando'),
+                        NEVER_EXPIRES
+                    )
+            ).to.be.revertedWithCustomError(
+                serviceDidRegistry,
+                'SigningKeyAlreadyInUse'
+            )
+        })
+
+        it("GIVEN a rotation WHEN the new key is a sibling service's THEN it succeeds, and another controller's THEN it fails", async () => {
+            const { serviceDidRegistry, parentDid, otherDid, other } =
+                await withOtherOrganisation()
+            const shared = freeKey(13).publicKey
+            const foreign = freeKey(14).publicKey
+
+            await register(
+                serviceDidRegistry as never,
+                parentDid,
+                shared,
+                'hermano'
+            )
+            await register(
+                serviceDidRegistry as never,
+                parentDid,
+                freeKey(15).publicKey,
+                'rotando'
+            )
+            await (
+                await serviceDidRegistry
+                    .connect(other)
+                    .registerServiceDid(
+                        otherDid,
+                        foreign,
+                        EllipticType.SECP_256_K1,
+                        ethers.id('de la otra'),
+                        NEVER_EXPIRES
+                    )
+            ).wait()
+            const rotating = await serviceDidRegistry.computeServiceDid(
+                parentDid,
+                2
+            )
+
+            await expect(
+                serviceDidRegistry.rotateSigningKey(
+                    rotating,
+                    foreign,
+                    EllipticType.SECP_256_K1
+                )
+            ).to.be.revertedWithCustomError(
+                serviceDidRegistry,
+                'SigningKeyAlreadyInUse'
+            )
+            await expect(
+                serviceDidRegistry.rotateSigningKey(
+                    rotating,
+                    shared,
+                    EllipticType.SECP_256_K1
+                )
+            ).to.emit(serviceDidRegistry, 'ServiceDidKeyRotated')
+        })
+
+        it('GIVEN a rotation WHEN the new key is the one already in force THEN it fails', async () => {
+            const { serviceDidRegistry, parentDid } = await registryFixture()
+            const { publicKey } = freeKey(16)
+
+            await register(
+                serviceDidRegistry as never,
+                parentDid,
+                publicKey,
+                'quieto'
+            )
+
+            await expect(
+                serviceDidRegistry.rotateSigningKey(
+                    await serviceDidRegistry.computeServiceDid(parentDid, 1),
+                    publicKey,
+                    EllipticType.SECP_256_K1
                 )
             ).to.be.revertedWithCustomError(
                 serviceDidRegistry,

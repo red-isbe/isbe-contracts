@@ -106,7 +106,7 @@ abstract contract ServiceDidRegistry is
         {
             _checkValidExpiry(_expiresAt);
             (bytes32 pubKeyX, bytes32 pubKeyY) = _splitPublicKey(_publicKey);
-            _checkSigningKeyIsFree(pubKeyX, pubKeyY);
+            _checkSigningKeyIsFree(_controllerDid, pubKeyX, pubKeyY);
             (serviceDid, record) = _registerServiceDid(
                 _controllerDid,
                 pubKeyX,
