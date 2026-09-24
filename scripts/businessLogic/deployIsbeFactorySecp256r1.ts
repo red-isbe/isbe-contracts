@@ -78,6 +78,7 @@ export async function deployIsbeFactorySecp256r1(
         'DidVerificationMethodFacet',
         'DidVerificationRelationshipFacet',
         'DidRegistryQueryFacet',
+        'ServiceDidRegistryFacet',
         'TrustedIssuersRegistryFacet',
         'EnsRegistryFacet',
         'TimeStampingRegistryFacet',

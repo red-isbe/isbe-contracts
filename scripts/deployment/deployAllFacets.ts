@@ -39,6 +39,7 @@ export const DEFAULT_FACETS = [
     'DidVerificationMethodFacet',
     'DidVerificationRelationshipFacet',
     'DidRegistryQueryFacet',
+    'ServiceDidRegistryFacet',
     'TrustedIssuersRegistryFacet',
     'EnsRegistryFacet',
     'TimeStampingRegistryFacet',

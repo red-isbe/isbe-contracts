@@ -45,6 +45,8 @@ import {
     TimeStampingRegistryFacet,
     DidRegistryQueryFacet,
     DidRegistryQueryFacet__factory,
+    ServiceDidRegistryFacet,
+    ServiceDidRegistryFacet__factory,
     AccessControlDidFacet__factory,
     BesuNodeManagerFacet,
     BesuNodeManagerFacet__factory,
@@ -90,6 +92,7 @@ let DidControllerFacetFactory: DidControllerFacet__factory
 let DidVerificationMethodFacetFactory: DidVerificationMethodFacet__factory
 let DidVerificationRelationshipFacetFactory: DidVerificationRelationshipFacet__factory
 let DidRegistryQueryFacetFactory: DidRegistryQueryFacet__factory
+let ServiceDidRegistryFacetFactory: ServiceDidRegistryFacet__factory
 let TrustedIssuersRegistryFacetFactory: TrustedIssuersRegistryFacet__factory
 let EnsRegistryFacetFactory: EnsRegistryFacet__factory
 let TimeStampingRegistryFacetFactory: TimeStampingRegistryFacet__factory
@@ -113,6 +116,7 @@ let didControllerFacet: DidControllerFacet
 let didVerificationMethodFacet: DidVerificationMethodFacet
 let didVerificationRelationshipFacet: DidVerificationRelationshipFacet
 let didRegistryQueryFacet: DidRegistryQueryFacet
+let serviceDidRegistryFacet: ServiceDidRegistryFacet
 let trustedIssuersRegistryFacet: TrustedIssuersRegistryFacet
 let ensRegistryFacet: EnsRegistryFacet
 let timeStampingRegistryFacet: TimeStampingRegistryFacet
@@ -163,6 +167,9 @@ async function deployInitial(ethers: any) {
     DidRegistryQueryFacetFactory = await ethers.getContractFactory(
         'DidRegistryQueryFacet'
     )
+    ServiceDidRegistryFacetFactory = await ethers.getContractFactory(
+        'ServiceDidRegistryFacet'
+    )
     TrustedIssuersRegistryFacetFactory = await ethers.getContractFactory(
         'TrustedIssuersRegistryFacet'
     )
@@ -209,6 +216,8 @@ async function deployInitial(ethers: any) {
         await DidVerificationRelationshipFacetFactory.deploy(deployOptions)
     didRegistryQueryFacet =
         await DidRegistryQueryFacetFactory.deploy(deployOptions)
+    serviceDidRegistryFacet =
+        await ServiceDidRegistryFacetFactory.deploy(deployOptions)
     trustedIssuersRegistryFacet =
         await TrustedIssuersRegistryFacetFactory.deploy(deployOptions)
     ensRegistryFacet = await EnsRegistryFacetFactory.deploy(deployOptions)
@@ -236,6 +245,7 @@ async function deployInitial(ethers: any) {
     await didVerificationMethodFacet.waitForDeployment()
     await didVerificationRelationshipFacet.waitForDeployment()
     await didRegistryQueryFacet.waitForDeployment()
+    await serviceDidRegistryFacet.waitForDeployment()
     await trustedIssuersRegistryFacet.waitForDeployment()
     await ensRegistryFacet.waitForDeployment()
     await timeStampingRegistryFacet.waitForDeployment()
@@ -269,6 +279,7 @@ export async function deployIsbeFactory(
         await didVerificationMethodFacet.getAddress(),
         await didVerificationRelationshipFacet.getAddress(),
         await didRegistryQueryFacet.getAddress(),
+        await serviceDidRegistryFacet.getAddress(),
         await trustedIssuersRegistryFacet.getAddress(),
         await ensRegistryFacet.getAddress(),
         await timeStampingRegistryFacet.getAddress(),
