@@ -63,6 +63,27 @@ export function generateProof(wallet: {
 }
 
 /**
+ * Generate an ERC-191 (`personal_sign`) proof from a wallet.
+ *
+ * This is what a hardware wallet (Trezor, Ledger) or a browser wallet actually
+ * produces: they never sign a bare digest, they always wrap it with the
+ * `\x19Ethereum Signed Message:\n32` prefix before signing.
+ *
+ * @param wallet - Wallet exposing signingKey.publicKey and signMessage
+ * @returns proof hex string (65 bytes, 0x-prefixed)
+ */
+export async function generateEip191Proof(wallet: {
+    signingKey: { publicKey: string }
+    signMessage: (message: Uint8Array) => Promise<string>
+}): Promise<string> {
+    const publicKey65 = wallet.signingKey.publicKey
+    const message = ethers.keccak256(
+        ethers.solidityPacked(['bytes'], [publicKey65])
+    )
+    return await wallet.signMessage(ethers.getBytes(message))
+}
+
+/**
  * Generate a random verification method ID
  * @returns A random verification method identifier
  */
