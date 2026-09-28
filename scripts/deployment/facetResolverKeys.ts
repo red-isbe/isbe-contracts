@@ -77,6 +77,10 @@ export const FACET_RESOLVER_KEYS: Record<string, string> = {
     DidRegistryQueryFacet:
         '0x5fb7bbf7185d00a34fa9c782b90e076f7b5d9e337febead788d0b980b59aa53b',
 
+    // Service DID Registry
+    ServiceDidRegistryFacet:
+        '0x3f4e1fc72c9cbf8beed300a44313de512ca7c62e779f6b5108db48809b858f6f',
+
     // Trusted Issuers Registry
     TrustedIssuersRegistryFacet:
         '0xa6d24218dbc9b95fcf333de1ad885429be1bc02839798a978c01989cffe93983',
@@ -143,6 +147,7 @@ export const FACET_CODE_VERSIONS: Record<string, number> = {
     DidVerificationMethodFacet: 1,
     DidVerificationRelationshipFacet: 1,
     DidRegistryQueryFacet: 1,
+    ServiceDidRegistryFacet: 1,
     TrustedIssuersRegistryFacet: 1,
     EnsRegistryFacet: 1,
     TimeStampingRegistryFacet: 1,

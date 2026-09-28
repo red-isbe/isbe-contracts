@@ -214,4 +214,7 @@ bytes32 constant _ACCOUNT_ABSTRACTION_SMART_ACCOUNT_RESOLVER_KEY = 0x57876e40acb
 // keccak256('isbe.contracts.account.abstraction.paymaster.paymaster.key');
 bytes32 constant _AA_PAYMASTER_PAYMASTER_KEY = 0x3b133fbb2a5301959c9d14293df1370f4f47c0bc94efc5443e10584be097309d;
 
+// keccak256('isbe.contracts.service.did.registry.resolver.key');
+bytes32 constant _SERVICE_DID_REGISTRY_RESOLVER_KEY = 0x3f4e1fc72c9cbf8beed300a44313de512ca7c62e779f6b5108db48809b858f6f;
+
 // solhint-enable max-line-length
