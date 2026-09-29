@@ -102,6 +102,93 @@ abstract contract ServiceDidRegistry is
         onlyControllerOrAuth(_controllerDid)
         returns (bytes32 serviceDid)
     {
+        return
+            _registerAndAnnounce(
+                _controllerDid,
+                _publicKey,
+                _ellipticType,
+                _labelHash,
+                _expiresAt
+            );
+    }
+
+    function registerServiceDidWithDocument(
+        bytes32 _controllerDid,
+        bytes memory _publicKey,
+        IDidDocumentDetailed.EllipticType _ellipticType,
+        bytes32 _labelHash,
+        uint256 _expiresAt,
+        string memory _document
+    )
+        external
+        override
+        whenNotPaused
+        bytes32IsNotZero(_controllerDid)
+        emptyBytes(_publicKey)
+        validateEllipticType(_ellipticType)
+        onlyDidExists(_controllerDid)
+        onlyControllerOrAuth(_controllerDid)
+        returns (bytes32 serviceDid)
+    {
+        _checkServiceDocumentSize(_document);
+        serviceDid = _registerAndAnnounce(
+            _controllerDid,
+            _publicKey,
+            _ellipticType,
+            _labelHash,
+            _expiresAt
+        );
+        emit ServiceDidDocumentUpdated(
+            serviceDid,
+            _setServiceDocument(serviceDid, _document)
+        );
+    }
+
+    function updateServiceDocument(
+        bytes32 _serviceDid,
+        string memory _document
+    )
+        external
+        override
+        whenNotPaused
+        bytes32IsNotZero(_serviceDid)
+        onlyServiceDidExists(_serviceDid)
+        onlyServiceDidNotDeactivated(_serviceDid)
+        onlyServiceDidController(_serviceDid)
+        returns (bool success)
+    {
+        _checkServiceDocumentSize(_document);
+        emit ServiceDidDocumentUpdated(
+            _serviceDid,
+            _setServiceDocument(_serviceDid, _document)
+        );
+        return true;
+    }
+
+    function getServiceDocument(
+        bytes32 _serviceDid
+    )
+        external
+        view
+        override
+        onlyServiceDidExists(_serviceDid)
+        returns (string memory document)
+    {
+        return _getServiceDocument(_serviceDid);
+    }
+
+    /**
+     * @notice Shared body of both registration entry points
+     * @dev The callers carry the modifiers; this performs the checks that depend on the
+     *      decoded key, stores the record and emits `ServiceDidRegistered`
+     */
+    function _registerAndAnnounce(
+        bytes32 _controllerDid,
+        bytes memory _publicKey,
+        IDidDocumentDetailed.EllipticType _ellipticType,
+        bytes32 _labelHash,
+        uint256 _expiresAt
+    ) internal returns (bytes32 serviceDid) {
         ServiceDidRecord memory record;
         {
             _checkValidExpiry(_expiresAt);

@@ -55,7 +55,12 @@ contract ServiceDidRegistryFacet is ServiceDidRegistry, IEIP2535Introspection {
     }
 
     /**
-     * @dev Ten selectors. `getServiceDidCountByController` was dropped because
+     * @dev Thirteen selectors. The last three — `registerServiceDidWithDocument`,
+     *      `updateServiceDocument` and `getServiceDocument` — were added after the
+     *      first deployment, so upgrading a live diamond is an `Add` of those three
+     *      plus a `Replace` of the original ten.
+     *
+     *      There is no `getServiceDidCountByController`, because
      *      `getServiceDidsByController` already returns `total`, which is the
      *      convention of this repository: a five-tuple getter carries no companion
      *      counter, a bare-array one does. Each selector is frozen into the Diamond's
@@ -67,8 +72,13 @@ contract ServiceDidRegistryFacet is ServiceDidRegistry, IEIP2535Introspection {
         override
         returns (bytes4[] memory selectors_)
     {
-        uint256 selectorsLength = 10;
+        uint256 selectorsLength = 13;
         selectors_ = new bytes4[](selectorsLength);
+        selectors_[--selectorsLength] = this.getServiceDocument.selector;
+        selectors_[--selectorsLength] = this.updateServiceDocument.selector;
+        selectors_[--selectorsLength] = this
+            .registerServiceDidWithDocument
+            .selector;
         selectors_[--selectorsLength] = this.signingKeyAddressOf.selector;
         selectors_[--selectorsLength] = this
             .initializeServiceDidRegistry

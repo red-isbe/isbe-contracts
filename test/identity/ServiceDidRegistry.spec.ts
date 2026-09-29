@@ -982,6 +982,256 @@ describe('ServiceDidRegistry', () => {
         })
     })
 
+    describe('Service document', () => {
+        const DOCUMENT = JSON.stringify({
+            serviceEndpoint: 'https://facturacion.ejemplo.es',
+            type: 'InvoicingService',
+        })
+
+        async function withDocumentedService(document = DOCUMENT) {
+            const fixture = await registryFixture()
+            await (
+                await fixture.serviceDidRegistry.registerServiceDidWithDocument(
+                    fixture.parentDid,
+                    freeKey(40).publicKey,
+                    EllipticType.SECP_256_K1,
+                    ethers.id('documentado'),
+                    NEVER_EXPIRES,
+                    document
+                )
+            ).wait()
+            const serviceDid =
+                await fixture.serviceDidRegistry.computeServiceDid(
+                    fixture.parentDid,
+                    1
+                )
+            return { ...fixture, serviceDid }
+        }
+
+        it('GIVEN a registration with a document WHEN reading it back THEN it is stored and announced', async () => {
+            const { serviceDidRegistry, parentDid } = await registryFixture()
+            const serviceDid = await serviceDidRegistry.computeServiceDid(
+                parentDid,
+                1
+            )
+
+            await expect(
+                serviceDidRegistry.registerServiceDidWithDocument(
+                    parentDid,
+                    freeKey(41).publicKey,
+                    EllipticType.SECP_256_K1,
+                    ethers.id('con documento'),
+                    NEVER_EXPIRES,
+                    DOCUMENT
+                )
+            )
+                .to.emit(serviceDidRegistry, 'ServiceDidRegistered')
+                .and.to.emit(serviceDidRegistry, 'ServiceDidDocumentUpdated')
+                .withArgs(serviceDid, ethers.id(DOCUMENT))
+
+            expect(
+                await serviceDidRegistry.getServiceDocument(serviceDid)
+            ).to.equal(DOCUMENT)
+            // The record itself is the same one a plain registration produces.
+            const record = await serviceDidRegistry.getServiceDid(serviceDid)
+            expect(record.controllerDid).to.equal(parentDid)
+            expect(record.nonce).to.equal(1n)
+        })
+
+        it('GIVEN a plain registration WHEN reading its document THEN it is empty', async () => {
+            const { serviceDidRegistry, parentDid } = await registryFixture()
+            await serviceDidRegistry.registerServiceDid(
+                parentDid,
+                freeKey(42).publicKey,
+                EllipticType.SECP_256_K1,
+                ethers.id('sin documento'),
+                NEVER_EXPIRES
+            )
+
+            expect(
+                await serviceDidRegistry.getServiceDocument(
+                    await serviceDidRegistry.computeServiceDid(parentDid, 1)
+                )
+            ).to.equal('')
+        })
+
+        it('GIVEN a document WHEN updating it THEN it is replaced, and an empty one clears it', async () => {
+            const { serviceDidRegistry, serviceDid } =
+                await withDocumentedService()
+            const replacement = JSON.stringify({
+                serviceEndpoint: 'https://nuevo.ejemplo.es',
+            })
+
+            await expect(
+                serviceDidRegistry.updateServiceDocument(
+                    serviceDid,
+                    replacement
+                )
+            )
+                .to.emit(serviceDidRegistry, 'ServiceDidDocumentUpdated')
+                .withArgs(serviceDid, ethers.id(replacement))
+            expect(
+                await serviceDidRegistry.getServiceDocument(serviceDid)
+            ).to.equal(replacement)
+
+            await expect(
+                serviceDidRegistry.updateServiceDocument(serviceDid, '')
+            )
+                .to.emit(serviceDidRegistry, 'ServiceDidDocumentUpdated')
+                .withArgs(serviceDid, ethers.id(''))
+            expect(
+                await serviceDidRegistry.getServiceDocument(serviceDid)
+            ).to.equal('')
+        })
+
+        it('GIVEN a document at the size limit WHEN storing it THEN it is accepted, and one byte more is not', async () => {
+            const { serviceDidRegistry, serviceDid, parentDid } =
+                await withDocumentedService()
+            const atLimit = 'x'.repeat(4096)
+            const overLimit = 'x'.repeat(4097)
+
+            await expect(
+                serviceDidRegistry.updateServiceDocument(serviceDid, atLimit)
+            ).to.emit(serviceDidRegistry, 'ServiceDidDocumentUpdated')
+
+            await expect(
+                serviceDidRegistry.updateServiceDocument(serviceDid, overLimit)
+            )
+                .to.be.revertedWithCustomError(
+                    serviceDidRegistry,
+                    'ServiceDocumentTooLarge'
+                )
+                .withArgs(4097, 4096)
+            await expect(
+                serviceDidRegistry.registerServiceDidWithDocument(
+                    parentDid,
+                    freeKey(43).publicKey,
+                    EllipticType.SECP_256_K1,
+                    ethers.id('demasiado'),
+                    NEVER_EXPIRES,
+                    overLimit
+                )
+            ).to.be.revertedWithCustomError(
+                serviceDidRegistry,
+                'ServiceDocumentTooLarge'
+            )
+        })
+
+        it('GIVEN a caller who does not control the parent WHEN writing a document THEN it fails', async () => {
+            const {
+                serviceDidRegistry,
+                didRegistry,
+                serviceDid,
+                parentDid,
+                other,
+            } = await withDocumentedService()
+
+            await expect(
+                serviceDidRegistry
+                    .connect(other)
+                    .updateServiceDocument(serviceDid, DOCUMENT)
+            ).to.be.revertedWithCustomError(
+                didRegistry,
+                'ControllerNotAuthorized'
+            )
+            await expect(
+                serviceDidRegistry
+                    .connect(other)
+                    .registerServiceDidWithDocument(
+                        parentDid,
+                        freeKey(44).publicKey,
+                        EllipticType.SECP_256_K1,
+                        ethers.id('ajeno'),
+                        NEVER_EXPIRES,
+                        DOCUMENT
+                    )
+            ).to.be.revertedWithCustomError(
+                didRegistry,
+                'ControllerNotAuthorized'
+            )
+        })
+
+        it('GIVEN a deactivated service WHEN updating its document THEN it fails, but it can still be read', async () => {
+            const { serviceDidRegistry, serviceDid } =
+                await withDocumentedService()
+            await serviceDidRegistry.deactivateServiceDid(serviceDid)
+
+            await expect(
+                serviceDidRegistry.updateServiceDocument(serviceDid, '{}')
+            ).to.be.revertedWithCustomError(
+                serviceDidRegistry,
+                'ServiceDidIsDeactivated'
+            )
+            expect(
+                await serviceDidRegistry.getServiceDocument(serviceDid)
+            ).to.equal(DOCUMENT)
+        })
+
+        it('GIVEN an unknown identifier WHEN reading or updating its document THEN it fails', async () => {
+            const { serviceDidRegistry } = await registryFixture()
+            const unknown = ethers.id('no registrado jamas')
+
+            await expect(
+                serviceDidRegistry.getServiceDocument(unknown)
+            ).to.be.revertedWithCustomError(
+                serviceDidRegistry,
+                'ServiceDidNotFound'
+            )
+            await expect(
+                serviceDidRegistry.updateServiceDocument(unknown, DOCUMENT)
+            ).to.be.revertedWithCustomError(
+                serviceDidRegistry,
+                'ServiceDidNotFound'
+            )
+        })
+
+        it('GIVEN a paused diamond WHEN writing a document THEN both entry points fail', async () => {
+            const {
+                serviceDidRegistry,
+                serviceDid,
+                parentDid,
+                pauseGovernance,
+            } = await withDocumentedService()
+            await pauseGovernance.pause()
+
+            for (const call of [
+                serviceDidRegistry.updateServiceDocument(serviceDid, DOCUMENT),
+                serviceDidRegistry.registerServiceDidWithDocument(
+                    parentDid,
+                    freeKey(45).publicKey,
+                    EllipticType.SECP_256_K1,
+                    ethers.id('en pausa'),
+                    NEVER_EXPIRES,
+                    DOCUMENT
+                ),
+            ]) {
+                await expect(call).to.be.revertedWithCustomError(
+                    pauseGovernance,
+                    'IsPaused'
+                )
+            }
+        })
+
+        it('GIVEN a registration with a document WHEN the key is foreign THEN it fails and stores nothing', async () => {
+            const { serviceDidRegistry, parentDid, parentWallet } =
+                await registryFixture()
+
+            await expect(
+                serviceDidRegistry.registerServiceDidWithDocument(
+                    parentDid,
+                    publicKeyOf(parentWallet),
+                    EllipticType.SECP_256_K1,
+                    ethers.id('clave del paraguas'),
+                    NEVER_EXPIRES,
+                    DOCUMENT
+                )
+            ).to.be.revertedWithCustomError(
+                serviceDidRegistry,
+                'SigningKeyBoundToDid'
+            )
+        })
+    })
+
     describe('Guards', () => {
         async function withService() {
             const fixture = await registryFixture()

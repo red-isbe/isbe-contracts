@@ -161,6 +161,20 @@ interface IServiceDidRegistry {
     );
 
     /**
+     * @notice Emitted when the document of a service identity is set or replaced
+     * @dev Carries the digest rather than the document so that the event stays cheap;
+     *      the content is read with `getServiceDocument`, and every past version remains
+     *      in the calldata of the transaction that set it
+     * @param serviceDid The service identifier whose document has changed
+     * @param documentHash `keccak256` of the document now in force, or of the empty
+     *        string when it has been cleared
+     */
+    event ServiceDidDocumentUpdated(
+        bytes32 indexed serviceDid,
+        bytes32 documentHash
+    );
+
+    /**
      * @notice Raised when registering a service identifier that is already present
      * @dev Given that identifiers are derived from a monotonic counter this condition
      *      is unreachable through normal operation, and acts as a storage invariant
@@ -217,6 +231,16 @@ interface IServiceDidRegistry {
      * @param expiresAt The expiry timestamp that was supplied
      */
     error InvalidExpiry(uint256 expiresAt);
+
+    /**
+     * @notice Raised when a service document exceeds the size the registry accepts
+     * @dev The bound keeps the storage cost of a single write predictable. The content
+     *      itself is not validated on-chain: it is opaque to the registry, and parsing
+     *      JSON here would cost far more than the check is worth
+     * @param length The length in bytes of the document that was supplied
+     * @param maxLength The largest length in bytes the registry accepts
+     */
+    error ServiceDocumentTooLarge(uint256 length, uint256 maxLength);
 
     /**
      * @notice Initialises the service DID registry facet
@@ -287,6 +311,56 @@ interface IServiceDidRegistry {
     function deactivateServiceDid(
         bytes32 serviceDid
     ) external returns (bool success);
+
+    /**
+     * @notice Registers a new service identity together with its document
+     * @dev Identical to `registerServiceDid` in authorisation, validation and derivation,
+     *      and additionally stores `document` for the new identity, emitting
+     *      `ServiceDidDocumentUpdated` after `ServiceDidRegistered`. The document is an
+     *      opaque UTF-8 string, in practice a JSON object whose members a resolver adds
+     *      to the DID document. It is public and permanent in the chain history
+     * @param controllerDid The organisational identifier that will control the service
+     * @param publicKey The signing public key material, 64 or 65 bytes
+     * @param ellipticType Elliptic curve algorithm of the signing public key
+     * @param labelHash Digest of the human-readable label of the service
+     * @param expiresAt Unix timestamp of expiry, or zero when it never expires
+     * @param document The service document, at most 4096 bytes
+     * @return serviceDid The deterministic identifier assigned to the service
+     */
+    function registerServiceDidWithDocument(
+        bytes32 controllerDid,
+        bytes memory publicKey,
+        IDidDocumentDetailed.EllipticType ellipticType,
+        bytes32 labelHash,
+        uint256 expiresAt,
+        string memory document
+    ) external returns (bytes32 serviceDid);
+
+    /**
+     * @notice Sets or replaces the document of a service identity
+     * @dev Same authorisation as the other lifecycle operations. An empty string clears
+     *      the document. The previous content is not kept in storage, only in the chain
+     *      history
+     * @param serviceDid The service identifier whose document is set
+     * @param document The service document, at most 4096 bytes
+     * @return success Boolean indicating whether the operation completed successfully
+     */
+    function updateServiceDocument(
+        bytes32 serviceDid,
+        string memory document
+    ) external returns (bool success);
+
+    /**
+     * @notice Retrieves the document of a service identity
+     * @dev Returns the empty string for a registered identity that has none. Reverts
+     *      with `ServiceDidNotFound` for unregistered identifiers, matching
+     *      `getServiceDid`
+     * @param serviceDid The service identifier to look up
+     * @return document The service document currently in force
+     */
+    function getServiceDocument(
+        bytes32 serviceDid
+    ) external view returns (string memory document);
 
     /**
      * @notice Retrieves the complete record of a service identity

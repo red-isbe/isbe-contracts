@@ -45,6 +45,9 @@ import {LibCommon} from '../../core/LibCommon.sol';
  * @author ISBE Development Team
  */
 abstract contract ServiceDidRegistryInternal is DidControllerInternal {
+    /// @notice Largest service document the registry accepts, in bytes
+    uint256 internal constant _MAX_SERVICE_DOCUMENT_LENGTH = 4096;
+
     /**
      * @notice Storage structure of the service DID registry
      * @param records Mapping from service identifier to its complete record
@@ -53,6 +56,9 @@ abstract contract ServiceDidRegistryInternal is DidControllerInternal {
      * @param nonceByController Monotonic counter of registrations per controller. It is
      *        pre-incremented, so the first service identity of a controller carries
      *        nonce one and the counter always equals the last nonce consumed
+     * @param documents Optional document of each service identity, an opaque string a
+     *        resolver merges into the DID document. Appended after the first deployment,
+     *        so it sits last and leaves every earlier member at its original slot
      * @param serviceDidByPublicKeyHash Reverse index from the digest of the signing
      *        public key coordinates to the first service identifier that claimed it.
      *        Entries are never removed nor overwritten, so key material is permanently
@@ -67,6 +73,8 @@ abstract contract ServiceDidRegistryInternal is DidControllerInternal {
         mapping(bytes32 controllerDid => uint64 nonce) nonceByController;
         // solhint-disable-next-line max-line-length
         mapping(bytes32 publicKeyHash => bytes32 serviceDid) serviceDidByPublicKeyHash;
+        // Appended after the first deployment: new members only ever go at the end.
+        mapping(bytes32 serviceDid => string document) documents;
     }
 
     /**
@@ -440,6 +448,46 @@ abstract contract ServiceDidRegistryInternal is DidControllerInternal {
         if (!_isNotEmptyBytes32(index[keyHash])) {
             index[keyHash] = _serviceDid;
         }
+    }
+
+    /**
+     * @notice Validates that a service document is within the accepted size
+     * @param _document The service document to validate
+     */
+    function _checkServiceDocumentSize(string memory _document) internal pure {
+        uint256 length = bytes(_document).length;
+        require(
+            length <= _MAX_SERVICE_DOCUMENT_LENGTH,
+            IServiceDidRegistry.ServiceDocumentTooLarge(
+                length,
+                _MAX_SERVICE_DOCUMENT_LENGTH
+            )
+        );
+    }
+
+    /**
+     * @notice Stores the document of a service identity, replacing any previous one
+     * @param _serviceDid The service identifier whose document is set
+     * @param _document The service document, already checked for size
+     * @return documentHash_ `keccak256` of the stored document
+     */
+    function _setServiceDocument(
+        bytes32 _serviceDid,
+        string memory _document
+    ) internal returns (bytes32 documentHash_) {
+        _serviceDidRegistryStorage().documents[_serviceDid] = _document;
+        documentHash_ = keccak256(bytes(_document));
+    }
+
+    /**
+     * @notice Reads the document of a service identity
+     * @param _serviceDid The service identifier to look up
+     * @return The service document, or the empty string when it has none
+     */
+    function _getServiceDocument(
+        bytes32 _serviceDid
+    ) internal view returns (string memory) {
+        return _serviceDidRegistryStorage().documents[_serviceDid];
     }
 
     /**
