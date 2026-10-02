@@ -45,9 +45,6 @@ import {LibCommon} from '../../core/LibCommon.sol';
  * @author ISBE Development Team
  */
 abstract contract ServiceDidRegistryInternal is DidControllerInternal {
-    /// @notice Largest service document the registry accepts, in bytes
-    uint256 internal constant _MAX_SERVICE_DOCUMENT_LENGTH = 4096;
-
     /**
      * @notice Storage structure of the service DID registry
      * @param records Mapping from service identifier to its complete record
@@ -94,6 +91,9 @@ abstract contract ServiceDidRegistryInternal is DidControllerInternal {
         bytes32 newPubKeyX;
         bytes32 newPubKeyY;
     }
+
+    /// @notice Largest service document the registry accepts, in bytes
+    uint256 internal constant _MAX_SERVICE_DOCUMENT_LENGTH = 4096;
 
     /**
      * @notice Validates that the service identifier is registered
@@ -239,6 +239,42 @@ abstract contract ServiceDidRegistryInternal is DidControllerInternal {
         record.deactivated = true;
         record.updatedAt = uint64(_blockTimestamp());
         controllerDid_ = record.controllerDid;
+    }
+
+    /**
+     * @notice Records the first service identity to claim a signing key
+     * @dev Written only while the entry is empty. The entry is what binds the key to a
+     *      controller, so later services of that controller sharing the key must not
+     *      overwrite it: the binding stays with the first claimant, forever
+     * @param _pubKeyX The `x` coordinate of the signing public key
+     * @param _pubKeyY The `y` coordinate of the signing public key
+     * @param _serviceDid The service identifier now holding the key
+     */
+    function _bindSigningKey(
+        bytes32 _pubKeyX,
+        bytes32 _pubKeyY,
+        bytes32 _serviceDid
+    ) internal {
+        mapping(bytes32 => bytes32) storage index = _serviceDidRegistryStorage()
+            .serviceDidByPublicKeyHash;
+        bytes32 keyHash = _publicKeyHash(_pubKeyX, _pubKeyY);
+        if (!_isNotEmptyBytes32(index[keyHash])) {
+            index[keyHash] = _serviceDid;
+        }
+    }
+
+    /**
+     * @notice Stores the document of a service identity, replacing any previous one
+     * @param _serviceDid The service identifier whose document is set
+     * @param _document The service document, already checked for size
+     * @return documentHash_ `keccak256` of the stored document
+     */
+    function _setServiceDocument(
+        bytes32 _serviceDid,
+        string memory _document
+    ) internal returns (bytes32 documentHash_) {
+        _serviceDidRegistryStorage().documents[_serviceDid] = _document;
+        documentHash_ = keccak256(bytes(_document));
     }
 
     function _getServiceDid(
@@ -429,25 +465,14 @@ abstract contract ServiceDidRegistryInternal is DidControllerInternal {
     }
 
     /**
-     * @notice Records the first service identity to claim a signing key
-     * @dev Written only while the entry is empty. The entry is what binds the key to a
-     *      controller, so later services of that controller sharing the key must not
-     *      overwrite it: the binding stays with the first claimant, forever
-     * @param _pubKeyX The `x` coordinate of the signing public key
-     * @param _pubKeyY The `y` coordinate of the signing public key
-     * @param _serviceDid The service identifier now holding the key
+     * @notice Reads the document of a service identity
+     * @param _serviceDid The service identifier to look up
+     * @return The service document, or the empty string when it has none
      */
-    function _bindSigningKey(
-        bytes32 _pubKeyX,
-        bytes32 _pubKeyY,
+    function _getServiceDocument(
         bytes32 _serviceDid
-    ) internal {
-        mapping(bytes32 => bytes32) storage index = _serviceDidRegistryStorage()
-            .serviceDidByPublicKeyHash;
-        bytes32 keyHash = _publicKeyHash(_pubKeyX, _pubKeyY);
-        if (!_isNotEmptyBytes32(index[keyHash])) {
-            index[keyHash] = _serviceDid;
-        }
+    ) internal view returns (string memory) {
+        return _serviceDidRegistryStorage().documents[_serviceDid];
     }
 
     /**
@@ -463,31 +488,6 @@ abstract contract ServiceDidRegistryInternal is DidControllerInternal {
                 _MAX_SERVICE_DOCUMENT_LENGTH
             )
         );
-    }
-
-    /**
-     * @notice Stores the document of a service identity, replacing any previous one
-     * @param _serviceDid The service identifier whose document is set
-     * @param _document The service document, already checked for size
-     * @return documentHash_ `keccak256` of the stored document
-     */
-    function _setServiceDocument(
-        bytes32 _serviceDid,
-        string memory _document
-    ) internal returns (bytes32 documentHash_) {
-        _serviceDidRegistryStorage().documents[_serviceDid] = _document;
-        documentHash_ = keccak256(bytes(_document));
-    }
-
-    /**
-     * @notice Reads the document of a service identity
-     * @param _serviceDid The service identifier to look up
-     * @return The service document, or the empty string when it has none
-     */
-    function _getServiceDocument(
-        bytes32 _serviceDid
-    ) internal view returns (string memory) {
-        return _serviceDidRegistryStorage().documents[_serviceDid];
     }
 
     /**
