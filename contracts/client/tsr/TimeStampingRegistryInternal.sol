@@ -121,6 +121,7 @@ abstract contract TimeStampingRegistryInternal is
         TimestampingRegistryStorage storage $ = _timestampingRegistryStorage();
 
         // Add original hash to enumerable set for pagination
+        // slither-disable-next-line unused-return
         $.originalHashes.add(_originalHash);
 
         // Create complete record
@@ -249,6 +250,7 @@ abstract contract TimeStampingRegistryInternal is
         uint256 _pageIndex
     ) internal view returns (TsrData[] memory datas_) {
         TimestampingRegistryStorage storage $ = _timestampingRegistryStorage();
+        // slither-disable-next-line unused-return
         (uint256 cursor, uint256 howMany, , ) = LibCommon
             .getPaginationParameters(
                 $.originalHashes.length(),

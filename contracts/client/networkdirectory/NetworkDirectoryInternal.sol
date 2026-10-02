@@ -132,6 +132,7 @@ abstract contract NetworkDirectoryInternal is DidDocumentDetailedInternal {
     // -------- Internal actions --------
     function _createNetwork(NetworkData calldata network) internal {
         NetworkDirectoryStorage storage $ = _directoryStorage();
+        // slither-disable-next-line unused-return
         $.chainIds.add(network.chainId);
         unchecked {
             ++$.networksByAlgorithm[network.algorithm];
@@ -169,6 +170,7 @@ abstract contract NetworkDirectoryInternal is DidDocumentDetailedInternal {
 
     function _deleteNetwork(uint256 chainId) internal {
         NetworkDirectoryStorage storage $ = _directoryStorage();
+        // slither-disable-next-line unused-return
         $.chainIds.remove(chainId);
         ChainIdData storage data = $.networkData[chainId];
         unchecked {
@@ -182,6 +184,7 @@ abstract contract NetworkDirectoryInternal is DidDocumentDetailedInternal {
             }
             bytes32 resourceId = data.resourceIds.at(index);
             delete data.resources[resourceId];
+            // slither-disable-next-line unused-return
             data.resourceIds.remove(resourceId);
         }
     }
@@ -203,6 +206,7 @@ abstract contract NetworkDirectoryInternal is DidDocumentDetailedInternal {
             chainId
         ];
         delete chainIdData.resources[resourceId];
+        // slither-disable-next-line unused-return
         chainIdData.resourceIds.remove(resourceId);
     }
 
@@ -364,6 +368,7 @@ abstract contract NetworkDirectoryInternal is DidDocumentDetailedInternal {
         string calldata resource
     ) private {
         if (!chainIdData.resourceIds.contains(resourceId)) {
+            // slither-disable-next-line unused-return
             chainIdData.resourceIds.add(resourceId);
         }
         chainIdData.resources[resourceId] = resource;

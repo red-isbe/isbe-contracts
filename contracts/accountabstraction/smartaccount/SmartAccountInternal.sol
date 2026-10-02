@@ -165,6 +165,8 @@ abstract contract SmartAccountInternal is DidDocumentDetailedInternal {
         );
     }
 
+    // msg.sender is always the EntryPoint here (validateUserOp is requireFromEntryPoint).
+    // slither-disable-start arbitrary-send-eth
     /**
      * @notice Pays the prefund required by EntryPoint when necessary.
      * @dev Transfers missing funds back to EntryPoint. Uses maximum gas to
@@ -180,6 +182,7 @@ abstract contract SmartAccountInternal is DidDocumentDetailedInternal {
             (success);
         }
     }
+    // slither-disable-end arbitrary-send-eth
 
     /**
      * @notice Validates the signature attached to a user operation.
