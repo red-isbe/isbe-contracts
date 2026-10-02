@@ -600,23 +600,21 @@ abstract contract DidDocumentDetailedInternal is
      * @notice Ensures the invocation address of a public key is not already bound to a DID
      * @dev The registry keeps a single global address-to-DID mapping, so registering the
      *      same key under a second DID would silently overwrite the first one's entry.
-     *      The check only applies when the key uses the network elliptic curve, because
-     *      that is the only case in which the mapping is written. Revoked keys release
-     *      their entry and may therefore be registered again.
+     *      The mapping is only written for keys on the network elliptic curve; callers
+     *      must enforce that curve beforehand (`onlyValidEllipticType`). Revoked keys
+     *      release their entry and may therefore be registered again.
      *      Reuses the existing PublicKeyAlreadyInUse error rather than declaring a new
      *      one, so the facet ABI is left completely unchanged.
      * @param _publicKey The public key whose derived address is checked
-     * @param _ellipticType The elliptic curve type of the provided public key
      */
     function _checkPublicKeyNotRegistered(
-        bytes memory _publicKey,
-        IDidDocumentDetailed.EllipticType _ellipticType
+        bytes memory _publicKey
     ) internal view {
-        DidDocumentsStorage storage $ = _didDocumentsStorage();
-        if ($.networkEllipticType != _ellipticType) return;
         require(
             !_isNotEmptyBytes32(
-                $.invocationAddressToDid[_getAddress(_publicKey)]
+                _didDocumentsStorage().invocationAddressToDid[
+                    _getAddress(_publicKey)
+                ]
             ),
             IDidVerificationMethod.PublicKeyAlreadyInUse(_publicKey)
         );
