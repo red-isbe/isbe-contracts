@@ -77,6 +77,7 @@ abstract contract ValidatorManagerInternal is BesuNodeManagerInternalCore {
         );
 
         // Add to appropriate enumerable set for O(1) pagination
+        // slither-disable-next-line unused-return
         initialState == ValidatorState.active
             ? $.activeValidators.add(nodeId)
             : $.standbyValidators.add(nodeId);
@@ -91,7 +92,9 @@ abstract contract ValidatorManagerInternal is BesuNodeManagerInternalCore {
 
         // Update state atomically (timestamp unchanged, only 1 SSTORE)
         $.data[nodeId].state = ValidatorState.active;
+        // slither-disable-next-line unused-return
         $.standbyValidators.remove(nodeId);
+        // slither-disable-next-line unused-return
         $.activeValidators.add(nodeId);
     }
 
@@ -104,7 +107,9 @@ abstract contract ValidatorManagerInternal is BesuNodeManagerInternalCore {
 
         // Update state atomically (timestamp unchanged, only 1 SSTORE)
         $.data[nodeId].state = ValidatorState.standby;
+        // slither-disable-next-line unused-return
         $.activeValidators.remove(nodeId);
+        // slither-disable-next-line unused-return
         $.standbyValidators.add(nodeId);
     }
 
@@ -117,7 +122,9 @@ abstract contract ValidatorManagerInternal is BesuNodeManagerInternalCore {
 
         // Update state atomically (timestamp unchanged, only 1 SSTORE)
         $.data[nodeId].state = ValidatorState.quarantine;
+        // slither-disable-next-line unused-return
         $.standbyValidators.remove(nodeId);
+        // slither-disable-next-line unused-return
         $.quarantinedValidators.add(nodeId);
     }
 
@@ -130,7 +137,9 @@ abstract contract ValidatorManagerInternal is BesuNodeManagerInternalCore {
 
         // Update state atomically (timestamp unchanged, only 1 SSTORE)
         $.data[nodeId].state = ValidatorState.standby;
+        // slither-disable-next-line unused-return
         $.quarantinedValidators.remove(nodeId);
+        // slither-disable-next-line unused-return
         $.standbyValidators.add(nodeId);
     }
 
@@ -143,6 +152,7 @@ abstract contract ValidatorManagerInternal is BesuNodeManagerInternalCore {
         _checkNodeRegistered(nodeId, uint8(currentState));
 
         // Remove from appropriate enumerable set
+        // slither-disable-next-line unused-return
         currentState == ValidatorState.active
             ? $.activeValidators.remove(nodeId)
             : (currentState == ValidatorState.standby)
@@ -189,6 +199,7 @@ abstract contract ValidatorManagerInternal is BesuNodeManagerInternalCore {
             return nodes;
         }
         EnumerableSet.Bytes32Set storage set = _getValidatorSet(state);
+        // slither-disable-next-line unused-return
         (uint256 cursor, uint256 howMany, , ) = LibCommon
             .getPaginationParameters(set.length(), pageIndex, pageSize);
 

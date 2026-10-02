@@ -74,6 +74,7 @@ abstract contract ExecutionNodeManagerInternal is BesuNodeManagerInternalCore {
         );
 
         // Add to active enumerable set
+        // slither-disable-next-line unused-return
         $.activeExecutionNodes.add(nodeId);
     }
 
@@ -86,7 +87,9 @@ abstract contract ExecutionNodeManagerInternal is BesuNodeManagerInternalCore {
 
         // Update state atomically (timestamp unchanged, only 1 SSTORE)
         $.data[nodeId].state = ExecutionNodeState.quarantine;
+        // slither-disable-next-line unused-return
         $.activeExecutionNodes.remove(nodeId);
+        // slither-disable-next-line unused-return
         $.quarantinedExecutionNodes.add(nodeId);
     }
 
@@ -99,7 +102,9 @@ abstract contract ExecutionNodeManagerInternal is BesuNodeManagerInternalCore {
 
         // Update state atomically (timestamp unchanged, only 1 SSTORE)
         $.data[nodeId].state = ExecutionNodeState.active;
+        // slither-disable-next-line unused-return
         $.quarantinedExecutionNodes.remove(nodeId);
+        // slither-disable-next-line unused-return
         $.activeExecutionNodes.add(nodeId);
     }
 
@@ -112,6 +117,7 @@ abstract contract ExecutionNodeManagerInternal is BesuNodeManagerInternalCore {
         _checkNodeRegistered(nodeId, uint8(currentState));
 
         // Remove from appropriate enumerable set
+        // slither-disable-next-line unused-return
         currentState == ExecutionNodeState.active
             ? $.activeExecutionNodes.remove(nodeId)
             : $.quarantinedExecutionNodes.remove(nodeId);
@@ -158,6 +164,7 @@ abstract contract ExecutionNodeManagerInternal is BesuNodeManagerInternalCore {
 
         EnumerableSet.Bytes32Set storage set = _getExecutionNodeSet(state);
 
+        // slither-disable-next-line unused-return
         (uint256 cursor, uint256 howMany, , ) = LibCommon
             .getPaginationParameters(set.length(), pageIndex, pageSize);
 

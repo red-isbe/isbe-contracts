@@ -85,6 +85,7 @@ abstract contract ClientFilteringInternal is DidDocumentDetailedInternal {
         returns (IClientFiltering.Filter[] memory filters_)
     {
         ClientFilteringStorage storage $ = _clientFilteringStorage();
+        // slither-disable-next-line unused-return
         (uint256 cursor, uint256 howMany, , ) = LibCommon
             .getPaginationParameters($.clientFilters.length, _page, _pageSize);
         filters_ = new IClientFiltering.Filter[](howMany);
@@ -136,6 +137,8 @@ abstract contract ClientFilteringInternal is DidDocumentDetailedInternal {
         );
     }
 
+    // Trailing `false` is the fallback for unknown filter types, not a misused constant.
+    // slither-disable-start boolean-cst
     function _isValidFilter(
         IClientFiltering.Filter calldata _filter
     ) private pure returns (bool) {
@@ -159,6 +162,7 @@ abstract contract ClientFilteringInternal is DidDocumentDetailedInternal {
                                     : false
             ) && _hasValidBlockNumbers(_filter.initialBlock, _filter.endBlock);
     }
+    // slither-disable-end boolean-cst
     function _hasValidBlockNumbers(
         uint256 _initial,
         uint256 _end
