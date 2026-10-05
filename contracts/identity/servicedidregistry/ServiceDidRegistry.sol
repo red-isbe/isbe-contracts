@@ -165,57 +165,6 @@ abstract contract ServiceDidRegistry is
         return true;
     }
 
-    function getServiceDocument(
-        bytes32 _serviceDid
-    )
-        external
-        view
-        override
-        onlyServiceDidExists(_serviceDid)
-        returns (string memory document)
-    {
-        return _getServiceDocument(_serviceDid);
-    }
-
-    /**
-     * @notice Shared body of both registration entry points
-     * @dev The callers carry the modifiers; this performs the checks that depend on the
-     *      decoded key, stores the record and emits `ServiceDidRegistered`
-     */
-    function _registerAndAnnounce(
-        bytes32 _controllerDid,
-        bytes memory _publicKey,
-        IDidDocumentDetailed.EllipticType _ellipticType,
-        bytes32 _labelHash,
-        uint256 _expiresAt
-    ) internal returns (bytes32 serviceDid) {
-        ServiceDidRecord memory record;
-        {
-            _checkValidExpiry(_expiresAt);
-            (bytes32 pubKeyX, bytes32 pubKeyY) = _splitPublicKey(_publicKey);
-            _checkSigningKeyIsFree(_controllerDid, pubKeyX, pubKeyY);
-            (serviceDid, record) = _registerServiceDid(
-                _controllerDid,
-                pubKeyX,
-                pubKeyY,
-                _ellipticType,
-                _labelHash,
-                _expiresAt
-            );
-        }
-
-        emit ServiceDidRegistered(
-            serviceDid,
-            record.controllerDid,
-            record.pubKeyX,
-            record.pubKeyY,
-            record.ellipticType,
-            record.labelHash,
-            record.expiresAt,
-            record.nonce
-        );
-    }
-
     function rotateSigningKey(
         bytes32 _serviceDid,
         bytes memory _newPublicKey,
@@ -293,6 +242,18 @@ abstract contract ServiceDidRegistry is
         return true;
     }
 
+    function getServiceDocument(
+        bytes32 _serviceDid
+    )
+        external
+        view
+        override
+        onlyServiceDidExists(_serviceDid)
+        returns (string memory document)
+    {
+        return _getServiceDocument(_serviceDid);
+    }
+
     function getServiceDid(
         bytes32 _serviceDid
     )
@@ -347,5 +308,44 @@ abstract contract ServiceDidRegistry is
         uint64 _nonce
     ) external pure override returns (bytes32 serviceDid) {
         return _computeServiceDid(_controllerDid, _nonce);
+    }
+
+    /**
+     * @notice Shared body of both registration entry points
+     * @dev The callers carry the modifiers; this performs the checks that depend on the
+     *      decoded key, stores the record and emits `ServiceDidRegistered`
+     */
+    function _registerAndAnnounce(
+        bytes32 _controllerDid,
+        bytes memory _publicKey,
+        IDidDocumentDetailed.EllipticType _ellipticType,
+        bytes32 _labelHash,
+        uint256 _expiresAt
+    ) internal returns (bytes32 serviceDid) {
+        ServiceDidRecord memory record;
+        {
+            _checkValidExpiry(_expiresAt);
+            (bytes32 pubKeyX, bytes32 pubKeyY) = _splitPublicKey(_publicKey);
+            _checkSigningKeyIsFree(_controllerDid, pubKeyX, pubKeyY);
+            (serviceDid, record) = _registerServiceDid(
+                _controllerDid,
+                pubKeyX,
+                pubKeyY,
+                _ellipticType,
+                _labelHash,
+                _expiresAt
+            );
+        }
+
+        emit ServiceDidRegistered(
+            serviceDid,
+            record.controllerDid,
+            record.pubKeyX,
+            record.pubKeyY,
+            record.ellipticType,
+            record.labelHash,
+            record.expiresAt,
+            record.nonce
+        );
     }
 }

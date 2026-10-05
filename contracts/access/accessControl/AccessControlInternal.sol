@@ -114,7 +114,9 @@ abstract contract AccessControlInternal is ISBEContext, IsbeFactoryInternal {
     function _grantRole(bytes32 _role, address _account) internal virtual {
         if (_hasRole(_role, _account)) return;
 
+        // slither-disable-next-line unused-return
         _accessControlStorage().roles[_role].members.add(_account);
+        // slither-disable-next-line unused-return
         _accessControlStorage().rolesByAccount[_account].add(_role);
 
         emit IAccessControlEoa.RoleGranted(_role, _account, _msgSender());
@@ -133,7 +135,9 @@ abstract contract AccessControlInternal is ISBEContext, IsbeFactoryInternal {
     function _revokeRole(bytes32 _role, address _account) internal virtual {
         if (!_hasEoaRole(_role, _account)) return;
 
+        // slither-disable-next-line unused-return
         _accessControlStorage().roles[_role].members.remove(_account);
+        // slither-disable-next-line unused-return
         _accessControlStorage().rolesByAccount[_account].remove(_role);
 
         emit IAccessControlEoa.RoleRevoked(_role, _account, _msgSender());
@@ -142,7 +146,9 @@ abstract contract AccessControlInternal is ISBEContext, IsbeFactoryInternal {
     function _grantDidRole(bytes32 _role, bytes32 _did) internal virtual {
         if (_hasDidRole(_role, _did)) return;
 
+        // slither-disable-next-line unused-return
         _accessControlStorage().roles[_role].didMembers.add(_did);
+        // slither-disable-next-line unused-return
         _accessControlStorage().didRolesByAccount[_did].add(_role);
 
         emit IAccessControlDid.RoleGrantedToDid(_role, _did, _msgSender());
@@ -151,7 +157,9 @@ abstract contract AccessControlInternal is ISBEContext, IsbeFactoryInternal {
     function _revokeDidRole(bytes32 _role, bytes32 _did) internal virtual {
         if (!_hasDidRole(_role, _did)) return;
 
+        // slither-disable-next-line unused-return
         _accessControlStorage().roles[_role].didMembers.remove(_did);
+        // slither-disable-next-line unused-return
         _accessControlStorage().didRolesByAccount[_did].remove(_role);
 
         emit IAccessControlDid.RoleRevokedFromDid(_role, _did, _msgSender());

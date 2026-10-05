@@ -702,7 +702,7 @@ npx tsc --noEmit --skipLibCheck
 # Complete Slither analysis (requires Docker)
 npm run slither
 
-# Local Slither analysis
+# Local Slither analysis (same gate as CI: fails on medium/high findings)
 npm run slither:analysis:local
 
 # Generate security summary
@@ -1332,7 +1332,7 @@ This repository has two types of users:
 ### Mandatory Requirements
 
 - **100% test coverage** (lines and branches)
-- **Zero critical Slither vulnerabilities**
+- **Zero high/medium Slither findings** (enforced in CI)
 - **All linting rules pass** (Solidity + TypeScript)
 - **Prettier formatting applied**
 - **Clean npm audit** (no high/critical vulnerabilities)

@@ -308,6 +308,16 @@ describe('ServiceDidRegistry', () => {
                     NEVER_EXPIRES
                 )
             ).to.be.revertedWithCustomError(didRegistry, 'DidNotExists')
+            await expect(
+                serviceDidRegistry.registerServiceDidWithDocument(
+                    ethers.id('did inexistente'),
+                    freeKey(48).publicKey,
+                    EllipticType.SECP_256_K1,
+                    ethers.id('huerfano con documento'),
+                    NEVER_EXPIRES,
+                    '{}'
+                )
+            ).to.be.revertedWithCustomError(didRegistry, 'DidNotExists')
         })
 
         it('GIVEN an expiry in the past WHEN registering THEN it fails', async () => {
@@ -594,6 +604,36 @@ describe('ServiceDidRegistry', () => {
                 serviceDidRegistry,
                 'SigningKeyAlreadyInUse'
             )
+        })
+
+        it('GIVEN a rotation WHEN the new key shares only the x coordinate THEN it is accepted', async () => {
+            const { serviceDidRegistry, parentDid } = await registryFixture()
+            const { publicKey, wallet } = freeKey(49)
+            // Private key n - k yields the mirrored point (x, p - y): a genuine key whose
+            // x coordinate equals the current one while y differs.
+            const SECP256K1_N = BigInt(
+                '0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141'
+            )
+            const mirrored = new Wallet(
+                ethers.toBeHex(SECP256K1_N - BigInt(wallet.privateKey), 32)
+            ).signingKey.publicKey
+            expect(mirrored.slice(4, 68)).to.equal(publicKey.slice(4, 68))
+            expect(mirrored.slice(68)).to.not.equal(publicKey.slice(68))
+
+            await register(
+                serviceDidRegistry as never,
+                parentDid,
+                publicKey,
+                'espejo'
+            )
+
+            await expect(
+                serviceDidRegistry.rotateSigningKey(
+                    await serviceDidRegistry.computeServiceDid(parentDid, 1),
+                    mirrored,
+                    EllipticType.SECP_256_K1
+                )
+            ).to.emit(serviceDidRegistry, 'ServiceDidKeyRotated')
         })
     })
 
@@ -1305,6 +1345,15 @@ describe('ServiceDidRegistry', () => {
                 ),
                 serviceDidRegistry.updateExpiry(ZERO32, YEAR_2033),
                 serviceDidRegistry.deactivateServiceDid(ZERO32),
+                serviceDidRegistry.registerServiceDidWithDocument(
+                    ZERO32,
+                    freeKey(46).publicKey,
+                    EllipticType.SECP_256_K1,
+                    ethers.id('sin padre con documento'),
+                    NEVER_EXPIRES,
+                    '{}'
+                ),
+                serviceDidRegistry.updateServiceDocument(ZERO32, '{}'),
             ]) {
                 await expect(call).to.be.revertedWithCustomError(
                     serviceDidRegistryFacet,
@@ -1333,6 +1382,14 @@ describe('ServiceDidRegistry', () => {
                     serviceDid,
                     '0x',
                     EllipticType.SECP_256_K1
+                ),
+                serviceDidRegistry.registerServiceDidWithDocument(
+                    parentDid,
+                    '0x',
+                    EllipticType.SECP_256_K1,
+                    ethers.id('sin clave con documento'),
+                    NEVER_EXPIRES,
+                    '{}'
                 ),
             ]) {
                 await expect(call).to.be.revertedWithCustomError(
@@ -1363,6 +1420,14 @@ describe('ServiceDidRegistry', () => {
                     serviceDid,
                     freeKey(36).publicKey,
                     NONE
+                ),
+                serviceDidRegistry.registerServiceDidWithDocument(
+                    parentDid,
+                    freeKey(47).publicKey,
+                    NONE,
+                    ethers.id('sin curva con documento'),
+                    NEVER_EXPIRES,
+                    '{}'
                 ),
             ]) {
                 await expect(call).to.be.revertedWithCustomError(

@@ -220,6 +220,7 @@ abstract contract ProxyFactoryInternal is ConfigurationManagementInternal {
         address _deployedProxyAddress
     ) private {
         ProxyFactoryStorage storage $ = _proxyFactoryStorage();
+        // slither-disable-next-line unused-return
         $.configurationToProxyAddress[_configurationId][_version].add(
             _deployedProxyAddress
         );

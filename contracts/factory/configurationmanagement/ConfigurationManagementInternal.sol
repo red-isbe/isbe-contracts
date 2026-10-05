@@ -88,10 +88,12 @@ abstract contract ConfigurationManagementInternal is
         for (uint256 index; index < length; ) {
             data = integratedBusinessData[index];
             facetAddress = facetAddresses[index];
+            // slither-disable-next-line unused-return
             $.businessIds[_configurationId][version_].add(data.businessId);
             $.businessVersions[_configurationId][version_][
                 data.businessId
             ] = data.version;
+            // slither-disable-next-line unused-return
             $.facetAddresses[_configurationId][version_].add(facetAddress);
             _storeFunctionSelectors(
                 $,

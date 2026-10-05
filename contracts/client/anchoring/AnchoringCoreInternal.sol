@@ -59,6 +59,7 @@ abstract contract AnchoringCoreInternal is Common {
     }
 
     function _registerChain(uint256 _chainId) internal {
+        // slither-disable-next-line unused-return
         _anchoringStorage().registeredChainIds.add(_chainId);
     }
 
@@ -350,6 +351,7 @@ abstract contract AnchoringCoreInternal is Common {
             _timestamp,
             _anchorer
         );
+        // slither-disable-next-line unused-return
         chainData.anchoredBlockNumbers.add(_blockNumber);
     }
 

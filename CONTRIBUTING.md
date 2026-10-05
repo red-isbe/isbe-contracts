@@ -86,7 +86,7 @@ Fixes #123
 | Requirement             | Standard                                     |
 | ----------------------- | -------------------------------------------- |
 | Test Coverage           | 100% (lines and branches)                    |
-| Slither Vulnerabilities | Zero critical issues                         |
+| Slither Vulnerabilities | Zero high/medium issues (enforced in CI)     |
 | Linting                 | All Solidity + TypeScript rules pass         |
 | Formatting              | Prettier applied                             |
 | npm audit               | No high/critical vulnerabilities             |
