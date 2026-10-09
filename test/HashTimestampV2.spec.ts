@@ -15,7 +15,7 @@ limitations under the License.
 import { expect } from 'chai'
 import { config, ethers } from 'hardhat'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
-import { HDNodeWallet, ZeroHash } from 'ethers'
+import { HDNodeWallet, ZeroAddress, ZeroHash } from 'ethers'
 import { deployGovernance } from './fixtures/governance'
 import { EllipticType } from './types/identity'
 import { generateProof, proofToDid } from './support'
@@ -36,6 +36,8 @@ const RESOLVER_KEY = ethers.id('isbe.contracts.hash.timestamp.v2.resolver.key')
 const CONFIGURATION_ID = ethers.id(
     'isbe.contracts.configuration.hash.timestamp.v2.test'
 )
+/** Enum value of IDiamond.ItemCutAction.Add */
+const ITEM_CUT_ACTION_ADD = 0
 const NOT_BEFORE = 5n
 const NOT_AFTER = NOT_BEFORE + 1_000_000_000_000n
 
@@ -151,6 +153,9 @@ describe('HashTimestampV2 (evidence attributed to entity DIDs)', () => {
             // ISBE keeps the pauser role irrevocably: it pauses through the factory (spec H24).
             pauseByIsbe: () => isbeFactory.pauseIsbe(proxy),
             accessControlDid,
+            gov,
+            admin: admin!,
+            governanceAddress: factoryAddress,
             registry,
             entityA,
             entityB,
@@ -441,6 +446,68 @@ describe('HashTimestampV2 (evidence attributed to entity DIDs)', () => {
                     .timestampHash(STAMPED, ZeroHash, entityA.did)
             ).to.be.revertedWithCustomError(evidence, 'IsPaused')
             expect(await evidence.exists(HASH, entityA.did)).to.equal(true)
+        })
+    })
+
+    describe('core diamond (not a use case)', () => {
+        // Cut into the governance diamond itself: there is no factory behind it, so the
+        // signer check resolves against the local DID registry instead of the factory.
+        async function deployOnGovernanceFixture() {
+            const fixture = await deployFixture()
+            const { gov, admin, governanceAddress } = fixture
+            const facet = await (
+                await ethers.getContractFactory('HashTimestampV2Facet')
+            ).deploy()
+            await gov.diamondCutAccessControl.connect(admin).diamondCut(
+                [
+                    {
+                        facetAddress: await facet.getAddress(),
+                        action: ITEM_CUT_ACTION_ADD,
+                        items: [...(await facet.selectorsIntrospection())],
+                    },
+                ],
+                ZeroAddress,
+                '0x'
+            )
+            const accessControlDidGovernance = (
+                await ethers.getContractFactory('AccessControlDidFacet')
+            )
+                .attach(governanceAddress)
+                .connect(admin) as AccessControlDidFacet
+            await accessControlDidGovernance.grantDidRole(
+                HASH_TIMESTAMP_ROLE,
+                fixture.entityA.did
+            )
+            return {
+                ...fixture,
+                evidenceOnGovernance: facet.attach(
+                    governanceAddress
+                ) as HashTimestampV2Facet,
+            }
+        }
+
+        it('GIVEN the facet on the governance diamond WHEN the assertionMethod key registers THEN stores the record and rejects other keys', async () => {
+            const { evidenceOnGovernance, entityA } = await loadFixture(
+                deployOnGovernanceFixture
+            )
+
+            await evidenceOnGovernance
+                .connect(entityA.docker)
+                .timestampHash(HASH, ZeroHash, entityA.did)
+
+            expect(
+                await evidenceOnGovernance.exists(HASH, entityA.did)
+            ).to.equal(true)
+            await expect(
+                evidenceOnGovernance
+                    .connect(entityA.founder)
+                    .timestampHash(STAMPED, ZeroHash, entityA.did)
+            )
+                .to.be.revertedWithCustomError(
+                    evidenceOnGovernance,
+                    'SignerNotAssertionMethod'
+                )
+                .withArgs(entityA.did, entityA.founder.address)
         })
     })
 
