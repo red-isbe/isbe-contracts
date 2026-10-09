@@ -360,6 +360,99 @@ abstract contract ServiceDidRegistryInternal is DidControllerInternal {
         return _signingKeyAddress(record.pubKeyX, record.pubKeyY);
     }
 
+    /**
+     * @notice Finds the service identities whose current signing key derives an address
+     * @dev Nothing is indexed by address: the lookup walks one page of the global list
+     *      of organisational identifiers kept by the DID registry and, for each of them,
+     *      every service identity it controls, deriving the address from the stored
+     *      coordinates. Every controller is a registered organisational identifier
+     *      (`onlyDidExists` on registration), so walking all pages covers every service
+     *      identity. Pagination applies to organisational identifiers, not to matches.
+     *      Only the current key is compared, so a key rotated away no longer matches.
+     *      Deactivated and expired identities are returned as well; callers filter
+     *      with `_isActiveServiceDid`
+     * @param _address The signing key address to look for
+     * @param _page Page of the list of organisational identifiers to scan
+     * @param _pageSize Number of organisational identifiers per page
+     * @return serviceDids_ Matching service identifiers within the scanned page
+     * @return total_ Total number of organisational identifiers
+     * @return howMany_ Number of organisational identifiers scanned in this page
+     * @return prev_ Previous page number
+     * @return next_ Next page number
+     */
+    function _getServiceDidsByAddress(
+        address _address,
+        uint256 _page,
+        uint256 _pageSize
+    )
+        internal
+        view
+        returns (
+            bytes32[] memory serviceDids_,
+            uint256 total_,
+            uint256 howMany_,
+            uint256 prev_,
+            uint256 next_
+        )
+    {
+        bytes32[] memory controllers;
+        (controllers, total_, howMany_, prev_, next_) = _getDids(
+            _page,
+            _pageSize
+        );
+        // First pass sizes the array, second pass fills it
+        uint256 matches = _collectServiceDidsByAddress(
+            controllers,
+            _address,
+            serviceDids_
+        );
+        serviceDids_ = new bytes32[](matches);
+        if (matches != 0) {
+            _collectServiceDidsByAddress(controllers, _address, serviceDids_);
+        }
+    }
+
+    /**
+     * @notice Counts, and optionally writes, the service identities of a set of
+     *         controllers whose current signing key derives `_address`
+     * @dev Writes into `_out` only when it is non-empty, which lets the same loop
+     *      serve both the sizing and the filling pass
+     * @param _controllers Organisational identifiers to scan
+     * @param _address The signing key address to look for
+     * @param _out Destination array, or an empty array to only count
+     * @return matches_ Number of matching service identifiers
+     */
+    function _collectServiceDidsByAddress(
+        bytes32[] memory _controllers,
+        address _address,
+        bytes32[] memory _out
+    ) internal view returns (uint256 matches_) {
+        ServiceDidRegistryStorage storage $ = _serviceDidRegistryStorage();
+        bool write = _out.length != 0;
+        uint256 controllersLength = _controllers.length;
+        for (uint256 i; i < controllersLength; ) {
+            bytes32[] storage serviceDids = $.serviceDidsByController[
+                _controllers[i]
+            ];
+            uint256 serviceDidsLength = serviceDids.length;
+            for (uint256 j; j < serviceDidsLength; ) {
+                bytes32 serviceDid = serviceDids[j];
+                if (_signingKeyAddressOf(serviceDid) == _address) {
+                    if (write) _out[matches_] = serviceDid;
+                    unchecked {
+                        ++matches_;
+                    }
+                }
+                unchecked {
+                    ++j;
+                }
+            }
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
     function _checkServiceDidExists(bytes32 _serviceDid) internal view {
         require(
             _serviceDidRegistryStorage().records[_serviceDid].exists,

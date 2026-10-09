@@ -303,6 +303,25 @@ abstract contract ServiceDidRegistry is
         return _signingKeyAddressOf(_serviceDid);
     }
 
+    function getServiceDidsByAddress(
+        address _address,
+        uint256 _page,
+        uint256 _pageSize
+    )
+        external
+        view
+        override
+        returns (
+            bytes32[] memory serviceDids,
+            uint256 total,
+            uint256 howMany,
+            uint256 prev,
+            uint256 next
+        )
+    {
+        return _getServiceDidsByAddress(_address, _page, _pageSize);
+    }
+
     function computeServiceDid(
         bytes32 _controllerDid,
         uint64 _nonce

@@ -965,6 +965,254 @@ describe('ServiceDidRegistry', () => {
         })
     })
 
+    describe('getServiceDidsByAddress (ISBECORE-354)', () => {
+        // Large enough to cover every organisational DID of the fixture in one page.
+        const ALL = 1000
+
+        // Two organisations: the parent (signer 0) and another one (signer 1).
+        async function withTwoOrganisations() {
+            const base = await registryFixture()
+            const otherOrg = await insertOrganisationalDid(
+                base.didRegistry as never,
+                1,
+                'otra-organizacion'
+            )
+            return { ...base, otherDid: otherOrg.did }
+        }
+
+        async function registerAndGet(
+            registry: Contract,
+            controllerDid: string,
+            publicKey: string,
+            label: string
+        ): Promise<string> {
+            const receipt = await (
+                await registry.registerServiceDid(
+                    controllerDid,
+                    publicKey,
+                    EllipticType.SECP_256_K1,
+                    ethers.id(label),
+                    NEVER_EXPIRES
+                )
+            ).wait()
+            for (const log of receipt.logs) {
+                try {
+                    const parsed = registry.interface.parseLog(log)
+                    if (parsed?.name === 'ServiceDidRegistered') {
+                        return parsed.args.serviceDid as string
+                    }
+                } catch {
+                    // Logs of other facets are ignored
+                }
+            }
+            throw new Error('ServiceDidRegistered not emitted')
+        }
+
+        async function find(registry: Contract, address: string) {
+            const [serviceDids] = await registry.getServiceDidsByAddress(
+                address,
+                1,
+                ALL
+            )
+            return [...serviceDids]
+        }
+
+        it('GIVEN a registered service WHEN searching by the address of its key THEN it is found', async () => {
+            const { serviceDidRegistry, parentDid } = await registryFixture()
+            const key = freeKey(60)
+            const serviceDid = await registerAndGet(
+                serviceDidRegistry as never,
+                parentDid,
+                key.publicKey,
+                'agente'
+            )
+
+            expect(
+                await find(serviceDidRegistry as never, key.wallet.address)
+            ).to.deep.equal([serviceDid])
+        })
+
+        it('GIVEN services of two organisations WHEN searching THEN each address returns only its own service', async () => {
+            const { serviceDidRegistry, parentDid, otherDid, other } =
+                await withTwoOrganisations()
+            const mine = freeKey(61)
+            const theirs = freeKey(62)
+            const mineDid = await registerAndGet(
+                serviceDidRegistry as never,
+                parentDid,
+                mine.publicKey,
+                'mio'
+            )
+            const theirsDid = await registerAndGet(
+                serviceDidRegistry.connect(other) as never,
+                otherDid,
+                theirs.publicKey,
+                'suyo'
+            )
+
+            expect(
+                await find(serviceDidRegistry as never, mine.wallet.address)
+            ).to.deep.equal([mineDid])
+            expect(
+                await find(serviceDidRegistry as never, theirs.wallet.address)
+            ).to.deep.equal([theirsDid])
+        })
+
+        it('GIVEN one key backing two services of the same organisation WHEN searching THEN both are returned', async () => {
+            const { serviceDidRegistry, parentDid } = await registryFixture()
+            const key = freeKey(63)
+            const first = await registerAndGet(
+                serviceDidRegistry as never,
+                parentDid,
+                key.publicKey,
+                'primero'
+            )
+            const second = await registerAndGet(
+                serviceDidRegistry as never,
+                parentDid,
+                key.publicKey,
+                'segundo'
+            )
+
+            expect(
+                await find(serviceDidRegistry as never, key.wallet.address)
+            ).to.deep.equal([first, second])
+        })
+
+        it('GIVEN an address without services WHEN searching THEN the result is empty', async () => {
+            const { serviceDidRegistry, parentDid } = await registryFixture()
+            await registerAndGet(
+                serviceDidRegistry as never,
+                parentDid,
+                freeKey(64).publicKey,
+                'otro'
+            )
+
+            expect(
+                await find(
+                    serviceDidRegistry as never,
+                    freeKey(65).wallet.address
+                )
+            ).to.deep.equal([])
+        })
+
+        it('GIVEN a rotation WHEN searching THEN the new address finds it and the old one does not', async () => {
+            const { serviceDidRegistry, parentDid } = await registryFixture()
+            const original = freeKey(66)
+            const replacement = freeKey(67)
+            const serviceDid = await registerAndGet(
+                serviceDidRegistry as never,
+                parentDid,
+                original.publicKey,
+                'a rotar'
+            )
+            await serviceDidRegistry.rotateSigningKey(
+                serviceDid,
+                replacement.publicKey,
+                EllipticType.SECP_256_K1
+            )
+
+            expect(
+                await find(serviceDidRegistry as never, original.wallet.address)
+            ).to.deep.equal([])
+            expect(
+                await find(
+                    serviceDidRegistry as never,
+                    replacement.wallet.address
+                )
+            ).to.deep.equal([serviceDid])
+        })
+
+        it('GIVEN a deactivated service WHEN searching THEN it is still returned and reported inactive', async () => {
+            const { serviceDidRegistry, parentDid } = await registryFixture()
+            const key = freeKey(68)
+            const serviceDid = await registerAndGet(
+                serviceDidRegistry as never,
+                parentDid,
+                key.publicKey,
+                'a desactivar'
+            )
+            await serviceDidRegistry.deactivateServiceDid(serviceDid)
+
+            expect(
+                await find(serviceDidRegistry as never, key.wallet.address)
+            ).to.deep.equal([serviceDid])
+            expect(await serviceDidRegistry.isServiceDidActive(serviceDid)).to
+                .be.false
+        })
+
+        it('GIVEN several organisations WHEN paging one organisation at a time THEN every page together finds the service', async () => {
+            const { serviceDidRegistry, otherDid, other } =
+                await withTwoOrganisations()
+            const key = freeKey(69)
+            const serviceDid = await registerAndGet(
+                serviceDidRegistry.connect(other) as never,
+                otherDid,
+                key.publicKey,
+                'en otra pagina'
+            )
+
+            const [, total] = await serviceDidRegistry.getServiceDidsByAddress(
+                key.wallet.address,
+                1,
+                1
+            )
+            expect(total).to.be.greaterThanOrEqual(2)
+
+            const found: string[] = []
+            let pagesWithoutMatch = 0
+            for (let page = 1n; page <= total; page++) {
+                const [serviceDids, , howMany] =
+                    await serviceDidRegistry.getServiceDidsByAddress(
+                        key.wallet.address,
+                        page,
+                        1
+                    )
+                expect(howMany).to.equal(1)
+                if (serviceDids.length === 0) pagesWithoutMatch++
+                found.push(...serviceDids)
+            }
+
+            expect(found).to.deep.equal([serviceDid])
+            expect(pagesWithoutMatch).to.equal(Number(total) - 1)
+        })
+
+        it('GIVEN a page beyond the end WHEN searching THEN it is empty but reports the total', async () => {
+            const { serviceDidRegistry, parentDid } = await registryFixture()
+            const key = freeKey(70)
+            await registerAndGet(
+                serviceDidRegistry as never,
+                parentDid,
+                key.publicKey,
+                'cualquiera'
+            )
+
+            const [serviceDids, total, howMany] =
+                await serviceDidRegistry.getServiceDidsByAddress(
+                    key.wallet.address,
+                    ALL,
+                    ALL
+                )
+
+            expect(serviceDids.length).to.equal(0)
+            expect(howMany).to.equal(0)
+            expect(total).to.be.greaterThan(0)
+        })
+
+        it('GIVEN the facet WHEN reading its selectors THEN the search is exposed', async () => {
+            const { serviceDidRegistry, serviceDidRegistryFacet } =
+                await registryFixture()
+
+            expect(
+                await serviceDidRegistryFacet.selectorsIntrospection()
+            ).to.include(
+                serviceDidRegistry.interface.getFunction(
+                    'getServiceDidsByAddress'
+                )!.selector
+            )
+        })
+    })
+
     describe('initializeServiceDidRegistry', () => {
         async function uninitialised() {
             const base = await loadFixture(deployServiceDidRegistryFixture)
