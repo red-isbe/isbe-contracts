@@ -3955,6 +3955,198 @@ describe('DiDRegistry', function () {
                         .false
                 })
             })
+
+            describe('hasActiveRelationship', () => {
+                // Adds a verification method declared only as assertionMethod (no capabilityInvocation)
+                async function addAssertionKey(
+                    path: string,
+                    relationshipNotBefore: bigint = notBefore,
+                    relationshipNotAfter: bigint = notAfter
+                ) {
+                    const assertionWallet = deriveWallet(wallet, path)
+                    const assertionVMethodId = randomDid()
+                    await didRegistry.addVerificationMethod(
+                        did,
+                        assertionVMethodId,
+                        assertionWallet.signingKey.publicKey,
+                        EllipticType.SECP_256_K1
+                    )
+                    await didRegistry.addVerificationRelationship(
+                        did,
+                        ASSERTION_RELATIONSHIP,
+                        assertionVMethodId,
+                        relationshipNotBefore,
+                        relationshipNotAfter
+                    )
+                    return {
+                        address: await assertionWallet.getAddress(),
+                        vMethodId: assertionVMethodId,
+                    }
+                }
+
+                it('GIVEN key declared only as assertionMethod WHEN checking assertionMethod THEN returns true while didOf returns zero', async () => {
+                    const { address } = await addAssertionKey('30')
+
+                    expect(
+                        await didRegistry.hasActiveRelationship(
+                            did,
+                            ASSERTION_RELATIONSHIP,
+                            address
+                        )
+                    ).to.be.true
+                    expect(await didRegistry.didOf(address)).to.equal(
+                        ethers.ZeroHash
+                    )
+                })
+
+                it('GIVEN key declared only as assertionMethod WHEN checking another relationship THEN returns false', async () => {
+                    const { address } = await addAssertionKey('31')
+
+                    expect(
+                        await didRegistry.hasActiveRelationship(
+                            did,
+                            AUTHENTICATION_RELATIONSHIP,
+                            address
+                        )
+                    ).to.be.false
+                    expect(
+                        await didRegistry.hasActiveRelationship(
+                            did,
+                            CAPABILITY_INVOCATION_RELATIONSHIP,
+                            address
+                        )
+                    ).to.be.false
+                })
+
+                it('GIVEN vMethod without relationships WHEN checking assertionMethod THEN returns false', async () => {
+                    const keyWallet = deriveWallet(wallet, '32')
+                    await didRegistry.addVerificationMethod(
+                        did,
+                        randomDid(),
+                        keyWallet.signingKey.publicKey,
+                        EllipticType.SECP_256_K1
+                    )
+
+                    expect(
+                        await didRegistry.hasActiveRelationship(
+                            did,
+                            ASSERTION_RELATIONSHIP,
+                            await keyWallet.getAddress()
+                        )
+                    ).to.be.false
+                })
+
+                it('GIVEN assertionMethod key of one DID WHEN checking against another DID THEN returns false', async () => {
+                    const { address } = await addAssertionKey('33')
+                    const otherDid = await insertControllerDocument()
+
+                    expect(
+                        await didRegistry.hasActiveRelationship(
+                            otherDid,
+                            ASSERTION_RELATIONSHIP,
+                            address
+                        )
+                    ).to.be.false
+                })
+
+                it('GIVEN unknown address or unknown DID WHEN checking assertionMethod THEN returns false', async () => {
+                    const { address } = await addAssertionKey('34')
+
+                    expect(
+                        await didRegistry.hasActiveRelationship(
+                            did,
+                            ASSERTION_RELATIONSHIP,
+                            ethers.Wallet.createRandom().address
+                        )
+                    ).to.be.false
+                    expect(
+                        await didRegistry.hasActiveRelationship(
+                            randomDid(),
+                            ASSERTION_RELATIONSHIP,
+                            address
+                        )
+                    ).to.be.false
+                })
+
+                it('GIVEN revoked assertionMethod key WHEN checking assertionMethod THEN returns false', async () => {
+                    const { address, vMethodId: assertionVMethodId } =
+                        await addAssertionKey('35')
+                    expect(
+                        await didRegistry.hasActiveRelationship(
+                            did,
+                            ASSERTION_RELATIONSHIP,
+                            address
+                        )
+                    ).to.be.true
+
+                    await didRegistry.revokeVerificationMethod(
+                        did,
+                        assertionVMethodId,
+                        notBefore
+                    )
+
+                    expect(
+                        await didRegistry.hasActiveRelationship(
+                            did,
+                            ASSERTION_RELATIONSHIP,
+                            address
+                        )
+                    ).to.be.false
+                })
+
+                it('GIVEN assertionMethod period WHEN checking outside and at its boundaries THEN only notBefore..notAfter-1 is active', async () => {
+                    const periodStart = notBefore + 10n
+                    const periodEnd = notBefore + 20n
+                    const { address } = await addAssertionKey(
+                        '36',
+                        periodStart,
+                        periodEnd
+                    )
+                    const check = () =>
+                        didRegistry.hasActiveRelationship(
+                            did,
+                            ASSERTION_RELATIONSHIP,
+                            address
+                        )
+
+                    await mockTimestamp.setMockedTimestamp(periodStart - 1n)
+                    expect(await check()).to.be.false
+                    await mockTimestamp.setMockedTimestamp(periodStart)
+                    expect(await check()).to.be.true
+                    await mockTimestamp.setMockedTimestamp(periodEnd - 1n)
+                    expect(await check()).to.be.true
+                    await mockTimestamp.setMockedTimestamp(periodEnd)
+                    expect(await check()).to.be.false
+                })
+
+                it('GIVEN founder key WHEN checking capabilityInvocation THEN matches isKnownDid', async () => {
+                    const walletAddress = await wallet.getAddress()
+
+                    expect(
+                        await didRegistry.hasActiveRelationship(
+                            did,
+                            CAPABILITY_INVOCATION_RELATIONSHIP,
+                            walletAddress
+                        )
+                    ).to.be.true
+                    expect(
+                        await didRegistry.hasActiveRelationship(
+                            did,
+                            ASSERTION_RELATIONSHIP,
+                            walletAddress
+                        )
+                    ).to.be.false
+
+                    await mockTimestamp.setMockedTimestamp(notAfter + 1n)
+                    expect(
+                        await didRegistry.hasActiveRelationship(
+                            did,
+                            CAPABILITY_INVOCATION_RELATIONSHIP,
+                            walletAddress
+                        )
+                    ).to.equal(await didRegistry.isKnownDid(walletAddress))
+                })
+            })
         })
 
         describe('Facet Introspection Functions', () => {
@@ -4082,7 +4274,7 @@ describe('DiDRegistry', function () {
                         await didRegistryQueryFacet.selectorsIntrospection()
 
                     expect(selectors.length).to.be.greaterThan(0)
-                    expect(selectors.length).to.equal(2) // didOf and isKnownDid
+                    expect(selectors.length).to.equal(3) // didOf, isKnownDid and hasActiveRelationship
                 })
             })
         })

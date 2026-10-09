@@ -34,4 +34,13 @@ abstract contract DidRegistryQuery is
     ) external view override returns (bytes32 did) {
         return _didOf(account);
     }
+
+    /// @inheritdoc IDidRegistryQuery
+    function hasActiveRelationship(
+        bytes32 did,
+        string calldata name,
+        address account
+    ) external view override returns (bool) {
+        return _hasActiveRelationship(did, name, account);
+    }
 }
