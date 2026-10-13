@@ -450,6 +450,50 @@ interface IServiceDidRegistry {
     ) external view returns (address signingKeyAddress);
 
     /**
+     * @notice Finds the service identities whose current signing key derives an address
+     * @dev Search by address without an address index: the address is derived on read
+     *      from the stored coordinates, as in `signingKeyAddressOf`. The lookup walks
+     *      one page of the global list of organisational identifiers of the DID
+     *      registry and every service identity each of them controls; walking all pages
+     *      covers every service identity, since every controller is a registered
+     *      organisational identifier.
+     *
+     *      Pagination applies to organisational identifiers, not to matches: `total`,
+     *      `howMany`, `prev` and `next` describe the scanned organisations, and a page
+     *      may return no match while a later one does. Its cost grows with the number of
+     *      organisations and service identities, so it is meant for off-chain reads; a
+     *      contract that already knows the organisation should prefer
+     *      `getServiceDidsByController`.
+     *
+     *      Only the current signing key is compared, so a key rotated away no longer
+     *      matches. Deactivated and expired identities are included; callers filter
+     *      them with `isServiceDidActive`. A key may back several service identities of
+     *      the same organisation, hence the array.
+     * @param signingKeyAddress The signing key address to look for
+     * @param page Page of the list of organisational identifiers to scan
+     * @param pageSize Number of organisational identifiers per page
+     * @return serviceDids Matching service identifiers within the scanned page
+     * @return total Total number of organisational identifiers
+     * @return howMany Number of organisational identifiers scanned in this page
+     * @return prev Previous page number
+     * @return next Next page number
+     */
+    function getServiceDidsByAddress(
+        address signingKeyAddress,
+        uint256 page,
+        uint256 pageSize
+    )
+        external
+        view
+        returns (
+            bytes32[] memory serviceDids,
+            uint256 total,
+            uint256 howMany,
+            uint256 prev,
+            uint256 next
+        );
+
+    /**
      * @notice Derives the identifier that a controller and nonce produce
      * @dev Exposed so that libraries and clients can reproduce a known identifier
      *      off-chain. Nonces start at one. The derivation is

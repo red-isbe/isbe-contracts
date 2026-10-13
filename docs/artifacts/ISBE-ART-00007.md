@@ -4,15 +4,15 @@
 
 ## 1. Identificación del Artefacto
 
-| Campo                     | Valor                                                                                                                                       |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Nombre del artefacto**  | ISBE-ART-00007 — Service DID Registry Contract (contracts/identity/servicedidregistry)                                                      |
+| Campo                     | Valor                                                                                                                                           |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Nombre del artefacto**  | ISBE-ART-00007 — Service DID Registry Contract (contracts/identity/servicedidregistry)                                                          |
 | **Origen**                | Repositorio oficial de Smart Contracts de ISBE. Faceta del Diamond de gobernanza (EIP-2535) que extiende el registro did:isbe (ISBE-ART-00000). |
-| **Estado**                | Borrador                                                                                                                                    |
-| **Versión del documento** | 0.1.0                                                                                                                                       |
-| **Fecha**                 | 2026-10-09                                                                                                                                  |
-| **Repositorio**           | [https://github.com/red-isbe/isbe-contracts](https://github.com/red-isbe/isbe-contracts/tree/main/contracts/identity/servicedidregistry)   |
-| **Commit**                | `ab3c2646d35158f76b27a2e01b72725840c71e01`                                                                                                  |
+| **Estado**                | Borrador                                                                                                                                        |
+| **Versión del documento** | 0.2.0                                                                                                                                           |
+| **Fecha**                 | 2026-10-13                                                                                                                                      |
+| **Repositorio**           | [https://github.com/red-isbe/isbe-contracts](https://github.com/red-isbe/isbe-contracts/tree/main/contracts/identity/servicedidregistry)        |
+| **Commit**                | `ab3c2646d35158f76b27a2e01b72725840c71e01`                                                                                                      |
 
 ---
 
@@ -82,16 +82,16 @@ La faceta comparte el Diamond con el registro did:isbe. Sus escrituras las firma
 
 ### 4.2. Trazabilidad:
 
-| Requisito                                                        | Cobertura en el contrato                                                         |
-| ---------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| Identidad operativa ligada a una organización                    | `controllerDid` inmutable en cada registro                                       |
-| Alta y gestión solo por la organización                          | `onlyDidExists` + `onlyControllerOrAuth` sobre el DID de organización            |
-| Revocación por la organización                                   | `deactivateServiceDid` (irreversible) y `updateExpiry`                           |
-| Rotación de clave sin solape                                     | `rotateSigningKey` (atómica)                                                     |
-| Atribución inequívoca de firmas                                  | Unicidad de clave entre organizaciones (`SigningKeyAlreadyInUse`)                |
-| Separación entre identidad de organización y de servicio         | `SigningKeyBoundToDid` y decisión D1                                             |
-| Soporte de las dos curvas de ISBE                                | `ellipticType` por clave (secp256k1 y P-256)                                     |
-| Metadatos libres por servicio                                    | Service document (máx. 4096 bytes)                                               |
+| Requisito                                                | Cobertura en el contrato                                              |
+| -------------------------------------------------------- | --------------------------------------------------------------------- |
+| Identidad operativa ligada a una organización            | `controllerDid` inmutable en cada registro                            |
+| Alta y gestión solo por la organización                  | `onlyDidExists` + `onlyControllerOrAuth` sobre el DID de organización |
+| Revocación por la organización                           | `deactivateServiceDid` (irreversible) y `updateExpiry`                |
+| Rotación de clave sin solape                             | `rotateSigningKey` (atómica)                                          |
+| Atribución inequívoca de firmas                          | Unicidad de clave entre organizaciones (`SigningKeyAlreadyInUse`)     |
+| Separación entre identidad de organización y de servicio | `SigningKeyBoundToDid` y decisión D1                                  |
+| Soporte de las dos curvas de ISBE                        | `ellipticType` por clave (secp256k1 y P-256)                          |
+| Metadatos libres por servicio                            | Service document (máx. 4096 bytes)                                    |
 
 ### 4.3. Descripción funcional detallada:
 
@@ -133,14 +133,14 @@ function registerServiceDid(
 
 **Registro en storage** (`IServiceDidRegistry.ServiceDidRecord`, seis slots):
 
-| Slot | Campos                                                                       |
-| ---- | ---------------------------------------------------------------------------- |
-| 0    | `controllerDid`                                                              |
-| 1    | `labelHash`                                                                  |
-| 2    | `pubKeyX`                                                                    |
-| 3    | `pubKeyY`                                                                    |
+| Slot | Campos                                                                        |
+| ---- | ----------------------------------------------------------------------------- |
+| 0    | `controllerDid`                                                               |
+| 1    | `labelHash`                                                                   |
+| 2    | `pubKeyX`                                                                     |
+| 3    | `pubKeyY`                                                                     |
 | 4    | `expiresAt`, `ellipticType`, `nonce`, `deactivated`, `exists`, `registeredAt` |
-| 5    | `updatedAt`                                                                  |
+| 5    | `updatedAt`                                                                   |
 
 **Storage de la faceta** (`ServiceDidRegistryStorage`): `records`, `serviceDidsByController`, `nonceByController`, `serviceDidByPublicKeyHash` y `documents`.
 
@@ -159,19 +159,19 @@ stateDiagram-v2
 
 ### 4.5. Reglas de negocio asociadas:
 
-| Regla                                                                                         | Error                         |
-| --------------------------------------------------------------------------------------------- | ----------------------------- |
+| Regla                                                                                        | Error                         |
+| -------------------------------------------------------------------------------------------- | ----------------------------- |
 | El DID de organización debe existir y quien firma debe ser su controlador o estar autorizado | Errores del DID Registry      |
-| El Diamond no debe estar en pausa                                                             | `IsPaused`                    |
-| La caducidad es `0` (sin caducidad) o un instante futuro que cabe en `uint64`                 | `InvalidExpiry`               |
-| La clave no puede ser la de ningún DID de organización                                        | `SigningKeyBoundToDid`        |
-| La clave no puede estar en uso por un servicio de **otra** organización                       | `SigningKeyAlreadyInUse`      |
-| Una rotación no puede apuntar a la clave ya vigente                                           | `SigningKeyAlreadyInUse`      |
-| Servicios de la **misma** organización sí pueden compartir clave                              | —                             |
-| Un servicio desactivado no admite más escrituras                                              | `ServiceDidIsDeactivated`     |
-| Operar sobre un identificador no registrado                                                   | `ServiceDidNotFound`          |
-| El service document no puede superar 4096 bytes                                               | `ServiceDocumentTooLarge`     |
-| `initializeServiceDidRegistry` solo una vez y solo con `DEFAULT_ADMIN_ROLE`                   | Errores del initializer / rol |
+| El Diamond no debe estar en pausa                                                            | `IsPaused`                    |
+| La caducidad es `0` (sin caducidad) o un instante futuro que cabe en `uint64`                | `InvalidExpiry`               |
+| La clave no puede ser la de ningún DID de organización                                       | `SigningKeyBoundToDid`        |
+| La clave no puede estar en uso por un servicio de **otra** organización                      | `SigningKeyAlreadyInUse`      |
+| Una rotación no puede apuntar a la clave ya vigente                                          | `SigningKeyAlreadyInUse`      |
+| Servicios de la **misma** organización sí pueden compartir clave                             | —                             |
+| Un servicio desactivado no admite más escrituras                                             | `ServiceDidIsDeactivated`     |
+| Operar sobre un identificador no registrado                                                  | `ServiceDidNotFound`          |
+| El service document no puede superar 4096 bytes                                              | `ServiceDocumentTooLarge`     |
+| `initializeServiceDidRegistry` solo una vez y solo con `DEFAULT_ADMIN_ROLE`                  | Errores del initializer / rol |
 
 **Decisión D1.** Una identidad de servicio **no** se resuelve en cadena: su clave nunca se escribe en el índice de direcciones del registro de organizaciones, así que `didOf` devuelve cero y no satisface `onlyKnownDid` ni puede tener roles basados en DID. Las identidades de servicio existen para firmar fuera de la cadena y se verifican a través del resolver.
 
@@ -179,27 +179,28 @@ stateDiagram-v2
 
 ### 4.6. Interfaces y puntos de integración:
 
-**Interfaz pública** (`IServiceDidRegistry`, 13 selectores, *resolver key* `_SERVICE_DID_REGISTRY_RESOLVER_KEY`):
+**Interfaz pública** (`IServiceDidRegistry`, 14 selectores, _resolver key_ `_SERVICE_DID_REGISTRY_RESOLVER_KEY`):
 
-| Función                                     | Tipo  | Descripción                                                                |
-| ------------------------------------------- | ----- | -------------------------------------------------------------------------- |
-| `initializeServiceDidRegistry()`            | Write | Inicializa la faceta (una vez, `DEFAULT_ADMIN_ROLE`)                       |
-| `registerServiceDid(...)`                   | Write | Alta de un servicio                                                        |
-| `registerServiceDidWithDocument(...)`       | Write | Alta con service document                                                  |
-| `rotateSigningKey(serviceDid, key, curve)`  | Write | Rotación atómica de la clave                                               |
-| `updateExpiry(serviceDid, expiresAt)`       | Write | Cambio o eliminación de la caducidad                                       |
-| `updateServiceDocument(serviceDid, doc)`    | Write | Sustituye o borra el service document                                      |
-| `deactivateServiceDid(serviceDid)`          | Write | Desactivación irreversible                                                 |
-| `getServiceDid(serviceDid)`                 | View  | Registro completo (revierte si no existe)                                  |
-| `getServiceDocument(serviceDid)`            | View  | Service document                                                           |
-| `getServiceDidsByController(did, page, n)`  | View  | Servicios de una organización, paginados                                   |
-| `isServiceDidActive(serviceDid)`            | View  | Existe, no desactivado y no caducado (no revierte)                         |
-| `signingKeyAddressOf(serviceDid)`           | View  | Dirección derivada de la clave vigente                                     |
-| `computeServiceDid(controllerDid, nonce)`   | Pure  | Reproduce un identificador                                                 |
+| Función                                     | Tipo  | Descripción                                                                   |
+| ------------------------------------------- | ----- | ----------------------------------------------------------------------------- |
+| `initializeServiceDidRegistry()`            | Write | Inicializa la faceta (una vez, `DEFAULT_ADMIN_ROLE`)                          |
+| `registerServiceDid(...)`                   | Write | Alta de un servicio                                                           |
+| `registerServiceDidWithDocument(...)`       | Write | Alta con service document                                                     |
+| `rotateSigningKey(serviceDid, key, curve)`  | Write | Rotación atómica de la clave                                                  |
+| `updateExpiry(serviceDid, expiresAt)`       | Write | Cambio o eliminación de la caducidad                                          |
+| `updateServiceDocument(serviceDid, doc)`    | Write | Sustituye o borra el service document                                         |
+| `deactivateServiceDid(serviceDid)`          | Write | Desactivación irreversible                                                    |
+| `getServiceDid(serviceDid)`                 | View  | Registro completo (revierte si no existe)                                     |
+| `getServiceDocument(serviceDid)`            | View  | Service document                                                              |
+| `getServiceDidsByController(did, page, n)`  | View  | Servicios de una organización, paginados                                      |
+| `isServiceDidActive(serviceDid)`            | View  | Existe, no desactivado y no caducado (no revierte)                            |
+| `signingKeyAddressOf(serviceDid)`           | View  | Dirección derivada de la clave vigente                                        |
+| `getServiceDidsByAddress(address, page, n)` | View  | Servicios cuya clave vigente deriva esa dirección, paginados por organización |
+| `computeServiceDid(controllerDid, nonce)`   | Pure  | Reproduce un identificador                                                    |
 
 **Eventos:** `ServiceDidRegistryInitialized`, `ServiceDidRegistered`, `ServiceDidKeyRotated`, `ServiceDidExpiryUpdated`, `ServiceDidDeactivated`, `ServiceDidDocumentUpdated`. `ServiceDidRegistered` incluye todo lo necesario para construir el método de verificación W3C desde el propio log.
 
-> **Evolutivo en curso (ISBECORE-354, pendiente de merge):** `getServiceDidsByAddress(address, page, pageSize)`, búsqueda por dirección sin cambios de storage. Deriva la dirección de cada clave guardada recorriendo, página a página, la lista global de DIDs de organización y sus servicios. La paginación es sobre organizaciones, no sobre resultados. Es la consulta que usa el faucet (ISBE-ART-07000) para fondear a los agentes.
+**Búsqueda por dirección (ISBECORE-354).** `getServiceDidsByAddress(address, page, pageSize)` devuelve los servicios cuya clave **vigente** deriva la dirección dada, sin índice en storage: deriva la dirección de cada clave guardada recorriendo, página a página, la lista global de DIDs de organización del DID Registry y los servicios de cada una. La paginación es sobre organizaciones, no sobre resultados (una página puede venir vacía y la siguiente no). Una clave rotada deja de coincidir; los servicios desactivados o caducados se devuelven y se filtran con `isServiceDidActive`. Su coste crece con el número de organizaciones, por lo que está pensada para lecturas fuera de la cadena. Es la consulta que usa el faucet (ISBE-ART-07000) para fondear a los agentes.
 
 **Consumidores:** Service DID Lib (ISBE-ART-00008), Service DID REST API (ISBE-ART-00009) y Faucet (ISBE-ART-07000).
 
@@ -225,19 +226,19 @@ stateDiagram-v2
 - `contracts/identity/servicedidregistry/interfaces/IServiceDidRegistry.sol` — interfaz, modelo de datos, eventos y errores.
 - `contracts/identity/servicedidregistry/ServiceDidRegistryInternal.sol` — storage y lógica interna.
 - `contracts/identity/servicedidregistry/ServiceDidRegistry.sol` — funciones externas y modificadores.
-- `contracts/identity/servicedidregistry/ServiceDidRegistryFacet.sol` — introspección de la faceta (selectores, interfaces y *business id*).
+- `contracts/identity/servicedidregistry/ServiceDidRegistryFacet.sol` — introspección de la faceta (selectores, interfaces y _business id_).
 - `contracts/testwrapper/identity/servicedidregistry/` — wrappers y sonda de storage para tests.
 - `test/identity/ServiceDidRegistry.spec.ts` y `test/fixtures/servicedidregistry.ts` — tests y fixtures de upgrade.
 
 ### 5.2. Lista de elementos clave producidos:
 
-| Nombre                  | Descripción                                      | Enlace                                                                                                                |
-| ----------------------- | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
-| Código                  | Faceta del Service DID Registry                  | [contracts/identity/servicedidregistry](https://github.com/red-isbe/isbe-contracts/tree/main/contracts/identity/servicedidregistry) |
-| Tests                   | Suite de la faceta y fixtures de upgrade         | [test/identity/ServiceDidRegistry.spec.ts](https://github.com/red-isbe/isbe-contracts/blob/main/test/identity/ServiceDidRegistry.spec.ts) |
-| Constantes              | Resolver key, posición de storage y versión      | `contracts/constants/` (`resolverKeys.sol`, `storagePositions.sol`, `facetVersions.sol`)                              |
-| Manual                  | Este documento y la NatSpec de la interfaz       | [ISBE-ART-00007.md](./ISBE-ART-00007.md)                                                                              |
-| Última versión liberada | Versiones y etiquetado de release                | [Releases](https://github.com/red-isbe/isbe-contracts/releases)                                                       |
+| Nombre                  | Descripción                                 | Enlace                                                                                                                                    |
+| ----------------------- | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Código                  | Faceta del Service DID Registry             | [contracts/identity/servicedidregistry](https://github.com/red-isbe/isbe-contracts/tree/main/contracts/identity/servicedidregistry)       |
+| Tests                   | Suite de la faceta y fixtures de upgrade    | [test/identity/ServiceDidRegistry.spec.ts](https://github.com/red-isbe/isbe-contracts/blob/main/test/identity/ServiceDidRegistry.spec.ts) |
+| Constantes              | Resolver key, posición de storage y versión | `contracts/constants/` (`resolverKeys.sol`, `storagePositions.sol`, `facetVersions.sol`)                                                  |
+| Manual                  | Este documento y la NatSpec de la interfaz  | [ISBE-ART-00007.md](./ISBE-ART-00007.md)                                                                                                  |
+| Última versión liberada | Versiones y etiquetado de release           | [Releases](https://github.com/red-isbe/isbe-contracts/releases)                                                                           |
 
 ### 5.3. Frameworks, librerías o tecnologías acordadas:
 
@@ -256,21 +257,24 @@ stateDiagram-v2
 
 ### 5.5. Criterios de validación del desarrollo:
 
-| Test / Escenario                                   | Resultado esperado                                         |
-| -------------------------------------------------- | ---------------------------------------------------------- |
-| Corte de la faceta en un Diamond existente         | Sin colisiones; todos los selectores enrutan a la faceta   |
-| Alta del primer y segundo servicio                 | Nonce 1 y 2, identificadores distintos                     |
-| Lectura del registro                               | Todos los campos coinciden con lo enviado                  |
-| Alta por quien no controla la organización         | Revierte                                                   |
-| Alta con organización inexistente o caducidad pasada | Revierte                                                 |
-| Clave compartida en la misma organización          | Se acepta                                                  |
+| Test / Escenario                                       | Resultado esperado                                           |
+| ------------------------------------------------------ | ------------------------------------------------------------ |
+| Corte de la faceta en un Diamond existente             | Sin colisiones; todos los selectores enrutan a la faceta     |
+| Alta del primer y segundo servicio                     | Nonce 1 y 2, identificadores distintos                       |
+| Lectura del registro                                   | Todos los campos coinciden con lo enviado                    |
+| Alta por quien no controla la organización             | Revierte                                                     |
+| Alta con organización inexistente o caducidad pasada   | Revierte                                                     |
+| Clave compartida en la misma organización              | Se acepta                                                    |
 | Clave de otra organización o de un DID de organización | Revierte (`SigningKeyAlreadyInUse` / `SigningKeyBoundToDid`) |
-| Rotación                                           | La clave cambia y `signingKeyAddressOf` sigue a la nueva   |
-| Desactivación                                      | Toda escritura posterior revierte                          |
-| Caducidad alcanzada                                | `isServiceDidActive` devuelve `false`                      |
-| Paginación por controlador                         | Páginas base 1, total correcto                             |
-| Service document en el límite y por encima         | Se acepta 4096 bytes; 4097 revierte                        |
-| Pausa del Diamond                                  | Todas las escrituras revierten                             |
+| Rotación                                               | La clave cambia y `signingKeyAddressOf` sigue a la nueva     |
+| Desactivación                                          | Toda escritura posterior revierte                            |
+| Caducidad alcanzada                                    | `isServiceDidActive` devuelve `false`                        |
+| Paginación por controlador                             | Páginas base 1, total correcto                               |
+| Búsqueda por dirección                                 | Devuelve los servicios de esa clave y solo esos              |
+| Búsqueda tras una rotación                             | La dirección antigua no coincide; la nueva sí                |
+| Búsqueda paginada por organizaciones                   | Recorriendo todas las páginas, cada servicio aparece una vez |
+| Service document en el límite y por encima             | Se acepta 4096 bytes; 4097 revierte                          |
+| Pausa del Diamond                                      | Todas las escrituras revierten                               |
 
 ```bash
 npx hardhat test test/identity/ServiceDidRegistry.spec.ts
@@ -291,7 +295,7 @@ npm run test:coverage
 ### 5.8. Limitaciones temporales:
 
 - Desplegado en la red de desarrollo (DEV). Despliegue en PRE y PRO por confirmar.
-- Sin enumeración global de servicios: solo por organización (`getServiceDidsByController`). La búsqueda por dirección de ISBECORE-354 escala con el número de organizaciones y está pensada para lecturas fuera de la cadena.
+- Sin enumeración global de servicios: solo por organización (`getServiceDidsByController`). La búsqueda por dirección (`getServiceDidsByAddress`) no usa índice y escala con el número de organizaciones; si se necesitara en cadena a gran escala, habría que añadir un índice en storage.
 
 ### 5.9. Limitaciones por versiones, licencias o configuraciones:
 
