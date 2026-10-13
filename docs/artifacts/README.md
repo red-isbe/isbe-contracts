@@ -2,6 +2,7 @@
 
 ## Table of content
 
+- [ISBE-ART-00007 — Service DID Registry Contract (contracts/identity/servicedidregistry)](./ISBE-ART-00007.md)
 - [ISBE-ART-01000 — Proxies EIP‑2535 e ISBE Proxy](./ISBE-ART-01000.md)
 - [ISBE-ART-01010 — Token ERC‑20 (contracts/tokens/erc20)](./ISBE-ART-01010.md)
 - [ISBE-ART-01011 — Token ERC‑721 (contracts/tokens/erc721)](./ISBE-ART-01011.md)
