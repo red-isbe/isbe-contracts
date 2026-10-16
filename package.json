@@ -1,6 +1,6 @@
 {
     "name": "@red-isbe/isbe-contracts",
-    "version": "0.2.1",
+    "version": "0.3.0",
     "description": "Repository of certified and audited smart contracts for use in the ISBE network",
     "scripts": {
         "compile": "npx hardhat compile",
@@ -77,7 +77,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/alastria/isbe-contracts.git"
+        "url": "git+https://github.com/red-isbe/isbe-contracts.git"
     },
     "keywords": [
         "ISBE",
@@ -87,29 +87,36 @@
         "Contracts"
     ],
     "author": "ISBE",
-    "license": "ISC",
+    "license": "Apache-2.0",
     "bugs": {
-        "url": "https://github.com/alastria/isbe-contracts/issues"
+        "url": "https://github.com/red-isbe/isbe-contracts/issues"
     },
-    "homepage": "https://github.com/alastria/isbe-contracts#readme",
+    "homepage": "https://github.com/red-isbe/isbe-contracts#readme",
     "devDependencies": {
-        "@account-abstraction/contracts": "0.8.0",
+        "@aws-sdk/client-kms": "^3.1134.0",
         "@commitlint/cli": "^20.1.0",
         "@commitlint/config-conventional": "^20.0.0",
         "@eslint/js": "^9.25.1",
+        "@noble/secp256k1": "^3.0.0",
         "@nomicfoundation/hardhat-toolbox": "^5.0.0",
-        "@openzeppelin/contracts": "^4.9.6",
+        "@rumblefishdev/hardhat-kms-signer": "^2.0.0",
+        "@solidity-parser/parser": "^0.20.2",
         "@types/node": "^25.0.0",
         "@types/nodemailer": "^7.0.4",
         "@types/p-limit": "^2.1.0",
         "@vonage/messages": "^1.22.1",
         "@vonage/server-sdk": "^3.25.1",
         "crypto-es": "^3.1.2",
+        "curve-p256": "^1.0.2",
+        "dotenv": "^17.2.1",
+        "ecdsa-secp256r1": "^1.3.3",
+        "elliptic": "^6.6.1",
         "eslint": "^9.25.1",
         "ethers": "^6.15.0",
         "hardhat": "^2.28.6",
         "hardhat-contract-sizer": "^2.10.0",
         "husky": "^9.1.7",
+        "keccak": "^3.0.4",
         "lint-staged": "^15.5.1",
         "nodemailer": "^7.0.11",
         "p-limit": "^7.2.0",
@@ -147,23 +154,17 @@
     },
     "publishConfig": {
         "registry": "https://registry.npmjs.org/",
-        "publishConfig": {
-            "access": "public"
-        }
+        "access": "public"
     },
     "files": [
-        "artifacts",
-        "contracts"
+        "contracts/**/*.sol",
+        "!contracts/testwrapper/**",
+        "artifacts/contracts/**/*.json",
+        "!artifacts/contracts/testwrapper/**",
+        "!artifacts/**/*.dbg.json"
     ],
     "dependencies": {
-        "@aws-sdk/client-kms": "^3.1134.0",
-        "@noble/secp256k1": "^3.0.0",
-        "@rumblefishdev/hardhat-kms-signer": "^2.0.0",
-        "@solidity-parser/parser": "^0.20.2",
-        "curve-p256": "^1.0.2",
-        "dotenv": "^17.2.1",
-        "ecdsa-secp256r1": "^1.3.3",
-        "elliptic": "^6.6.1",
-        "keccak": "^3.0.4"
+        "@account-abstraction/contracts": "0.8.0",
+        "@openzeppelin/contracts": "^4.9.6"
     }
 }
