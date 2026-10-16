@@ -87,7 +87,7 @@
         "Contracts"
     ],
     "author": "ISBE",
-    "license": "ISC",
+    "license": "Apache-2.0",
     "bugs": {
         "url": "https://github.com/red-isbe/isbe-contracts/issues"
     },
