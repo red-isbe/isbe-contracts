@@ -60,6 +60,7 @@ export const DEFAULT_USE_CASE_CONFIGURATIONS = [
 
     // Utility use cases
     UTILITY_USE_CASE_CONFIGS.HASH_TIMESTAMP,
+    UTILITY_USE_CASE_CONFIGS.HASH_TIMESTAMP_V2,
 
     // ERC20 use cases - Base and Single Extensions
     ERC20_USE_CASE_CONFIGS.BASE,

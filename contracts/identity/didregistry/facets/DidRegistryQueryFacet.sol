@@ -49,9 +49,10 @@ contract DidRegistryQueryFacet is DidRegistryQuery, IEIP2535Introspection {
         pure
         returns (bytes4[] memory selectors_)
     {
-        selectors_ = new bytes4[](2);
+        selectors_ = new bytes4[](3);
         selectors_[0] = DidRegistryQuery.didOf.selector;
         selectors_[1] = DidRegistryQuery.isKnownDid.selector;
+        selectors_[2] = DidRegistryQuery.hasActiveRelationship.selector;
     }
 
     function _implementedInterfaces()

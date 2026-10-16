@@ -28,4 +28,17 @@ interface IDidRegistryQuery {
     /// @param account EOA or contract address associated to a verification method in the DID Registry
     /// @return did The DID string if found, otherwise bytes32(0)
     function didOf(address account) external view returns (bytes32 did);
+
+    /// @notice Check if an address holds an active verification relationship on a DID
+    /// @dev Unlike didOf, it does not require capabilityInvocation, so keys declared only as
+    ///      assertionMethod (or any other relationship) can be validated on-chain
+    /// @param did The DID to check against
+    /// @param name The verification relationship name (e.g. assertionMethod)
+    /// @param account Address derived from the verification method public key
+    /// @return True if the relationship is active at the current block time and not revoked
+    function hasActiveRelationship(
+        bytes32 did,
+        string calldata name,
+        address account
+    ) external view returns (bool);
 }
