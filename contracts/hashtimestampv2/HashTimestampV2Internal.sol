@@ -21,10 +21,10 @@ import {_HASH_TIMESTAMP_ROLE} from '../constants/roles.sol';
 import {_ASSERTION_RELATIONSHIP} from '../identity/didregistry/constants.sol';
 import {IHashTimestampV2} from './IHashTimestampV2.sol';
 import {
-    DidDocumentDetailedInternal
-} from '../identity/didregistry/DidDocumentDetailedInternal.sol';
+    DidRegistryQueryInternal
+} from '../identity/didregistry/query/DidRegistryQueryInternal.sol';
 
-abstract contract HashTimestampV2Internal is DidDocumentDetailedInternal {
+abstract contract HashTimestampV2Internal is DidRegistryQueryInternal {
     struct HashTimestampV2Storage {
         mapping(bytes32 hash => mapping(bytes32 did => IHashTimestampV2.EvidenceRecord)) records;
         mapping(bytes32 hash => bytes32[] dids) didsByHash;
@@ -36,27 +36,27 @@ abstract contract HashTimestampV2Internal is DidDocumentDetailedInternal {
      */
     function _timestampHash(
         bytes32 _hash,
-        bytes32 _parentHash,
-        bytes32 _did
+        bytes32 _parentHash
     )
         internal
         returns (
+            bytes32 did_,
             IHashTimestampV2.EvidenceRecord memory record_,
             bool alreadyRegistered_
         )
     {
         address signer = _msgSender();
-        _checkEntityRegistered(_did);
-        _checkSignerIsAssertionMethod(_did, signer);
+        did_ = _entityDidOf(signer);
+        _checkEntityRegistered(did_);
 
         HashTimestampV2Storage storage $ = _hashTimestampV2Storage();
-        record_ = $.records[_hash][_did];
-        if (record_.blockNumber != 0) return (record_, true);
+        record_ = $.records[_hash][did_];
+        if (record_.blockNumber != 0) return (did_, record_, true);
 
         if (_isNotEmptyBytes32(_parentHash)) {
             require(
-                $.records[_parentHash][_did].blockNumber != 0,
-                IHashTimestampV2.ParentNotRegistered(_parentHash, _did)
+                $.records[_parentHash][did_].blockNumber != 0,
+                IHashTimestampV2.ParentNotRegistered(_parentHash, did_)
             );
         }
 
@@ -67,12 +67,12 @@ abstract contract HashTimestampV2Internal is DidDocumentDetailedInternal {
             timestamp: uint48(timestamp),
             parentHash: _parentHash
         });
-        $.records[_hash][_did] = record_;
-        $.didsByHash[_hash].push(_did);
+        $.records[_hash][did_] = record_;
+        $.didsByHash[_hash].push(did_);
 
         emit IHashTimestampV2.EvidenceRegistered(
             _hash,
-            _did,
+            did_,
             signer,
             _parentHash,
             block.number,
@@ -135,23 +135,21 @@ abstract contract HashTimestampV2Internal is DidDocumentDetailedInternal {
     }
 
     /**
-     * @dev Checked at registration time: the record existing in block N proves the key
+     * @dev Resolved at registration time: the record existing in block N proves the key
      *      was an active assertionMethod of the DID in block N, whatever happens later.
      */
-    function _checkSignerIsAssertionMethod(
-        bytes32 _did,
+    function _entityDidOf(
         address _signer
-    ) internal view {
-        bool active = _isUseCase()
-            ? _getIsbeFactory().hasActiveRelationship(
-                _did,
-                _ASSERTION_RELATIONSHIP,
-                _signer
+    ) internal view returns (bytes32 did_) {
+        did_ = _isUseCase()
+            ? _getIsbeFactory().didOfRelationship(
+                _signer,
+                _ASSERTION_RELATIONSHIP
             )
-            : _hasActiveRelationship(_did, _ASSERTION_RELATIONSHIP, _signer);
+            : _didOfRelationship(_signer, _ASSERTION_RELATIONSHIP);
         require(
-            active,
-            IHashTimestampV2.SignerNotAssertionMethod(_did, _signer)
+            _isNotEmptyBytes32(did_),
+            IHashTimestampV2.SignerNotAssertionMethod(_signer)
         );
     }
 

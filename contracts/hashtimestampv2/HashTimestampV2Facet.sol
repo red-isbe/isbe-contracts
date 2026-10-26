@@ -48,10 +48,10 @@ contract HashTimestampV2Facet is HashTimestampV2, IEIP2535Introspection {
     {
         uint256 selectorsLength = 5;
         selectors_ = new bytes4[](selectorsLength);
-        selectors_[--selectorsLength] = this.timestampHash.selector;
-        selectors_[--selectorsLength] = this.exists.selector;
-        selectors_[--selectorsLength] = this.getTimestamp.selector;
-        selectors_[--selectorsLength] = this.getRecordsCount.selector;
-        selectors_[--selectorsLength] = this.getRecords.selector;
+        selectors_[--selectorsLength] = this.timestampHashV2.selector;
+        selectors_[--selectorsLength] = this.existsV2.selector;
+        selectors_[--selectorsLength] = this.getTimestampV2.selector;
+        selectors_[--selectorsLength] = this.getRecordsCountV2.selector;
+        selectors_[--selectorsLength] = this.getRecordsV2.selector;
     }
 }

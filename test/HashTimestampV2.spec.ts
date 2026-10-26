@@ -186,7 +186,7 @@ describe('HashTimestampV2 (evidence attributed to entity DIDs)', () => {
         it('GIVEN an onboarded entity and its assertionMethod key WHEN registering THEN stores the record and emits the event', async () => {
             const tx = await evidence
                 .connect(entityA.docker)
-                .timestampHash(HASH, ZeroHash, entityA.did)
+                .timestampHashV2(HASH, ZeroHash)
             const receipt = (await tx.wait())!
             const block = (await ethers.provider.getBlock(receipt.blockNumber))!
 
@@ -200,8 +200,8 @@ describe('HashTimestampV2 (evidence attributed to entity DIDs)', () => {
                     receipt.blockNumber,
                     block.timestamp
                 )
-            expect(await evidence.exists(HASH, entityA.did)).to.equal(true)
-            const record = await evidence.getTimestamp(HASH, entityA.did)
+            expect(await evidence.existsV2(HASH, entityA.did)).to.equal(true)
+            const record = await evidence.getTimestampV2(HASH, entityA.did)
             expect(record.signer).to.equal(entityA.docker.address)
             expect(record.blockNumber).to.equal(receipt.blockNumber)
             expect(record.timestamp).to.equal(block.timestamp)
@@ -211,35 +211,34 @@ describe('HashTimestampV2 (evidence attributed to entity DIDs)', () => {
         it('GIVEN a registered pair WHEN registering it again THEN does not revert, returns the existing record and emits nothing', async () => {
             await evidence
                 .connect(entityA.docker)
-                .timestampHash(HASH, ZeroHash, entityA.did)
-            const original = await evidence.getTimestamp(HASH, entityA.did)
+                .timestampHashV2(HASH, ZeroHash)
+            const original = await evidence.getTimestampV2(HASH, entityA.did)
 
-            const [record, alreadyRegistered] = await evidence
+            const [did, record, alreadyRegistered] = await evidence
                 .connect(entityA.docker)
-                .timestampHash.staticCall(HASH, ZeroHash, entityA.did)
+                .timestampHashV2.staticCall(HASH, ZeroHash)
             await expect(
-                evidence
-                    .connect(entityA.docker)
-                    .timestampHash(HASH, ZeroHash, entityA.did)
+                evidence.connect(entityA.docker).timestampHashV2(HASH, ZeroHash)
             ).not.to.emit(evidence, 'EvidenceRegistered')
 
+            expect(did).to.equal(entityA.did)
             expect(alreadyRegistered).to.equal(true)
             expect(record.blockNumber).to.equal(original.blockNumber)
             expect(
-                await evidence.getTimestamp(HASH, entityA.did)
+                await evidence.getTimestampV2(HASH, entityA.did)
             ).to.deep.equal(original)
         })
 
         it('GIVEN two entities WHEN both register the same hash THEN each keeps its own record (uniqueness per hash and DID)', async () => {
             await evidence
                 .connect(entityA.docker)
-                .timestampHash(HASH, ZeroHash, entityA.did)
+                .timestampHashV2(HASH, ZeroHash)
             await evidence
                 .connect(entityB.docker)
-                .timestampHash(HASH, ZeroHash, entityB.did)
+                .timestampHashV2(HASH, ZeroHash)
 
-            expect(await evidence.getRecordsCount(HASH)).to.equal(2n)
-            const [dids, records] = await evidence.getRecords(HASH, 0, 10)
+            expect(await evidence.getRecordsCountV2(HASH)).to.equal(2n)
+            const [dids, records] = await evidence.getRecordsV2(HASH, 0, 10)
             expect(dids).to.deep.equal([entityA.did, entityB.did])
             expect(records.map((record) => record.signer)).to.deep.equal([
                 entityA.docker.address,
@@ -250,31 +249,33 @@ describe('HashTimestampV2 (evidence attributed to entity DIDs)', () => {
         it('GIVEN several records WHEN paginating getRecords THEN returns each page and an empty page past the end', async () => {
             await evidence
                 .connect(entityA.docker)
-                .timestampHash(HASH, ZeroHash, entityA.did)
+                .timestampHashV2(HASH, ZeroHash)
             await evidence
                 .connect(entityB.docker)
-                .timestampHash(HASH, ZeroHash, entityB.did)
+                .timestampHashV2(HASH, ZeroHash)
 
-            expect((await evidence.getRecords(HASH, 0, 1))[0]).to.deep.equal([
+            expect((await evidence.getRecordsV2(HASH, 0, 1))[0]).to.deep.equal([
                 entityA.did,
             ])
-            expect((await evidence.getRecords(HASH, 1, 1))[0]).to.deep.equal([
+            expect((await evidence.getRecordsV2(HASH, 1, 1))[0]).to.deep.equal([
                 entityB.did,
             ])
-            expect((await evidence.getRecords(HASH, 2, 1))[0]).to.deep.equal([])
+            expect((await evidence.getRecordsV2(HASH, 2, 1))[0]).to.deep.equal(
+                []
+            )
         })
 
         it('GIVEN a registered original WHEN registering the stamped document with it as parent THEN chains both records', async () => {
             await evidence
                 .connect(entityA.docker)
-                .timestampHash(HASH, ZeroHash, entityA.did)
+                .timestampHashV2(HASH, ZeroHash)
 
             await evidence
                 .connect(entityA.docker)
-                .timestampHash(STAMPED, HASH, entityA.did)
+                .timestampHashV2(STAMPED, HASH)
 
             expect(
-                (await evidence.getTimestamp(STAMPED, entityA.did)).parentHash
+                (await evidence.getTimestampV2(STAMPED, entityA.did)).parentHash
             ).to.equal(HASH)
         })
     })
@@ -284,47 +285,45 @@ describe('HashTimestampV2 (evidence attributed to entity DIDs)', () => {
             await expect(
                 evidence
                     .connect(entityA.founder)
-                    .timestampHash(HASH, ZeroHash, entityA.did)
+                    .timestampHashV2(HASH, ZeroHash)
             )
                 .to.be.revertedWithCustomError(
                     evidence,
                     'SignerNotAssertionMethod'
                 )
-                .withArgs(entityA.did, entityA.founder.address)
+                .withArgs(entityA.founder.address)
         })
 
-        it('GIVEN the docker key of entity A WHEN claiming to act for entity B THEN reverts', async () => {
-            await expect(
-                evidence
-                    .connect(entityA.docker)
-                    .timestampHash(HASH, ZeroHash, entityB.did)
-            )
-                .to.be.revertedWithCustomError(
-                    evidence,
-                    'SignerNotAssertionMethod'
-                )
-                .withArgs(entityB.did, entityA.docker.address)
+        it('GIVEN the docker key of entity A WHEN registering THEN the evidence is attributed to the DID of A, never to another entity', async () => {
+            const [did] = await evidence
+                .connect(entityA.docker)
+                .timestampHashV2.staticCall(HASH, ZeroHash)
+            await evidence
+                .connect(entityA.docker)
+                .timestampHashV2(HASH, ZeroHash)
+
+            expect(did).to.equal(entityA.did)
+            expect(await evidence.existsV2(HASH, entityA.did)).to.equal(true)
+            expect(await evidence.existsV2(HASH, entityB.did)).to.equal(false)
         })
 
         it('GIVEN an address without any DID WHEN registering THEN reverts', async () => {
             const outsider = wallet(6)
 
             await expect(
-                evidence
-                    .connect(outsider)
-                    .timestampHash(HASH, ZeroHash, entityA.did)
+                evidence.connect(outsider).timestampHashV2(HASH, ZeroHash)
             )
                 .to.be.revertedWithCustomError(
                     evidence,
                     'SignerNotAssertionMethod'
                 )
-                .withArgs(entityA.did, outsider.address)
+                .withArgs(outsider.address)
         })
 
         it('GIVEN an entity whose onboarding was revoked WHEN registering THEN reverts but its previous records remain', async () => {
             await evidence
                 .connect(entityA.docker)
-                .timestampHash(HASH, ZeroHash, entityA.did)
+                .timestampHashV2(HASH, ZeroHash)
 
             await accessControlDid.revokeDidRole(
                 HASH_TIMESTAMP_ROLE,
@@ -334,17 +333,17 @@ describe('HashTimestampV2 (evidence attributed to entity DIDs)', () => {
             await expect(
                 evidence
                     .connect(entityA.docker)
-                    .timestampHash(STAMPED, ZeroHash, entityA.did)
+                    .timestampHashV2(STAMPED, ZeroHash)
             )
                 .to.be.revertedWithCustomError(evidence, 'EntityNotRegistered')
                 .withArgs(entityA.did)
-            expect(await evidence.exists(HASH, entityA.did)).to.equal(true)
+            expect(await evidence.existsV2(HASH, entityA.did)).to.equal(true)
         })
 
         it('GIVEN a revoked docker key WHEN registering THEN reverts but records signed before remain valid', async () => {
             await evidence
                 .connect(entityA.docker)
-                .timestampHash(HASH, ZeroHash, entityA.did)
+                .timestampHashV2(HASH, ZeroHash)
 
             await registry
                 .connect(entityA.founder)
@@ -357,63 +356,29 @@ describe('HashTimestampV2 (evidence attributed to entity DIDs)', () => {
             await expect(
                 evidence
                     .connect(entityA.docker)
-                    .timestampHash(STAMPED, ZeroHash, entityA.did)
+                    .timestampHashV2(STAMPED, ZeroHash)
             ).to.be.revertedWithCustomError(
                 evidence,
                 'SignerNotAssertionMethod'
             )
             expect(
-                (await evidence.getTimestamp(HASH, entityA.did)).signer
+                (await evidence.getTimestampV2(HASH, entityA.did)).signer
             ).to.equal(entityA.docker.address)
-        })
-
-        it('GIVEN the key-binding flaw of the DID registry WHEN entity B binds A docker public key THEN evidence of A stays attributed to A', async () => {
-            // B declares A's docker PUBLIC key as its own assertionMethod (possible today, see the security ticket).
-            const stolen = ethers.id(`${entityB.did}#stolen`)
-            const asFounderB = registry.connect(entityB.founder)
-            await asFounderB.addVerificationMethod(
-                entityB.did,
-                stolen,
-                entityA.docker.signingKey.publicKey,
-                EllipticType.SECP_256_K1
-            )
-            await asFounderB.addVerificationRelationship(
-                entityB.did,
-                ASSERTION_RELATIONSHIP,
-                stolen,
-                NOT_BEFORE,
-                NOT_AFTER
-            )
-
-            // A's docker always declares A's DID: the record is A's, whatever the address index says.
-            await evidence
-                .connect(entityA.docker)
-                .timestampHash(HASH, ZeroHash, entityA.did)
-
-            expect(await evidence.exists(HASH, entityA.did)).to.equal(true)
-            expect(await evidence.exists(HASH, entityB.did)).to.equal(false)
         })
     })
 
     describe('validation', () => {
-        it('GIVEN a zero hash or a zero DID WHEN registering THEN reverts', async () => {
+        it('GIVEN a zero hash WHEN registering THEN reverts', async () => {
             await expect(
                 evidence
                     .connect(entityA.docker)
-                    .timestampHash(ZeroHash, ZeroHash, entityA.did)
-            ).to.be.revertedWithCustomError(evidence, 'EmptyBytes32')
-            await expect(
-                evidence
-                    .connect(entityA.docker)
-                    .timestampHash(HASH, ZeroHash, ZeroHash)
+                    .timestampHashV2(ZeroHash, ZeroHash)
             ).to.be.revertedWithCustomError(evidence, 'EmptyBytes32')
         })
 
         it('GIVEN a parent never registered WHEN registering a child THEN reverts', async () => {
             await expect(
-                evidence
-                    .connect(entityA.docker)
-                    .timestampHash(STAMPED, HASH, entityA.did)
+                evidence.connect(entityA.docker).timestampHashV2(STAMPED, HASH)
             )
                 .to.be.revertedWithCustomError(evidence, 'ParentNotRegistered')
                 .withArgs(HASH, entityA.did)
@@ -422,12 +387,10 @@ describe('HashTimestampV2 (evidence attributed to entity DIDs)', () => {
         it('GIVEN a parent registered by another entity WHEN registering a child THEN reverts', async () => {
             await evidence
                 .connect(entityB.docker)
-                .timestampHash(HASH, ZeroHash, entityB.did)
+                .timestampHashV2(HASH, ZeroHash)
 
             await expect(
-                evidence
-                    .connect(entityA.docker)
-                    .timestampHash(STAMPED, HASH, entityA.did)
+                evidence.connect(entityA.docker).timestampHashV2(STAMPED, HASH)
             )
                 .to.be.revertedWithCustomError(evidence, 'ParentNotRegistered')
                 .withArgs(HASH, entityA.did)
@@ -436,16 +399,16 @@ describe('HashTimestampV2 (evidence attributed to entity DIDs)', () => {
         it('GIVEN a use case paused by ISBE WHEN registering THEN reverts and reads still work', async () => {
             await evidence
                 .connect(entityA.docker)
-                .timestampHash(HASH, ZeroHash, entityA.did)
+                .timestampHashV2(HASH, ZeroHash)
 
             await pauseByIsbe()
 
             await expect(
                 evidence
                     .connect(entityA.docker)
-                    .timestampHash(STAMPED, ZeroHash, entityA.did)
+                    .timestampHashV2(STAMPED, ZeroHash)
             ).to.be.revertedWithCustomError(evidence, 'IsPaused')
-            expect(await evidence.exists(HASH, entityA.did)).to.equal(true)
+            expect(await evidence.existsV2(HASH, entityA.did)).to.equal(true)
         })
     })
 
@@ -493,21 +456,21 @@ describe('HashTimestampV2 (evidence attributed to entity DIDs)', () => {
 
             await evidenceOnGovernance
                 .connect(entityA.docker)
-                .timestampHash(HASH, ZeroHash, entityA.did)
+                .timestampHashV2(HASH, ZeroHash)
 
             expect(
-                await evidenceOnGovernance.exists(HASH, entityA.did)
+                await evidenceOnGovernance.existsV2(HASH, entityA.did)
             ).to.equal(true)
             await expect(
                 evidenceOnGovernance
                     .connect(entityA.founder)
-                    .timestampHash(STAMPED, ZeroHash, entityA.did)
+                    .timestampHashV2(STAMPED, ZeroHash)
             )
                 .to.be.revertedWithCustomError(
                     evidenceOnGovernance,
                     'SignerNotAssertionMethod'
                 )
-                .withArgs(entityA.did, entityA.founder.address)
+                .withArgs(entityA.founder.address)
         })
     })
 
@@ -520,11 +483,11 @@ describe('HashTimestampV2 (evidence attributed to entity DIDs)', () => {
             expect(await facet.businessIdIntrospection()).to.equal(RESOLVER_KEY)
             const selectors = [...(await facet.selectorsIntrospection())].sort()
             const expected = [
-                'timestampHash',
-                'exists',
-                'getTimestamp',
-                'getRecordsCount',
-                'getRecords',
+                'timestampHashV2',
+                'existsV2',
+                'getTimestampV2',
+                'getRecordsCountV2',
+                'getRecordsV2',
             ]
                 .map((name) => facet.interface.getFunction(name)!.selector)
                 .sort()
@@ -538,17 +501,17 @@ describe('HashTimestampV2 (evidence attributed to entity DIDs)', () => {
             const original = await (
                 await evidence
                     .connect(entityA.docker)
-                    .timestampHash(HASH, ZeroHash, entityA.did)
+                    .timestampHashV2(HASH, ZeroHash)
             ).wait()
             const stamped = await (
                 await evidence
                     .connect(entityA.docker)
-                    .timestampHash(STAMPED, HASH, entityA.did)
+                    .timestampHashV2(STAMPED, HASH)
             ).wait()
             const duplicate = await (
                 await evidence
                     .connect(entityA.docker)
-                    .timestampHash(HASH, ZeroHash, entityA.did)
+                    .timestampHashV2(HASH, ZeroHash)
             ).wait()
 
             console.table({

@@ -24,9 +24,9 @@ pragma solidity ^0.8.28;
  *      - A duplicate of the same pair does not revert: it returns the existing record.
  *      - The signer must hold an active assertionMethod relationship on the entity DID,
  *        and the entity DID must hold HASH_TIMESTAMP_ROLE (granted per entity).
- *      The entity DID is passed explicitly instead of being derived from the signer:
- *      a key may appear in more than one DID document, so the address-to-DID index of
- *      the registry cannot be used to attribute evidence.
+ *      The entity DID is derived from the signer through the registry address index, which
+ *      is unique since a key cannot be bound to more than one DID (ISBECORE-435), so a
+ *      signer can only ever register evidence for its own entity.
  */
 interface IHashTimestampV2 {
     /**
@@ -59,39 +59,44 @@ interface IHashTimestampV2 {
     /// @notice The entity DID does not hold HASH_TIMESTAMP_ROLE in this use case
     error EntityNotRegistered(bytes32 did);
 
-    /// @notice The signer is not an active assertionMethod key of the entity DID
-    error SignerNotAssertionMethod(bytes32 did, address signer);
+    /// @notice The signer is not an active assertionMethod key of any DID
+    error SignerNotAssertionMethod(address signer);
 
     /// @notice The parent hash was not registered by the same entity
     error ParentNotRegistered(bytes32 parentHash, bytes32 did);
 
     /**
-     * @notice Registers the evidence of a hash on behalf of an entity DID
+     * @notice Registers the evidence of a hash on behalf of the signer's entity DID
      * @param hash SHA-256 of the document
      * @param parentHash Hash of the document this one derives from, or zero
-     * @param did Entity DID the signer acts for
+     * @return did Entity DID the evidence is attributed to, resolved from the signer
      * @return record The stored record (the existing one for a duplicate)
      * @return alreadyRegistered True when the pair was already registered
      */
-    function timestampHash(
+    function timestampHashV2(
         bytes32 hash,
-        bytes32 parentHash,
-        bytes32 did
-    ) external returns (EvidenceRecord memory record, bool alreadyRegistered);
+        bytes32 parentHash
+    )
+        external
+        returns (
+            bytes32 did,
+            EvidenceRecord memory record,
+            bool alreadyRegistered
+        );
 
-    function exists(
+    function existsV2(
         bytes32 hash,
         bytes32 did
     ) external view returns (bool exists_);
 
     /// @return record The record of the pair; blockNumber is zero when it does not exist
-    function getTimestamp(
+    function getTimestampV2(
         bytes32 hash,
         bytes32 did
     ) external view returns (EvidenceRecord memory record);
 
     /// @return count Number of entities that registered this hash
-    function getRecordsCount(
+    function getRecordsCountV2(
         bytes32 hash
     ) external view returns (uint256 count);
 
@@ -100,7 +105,7 @@ interface IHashTimestampV2 {
      * @param pageIndex Zero-based page
      * @param pageLength Records per page
      */
-    function getRecords(
+    function getRecordsV2(
         bytes32 hash,
         uint256 pageIndex,
         uint256 pageLength

@@ -20,42 +20,44 @@ import {HashTimestampV2Internal} from './HashTimestampV2Internal.sol';
 /// @title HashTimestampV2
 /// @notice Evidence registry attributed to entity DIDs (see IHashTimestampV2)
 abstract contract HashTimestampV2 is IHashTimestampV2, HashTimestampV2Internal {
-    function timestampHash(
+    function timestampHashV2(
         bytes32 _hash,
-        bytes32 _parentHash,
-        bytes32 _did
+        bytes32 _parentHash
     )
         external
         override
         whenNotPaused
         bytes32IsNotZero(_hash)
-        bytes32IsNotZero(_did)
-        returns (EvidenceRecord memory record_, bool alreadyRegistered_)
+        returns (
+            bytes32 did_,
+            EvidenceRecord memory record_,
+            bool alreadyRegistered_
+        )
     {
-        return _timestampHash(_hash, _parentHash, _did);
+        return _timestampHash(_hash, _parentHash);
     }
 
-    function exists(
+    function existsV2(
         bytes32 _hash,
         bytes32 _did
     ) external view override returns (bool exists_) {
         return _exists(_hash, _did);
     }
 
-    function getTimestamp(
+    function getTimestampV2(
         bytes32 _hash,
         bytes32 _did
     ) external view override returns (EvidenceRecord memory record_) {
         return _getTimestamp(_hash, _did);
     }
 
-    function getRecordsCount(
+    function getRecordsCountV2(
         bytes32 _hash
     ) external view override returns (uint256 count_) {
         return _getRecordsCount(_hash);
     }
 
-    function getRecords(
+    function getRecordsV2(
         bytes32 _hash,
         uint256 _pageIndex,
         uint256 _pageLength

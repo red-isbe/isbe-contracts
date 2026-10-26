@@ -21,7 +21,7 @@ limitations under the License.
  *      version (never 0 = "latest", which would follow future versions silently),
  *   3. deploys the use case proxy (or reuses the one already on that version),
  *   4. onboards the ENTITY DID (HASH_TIMESTAMP_ROLE granted per DID, spec H1/H2),
- *   5. optionally funds the docker key and warns if it is not an assertionMethod of the DID.
+ *   5. optionally funds the docker key and warns if it does not resolve to the DID as assertionMethod.
  * The entity creates its DID and declares the docker key itself (did-gen + DID API).
  * Refuses to run against an RPC that is not local.
  *
@@ -61,7 +61,7 @@ const FACTORY_ABI = [
     'function setConfiguration(bytes32 configurationId, tuple(bytes32 businessId, uint256 version)[] businessIds)',
     'function getDeployedProxiesByConfiguration(bytes32 configurationId, uint256 version) view returns (address[])',
     'function deployUseCase(bytes32 configurationId, uint256 version, tuple(bytes32 role, address[] members)[] rbacs, bool initPause, bytes32[] initBusinessIds, bytes[] initData)',
-    'function hasActiveRelationship(bytes32 did, string name, address account) view returns (bool)',
+    'function didOfRelationship(address account, string name) view returns (bytes32)',
     'event ConfigurationSet(bytes32 configurationId, tuple(bytes32 businessId, uint256 version)[] businessData, uint256 version)',
     'event UseCaseDeployed(bytes32 configurationId, uint256 version, tuple(bytes32 role, address[] members)[] rbacs, address proxy)',
 ]
@@ -122,15 +122,14 @@ async function main() {
                 await deployer.sendTransaction({ to: docker, value: fundWei })
             ).wait()
         }
-        if (
-            !(await factory.hasActiveRelationship(
-                entityDid,
-                'assertionMethod',
-                docker
-            ))
-        ) {
+        // The registry resolves the DID from the signer exactly like this.
+        const resolvedDid = await factory.didOfRelationship(
+            docker,
+            'assertionMethod'
+        )
+        if (resolvedDid !== entityDid) {
             console.warn(
-                `WARNING: ${docker} is not an active assertionMethod of the entity DID yet`
+                `WARNING: ${docker} does not resolve to the entity DID as assertionMethod yet (resolves to ${resolvedDid})`
             )
         }
     }
