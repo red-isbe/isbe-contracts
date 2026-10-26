@@ -41,4 +41,14 @@ interface IDidRegistryQuery {
         string calldata name,
         address account
     ) external view returns (bool);
+
+    /// @notice Resolve the DID of an address that holds a given active verification relationship
+    /// @dev Like didOf, but for any relationship (e.g. assertionMethod) instead of capabilityInvocation
+    /// @param account Address derived from the verification method public key
+    /// @param name The verification relationship name (e.g. assertionMethod)
+    /// @return did The DID bound to the address if the relationship is active, otherwise bytes32(0)
+    function didOfRelationship(
+        address account,
+        string calldata name
+    ) external view returns (bytes32 did);
 }

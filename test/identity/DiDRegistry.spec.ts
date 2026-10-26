@@ -4146,6 +4146,67 @@ describe('DiDRegistry', function () {
                         )
                     ).to.equal(await didRegistry.isKnownDid(walletAddress))
                 })
+
+                describe('didOfRelationship', () => {
+                    it('GIVEN key declared only as assertionMethod WHEN resolving assertionMethod THEN returns its DID', async () => {
+                        const { address } = await addAssertionKey('37')
+
+                        expect(
+                            await didRegistry.didOfRelationship(
+                                address,
+                                ASSERTION_RELATIONSHIP
+                            )
+                        ).to.equal(did)
+                    })
+
+                    it('GIVEN key declared only as assertionMethod WHEN resolving another relationship THEN returns zero', async () => {
+                        const { address } = await addAssertionKey('38')
+
+                        expect(
+                            await didRegistry.didOfRelationship(
+                                address,
+                                AUTHENTICATION_RELATIONSHIP
+                            )
+                        ).to.equal(ethers.ZeroHash)
+                    })
+
+                    it('GIVEN revoked assertionMethod key or unknown address WHEN resolving assertionMethod THEN returns zero', async () => {
+                        const { address, vMethodId: assertionVMethodId } =
+                            await addAssertionKey('39')
+                        await didRegistry.revokeVerificationMethod(
+                            did,
+                            assertionVMethodId,
+                            notBefore
+                        )
+
+                        expect(
+                            await didRegistry.didOfRelationship(
+                                address,
+                                ASSERTION_RELATIONSHIP
+                            )
+                        ).to.equal(ethers.ZeroHash)
+                        expect(
+                            await didRegistry.didOfRelationship(
+                                ethers.Wallet.createRandom().address,
+                                ASSERTION_RELATIONSHIP
+                            )
+                        ).to.equal(ethers.ZeroHash)
+                    })
+
+                    it('GIVEN founder key WHEN resolving capabilityInvocation THEN matches didOf', async () => {
+                        const walletAddress = await wallet.getAddress()
+
+                        expect(
+                            await didRegistry.didOfRelationship(
+                                walletAddress,
+                                CAPABILITY_INVOCATION_RELATIONSHIP
+                            )
+                        ).to.equal(await didRegistry.didOf(walletAddress))
+                        expect(await didRegistry.didOf(walletAddress)).to.equal(
+                            did
+                        )
+                    })
+                })
             })
         })
 
@@ -4274,7 +4335,7 @@ describe('DiDRegistry', function () {
                         await didRegistryQueryFacet.selectorsIntrospection()
 
                     expect(selectors.length).to.be.greaterThan(0)
-                    expect(selectors.length).to.equal(3) // didOf, isKnownDid and hasActiveRelationship
+                    expect(selectors.length).to.equal(4) // didOf, isKnownDid, hasActiveRelationship and didOfRelationship
                 })
             })
         })
