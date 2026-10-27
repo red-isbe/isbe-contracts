@@ -55,10 +55,13 @@ contract ServiceDidRegistryFacet is ServiceDidRegistry, IEIP2535Introspection {
     }
 
     /**
-     * @dev Thirteen selectors. The last three — `registerServiceDidWithDocument`,
-     *      `updateServiceDocument` and `getServiceDocument` — were added after the
-     *      first deployment, so upgrading a live diamond is an `Add` of those three
-     *      plus a `Replace` of the original ten.
+     * @dev Fourteen selectors. `registerServiceDidWithDocument`,
+     *      `updateServiceDocument` and `getServiceDocument` were added after the
+     *      first deployment, and `getServiceDidsByAddress` after them (ISBECORE-354).
+     *      Upgrading a live diamond is an `Add` of the new selectors plus a `Replace`
+     *      of the existing ones. Adding a function to `IServiceDidRegistry` changes its
+     *      ERC-165 identifier, so the interface registration is refreshed as well.
+     *      `getServiceDidsByAddress` is read-only and needs no storage migration.
      *
      *      There is no `getServiceDidCountByController`, because
      *      `getServiceDidsByController` already returns `total`, which is the
@@ -72,8 +75,9 @@ contract ServiceDidRegistryFacet is ServiceDidRegistry, IEIP2535Introspection {
         override
         returns (bytes4[] memory selectors_)
     {
-        uint256 selectorsLength = 13;
+        uint256 selectorsLength = 14;
         selectors_ = new bytes4[](selectorsLength);
+        selectors_[--selectorsLength] = this.getServiceDidsByAddress.selector;
         selectors_[--selectorsLength] = this.getServiceDocument.selector;
         selectors_[--selectorsLength] = this.updateServiceDocument.selector;
         selectors_[--selectorsLength] = this

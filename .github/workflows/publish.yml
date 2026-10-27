@@ -1,4 +1,4 @@
-name: Publish to GitHub Packages
+name: Publish to npm
 
 on:
     workflow_dispatch: # Manual trigger from GitHub UI
@@ -10,24 +10,19 @@ jobs:
 
         permissions:
             contents: read
-            packages: write
 
         steps:
             - name: Checkout repo
               uses: actions/checkout@v4
 
+            # setup-node writes an .npmrc for this registry that reads NODE_AUTH_TOKEN
             - uses: ./.github/actions/init
               with:
-                  registry-url: 'https://npm.pkg.github.com/'
-                  scope: '@alastria'
-
-            - name: Configure .npmrc
-              run: |
-                  echo "//npm.pkg.github.com/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
-                  echo "@alastria:registry=https://npm.pkg.github.com/" >> ~/.npmrc
+                  registry-url: 'https://registry.npmjs.org/'
+                  scope: '@red-isbe'
 
             - name: Compile contracts
-              run: npm run compile
+              run: npx hardhat clean && npm run compile
 
             - name: Publish package
               run: npm publish
