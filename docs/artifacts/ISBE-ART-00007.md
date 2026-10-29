@@ -142,7 +142,7 @@ function registerServiceDid(
 | 4    | `expiresAt`, `ellipticType`, `nonce`, `deactivated`, `exists`, `registeredAt` |
 | 5    | `updatedAt`                                                                   |
 
-**Storage de la faceta** (`ServiceDidRegistryStorage`): `records`, `serviceDidsByController`, `nonceByController`, `serviceDidByPublicKeyHash` y `documents`.
+**Storage de la faceta** (`ServiceDidRegistryStorage`): `records`, `serviceDidsByController`, `nonceByController`, `serviceDidByPublicKeyHash`, `documents`, `serviceDidsByAddress` y `addressIndexPosition`. Los dos últimos son el índice por dirección que usa `serviceDidOf`; se añadieron al final de la estructura.
 
 **Ciclo de vida:**
 
@@ -175,32 +175,40 @@ stateDiagram-v2
 
 **Decisión D1.** Una identidad de servicio **no** se resuelve en cadena: su clave nunca se escribe en el índice de direcciones del registro de organizaciones, así que `didOf` devuelve cero y no satisface `onlyKnownDid` ni puede tener roles basados en DID. Las identidades de servicio existen para firmar fuera de la cadena y se verifican a través del resolver.
 
+**Índice por dirección de servicios.** `serviceDidOf(address)` es el equivalente de `didOf` para `did:isbe:svc`: devuelve en una sola lectura el servicio cuya clave vigente deriva esa dirección. Usa su propio índice (`serviceDidsByAddress`), nunca el del registro de organizaciones, así que D1 se mantiene: la clave de un servicio sigue sin satisfacer `didOf` ni `isKnownDid`. Devuelve cero, sin revertir, si no hay servicio, si está desactivado o caducado, o si la organización ya no tiene ningún `capabilityInvocation` en vigor (la cascada se aplica aquí, a diferencia de `isServiceDidActive`). Como varios servicios de la misma organización pueden compartir clave, devuelve el más reciente que esté activo; `serviceDidsOf(address)` devuelve todos los que no están desactivados.
+
 **Cascada de la organización.** `isServiceDidActive` no evalúa si la organización sigue operativa; esa cascada la aplica el resolver (ISBE-ART-00008).
 
 ### 4.6. Interfaces y puntos de integración:
 
-**Interfaz pública** (`IServiceDidRegistry`, 14 selectores, _resolver key_ `_SERVICE_DID_REGISTRY_RESOLVER_KEY`):
+**Interfaz pública** (`IServiceDidRegistry`, 18 selectores, _resolver key_ `_SERVICE_DID_REGISTRY_RESOLVER_KEY`):
 
-| Función                                     | Tipo  | Descripción                                                                   |
-| ------------------------------------------- | ----- | ----------------------------------------------------------------------------- |
-| `initializeServiceDidRegistry()`            | Write | Inicializa la faceta (una vez, `DEFAULT_ADMIN_ROLE`)                          |
-| `registerServiceDid(...)`                   | Write | Alta de un servicio                                                           |
-| `registerServiceDidWithDocument(...)`       | Write | Alta con service document                                                     |
-| `rotateSigningKey(serviceDid, key, curve)`  | Write | Rotación atómica de la clave                                                  |
-| `updateExpiry(serviceDid, expiresAt)`       | Write | Cambio o eliminación de la caducidad                                          |
-| `updateServiceDocument(serviceDid, doc)`    | Write | Sustituye o borra el service document                                         |
-| `deactivateServiceDid(serviceDid)`          | Write | Desactivación irreversible                                                    |
-| `getServiceDid(serviceDid)`                 | View  | Registro completo (revierte si no existe)                                     |
-| `getServiceDocument(serviceDid)`            | View  | Service document                                                              |
-| `getServiceDidsByController(did, page, n)`  | View  | Servicios de una organización, paginados                                      |
-| `isServiceDidActive(serviceDid)`            | View  | Existe, no desactivado y no caducado (no revierte)                            |
-| `signingKeyAddressOf(serviceDid)`           | View  | Dirección derivada de la clave vigente                                        |
-| `getServiceDidsByAddress(address, page, n)` | View  | Servicios cuya clave vigente deriva esa dirección, paginados por organización |
-| `computeServiceDid(controllerDid, nonce)`   | Pure  | Reproduce un identificador                                                    |
+| Función                                     | Tipo  | Descripción                                                                                     |
+| ------------------------------------------- | ----- | ----------------------------------------------------------------------------------------------- |
+| `initializeServiceDidRegistry()`            | Write | Inicializa la faceta (una vez, `DEFAULT_ADMIN_ROLE`)                                            |
+| `registerServiceDid(...)`                   | Write | Alta de un servicio                                                                             |
+| `registerServiceDidWithDocument(...)`       | Write | Alta con service document                                                                       |
+| `rotateSigningKey(serviceDid, key, curve)`  | Write | Rotación atómica de la clave                                                                    |
+| `updateExpiry(serviceDid, expiresAt)`       | Write | Cambio o eliminación de la caducidad                                                            |
+| `updateServiceDocument(serviceDid, doc)`    | Write | Sustituye o borra el service document                                                           |
+| `deactivateServiceDid(serviceDid)`          | Write | Desactivación irreversible                                                                      |
+| `getServiceDid(serviceDid)`                 | View  | Registro completo (revierte si no existe)                                                       |
+| `getServiceDocument(serviceDid)`            | View  | Service document                                                                                |
+| `getServiceDidsByController(did, page, n)`  | View  | Servicios de una organización, paginados                                                        |
+| `isServiceDidActive(serviceDid)`            | View  | Existe, no desactivado y no caducado (no revierte)                                              |
+| `signingKeyAddressOf(serviceDid)`           | View  | Dirección derivada de la clave vigente                                                          |
+| `getServiceDidsByAddress(address, page, n)` | View  | Servicios cuya clave vigente deriva esa dirección, paginados por organización                   |
+| `serviceDidOf(address)`                     | View  | Servicio activo cuya clave deriva esa dirección, con cascada de la organización; cero si no hay |
+| `isKnownServiceDid(address)`                | View  | `true` si `serviceDidOf` devuelve un servicio                                                   |
+| `serviceDidsOf(address)`                    | View  | Todos los servicios no desactivados cuya clave deriva esa dirección                             |
+| `indexServiceDidsByAddress(page, n)`        | Write | Relleno del índice por dirección tras el upgrade (`DEFAULT_ADMIN_ROLE`)                         |
+| `computeServiceDid(controllerDid, nonce)`   | Pure  | Reproduce un identificador                                                                      |
 
-**Eventos:** `ServiceDidRegistryInitialized`, `ServiceDidRegistered`, `ServiceDidKeyRotated`, `ServiceDidExpiryUpdated`, `ServiceDidDeactivated`, `ServiceDidDocumentUpdated`. `ServiceDidRegistered` incluye todo lo necesario para construir el método de verificación W3C desde el propio log.
+**Eventos:** `ServiceDidRegistryInitialized`, `ServiceDidRegistered`, `ServiceDidKeyRotated`, `ServiceDidExpiryUpdated`, `ServiceDidDeactivated`, `ServiceDidDocumentUpdated`, `ServiceDidsIndexedByAddress`. `ServiceDidRegistered` incluye todo lo necesario para construir el método de verificación W3C desde el propio log.
 
 **Búsqueda por dirección (ISBECORE-354).** `getServiceDidsByAddress(address, page, pageSize)` devuelve los servicios cuya clave **vigente** deriva la dirección dada, sin índice en storage: deriva la dirección de cada clave guardada recorriendo, página a página, la lista global de DIDs de organización del DID Registry y los servicios de cada una. La paginación es sobre organizaciones, no sobre resultados (una página puede venir vacía y la siguiente no). Una clave rotada deja de coincidir; los servicios desactivados o caducados se devuelven y se filtran con `isServiceDidActive`. Su coste crece con el número de organizaciones, por lo que está pensada para lecturas fuera de la cadena. Es la consulta que usa el faucet (ISBE-ART-07000) para fondear a los agentes.
+
+Para búsquedas por dirección, sobre todo desde otros contratos, se usa `serviceDidOf` o `serviceDidsOf`, que leen el índice. `getServiceDidsByAddress` se mantiene por compatibilidad.
 
 **Consumidores:** Service DID Lib (ISBE-ART-00008), Service DID REST API (ISBE-ART-00009) y Faucet (ISBE-ART-07000).
 
@@ -257,24 +265,30 @@ stateDiagram-v2
 
 ### 5.5. Criterios de validación del desarrollo:
 
-| Test / Escenario                                       | Resultado esperado                                           |
-| ------------------------------------------------------ | ------------------------------------------------------------ |
-| Corte de la faceta en un Diamond existente             | Sin colisiones; todos los selectores enrutan a la faceta     |
-| Alta del primer y segundo servicio                     | Nonce 1 y 2, identificadores distintos                       |
-| Lectura del registro                                   | Todos los campos coinciden con lo enviado                    |
-| Alta por quien no controla la organización             | Revierte                                                     |
-| Alta con organización inexistente o caducidad pasada   | Revierte                                                     |
-| Clave compartida en la misma organización              | Se acepta                                                    |
-| Clave de otra organización o de un DID de organización | Revierte (`SigningKeyAlreadyInUse` / `SigningKeyBoundToDid`) |
-| Rotación                                               | La clave cambia y `signingKeyAddressOf` sigue a la nueva     |
-| Desactivación                                          | Toda escritura posterior revierte                            |
-| Caducidad alcanzada                                    | `isServiceDidActive` devuelve `false`                        |
-| Paginación por controlador                             | Páginas base 1, total correcto                               |
-| Búsqueda por dirección                                 | Devuelve los servicios de esa clave y solo esos              |
-| Búsqueda tras una rotación                             | La dirección antigua no coincide; la nueva sí                |
-| Búsqueda paginada por organizaciones                   | Recorriendo todas las páginas, cada servicio aparece una vez |
-| Service document en el límite y por encima             | Se acepta 4096 bytes; 4097 revierte                          |
-| Pausa del Diamond                                      | Todas las escrituras revierten                               |
+| Test / Escenario                                              | Resultado esperado                                               |
+| ------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Corte de la faceta en un Diamond existente                    | Sin colisiones; todos los selectores enrutan a la faceta         |
+| Alta del primer y segundo servicio                            | Nonce 1 y 2, identificadores distintos                           |
+| Lectura del registro                                          | Todos los campos coinciden con lo enviado                        |
+| Alta por quien no controla la organización                    | Revierte                                                         |
+| Alta con organización inexistente o caducidad pasada          | Revierte                                                         |
+| Clave compartida en la misma organización                     | Se acepta                                                        |
+| Clave de otra organización o de un DID de organización        | Revierte (`SigningKeyAlreadyInUse` / `SigningKeyBoundToDid`)     |
+| Rotación                                                      | La clave cambia y `signingKeyAddressOf` sigue a la nueva         |
+| Desactivación                                                 | Toda escritura posterior revierte                                |
+| Caducidad alcanzada                                           | `isServiceDidActive` devuelve `false`                            |
+| Paginación por controlador                                    | Páginas base 1, total correcto                                   |
+| Búsqueda por dirección                                        | Devuelve los servicios de esa clave y solo esos                  |
+| Búsqueda tras una rotación                                    | La dirección antigua no coincide; la nueva sí                    |
+| Búsqueda paginada por organizaciones                          | Recorriendo todas las páginas, cada servicio aparece una vez     |
+| `serviceDidOf` de un servicio registrado                      | Devuelve el servicio; `isKnownServiceDid` es `true`              |
+| `serviceDidOf` tras rotación o desactivación                  | La dirección vieja o desactivada devuelve cero                   |
+| `serviceDidOf` con clave compartida                           | Devuelve el más reciente activo; `serviceDidsOf` los lista todos |
+| `serviceDidOf` con la organización sin `capabilityInvocation` | Devuelve cero; el servicio sigue activo                          |
+| Clave de servicio frente a `didOf` y viceversa (D1)           | Ninguna resuelve en el índice de la otra                         |
+| `indexServiceDidsByAddress` sobre servicios anteriores        | Los indexa una vez; repetirlo no añade nada                      |
+| Service document en el límite y por encima                    | Se acepta 4096 bytes; 4097 revierte                              |
+| Pausa del Diamond                                             | Todas las escrituras revierten                                   |
 
 ```bash
 npx hardhat test test/identity/ServiceDidRegistry.spec.ts
@@ -290,12 +304,13 @@ npm run test:coverage
 
 - Diamond de gobernanza de ISBE con el DID Registry desplegado e inicializado.
 - Upgrade de facetas con la tarea `updateDiamondFacets` de `isbe-contracts` (todas las facetas por defecto). Añadir funciones a `IServiceDidRegistry` cambia su identificador ERC-165, por lo que el registro de interfaces se actualiza en el mismo upgrade.
+- Tras el upgrade que añade el índice por dirección, ejecutar `indexServiceDidsByAddress` sobre todas las páginas de organizaciones con una cuenta con `DEFAULT_ADMIN_ROLE`. Hasta entonces, `serviceDidOf` no encuentra los servicios dados de alta antes del upgrade.
 - Node.js y Hardhat para compilar, testear y desplegar.
 
 ### 5.8. Limitaciones temporales:
 
 - Desplegado en la red de desarrollo (DEV). Despliegue en PRE y PRO por confirmar.
-- Sin enumeración global de servicios: solo por organización (`getServiceDidsByController`). La búsqueda por dirección (`getServiceDidsByAddress`) no usa índice y escala con el número de organizaciones; si se necesitara en cadena a gran escala, habría que añadir un índice en storage.
+- Sin enumeración global de servicios: solo por organización (`getServiceDidsByController`) o por dirección (`serviceDidsOf`). `getServiceDidsByAddress` no usa el índice y escala con el número de organizaciones.
 
 ### 5.9. Limitaciones por versiones, licencias o configuraciones:
 

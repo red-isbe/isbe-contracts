@@ -68,9 +68,9 @@ export async function deployServiceDidRegistryFixture() {
     const storageProbeFacet = await probeFactory.deploy()
     await storageProbeFacet.waitForDeployment()
     const probeAddress = await storageProbeFacet.getAddress()
-    const probeSelector = storageProbeFacet.interface.getFunction(
-        'forceServiceDidExists'
-    )!.selector
+    const probeSelectors = ['forceServiceDidExists', 'forgetAddressIndex'].map(
+        (name) => storageProbeFacet.interface.getFunction(name)!.selector
+    )
 
     const newSelectors = await serviceDidRegistryFacet.selectorsIntrospection()
     const newInterfaces =
@@ -95,7 +95,7 @@ export async function deployServiceDidRegistryFixture() {
             {
                 facetAddress: probeAddress,
                 action: ITEM_CUT_ACTION_ADD,
-                items: [probeSelector],
+                items: probeSelectors,
             },
         ],
         ZeroAddress,

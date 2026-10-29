@@ -175,6 +175,14 @@ interface IServiceDidRegistry {
     );
 
     /**
+     * @notice Emitted when a page of organisations is processed by the address index
+     *         backfill
+     * @param page Page of the list of organisational identifiers that was processed
+     * @param indexedCount Number of service identities added to the index in that page
+     */
+    event ServiceDidsIndexedByAddress(uint256 page, uint256 indexedCount);
+
+    /**
      * @notice Raised when registering a service identifier that is already present
      * @dev Given that identifiers are derived from a monotonic counter this condition
      *      is unreachable through normal operation, and acts as a storage invariant
@@ -351,6 +359,35 @@ interface IServiceDidRegistry {
     ) external returns (bool success);
 
     /**
+     * @notice Adds to the address index the service identities registered before it
+     *         existed, one page of organisations at a time
+     * @dev Restricted to the default admin role and meant to run once after the
+     *      upgrade, over every page. Idempotent: identities already indexed and
+     *      deactivated ones are skipped, so a repeated or overlapping run changes
+     *      nothing. Pages follow `getServiceDidsByAddress`: one-based, over the global
+     *      list of organisational identifiers
+     * @param page Page of the list of organisational identifiers to process
+     * @param pageSize Number of organisational identifiers per page
+     * @return indexedCount Number of service identities added in this page
+     * @return total Total number of organisational identifiers
+     * @return howMany Number of organisational identifiers processed in this page
+     * @return prev Previous page number
+     * @return next Next page number
+     */
+    function indexServiceDidsByAddress(
+        uint256 page,
+        uint256 pageSize
+    )
+        external
+        returns (
+            uint256 indexedCount,
+            uint256 total,
+            uint256 howMany,
+            uint256 prev,
+            uint256 next
+        );
+
+    /**
      * @notice Retrieves the document of a service identity
      * @dev Returns the empty string for a registered identity that has none. Reverts
      *      with `ServiceDidNotFound` for unregistered identifiers, matching
@@ -492,6 +529,57 @@ interface IServiceDidRegistry {
             uint256 prev,
             uint256 next
         );
+
+    /**
+     * @notice Resolves an address to the service identity it currently signs for
+     * @dev The counterpart of `didOf` for the `did:isbe:svc` sub-namespace, answered
+     *      from an address index in a single lookup, whatever the number of
+     *      organisations. It reads its own index, never the organisational one, so
+     *      decision D1 holds: a service key still makes `didOf` and `isKnownDid` return
+     *      zero and false.
+     *
+     *      Returns zero, rather than reverting, when nothing usable is found: when no
+     *      service holds a key deriving the address, when every such service is
+     *      deactivated or expired, or when their organisation no longer holds any
+     *      capability invocation in force. Unlike `isServiceDidActive`, the cascade of
+     *      the organisation is evaluated here.
+     *
+     *      Services of the same organisation may share a key, so an address can back
+     *      several of them; this returns the most recently registered one that is
+     *      active. `serviceDidsOf` returns them all.
+     *
+     *      Identities registered before the index existed are found once
+     *      `indexServiceDidsByAddress` has processed their organisation
+     * @param signingKeyAddress The address derived from a service signing key
+     * @return serviceDid The service identifier, or zero when none is usable
+     */
+    function serviceDidOf(
+        address signingKeyAddress
+    ) external view returns (bytes32 serviceDid);
+
+    /**
+     * @notice Reports whether an address signs for a usable service identity
+     * @dev The counterpart of `isKnownDid`: true exactly when `serviceDidOf` returns a
+     *      non-zero identifier
+     * @param signingKeyAddress The address derived from a service signing key
+     * @return known True when the address resolves to a usable service identity
+     */
+    function isKnownServiceDid(
+        address signingKeyAddress
+    ) external view returns (bool known);
+
+    /**
+     * @notice Lists every service identity whose current signing key derives an address
+     * @dev Read from the address index. Deactivated identities are not listed, expired
+     *      ones are, and the organisation's cascade is not applied: callers filter with
+     *      `isServiceDidActive`. The order is not the registration order. Every entry
+     *      belongs to the same organisation, since a key never spans two of them
+     * @param signingKeyAddress The address derived from a service signing key
+     * @return serviceDids The service identifiers indexed under that address
+     */
+    function serviceDidsOf(
+        address signingKeyAddress
+    ) external view returns (bytes32[] memory serviceDids);
 
     /**
      * @notice Derives the identifier that a controller and nonce produce

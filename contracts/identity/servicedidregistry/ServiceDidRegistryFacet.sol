@@ -55,13 +55,18 @@ contract ServiceDidRegistryFacet is ServiceDidRegistry, IEIP2535Introspection {
     }
 
     /**
-     * @dev Fourteen selectors. `registerServiceDidWithDocument`,
+     * @dev Eighteen selectors. `registerServiceDidWithDocument`,
      *      `updateServiceDocument` and `getServiceDocument` were added after the
-     *      first deployment, and `getServiceDidsByAddress` after them (ISBECORE-354).
+     *      first deployment, `getServiceDidsByAddress` after them (ISBECORE-354), and
+     *      the address index (`serviceDidOf`, `isKnownServiceDid`, `serviceDidsOf`,
+     *      `indexServiceDidsByAddress`) last.
      *      Upgrading a live diamond is an `Add` of the new selectors plus a `Replace`
      *      of the existing ones. Adding a function to `IServiceDidRegistry` changes its
      *      ERC-165 identifier, so the interface registration is refreshed as well.
-     *      `getServiceDidsByAddress` is read-only and needs no storage migration.
+     *      `getServiceDidsByAddress` is read-only and needs no storage migration. The
+     *      address index appends two mappings to the storage and needs one run of
+     *      `indexServiceDidsByAddress` over every page after the upgrade, so that
+     *      identities registered before it are found by `serviceDidOf`.
      *
      *      There is no `getServiceDidCountByController`, because
      *      `getServiceDidsByController` already returns `total`, which is the
@@ -75,8 +80,12 @@ contract ServiceDidRegistryFacet is ServiceDidRegistry, IEIP2535Introspection {
         override
         returns (bytes4[] memory selectors_)
     {
-        uint256 selectorsLength = 14;
+        uint256 selectorsLength = 18;
         selectors_ = new bytes4[](selectorsLength);
+        selectors_[--selectorsLength] = this.indexServiceDidsByAddress.selector;
+        selectors_[--selectorsLength] = this.serviceDidsOf.selector;
+        selectors_[--selectorsLength] = this.isKnownServiceDid.selector;
+        selectors_[--selectorsLength] = this.serviceDidOf.selector;
         selectors_[--selectorsLength] = this.getServiceDidsByAddress.selector;
         selectors_[--selectorsLength] = this.getServiceDocument.selector;
         selectors_[--selectorsLength] = this.updateServiceDocument.selector;

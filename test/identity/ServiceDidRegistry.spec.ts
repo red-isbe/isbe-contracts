@@ -1213,6 +1213,451 @@ describe('ServiceDidRegistry', () => {
         })
     })
 
+    describe('serviceDidOf (address index)', () => {
+        const ALL = 1000
+        const ZERO32 = ethers.ZeroHash
+
+        async function register(
+            registry: Contract,
+            controllerDid: string,
+            publicKey: string,
+            label: string,
+            expiresAt: bigint = NEVER_EXPIRES
+        ): Promise<string> {
+            const receipt = await (
+                await registry.registerServiceDid(
+                    controllerDid,
+                    publicKey,
+                    EllipticType.SECP_256_K1,
+                    ethers.id(label),
+                    expiresAt
+                )
+            ).wait()
+            for (const log of receipt.logs) {
+                try {
+                    const parsed = registry.interface.parseLog(log)
+                    if (parsed?.name === 'ServiceDidRegistered') {
+                        return parsed.args.serviceDid as string
+                    }
+                } catch {
+                    // Logs of other facets are ignored
+                }
+            }
+            throw new Error('ServiceDidRegistered not emitted')
+        }
+
+        async function listed(registry: Contract, address: string) {
+            return [...(await registry.serviceDidsOf(address))].sort()
+        }
+
+        it('GIVEN a registered service WHEN resolving the address of its key THEN it is found in one read', async () => {
+            const { serviceDidRegistry, parentDid } = await registryFixture()
+            const key = freeKey(80)
+            const serviceDid = await register(
+                serviceDidRegistry as never,
+                parentDid,
+                key.publicKey,
+                'agente'
+            )
+
+            expect(
+                await serviceDidRegistry.serviceDidOf(key.wallet.address)
+            ).to.equal(serviceDid)
+            expect(
+                await serviceDidRegistry.isKnownServiceDid(key.wallet.address)
+            ).to.be.true
+            expect(
+                await listed(serviceDidRegistry as never, key.wallet.address)
+            ).to.deep.equal([serviceDid])
+        })
+
+        it('GIVEN an address without services WHEN resolving THEN it is zero, not a revert', async () => {
+            const { serviceDidRegistry } = await registryFixture()
+            const address = freeKey(81).wallet.address
+
+            expect(await serviceDidRegistry.serviceDidOf(address)).to.equal(
+                ZERO32
+            )
+            expect(await serviceDidRegistry.isKnownServiceDid(address)).to.be
+                .false
+            expect(
+                await serviceDidRegistry.serviceDidsOf(address)
+            ).to.deep.equal([])
+        })
+
+        it('GIVEN a service key and an organisational key WHEN crossing the lookups THEN neither resolves in the other (D1)', async () => {
+            const { serviceDidRegistry, didRegistry, parentDid, parentWallet } =
+                await registryFixture()
+            const key = freeKey(82)
+            await register(
+                serviceDidRegistry as never,
+                parentDid,
+                key.publicKey,
+                'separado'
+            )
+
+            // A service key never enters the organisational index...
+            expect(await didRegistry.didOf(key.wallet.address)).to.equal(ZERO32)
+            expect(await didRegistry.isKnownDid(key.wallet.address)).to.be.false
+            // ...and an organisational key never enters the service one.
+            expect(
+                await serviceDidRegistry.serviceDidOf(parentWallet.address)
+            ).to.equal(ZERO32)
+            expect(await didRegistry.didOf(parentWallet.address)).to.equal(
+                parentDid
+            )
+        })
+
+        it('GIVEN a rotation WHEN resolving THEN the new address resolves and the old one no longer does', async () => {
+            const { serviceDidRegistry, parentDid } = await registryFixture()
+            const original = freeKey(83)
+            const replacement = freeKey(84)
+            const serviceDid = await register(
+                serviceDidRegistry as never,
+                parentDid,
+                original.publicKey,
+                'a rotar'
+            )
+            await serviceDidRegistry.rotateSigningKey(
+                serviceDid,
+                replacement.publicKey,
+                EllipticType.SECP_256_K1
+            )
+
+            expect(
+                await serviceDidRegistry.serviceDidOf(original.wallet.address)
+            ).to.equal(ZERO32)
+            expect(
+                await serviceDidRegistry.serviceDidsOf(original.wallet.address)
+            ).to.deep.equal([])
+            expect(
+                await serviceDidRegistry.serviceDidOf(
+                    replacement.wallet.address
+                )
+            ).to.equal(serviceDid)
+        })
+
+        it('GIVEN a deactivated service WHEN resolving THEN it is zero and leaves the list', async () => {
+            const { serviceDidRegistry, parentDid } = await registryFixture()
+            const key = freeKey(85)
+            const serviceDid = await register(
+                serviceDidRegistry as never,
+                parentDid,
+                key.publicKey,
+                'a desactivar'
+            )
+            await serviceDidRegistry.deactivateServiceDid(serviceDid)
+
+            expect(
+                await serviceDidRegistry.serviceDidOf(key.wallet.address)
+            ).to.equal(ZERO32)
+            expect(
+                await serviceDidRegistry.serviceDidsOf(key.wallet.address)
+            ).to.deep.equal([])
+            // The scan, unlike the index, still reports it.
+            const [scanned] = await serviceDidRegistry.getServiceDidsByAddress(
+                key.wallet.address,
+                1,
+                ALL
+            )
+            expect([...scanned]).to.deep.equal([serviceDid])
+        })
+
+        it('GIVEN an expired service WHEN resolving THEN it is zero, stays listed, and resolves again once extended', async () => {
+            const { serviceDidRegistry, parentDid, mockTimestamp } =
+                await registryFixture()
+            const key = freeKey(86)
+            const serviceDid = await register(
+                serviceDidRegistry as never,
+                parentDid,
+                key.publicKey,
+                'caduca',
+                YEAR_2033
+            )
+
+            await mockTimestamp.setMockedTimestamp(YEAR_2033 + 1n)
+            expect(
+                await serviceDidRegistry.serviceDidOf(key.wallet.address)
+            ).to.equal(ZERO32)
+            expect(
+                await serviceDidRegistry.serviceDidsOf(key.wallet.address)
+            ).to.deep.equal([serviceDid])
+
+            await serviceDidRegistry.updateExpiry(serviceDid, NEVER_EXPIRES)
+            expect(
+                await serviceDidRegistry.serviceDidOf(key.wallet.address)
+            ).to.equal(serviceDid)
+        })
+
+        it('GIVEN one key backing several services WHEN resolving THEN the most recent active one wins and all are listed', async () => {
+            const { serviceDidRegistry, parentDid } = await registryFixture()
+            const key = freeKey(87)
+            const first = await register(
+                serviceDidRegistry as never,
+                parentDid,
+                key.publicKey,
+                'primero'
+            )
+            const second = await register(
+                serviceDidRegistry as never,
+                parentDid,
+                key.publicKey,
+                'segundo'
+            )
+            const third = await register(
+                serviceDidRegistry as never,
+                parentDid,
+                key.publicKey,
+                'tercero'
+            )
+
+            expect(
+                await serviceDidRegistry.serviceDidOf(key.wallet.address)
+            ).to.equal(third)
+            expect(
+                await listed(serviceDidRegistry as never, key.wallet.address)
+            ).to.deep.equal([first, second, third].sort())
+
+            // Removing the first moves the last into its slot; the list must stay whole.
+            await serviceDidRegistry.deactivateServiceDid(first)
+            expect(
+                await listed(serviceDidRegistry as never, key.wallet.address)
+            ).to.deep.equal([second, third].sort())
+
+            await serviceDidRegistry.deactivateServiceDid(third)
+            expect(
+                await serviceDidRegistry.serviceDidOf(key.wallet.address)
+            ).to.equal(second)
+            expect(
+                await serviceDidRegistry.serviceDidsOf(key.wallet.address)
+            ).to.deep.equal([second])
+        })
+
+        it('GIVEN an organisation without a capability invocation in force WHEN resolving THEN the cascade makes it zero', async () => {
+            const {
+                serviceDidRegistry,
+                didRegistry,
+                parentDid,
+                mockTimestamp,
+            } = await registryFixture()
+            const key = freeKey(88)
+            const serviceDid = await register(
+                serviceDidRegistry as never,
+                parentDid,
+                key.publicKey,
+                'en cascada'
+            )
+            expect(
+                await serviceDidRegistry.serviceDidOf(key.wallet.address)
+            ).to.equal(serviceDid)
+
+            await mockTimestamp.setMockedTimestamp(YEAR_2033)
+            await didRegistry.revokeVerificationMethod(
+                parentDid,
+                ethers.id('vmethod:alastria'),
+                YEAR_2033
+            )
+            await mockTimestamp.setMockedTimestamp(YEAR_2033 + 1n)
+
+            expect(
+                await serviceDidRegistry.serviceDidOf(key.wallet.address)
+            ).to.equal(ZERO32)
+            expect(
+                await serviceDidRegistry.isKnownServiceDid(key.wallet.address)
+            ).to.be.false
+            // The service itself is untouched: only the cascade changed.
+            expect(await serviceDidRegistry.isServiceDidActive(serviceDid)).to
+                .be.true
+            expect(
+                await serviceDidRegistry.serviceDidsOf(key.wallet.address)
+            ).to.deep.equal([serviceDid])
+        })
+
+        describe('indexServiceDidsByAddress', () => {
+            it('GIVEN services registered before the index WHEN backfilling THEN they resolve, and a second run adds nothing', async () => {
+                const { serviceDidRegistry, storageProbe, parentDid } =
+                    await registryFixture()
+                const old = freeKey(89)
+                const gone = freeKey(90)
+                const oldDid = await register(
+                    serviceDidRegistry as never,
+                    parentDid,
+                    old.publicKey,
+                    'anterior'
+                )
+                const goneDid = await register(
+                    serviceDidRegistry as never,
+                    parentDid,
+                    gone.publicKey,
+                    'desactivado antes'
+                )
+                await storageProbe.forgetAddressIndex(oldDid)
+                await storageProbe.forgetAddressIndex(goneDid)
+                // A deactivation of an identity that was never indexed is harmless.
+                await serviceDidRegistry.deactivateServiceDid(goneDid)
+                expect(
+                    await serviceDidRegistry.serviceDidOf(old.wallet.address)
+                ).to.equal(ZERO32)
+
+                await expect(
+                    serviceDidRegistry.indexServiceDidsByAddress(1, ALL)
+                )
+                    .to.emit(serviceDidRegistry, 'ServiceDidsIndexedByAddress')
+                    .withArgs(1, 1)
+
+                expect(
+                    await serviceDidRegistry.serviceDidOf(old.wallet.address)
+                ).to.equal(oldDid)
+                expect(
+                    await serviceDidRegistry.serviceDidsOf(gone.wallet.address)
+                ).to.deep.equal([])
+
+                await expect(
+                    serviceDidRegistry.indexServiceDidsByAddress(1, ALL)
+                )
+                    .to.emit(serviceDidRegistry, 'ServiceDidsIndexedByAddress')
+                    .withArgs(1, 0)
+                expect(
+                    await serviceDidRegistry.serviceDidsOf(old.wallet.address)
+                ).to.deep.equal([oldDid])
+            })
+
+            it('GIVEN a service rotated before being backfilled WHEN backfilling THEN only its current key resolves', async () => {
+                const { serviceDidRegistry, storageProbe, parentDid } =
+                    await registryFixture()
+                const original = freeKey(91)
+                const replacement = freeKey(92)
+                const serviceDid = await register(
+                    serviceDidRegistry as never,
+                    parentDid,
+                    original.publicKey,
+                    'rotado antes'
+                )
+                await storageProbe.forgetAddressIndex(serviceDid)
+                await serviceDidRegistry.rotateSigningKey(
+                    serviceDid,
+                    replacement.publicKey,
+                    EllipticType.SECP_256_K1
+                )
+
+                await serviceDidRegistry.indexServiceDidsByAddress(1, ALL)
+
+                expect(
+                    await serviceDidRegistry.serviceDidOf(
+                        original.wallet.address
+                    )
+                ).to.equal(ZERO32)
+                expect(
+                    await serviceDidRegistry.serviceDidsOf(
+                        replacement.wallet.address
+                    )
+                ).to.deep.equal([serviceDid])
+            })
+
+            it('GIVEN several organisations WHEN backfilling one per page THEN every page together indexes them all', async () => {
+                const base = await registryFixture()
+                const otherOrg = await insertOrganisationalDid(
+                    base.didRegistry as never,
+                    1,
+                    'otra-organizacion'
+                )
+                const mine = freeKey(93)
+                const theirs = freeKey(94)
+                const mineDid = await register(
+                    base.serviceDidRegistry as never,
+                    base.parentDid,
+                    mine.publicKey,
+                    'mio'
+                )
+                const theirsDid = await register(
+                    base.serviceDidRegistry.connect(base.other) as never,
+                    otherOrg.did,
+                    theirs.publicKey,
+                    'suyo'
+                )
+                await base.storageProbe.forgetAddressIndex(mineDid)
+                await base.storageProbe.forgetAddressIndex(theirsDid)
+
+                const [, total] =
+                    await base.serviceDidRegistry.getServiceDidsByAddress(
+                        mine.wallet.address,
+                        1,
+                        1
+                    )
+                let added = 0n
+                for (let page = 1n; page <= total; page++) {
+                    const [indexedCount] =
+                        await base.serviceDidRegistry.indexServiceDidsByAddress.staticCall(
+                            page,
+                            1
+                        )
+                    added += indexedCount
+                    await base.serviceDidRegistry.indexServiceDidsByAddress(
+                        page,
+                        1
+                    )
+                }
+
+                expect(added).to.equal(2n)
+                expect(
+                    await base.serviceDidRegistry.serviceDidOf(
+                        mine.wallet.address
+                    )
+                ).to.equal(mineDid)
+                expect(
+                    await base.serviceDidRegistry.serviceDidOf(
+                        theirs.wallet.address
+                    )
+                ).to.equal(theirsDid)
+            })
+
+            it('GIVEN an account without DEFAULT_ADMIN_ROLE WHEN backfilling THEN it fails', async () => {
+                const { serviceDidRegistry, other, accessControlGovernance } =
+                    await registryFixture()
+
+                await expect(
+                    serviceDidRegistry
+                        .connect(other)
+                        .indexServiceDidsByAddress(1, ALL)
+                ).to.be.revertedWithCustomError(
+                    accessControlGovernance,
+                    'AccountHasNoRole'
+                )
+            })
+
+            it('GIVEN a paused diamond WHEN backfilling THEN it fails', async () => {
+                const { serviceDidRegistry, pauseGovernance } =
+                    await registryFixture()
+                await pauseGovernance.pause()
+
+                await expect(
+                    serviceDidRegistry.indexServiceDidsByAddress(1, ALL)
+                ).to.be.reverted
+            })
+        })
+
+        it('GIVEN the facet WHEN reading its selectors THEN the address index is exposed', async () => {
+            const { serviceDidRegistry, serviceDidRegistryFacet } =
+                await registryFixture()
+            const selectors = [
+                ...(await serviceDidRegistryFacet.selectorsIntrospection()),
+            ]
+
+            for (const name of [
+                'serviceDidOf',
+                'isKnownServiceDid',
+                'serviceDidsOf',
+                'indexServiceDidsByAddress',
+            ]) {
+                expect(selectors).to.include(
+                    serviceDidRegistry.interface.getFunction(name)!.selector
+                )
+            }
+            expect(new Set(selectors).size).to.equal(selectors.length)
+            expect(selectors.length).to.equal(18)
+        })
+    })
+
     describe('initializeServiceDidRegistry', () => {
         async function uninitialised() {
             const base = await loadFixture(deployServiceDidRegistryFixture)
@@ -1324,6 +1769,24 @@ describe('ServiceDidRegistry', () => {
             const record = await serviceDidRegistry.getServiceDid(serviceDid)
             expect(record.controllerDid).to.equal(parentDid)
             expect(record.nonce).to.equal(1n)
+            // Same block as the registration, so storing the document changes nothing.
+            expect(record.updatedAt).to.equal(record.registeredAt)
+        })
+
+        it('GIVEN a document WHEN updating it later THEN updatedAt moves to that moment', async () => {
+            const { serviceDidRegistry, serviceDid, mockTimestamp } =
+                await withDocumentedService()
+            const before = await serviceDidRegistry.getServiceDid(serviceDid)
+
+            await mockTimestamp.setMockedTimestamp(YEAR_2033)
+            await serviceDidRegistry.updateServiceDocument(
+                serviceDid,
+                JSON.stringify({ serviceEndpoint: 'https://nuevo.ejemplo.es' })
+            )
+
+            const after = await serviceDidRegistry.getServiceDid(serviceDid)
+            expect(after.updatedAt).to.equal(YEAR_2033)
+            expect(after.registeredAt).to.equal(before.registeredAt)
         })
 
         it('GIVEN a plain registration WHEN reading its document THEN it is empty', async () => {
