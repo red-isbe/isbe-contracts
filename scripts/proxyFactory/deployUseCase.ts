@@ -15,7 +15,6 @@ import { getIsbeFactory } from '../utils/getIsbeFactory'
 import { getEvent } from '../utils/getEvent'
 import { isValidBytes, isValidBytesAndLength } from '../utils/validation'
 import { Rbac } from './interfaces'
-import { ProxyFactoryFacet__factory } from '../../typechain-types'
 import { ISignatureProvider } from '../../tasks/deployment/providers/ISignatureProvider'
 import { DEFAULT_TX_GAS_LIMIT } from '../../utils/constants'
 
@@ -62,6 +61,9 @@ export async function deployUseCaseWithSignatureProvider(
         initBusinessIds,
         initData
     )
+    // Dynamic import: this module is loaded with the Hardhat config, before
+    // typechain-types exists on a clean checkout
+    const { ProxyFactoryFacet__factory } = await import('../../typechain-types')
     const proxyFactory = ProxyFactoryFacet__factory.createInterface()
 
     const tx = await signatureProvider.sendTransaction({
