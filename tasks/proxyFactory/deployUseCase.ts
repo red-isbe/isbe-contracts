@@ -12,7 +12,7 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 import { task, types } from 'hardhat/config'
 
-import { deployUseCase } from '../../scripts/proxyFactory/deployUseCase'
+import { deployUseCaseWithSignatureProvider } from '../../scripts/proxyFactory/deployUseCase'
 import { SignatureProviderFactory } from '../deployment/providers/SignatureProviderFactory'
 import { NetworkConfigWithCurve } from '../../types/hardhat'
 
@@ -83,10 +83,7 @@ task('deployUseCase', 'Sets config')
             }
 
             try {
-                const signer =
-                    await SignatureProviderFactory.create(hre).getSigner()
-
-                const result = await deployUseCase(
+                const result = await deployUseCaseWithSignatureProvider(
                     configId,
                     configVersion,
                     rbacRoles,
@@ -94,7 +91,7 @@ task('deployUseCase', 'Sets config')
                     initBusinessId,
                     initData,
                     factory,
-                    signer
+                    SignatureProviderFactory.create(hre)
                 )
 
                 console.log('✅ Use case deployed successfully')
