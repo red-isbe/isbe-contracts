@@ -581,19 +581,29 @@ abstract contract DidDocumentDetailedInternal is
         );
     }
 
+    /**
+     * @notice Ensures a network-curve public key is free both in the DID and registry-wide
+     * @dev Without the registry-wide check any controller could bind another entity's
+     *      public key to its own DID and overwrite that key's address-to-DID entry.
+     *      Keys on other curves are not indexed by address, so they are not checked.
+     * @param _did The DID the key is being added to
+     * @param _publicKey The public key being added
+     * @param _ellipticType The elliptic curve of the key
+     */
     function _checkPublicKeyNotAssigned(
         bytes32 _did,
         bytes memory _publicKey,
         IDidDocumentDetailed.EllipticType _ellipticType
     ) internal view {
         DidDocumentsStorage storage $ = _didDocumentsStorage();
-        if ($.networkEllipticType == _ellipticType)
-            require(
-                !_isNotEmptyBytes32(
-                    $.didList[_did].vMethodIdOfAddress[_getAddress(_publicKey)]
-                ),
-                IDidVerificationMethod.PublicKeyAlreadyInUse(_publicKey)
-            );
+        if ($.networkEllipticType != _ellipticType) return;
+        require(
+            !_isNotEmptyBytes32(
+                $.didList[_did].vMethodIdOfAddress[_getAddress(_publicKey)]
+            ),
+            IDidVerificationMethod.PublicKeyAlreadyInUse(_publicKey)
+        );
+        _checkPublicKeyNotRegistered(_publicKey);
     }
 
     /**
@@ -1037,6 +1047,11 @@ abstract contract DidDocumentDetailedInternal is
         IDidVerificationMethod.RollArgs memory _args
     ) private view {
         _checkEmptyVMethod(_args.did, _args.vMethodId);
+        _checkPublicKeyNotAssigned(
+            _args.did,
+            _args.publicKey,
+            _args.ellipticType
+        );
         _checkVMethodExists(_args.did, _args.oldVMethodId);
         _checkVMethodNotRevoked(_args.did, _args.oldVMethodId);
     }

@@ -193,6 +193,41 @@ async function insertControllerDocument(): Promise<string> {
     return did
 }
 
+/**
+ * Helper function to insert the DID document of another entity, controlled by
+ * the hardhat signer at the given index (e.g. 1 for `other`)
+ * Returns the proof-derived DID and the vMethodId of its key
+ */
+async function insertSignerDocument(
+    signerIndex: number
+): Promise<{ did: string; vMethodId: string }> {
+    const { mnemonic } = config.networks.hardhat.accounts as {
+        mnemonic: string
+    }
+    const signerWallet = HDNodeWallet.fromPhrase(
+        mnemonic,
+        undefined,
+        `m/44'/60'/0'/0/${signerIndex}`
+    )
+    const signerVMethodId = randomDid()
+    const proof = generateProof(signerWallet)
+    const did = proofToDid(proof)
+
+    await didRegistry.insertFirstDidDocument(
+        did,
+        randomBaseDocument(),
+        signerVMethodId,
+        proof,
+        walletToPublicKey(signerWallet),
+        EllipticType.SECP_256_K1,
+        notBefore,
+        notAfter,
+        ''
+    )
+
+    return { did, vMethodId: signerVMethodId }
+}
+
 // --- Assertion Helpers ---
 
 /**
@@ -1705,6 +1740,57 @@ describe('DiDRegistry', function () {
                     )
                     .withArgs(publicKey64)
             })
+            it('GIVEN a controller key bound to another DID WHEN another entity adds it to its own DID THEN it fails and the key keeps resolving to its DID', async () => {
+                const { did: otherDid } = await insertSignerDocument(1)
+
+                await expect(
+                    didRegistry
+                        .connect(other)
+                        .addVerificationMethod(
+                            otherDid,
+                            randomDid(),
+                            publicKey65,
+                            EllipticType.SECP_256_K1
+                        )
+                )
+                    .to.be.revertedWithCustomError(
+                        didVerificationMethodFacet,
+                        'PublicKeyAlreadyInUse'
+                    )
+                    .withArgs(publicKey65)
+
+                expect(
+                    await didRegistry.didOf(await wallet.getAddress())
+                ).to.equal(did)
+            })
+            it('GIVEN a non controller key bound to another DID WHEN another entity adds it to its own DID THEN it fails', async () => {
+                const assertionPublicKey = walletToPublicKey(
+                    deriveWallet(wallet, '1')
+                )
+                await didRegistry.addVerificationMethod(
+                    did,
+                    randomDid(),
+                    assertionPublicKey,
+                    EllipticType.SECP_256_K1
+                )
+                const { did: otherDid } = await insertSignerDocument(1)
+
+                await expect(
+                    didRegistry
+                        .connect(other)
+                        .addVerificationMethod(
+                            otherDid,
+                            randomDid(),
+                            assertionPublicKey,
+                            EllipticType.SECP_256_K1
+                        )
+                )
+                    .to.be.revertedWithCustomError(
+                        didVerificationMethodFacet,
+                        'PublicKeyAlreadyInUse'
+                    )
+                    .withArgs(assertionPublicKey)
+            })
             it('GIVEN an inserted document WHEN try to add V.M. with a non controller THEN it fails', async () => {
                 const newMethodId = randomDid()
                 await expect(
@@ -2510,6 +2596,37 @@ describe('DiDRegistry', function () {
                         'NewVMethodMustMatchNetworkEllipticType'
                     )
                     .withArgs(rollArgs.vMethodId)
+            })
+
+            it('GIVEN a key already in the same DID WHEN try to roll to it THEN it fails', async () => {
+                rollArgs.publicKey = publicKey65
+                await expect(didRegistry.rollVerificationMethod(rollArgs))
+                    .to.be.revertedWithCustomError(
+                        didVerificationMethodFacet,
+                        'PublicKeyAlreadyInUse'
+                    )
+                    .withArgs(publicKey65)
+            })
+
+            it('GIVEN a key bound to another DID WHEN another entity rolls its own key to it THEN it fails and the key keeps resolving to its DID', async () => {
+                const { did: otherDid, vMethodId: otherVMethodId } =
+                    await insertSignerDocument(1)
+                rollArgs.did = otherDid
+                rollArgs.oldVMethodId = otherVMethodId
+                rollArgs.publicKey = publicKey65
+
+                await expect(
+                    didRegistry.connect(other).rollVerificationMethod(rollArgs)
+                )
+                    .to.be.revertedWithCustomError(
+                        didVerificationMethodFacet,
+                        'PublicKeyAlreadyInUse'
+                    )
+                    .withArgs(publicKey65)
+
+                expect(
+                    await didRegistry.didOf(await wallet.getAddress())
+                ).to.equal(did)
             })
         })
 
