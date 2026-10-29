@@ -95,6 +95,9 @@ export function getNetworkConfigs(): NetworksConfig {
             gas: DEFAULT_TX_GAS_LIMIT,
             blockGasLimit: 0x1e84800, // 32,000,000
             curve: CURVE,
+            ...(process.env.DEV_KMS_KEY_ID
+                ? { kmsKeyId: process.env.DEV_KMS_KEY_ID }
+                : {}),
         } as NetworkConfigWithCurve,
 
         bare: {

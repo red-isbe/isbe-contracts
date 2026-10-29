@@ -10,6 +10,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ----------------------------------------------------------------------------------- */
+import type { Signer } from 'ethers'
+import type { HardhatRuntimeEnvironment } from 'hardhat/types'
+import { SignatureProviderFactory } from '../../tasks/deployment/providers/SignatureProviderFactory'
 
 /**
  * Facet deployment utilities for ISBE Diamond
@@ -74,11 +77,12 @@ export interface DeployAllFacetsResult {
 async function deployFacet(
     ethers: HardhatRuntimeEnvironment['ethers'],
     facetName: string,
+    signer: Signer,
     gasLimit: number = 15_000_000
 ): Promise<FacetDeploymentResult> {
     console.log(`   📦 Deploying ${facetName}...`)
 
-    const factory = await ethers.getContractFactory(facetName)
+    const factory = await ethers.getContractFactory(facetName, signer)
     const contract = await factory.deploy({ gasLimit })
     await contract.waitForDeployment()
 
@@ -99,6 +103,7 @@ export async function deployAllFacets(
     facets: readonly string[] = DEFAULT_FACETS,
     gasLimit: number = 15_000_000
 ): Promise<DeployAllFacetsResult> {
+    const signer = await SignatureProviderFactory.create(hre).getSigner()
     const ethers = hre.ethers
 
     console.log('🚀 Starting ISBE facet deployment...')
@@ -122,7 +127,12 @@ export async function deployAllFacets(
     // Deploy each facet sequentially
     for (const facetName of facets) {
         try {
-            const result = await deployFacet(ethers, facetName, gasLimit)
+            const result = await deployFacet(
+                ethers,
+                facetName,
+                signer,
+                gasLimit
+            )
             deploymentResults.push(result)
             facetAddresses.push(result.address)
         } catch (error) {

@@ -14,7 +14,6 @@ import { task, types } from 'hardhat/config'
 
 import { deployUseCase } from '../../scripts/proxyFactory/deployUseCase'
 import { SignatureProviderFactory } from '../deployment/providers/SignatureProviderFactory'
-import { ISignatureProvider } from '../deployment/providers/ISignatureProvider'
 import { NetworkConfigWithCurve } from '../../types/hardhat'
 
 /**
@@ -84,8 +83,8 @@ task('deployUseCase', 'Sets config')
             }
 
             try {
-                const signatureProvider: ISignatureProvider =
-                    SignatureProviderFactory.create(hre)
+                const signer =
+                    await SignatureProviderFactory.create(hre).getSigner()
 
                 const result = await deployUseCase(
                     configId,
@@ -95,7 +94,7 @@ task('deployUseCase', 'Sets config')
                     initBusinessId,
                     initData,
                     factory,
-                    signatureProvider
+                    signer
                 )
 
                 console.log('✅ Use case deployed successfully')
