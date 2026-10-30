@@ -17,6 +17,9 @@ pragma solidity ^0.8.28;
 import {
     _SERVICE_DID_REGISTRY_STORAGE_POSITION
 } from '../../constants/storagePositions.sol';
+import {
+    _CAPABILITY_INVOCATION_RELATIONSHIP
+} from '../didregistry/constants.sol';
 import {DidControllerInternal} from '../didregistry/DidControllerInternal.sol';
 import {IDidController} from '../didregistry/interfaces/IDidController.sol';
 import {
@@ -61,6 +64,17 @@ abstract contract ServiceDidRegistryInternal is DidControllerInternal {
      *        Entries are never removed nor overwritten, so key material is permanently
      *        bound to the controller of that first service: other services of the same
      *        controller may share it, a service of any other controller never can
+     * @param serviceDidsByAddress Index from the address derived from a signing key to
+     *        the service identifiers whose current key derives it, the counterpart of
+     *        `invocationAddressToDid` in the organisational registry. Only identities
+     *        that are not deactivated are listed. Several entries are possible because
+     *        services of the same controller may share a key; services of different
+     *        controllers never can, so every entry of one address shares a controller.
+     *        Appended with `addressIndexPosition` after `documents`
+     * @param addressIndexPosition One-based position of each service identifier inside
+     *        its `serviceDidsByAddress` list, zero when it is not indexed. Lets a
+     *        rotation or a deactivation remove the entry in constant time, and lets
+     *        the backfill skip identities that are already indexed
      */
     struct ServiceDidRegistryStorage {
         // solhint-disable-next-line max-line-length
@@ -72,6 +86,10 @@ abstract contract ServiceDidRegistryInternal is DidControllerInternal {
         mapping(bytes32 publicKeyHash => bytes32 serviceDid) serviceDidByPublicKeyHash;
         // Appended after the first deployment: new members only ever go at the end.
         mapping(bytes32 serviceDid => string document) documents;
+        // Appended for serviceDidOf (address index): new members only ever go at the end.
+        // solhint-disable-next-line max-line-length
+        mapping(address signingKeyAddress => bytes32[] serviceDids) serviceDidsByAddress;
+        mapping(bytes32 serviceDid => uint256 position) addressIndexPosition;
     }
 
     /**
@@ -166,6 +184,7 @@ abstract contract ServiceDidRegistryInternal is DidControllerInternal {
             .serviceDidsByController[_controllerDid]
             .push(serviceDid_);
         _bindSigningKey(_pubKeyX, _pubKeyY, serviceDid_);
+        _indexByAddress(serviceDid_, _pubKeyX, _pubKeyY);
     }
 
     /**
@@ -214,6 +233,16 @@ abstract contract ServiceDidRegistryInternal is DidControllerInternal {
             rotation_.newPubKeyY,
             _serviceDid
         );
+        _unindexByAddress(
+            _serviceDid,
+            rotation_.oldPubKeyX,
+            rotation_.oldPubKeyY
+        );
+        _indexByAddress(
+            _serviceDid,
+            rotation_.newPubKeyX,
+            rotation_.newPubKeyY
+        );
         record.pubKeyX = rotation_.newPubKeyX;
         record.pubKeyY = rotation_.newPubKeyY;
         record.ellipticType = _newEllipticType;
@@ -239,6 +268,127 @@ abstract contract ServiceDidRegistryInternal is DidControllerInternal {
         record.deactivated = true;
         record.updatedAt = uint64(_blockTimestamp());
         controllerDid_ = record.controllerDid;
+        // Deactivation is final, so the identity leaves the address index for good.
+        _unindexByAddress(_serviceDid, record.pubKeyX, record.pubKeyY);
+    }
+
+    /**
+     * @notice Adds a service identity to the list of the address its key derives
+     * @dev A no-op when the identity is already indexed, which keeps the backfill
+     *      idempotent and safe to run over identities registered after the upgrade
+     * @param _serviceDid The service identifier to index
+     * @param _pubKeyX The `x` coordinate of its current signing key
+     * @param _pubKeyY The `y` coordinate of its current signing key
+     * @return indexed_ True when the identity was added, false when it already was
+     */
+    function _indexByAddress(
+        bytes32 _serviceDid,
+        bytes32 _pubKeyX,
+        bytes32 _pubKeyY
+    ) internal returns (bool indexed_) {
+        ServiceDidRegistryStorage storage $ = _serviceDidRegistryStorage();
+        if ($.addressIndexPosition[_serviceDid] != 0) return false;
+        bytes32[] storage list = $.serviceDidsByAddress[
+            _signingKeyAddress(_pubKeyX, _pubKeyY)
+        ];
+        list.push(_serviceDid);
+        $.addressIndexPosition[_serviceDid] = list.length;
+        return true;
+    }
+
+    /**
+     * @notice Removes a service identity from the list of the address its key derives
+     * @dev Swap-and-pop, so the order of a list is not the registration order; readers
+     *      that need the most recent identity compare nonces. A no-op for an identity
+     *      that was never indexed, such as one registered before the index existed and
+     *      not yet backfilled
+     * @param _serviceDid The service identifier to remove
+     * @param _pubKeyX The `x` coordinate of the key it is indexed under
+     * @param _pubKeyY The `y` coordinate of the key it is indexed under
+     */
+    function _unindexByAddress(
+        bytes32 _serviceDid,
+        bytes32 _pubKeyX,
+        bytes32 _pubKeyY
+    ) internal {
+        ServiceDidRegistryStorage storage $ = _serviceDidRegistryStorage();
+        uint256 position = $.addressIndexPosition[_serviceDid];
+        if (position == 0) return;
+        bytes32[] storage list = $.serviceDidsByAddress[
+            _signingKeyAddress(_pubKeyX, _pubKeyY)
+        ];
+        uint256 lastPosition = list.length;
+        if (position != lastPosition) {
+            bytes32 moved = list[lastPosition - 1];
+            list[position - 1] = moved;
+            $.addressIndexPosition[moved] = position;
+        }
+        list.pop();
+        delete $.addressIndexPosition[_serviceDid];
+    }
+
+    /**
+     * @notice Indexes, one page of organisations at a time, the service identities that
+     *         were registered before the address index existed
+     * @dev Walks one page of the global list of organisational identifiers of the DID
+     *      registry and every service identity each of them controls. Deactivated
+     *      identities are skipped, as they are never indexed, and identities already
+     *      indexed are left alone, so running it twice, or over a page that holds
+     *      identities registered after the upgrade, changes nothing
+     * @param _page Page of the list of organisational identifiers to process
+     * @param _pageSize Number of organisational identifiers per page
+     * @return indexed_ Number of service identities added to the index
+     * @return total_ Total number of organisational identifiers
+     * @return howMany_ Number of organisational identifiers processed in this page
+     * @return prev_ Previous page number
+     * @return next_ Next page number
+     */
+    function _indexExistingServiceDids(
+        uint256 _page,
+        uint256 _pageSize
+    )
+        internal
+        returns (
+            uint256 indexed_,
+            uint256 total_,
+            uint256 howMany_,
+            uint256 prev_,
+            uint256 next_
+        )
+    {
+        bytes32[] memory controllers;
+        (controllers, total_, howMany_, prev_, next_) = _getDids(
+            _page,
+            _pageSize
+        );
+        ServiceDidRegistryStorage storage $ = _serviceDidRegistryStorage();
+        uint256 controllersLength = controllers.length;
+        for (uint256 i; i < controllersLength; ) {
+            bytes32[] storage serviceDids = $.serviceDidsByController[
+                controllers[i]
+            ];
+            uint256 serviceDidsLength = serviceDids.length;
+            for (uint256 j; j < serviceDidsLength; ) {
+                bytes32 serviceDid = serviceDids[j];
+                IServiceDidRegistry.ServiceDidRecord storage record = $.records[
+                    serviceDid
+                ];
+                if (
+                    !record.deactivated &&
+                    _indexByAddress(serviceDid, record.pubKeyX, record.pubKeyY)
+                ) {
+                    unchecked {
+                        ++indexed_;
+                    }
+                }
+                unchecked {
+                    ++j;
+                }
+            }
+            unchecked {
+                ++i;
+            }
+        }
     }
 
     /**
@@ -265,6 +415,10 @@ abstract contract ServiceDidRegistryInternal is DidControllerInternal {
 
     /**
      * @notice Stores the document of a service identity, replacing any previous one
+     * @dev Stamps `updatedAt`, as every other lifecycle write does: the document is
+     *      part of what the identity resolves to, so changing it is an update of the
+     *      DID document. On a registration with a document it runs in the same block as
+     *      the registration and leaves `updatedAt` equal to `registeredAt`
      * @param _serviceDid The service identifier whose document is set
      * @param _document The service document, already checked for size
      * @return documentHash_ `keccak256` of the stored document
@@ -274,6 +428,9 @@ abstract contract ServiceDidRegistryInternal is DidControllerInternal {
         string memory _document
     ) internal returns (bytes32 documentHash_) {
         _serviceDidRegistryStorage().documents[_serviceDid] = _document;
+        _serviceDidRegistryStorage().records[_serviceDid].updatedAt = uint64(
+            _blockTimestamp()
+        );
         documentHash_ = keccak256(bytes(_document));
     }
 
@@ -361,96 +518,92 @@ abstract contract ServiceDidRegistryInternal is DidControllerInternal {
     }
 
     /**
-     * @notice Finds the service identities whose current signing key derives an address
-     * @dev Nothing is indexed by address: the lookup walks one page of the global list
-     *      of organisational identifiers kept by the DID registry and, for each of them,
-     *      every service identity it controls, deriving the address from the stored
-     *      coordinates. Every controller is a registered organisational identifier
-     *      (`onlyDidExists` on registration), so walking all pages covers every service
-     *      identity. Pagination applies to organisational identifiers, not to matches.
-     *      Only the current key is compared, so a key rotated away no longer matches.
-     *      Deactivated and expired identities are returned as well; callers filter
-     *      with `_isActiveServiceDid`
-     * @param _address The signing key address to look for
-     * @param _page Page of the list of organisational identifiers to scan
-     * @param _pageSize Number of organisational identifiers per page
-     * @return serviceDids_ Matching service identifiers within the scanned page
-     * @return total_ Total number of organisational identifiers
-     * @return howMany_ Number of organisational identifiers scanned in this page
-     * @return prev_ Previous page number
-     * @return next_ Next page number
+     * @notice Lists the service identities whose current signing key derives an address
+     * @dev Read straight from the address index: one storage read per entry, whatever
+     *      the number of organisations. Deactivated identities are not listed; expired
+     *      ones are, because their expiry can still be extended. The order is not the
+     *      registration order
+     * @param _address The signing key address to look up
+     * @return The service identifiers indexed under that address
      */
-    function _getServiceDidsByAddress(
-        address _address,
-        uint256 _page,
-        uint256 _pageSize
-    )
-        internal
-        view
-        returns (
-            bytes32[] memory serviceDids_,
-            uint256 total_,
-            uint256 howMany_,
-            uint256 prev_,
-            uint256 next_
-        )
-    {
-        bytes32[] memory controllers;
-        (controllers, total_, howMany_, prev_, next_) = _getDids(
-            _page,
-            _pageSize
-        );
-        // First pass sizes the array, second pass fills it
-        uint256 matches = _collectServiceDidsByAddress(
-            controllers,
-            _address,
-            serviceDids_
-        );
-        serviceDids_ = new bytes32[](matches);
-        if (matches != 0) {
-            _collectServiceDidsByAddress(controllers, _address, serviceDids_);
-        }
+    function _serviceDidsOf(
+        address _address
+    ) internal view returns (bytes32[] memory) {
+        return _serviceDidRegistryStorage().serviceDidsByAddress[_address];
     }
 
     /**
-     * @notice Counts, and optionally writes, the service identities of a set of
-     *         controllers whose current signing key derives `_address`
-     * @dev Writes into `_out` only when it is non-empty, which lets the same loop
-     *      serve both the sizing and the filling pass
-     * @param _controllers Organisational identifiers to scan
-     * @param _address The signing key address to look for
-     * @param _out Destination array, or an empty array to only count
-     * @return matches_ Number of matching service identifiers
+     * @notice Resolves an address to the service identity it currently signs for, the
+     *         counterpart of `_didOf` in the organisational registry
+     * @dev Among the identities indexed under the address it picks the most recently
+     *      registered one that is active, comparing nonces: every entry of one address
+     *      shares a controller, so the nonce orders them. It then applies the cascade
+     *      the resolver applies off-chain: when the controlling organisation no longer
+     *      holds any capability invocation in force, the result is zero. `_didOf` also
+     *      returns zero, rather than reverting, for an address that resolves to nothing
+     * @param _address The signing key address to resolve
+     * @return serviceDid_ The service identifier, or zero when none is usable
      */
-    function _collectServiceDidsByAddress(
-        bytes32[] memory _controllers,
-        address _address,
-        bytes32[] memory _out
-    ) internal view returns (uint256 matches_) {
+    function _serviceDidOf(
+        address _address
+    ) internal view returns (bytes32 serviceDid_) {
         ServiceDidRegistryStorage storage $ = _serviceDidRegistryStorage();
-        bool write = _out.length != 0;
-        uint256 controllersLength = _controllers.length;
-        for (uint256 i; i < controllersLength; ) {
-            bytes32[] storage serviceDids = $.serviceDidsByController[
-                _controllers[i]
-            ];
-            uint256 serviceDidsLength = serviceDids.length;
-            for (uint256 j; j < serviceDidsLength; ) {
-                bytes32 serviceDid = serviceDids[j];
-                if (_signingKeyAddressOf(serviceDid) == _address) {
-                    if (write) _out[matches_] = serviceDid;
-                    unchecked {
-                        ++matches_;
-                    }
-                }
-                unchecked {
-                    ++j;
-                }
+        bytes32[] storage list = $.serviceDidsByAddress[_address];
+        uint256 listLength = list.length;
+        uint64 bestNonce;
+        for (uint256 i; i < listLength; ) {
+            bytes32 candidate = list[i];
+            uint64 nonce = $.records[candidate].nonce;
+            if (nonce > bestNonce && _isActiveServiceDid(candidate)) {
+                serviceDid_ = candidate;
+                bestNonce = nonce;
             }
             unchecked {
                 ++i;
             }
         }
+        if (
+            _isNotEmptyBytes32(serviceDid_) &&
+            !_isOrganisationOperative($.records[serviceDid_].controllerDid)
+        ) {
+            return bytes32(0);
+        }
+    }
+
+    /**
+     * @notice Reports whether an organisational identifier still holds a capability
+     *         invocation in force
+     * @dev The same test the resolver applies: the document the registry returns for
+     *      the current timestamp lists only relationships inside their validity window,
+     *      and a revoked method has its window closed, so an organisation whose keys
+     *      have all lapsed or been revoked comes back without a capability invocation
+     * @param _did The organisational identifier to evaluate
+     * @return bool True when at least one capability invocation is in force
+     */
+    function _isOrganisationOperative(
+        bytes32 _did
+    ) internal view returns (bool) {
+        (
+            ,
+            ,
+            ,
+            ,
+            ,
+            IDidDocumentDetailed.VRelationship[] memory relationships
+        ) = _getDidDocument(_did);
+        uint256 relationshipsLength = relationships.length;
+        for (uint256 i; i < relationshipsLength; ) {
+            if (
+                _equalStrings(
+                    relationships[i].name,
+                    _CAPABILITY_INVOCATION_RELATIONSHIP
+                )
+            ) return true;
+            unchecked {
+                ++i;
+            }
+        }
+        return false;
     }
 
     function _checkServiceDidExists(bytes32 _serviceDid) internal view {

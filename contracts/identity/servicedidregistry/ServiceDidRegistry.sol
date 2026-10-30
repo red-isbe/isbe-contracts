@@ -242,6 +242,29 @@ abstract contract ServiceDidRegistry is
         return true;
     }
 
+    function indexServiceDidsByAddress(
+        uint256 _page,
+        uint256 _pageSize
+    )
+        external
+        override
+        whenNotPaused
+        onlyRole(_DEFAULT_ADMIN_ROLE)
+        returns (
+            uint256 indexedCount,
+            uint256 total,
+            uint256 howMany,
+            uint256 prev,
+            uint256 next
+        )
+    {
+        (indexedCount, total, howMany, prev, next) = _indexExistingServiceDids(
+            _page,
+            _pageSize
+        );
+        emit ServiceDidsIndexedByAddress(_page, indexedCount);
+    }
+
     function getServiceDocument(
         bytes32 _serviceDid
     )
@@ -303,23 +326,22 @@ abstract contract ServiceDidRegistry is
         return _signingKeyAddressOf(_serviceDid);
     }
 
-    function getServiceDidsByAddress(
-        address _address,
-        uint256 _page,
-        uint256 _pageSize
-    )
-        external
-        view
-        override
-        returns (
-            bytes32[] memory serviceDids,
-            uint256 total,
-            uint256 howMany,
-            uint256 prev,
-            uint256 next
-        )
-    {
-        return _getServiceDidsByAddress(_address, _page, _pageSize);
+    function serviceDidOf(
+        address _signingKeyAddress
+    ) external view override returns (bytes32 serviceDid) {
+        return _serviceDidOf(_signingKeyAddress);
+    }
+
+    function isKnownServiceDid(
+        address _signingKeyAddress
+    ) external view override returns (bool known) {
+        return _isNotEmptyBytes32(_serviceDidOf(_signingKeyAddress));
+    }
+
+    function serviceDidsOf(
+        address _signingKeyAddress
+    ) external view override returns (bytes32[] memory serviceDids) {
+        return _serviceDidsOf(_signingKeyAddress);
     }
 
     function computeServiceDid(

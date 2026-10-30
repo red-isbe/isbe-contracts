@@ -40,6 +40,20 @@ contract ServiceDidStorageProbeFacet is ServiceDidRegistryInternal {
         _serviceDidRegistryStorage().records[_serviceDid].exists = true;
     }
 
+    /**
+     * @notice Takes a service identity out of the address index, leaving the record
+     *         untouched, to reproduce one registered before the index existed
+     * @param _serviceDid The service identifier to take out of the index
+     */
+    function forgetAddressIndex(bytes32 _serviceDid) external {
+        ServiceDidRegistryStorage storage $ = _serviceDidRegistryStorage();
+        _unindexByAddress(
+            _serviceDid,
+            $.records[_serviceDid].pubKeyX,
+            $.records[_serviceDid].pubKeyY
+        );
+    }
+
     function _implementedInterfaces()
         internal
         pure
