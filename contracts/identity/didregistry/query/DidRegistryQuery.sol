@@ -15,13 +15,13 @@ limitations under the License.
 pragma solidity ^0.8.28;
 
 import {IDidRegistryQuery} from '../interfaces/IDidRegistryQuery.sol';
-import {DidDocumentDetailedInternal} from '../DidDocumentDetailedInternal.sol';
+import {DidRegistryQueryInternal} from './DidRegistryQueryInternal.sol';
 
 /// @title DID Registry Query (external surface with validations)
 /// @notice Abstract contract exposing read-only queries with input validations
 /// @dev Adds whenNotPaused and basic format checks; implementation lives in Facet
 abstract contract DidRegistryQuery is
-    DidDocumentDetailedInternal,
+    DidRegistryQueryInternal,
     IDidRegistryQuery
 {
     function isKnownDid(address account) external view override returns (bool) {
@@ -33,5 +33,22 @@ abstract contract DidRegistryQuery is
         address account
     ) external view override returns (bytes32 did) {
         return _didOf(account);
+    }
+
+    /// @inheritdoc IDidRegistryQuery
+    function hasActiveRelationship(
+        bytes32 did,
+        string calldata name,
+        address account
+    ) external view override returns (bool) {
+        return _hasActiveRelationship(did, name, account);
+    }
+
+    /// @inheritdoc IDidRegistryQuery
+    function didOfRelationship(
+        address account,
+        string calldata name
+    ) external view override returns (bytes32 did) {
+        return _didOfRelationship(account, name);
     }
 }

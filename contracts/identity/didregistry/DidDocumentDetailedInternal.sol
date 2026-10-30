@@ -753,6 +753,53 @@ abstract contract DidDocumentDetailedInternal is
                 : bytes32(0);
     }
 
+    /**
+     * @notice Checks if an address holds an active verification relationship on a DID document
+     * @dev capabilityInvocation delegates to _hasActiveCapabilityInvocation. For any other
+     *      relationship the address mapping survives revocation (_cleanupAddressMappingIfNeeded
+     *      only runs for methods with capabilityInvocation), so the revoked flag and the
+     *      relationship period are checked explicitly. Period semantics match
+     *      _hasActiveCapabilityInvocation: notBefore inclusive, notAfter exclusive.
+     * @param _did The DID document to check against
+     * @param _name The verification relationship name (e.g. assertionMethod)
+     * @param _account The address to validate
+     * @return bool True if the address has the relationship active at the current block time
+     */
+    function _hasActiveRelationship(
+        bytes32 _did,
+        string memory _name,
+        address _account
+    ) internal view returns (bool) {
+        DidDocument storage document = _didDocumentsStorage().didList[_did];
+        if (_equalStrings(_name, _CAPABILITY_INVOCATION_RELATIONSHIP)) {
+            return _hasActiveCapabilityInvocation(document, _account);
+        }
+        if (!document.exists) return false;
+        bytes32 vMethodId = document.vMethodIdOfAddress[_account];
+        if (
+            !_isNotEmptyBytes32(vMethodId) ||
+            document.vMethods[vMethodId].revoked
+        ) return false;
+        uint256[] storage relationshipIndexes = document.vRelationshipsIndexes[
+            vMethodId
+        ];
+        uint256 length = relationshipIndexes.length;
+        uint256 blockTimestamp = _blockTimestamp();
+        for (uint256 index; index < length; ) {
+            IDidDocumentDetailed.VRelationship storage vRelationship = document
+                .vRelationships[relationshipIndexes[index]];
+            if (
+                blockTimestamp >= vRelationship.notBefore &&
+                blockTimestamp < vRelationship.notAfter &&
+                _equalStrings(vRelationship.name, _name)
+            ) return true;
+            unchecked {
+                ++index;
+            }
+        }
+        return false;
+    }
+
     /// @notice Override of AccessControlInternal._localDidOf for local DID resolution
     /// @param _account The address to resolve
     /// @return bytes32 The DID hash if found and active, otherwise bytes32(0)
