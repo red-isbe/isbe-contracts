@@ -21,6 +21,7 @@ import {HashTimestampV2Internal} from './HashTimestampV2Internal.sol';
 /// @notice Evidence registry attributed to entity DIDs (see IHashTimestampV2)
 abstract contract HashTimestampV2 is IHashTimestampV2, HashTimestampV2Internal {
     function timestampHashV2(
+        bytes32 _serviceDid,
         bytes32 _hash,
         bytes32 _parentHash
     )
@@ -34,7 +35,7 @@ abstract contract HashTimestampV2 is IHashTimestampV2, HashTimestampV2Internal {
             bool alreadyRegistered_
         )
     {
-        return _timestampHash(_hash, _parentHash);
+        return _timestampHash(_serviceDid, _hash, _parentHash);
     }
 
     function existsV2(

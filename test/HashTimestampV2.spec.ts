@@ -14,22 +14,19 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 import { expect } from 'chai'
 import { config, ethers } from 'hardhat'
-import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
+import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers'
 import { HDNodeWallet, ZeroAddress, ZeroHash } from 'ethers'
 import { deployGovernance } from './fixtures/governance'
 import { EllipticType } from './types/identity'
 import { generateProof, proofToDid } from './support'
-import {
-    ASSERTION_RELATIONSHIP,
-    CONFIGURATION_ID_ERC20,
-    HASH_TIMESTAMP_ROLE,
-} from '../utils/constants'
+import { CONFIGURATION_ID_ERC20, HASH_TIMESTAMP_ROLE } from '../utils/constants'
 import { getEvent } from '../scripts/utils/getEvent'
 import {
     AccessControlDidFacet,
     HashTimestampV2Facet,
-    IDidRegistry,
     IDidRegistry__factory,
+    IServiceDidRegistry,
+    IServiceDidRegistry__factory,
 } from '../typechain-types'
 
 const RESOLVER_KEY = ethers.id('isbe.contracts.hash.timestamp.v2.resolver.key')
@@ -40,6 +37,7 @@ const CONFIGURATION_ID = ethers.id(
 const ITEM_CUT_ACTION_ADD = 0
 const NOT_BEFORE = 5n
 const NOT_AFTER = NOT_BEFORE + 1_000_000_000_000n
+const GATEWAY_LABEL = ethers.id('evidence-gateway')
 
 function wallet(index: number): HDNodeWallet {
     const { mnemonic } = config.networks.hardhat.accounts as {
@@ -55,11 +53,11 @@ function wallet(index: number): HDNodeWallet {
 interface Entity {
     did: string
     founder: HDNodeWallet
-    docker: HDNodeWallet
-    dockerVMethodId: string
+    gateway: HDNodeWallet
+    serviceDid: string
 }
 
-describe('HashTimestampV2 (evidence attributed to entity DIDs)', () => {
+describe('HashTimestampV2 (evidence attributed to entity DIDs through service DIDs)', () => {
     async function deployFixture() {
         const [admin] = await ethers.getSigners()
         const gov = await deployGovernance(admin!, [], CONFIGURATION_ID_ERC20)
@@ -74,13 +72,64 @@ describe('HashTimestampV2 (evidence attributed to entity DIDs)', () => {
             .connect(admin!)
             .setMockedTimestamp(NOT_BEFORE + 1n)
 
-        // Entity founders and dockers are hardhat accounts, so they can send transactions.
+        // The Service DID Registry is cut into 0x15BE as a live upgrade would do.
+        const serviceFacet = await (
+            await ethers.getContractFactory('ServiceDidRegistryFacet')
+        ).deploy()
+        await gov.diamondCutAccessControl.connect(admin!).diamondCut(
+            [
+                {
+                    facetAddress: await serviceFacet.getAddress(),
+                    action: ITEM_CUT_ACTION_ADD,
+                    items: [...(await serviceFacet.selectorsIntrospection())],
+                },
+            ],
+            ZeroAddress,
+            '0x'
+        )
+        const serviceRegistry = IServiceDidRegistry__factory.connect(
+            factoryAddress,
+            admin!
+        )
+        await serviceRegistry.initializeServiceDidRegistry()
+
+        /** Registered by the entity itself, with its capabilityInvocation (founder) key. */
+        async function registerService(
+            founder: HDNodeWallet,
+            controllerDid: string,
+            gateway: HDNodeWallet,
+            expiresAt = 0n,
+            document?: string
+        ): Promise<string> {
+            const asFounder = serviceRegistry.connect(founder)
+            const tx =
+                document === undefined
+                    ? await asFounder.registerServiceDid(
+                          controllerDid,
+                          gateway.signingKey.publicKey,
+                          EllipticType.SECP_256_K1,
+                          GATEWAY_LABEL,
+                          expiresAt
+                      )
+                    : await asFounder.registerServiceDidWithDocument(
+                          controllerDid,
+                          gateway.signingKey.publicKey,
+                          EllipticType.SECP_256_K1,
+                          GATEWAY_LABEL,
+                          expiresAt,
+                          document
+                      )
+            return (await getEvent('ServiceDidRegistered', tx, serviceRegistry))
+                .args.serviceDid as string
+        }
+
+        // Founders and gateways are hardhat accounts, so they can send transactions.
         async function createEntity(
             founderIndex: number,
-            dockerIndex: number
+            gatewayIndex: number
         ): Promise<Entity> {
             const founder = wallet(founderIndex)
-            const docker = wallet(dockerIndex)
+            const gateway = wallet(gatewayIndex)
             const proof = generateProof(founder)
             const did = proofToDid(proof)
             await registry.insertFirstDidDocument(
@@ -94,26 +143,14 @@ describe('HashTimestampV2 (evidence attributed to entity DIDs)', () => {
                 NOT_AFTER,
                 ''
             )
-            // Self-service by the entity: its own controller key declares the docker key.
-            const dockerVMethodId = ethers.id(`${did}#docker`)
-            const asFounder = registry.connect(founder)
-            await asFounder.addVerificationMethod(
-                did,
-                dockerVMethodId,
-                docker.signingKey.publicKey,
-                EllipticType.SECP_256_K1
-            )
-            await asFounder.addVerificationRelationship(
-                did,
-                ASSERTION_RELATIONSHIP,
-                dockerVMethodId,
-                NOT_BEFORE,
-                NOT_AFTER
-            )
-            return { did, founder, docker, dockerVMethodId }
+            // No verification method is added to the entity DID: the gateway is a service.
+            const serviceDid = await registerService(founder, did, gateway)
+            return { did, founder, gateway, serviceDid }
         }
         const entityA = await createEntity(2, 3)
         const entityB = await createEntity(4, 5)
+        // Has a service DID but was never onboarded to the evidence registry.
+        const entityC = await createEntity(8, 9)
 
         const FacetFactory = await ethers.getContractFactory(
             'HashTimestampV2Facet'
@@ -140,34 +177,36 @@ describe('HashTimestampV2 (evidence attributed to entity DIDs)', () => {
         )
             .attach(proxy)
             .connect(admin!) as AccessControlDidFacet
-        // Onboarding (spec H1/H2) is per entity DID, never per key.
+        // Onboarding (spec H1/H2) is per entity DID, never per key nor per service.
         await accessControlDid.grantDidRole(HASH_TIMESTAMP_ROLE, entityA.did)
         await accessControlDid.grantDidRole(HASH_TIMESTAMP_ROLE, entityB.did)
 
         return {
             evidence: FacetFactory.attach(proxy) as HashTimestampV2Facet,
-            facet: (await ethers.getContractAt(
-                'HashTimestampV2Facet',
-                proxy
-            )) as HashTimestampV2Facet,
             // ISBE keeps the pauser role irrevocably: it pauses through the factory (spec H24).
             pauseByIsbe: () => isbeFactory.pauseIsbe(proxy),
             accessControlDid,
             gov,
             admin: admin!,
             governanceAddress: factoryAddress,
-            registry,
+            serviceRegistry,
+            registerService,
             entityA,
             entityB,
+            entityC,
         }
     }
 
     let evidence: HashTimestampV2Facet
     let pauseByIsbe: () => Promise<unknown>
     let accessControlDid: AccessControlDidFacet
-    let registry: IDidRegistry
+    let serviceRegistry: IServiceDidRegistry
+    let registerService: Awaited<
+        ReturnType<typeof deployFixture>
+    >['registerService']
     let entityA: Entity
     let entityB: Entity
+    let entityC: Entity
     const HASH = ethers.id('document')
     const STAMPED = ethers.id('stamped document')
 
@@ -176,17 +215,19 @@ describe('HashTimestampV2 (evidence attributed to entity DIDs)', () => {
             evidence,
             pauseByIsbe,
             accessControlDid,
-            registry,
+            serviceRegistry,
+            registerService,
             entityA,
             entityB,
+            entityC,
         } = await loadFixture(deployFixture))
     })
 
     describe('registration', () => {
-        it('GIVEN an onboarded entity and its assertionMethod key WHEN registering THEN stores the record and emits the event', async () => {
+        it('GIVEN an onboarded entity and the key of its active service DID WHEN registering THEN stores the record under the entity DID and emits the event', async () => {
             const tx = await evidence
-                .connect(entityA.docker)
-                .timestampHashV2(HASH, ZeroHash)
+                .connect(entityA.gateway)
+                .timestampHashV2(entityA.serviceDid, HASH, ZeroHash)
             const receipt = (await tx.wait())!
             const block = (await ethers.provider.getBlock(receipt.blockNumber))!
 
@@ -195,14 +236,18 @@ describe('HashTimestampV2 (evidence attributed to entity DIDs)', () => {
                 .withArgs(
                     HASH,
                     entityA.did,
-                    entityA.docker.address,
+                    entityA.gateway.address,
+                    entityA.serviceDid,
                     ZeroHash,
                     receipt.blockNumber,
                     block.timestamp
                 )
             expect(await evidence.existsV2(HASH, entityA.did)).to.equal(true)
+            expect(await evidence.existsV2(HASH, entityA.serviceDid)).to.equal(
+                false
+            )
             const record = await evidence.getTimestampV2(HASH, entityA.did)
-            expect(record.signer).to.equal(entityA.docker.address)
+            expect(record.signer).to.equal(entityA.gateway.address)
             expect(record.blockNumber).to.equal(receipt.blockNumber)
             expect(record.timestamp).to.equal(block.timestamp)
             expect(record.parentHash).to.equal(ZeroHash)
@@ -210,15 +255,17 @@ describe('HashTimestampV2 (evidence attributed to entity DIDs)', () => {
 
         it('GIVEN a registered pair WHEN registering it again THEN does not revert, returns the existing record and emits nothing', async () => {
             await evidence
-                .connect(entityA.docker)
-                .timestampHashV2(HASH, ZeroHash)
+                .connect(entityA.gateway)
+                .timestampHashV2(entityA.serviceDid, HASH, ZeroHash)
             const original = await evidence.getTimestampV2(HASH, entityA.did)
 
             const [did, record, alreadyRegistered] = await evidence
-                .connect(entityA.docker)
-                .timestampHashV2.staticCall(HASH, ZeroHash)
+                .connect(entityA.gateway)
+                .timestampHashV2.staticCall(entityA.serviceDid, HASH, ZeroHash)
             await expect(
-                evidence.connect(entityA.docker).timestampHashV2(HASH, ZeroHash)
+                evidence
+                    .connect(entityA.gateway)
+                    .timestampHashV2(entityA.serviceDid, HASH, ZeroHash)
             ).not.to.emit(evidence, 'EvidenceRegistered')
 
             expect(did).to.equal(entityA.did)
@@ -229,30 +276,50 @@ describe('HashTimestampV2 (evidence attributed to entity DIDs)', () => {
             ).to.deep.equal(original)
         })
 
+        it('GIVEN two services of the same entity WHEN both register the same hash THEN it is one record of the entity (uniqueness per hash and DID)', async () => {
+            const secondGateway = wallet(10)
+            const secondService = await registerService(
+                entityA.founder,
+                entityA.did,
+                secondGateway
+            )
+            await evidence
+                .connect(entityA.gateway)
+                .timestampHashV2(entityA.serviceDid, HASH, ZeroHash)
+
+            const [did, , alreadyRegistered] = await evidence
+                .connect(secondGateway)
+                .timestampHashV2.staticCall(secondService, HASH, ZeroHash)
+
+            expect(did).to.equal(entityA.did)
+            expect(alreadyRegistered).to.equal(true)
+            expect(await evidence.getRecordsCountV2(HASH)).to.equal(1n)
+        })
+
         it('GIVEN two entities WHEN both register the same hash THEN each keeps its own record (uniqueness per hash and DID)', async () => {
             await evidence
-                .connect(entityA.docker)
-                .timestampHashV2(HASH, ZeroHash)
+                .connect(entityA.gateway)
+                .timestampHashV2(entityA.serviceDid, HASH, ZeroHash)
             await evidence
-                .connect(entityB.docker)
-                .timestampHashV2(HASH, ZeroHash)
+                .connect(entityB.gateway)
+                .timestampHashV2(entityB.serviceDid, HASH, ZeroHash)
 
             expect(await evidence.getRecordsCountV2(HASH)).to.equal(2n)
             const [dids, records] = await evidence.getRecordsV2(HASH, 0, 10)
             expect(dids).to.deep.equal([entityA.did, entityB.did])
             expect(records.map((record) => record.signer)).to.deep.equal([
-                entityA.docker.address,
-                entityB.docker.address,
+                entityA.gateway.address,
+                entityB.gateway.address,
             ])
         })
 
         it('GIVEN several records WHEN paginating getRecords THEN returns each page and an empty page past the end', async () => {
             await evidence
-                .connect(entityA.docker)
-                .timestampHashV2(HASH, ZeroHash)
+                .connect(entityA.gateway)
+                .timestampHashV2(entityA.serviceDid, HASH, ZeroHash)
             await evidence
-                .connect(entityB.docker)
-                .timestampHashV2(HASH, ZeroHash)
+                .connect(entityB.gateway)
+                .timestampHashV2(entityB.serviceDid, HASH, ZeroHash)
 
             expect((await evidence.getRecordsV2(HASH, 0, 1))[0]).to.deep.equal([
                 entityA.did,
@@ -267,63 +334,188 @@ describe('HashTimestampV2 (evidence attributed to entity DIDs)', () => {
 
         it('GIVEN a registered original WHEN registering the stamped document with it as parent THEN chains both records', async () => {
             await evidence
-                .connect(entityA.docker)
-                .timestampHashV2(HASH, ZeroHash)
+                .connect(entityA.gateway)
+                .timestampHashV2(entityA.serviceDid, HASH, ZeroHash)
 
             await evidence
-                .connect(entityA.docker)
-                .timestampHashV2(STAMPED, HASH)
+                .connect(entityA.gateway)
+                .timestampHashV2(entityA.serviceDid, STAMPED, HASH)
 
             expect(
                 (await evidence.getTimestampV2(STAMPED, entityA.did)).parentHash
             ).to.equal(HASH)
         })
+
+        it('GIVEN a service DID with a document declaring a serviceEndpoint WHEN registering THEN it works the same as one without document', async () => {
+            const gateway = wallet(11)
+            const document = JSON.stringify({
+                service: [
+                    {
+                        id: '#evidence',
+                        type: 'EvidenceGateway',
+                        serviceEndpoint: 'https://gateway.example/evidence',
+                    },
+                ],
+            })
+            const serviceDid = await registerService(
+                entityA.founder,
+                entityA.did,
+                gateway,
+                0n,
+                document
+            )
+            expect(
+                await serviceRegistry.getServiceDocument(serviceDid)
+            ).to.equal(document)
+
+            await evidence
+                .connect(gateway)
+                .timestampHashV2(serviceDid, HASH, ZeroHash)
+
+            expect(
+                (await evidence.getTimestampV2(HASH, entityA.did)).signer
+            ).to.equal(gateway.address)
+        })
     })
 
     describe('authorization', () => {
-        it('GIVEN the founder key (capabilityInvocation, not assertionMethod) WHEN registering THEN reverts', async () => {
+        it('GIVEN a service DID that does not exist WHEN registering THEN reverts', async () => {
+            const unknown = ethers.id('unknown service')
+
+            await expect(
+                evidence
+                    .connect(entityA.gateway)
+                    .timestampHashV2(unknown, HASH, ZeroHash)
+            )
+                .to.be.revertedWithCustomError(evidence, 'ServiceDidNotActive')
+                .withArgs(unknown)
+        })
+
+        it('GIVEN an expired service DID WHEN registering THEN reverts but records signed before remain', async () => {
+            const gateway = wallet(12)
+            const expiresAt = BigInt(await time.latest()) + 3600n
+            const serviceDid = await registerService(
+                entityA.founder,
+                entityA.did,
+                gateway,
+                expiresAt
+            )
+            await evidence
+                .connect(gateway)
+                .timestampHashV2(serviceDid, HASH, ZeroHash)
+
+            await time.increaseTo(expiresAt)
+
+            await expect(
+                evidence
+                    .connect(gateway)
+                    .timestampHashV2(serviceDid, STAMPED, ZeroHash)
+            )
+                .to.be.revertedWithCustomError(evidence, 'ServiceDidNotActive')
+                .withArgs(serviceDid)
+            expect(await evidence.existsV2(HASH, entityA.did)).to.equal(true)
+        })
+
+        it('GIVEN a deactivated service DID WHEN registering THEN reverts but records signed before remain', async () => {
+            await evidence
+                .connect(entityA.gateway)
+                .timestampHashV2(entityA.serviceDid, HASH, ZeroHash)
+
+            await serviceRegistry
+                .connect(entityA.founder)
+                .deactivateServiceDid(entityA.serviceDid)
+
+            await expect(
+                evidence
+                    .connect(entityA.gateway)
+                    .timestampHashV2(entityA.serviceDid, STAMPED, ZeroHash)
+            )
+                .to.be.revertedWithCustomError(evidence, 'ServiceDidNotActive')
+                .withArgs(entityA.serviceDid)
+            expect(
+                (await evidence.getTimestampV2(HASH, entityA.did)).signer
+            ).to.equal(entityA.gateway.address)
+        })
+
+        it('GIVEN the founder key (not the service key) WHEN registering THEN reverts', async () => {
             await expect(
                 evidence
                     .connect(entityA.founder)
-                    .timestampHashV2(HASH, ZeroHash)
+                    .timestampHashV2(entityA.serviceDid, HASH, ZeroHash)
             )
-                .to.be.revertedWithCustomError(
-                    evidence,
-                    'SignerNotAssertionMethod'
-                )
-                .withArgs(entityA.founder.address)
+                .to.be.revertedWithCustomError(evidence, 'SignerNotServiceKey')
+                .withArgs(entityA.serviceDid, entityA.founder.address)
         })
 
-        it('GIVEN the docker key of entity A WHEN registering THEN the evidence is attributed to the DID of A, never to another entity', async () => {
-            const [did] = await evidence
-                .connect(entityA.docker)
-                .timestampHashV2.staticCall(HASH, ZeroHash)
-            await evidence
-                .connect(entityA.docker)
-                .timestampHashV2(HASH, ZeroHash)
-
-            expect(did).to.equal(entityA.did)
-            expect(await evidence.existsV2(HASH, entityA.did)).to.equal(true)
+        it('GIVEN the gateway of entity A WHEN registering with the service DID of entity B THEN reverts, so it can never act for another entity', async () => {
+            await expect(
+                evidence
+                    .connect(entityA.gateway)
+                    .timestampHashV2(entityB.serviceDid, HASH, ZeroHash)
+            )
+                .to.be.revertedWithCustomError(evidence, 'SignerNotServiceKey')
+                .withArgs(entityB.serviceDid, entityA.gateway.address)
             expect(await evidence.existsV2(HASH, entityB.did)).to.equal(false)
         })
 
-        it('GIVEN an address without any DID WHEN registering THEN reverts', async () => {
+        it('GIVEN an address without any identity WHEN registering THEN reverts', async () => {
             const outsider = wallet(6)
 
             await expect(
-                evidence.connect(outsider).timestampHashV2(HASH, ZeroHash)
+                evidence
+                    .connect(outsider)
+                    .timestampHashV2(entityA.serviceDid, HASH, ZeroHash)
             )
-                .to.be.revertedWithCustomError(
-                    evidence,
-                    'SignerNotAssertionMethod'
+                .to.be.revertedWithCustomError(evidence, 'SignerNotServiceKey')
+                .withArgs(entityA.serviceDid, outsider.address)
+        })
+
+        it('GIVEN a rotated service key WHEN registering THEN the old key reverts, the new one registers for the same entity and earlier records keep their signer', async () => {
+            await evidence
+                .connect(entityA.gateway)
+                .timestampHashV2(entityA.serviceDid, HASH, ZeroHash)
+            const rotated = wallet(13)
+
+            await serviceRegistry
+                .connect(entityA.founder)
+                .rotateSigningKey(
+                    entityA.serviceDid,
+                    rotated.signingKey.publicKey,
+                    EllipticType.SECP_256_K1
                 )
-                .withArgs(outsider.address)
+
+            await expect(
+                evidence
+                    .connect(entityA.gateway)
+                    .timestampHashV2(entityA.serviceDid, STAMPED, ZeroHash)
+            )
+                .to.be.revertedWithCustomError(evidence, 'SignerNotServiceKey')
+                .withArgs(entityA.serviceDid, entityA.gateway.address)
+            await evidence
+                .connect(rotated)
+                .timestampHashV2(entityA.serviceDid, STAMPED, HASH)
+            expect(
+                (await evidence.getTimestampV2(STAMPED, entityA.did)).signer
+            ).to.equal(rotated.address)
+            expect(
+                (await evidence.getTimestampV2(HASH, entityA.did)).signer
+            ).to.equal(entityA.gateway.address)
+        })
+
+        it('GIVEN an entity never onboarded WHEN its active service registers THEN reverts', async () => {
+            await expect(
+                evidence
+                    .connect(entityC.gateway)
+                    .timestampHashV2(entityC.serviceDid, HASH, ZeroHash)
+            )
+                .to.be.revertedWithCustomError(evidence, 'EntityNotRegistered')
+                .withArgs(entityC.did)
         })
 
         it('GIVEN an entity whose onboarding was revoked WHEN registering THEN reverts but its previous records remain', async () => {
             await evidence
-                .connect(entityA.docker)
-                .timestampHashV2(HASH, ZeroHash)
+                .connect(entityA.gateway)
+                .timestampHashV2(entityA.serviceDid, HASH, ZeroHash)
 
             await accessControlDid.revokeDidRole(
                 HASH_TIMESTAMP_ROLE,
@@ -332,38 +524,27 @@ describe('HashTimestampV2 (evidence attributed to entity DIDs)', () => {
 
             await expect(
                 evidence
-                    .connect(entityA.docker)
-                    .timestampHashV2(STAMPED, ZeroHash)
+                    .connect(entityA.gateway)
+                    .timestampHashV2(entityA.serviceDid, STAMPED, ZeroHash)
             )
                 .to.be.revertedWithCustomError(evidence, 'EntityNotRegistered')
                 .withArgs(entityA.did)
             expect(await evidence.existsV2(HASH, entityA.did)).to.equal(true)
         })
 
-        it('GIVEN a revoked docker key WHEN registering THEN reverts but records signed before remain valid', async () => {
-            await evidence
-                .connect(entityA.docker)
-                .timestampHashV2(HASH, ZeroHash)
-
-            await registry
-                .connect(entityA.founder)
-                .revokeVerificationMethod(
-                    entityA.did,
-                    entityA.dockerVMethodId,
-                    NOT_BEFORE
-                )
+        it('GIVEN the service DID itself WHEN granted HASH_TIMESTAMP_ROLE THEN it still cannot register for an entity that is not onboarded', async () => {
+            await accessControlDid.grantDidRole(
+                HASH_TIMESTAMP_ROLE,
+                entityC.serviceDid
+            )
 
             await expect(
                 evidence
-                    .connect(entityA.docker)
-                    .timestampHashV2(STAMPED, ZeroHash)
-            ).to.be.revertedWithCustomError(
-                evidence,
-                'SignerNotAssertionMethod'
+                    .connect(entityC.gateway)
+                    .timestampHashV2(entityC.serviceDid, HASH, ZeroHash)
             )
-            expect(
-                (await evidence.getTimestampV2(HASH, entityA.did)).signer
-            ).to.equal(entityA.docker.address)
+                .to.be.revertedWithCustomError(evidence, 'EntityNotRegistered')
+                .withArgs(entityC.did)
         })
     })
 
@@ -371,14 +552,16 @@ describe('HashTimestampV2 (evidence attributed to entity DIDs)', () => {
         it('GIVEN a zero hash WHEN registering THEN reverts', async () => {
             await expect(
                 evidence
-                    .connect(entityA.docker)
-                    .timestampHashV2(ZeroHash, ZeroHash)
+                    .connect(entityA.gateway)
+                    .timestampHashV2(entityA.serviceDid, ZeroHash, ZeroHash)
             ).to.be.revertedWithCustomError(evidence, 'EmptyBytes32')
         })
 
         it('GIVEN a parent never registered WHEN registering a child THEN reverts', async () => {
             await expect(
-                evidence.connect(entityA.docker).timestampHashV2(STAMPED, HASH)
+                evidence
+                    .connect(entityA.gateway)
+                    .timestampHashV2(entityA.serviceDid, STAMPED, HASH)
             )
                 .to.be.revertedWithCustomError(evidence, 'ParentNotRegistered')
                 .withArgs(HASH, entityA.did)
@@ -386,11 +569,13 @@ describe('HashTimestampV2 (evidence attributed to entity DIDs)', () => {
 
         it('GIVEN a parent registered by another entity WHEN registering a child THEN reverts', async () => {
             await evidence
-                .connect(entityB.docker)
-                .timestampHashV2(HASH, ZeroHash)
+                .connect(entityB.gateway)
+                .timestampHashV2(entityB.serviceDid, HASH, ZeroHash)
 
             await expect(
-                evidence.connect(entityA.docker).timestampHashV2(STAMPED, HASH)
+                evidence
+                    .connect(entityA.gateway)
+                    .timestampHashV2(entityA.serviceDid, STAMPED, HASH)
             )
                 .to.be.revertedWithCustomError(evidence, 'ParentNotRegistered')
                 .withArgs(HASH, entityA.did)
@@ -398,15 +583,15 @@ describe('HashTimestampV2 (evidence attributed to entity DIDs)', () => {
 
         it('GIVEN a use case paused by ISBE WHEN registering THEN reverts and reads still work', async () => {
             await evidence
-                .connect(entityA.docker)
-                .timestampHashV2(HASH, ZeroHash)
+                .connect(entityA.gateway)
+                .timestampHashV2(entityA.serviceDid, HASH, ZeroHash)
 
             await pauseByIsbe()
 
             await expect(
                 evidence
-                    .connect(entityA.docker)
-                    .timestampHashV2(STAMPED, ZeroHash)
+                    .connect(entityA.gateway)
+                    .timestampHashV2(entityA.serviceDid, STAMPED, ZeroHash)
             ).to.be.revertedWithCustomError(evidence, 'IsPaused')
             expect(await evidence.existsV2(HASH, entityA.did)).to.equal(true)
         })
@@ -414,7 +599,7 @@ describe('HashTimestampV2 (evidence attributed to entity DIDs)', () => {
 
     describe('core diamond (not a use case)', () => {
         // Cut into the governance diamond itself: there is no factory behind it, so the
-        // signer check resolves against the local DID registry instead of the factory.
+        // service DID resolves against the local Service DID Registry storage.
         async function deployOnGovernanceFixture() {
             const fixture = await deployFixture()
             const { gov, admin, governanceAddress } = fixture
@@ -449,14 +634,13 @@ describe('HashTimestampV2 (evidence attributed to entity DIDs)', () => {
             }
         }
 
-        it('GIVEN the facet on the governance diamond WHEN the assertionMethod key registers THEN stores the record and rejects other keys', async () => {
-            const { evidenceOnGovernance, entityA } = await loadFixture(
-                deployOnGovernanceFixture
-            )
+        it('GIVEN the facet on the governance diamond WHEN the service key registers THEN stores the record and rejects other keys and inactive services', async () => {
+            const { evidenceOnGovernance, entityA, entityB } =
+                await loadFixture(deployOnGovernanceFixture)
 
             await evidenceOnGovernance
-                .connect(entityA.docker)
-                .timestampHashV2(HASH, ZeroHash)
+                .connect(entityA.gateway)
+                .timestampHashV2(entityA.serviceDid, HASH, ZeroHash)
 
             expect(
                 await evidenceOnGovernance.existsV2(HASH, entityA.did)
@@ -464,13 +648,32 @@ describe('HashTimestampV2 (evidence attributed to entity DIDs)', () => {
             await expect(
                 evidenceOnGovernance
                     .connect(entityA.founder)
-                    .timestampHashV2(STAMPED, ZeroHash)
+                    .timestampHashV2(entityA.serviceDid, STAMPED, ZeroHash)
             )
                 .to.be.revertedWithCustomError(
                     evidenceOnGovernance,
-                    'SignerNotAssertionMethod'
+                    'SignerNotServiceKey'
                 )
-                .withArgs(entityA.founder.address)
+                .withArgs(entityA.serviceDid, entityA.founder.address)
+            await expect(
+                evidenceOnGovernance
+                    .connect(entityA.gateway)
+                    .timestampHashV2(ethers.id('unknown'), STAMPED, ZeroHash)
+            ).to.be.revertedWithCustomError(
+                evidenceOnGovernance,
+                'ServiceDidNotActive'
+            )
+            // B holds the role on the use case proxy, not on the governance diamond.
+            await expect(
+                evidenceOnGovernance
+                    .connect(entityB.gateway)
+                    .timestampHashV2(entityB.serviceDid, HASH, ZeroHash)
+            )
+                .to.be.revertedWithCustomError(
+                    evidenceOnGovernance,
+                    'EntityNotRegistered'
+                )
+                .withArgs(entityB.did)
         })
     })
 
@@ -497,21 +700,21 @@ describe('HashTimestampV2 (evidence attributed to entity DIDs)', () => {
     })
 
     describe('gas', () => {
-        it('GIVEN an onboarded entity WHEN registering an original and a chained stamped hash THEN reports gas used', async () => {
+        it('GIVEN an onboarded entity WHEN its service registers an original and a chained stamped hash THEN reports gas used', async () => {
             const original = await (
                 await evidence
-                    .connect(entityA.docker)
-                    .timestampHashV2(HASH, ZeroHash)
+                    .connect(entityA.gateway)
+                    .timestampHashV2(entityA.serviceDid, HASH, ZeroHash)
             ).wait()
             const stamped = await (
                 await evidence
-                    .connect(entityA.docker)
-                    .timestampHashV2(STAMPED, HASH)
+                    .connect(entityA.gateway)
+                    .timestampHashV2(entityA.serviceDid, STAMPED, HASH)
             ).wait()
             const duplicate = await (
                 await evidence
-                    .connect(entityA.docker)
-                    .timestampHashV2(HASH, ZeroHash)
+                    .connect(entityA.gateway)
+                    .timestampHashV2(entityA.serviceDid, HASH, ZeroHash)
             ).wait()
 
             console.table({

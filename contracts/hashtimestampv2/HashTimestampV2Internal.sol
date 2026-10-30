@@ -18,13 +18,15 @@ import {
     _HASH_TIMESTAMP_V2_STORAGE_POSITION
 } from '../constants/storagePositions.sol';
 import {_HASH_TIMESTAMP_ROLE} from '../constants/roles.sol';
-import {_ASSERTION_RELATIONSHIP} from '../identity/didregistry/constants.sol';
 import {IHashTimestampV2} from './IHashTimestampV2.sol';
 import {
-    DidRegistryQueryInternal
-} from '../identity/didregistry/query/DidRegistryQueryInternal.sol';
+    IServiceDidRegistry
+} from '../identity/servicedidregistry/interfaces/IServiceDidRegistry.sol';
+import {
+    ServiceDidRegistryInternal
+} from '../identity/servicedidregistry/ServiceDidRegistryInternal.sol';
 
-abstract contract HashTimestampV2Internal is DidRegistryQueryInternal {
+abstract contract HashTimestampV2Internal is ServiceDidRegistryInternal {
     struct HashTimestampV2Storage {
         mapping(bytes32 hash => mapping(bytes32 did => IHashTimestampV2.EvidenceRecord)) records;
         mapping(bytes32 hash => bytes32[] dids) didsByHash;
@@ -35,6 +37,7 @@ abstract contract HashTimestampV2Internal is DidRegistryQueryInternal {
      *      the entity learns through a transaction that the pair already exists.
      */
     function _timestampHash(
+        bytes32 _serviceDid,
         bytes32 _hash,
         bytes32 _parentHash
     )
@@ -46,7 +49,7 @@ abstract contract HashTimestampV2Internal is DidRegistryQueryInternal {
         )
     {
         address signer = _msgSender();
-        did_ = _entityDidOf(signer);
+        did_ = _entityDidOf(_serviceDid, signer);
         _checkEntityRegistered(did_);
 
         HashTimestampV2Storage storage $ = _hashTimestampV2Storage();
@@ -74,6 +77,7 @@ abstract contract HashTimestampV2Internal is DidRegistryQueryInternal {
             _hash,
             did_,
             signer,
+            _serviceDid,
             _parentHash,
             block.number,
             timestamp
@@ -135,22 +139,40 @@ abstract contract HashTimestampV2Internal is DidRegistryQueryInternal {
     }
 
     /**
-     * @dev Resolved at registration time: the record existing in block N proves the key
-     *      was an active assertionMethod of the DID in block N, whatever happens later.
+     * @dev Resolved at registration time: the record existing in block N proves the
+     *      signer held the current key of an active service DID of the entity in block N,
+     *      whatever happens later (rotation, expiry or deactivation).
+     *
+     *      Comparing the derived address with the sender is enough to bind the key: the
+     *      address only matches when the sender holds the private key of those
+     *      coordinates on the curve the network operates on.
      */
     function _entityDidOf(
+        bytes32 _serviceDid,
         address _signer
     ) internal view returns (bytes32 did_) {
-        did_ = _isUseCase()
-            ? _getIsbeFactory().didOfRelationship(
-                _signer,
-                _ASSERTION_RELATIONSHIP
-            )
-            : _didOfRelationship(_signer, _ASSERTION_RELATIONSHIP);
+        IServiceDidRegistry.ServiceDidRecord memory record;
+        if (_isUseCase()) {
+            IServiceDidRegistry serviceDidRegistry = IServiceDidRegistry(
+                address(_getIsbeFactory())
+            );
+            require(
+                serviceDidRegistry.isServiceDidActive(_serviceDid),
+                IHashTimestampV2.ServiceDidNotActive(_serviceDid)
+            );
+            record = serviceDidRegistry.getServiceDid(_serviceDid);
+        } else {
+            require(
+                _isActiveServiceDid(_serviceDid),
+                IHashTimestampV2.ServiceDidNotActive(_serviceDid)
+            );
+            record = _getServiceDid(_serviceDid);
+        }
         require(
-            _isNotEmptyBytes32(did_),
-            IHashTimestampV2.SignerNotAssertionMethod(_signer)
+            _signingKeyAddress(record.pubKeyX, record.pubKeyY) == _signer,
+            IHashTimestampV2.SignerNotServiceKey(_serviceDid, _signer)
         );
+        did_ = record.controllerDid;
     }
 
     function _hashTimestampV2Storage()

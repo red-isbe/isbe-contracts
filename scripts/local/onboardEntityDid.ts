@@ -18,8 +18,11 @@ limitations under the License.
  * network so the evidence agent can be tested end to end with a real entity DID:
  *   1. registers the entity DID produced by did-gen (deployer with DID_REGISTRY_ROLE),
  *   2. funds the entity founder key so it can send its own transactions,
- *   3. as the entity (its founder key, the DID controller), adds the docker public key as
- *      a verification method and declares it as assertionMethod.
+ *   3. as the entity (its founder key, the DID controller), registers the docker public key
+ *      as a Service DID (did:isbe:svc) of the entity. The entity DID gets no extra
+ *      verification method: the gateway acts as a service the entity controls.
+ *      SERVICE_ENDPOINT, when set, is published in the service document; nothing else
+ *      (no PDFs) is published.
  * Every step is skipped when already done, so the script can be rerun safely.
  * Refuses to run against an RPC that is not local.
  *
@@ -28,15 +31,16 @@ limitations under the License.
  *   ENTITY_DID=did:isbe:uc-pre:z1... ENTITY_PUBLIC_KEY=0x04... ENTITY_PROOF=0x... \
  *   ENTITY_KEYSTORE=./identity.keystore.json ENTITY_KEYSTORE_PASSWORD_FILE=./identity.password \
  *   DOCKER_PUBLIC_KEY=0x04... [FACTORY=0x...15BE] [FUND_ETH=1] [VALIDITY_DAYS=365] \
+ *   [SERVICE_LABEL=evidence-gateway] [SERVICE_ENDPOINT=https://...] \
  *   npx hardhat run scripts/local/onboardEntityDid.ts --network isbe
  */
 import { readFileSync } from 'node:fs'
 import { ethers, network } from 'hardhat'
+import type { IServiceDidRegistry } from '../../typechain-types'
 
 const DID_REGISTRY_ROLE =
     '0xaf2da20f2930ba6162489e7dc51c672f0482cbdc3b62d16063683f2d23f0a973'
 const SECP_256_K1 = 1
-const ASSERTION_METHOD = 'assertionMethod'
 const LOCAL_HOSTS = new Set([
     '127.0.0.1',
     'localhost',
@@ -98,22 +102,14 @@ async function main() {
         'DidRegistryQueryFacet',
         factoryAddress
     )
-    const methods = await ethers.getContractAt(
-        'DidVerificationMethodFacet',
-        factoryAddress,
-        founder
-    )
-    const relationships = await ethers.getContractAt(
-        'DidVerificationRelationshipFacet',
+    const services = await ethers.getContractAt(
+        'IServiceDidRegistry',
         factoryAddress,
         founder
     )
     const registryViews = new ethers.Contract(
         factoryAddress,
-        [
-            'function hasActiveRelationship(bytes32 did, string name, address account) view returns (bool)',
-            'function hasRole(bytes32 role, address account) view returns (bool)',
-        ],
+        ['function hasRole(bytes32 role, address account) view returns (bool)'],
         ethers.provider
     )
     console.log(
@@ -171,50 +167,93 @@ async function main() {
         ).wait()
     }
 
-    if (
-        await registryViews.hasActiveRelationship(
-            did,
-            ASSERTION_METHOD,
-            dockerAddress
-        )
-    ) {
-        console.log('Docker key already an active assertionMethod')
+    let serviceDid = await findActiveService(services, did, dockerAddress)
+    if (serviceDid !== null) {
+        console.log('Docker key already the key of an active Service DID')
     } else {
-        // A fresh id per run: a revoked method cannot be reused under the same id.
-        const vMethodId = ethers.id(`${didText}#evidence-agent-${now}`)
+        // The registry rejects a key already bound to an organisational DID.
+        const boundTo = await query.didOf(dockerAddress)
+        if (boundTo !== ethers.ZeroHash) {
+            throw new Error(
+                `The docker key is a verification method of DID ${boundTo}: use a fresh key for the Service DID`
+            )
+        }
+        const label = process.env.SERVICE_LABEL ?? 'evidence-gateway'
+        const endpoint = process.env.SERVICE_ENDPOINT
+        const args = [
+            did,
+            dockerPublicKey,
+            SECP_256_K1,
+            ethers.id(label),
+            notAfter,
+        ] as const
         console.log(
-            'Adding the docker key as verification method (signed by the entity)...'
+            `Registering the docker key as Service DID "${label}" (signed by the entity)...`
         )
-        await (
-            await methods.addVerificationMethod(
-                did,
-                vMethodId,
-                dockerPublicKey,
-                SECP_256_K1
-            )
-        ).wait()
-        console.log('Declaring it as assertionMethod (signed by the entity)...')
-        await (
-            await relationships.addVerificationRelationship(
-                did,
-                ASSERTION_METHOD,
-                vMethodId,
-                now,
-                notAfter
-            )
-        ).wait()
+        const tx =
+            endpoint === undefined || endpoint === ''
+                ? await services.registerServiceDid(...args)
+                : await services.registerServiceDidWithDocument(
+                      ...args,
+                      JSON.stringify({
+                          service: [
+                              {
+                                  id: `#${label}`,
+                                  type: 'EvidenceGateway',
+                                  serviceEndpoint: endpoint,
+                              },
+                          ],
+                      })
+                  )
+        const receipt = await tx.wait()
+        for (const log of receipt?.logs ?? []) {
+            const parsed = services.interface.parseLog(log)
+            if (parsed?.name === 'ServiceDidRegistered')
+                serviceDid = parsed.args.serviceDid as string
+        }
+        if (serviceDid === null)
+            throw new Error('ServiceDidRegistered event not found')
     }
 
-    const active = await registryViews.hasActiveRelationship(
-        did,
-        ASSERTION_METHOD,
-        dockerAddress
-    )
-    console.log('\n=== Entity DID ready ===')
+    const record = await services.getServiceDid(serviceDid)
+    const active = await services.isServiceDidActive(serviceDid)
+    console.log('\n=== Entity DID and Service DID ready ===')
     console.log(`ENTITY_DID=${didText}`)
+    console.log(
+        `SERVICE_DID=${didText.replace(/^did:isbe:/, 'did:isbe:svc:')}:${record.nonce}`
+    )
+    console.log(`SERVICE_DID_BYTES32=${serviceDid}`)
     console.log(`DOCKER_ADDRESS=${dockerAddress}`)
-    console.log(`docker key active assertionMethod: ${active}`)
+    console.log(
+        `service active: ${active}, key matches docker: ${(await services.signingKeyAddressOf(serviceDid)) === dockerAddress}`
+    )
     if (!active) process.exitCode = 1
+}
+
+/** Active Service DID of the entity whose current key is the docker key, if any. */
+async function findActiveService(
+    services: IServiceDidRegistry,
+    did: string,
+    dockerAddress: string
+): Promise<string | null> {
+    const pageSize = 100n
+    for (let page = 1n; ; page++) {
+        const [items, total] = await services.getServiceDidsByController(
+            did,
+            page,
+            pageSize
+        )
+        for (const item of items) {
+            const serviceDid = await services.computeServiceDid(did, item.nonce)
+            if (
+                (await services.signingKeyAddressOf(serviceDid)) ===
+                    dockerAddress &&
+                (await services.isServiceDidActive(serviceDid))
+            )
+                return serviceDid
+        }
+        if (page * pageSize >= total) return null
+    }
 }
 
 /**

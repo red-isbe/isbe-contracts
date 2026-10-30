@@ -22,16 +22,18 @@ pragma solidity ^0.8.28;
  *      - Uniqueness per (hash, DID) instead of per hash, so several entities can register
  *        the same document and nobody can block a hash for others.
  *      - A duplicate of the same pair does not revert: it returns the existing record.
- *      - The signer must hold an active assertionMethod relationship on the entity DID,
- *        and the entity DID must hold HASH_TIMESTAMP_ROLE (granted per entity).
- *      The entity DID is derived from the signer through the registry address index, which
- *      is unique since a key cannot be bound to more than one DID (ISBECORE-435), so a
- *      signer can only ever register evidence for its own entity.
+ *      - The signer acts through a service DID (did:isbe:svc) of the entity: the service
+ *        must be active in the Service DID Registry and its current signing key must
+ *        derive the signer address. The entity DID must hold HASH_TIMESTAMP_ROLE
+ *        (granted per entity).
+ *      The entity DID is the controller of the service DID, read from the Service DID
+ *      Registry, so a signer can only ever register evidence for the organisation that
+ *      issued its service identity. The entity DID keeps no extra verification method.
  */
 interface IHashTimestampV2 {
     /**
      * @notice Evidence record of one (hash, DID) pair, packed in two storage slots
-     * @param signer Address of the assertionMethod key that registered the evidence
+     * @param signer Address of the service DID key that registered the evidence
      * @param blockNumber Block in which the evidence was registered
      * @param timestamp Block timestamp: the evidence date, never a local clock
      * @param parentHash Hash this record derives from (stamped from original), or zero
@@ -51,6 +53,7 @@ interface IHashTimestampV2 {
         bytes32 indexed hash,
         bytes32 indexed did,
         address indexed signer,
+        bytes32 serviceDid,
         bytes32 parentHash,
         uint256 blockNumber,
         uint256 timestamp
@@ -59,21 +62,27 @@ interface IHashTimestampV2 {
     /// @notice The entity DID does not hold HASH_TIMESTAMP_ROLE in this use case
     error EntityNotRegistered(bytes32 did);
 
-    /// @notice The signer is not an active assertionMethod key of any DID
-    error SignerNotAssertionMethod(address signer);
+    /// @notice The service DID does not exist, has expired or has been deactivated
+    error ServiceDidNotActive(bytes32 serviceDid);
+
+    /// @notice The signer is not the current signing key of the service DID
+    error SignerNotServiceKey(bytes32 serviceDid, address signer);
 
     /// @notice The parent hash was not registered by the same entity
     error ParentNotRegistered(bytes32 parentHash, bytes32 did);
 
     /**
-     * @notice Registers the evidence of a hash on behalf of the signer's entity DID
+     * @notice Registers the evidence of a hash on behalf of the entity that controls the
+     *         signer's service DID
+     * @param serviceDid Service DID whose current signing key is the signer
      * @param hash SHA-256 of the document
      * @param parentHash Hash of the document this one derives from, or zero
-     * @return did Entity DID the evidence is attributed to, resolved from the signer
+     * @return did Entity DID the evidence is attributed to: the service DID controller
      * @return record The stored record (the existing one for a duplicate)
      * @return alreadyRegistered True when the pair was already registered
      */
     function timestampHashV2(
+        bytes32 serviceDid,
         bytes32 hash,
         bytes32 parentHash
     )

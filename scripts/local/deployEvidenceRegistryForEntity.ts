@@ -16,20 +16,22 @@ limitations under the License.
 /**
  * LOCAL TEST NETWORKS ONLY (ISBECORE-285). Prepares the evidence registry (HashTimestamp
  * v2) for one entity on a network that was not deployed with deployAllClean:
- *   1. deploys the v2 business logic if missing,
- *   2. registers its configuration if missing and pins the use case to an explicit
- *      version (never 0 = "latest", which would follow future versions silently),
+ *   1. deploys the v2 business logic if missing or if the compiled facet changed,
+ *   2. registers a configuration pinned to that explicit business logic version when the
+ *      latest one is not (never 0 = "latest", which would follow future versions silently),
  *   3. deploys the use case proxy (or reuses the one already on that version),
  *   4. onboards the ENTITY DID (HASH_TIMESTAMP_ROLE granted per DID, spec H1/H2),
- *   5. optionally funds the docker key and warns if it does not resolve to the DID as assertionMethod.
- * The entity creates its DID and declares the docker key itself (did-gen + DID API).
- * Refuses to run against an RPC that is not local.
+ *   5. optionally checks the gateway Service DID (active, controlled by the entity) and
+ *      funds its signing key so it can send transactions.
+ * The entity creates its DID and registers the gateway Service DID itself (did-gen + DID
+ * API, or onboardEntityDid.ts locally). Refuses to run against an RPC that is not local.
  *
- *   ISBE_URL=http://127.0.0.1:8545 ENTITY_DID=did:isbe:uc-dev:z1... [DOCKER_ADDRESS=0x...] \
+ *   ISBE_URL=http://127.0.0.1:8545 ENTITY_DID=did:isbe:uc-dev:z1... \
+ *   [SERVICE_DID=did:isbe:svc:uc-dev:z1...:1 | 0x<bytes32>] \
  *   [FACTORY=0x...15BE] [FUND_ETH=1] \
  *   npx hardhat run scripts/local/deployEvidenceRegistryForEntity.ts --network isbe
  */
-import { ethers, network } from 'hardhat'
+import { artifacts, ethers, network } from 'hardhat'
 import type { Contract } from 'ethers'
 
 const BUSINESS_ID =
@@ -61,7 +63,10 @@ const FACTORY_ABI = [
     'function setConfiguration(bytes32 configurationId, tuple(bytes32 businessId, uint256 version)[] businessIds)',
     'function getDeployedProxiesByConfiguration(bytes32 configurationId, uint256 version) view returns (address[])',
     'function deployUseCase(bytes32 configurationId, uint256 version, tuple(bytes32 role, address[] members)[] rbacs, bool initPause, bytes32[] initBusinessIds, bytes[] initData)',
-    'function didOfRelationship(address account, string name) view returns (bytes32)',
+    'function getConfiguration(bytes32 configurationId, uint256 version) view returns (tuple(bytes32 businessId, uint256 version)[])',
+    'function isServiceDidActive(bytes32 serviceDid) view returns (bool)',
+    'function getServiceDid(bytes32 serviceDid) view returns (tuple(bytes32 controllerDid, bytes32 labelHash, bytes32 pubKeyX, bytes32 pubKeyY, uint64 expiresAt, uint8 ellipticType, uint64 nonce, bool deactivated, bool exists, uint64 registeredAt, uint64 updatedAt))',
+    'function signingKeyAddressOf(bytes32 serviceDid) view returns (address)',
     'event ConfigurationSet(bytes32 configurationId, tuple(bytes32 businessId, uint256 version)[] businessData, uint256 version)',
     'event UseCaseDeployed(bytes32 configurationId, uint256 version, tuple(bytes32 role, address[] members)[] rbacs, address proxy)',
 ]
@@ -73,8 +78,8 @@ const PROXY_ABI = [
 async function main() {
     assertLocalNetwork()
     const entityDid = toDidBytes32(requiredEnv('ENTITY_DID'))
-    const docker = process.env.DOCKER_ADDRESS
-        ? ethers.getAddress(process.env.DOCKER_ADDRESS)
+    const serviceDid = process.env.SERVICE_DID
+        ? toServiceDidBytes32(process.env.SERVICE_DID)
         : null
     const factoryAddress = ethers.getAddress(
         process.env.FACTORY ?? '0x00000000000000000000000000000000000015BE'
@@ -93,11 +98,18 @@ async function main() {
             throw new Error(`Deployer lacks ${name}`)
     }
 
-    if ((await factory.getBusinessLogicVersions(BUSINESS_ID)).length === 0) {
+    const { bytecode } = await ethers.getContractFactory('HashTimestampV2Facet')
+    const { deployedBytecode } = await artifacts.readArtifact(
+        'HashTimestampV2Facet'
+    )
+    const versions: string[] =
+        await factory.getBusinessLogicVersions(BUSINESS_ID)
+    const latestLogic = versions.at(-1)
+    if (
+        latestLogic === undefined ||
+        (await ethers.provider.getCode(latestLogic)) !== deployedBytecode
+    ) {
         console.log('Deploying HashTimestampV2Facet business logic...')
-        const { bytecode } = await ethers.getContractFactory(
-            'HashTimestampV2Facet'
-        )
         await (await factory.deploy(BUSINESS_ID, bytecode)).wait()
     }
 
@@ -113,25 +125,26 @@ async function main() {
         await (await access.grantDidRole(HASH_TIMESTAMP_ROLE, entityDid)).wait()
     }
 
-    if (docker !== null) {
-        if ((await ethers.provider.getBalance(docker)) < fundWei) {
+    if (serviceDid !== null) {
+        // The registry checks the Service DID exactly like this.
+        if (!(await factory.isServiceDidActive(serviceDid)))
+            throw new Error(`Service DID ${serviceDid} is not active`)
+        const { controllerDid } = await factory.getServiceDid(serviceDid)
+        if (controllerDid !== entityDid) {
+            throw new Error(
+                `Service DID ${serviceDid} is controlled by ${controllerDid}, not by the entity`
+            )
+        }
+        const gateway: string = await factory.signingKeyAddressOf(serviceDid)
+        if ((await ethers.provider.getBalance(gateway)) < fundWei) {
             console.log(
-                `Funding docker key with ${ethers.formatEther(fundWei)} ETH...`
+                `Funding the gateway key ${gateway} with ${ethers.formatEther(fundWei)} ETH...`
             )
             await (
-                await deployer.sendTransaction({ to: docker, value: fundWei })
+                await deployer.sendTransaction({ to: gateway, value: fundWei })
             ).wait()
         }
-        // The registry resolves the DID from the signer exactly like this.
-        const resolvedDid = await factory.didOfRelationship(
-            docker,
-            'assertionMethod'
-        )
-        if (resolvedDid !== entityDid) {
-            console.warn(
-                `WARNING: ${docker} does not resolve to the entity DID as assertionMethod yet (resolves to ${resolvedDid})`
-            )
-        }
+        console.log(`SERVICE_DID=${serviceDid} (gateway ${gateway})`)
     }
 
     console.log('\n=== Evidence registry ready ===')
@@ -141,14 +154,23 @@ async function main() {
     )
 }
 
-/** Registers the configuration (pinned to an explicit business logic version) when missing; returns the latest configuration version. */
+/** Registers a configuration pinned to the business logic version unless the latest one already is; returns its version. */
 async function ensureConfiguration(
     factory: Contract,
     businessVersion: bigint
 ): Promise<bigint> {
     let latest = 0n
     while (await configurationExists(factory, latest + 1n)) latest += 1n
-    if (latest > 0n) return latest
+    if (latest > 0n) {
+        const businessData = await factory.getConfiguration(CONFIG_ID, latest)
+        if (
+            businessData.some(
+                ([businessId, version]: [string, bigint]) =>
+                    businessId === BUSINESS_ID && version === businessVersion
+            )
+        )
+            return latest
+    }
 
     console.log('Registering the v2 configuration...')
     const receipt = await (
@@ -203,13 +225,27 @@ async function ensureProxy(
     throw new Error('UseCaseDeployed event not found')
 }
 
+/** Accepts the on-chain bytes32 form or did:isbe:svc:<net>:z<base58>:<nonce> (ISBE-ART-00007). */
+function toServiceDidBytes32(value: string): string {
+    if (/^0x[0-9a-fA-F]{64}$/.test(value)) return value.toLowerCase()
+    const match =
+        /^did:isbe:svc:([a-z0-9-]+:z[1-9A-HJ-NP-Za-km-z]+):(\d+)$/.exec(value)
+    if (match === null) throw new Error(`Unsupported service DID: ${value}`)
+    return ethers.keccak256(
+        ethers.AbiCoder.defaultAbiCoder().encode(
+            ['bytes32', 'uint64'],
+            [toDidBytes32(`did:isbe:${match[1]}`), BigInt(match[2]!)]
+        )
+    )
+}
+
 /** Accepts the on-chain bytes32 form or did:isbe:<net>:z<base58>, whose 20 bytes are left aligned. */
 function toDidBytes32(value: string): string {
     if (/^0x[0-9a-fA-F]{64}$/.test(value)) return value.toLowerCase()
     const match = /^did:isbe:[a-z0-9-]+:z([1-9A-HJ-NP-Za-km-z]+)$/.exec(value)
     if (match === null) throw new Error(`Unsupported DID format: ${value}`)
     const bytes = ethers.toBeHex(ethers.decodeBase58(match[1]!), 20)
-    return ethers.zeroPadBytes(bytes, 32)
+    return ethers.zeroPadBytes(bytes, 32).toLowerCase()
 }
 
 function assertLocalNetwork() {
