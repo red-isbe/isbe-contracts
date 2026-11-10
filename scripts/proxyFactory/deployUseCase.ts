@@ -15,10 +15,94 @@ import { getIsbeFactory } from '../utils/getIsbeFactory'
 import { getEvent } from '../utils/getEvent'
 import { isValidBytes, isValidBytesAndLength } from '../utils/validation'
 import { Rbac } from './interfaces'
+import { ISignatureProvider } from '../../tasks/deployment/providers/ISignatureProvider'
+import { DEFAULT_TX_GAS_LIMIT } from '../../utils/constants'
+
+type UseCaseDeployment = {
+    configurationId: string
+    version: BigNumberish
+    rbacs: Rbac[]
+    proxy: string
+}
+
+/**
+ * Deploys a use case signing with the given signature provider.
+ * secp256k1 providers (local key or KMS) use the ethers Signer flow;
+ * secp256r1 providers (local key or KMS) send a raw transaction through
+ * the provider, since ethers' standard flow assumes secp256k1 signatures.
+ */
+export async function deployUseCaseWithSignatureProvider(
+    configId: string,
+    configVersion: number,
+    roles: string[],
+    members: string[][],
+    initBusinessIds: string[],
+    initData: string[],
+    factory: string,
+    signatureProvider: ISignatureProvider
+): Promise<UseCaseDeployment> {
+    if (signatureProvider.getCurveType() !== 'secp256r1') {
+        return deployUseCase(
+            configId,
+            configVersion,
+            roles,
+            members,
+            initBusinessIds,
+            initData,
+            factory,
+            await signatureProvider.getSigner()
+        )
+    }
+
+    const initRbacs = buildInitRbacs(
+        configId,
+        roles,
+        members,
+        initBusinessIds,
+        initData
+    )
+    // Dynamic import: this module is loaded with the Hardhat config, before
+    // typechain-types exists on a clean checkout
+    const { ProxyFactoryFacet__factory } = await import('../../typechain-types')
+    const proxyFactory = ProxyFactoryFacet__factory.createInterface()
+
+    const tx = await signatureProvider.sendTransaction({
+        to: factory,
+        data: proxyFactory.encodeFunctionData('deployUseCase', [
+            configId,
+            configVersion,
+            initRbacs,
+            false,
+            initBusinessIds,
+            initData,
+        ]),
+        gasLimit: DEFAULT_TX_GAS_LIMIT,
+    })
+    const receipt = await signatureProvider.waitForTransaction(tx.hash)
+    if (!receipt || receipt.status !== 1) {
+        throw new Error(`Failed to deploy use case: tx ${tx.hash} reverted`)
+    }
+
+    for (const log of receipt.logs) {
+        const parsed = proxyFactory.parseLog(log)
+        if (parsed?.name === 'UseCaseDeployed') {
+            const { configurationId, version, rbacs, proxy } = parsed.args
+            return {
+                configurationId,
+                version: version.toString(),
+                rbacs,
+                proxy,
+            }
+        }
+    }
+    throw new Error(
+        `Failed to deploy use case: no UseCaseDeployed event in tx ${tx.hash}`
+    )
+}
 
 /**
  * Legacy function for backward compatibility
- * @deprecated Use the signature provider version above
+ * @deprecated Use deployUseCaseWithSignatureProvider
  */
 export async function deployUseCase(
     configId: string,
@@ -29,15 +113,57 @@ export async function deployUseCase(
     initData: string[],
     factory: string,
     signer: Signer
-): Promise<{
-    configurationId: string
-    version: BigNumberish
-    rbacs: Rbac[]
-    proxy: string
-}> {
+): Promise<UseCaseDeployment> {
     console.warn(
         '⚠️  Using legacy deployUseCase - consider switching to signature provider version'
     )
+    const initRbacs = buildInitRbacs(
+        configId,
+        roles,
+        members,
+        initBusinessIds,
+        initData
+    )
+
+    const proxyFactory = await getIsbeFactory(factory, signer)
+
+    try {
+        const tx = await proxyFactory.deployUseCase(
+            configId,
+            configVersion,
+            initRbacs,
+            false,
+            initBusinessIds,
+            initData
+        )
+
+        const deployedEvent = await getEvent(
+            'UseCaseDeployed',
+            tx,
+            proxyFactory
+        )
+
+        const { configurationId, version, rbacs, proxy } = deployedEvent.args
+
+        return {
+            configurationId,
+            version: version.toString(),
+            rbacs,
+            proxy,
+        }
+    } catch (error) {
+        console.error('Failed to deploy use case:', error)
+        throw new Error(`Failed to deploy use case: ${error}`)
+    }
+}
+
+function buildInitRbacs(
+    configId: string,
+    roles: string[],
+    members: string[][],
+    initBusinessIds: string[],
+    initData: string[]
+): Rbac[] {
     if (!isValidBytesAndLength(configId, 32))
         throw new Error('Invalid config Id format : ' + configId)
 
@@ -79,34 +205,5 @@ export async function deployUseCase(
         })
     }
 
-    const proxyFactory = await getIsbeFactory(factory, signer)
-
-    try {
-        const tx = await proxyFactory.deployUseCase(
-            configId,
-            configVersion,
-            initRbacs,
-            false,
-            initBusinessIds,
-            initData
-        )
-
-        const deployedEvent = await getEvent(
-            'UseCaseDeployed',
-            tx,
-            proxyFactory
-        )
-
-        const { configurationId, version, rbacs, proxy } = deployedEvent.args
-
-        return {
-            configurationId,
-            version: version.toString(),
-            rbacs,
-            proxy,
-        }
-    } catch (error) {
-        console.error('Failed to deploy use case:', error)
-        throw new Error(`Failed to deploy use case: ${error}`)
-    }
+    return initRbacs
 }
