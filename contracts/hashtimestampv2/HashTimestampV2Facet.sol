@@ -21,7 +21,7 @@ import {
 } from '../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 
 /// @title HashTimestampV2Facet
-/// @notice Evidence registry facet attributed to entity DIDs
+/// @notice Evidence registry facet attributed to entity DIDs or authorised accounts
 contract HashTimestampV2Facet is HashTimestampV2, IEIP2535Introspection {
     function interfacesIntrospection()
         external
@@ -46,9 +46,14 @@ contract HashTimestampV2Facet is HashTimestampV2, IEIP2535Introspection {
         override
         returns (bytes4[] memory selectors_)
     {
-        uint256 selectorsLength = 5;
+        uint256 selectorsLength = 10;
         selectors_ = new bytes4[](selectorsLength);
         selectors_[--selectorsLength] = this.timestampHashV2.selector;
+        selectors_[--selectorsLength] = this.timestampHashWithRoleV2.selector;
+        selectors_[--selectorsLength] = this.existsByAccountV2.selector;
+        selectors_[--selectorsLength] = this.getTimestampByAccountV2.selector;
+        selectors_[--selectorsLength] = this.getAccountRecordsCountV2.selector;
+        selectors_[--selectorsLength] = this.getAccountRecordsV2.selector;
         selectors_[--selectorsLength] = this.existsV2.selector;
         selectors_[--selectorsLength] = this.getTimestampV2.selector;
         selectors_[--selectorsLength] = this.getRecordsCountV2.selector;

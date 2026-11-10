@@ -18,11 +18,13 @@ limitations under the License.
  * network so the evidence agent can be tested end to end with a real entity DID:
  *   1. registers the entity DID produced by did-gen (deployer with DID_REGISTRY_ROLE),
  *   2. funds the entity founder key so it can send its own transactions,
- *   3. as the entity (its founder key, the DID controller), registers the docker public key
- *      as a Service DID (did:isbe:svc) of the entity. The entity DID gets no extra
- *      verification method: the gateway acts as a service the entity controls.
- *      SERVICE_ENDPOINT, when set, is published in the service document; nothing else
- *      (no PDFs) is published.
+ *   3. (only with REGISTER_SERVICE_DID=1) as the entity (its founder key, the DID
+ *      controller), registers the docker public key as a Service DID (did:isbe:svc) of the
+ *      entity. The entity DID gets no extra verification method: the gateway acts as a
+ *      service the entity controls. SERVICE_ENDPOINT, when set, is published in the service
+ *      document; nothing else (no PDFs) is published.
+ *      By default step 3 is left out so it can be done by hand (isbe-stamp setup, step 3);
+ *      the script then prints the founder address and DID it needs.
  * Every step is skipped when already done, so the script can be rerun safely.
  * Refuses to run against an RPC that is not local.
  *
@@ -30,8 +32,9 @@ limitations under the License.
  *   ISBE_URL=http://127.0.0.1:8545 \
  *   ENTITY_DID=did:isbe:uc-pre:z1... ENTITY_PUBLIC_KEY=0x04... ENTITY_PROOF=0x... \
  *   ENTITY_KEYSTORE=./identity.keystore.json ENTITY_KEYSTORE_PASSWORD_FILE=./identity.password \
- *   DOCKER_PUBLIC_KEY=0x04... [FACTORY=0x...15BE] [FUND_ETH=1] [VALIDITY_DAYS=365] \
- *   [SERVICE_LABEL=evidence-gateway] [SERVICE_ENDPOINT=https://...] \
+ *   [FACTORY=0x...15BE] [FUND_ETH=1] [VALIDITY_DAYS=365] \
+ *   [REGISTER_SERVICE_DID=1 DOCKER_PUBLIC_KEY=0x04... \
+ *    [SERVICE_LABEL=evidence-gateway] [SERVICE_ENDPOINT=https://...]] \
  *   npx hardhat run scripts/local/onboardEntityDid.ts --network isbe
  */
 import { readFileSync } from 'node:fs'
@@ -53,11 +56,7 @@ async function main() {
     const didText = requiredEnv('ENTITY_DID')
     const did = toDidBytes32(didText)
     const proof = requiredEnv('ENTITY_PROOF')
-    const dockerPublicKey = ethers.SigningKey.computePublicKey(
-        requiredEnv('DOCKER_PUBLIC_KEY'),
-        false
-    )
-    const dockerAddress = ethers.computeAddress(dockerPublicKey)
+    const registerService = process.env.REGISTER_SERVICE_DID === '1'
     const founderPublicKey = proofPublicKey(
         requiredEnv('ENTITY_PUBLIC_KEY'),
         proof
@@ -116,7 +115,6 @@ async function main() {
         `chainId ${(await ethers.provider.getNetwork()).chainId}, registry ${factoryAddress}`
     )
     console.log(`entity ${didText} (${did}), founder ${founder.address}`)
-    console.log(`docker ${dockerAddress}`)
 
     const now = BigInt((await ethers.provider.getBlock('latest'))!.timestamp)
     const notAfter = now + BigInt(validitySeconds)
@@ -166,6 +164,28 @@ async function main() {
             })
         ).wait()
     }
+
+    if (!registerService) {
+        console.log('\n=== Entity DID registered and founder funded ===')
+        console.log(`ENTITY_DID=${didText}`)
+        console.log(`ENTITY_DID_BYTES32=${did}`)
+        console.log(`FOUNDER_ADDRESS=${founder.address}`)
+        console.log(
+            `FOUNDER_BALANCE=${ethers.formatEther(await ethers.provider.getBalance(founder.address))} ETH`
+        )
+        console.log(
+            '\nService DID not registered: do step 3 of the isbe-stamp setup by hand' +
+                ' (or rerun with REGISTER_SERVICE_DID=1 DOCKER_PUBLIC_KEY=0x04...).'
+        )
+        return
+    }
+
+    const dockerPublicKey = ethers.SigningKey.computePublicKey(
+        requiredEnv('DOCKER_PUBLIC_KEY'),
+        false
+    )
+    const dockerAddress = ethers.computeAddress(dockerPublicKey)
+    console.log(`docker ${dockerAddress}`)
 
     let serviceDid = await findActiveService(services, did, dockerAddress)
     if (serviceDid !== null) {

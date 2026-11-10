@@ -18,7 +18,8 @@ import {IHashTimestampV2} from './IHashTimestampV2.sol';
 import {HashTimestampV2Internal} from './HashTimestampV2Internal.sol';
 
 /// @title HashTimestampV2
-/// @notice Evidence registry attributed to entity DIDs (see IHashTimestampV2)
+/// @notice Evidence registry attributed to entity DIDs or authorised accounts
+///         (see IHashTimestampV2)
 abstract contract HashTimestampV2 is IHashTimestampV2, HashTimestampV2Internal {
     function timestampHashV2(
         bytes32 _serviceDid,
@@ -36,6 +37,19 @@ abstract contract HashTimestampV2 is IHashTimestampV2, HashTimestampV2Internal {
         )
     {
         return _timestampHash(_serviceDid, _hash, _parentHash);
+    }
+
+    function timestampHashWithRoleV2(
+        bytes32 _hash,
+        bytes32 _parentHash
+    )
+        external
+        override
+        whenNotPaused
+        bytes32IsNotZero(_hash)
+        returns (EvidenceRecord memory record_, bool alreadyRegistered_)
+    {
+        return _timestampHashWithRole(_hash, _parentHash);
     }
 
     function existsV2(
@@ -69,6 +83,39 @@ abstract contract HashTimestampV2 is IHashTimestampV2, HashTimestampV2Internal {
         returns (bytes32[] memory dids_, EvidenceRecord[] memory records_)
     {
         return _getRecords(_hash, _pageIndex, _pageLength);
+    }
+
+    function existsByAccountV2(
+        bytes32 _hash,
+        address _account
+    ) external view override returns (bool exists_) {
+        return _existsByAccount(_hash, _account);
+    }
+
+    function getTimestampByAccountV2(
+        bytes32 _hash,
+        address _account
+    ) external view override returns (EvidenceRecord memory record_) {
+        return _getTimestampByAccount(_hash, _account);
+    }
+
+    function getAccountRecordsCountV2(
+        bytes32 _hash
+    ) external view override returns (uint256 count_) {
+        return _getAccountRecordsCount(_hash);
+    }
+
+    function getAccountRecordsV2(
+        bytes32 _hash,
+        uint256 _pageIndex,
+        uint256 _pageLength
+    )
+        external
+        view
+        override
+        returns (address[] memory accounts_, EvidenceRecord[] memory records_)
+    {
+        return _getAccountRecords(_hash, _pageIndex, _pageLength);
     }
 
     function _implementedInterfaces()

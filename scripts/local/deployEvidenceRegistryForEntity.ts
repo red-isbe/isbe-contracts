@@ -15,20 +15,23 @@ limitations under the License.
 
 /**
  * LOCAL TEST NETWORKS ONLY (ISBECORE-285). Prepares the evidence registry (HashTimestamp
- * v2) for one entity on a network that was not deployed with deployAllClean:
+ * v2) on a network that was not deployed with deployAllClean:
  *   1. deploys the v2 business logic if missing or if the compiled facet changed,
  *   2. registers a configuration pinned to that explicit business logic version when the
  *      latest one is not (never 0 = "latest", which would follow future versions silently),
  *   3. deploys the use case proxy (or reuses the one already on that version),
- *   4. onboards the ENTITY DID (HASH_TIMESTAMP_ROLE granted per DID, spec H1/H2),
- *   5. optionally checks the gateway Service DID (active, controlled by the entity) and
- *      funds its signing key so it can send transactions.
+ *   4. optionally grants HASH_TIMESTAMP_ROLE, in this v2 proxy, to the accounts in
+ *      ROLE_ACCOUNTS: they register with timestampHashWithRoleV2 and need no DID. A role
+ *      granted in the v1 proxy does not count here: roles are per proxy,
+ *   5. optionally checks the gateway Service DID (active, controlled by ENTITY_DID) and
+ *      funds its signing key so it can send transactions. The Service DID flow
+ *      (timestampHashV2) needs no role: no onboarding of the entity DID is done.
  * The entity creates its DID and registers the gateway Service DID itself (did-gen + DID
  * API, or onboardEntityDid.ts locally). Refuses to run against an RPC that is not local.
  *
- *   ISBE_URL=http://127.0.0.1:8545 ENTITY_DID=did:isbe:uc-dev:z1... \
- *   [SERVICE_DID=did:isbe:svc:uc-dev:z1...:1 | 0x<bytes32>] \
- *   [FACTORY=0x...15BE] [FUND_ETH=1] \
+ *   ISBE_URL=http://127.0.0.1:8545 \
+ *   [ENTITY_DID=did:isbe:uc-dev:z1... SERVICE_DID=did:isbe:svc:uc-dev:z1...:1 | 0x<bytes32>] \
+ *   [ROLE_ACCOUNTS=0xabc...,0xdef...] [FACTORY=0x...15BE] [FUND_ETH=1] \
  *   npx hardhat run scripts/local/deployEvidenceRegistryForEntity.ts --network isbe
  */
 import { artifacts, ethers, network } from 'hardhat'
@@ -71,16 +74,22 @@ const FACTORY_ABI = [
     'event UseCaseDeployed(bytes32 configurationId, uint256 version, tuple(bytes32 role, address[] members)[] rbacs, address proxy)',
 ]
 const PROXY_ABI = [
-    'function grantDidRole(bytes32 role, bytes32 did)',
-    'function hasRoleForDid(bytes32 role, bytes32 did) view returns (bool)',
+    'function grantRole(bytes32 role, address account)',
+    'function hasRole(bytes32 role, address account) view returns (bool)',
 ]
 
 async function main() {
     assertLocalNetwork()
-    const entityDid = toDidBytes32(requiredEnv('ENTITY_DID'))
     const serviceDid = process.env.SERVICE_DID
         ? toServiceDidBytes32(process.env.SERVICE_DID)
         : null
+    const entityDid =
+        serviceDid === null ? null : toDidBytes32(requiredEnv('ENTITY_DID'))
+    const roleAccounts = (process.env.ROLE_ACCOUNTS ?? '')
+        .split(',')
+        .map((account) => account.trim())
+        .filter((account) => account !== '')
+        .map((account) => ethers.getAddress(account))
     const factoryAddress = ethers.getAddress(
         process.env.FACTORY ?? '0x00000000000000000000000000000000000015BE'
     )
@@ -120,12 +129,14 @@ async function main() {
     const proxy = await ensureProxy(factory, version)
 
     const access = new ethers.Contract(proxy, PROXY_ABI, deployer)
-    if (!(await access.hasRoleForDid(HASH_TIMESTAMP_ROLE, entityDid))) {
-        console.log('Onboarding the entity DID (HASH_TIMESTAMP_ROLE)...')
-        await (await access.grantDidRole(HASH_TIMESTAMP_ROLE, entityDid)).wait()
+    for (const account of roleAccounts) {
+        if (!(await access.hasRole(HASH_TIMESTAMP_ROLE, account))) {
+            console.log(`Granting HASH_TIMESTAMP_ROLE to ${account}...`)
+            await (await access.grantRole(HASH_TIMESTAMP_ROLE, account)).wait()
+        }
     }
 
-    if (serviceDid !== null) {
+    if (serviceDid !== null && entityDid !== null) {
         // The registry checks the Service DID exactly like this.
         if (!(await factory.isServiceDidActive(serviceDid)))
             throw new Error(`Service DID ${serviceDid} is not active`)
@@ -149,9 +160,12 @@ async function main() {
 
     console.log('\n=== Evidence registry ready ===')
     console.log(`EVIDENCE_CONTRACT_ADDRESS=${proxy}`)
-    console.log(
-        `configuration version ${version}, entity DID ${entityDid} onboarded: ${await access.hasRoleForDid(HASH_TIMESTAMP_ROLE, entityDid)}`
-    )
+    console.log(`configuration version ${version}`)
+    for (const account of roleAccounts) {
+        console.log(
+            `HASH_TIMESTAMP_ROLE ${account}: ${await access.hasRole(HASH_TIMESTAMP_ROLE, account)}`
+        )
+    }
 }
 
 /** Registers a configuration pinned to the business logic version unless the latest one already is; returns its version. */
