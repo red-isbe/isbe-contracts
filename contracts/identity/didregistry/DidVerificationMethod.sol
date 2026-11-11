@@ -79,6 +79,7 @@ abstract contract DidVerificationMethod is
         {
             _checkUintIsNotZero(_notAfter);
             _checkNotAfterRevocation(_notAfter);
+            _checkVMethodNotRevoked(_did, _vMethodId);
         }
         emit VerificationMethodRevoked(_did, _vMethodId, _notAfter);
         return _revokeVerificationMethod(_did, _vMethodId, _notAfter);
@@ -101,6 +102,7 @@ abstract contract DidVerificationMethod is
         {
             _checkUintIsNotZero(_notAfter);
             _checkNotAfterExpiration(_notAfter);
+            _checkVMethodNotRevoked(_did, _vMethodId);
         }
         emit VerificationMethodExpired(_did, _vMethodId, _notAfter);
         return _expireVerificationMethod(_did, _vMethodId, _notAfter);

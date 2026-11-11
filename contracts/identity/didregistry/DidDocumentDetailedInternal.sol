@@ -253,28 +253,38 @@ abstract contract DidDocumentDetailedInternal is
         return true;
     }
 
+    /**
+     * @notice Revokes a verification method with immediate effect
+     * @dev Revocation (notAfter <= now) is the only operation that releases the address
+     *      binding of a network-curve key, whether or not it has capabilityInvocation, so
+     *      the key can be registered again. Callers must reject already revoked methods.
+     */
     function _revokeVerificationMethod(
         bytes32 _did,
         bytes32 _vMethodId,
         uint256 _notAfter
     ) internal returns (bool) {
+        DidDocumentsStorage storage $ = _didDocumentsStorage();
         _expireVerificationMethod(_did, _vMethodId, _notAfter);
-        return
-            _didDocumentsStorage()
-                .didList[_did]
-                .vMethods[_vMethodId]
-                .revoked = true;
+        _cleanupAddressMappingIfNeeded($, _did, _vMethodId);
+        return $.didList[_did].vMethods[_vMethodId].revoked = true;
     }
 
+    /**
+     * @notice Sets the end of validity of every relationship of a verification method
+     * @dev Does not release the address binding: an expiration scheduled in the future must
+     *      not let another DID take the key before it actually lapses, and `didOf` already
+     *      honours notAfter. Once lapsed, the key stays bound to this DID until a
+     *      controller revokes the method (see `_checkPublicKeyNotRegistered`).
+     */
     function _expireVerificationMethod(
         bytes32 _did,
         bytes32 _vMethodId,
         uint256 _notAfter
     ) internal returns (bool) {
-        DidDocumentsStorage storage $ = _didDocumentsStorage();
-        DidDocument storage document = $.didList[_did];
+        DidDocument storage document = _didDocumentsStorage().didList[_did];
         _revokeAllVerificationRelationships(document, _vMethodId, _notAfter);
-        _revokeCapabilityInvocation(document, _vMethodId, _notAfter, $);
+        _expireCapabilityInvocation(document, _vMethodId, _notAfter);
         return true;
     }
 
@@ -342,11 +352,7 @@ abstract contract DidDocumentDetailedInternal is
         }
         _rollExistingVerificationRelationships(document, _args, newNotAfter);
         _rollCapabilityInvocation(document, _args, newNotAfter);
-        _cleanupAddressMappingIfNeeded(
-            document,
-            _args.oldVMethodId,
-            $.networkEllipticType
-        );
+        _cleanupAddressMappingIfNeeded($, _args.did, _args.oldVMethodId);
 
         return true;
     }
@@ -598,9 +604,7 @@ abstract contract DidDocumentDetailedInternal is
         DidDocumentsStorage storage $ = _didDocumentsStorage();
         if ($.networkEllipticType != _ellipticType) return;
         require(
-            !_isNotEmptyBytes32(
-                $.didList[_did].vMethodIdOfAddress[_getAddress(_publicKey)]
-            ),
+            !_isAddressBoundIn($.didList[_did], _getAddress(_publicKey)),
             IDidVerificationMethod.PublicKeyAlreadyInUse(_publicKey)
         );
         _checkPublicKeyNotRegistered(_publicKey);
@@ -611,8 +615,13 @@ abstract contract DidDocumentDetailedInternal is
      * @dev The registry keeps a single global address-to-DID mapping, so registering the
      *      same key under a second DID would silently overwrite the first one's entry.
      *      The mapping is only written for keys on the network elliptic curve; callers
-     *      must enforce that curve beforehand (`onlyValidEllipticType`). Revoked keys
-     *      release their entry and may therefore be registered again.
+     *      must enforce that curve beforehand (`onlyValidEllipticType`). Only revocation
+     *      releases the entry, so a revoked key may be registered again. A key whose
+     *      relationships have lapsed (expired) stays bound to its DID, even though `didOf`
+     *      no longer resolves it, until a controller of that DID revokes the method: an
+     *      expired key is never released automatically. An entry left behind by a method
+     *      that is already revoked (written before revocation released every network-curve
+     *      key) does not block the key either.
      *      Reuses the existing PublicKeyAlreadyInUse error rather than declaring a new
      *      one, so the facet ABI is left completely unchanged.
      * @param _publicKey The public key whose derived address is checked
@@ -620,12 +629,10 @@ abstract contract DidDocumentDetailedInternal is
     function _checkPublicKeyNotRegistered(
         bytes memory _publicKey
     ) internal view {
+        DidDocumentsStorage storage $ = _didDocumentsStorage();
+        address addr = _getAddress(_publicKey);
         require(
-            !_isNotEmptyBytes32(
-                _didDocumentsStorage().invocationAddressToDid[
-                    _getAddress(_publicKey)
-                ]
-            ),
+            !_isAddressBoundIn($.didList[$.invocationAddressToDid[addr]], addr),
             IDidVerificationMethod.PublicKeyAlreadyInUse(_publicKey)
         );
     }
@@ -958,22 +965,16 @@ abstract contract DidDocumentDetailedInternal is
         }
     }
 
-    function _revokeCapabilityInvocation(
+    function _expireCapabilityInvocation(
         DidDocument storage document,
         bytes32 _vMethodId,
-        uint256 _notAfter,
-        DidDocumentsStorage storage $
+        uint256 _notAfter
     ) private {
         if (!document.capabilityInvocationMethodIdExist[_vMethodId]) return;
         IDidDocumentDetailed.VRelationship
             storage capabilityInvocation = document.capabilityInvocations[
                 document.capabilityInvocationMethodIdIndex[_vMethodId]
             ];
-        _cleanupAddressMappingIfNeeded(
-            document,
-            _vMethodId,
-            $.networkEllipticType
-        );
         _updateVerificationRelationship(
             _vMethodId,
             _CAPABILITY_INVOCATION_RELATIONSHIP,
@@ -984,19 +985,47 @@ abstract contract DidDocumentDetailedInternal is
         capabilityInvocation.notAfter = _notAfter;
     }
 
+    /**
+     * @notice Releases the address binding of a network-curve verification method
+     * @dev Only releases what this method still owns. The address may have been bound
+     *      again since, under another vMethodId of the same DID or under another DID, and
+     *      an operation on the old method must never remove that newer binding.
+     * @param $ The DID documents storage
+     * @param _did The DID that owns the verification method
+     * @param _vMethodId The verification method whose binding is released
+     */
     function _cleanupAddressMappingIfNeeded(
-        DidDocument storage document,
-        bytes32 _vMethodId,
-        IDidDocumentDetailed.EllipticType _networkEllipticType
+        DidDocumentsStorage storage $,
+        bytes32 _did,
+        bytes32 _vMethodId
     ) private {
+        DidDocument storage document = $.didList[_did];
         IDidDocumentDetailed.VMethod storage vMethod = document.vMethods[
             _vMethodId
         ];
-        if (vMethod.ellipticType == _networkEllipticType) {
-            address addr = _getAddress(vMethod.publicKey);
-            delete document.vMethodIdOfAddress[addr];
-            delete _didDocumentsStorage().invocationAddressToDid[addr];
-        }
+        if (vMethod.ellipticType != $.networkEllipticType) return;
+        address addr = _getAddress(vMethod.publicKey);
+        if (document.vMethodIdOfAddress[addr] != _vMethodId) return;
+        delete document.vMethodIdOfAddress[addr];
+        if ($.invocationAddressToDid[addr] == _did)
+            delete $.invocationAddressToDid[addr];
+    }
+
+    /**
+     * @notice Tells whether an address is bound to a non-revoked method of a DID document
+     * @dev Expired methods still count as bound; only revocation releases a key.
+     * @param _document The DID document to check
+     * @param _address The address derived from a network-curve public key
+     * @return bool True if the address points to a method of the document that is not revoked
+     */
+    function _isAddressBoundIn(
+        DidDocument storage _document,
+        address _address
+    ) private view returns (bool) {
+        bytes32 vMethodId = _document.vMethodIdOfAddress[_address];
+        return
+            _isNotEmptyBytes32(vMethodId) &&
+            !_document.vMethods[vMethodId].revoked;
     }
 
     function _isEmptyVerificationRelationship(
@@ -1017,7 +1046,8 @@ abstract contract DidDocumentDetailedInternal is
      * @dev Checks capability invocation existence and temporal validity
      * @dev Note: Revocation check is not needed here because _cleanupAddressMappingIfNeeded
      *      removes the vMethodIdOfAddress mapping when a vMethod is revoked, making the
-     *      first check (!_isNotEmptyBytes32) catch revoked vMethods automatically
+     *      first check (!_isNotEmptyBytes32) catch revoked vMethods automatically.
+     *      Expiration keeps the mapping; the notBefore/notAfter check below handles it
      * @param _document The DID document to check against
      * @param _address The address to validate
      * @return bool True if address has active capability invocation, false otherwise

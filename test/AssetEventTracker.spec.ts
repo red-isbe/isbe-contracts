@@ -28,7 +28,7 @@ import {
     CONFIGURATION_ID_ERC20,
 } from '../utils/constants'
 import { deployGovernance } from './fixtures/governance'
-import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
+import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers'
 import { EllipticType } from './types/identity'
 import { config } from 'hardhat'
 import { generateProof, proofToDid } from './support'
@@ -707,6 +707,10 @@ describe('Asset Event Tracker', function () {
 
             // Set mock timestamp past the mid expiration
             await contracts.mockTimestamp.setMockedTimestamp(midTime + 1)
+            // The governance diamond resolves the DID with the chain time (the mock above
+            // is not the governance one), and a scheduled expiration only takes effect
+            // once reached, so the chain has to reach it too
+            await time.increaseTo(midTime + 1)
 
             // Should fail - note: AccountHasNoRole is checked before AddressNotKnown
             const didSigner = new ethers.Wallet(

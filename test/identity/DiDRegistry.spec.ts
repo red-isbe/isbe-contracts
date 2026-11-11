@@ -2205,7 +2205,13 @@ describe('DiDRegistry', function () {
                     .to.emit(didRegistry, 'VerificationMethodExpired')
                     .withArgs(did, vMethodId, notBefore + 2n)
 
-                // After expiring, the verification method owner is no longer a controller
+                // A scheduled expiration takes effect at notAfter, not before
+                await expectControllerStatus(
+                    did,
+                    await admin.getAddress(),
+                    true
+                )
+                await mockTimestamp.setMockedTimestamp(notBefore + 2n)
                 await expectControllerStatus(
                     did,
                     await admin.getAddress(),
@@ -2627,6 +2633,362 @@ describe('DiDRegistry', function () {
                 expect(
                     await didRegistry.didOf(await wallet.getAddress())
                 ).to.equal(did)
+            })
+        })
+
+        describe('Key binding lifecycle (ISBECORE-435)', () => {
+            // Block timestamp set by createStandardFixture
+            const now = () => notBefore + 1n
+            let wallet: HDNodeWallet
+            let otherDid: string
+            let otherVMethodId: string
+            let key: string
+            let keyAddress: string
+
+            // Storage layout of DidDocumentDetailedInternal, used only to recreate
+            // entries written by earlier versions of the registry
+            const storageBase = BigInt(
+                '0x80e94812a2790226ccf997ec25d285a8dcc6c5b510b98e9845f9905541840650'
+            )
+            const coder = ethers.AbiCoder.defaultAbiCoder()
+            const invocationAddressToDidSlot = (address: string) =>
+                ethers.keccak256(
+                    coder.encode(
+                        ['address', 'uint256'],
+                        [address, storageBase + 3n]
+                    )
+                )
+            const vMethodIdOfAddressSlot = (didId: string, address: string) =>
+                ethers.keccak256(
+                    coder.encode(
+                        ['address', 'uint256'],
+                        [
+                            address,
+                            BigInt(
+                                ethers.keccak256(
+                                    coder.encode(
+                                        ['bytes32', 'uint256'],
+                                        [didId, storageBase + 1n]
+                                    )
+                                )
+                            ) + 11n,
+                        ]
+                    )
+                )
+            const readBoundDid = async (address: string) =>
+                ethers.provider.getStorage(
+                    await didRegistry.getAddress(),
+                    invocationAddressToDidSlot(address)
+                )
+            const writeSlot = async (slot: string, value: string) =>
+                ethers.provider.send('hardhat_setStorageAt', [
+                    await didRegistry.getAddress(),
+                    slot,
+                    value,
+                ])
+
+            async function addKey(
+                didId: string,
+                signer: Signer,
+                withCapabilityInvocation: boolean
+            ): Promise<string> {
+                const id = randomDid()
+                await didRegistry
+                    .connect(signer)
+                    .addVerificationMethod(
+                        didId,
+                        id,
+                        key,
+                        EllipticType.SECP_256_K1
+                    )
+                if (withCapabilityInvocation) {
+                    await didRegistry
+                        .connect(signer)
+                        .addVerificationRelationship(
+                            didId,
+                            CAPABILITY_INVOCATION_RELATIONSHIP,
+                            id,
+                            notBefore,
+                            notAfter
+                        )
+                }
+                return id
+            }
+
+            async function expectKeyInUse(didId: string, signer: Signer) {
+                await expect(
+                    didRegistry
+                        .connect(signer)
+                        .addVerificationMethod(
+                            didId,
+                            randomDid(),
+                            key,
+                            EllipticType.SECP_256_K1
+                        )
+                )
+                    .to.be.revertedWithCustomError(
+                        didVerificationMethodFacet,
+                        'PublicKeyAlreadyInUse'
+                    )
+                    .withArgs(key)
+            }
+
+            async function expectRevoked(didId: string, id: string) {
+                await expect(
+                    didRegistry.revokeVerificationMethod(didId, id, now())
+                )
+                    .to.be.revertedWithCustomError(
+                        didVerificationRelationshipFacet,
+                        'VerificationMethodIsRevoked'
+                    )
+                    .withArgs(didId, id)
+                await expect(
+                    didRegistry.expireVerificationMethod(didId, id, notAfter)
+                )
+                    .to.be.revertedWithCustomError(
+                        didVerificationRelationshipFacet,
+                        'VerificationMethodIsRevoked'
+                    )
+                    .withArgs(didId, id)
+            }
+
+            beforeEach(async () => {
+                ;({ did, wallet } = await createStandardFixture())
+                ;({ did: otherDid, vMethodId: otherVMethodId } =
+                    await insertSignerDocument(1))
+                const keyWallet = deriveWallet(wallet, '2')
+                key = walletToPublicKey(keyWallet)
+                keyAddress = await keyWallet.getAddress()
+            })
+
+            it('GIVEN a revoked key without capabilityInvocation WHEN another DID adds it THEN it succeeds', async () => {
+                const oldId = await addKey(did, admin, false)
+                await expectKeyInUse(otherDid, other)
+
+                await didRegistry.revokeVerificationMethod(did, oldId, now())
+
+                await addKey(otherDid, other, true)
+                expect(await didRegistry.didOf(keyAddress)).to.equal(otherDid)
+            })
+
+            it('GIVEN a key revoked and added to another DID WHEN the old DID operates again on the old method THEN it fails and the new binding is kept', async () => {
+                const oldId = await addKey(did, admin, true)
+                await didRegistry.revokeVerificationMethod(did, oldId, now())
+                await addKey(otherDid, other, true)
+
+                await expectRevoked(did, oldId)
+                await expect(
+                    didRegistry.rollVerificationMethod({
+                        did,
+                        vMethodId: randomDid(),
+                        publicKey: walletToPublicKey(deriveWallet(wallet, '3')),
+                        ellipticType: EllipticType.SECP_256_K1,
+                        notBefore,
+                        notAfter,
+                        oldVMethodId: oldId,
+                        duration: 1n,
+                    })
+                )
+                    .to.be.revertedWithCustomError(
+                        didVerificationRelationshipFacet,
+                        'VerificationMethodIsRevoked'
+                    )
+                    .withArgs(did, oldId)
+
+                expect(await didRegistry.didOf(keyAddress)).to.equal(otherDid)
+            })
+
+            it('GIVEN a key revoked and added again to the same DID under another vMethodId WHEN the old method is operated on THEN it fails and the new binding is kept', async () => {
+                const oldId = await addKey(did, admin, true)
+                await didRegistry.revokeVerificationMethod(did, oldId, now())
+                await addKey(did, admin, true)
+
+                await expectRevoked(did, oldId)
+
+                expect(await didRegistry.didOf(keyAddress)).to.equal(did)
+                await expectKeyInUse(did, admin)
+                await expectKeyInUse(otherDid, other)
+            })
+
+            it('GIVEN a future expiration WHEN it has not been reached THEN the key keeps resolving and is not released', async () => {
+                const id = await addKey(did, admin, true)
+
+                await didRegistry.expireVerificationMethod(
+                    did,
+                    id,
+                    now() + 100n
+                )
+
+                expect(await didRegistry.didOf(keyAddress)).to.equal(did)
+                await expectKeyInUse(otherDid, other)
+                await expectKeyInUse(did, admin)
+            })
+
+            it('GIVEN an expiration WHEN it is reached THEN the key stops resolving but stays bound until its DID revokes it', async () => {
+                const id = await addKey(did, admin, true)
+                await didRegistry.expireVerificationMethod(
+                    did,
+                    id,
+                    now() + 100n
+                )
+
+                await mockTimestamp.setMockedTimestamp(now() + 100n)
+
+                expect(await didRegistry.didOf(keyAddress)).to.equal(ZeroHash)
+                await expectKeyInUse(otherDid, other)
+
+                await didRegistry.revokeVerificationMethod(
+                    did,
+                    id,
+                    now() + 100n
+                )
+
+                await addKey(otherDid, other, true)
+                expect(await didRegistry.didOf(keyAddress)).to.equal(otherDid)
+            })
+
+            it('GIVEN an expired method WHEN its DID rolls it THEN only its own binding is released', async () => {
+                const id = await addKey(did, admin, true)
+                await didRegistry.expireVerificationMethod(
+                    did,
+                    id,
+                    now() + 100n
+                )
+                await mockTimestamp.setMockedTimestamp(now() + 100n)
+                const rolledWallet = deriveWallet(wallet, '3')
+
+                await didRegistry.rollVerificationMethod({
+                    did,
+                    vMethodId: randomDid(),
+                    publicKey: walletToPublicKey(rolledWallet),
+                    ellipticType: EllipticType.SECP_256_K1,
+                    notBefore,
+                    notAfter,
+                    oldVMethodId: id,
+                    duration: 1n,
+                })
+
+                expect(
+                    await didRegistry.didOf(await rolledWallet.getAddress())
+                ).to.equal(did)
+                await addKey(otherDid, other, true)
+                expect(await didRegistry.didOf(keyAddress)).to.equal(otherDid)
+            })
+
+            it('GIVEN a key whose address entry already points to another DID WHEN the old DID rolls or revokes the old method THEN that entry is kept', async () => {
+                // Recreates a key added to two DIDs before ISBECORE-435, where the
+                // second registration overwrote the address entry of the first
+                const rollId = await addKey(did, admin, true)
+                expect(await readBoundDid(keyAddress)).to.equal(did)
+                await writeSlot(
+                    invocationAddressToDidSlot(keyAddress),
+                    otherDid
+                )
+
+                await didRegistry.rollVerificationMethod({
+                    did,
+                    vMethodId: randomDid(),
+                    publicKey: walletToPublicKey(deriveWallet(wallet, '3')),
+                    ellipticType: EllipticType.SECP_256_K1,
+                    notBefore,
+                    notAfter,
+                    oldVMethodId: rollId,
+                    duration: 1n,
+                })
+                expect(await readBoundDid(keyAddress)).to.equal(otherDid)
+
+                // Same for revocation
+                const otherKeyWallet = deriveWallet(wallet, '4')
+                key = walletToPublicKey(otherKeyWallet)
+                const revokeId = await addKey(did, admin, false)
+                await writeSlot(
+                    invocationAddressToDidSlot(
+                        await otherKeyWallet.getAddress()
+                    ),
+                    otherDid
+                )
+                await didRegistry.revokeVerificationMethod(did, revokeId, now())
+                expect(
+                    await readBoundDid(await otherKeyWallet.getAddress())
+                ).to.equal(otherDid)
+            })
+
+            it('GIVEN a method expired before ISBECORE-435 whose key was added again under another vMethodId WHEN the old method is revoked or rolled THEN the new binding is kept', async () => {
+                const oldId = await addKey(did, admin, true)
+                // Earlier versions released both entries as soon as an expiration was
+                // scheduled, so the key could be added again while oldId stayed unrevoked
+                await didRegistry.expireVerificationMethod(
+                    did,
+                    oldId,
+                    now() + 100n
+                )
+                await writeSlot(
+                    invocationAddressToDidSlot(keyAddress),
+                    ZeroHash
+                )
+                await writeSlot(
+                    vMethodIdOfAddressSlot(did, keyAddress),
+                    ZeroHash
+                )
+                await addKey(did, admin, true)
+
+                const snapshot = await ethers.provider.send('evm_snapshot', [])
+                await didRegistry.rollVerificationMethod({
+                    did,
+                    vMethodId: randomDid(),
+                    publicKey: walletToPublicKey(deriveWallet(wallet, '3')),
+                    ellipticType: EllipticType.SECP_256_K1,
+                    notBefore,
+                    notAfter,
+                    oldVMethodId: oldId,
+                    duration: 1n,
+                })
+                expect(await didRegistry.didOf(keyAddress)).to.equal(did)
+                await ethers.provider.send('evm_revert', [snapshot])
+
+                await didRegistry.revokeVerificationMethod(did, oldId, now())
+                expect(await didRegistry.didOf(keyAddress)).to.equal(did)
+                await expectKeyInUse(otherDid, other)
+            })
+
+            it('GIVEN an entry left by a method revoked before ISBECORE-435 WHEN the key is added again THEN it is not blocked', async () => {
+                const oldId = await addKey(did, admin, false)
+                await didRegistry.revokeVerificationMethod(did, oldId, now())
+                // Earlier versions kept both entries for revoked keys without
+                // capabilityInvocation
+                await writeSlot(invocationAddressToDidSlot(keyAddress), did)
+                await writeSlot(vMethodIdOfAddressSlot(did, keyAddress), oldId)
+
+                const snapshot = await ethers.provider.send('evm_snapshot', [])
+                await addKey(did, admin, true)
+                expect(await didRegistry.didOf(keyAddress)).to.equal(did)
+                await ethers.provider.send('evm_revert', [snapshot])
+
+                await addKey(otherDid, other, true)
+                expect(await didRegistry.didOf(keyAddress)).to.equal(otherDid)
+            })
+
+            it('GIVEN a key of another DID WHEN rolling to it or adding it THEN duplicated keys are still rejected', async () => {
+                await addKey(did, admin, true)
+                await expectKeyInUse(otherDid, other)
+                await expect(
+                    didRegistry.connect(other).rollVerificationMethod({
+                        did: otherDid,
+                        vMethodId: randomDid(),
+                        publicKey: key,
+                        ellipticType: EllipticType.SECP_256_K1,
+                        notBefore,
+                        notAfter,
+                        oldVMethodId: otherVMethodId,
+                        duration: 1n,
+                    })
+                )
+                    .to.be.revertedWithCustomError(
+                        didVerificationMethodFacet,
+                        'PublicKeyAlreadyInUse'
+                    )
+                    .withArgs(key)
+                expect(await didRegistry.didOf(keyAddress)).to.equal(did)
             })
         })
 
