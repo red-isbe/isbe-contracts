@@ -88,7 +88,7 @@ describe('TimeStampingRegistry', function () {
         ).to.be.equal(TIMESTAMPING_REGISTRY_RESOLVER_KEY)
         expect(
             await gov.timeStampingRegistryFacet.interfacesIntrospection()
-        ).to.be.deep.equal(['0x6cf6673f'])
+        ).to.be.deep.equal(['0x697df696'])
 
         BLOCK_TIMESTAMP = 1234567890
         await mockTimestamp.setMockedTimestamp(BLOCK_TIMESTAMP)
@@ -1094,6 +1094,42 @@ describe('TimeStampingRegistry', function () {
             it('GIVEN stamped records WHEN calling getStampedSize THEN should return size', async function () {
                 const size = await timeStampingRegistry.getStampedSize()
                 expect(typeof size).to.equal('bigint')
+            })
+        })
+
+        describe('getTsrTimestamp', function () {
+            it('GIVEN stamped originalHash WHEN calling getTsrTimestamp THEN should return the stamped block timestamp', async function () {
+                const originalHash = ethers.keccak256(
+                    ethers.toUtf8Bytes('ts-original')
+                )
+                const tsaHash = ethers.keccak256(ethers.toUtf8Bytes('ts-tsa'))
+                const externalId = ethers.keccak256(
+                    ethers.toUtf8Bytes('ts-ext')
+                )
+                const stampedAt = 1700000000
+
+                await mockTimestamp.setMockedTimestamp(stampedAt)
+                await timeStampingRegistry
+                    .connect(admin)
+                    .stamp(originalHash, tsaHash, externalId)
+                await mockTimestamp.setMockedTimestamp(stampedAt + 1000)
+
+                expect(
+                    await timeStampingRegistry.getTsrTimestamp(originalHash)
+                ).to.equal(stampedAt)
+            })
+
+            it('GIVEN nonexistent originalHash WHEN calling getTsrTimestamp THEN should revert with HashNotFound', async function () {
+                const missingHash = ethers.keccak256(
+                    ethers.toUtf8Bytes('ts-missing')
+                )
+
+                await expect(timeStampingRegistry.getTsrTimestamp(missingHash))
+                    .to.be.revertedWithCustomError(
+                        timeStampingRegistry,
+                        'HashNotFound'
+                    )
+                    .withArgs(missingHash)
             })
         })
 

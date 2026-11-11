@@ -220,6 +220,20 @@ abstract contract TimeStampingRegistryInternal is
         return (record.data, record.authority, record.requester);
     }
 
+    /// @notice Internal function to get the block timestamp of a TSR record
+    /// @dev Reverts with HashNotFound if the original hash is not registered
+    /// @param _originalHash The original hash to query (primary key)
+    /// @return timestamp_ The block timestamp stored in the TSR record
+    function _getTsrTimestamp(
+        bytes32 _originalHash
+    ) internal view returns (uint256 timestamp_) {
+        require(
+            _isOriginalHashRegistered(_originalHash),
+            ITimeStampingRegistry.HashNotFound(_originalHash)
+        );
+        return _timestampingRegistryStorage().records[_originalHash].timestamp;
+    }
+
     /// @notice Internal function to check if an external reference ID is registered
     /// @dev Returns true if the external reference ID exists in the reverse mapping
     /// @param _externalReferenceId The external reference ID to check

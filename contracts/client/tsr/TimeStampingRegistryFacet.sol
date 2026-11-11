@@ -67,7 +67,7 @@ contract TimeStampingRegistryFacet is
         override
         returns (bytes4[] memory selectors_)
     {
-        uint256 selectorsLength = 8;
+        uint256 selectorsLength = 9;
         selectors_ = new bytes4[](selectorsLength);
 
         // Core timestamping functions
@@ -90,6 +90,9 @@ contract TimeStampingRegistryFacet is
         // Data retrieval functions
         selectors_[--selectorsLength] = ITimeStampingRegistry
             .getTsrRecordFromOriginalHash
+            .selector;
+        selectors_[--selectorsLength] = ITimeStampingRegistry
+            .getTsrTimestamp
             .selector;
         selectors_[--selectorsLength] = ITimeStampingRegistry
             .getStampedSize

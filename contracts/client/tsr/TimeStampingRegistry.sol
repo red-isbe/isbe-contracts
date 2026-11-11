@@ -130,6 +130,16 @@ abstract contract TimeStampingRegistry is
         return _getTsrRecordFromOriginalHash(_originalHash);
     }
 
+    /// @notice Get the block timestamp at which a given original hash was stamped
+    /// @dev Reverts with HashNotFound if the original hash is not registered
+    /// @param _originalHash The original hash to query (primary key)
+    /// @return timestamp_ The block timestamp stored in the TSR record
+    function getTsrTimestamp(
+        bytes32 _originalHash
+    ) external view override returns (uint256 timestamp_) {
+        return _getTsrTimestamp(_originalHash);
+    }
+
     /// @notice Check if an external reference ID is registered
     /// @dev Returns true if the external reference ID exists in the registry
     /// @param _externalReferenceId The external reference ID to check
