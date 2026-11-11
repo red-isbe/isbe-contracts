@@ -171,6 +171,7 @@ import './client/timestamping/isOriginalHashRegistered'
 import './client/timestamping/isTsaHashRegistered'
 import './client/timestamping/isExternalReferenceIdRegistered'
 import './client/timestamping/getTsrRecordFromOriginalHash'
+import './client/timestamping/getTsrTimestamp'
 import './client/timestamping/getStampedSize'
 import './client/timestamping/getPaginatedStamped'
 
