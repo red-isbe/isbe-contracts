@@ -31,10 +31,15 @@ pragma solidity ^0.8.28;
  *        current signing key must derive the signer address. No role is required: the
  *        entity DID is the controller of the service DID, read from the Service DID
  *        Registry, so a signer can only ever register evidence for the organisation that
- *        issued its service identity.
+ *        issued its service identity. That organisation must still be operative, i.e.
+ *        hold at least one capabilityInvocation in force in the DID Registry: once all
+ *        of them are revoked or expired, its service DIDs stop registering evidence
+ *        even if they are not deactivated or expired themselves.
  *      - Account flow: the signer must hold HASH_TIMESTAMP_ROLE granted to its address
  *        (grantRole) in the access control of this same proxy. A role granted to a DID,
- *        or in another proxy such as the HashTimestamp v1 one, does not count.
+ *        or in another proxy such as the HashTimestamp v1 one, does not count. Both
+ *        memberships are independent: an address can be granted the role even when its
+ *        DID already holds it, and revoking either one leaves the other in place.
  *      DID records and account records live in separate mappings and are read with
  *      separate functions, so an account is never reported as a DID nor vice versa.
  */
@@ -85,6 +90,10 @@ interface IHashTimestampV2 {
 
     /// @notice The signer is not the current signing key of the service DID
     error SignerNotServiceKey(bytes32 serviceDid, address signer);
+
+    /// @notice The entity DID that controls the service DID holds no capabilityInvocation
+    ///         in force: all of them have been revoked or have expired
+    error OrganisationNotOperative(bytes32 did);
 
     /// @notice The parent hash was not registered by the same entity
     error ParentNotRegistered(bytes32 parentHash, bytes32 did);

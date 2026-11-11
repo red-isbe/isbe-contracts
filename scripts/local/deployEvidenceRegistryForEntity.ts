@@ -75,7 +75,7 @@ const FACTORY_ABI = [
 ]
 const PROXY_ABI = [
     'function grantRole(bytes32 role, address account)',
-    'function hasRole(bytes32 role, address account) view returns (bool)',
+    'function getRolesByAccount(address account, uint256 pageIndex, uint256 pageLength) view returns (bytes32[])',
 ]
 
 async function main() {
@@ -129,15 +129,22 @@ async function main() {
     const proxy = await ensureProxy(factory, version)
 
     const access = new ethers.Contract(proxy, PROXY_ABI, deployer)
+    // timestampHashWithRoleV2 only accepts the role granted to the address itself:
+    // hasRole would also report a role the address inherits from its DID.
+    const holdsRoleDirectly = async (account: string): Promise<boolean> =>
+        (
+            (await access.getRolesByAccount(account, 0, 1000)) as string[]
+        ).includes(HASH_TIMESTAMP_ROLE)
     for (const account of roleAccounts) {
-        if (!(await access.hasRole(HASH_TIMESTAMP_ROLE, account))) {
+        if (!(await holdsRoleDirectly(account))) {
             console.log(`Granting HASH_TIMESTAMP_ROLE to ${account}...`)
             await (await access.grantRole(HASH_TIMESTAMP_ROLE, account)).wait()
         }
     }
 
     if (serviceDid !== null && entityDid !== null) {
-        // The registry checks the Service DID exactly like this.
+        // The registry checks the Service DID like this; it also requires the entity DID
+        // to keep a capabilityInvocation in force (OrganisationNotOperative otherwise).
         if (!(await factory.isServiceDidActive(serviceDid)))
             throw new Error(`Service DID ${serviceDid} is not active`)
         const { controllerDid } = await factory.getServiceDid(serviceDid)
@@ -163,7 +170,7 @@ async function main() {
     console.log(`configuration version ${version}`)
     for (const account of roleAccounts) {
         console.log(
-            `HASH_TIMESTAMP_ROLE ${account}: ${await access.hasRole(HASH_TIMESTAMP_ROLE, account)}`
+            `HASH_TIMESTAMP_ROLE ${account}: ${await holdsRoleDirectly(account)}`
         )
     }
 }

@@ -590,6 +590,172 @@ describe('HashTimestampV2 (evidence attributed to entity DIDs through service DI
         })
     })
 
+    describe('authorization (organisation controlling the service DID)', () => {
+        const SERVICE_DID_STORAGE = BigInt(
+            '0x7caa54a54901b11933448b340f01805232da273262db5e6eab8d62342d73a5c0'
+        )
+        const founderVMethod = (entity: Entity) =>
+            ethers.id(`${entity.did}#founder`)
+
+        // Each entity manages its own DID document with its founder key
+        // (the Service DID Registry and the DID Registry share the governance diamond)
+        async function didRegistry() {
+            return IDidRegistry__factory.connect(
+                await serviceRegistry.getAddress(),
+                entityA.founder
+            )
+        }
+
+        async function expectNotOperative(
+            facet: HashTimestampV2Facet,
+            entity: Entity,
+            hash: string
+        ) {
+            await expect(
+                facet
+                    .connect(entity.gateway)
+                    .timestampHashV2(entity.serviceDid, hash, ZeroHash)
+            )
+                .to.be.revertedWithCustomError(
+                    facet,
+                    'OrganisationNotOperative'
+                )
+                .withArgs(entity.did)
+        }
+
+        it('GIVEN an entity whose capabilityInvocation keys are all revoked WHEN its still active service registers THEN reverts but its earlier records remain readable', async () => {
+            await evidence
+                .connect(entityA.gateway)
+                .timestampHashV2(entityA.serviceDid, HASH, ZeroHash)
+            const registry = await didRegistry()
+
+            await registry.revokeVerificationMethod(
+                entityA.did,
+                founderVMethod(entityA),
+                await time.latest()
+            )
+
+            expect(
+                await serviceRegistry.isServiceDidActive(entityA.serviceDid)
+            ).to.equal(true)
+            expect(
+                await serviceRegistry.serviceDidOf(entityA.gateway.address)
+            ).to.equal(ZeroHash)
+            await expectNotOperative(evidence, entityA, STAMPED)
+            expect(await evidence.existsV2(HASH, entityA.did)).to.equal(true)
+            expect(
+                (await evidence.getTimestampV2(HASH, entityA.did)).signer
+            ).to.equal(entityA.gateway.address)
+            const [dids] = await evidence.getRecordsV2(HASH, 0, 10)
+            expect(dids).to.deep.equal([entityA.did])
+            // Other entities are not affected
+            await evidence
+                .connect(entityB.gateway)
+                .timestampHashV2(entityB.serviceDid, STAMPED, ZeroHash)
+        })
+
+        it('GIVEN an entity whose capabilityInvocation keys expire WHEN the expiration is reached THEN its service stops registering, and not before', async () => {
+            const registry = await didRegistry()
+            const expiresAt = BigInt(await time.latest()) + 3600n
+            await registry.expireVerificationMethod(
+                entityA.did,
+                founderVMethod(entityA),
+                expiresAt
+            )
+
+            await evidence
+                .connect(entityA.gateway)
+                .timestampHashV2(entityA.serviceDid, HASH, ZeroHash)
+
+            await time.increaseTo(expiresAt)
+
+            await expectNotOperative(evidence, entityA, STAMPED)
+            expect(await evidence.existsV2(HASH, entityA.did)).to.equal(true)
+        })
+
+        it('GIVEN an entity that still holds one capabilityInvocation in force WHEN another one is revoked THEN its service keeps registering', async () => {
+            const registry = await didRegistry()
+            const secondKey = ethers.id(`${entityA.did}#second`)
+            await registry.addVerificationMethod(
+                entityA.did,
+                secondKey,
+                wallet(18).signingKey.publicKey,
+                EllipticType.SECP_256_K1
+            )
+            await registry.addVerificationRelationship(
+                entityA.did,
+                'capabilityInvocation',
+                secondKey,
+                NOT_BEFORE,
+                NOT_AFTER
+            )
+
+            await registry.revokeVerificationMethod(
+                entityA.did,
+                founderVMethod(entityA),
+                await time.latest()
+            )
+
+            await evidence
+                .connect(entityA.gateway)
+                .timestampHashV2(entityA.serviceDid, HASH, ZeroHash)
+            expect(await evidence.existsV2(HASH, entityA.did)).to.equal(true)
+        })
+
+        it('GIVEN an inactive service DID of a non operative entity WHEN registering THEN reports the service DID first', async () => {
+            await serviceRegistry
+                .connect(entityA.founder)
+                .deactivateServiceDid(entityA.serviceDid)
+            const registry = await didRegistry()
+            await registry.revokeVerificationMethod(
+                entityA.did,
+                founderVMethod(entityA),
+                await time.latest()
+            )
+
+            await expect(
+                evidence
+                    .connect(entityA.gateway)
+                    .timestampHashV2(entityA.serviceDid, HASH, ZeroHash)
+            )
+                .to.be.revertedWithCustomError(evidence, 'ServiceDidNotActive')
+                .withArgs(entityA.serviceDid)
+        })
+
+        it('GIVEN a service DID registered before the address index (not backfilled) WHEN its operative entity registers THEN succeeds', async () => {
+            const governanceAddress = await serviceRegistry.getAddress()
+            const coder = ethers.AbiCoder.defaultAbiCoder()
+            // Empty serviceDidsByAddress[gateway] and addressIndexPosition[serviceDid]
+            for (const [key, type, field] of [
+                [entityA.gateway.address, 'address', 5n],
+                [entityA.serviceDid, 'bytes32', 6n],
+            ] as const) {
+                await ethers.provider.send('hardhat_setStorageAt', [
+                    governanceAddress,
+                    ethers.keccak256(
+                        coder.encode(
+                            [type, 'uint256'],
+                            [key, SERVICE_DID_STORAGE + field]
+                        )
+                    ),
+                    ZeroHash,
+                ])
+            }
+            expect(
+                await serviceRegistry.serviceDidsOf(entityA.gateway.address)
+            ).to.deep.equal([])
+            expect(
+                await serviceRegistry.serviceDidOf(entityA.gateway.address)
+            ).to.equal(ZeroHash)
+
+            await evidence
+                .connect(entityA.gateway)
+                .timestampHashV2(entityA.serviceDid, HASH, ZeroHash)
+
+            expect(await evidence.existsV2(HASH, entityA.did)).to.equal(true)
+        })
+    })
+
     describe('authorization (account holding HASH_TIMESTAMP_ROLE, no DID)', () => {
         it('GIVEN an account with the role and no DID WHEN registering THEN stores the record under the account and emits EvidenceRegisteredByAccount', async () => {
             const [record, alreadyRegistered] = await evidence
@@ -697,6 +863,58 @@ describe('HashTimestampV2 (evidence attributed to entity DIDs through service DI
             )
                 .to.be.revertedWithCustomError(evidence, 'AccountHasNoRole')
                 .withArgs(entityA.founder.address, HASH_TIMESTAMP_ROLE)
+        })
+
+        it('GIVEN the role granted to an entity DID WHEN it is also granted to a key of that DID THEN the key uses the account flow, and revoking it keeps the DID role', async () => {
+            await accessControlDid.grantDidRole(
+                HASH_TIMESTAMP_ROLE,
+                entityA.did
+            )
+
+            await expect(
+                accessControl.grantRole(
+                    HASH_TIMESTAMP_ROLE,
+                    entityA.founder.address
+                )
+            )
+                .to.emit(accessControl, 'RoleGranted')
+                .withArgs(
+                    HASH_TIMESTAMP_ROLE,
+                    entityA.founder.address,
+                    anyValue
+                )
+            await evidence
+                .connect(entityA.founder)
+                .timestampHashWithRoleV2(HASH, ZeroHash)
+            expect(
+                await evidence.existsByAccountV2(HASH, entityA.founder.address)
+            ).to.equal(true)
+            expect(await evidence.existsV2(HASH, entityA.did)).to.equal(false)
+
+            await accessControl.revokeRole(
+                HASH_TIMESTAMP_ROLE,
+                entityA.founder.address
+            )
+
+            await expect(
+                evidence
+                    .connect(entityA.founder)
+                    .timestampHashWithRoleV2(STAMPED, ZeroHash)
+            )
+                .to.be.revertedWithCustomError(evidence, 'AccountHasNoRole')
+                .withArgs(entityA.founder.address, HASH_TIMESTAMP_ROLE)
+            expect(
+                await accessControlDid.hasRoleForDid(
+                    HASH_TIMESTAMP_ROLE,
+                    entityA.did
+                )
+            ).to.equal(true)
+            expect(
+                await accessControl.hasRole(
+                    HASH_TIMESTAMP_ROLE,
+                    entityA.founder.address
+                )
+            ).to.equal(true)
         })
 
         it('GIVEN the role granted in a HashTimestamp v1 proxy WHEN registering in the v2 proxy THEN reverts (roles are per proxy)', async () => {
@@ -1000,6 +1218,44 @@ describe('HashTimestampV2 (evidence attributed to entity DIDs through service DI
             expect(
                 await evidenceOnGovernance.existsV2(HASH, entityB.did)
             ).to.equal(true)
+        })
+
+        it('GIVEN the facet on the governance diamond WHEN the entity is no longer operative THEN its service is rejected there too', async () => {
+            const {
+                evidenceOnGovernance,
+                entityA,
+                entityB,
+                governanceAddress,
+            } = await loadFixture(deployOnGovernanceFixture)
+            await evidenceOnGovernance
+                .connect(entityA.gateway)
+                .timestampHashV2(entityA.serviceDid, HASH, ZeroHash)
+
+            await IDidRegistry__factory.connect(
+                governanceAddress,
+                entityA.founder
+            ).revokeVerificationMethod(
+                entityA.did,
+                ethers.id(`${entityA.did}#founder`),
+                await time.latest()
+            )
+
+            await expect(
+                evidenceOnGovernance
+                    .connect(entityA.gateway)
+                    .timestampHashV2(entityA.serviceDid, STAMPED, ZeroHash)
+            )
+                .to.be.revertedWithCustomError(
+                    evidenceOnGovernance,
+                    'OrganisationNotOperative'
+                )
+                .withArgs(entityA.did)
+            expect(
+                await evidenceOnGovernance.existsV2(HASH, entityA.did)
+            ).to.equal(true)
+            await evidenceOnGovernance
+                .connect(entityB.gateway)
+                .timestampHashV2(entityB.serviceDid, STAMPED, ZeroHash)
         })
 
         it('GIVEN the facet on the governance diamond WHEN accounts use the role flow THEN only the role granted on that diamond counts', async () => {

@@ -24,6 +24,12 @@ import {
     IServiceDidRegistry
 } from '../identity/servicedidregistry/interfaces/IServiceDidRegistry.sol';
 import {
+    IDidDocumentDetailed
+} from '../identity/didregistry/interfaces/IDidDocumentDetailed.sol';
+import {
+    _CAPABILITY_INVOCATION_RELATIONSHIP
+} from '../identity/didregistry/constants.sol';
+import {
     ServiceDidRegistryInternal
 } from '../identity/servicedidregistry/ServiceDidRegistryInternal.sol';
 
@@ -237,13 +243,21 @@ abstract contract HashTimestampV2Internal is ServiceDidRegistryInternal {
      *      Comparing the derived address with the sender is enough to bind the key: the
      *      address only matches when the sender holds the private key of those
      *      coordinates on the curve the network operates on.
+     *
+     *      `isServiceDidActive` does not evaluate the controlling organisation, so it is
+     *      checked here as well, with the same test `serviceDidOf` applies. It is applied
+     *      to the controller of the given service DID rather than through
+     *      `serviceDidOf(signer)`: that lookup reads the address index, which does not
+     *      list service DIDs registered before it existed until they are backfilled, and
+     *      would reject them while they are perfectly valid.
      */
     function _entityDidOf(
         bytes32 _serviceDid,
         address _signer
     ) internal view returns (bytes32 did_) {
         IServiceDidRegistry.ServiceDidRecord memory record;
-        if (_isUseCase()) {
+        bool useCase = _isUseCase();
+        if (useCase) {
             IServiceDidRegistry serviceDidRegistry = IServiceDidRegistry(
                 address(_getIsbeFactory())
             );
@@ -264,6 +278,12 @@ abstract contract HashTimestampV2Internal is ServiceDidRegistryInternal {
             IHashTimestampV2.SignerNotServiceKey(_serviceDid, _signer)
         );
         did_ = record.controllerDid;
+        require(
+            useCase
+                ? _isRemoteOrganisationOperative(did_)
+                : _isOrganisationOperative(did_),
+            IHashTimestampV2.OrganisationNotOperative(did_)
+        );
     }
 
     function _hashTimestampV2Storage()
@@ -302,6 +322,42 @@ abstract contract HashTimestampV2Internal is ServiceDidRegistryInternal {
         IHashTimestampV2.EvidenceRecord storage _record
     ) private view returns (bool) {
         return _record.blockNumber != 0;
+    }
+
+    /**
+     * @dev `_isOrganisationOperative` evaluated against the DID Registry of the
+     *      governance diamond: the document it returns for the current timestamp lists
+     *      only relationships in force, so the organisation is operative when it still
+     *      lists a capabilityInvocation.
+     */
+    function _isRemoteOrganisationOperative(
+        bytes32 _did
+    ) private view returns (bool) {
+        // Only the relationships matter: the rest of the document is not needed.
+        // slither-disable-next-line unused-return
+        (
+            ,
+            ,
+            ,
+            ,
+            ,
+            IDidDocumentDetailed.VRelationship[] memory relationships
+        ) = IDidDocumentDetailed(address(_getIsbeFactory())).getDidDocument(
+                _did
+            );
+        uint256 relationshipsLength = relationships.length;
+        for (uint256 i; i < relationshipsLength; ) {
+            if (
+                _equalStrings(
+                    relationships[i].name,
+                    _CAPABILITY_INVOCATION_RELATIONSHIP
+                )
+            ) return true;
+            unchecked {
+                ++i;
+            }
+        }
+        return false;
     }
 
     function _page(

@@ -111,8 +111,14 @@ abstract contract AccessControlInternal is ISBEContext, IsbeFactoryInternal {
         );
     }
 
+    /**
+     * @dev Skips only when the account already holds the role directly. A role the
+     *      account inherits from its DID is a separate membership: it must not stop the
+     *      grant, or the account would never hold the role in its own right (and would
+     *      lose it as soon as the DID role is revoked). Mirrors `_revokeRole`.
+     */
     function _grantRole(bytes32 _role, address _account) internal virtual {
-        if (_hasRole(_role, _account)) return;
+        if (_hasEoaRole(_role, _account)) return;
 
         // slither-disable-next-line unused-return
         _accessControlStorage().roles[_role].members.add(_account);
