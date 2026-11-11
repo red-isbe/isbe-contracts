@@ -329,6 +329,11 @@ abstract contract HashTimestampV2Internal is ServiceDidRegistryInternal {
      *      governance diamond: the document it returns for the current timestamp lists
      *      only relationships in force, so the organisation is operative when it still
      *      lists a capabilityInvocation.
+     *      Cost: reading the whole document makes a registration through the use case
+     *      about 84k gas dearer (about 144k to 228k for a first record). A lean DID
+     *      Registry view that only walks the capabilityInvocation entries would remove
+     *      most of it, but needs a DID Registry change and a governance diamond upgrade,
+     *      so it is left as a future optimisation.
      */
     function _isRemoteOrganisationOperative(
         bytes32 _did
