@@ -33,6 +33,9 @@ bytes32 constant _INITIALIZABLE_STORAGE_POSITION = 0xcfff96098fae8df9a4c6ae59e43
 // keccak256('isbe.contracts.hash.timestamp.storage');
 bytes32 constant _HASH_TIMESTAMP_STORAGE_POSITION = 0x9461e6f53daf5c3d0aa4d10025e40b84fad06da43fb4fab1a98f3e6b3a58d616;
 
+// keccak256('isbe.contracts.hash.timestamp.v2.storage');
+bytes32 constant _HASH_TIMESTAMP_V2_STORAGE_POSITION = 0x34ed825b0cc5ea8641815aa67129e133c85c584f15250ece5dacb529c899a01e;
+
 // keccak256('isbe.contracts.asset.event.tracker.storage');
 bytes32 constant _ASSET_EVENT_TRACKER_STORAGE_POSITION = 0xb13a0c12204f114e7a8e799996dabff59f106350c92089a46344d8deff3164b3;
 

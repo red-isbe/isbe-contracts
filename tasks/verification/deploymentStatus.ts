@@ -598,6 +598,10 @@ async function analyzeBusinessLogicRegistry(
                 key: '0xf4e751bf7e74c25f287942d8743e3d0fdfb08f29556e786178a50e2d69dc403a',
                 name: 'HashTimestampFacet',
             },
+            {
+                key: '0x798ec97da51506566f19dc4d3df52a19b9de52f59e46d12a45f964feb662bb8b',
+                name: 'HashTimestampV2Facet',
+            },
         ]
 
         let registeredCount = 0

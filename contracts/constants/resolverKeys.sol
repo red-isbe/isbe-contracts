@@ -28,6 +28,9 @@ bytes32 constant _ASSET_EVENT_TRACKER_RESOLVER_KEY = 0x112dd723577b76611d03a5df6
 // keccak256('isbe.contracts.hash.timestamp.resolver.key');
 bytes32 constant _HASH_TIMESTAMP_RESOLVER_KEY = 0xf4e751bf7e74c25f287942d8743e3d0fdfb08f29556e786178a50e2d69dc403a;
 
+// keccak256('isbe.contracts.hash.timestamp.v2.resolver.key');
+bytes32 constant _HASH_TIMESTAMP_V2_RESOLVER_KEY = 0x798ec97da51506566f19dc4d3df52a19b9de52f59e46d12a45f964feb662bb8b;
+
 // keccak256('isbe.contracts.erc20.resolver.key');
 bytes32 constant _ERC20_RESOLVER_KEY = 0x2428f215905ecd05cc26794e218b9fad455e6ae2ca828b2f1c1903e8770265ad;
 

@@ -72,6 +72,8 @@ export const ERC721_RESOLVER_KEYS: ResolverKeys = {
 export const UTILITY_RESOLVER_KEYS: ResolverKeys = {
     HASH_TIMESTAMP:
         '0xf4e751bf7e74c25f287942d8743e3d0fdfb08f29556e786178a50e2d69dc403a',
+    HASH_TIMESTAMP_V2:
+        '0x798ec97da51506566f19dc4d3df52a19b9de52f59e46d12a45f964feb662bb8b',
     OWNABLE:
         '0x32d893fe746ed6e72cf641731066f84e26611cdd03031f873957cb1a29071a5f',
 }

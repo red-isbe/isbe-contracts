@@ -248,6 +248,70 @@ describe('Use Case DID Resolution via Factory', function () {
         })
     })
 
+    describe('Account and DID memberships of the same role', function () {
+        async function grantRoleToDid1() {
+            await useCaseAccessControl.grantRole(ROLE_1, adminAddress)
+            const useCaseAccessControlDid = (
+                await ethers.getContractFactory('AccessControlDidFacet')
+            ).attach(await useCaseAccessControl.getAddress())
+            await useCaseAccessControlDid.grantDidRole(ROLE_1, did1)
+            return useCaseAccessControlDid
+        }
+
+        it('GIVEN a DID holding a role WHEN granting it to an address resolving to that DID THEN the address becomes a direct member', async function () {
+            await grantRoleToDid1()
+            expect(await useCaseAccessControl.hasRole(ROLE_1, wallet1.address))
+                .to.be.true
+
+            await expect(
+                useCaseAccessControl.grantRole(ROLE_1, wallet1.address)
+            )
+                .to.emit(useCaseAccessControl, 'RoleGranted')
+                .withArgs(ROLE_1, wallet1.address, adminAddress)
+
+            expect(
+                await useCaseAccessControl.getRoleMembers(ROLE_1, 0, 10)
+            ).to.include(wallet1.address)
+            expect(
+                await useCaseAccessControl.getRolesByAccount(
+                    wallet1.address,
+                    0,
+                    10
+                )
+            ).to.deep.equal([ROLE_1])
+            await expect(
+                useCaseAccessControl.grantRole(ROLE_1, wallet1.address)
+            ).to.not.emit(useCaseAccessControl, 'RoleGranted')
+        })
+
+        it('GIVEN both memberships WHEN revoking either one THEN the other one is kept', async function () {
+            const useCaseAccessControlDid = await grantRoleToDid1()
+            await useCaseAccessControl.grantRole(ROLE_1, wallet1.address)
+
+            await expect(
+                useCaseAccessControl.revokeRole(ROLE_1, wallet1.address)
+            )
+                .to.emit(useCaseAccessControl, 'RoleRevoked')
+                .withArgs(ROLE_1, wallet1.address, adminAddress)
+            expect(await useCaseAccessControlDid.hasRoleForDid(ROLE_1, did1)).to
+                .be.true
+            expect(await useCaseAccessControl.hasRole(ROLE_1, wallet1.address))
+                .to.be.true
+            expect(
+                await useCaseAccessControl.getRoleMembers(ROLE_1, 0, 10)
+            ).to.not.include(wallet1.address)
+
+            await useCaseAccessControl.grantRole(ROLE_1, wallet1.address)
+            await useCaseAccessControlDid.revokeDidRole(ROLE_1, did1)
+            expect(await useCaseAccessControl.hasRole(ROLE_1, wallet1.address))
+                .to.be.true
+
+            await useCaseAccessControl.revokeRole(ROLE_1, wallet1.address)
+            expect(await useCaseAccessControl.hasRole(ROLE_1, wallet1.address))
+                .to.be.false
+        })
+    })
+
     describe('DID Validation When Granting Roles', function () {
         it('GIVEN use case WHEN granting role to non-existent DID THEN should validate via factory', async function () {
             // NOTE: Current implementation of grantDidRole does NOT validate DID existence
