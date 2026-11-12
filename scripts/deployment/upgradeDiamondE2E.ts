@@ -18,12 +18,11 @@ limitations under the License.
  * Handles pre-flight checks, facet deployment, diamond update, and verification.
  */
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
+import { DEFAULT_FACETS, type DeployAllFacetsResult } from './deployAllFacets'
 import {
-    deployAllFacets,
-    DEFAULT_FACETS,
-    type DeployAllFacetsResult,
-} from './deployAllFacets'
-import { facetUpdates } from '../diamond/cut/facetUpdates'
+    runDiamondUpgrade,
+    type DiamondUpgradeResult,
+} from './safeDiamondUpgrade'
 import { getDiamondLoupe } from '../utils/getDiamondLoupe'
 import { checkFacetVersions, printVersionResults } from './checkFacetVersions'
 import { SignatureProviderFactory } from '../../tasks/deployment/providers/SignatureProviderFactory'
@@ -34,8 +33,11 @@ import { NetworkConfigWithCurve } from '../../types/hardhat'
  */
 export interface E2EUpgradeOptions {
     diamond: string
+    /** Validated facet names (see resolveFacetSelection). Undefined: full replacement */
     facets?: string[]
     dryRun: boolean
+    /** Allow removing functions that the new facets no longer declare */
+    allowRemove?: boolean
     skipVerification: boolean
     saveAddresses: boolean
     checkVersions: boolean
@@ -165,6 +167,7 @@ export async function upgradeDiamondE2E(
         saveAddresses,
         checkVersions,
     } = options
+    const allowRemove = options.allowRemove ?? false
 
     const errors: string[] = []
     const networkConfig = hre.config.networks[
@@ -245,146 +248,87 @@ export async function upgradeDiamondE2E(
     }
 
     // ============================================================
-    // PHASE 3: Facet Deployment
+    // PHASE 3: Safe upgrade (deploy, plan, simulate, send, verify)
     // ============================================================
     console.log(
         '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
     )
-    console.log('PHASE 3: FACET DEPLOYMENT')
+    console.log(
+        facets
+            ? `PHASE 3: PARTIAL UPGRADE (${facets.join(', ')})`
+            : 'PHASE 3: FULL REPLACEMENT (all ISBE facets)'
+    )
     console.log(
         '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
     )
 
     const facetNames = facets || [...DEFAULT_FACETS]
-    console.log(`   Facets to deploy: ${facetNames.length}`)
+    let upgrade: DiamondUpgradeResult
+    try {
+        upgrade = await runDiamondUpgrade(hre, {
+            diamond,
+            facets,
+            dryRun,
+            allowRemove,
+            skipVerification,
+        })
+    } catch (error: unknown) {
+        const msg = error instanceof Error ? error.message : String(error)
+        errors.push(`Diamond upgrade failed: ${msg}`)
+        console.log(`\n   ❌ ${msg}`)
+        return result
+    }
 
     if (dryRun) {
-        console.log('   🔍 DRY RUN: Would deploy facets:')
-        facetNames.forEach((name, idx) => {
-            console.log(`      ${idx + 1}. ${name}`)
-        })
         result.success = true
         return result
     }
 
-    let deploymentResult: DeployAllFacetsResult
-    try {
-        deploymentResult = await deployAllFacets(hre, facetNames)
+    if (upgrade.deployed.length > 0) {
+        const facetAddresses = upgrade.deployed.map((f) => f.address)
         result.deployment = {
-            facets: deploymentResult,
-            deploymentTimeMs: deploymentResult.deploymentTimeMs,
+            facets: {
+                facets: upgrade.deployed,
+                facetAddresses,
+                totalGasUsed: BigInt(0),
+                deploymentTimeMs: 0,
+            },
+            deploymentTimeMs: 0,
         }
-        console.log(
-            `\n   ✅ All ${deploymentResult.facetAddresses.length} facets deployed`
-        )
-    } catch (error: unknown) {
-        const msg = error instanceof Error ? error.message : String(error)
-        errors.push(`Facet deployment failed: ${msg}`)
-        console.log(`\n   ❌ Facet deployment failed: ${msg}`)
-        return result
     }
-
-    // ============================================================
-    // PHASE 4: Diamond Update
-    // ============================================================
-    console.log(
-        '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
-    )
-    console.log('PHASE 4: DIAMOND UPDATE')
-    console.log(
-        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
-    )
-
-    const signatureProvider = SignatureProviderFactory.create(hre)
-    const initAddress = hre.ethers.ZeroAddress
-    const calldata = '0x'
-
-    try {
-        console.log('   📡 Sending facetUpdates transaction...')
-        const updateResult = await facetUpdates(
-            deploymentResult.facetAddresses,
-            initAddress,
-            calldata,
-            diamond,
-            signatureProvider
-        )
+    if (upgrade.executed) {
         result.update = {
-            transactionHash: updateResult.hash || 'unknown',
-            facetsUpdated: deploymentResult.facetAddresses.length,
+            transactionHash: upgrade.transactionHashes.join(', '),
+            facetsUpdated: upgrade.plan.changes.length,
         }
-        console.log(`   ✅ Diamond updated successfully`)
-        if (updateResult.hash) {
-            console.log(`   📝 Transaction: ${updateResult.hash}`)
-        }
-    } catch (error: unknown) {
-        const msg = error instanceof Error ? error.message : String(error)
-        errors.push(`Diamond update failed: ${msg}`)
-        console.log(`   ❌ Diamond update failed: ${msg}`)
-        return result
     }
 
     // ============================================================
-    // PHASE 5: Verification
+    // PHASE 4: Version check (optional)
     // ============================================================
-    if (!skipVerification) {
-        console.log(
-            '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
-        )
-        console.log('PHASE 5: VERIFICATION')
-        console.log(
-            '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
-        )
-
+    if (upgrade.executed && checkVersions) {
         try {
-            const signer = await signatureProvider.getSigner()
-            const loupe = await getDiamondLoupe(diamond, signer)
+            const loupe = await getDiamondLoupe(
+                diamond,
+                await SignatureProviderFactory.create(hre).getSigner()
+            )
             const configuredFacets = await loupe.facets()
-
-            console.log(`   📊 Facets in diamond: ${configuredFacets.length}`)
-
-            // Verify all deployed facets are present
-            const configuredAddresses = new Set(
-                configuredFacets.map(
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    (f: any) => f.facetAddress.toLowerCase()
-                )
+            const versionResult = await checkFacetVersions(
+                hre,
+                diamond,
+                facetNames
             )
-            const allPresent = deploymentResult.facetAddresses.every((addr) =>
-                configuredAddresses.has(addr.toLowerCase())
-            )
-
-            if (allPresent) {
-                console.log(
-                    '   ✅ All deployed facets are configured in the diamond'
-                )
-            } else {
-                console.log('   ⚠️  Some facets may not be properly configured')
+            result.verification = {
+                facetsCount: configuredFacets.length,
+                versionCheckPassed:
+                    versionResult.summary.matched ===
+                    versionResult.summary.total,
             }
-
-            // Version check
-            if (checkVersions) {
-                const versionResult = await checkFacetVersions(
-                    hre,
-                    diamond,
-                    facetNames
-                )
-                result.verification = {
-                    facetsCount: configuredFacets.length,
-                    versionCheckPassed:
-                        versionResult.summary.matched ===
-                        versionResult.summary.total,
-                }
-                printVersionResults(versionResult)
-            } else {
-                result.verification = {
-                    facetsCount: configuredFacets.length,
-                    versionCheckPassed: true,
-                }
-            }
+            printVersionResults(versionResult)
         } catch (error: unknown) {
             const msg = error instanceof Error ? error.message : String(error)
-            errors.push(`Verification failed: ${msg}`)
-            console.log(`   ⚠️  Verification failed: ${msg}`)
+            errors.push(`Version check failed: ${msg}`)
+            console.log(`   ⚠️  Version check failed: ${msg}`)
         }
     }
 

@@ -11,17 +11,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ----------------------------------------------------------------------------------- */
 import { task, types } from 'hardhat/config'
-import { SignatureProviderFactory } from './providers/SignatureProviderFactory'
-import { ISignatureProvider } from './providers/ISignatureProvider'
-import { facetUpdates } from '../../scripts/diamond/cut/facetUpdates'
 import {
     deployAllFacets,
     DEFAULT_FACETS,
-    validateFacetList,
-    type DeployAllFacetsResult,
 } from '../../scripts/deployment/deployAllFacets'
+import { resolveFacetSelection } from '../../scripts/deployment/facetSelection'
+import { runDiamondUpgrade } from '../../scripts/deployment/safeDiamondUpgrade'
 import { getDiamondLoupe } from '../../scripts/utils/getDiamondLoupe'
-import { NetworkConfigWithCurve } from '../../types/hardhat'
 
 /**
  * Default diamond address for ISBE networks
@@ -31,15 +27,29 @@ export const DEFAULT_DIAMOND_ADDRESS =
     '0x00000000000000000000000000000000000015BE'
 
 /**
- * npx hardhat updateDiamondFacets --network dev
- * npx hardhat updateDiamondFacets --network dev --diamond 0x123...
- * npx hardhat updateDiamondFacets --network dev --dry-run
- * npx hardhat updateDiamondFacets --network dev --facets '["DiamondCutAccessControlFacet","DiamondLoupeFacet"]'
- * npx hardhat updateDiamondFacets --network dev --facet-addresses '["0x...","0x..."]'
+ * Two ways of updating the governance diamond:
+ *
+ * Partial upgrade: only the listed facets change, the rest stay untouched.
+ *   npx hardhat updateDiamondFacets --network dev --facets '["DidRegistryQueryFacet"]' --dry-run
+ *   npx hardhat updateDiamondFacets --network dev --facets '["DidRegistryQueryFacet"]'
+ *
+ * Full replacement: every ISBE facet is redeployed and installed with facetUpdates.
+ *   npx hardhat updateDiamondFacets --network dev --dry-run
+ *   npx hardhat updateDiamondFacets --network dev
+ *
+ * Other options:
+ *   --diamond 0x123...                 Diamond address (default 0x...15BE)
+ *   --facet-addresses '["0x..."]'      Use facets already deployed (same order as --facets)
+ *   --allow-remove                     Allow removing functions the new facets no longer declare
+ *
+ * Safety rules (both modes): unknown or empty --facets stops the task; the diamond can never
+ * lose DiamondCut/DiamondLoupe; functions are never removed without --allow-remove; a function
+ * is never moved between facets; transactions are simulated first; the final check reads the
+ * real diamond and fails if it does not match.
  */
 task(
     'updateDiamondFacets',
-    'Deploy all ISBE facets and update the diamond contract'
+    'Upgrade the governance diamond: only the given facets (--facets) or all ISBE facets'
 )
     .addOptionalParam(
         'diamond',
@@ -49,7 +59,7 @@ task(
     )
     .addOptionalParam(
         'facets',
-        'JSON array of facet names to deploy (default: all ISBE facets)',
+        'JSON array of facet names to upgrade. Only these facets change. Omit it for a full replacement',
         undefined,
         types.json
     )
@@ -59,30 +69,31 @@ task(
         undefined,
         types.json
     )
-    .addFlag('dryRun', 'Show what would be done without executing transactions')
+    .addFlag(
+        'dryRun',
+        'Show what would change without deploying or sending anything'
+    )
+    .addFlag(
+        'allowRemove',
+        'Allow removing functions that the new facets no longer declare'
+    )
     .addFlag('skipVerification', 'Skip post-update verification')
     .addFlag('saveAddresses', 'Save deployed facet addresses to a file')
     .setAction(
         async (
             taskArgs: {
                 diamond: string
-                facets?: string[]
+                facets?: unknown
                 facetAddresses?: string[]
                 dryRun: boolean
+                allowRemove: boolean
                 skipVerification: boolean
                 saveAddresses: boolean
             },
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             hre: any
         ) => {
-            const {
-                diamond,
-                facets,
-                facetAddresses,
-                dryRun,
-                skipVerification,
-                saveAddresses,
-            } = taskArgs
+            const facets = resolveFacetSelection(taskArgs.facets)
 
             console.log(
                 '═══════════════════════════════════════════════════════════════'
@@ -92,265 +103,54 @@ task(
                 '═══════════════════════════════════════════════════════════════'
             )
             console.log(`🔍 Network: ${hre.network.name}`)
-            console.log(`📍 Diamond: ${diamond}`)
+            console.log(`📍 Diamond: ${taskArgs.diamond}`)
+            console.log(
+                facets
+                    ? `📋 Partial upgrade: ${facets.join(', ')}`
+                    : `📋 Full replacement: ${DEFAULT_FACETS.length} ISBE facets`
+            )
 
-            // Check curve type
-            const networkConfig = hre.config.networks[
-                hre.network.name
-            ] as NetworkConfigWithCurve
-            const isSecp256r1 = networkConfig.curve === 'secp256r1'
+            const result = await runDiamondUpgrade(hre, {
+                diamond: taskArgs.diamond,
+                facets,
+                facetAddresses: taskArgs.facetAddresses,
+                dryRun: taskArgs.dryRun,
+                allowRemove: taskArgs.allowRemove,
+                skipVerification: taskArgs.skipVerification,
+            })
 
-            if (isSecp256r1) {
+            if (taskArgs.saveAddresses && result.deployed.length > 0) {
+                const fs = await import('fs')
+                const path = await import('path')
+                const filename = `facet-addresses-${hre.network.name}-${Date.now()}.json`
+                const filepath = path.join(process.cwd(), filename)
+                await fs.promises.writeFile(
+                    filepath,
+                    JSON.stringify(
+                        {
+                            network: hre.network.name,
+                            diamond: taskArgs.diamond,
+                            timestamp: new Date().toISOString(),
+                            facets: result.deployed,
+                        },
+                        null,
+                        2
+                    )
+                )
+                console.log(`\n💾 Facet addresses saved to: ${filepath}`)
+            }
+
+            if (result.executed) {
                 console.log(
-                    '🔐 secp256r1 network detected - using enhanced signature handling'
+                    '\n═══════════════════════════════════════════════════════════════'
+                )
+                console.log('           ✅ Diamond Facet Update Complete!')
+                console.log(
+                    '═══════════════════════════════════════════════════════════════'
                 )
             }
 
-            // Determine facets to use
-            let facetNamesToDeploy: readonly string[] = DEFAULT_FACETS
-            if (facets && facets.length > 0) {
-                const validation = validateFacetList(facets)
-                if (validation.unknown.length > 0) {
-                    console.warn(
-                        `⚠️  Unknown facets specified: ${validation.unknown.join(', ')}`
-                    )
-                }
-                facetNamesToDeploy = facets.filter((f) =>
-                    DEFAULT_FACETS.includes(
-                        f as (typeof DEFAULT_FACETS)[number]
-                    )
-                )
-                console.log(
-                    `📋 Using custom facet subset: ${facetNamesToDeploy.length} facets`
-                )
-            }
-
-            // Validate diamond address
-            if (!diamond.startsWith('0x') || diamond.length !== 42) {
-                throw new Error(`Invalid diamond address: ${diamond}`)
-            }
-
-            let finalFacetAddresses: string[]
-
-            // ============================================================
-            // PHASE 1: Deploy Facets (or use provided addresses)
-            // ============================================================
-            console.log(
-                '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
-            )
-            console.log('PHASE 1: FACET DEPLOYMENT')
-            console.log(
-                '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
-            )
-
-            if (facetAddresses && facetAddresses.length > 0) {
-                console.log(
-                    '📦 Using provided facet addresses (skipping deployment)'
-                )
-                if (facetAddresses.length !== facetNamesToDeploy.length) {
-                    throw new Error(
-                        `Mismatch: ${facetNamesToDeploy.length} facet names but ${facetAddresses.length} addresses provided`
-                    )
-                }
-                finalFacetAddresses = facetAddresses
-
-                // Validate addresses
-                for (let i = 0; i < finalFacetAddresses.length; i++) {
-                    const addr = finalFacetAddresses[i]
-                    if (!addr.startsWith('0x') || addr.length !== 42) {
-                        throw new Error(
-                            `Invalid facet address at index ${i}: ${addr}`
-                        )
-                    }
-                }
-
-                console.log(
-                    `   ✅ Using ${finalFacetAddresses.length} pre-deployed facet addresses`
-                )
-            } else {
-                if (dryRun) {
-                    console.log(
-                        '🔍 DRY RUN: Would deploy the following facets:'
-                    )
-                    facetNamesToDeploy.forEach((name, idx) => {
-                        console.log(`   ${idx + 1}. ${name}`)
-                    })
-                    finalFacetAddresses = facetNamesToDeploy.map(
-                        (_, i) => `0x${i.toString(16).padStart(40, '0')}`
-                    )
-                } else {
-                    const deploymentResult: DeployAllFacetsResult =
-                        await deployAllFacets(hre, facetNamesToDeploy)
-                    finalFacetAddresses = deploymentResult.facetAddresses
-
-                    // Print deployment summary
-                    console.log('\n📊 Deployment Summary:')
-                    deploymentResult.facets.forEach((facet, idx) => {
-                        console.log(
-                            `   ${idx + 1}. ${facet.name}: ${facet.address}`
-                        )
-                    })
-
-                    // Optionally save addresses
-                    if (saveAddresses) {
-                        const fs = await import('fs')
-                        const path = await import('path')
-                        const filename = `facet-addresses-${hre.network.name}-${Date.now()}.json`
-                        const filepath = path.join(process.cwd(), filename)
-                        await fs.promises.writeFile(
-                            filepath,
-                            JSON.stringify(
-                                {
-                                    network: hre.network.name,
-                                    diamond,
-                                    timestamp: new Date().toISOString(),
-                                    facets: deploymentResult.facets,
-                                },
-                                null,
-                                2
-                            )
-                        )
-                        console.log(
-                            `\n💾 Facet addresses saved to: ${filepath}`
-                        )
-                    }
-                }
-            }
-
-            // ============================================================
-            // PHASE 2: Update Diamond
-            // ============================================================
-            console.log(
-                '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
-            )
-            console.log('PHASE 2: DIAMOND UPDATE')
-            console.log(
-                '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
-            )
-
-            if (dryRun) {
-                console.log('🔍 DRY RUN: Would call facetUpdates with:')
-                console.log(`   Diamond: ${diamond}`)
-                console.log(
-                    `   Facet addresses: ${finalFacetAddresses.length} facets`
-                )
-                console.log(
-                    `   Init: 0x0000000000000000000000000000000000000000 (empty)`
-                )
-                console.log(`   Calldata: 0x (empty)`)
-                return
-            }
-
-            // Get signature provider
-            const signatureProvider: ISignatureProvider =
-                SignatureProviderFactory.create(hre)
-
-            // Call facetUpdates with empty initialization
-            // This removes all existing selectors/interfaces and adds the new facets
-            const initAddress = hre.ethers.ZeroAddress
-            const calldata = '0x'
-
-            console.log('📡 Sending facetUpdates transaction...')
-            console.log(`   Facets: ${finalFacetAddresses.length}`)
-            console.log(`   Init: ${initAddress} (no initialization)`)
-            console.log(`   Calldata: ${calldata}`)
-
-            try {
-                const result = await facetUpdates(
-                    finalFacetAddresses,
-                    initAddress,
-                    calldata,
-                    diamond,
-                    signatureProvider
-                )
-
-                console.log('\n✅ Diamond updated successfully!')
-                console.log(
-                    `   Transaction events captured: ${result._diamondCut?.length || 0} cuts`
-                )
-
-                // ============================================================
-                // PHASE 3: Verification (optional)
-                // ============================================================
-                if (!skipVerification) {
-                    console.log(
-                        '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
-                    )
-                    console.log('PHASE 3: VERIFICATION')
-                    console.log(
-                        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
-                    )
-
-                    const signer = await signatureProvider.getSigner()
-                    const diamondLoupe = await getDiamondLoupe(diamond, signer)
-
-                    console.log('🔍 Verifying diamond configuration...')
-                    const configuredFacets = await diamondLoupe.facets()
-                    console.log(
-                        `   Total facets in diamond: ${configuredFacets.length}`
-                    )
-
-                    // Verify all facet addresses are present
-                    const configuredAddresses = new Set(
-                        configuredFacets.map(
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            (f: any) => f.facetAddress.toLowerCase()
-                        )
-                    )
-                    const allPresent = finalFacetAddresses.every(
-                        (addr) =>
-                            configuredAddresses.has(addr.toLowerCase()) ||
-                            // Allow for facets that may have been replaced
-                            true
-                    )
-
-                    if (allPresent) {
-                        console.log(
-                            '   ✅ All deployed facets are configured in the diamond'
-                        )
-                    } else {
-                        console.warn(
-                            '   ⚠️  Some facets may not be properly configured'
-                        )
-                    }
-                }
-            } catch (error: unknown) {
-                const errorMessage =
-                    error instanceof Error ? error.message : String(error)
-
-                // Enhanced error handling for secp256r1
-                if (
-                    isSecp256r1 &&
-                    errorMessage.includes('Cannot find square root')
-                ) {
-                    console.error(
-                        '\n🚨 CRITICAL: secp256r1 signature generation failed'
-                    )
-                    console.error(
-                        '   This indicates the Besu client may not support secp256r1 properly'
-                    )
-                    console.error('   Required Actions:')
-                    console.error(
-                        '   1. Check Besu client version and secp256r1 support'
-                    )
-                    console.error('   2. Verify network configuration')
-                    process.exit(1)
-                }
-
-                console.error('\n❌ Failed to update diamond:', errorMessage)
-                throw error
-            }
-
-            console.log(
-                '\n═══════════════════════════════════════════════════════════════'
-            )
-            console.log('           ✅ Diamond Facet Update Complete!')
-            console.log(
-                '═══════════════════════════════════════════════════════════════'
-            )
-            console.log(`📍 Diamond Address: ${diamond}`)
-            console.log(`🔗 Network: ${hre.network.name}`)
-            console.log(`📊 Facets Updated: ${finalFacetAddresses.length}`)
+            return result
         }
     )
 
@@ -371,7 +171,7 @@ task('deployFacets', 'Deploy ISBE facet contracts without updating diamond')
     .setAction(
         async (
             taskArgs: {
-                facets?: string[]
+                facets?: unknown
                 saveAddresses: boolean
             },
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -388,28 +188,15 @@ task('deployFacets', 'Deploy ISBE facet contracts without updating diamond')
             )
             console.log(`🔍 Network: ${hre.network.name}`)
 
-            // Determine facets to deploy
-            let facetNamesToDeploy: readonly string[] = DEFAULT_FACETS
-            if (facets && facets.length > 0) {
-                const validation = validateFacetList(facets)
-                if (validation.unknown.length > 0) {
-                    console.warn(
-                        `⚠️  Unknown facets specified: ${validation.unknown.join(', ')}`
-                    )
-                }
-                facetNamesToDeploy = facets.filter((f) =>
-                    DEFAULT_FACETS.includes(
-                        f as (typeof DEFAULT_FACETS)[number]
-                    )
-                )
-                console.log(
-                    `📋 Deploying custom facet subset: ${facetNamesToDeploy.length} facets`
-                )
-            } else {
-                console.log(
-                    `📋 Deploying all ISBE facets: ${facetNamesToDeploy.length} facets`
-                )
-            }
+            // Determine facets to deploy (unknown or empty lists stop the task)
+            const selection = resolveFacetSelection(facets)
+            const facetNamesToDeploy: readonly string[] =
+                selection ?? DEFAULT_FACETS
+            console.log(
+                selection
+                    ? `📋 Deploying custom facet subset: ${facetNamesToDeploy.length} facets`
+                    : `📋 Deploying all ISBE facets: ${facetNamesToDeploy.length} facets`
+            )
 
             // Deploy facets
             const deploymentResult = await deployAllFacets(

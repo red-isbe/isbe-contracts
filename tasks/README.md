@@ -71,7 +71,8 @@ The index provides documentation for all Hardhat tasks organized by category:
 - **businessLogic**: Business logic deployment and management
 - **configMgmt**: Configuration and facet management
 - **diamond**: Diamond proxy pattern operations
-    - `updateDiamondFacets`: Deploy all ISBE facets and update the diamond
+    - `updateDiamondFacets`: Upgrade only the facets in `--facets` (diamondCut), or redeploy all ISBE facets (facetUpdates) when `--facets` is omitted. See the README for the safety rules
+    - `upgradeDiamondE2E`: Same upgrade with pre-flight checks and optional version check
     - `deployFacets`: Deploy facet contracts without updating diamond
     - `showDiamondFacets`: Display current diamond facet configuration
     - `getFacets`, `getFacetAddress`, `getFacetSelectors`: Diamond inspection
