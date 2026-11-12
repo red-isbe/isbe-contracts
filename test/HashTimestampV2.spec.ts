@@ -229,6 +229,9 @@ describe('HashTimestampV2 (evidence attributed to entity DIDs through service DI
     let entityA: Entity
     let entityB: Entity
     let entityC: Entity
+    let admin:
+        | HDNodeWallet
+        | Awaited<ReturnType<typeof ethers.getSigners>>[number]
     const HASH = ethers.id('document')
     const STAMPED = ethers.id('stamped document')
 
@@ -245,6 +248,7 @@ describe('HashTimestampV2 (evidence attributed to entity DIDs through service DI
             entityA,
             entityB,
             entityC,
+            admin,
         } = await loadFixture(deployFixture))
     })
 
@@ -722,7 +726,9 @@ describe('HashTimestampV2 (evidence attributed to entity DIDs through service DI
                 .withArgs(entityA.serviceDid)
         })
 
-        it('GIVEN a service DID registered before the address index (not backfilled) WHEN its operative entity registers THEN succeeds', async () => {
+        // The use case resolves the organisation through serviceDidOf(signer), which
+        // reads the address index: the backfill must have run before the upgrade.
+        it('GIVEN a service DID registered before the address index (not backfilled) WHEN its operative entity registers THEN reverts until the backfill indexes it', async () => {
             const governanceAddress = await serviceRegistry.getAddress()
             const coder = ethers.AbiCoder.defaultAbiCoder()
             // Empty serviceDidsByAddress[gateway] and addressIndexPosition[serviceDid]
@@ -744,15 +750,189 @@ describe('HashTimestampV2 (evidence attributed to entity DIDs through service DI
             expect(
                 await serviceRegistry.serviceDidsOf(entityA.gateway.address)
             ).to.deep.equal([])
-            expect(
-                await serviceRegistry.serviceDidOf(entityA.gateway.address)
-            ).to.equal(ZeroHash)
 
+            await expectNotOperative(evidence, entityA, HASH)
+
+            await serviceRegistry
+                .connect(admin)
+                .indexServiceDidsByAddress(1, 100)
             await evidence
                 .connect(entityA.gateway)
                 .timestampHashV2(entityA.serviceDid, HASH, ZeroHash)
-
             expect(await evidence.existsV2(HASH, entityA.did)).to.equal(true)
+        })
+
+        describe('several service DIDs of one entity sharing a wallet', () => {
+            /** A second service of entity A, registered after the fixture one, on the same key. */
+            async function shareGateway(expiresAt = 0n): Promise<string> {
+                return registerService(
+                    entityA.founder,
+                    entityA.did,
+                    entityA.gateway,
+                    expiresAt
+                )
+            }
+
+            it('GIVEN two active services sharing the wallet WHEN each registers THEN both succeed although serviceDidOf returns only the newest', async () => {
+                const newer = await shareGateway()
+                expect(
+                    await serviceRegistry.serviceDidOf(entityA.gateway.address)
+                ).to.equal(newer)
+
+                // The given service DID differs from the one serviceDidOf returns.
+                await expect(
+                    evidence
+                        .connect(entityA.gateway)
+                        .timestampHashV2(entityA.serviceDid, HASH, ZeroHash)
+                )
+                    .to.emit(evidence, 'EvidenceRegistered')
+                    .withArgs(
+                        HASH,
+                        entityA.did,
+                        entityA.gateway.address,
+                        entityA.serviceDid,
+                        ZeroHash,
+                        anyValue,
+                        anyValue
+                    )
+                await evidence
+                    .connect(entityA.gateway)
+                    .timestampHashV2(newer, STAMPED, HASH)
+                expect(await evidence.existsV2(STAMPED, entityA.did)).to.equal(
+                    true
+                )
+            })
+
+            it('GIVEN the newest shared service deactivated WHEN registering THEN it reverts and the older one keeps registering', async () => {
+                const newer = await shareGateway()
+                await serviceRegistry
+                    .connect(entityA.founder)
+                    .deactivateServiceDid(newer)
+
+                await expect(
+                    evidence
+                        .connect(entityA.gateway)
+                        .timestampHashV2(newer, HASH, ZeroHash)
+                )
+                    .to.be.revertedWithCustomError(
+                        evidence,
+                        'ServiceDidNotActive'
+                    )
+                    .withArgs(newer)
+                await evidence
+                    .connect(entityA.gateway)
+                    .timestampHashV2(entityA.serviceDid, HASH, ZeroHash)
+                expect(await evidence.existsV2(HASH, entityA.did)).to.equal(
+                    true
+                )
+            })
+
+            it('GIVEN an expired service sharing the wallet with an active one WHEN the expired one registers THEN reverts although serviceDidOf still resolves the wallet', async () => {
+                const expiresAt = BigInt(await time.latest()) + 3600n
+                const expiring = await shareGateway(expiresAt)
+                await time.increaseTo(expiresAt)
+
+                expect(
+                    await serviceRegistry.serviceDidOf(entityA.gateway.address)
+                ).to.equal(entityA.serviceDid)
+                await expect(
+                    evidence
+                        .connect(entityA.gateway)
+                        .timestampHashV2(expiring, HASH, ZeroHash)
+                )
+                    .to.be.revertedWithCustomError(
+                        evidence,
+                        'ServiceDidNotActive'
+                    )
+                    .withArgs(expiring)
+                await evidence
+                    .connect(entityA.gateway)
+                    .timestampHashV2(entityA.serviceDid, HASH, ZeroHash)
+            })
+
+            it('GIVEN one shared service rotated to another key WHEN registering THEN the wallet keeps working only for the service still on it', async () => {
+                const newer = await shareGateway()
+                const rotated = wallet(13)
+                await serviceRegistry
+                    .connect(entityA.founder)
+                    .rotateSigningKey(
+                        newer,
+                        rotated.signingKey.publicKey,
+                        EllipticType.SECP_256_K1
+                    )
+
+                await expect(
+                    evidence
+                        .connect(entityA.gateway)
+                        .timestampHashV2(newer, HASH, ZeroHash)
+                )
+                    .to.be.revertedWithCustomError(
+                        evidence,
+                        'SignerNotServiceKey'
+                    )
+                    .withArgs(newer, entityA.gateway.address)
+                await evidence
+                    .connect(entityA.gateway)
+                    .timestampHashV2(entityA.serviceDid, HASH, ZeroHash)
+                await evidence
+                    .connect(rotated)
+                    .timestampHashV2(newer, STAMPED, ZeroHash)
+            })
+
+            it('GIVEN the entity no longer operative WHEN any of its shared services registers THEN all revert', async () => {
+                const newer = await shareGateway()
+                await (
+                    await didRegistry()
+                ).revokeVerificationMethod(
+                    entityA.did,
+                    founderVMethod(entityA),
+                    await time.latest()
+                )
+
+                for (const serviceDid of [entityA.serviceDid, newer]) {
+                    await expect(
+                        evidence
+                            .connect(entityA.gateway)
+                            .timestampHashV2(serviceDid, HASH, ZeroHash)
+                    )
+                        .to.be.revertedWithCustomError(
+                            evidence,
+                            'OrganisationNotOperative'
+                        )
+                        .withArgs(entityA.did)
+                }
+            })
+
+            // What makes serviceDidOf(signer) prove the controller of the given service
+            // DID operative: a wallet never resolves to another organisation.
+            it('GIVEN the wallet of entity A WHEN entity B tries to bind it to a service THEN the registry rejects it, even after A deactivates its service', async () => {
+                await serviceRegistry
+                    .connect(entityA.founder)
+                    .deactivateServiceDid(entityA.serviceDid)
+
+                await expect(
+                    registerService(
+                        entityB.founder,
+                        entityB.did,
+                        entityA.gateway
+                    )
+                ).to.be.revertedWithCustomError(
+                    serviceRegistry,
+                    'SigningKeyAlreadyInUse'
+                )
+                await expect(
+                    serviceRegistry
+                        .connect(entityB.founder)
+                        .rotateSigningKey(
+                            entityB.serviceDid,
+                            entityA.gateway.signingKey.publicKey,
+                            EllipticType.SECP_256_K1
+                        )
+                ).to.be.revertedWithCustomError(
+                    serviceRegistry,
+                    'SigningKeyAlreadyInUse'
+                )
+            })
         })
     })
 

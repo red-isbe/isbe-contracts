@@ -24,12 +24,6 @@ import {
     IServiceDidRegistry
 } from '../identity/servicedidregistry/interfaces/IServiceDidRegistry.sol';
 import {
-    IDidDocumentDetailed
-} from '../identity/didregistry/interfaces/IDidDocumentDetailed.sol';
-import {
-    _CAPABILITY_INVOCATION_RELATIONSHIP
-} from '../identity/didregistry/constants.sol';
-import {
     ServiceDidRegistryInternal
 } from '../identity/servicedidregistry/ServiceDidRegistryInternal.sol';
 
@@ -245,11 +239,18 @@ abstract contract HashTimestampV2Internal is ServiceDidRegistryInternal {
      *      coordinates on the curve the network operates on.
      *
      *      `isServiceDidActive` does not evaluate the controlling organisation, so it is
-     *      checked here as well, with the same test `serviceDidOf` applies. It is applied
-     *      to the controller of the given service DID rather than through
-     *      `serviceDidOf(signer)`: that lookup reads the address index, which does not
-     *      list service DIDs registered before it existed until they are backfilled, and
-     *      would reject them while they are perfectly valid.
+     *      checked here as well:
+     *      - Use case: through `serviceDidOf(signer)`, which applies the organisation
+     *        cascade in the governance diamond and saves reading the whole DID document
+     *        from here. Every service DID indexed under one address shares a controller
+     *        (a key stays bound to the organisation that first claimed it), and the given
+     *        service DID is active and indexed under the signer, so a non-zero result
+     *        proves that its controller is operative. The result may be another service
+     *        DID of the same organisation sharing the wallet, so it is not compared with
+     *        the given one. Relies on the address index being backfilled: a service DID
+     *        missing from it is rejected as not operative.
+     *      - Governance diamond: `_isOrganisationOperative` on the controller, read from
+     *        local storage, which is cheaper than walking the address index.
      */
     function _entityDidOf(
         bytes32 _serviceDid,
@@ -280,7 +281,10 @@ abstract contract HashTimestampV2Internal is ServiceDidRegistryInternal {
         did_ = record.controllerDid;
         require(
             useCase
-                ? _isRemoteOrganisationOperative(did_)
+                ? _isNotEmptyBytes32(
+                    IServiceDidRegistry(address(_getIsbeFactory()))
+                        .serviceDidOf(_signer)
+                )
                 : _isOrganisationOperative(did_),
             IHashTimestampV2.OrganisationNotOperative(did_)
         );
@@ -322,47 +326,6 @@ abstract contract HashTimestampV2Internal is ServiceDidRegistryInternal {
         IHashTimestampV2.EvidenceRecord storage _record
     ) private view returns (bool) {
         return _record.blockNumber != 0;
-    }
-
-    /**
-     * @dev `_isOrganisationOperative` evaluated against the DID Registry of the
-     *      governance diamond: the document it returns for the current timestamp lists
-     *      only relationships in force, so the organisation is operative when it still
-     *      lists a capabilityInvocation.
-     *      Cost: reading the whole document makes a registration through the use case
-     *      about 84k gas dearer (about 144k to 228k for a first record). A lean DID
-     *      Registry view that only walks the capabilityInvocation entries would remove
-     *      most of it, but needs a DID Registry change and a governance diamond upgrade,
-     *      so it is left as a future optimisation.
-     */
-    function _isRemoteOrganisationOperative(
-        bytes32 _did
-    ) private view returns (bool) {
-        // Only the relationships matter: the rest of the document is not needed.
-        // slither-disable-next-line unused-return
-        (
-            ,
-            ,
-            ,
-            ,
-            ,
-            IDidDocumentDetailed.VRelationship[] memory relationships
-        ) = IDidDocumentDetailed(address(_getIsbeFactory())).getDidDocument(
-                _did
-            );
-        uint256 relationshipsLength = relationships.length;
-        for (uint256 i; i < relationshipsLength; ) {
-            if (
-                _equalStrings(
-                    relationships[i].name,
-                    _CAPABILITY_INVOCATION_RELATIONSHIP
-                )
-            ) return true;
-            unchecked {
-                ++i;
-            }
-        }
-        return false;
     }
 
     function _page(
