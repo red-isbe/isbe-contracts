@@ -11,6 +11,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ----------------------------------------------------------------------------------- */
 import { expect } from 'chai'
+import { createECDH } from 'crypto'
 import { config, ethers } from 'hardhat'
 import {
     DidControllerFacet,
@@ -1740,6 +1741,46 @@ describe('DiDRegistry', function () {
                     )
                     .withArgs(publicKey64)
             })
+            it.skip('GIVEN an added K1 method with CapabilityInvocation WHEN creating another DID with its key THEN it fails', async () => {
+                const newWallet = deriveWallet(wallet, '1')
+                const newPublicKey = walletToPublicKey(newWallet)
+                const newVMethodId = randomDid()
+
+                await didRegistry.addVerificationMethod(
+                    did,
+                    newVMethodId,
+                    newPublicKey,
+                    EllipticType.SECP_256_K1
+                )
+                await didRegistry.addVerificationRelationship(
+                    did,
+                    CAPABILITY_INVOCATION_RELATIONSHIP,
+                    newVMethodId,
+                    notBefore,
+                    notAfter
+                )
+
+                const proof = generateProof(newWallet)
+                await expect(
+                    didRegistry.insertFirstDidDocument(
+                        proofToDid(proof),
+                        randomBaseDocument(),
+                        randomDid(),
+                        proof,
+                        newPublicKey,
+                        EllipticType.SECP_256_K1,
+                        notBefore,
+                        notAfter,
+                        ''
+                    )
+                )
+                    .to.be.revertedWithCustomError(
+                        didDocumentDetailedFacet,
+                        'PublicKeyAlreadyInUse'
+                    )
+                    .withArgs(newPublicKey)
+            })
+
             it('GIVEN a controller key bound to another DID WHEN another entity adds it to its own DID THEN it fails and the key keeps resolving to its DID', async () => {
                 const { did: otherDid } = await insertSignerDocument(1)
 
@@ -2999,6 +3040,42 @@ describe('DiDRegistry', function () {
                 const fixtures = await createStandardFixture()
                 did = fixtures.did
                 wallet = fixtures.wallet
+            })
+
+            it.skip('GIVEN an R1 method on a K1 network WHEN adding CapabilityInvocation THEN it fails', async () => {
+                const newVMethodId = randomDid()
+                const r1PublicKey = ethers.hexlify(
+                    createECDH('prime256v1').generateKeys()
+                )
+                await didRegistry.addVerificationMethod(
+                    did,
+                    newVMethodId,
+                    r1PublicKey,
+                    EllipticType.SECP_256_R1
+                )
+
+                await expect(
+                    didRegistry.addVerificationRelationship(
+                        did,
+                        CAPABILITY_INVOCATION_RELATIONSHIP,
+                        newVMethodId,
+                        notBefore,
+                        notAfter
+                    )
+                ).to.be.reverted
+            })
+
+            it.skip('GIVEN a K1 method with an invalid public key WHEN adding CapabilityInvocation THEN it fails', async () => {
+                const newVMethodId = randomDid()
+                const invalidPublicKey = '0x04' + '00'.repeat(64)
+                await expect(
+                    didRegistry.addVerificationMethod(
+                        did,
+                        newVMethodId,
+                        invalidPublicKey,
+                        EllipticType.SECP_256_K1
+                    )
+                ).to.be.reverted
             })
 
             it('GIVEN an inserted document WHEN try to add V.R. with empty did THEN it fails', async () => {
