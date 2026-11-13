@@ -1103,30 +1103,45 @@ npx hardhat showDiamondFacets --diamond 0x123... --network <network>
 
 #### Diamond Updates
 
+There are two ways to update the governance diamond. Both are available in `updateDiamondFacets` and `upgradeDiamondE2E`.
+
+| Mode             | How                        | What changes                                                                                                                                          |
+| ---------------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Partial upgrade  | `--facets '["Name", ...]'` | Only the listed facets. They are deployed and installed with a standard `diamondCut` (add/replace) and `interfaceCut`. Every other facet stays as is. |
+| Full replacement | no `--facets`              | Every ISBE facet is redeployed and installed with `facetUpdates`, which first removes **all** functions and interfaces of the diamond.                |
+
 ```bash
-# Deploy all ISBE facets and update the diamond
+# Partial upgrade: preview, then run
+npx hardhat updateDiamondFacets --network <network> --facets '["DidRegistryQueryFacet"]' --dry-run
+npx hardhat updateDiamondFacets --network <network> --facets '["DidRegistryQueryFacet"]'
+
+# Full replacement: preview, then run
+npx hardhat updateDiamondFacets --network <network> --dry-run
 npx hardhat updateDiamondFacets --network <network>
 
-# Dry-run to preview changes without executing
-npx hardhat updateDiamondFacets --network <network> --dry-run
-
-# Deploy only specific facets
+# Use facets that are already deployed (same order as --facets)
+npx hardhat deployFacets --network <network> --facets '["DidRegistryQueryFacet"]' --save-addresses
 npx hardhat updateDiamondFacets --network <network> \
-  --facets '["DiamondCutAccessControlFacet","DiamondLoupeFacet"]'
+  --facets '["DidRegistryQueryFacet"]' --facet-addresses '["0x..."]'
 
-# Use pre-deployed facet addresses (skip deployment)
-npx hardhat updateDiamondFacets --network <network> \
-  --facet-addresses '["0x...","0x..."]'
+# End-to-end (pre-flight checks + upgrade + optional version check)
+npx hardhat upgradeDiamondE2E --network <network> --facets '["DidRegistryQueryFacet"]'
 
-# Deploy facets without updating diamond (just deployment)
-npx hardhat deployFacets --network <network>
-
-# Save deployed facet addresses to file
-npx hardhat deployFacets --network <network> --save-addresses
-
-# Perform diamond cut (advanced)
+# Perform diamond cut (advanced, no safety checks)
 npx hardhat diamondCut --cuts <cuts> --diamond <address> --network <network>
 ```
+
+Safety rules, in both modes:
+
+- `--facets` with an empty list, an unknown name or a repeated name stops the task. Nothing is deployed or sent.
+- The diamond can never lose the `DiamondCut` or `DiamondLoupe` functions.
+- Functions that exist today are never removed unless `--allow-remove` is passed. The dry-run lists them.
+- A partial upgrade never moves a function from one facet to a different one.
+- `--dry-run` shows, per facet, which functions and interfaces are added, replaced and removed, without deploying or sending anything.
+- Every transaction is simulated (`staticCall`) before being sent.
+- After the upgrade the task reads the real diamond and fails if any function or interface is not where it should be.
+
+> The low-level `facetUpdates` task (`tasks/diamond/cut/facetUpdates.ts`) has none of these checks: it replaces the whole diamond with exactly the facets it receives.
 
 #### Default Diamond Address
 
