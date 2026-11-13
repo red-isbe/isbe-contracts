@@ -42,6 +42,7 @@
         "test:isbeProxy": "npx hardhat test test/governance/IsbeProxy.spec.ts",
         "test:proxyFactory": "npx hardhat test test/governance/ProxyFactory.spec.ts",
         "test:didRegistry": "npx hardhat test test/identity/DiDRegistry.spec.ts",
+        "test:trustedIssuerRegistry": "npx hardhat test test/identity/TrustedIssuersRegistry.spec.ts",
         "test:networkDirectory": "npx hardhat test test/client/NetworkDirectory.spec.ts",
         "test:governance": "npx hardhat test test/governance/*.spec.ts",
         "test:identity": "npx hardhat test test/identity/*.spec.ts",
