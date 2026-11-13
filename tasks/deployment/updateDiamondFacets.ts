@@ -110,16 +110,9 @@ task(
                     : `📋 Full replacement: ${DEFAULT_FACETS.length} ISBE facets`
             )
 
-            const result = await runDiamondUpgrade(hre, {
-                diamond: taskArgs.diamond,
-                facets,
-                facetAddresses: taskArgs.facetAddresses,
-                dryRun: taskArgs.dryRun,
-                allowRemove: taskArgs.allowRemove,
-                skipVerification: taskArgs.skipVerification,
-            })
-
-            if (taskArgs.saveAddresses && result.deployed.length > 0) {
+            const saveDeployed = async (
+                deployed: { name: string; address: string }[]
+            ): Promise<void> => {
                 const fs = await import('fs')
                 const path = await import('path')
                 const filename = `facet-addresses-${hre.network.name}-${Date.now()}.json`
@@ -131,14 +124,28 @@ task(
                             network: hre.network.name,
                             diamond: taskArgs.diamond,
                             timestamp: new Date().toISOString(),
-                            facets: result.deployed,
+                            facets: deployed,
                         },
                         null,
                         2
                     )
                 )
-                console.log(`\n💾 Facet addresses saved to: ${filepath}`)
+                console.log(`💾 Facet addresses saved to: ${filepath}`)
             }
+
+            const result = await runDiamondUpgrade(hre, {
+                diamond: taskArgs.diamond,
+                facets,
+                facetAddresses: taskArgs.facetAddresses,
+                dryRun: taskArgs.dryRun,
+                allowRemove: taskArgs.allowRemove,
+                skipVerification: taskArgs.skipVerification,
+                // Saved as soon as the facets exist, so they can be reused with
+                // --facet-addresses even if a later step fails
+                onFacetsDeployed: taskArgs.saveAddresses
+                    ? saveDeployed
+                    : undefined,
+            })
 
             if (result.executed) {
                 console.log(

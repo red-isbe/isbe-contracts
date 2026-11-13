@@ -41,7 +41,9 @@ export function resolveFacetSelection(
     facets: unknown,
     knownFacets: readonly string[] = DEFAULT_FACETS
 ): string[] | undefined {
-    if (facets === undefined || facets === null) {
+    // Only an omitted argument means "no selection". `--facets null` is an error,
+    // not a silent full replacement.
+    if (facets === undefined) {
         return undefined
     }
 

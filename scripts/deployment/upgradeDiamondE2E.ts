@@ -263,6 +263,29 @@ export async function upgradeDiamondE2E(
     )
 
     const facetNames = facets || [...DEFAULT_FACETS]
+    const saveFacetAddresses = async (
+        deployed: { name: string; address: string }[]
+    ): Promise<void> => {
+        const fs = await import('fs')
+        const path = await import('path')
+        const filename = `facet-addresses-${hre.network.name}-${Date.now()}.json`
+        const filepath = path.join(process.cwd(), filename)
+        await fs.promises.writeFile(
+            filepath,
+            JSON.stringify(
+                {
+                    network: hre.network.name,
+                    diamond,
+                    curve,
+                    timestamp: result.timestamp,
+                    facets: deployed,
+                },
+                null,
+                2
+            )
+        )
+        console.log(`\n💾 Facet addresses saved to: ${filepath}`)
+    }
     let upgrade: DiamondUpgradeResult
     try {
         upgrade = await runDiamondUpgrade(hre, {
@@ -271,6 +294,11 @@ export async function upgradeDiamondE2E(
             dryRun,
             allowRemove,
             skipVerification,
+            // Saved as soon as the facets exist, so they can be reused with
+            // --facet-addresses even if a later step fails
+            onFacetsDeployed: saveAddresses
+                ? (deployed) => saveFacetAddresses(deployed)
+                : undefined,
         })
     } catch (error: unknown) {
         const msg = error instanceof Error ? error.message : String(error)
@@ -330,29 +358,6 @@ export async function upgradeDiamondE2E(
             errors.push(`Version check failed: ${msg}`)
             console.log(`   ⚠️  Version check failed: ${msg}`)
         }
-    }
-
-    // Save addresses if requested
-    if (saveAddresses && result.deployment) {
-        const fs = await import('fs')
-        const path = await import('path')
-        const filename = `facet-addresses-${hre.network.name}-${Date.now()}.json`
-        const filepath = path.join(process.cwd(), filename)
-        await fs.promises.writeFile(
-            filepath,
-            JSON.stringify(
-                {
-                    network: hre.network.name,
-                    diamond,
-                    curve,
-                    timestamp: result.timestamp,
-                    facets: result.deployment.facets.facets,
-                },
-                null,
-                2
-            )
-        )
-        console.log(`\n💾 Facet addresses saved to: ${filepath}`)
     }
 
     result.success = errors.length === 0

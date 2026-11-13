@@ -118,6 +118,13 @@ describe('Safe diamond upgrade', function () {
             expect(resolveFacetSelection(undefined)).to.equal(undefined)
         })
 
+        it('rejects --facets null instead of starting a full replacement', function () {
+            expect(() => resolveFacetSelection(null)).to.throw(
+                FacetSelectionError,
+                'JSON array'
+            )
+        })
+
         it('accepts known facet names', function () {
             expect(
                 resolveFacetSelection(['DidRegistryQueryFacet'])
@@ -645,6 +652,107 @@ describe('Safe diamond upgrade', function () {
             )
             expect(verification.ok).to.equal(false)
             expect(verification.problems[0]).to.contain(DID_OF)
+        })
+
+        describe('with a secp256r1 signature provider', function () {
+            /**
+             * Stand-in for the secp256r1 providers: the Hardhat network cannot
+             * verify r1 signatures, so raw transactions are relayed by a Hardhat
+             * account. The point is that the ethers signer flow is never used.
+             */
+            function r1Provider(
+                signer: Awaited<ReturnType<typeof ethers.getSigners>>[number]
+            ) {
+                const sent: { to?: unknown; data?: unknown }[] = []
+                const provider = {
+                    getCurveType: () => 'secp256r1' as const,
+                    getAddress: async () => signer.address,
+                    getSigner: async () => {
+                        throw new Error(
+                            'The ethers signer flow must not be used on secp256r1'
+                        )
+                    },
+                    deployContract: async (name: string) => {
+                        const contract = await (
+                            await ethers.getContractFactory(name, signer)
+                        ).deploy()
+                        return contract.getAddress()
+                    },
+                    sendTransaction: async (tx: {
+                        to?: string
+                        data?: string
+                        gasLimit?: bigint
+                    }) => {
+                        sent.push(tx)
+                        return signer.sendTransaction(tx)
+                    },
+                    waitForTransaction: async (hash: string) =>
+                        ethers.provider.getTransactionReceipt(hash),
+                }
+                return { provider, sent }
+            }
+
+            it('sends diamondCut and interfaceCut as raw transactions', async function () {
+                const { owner, diamond } = await loadFixture(
+                    deployGovernanceDiamondFixture
+                )
+                const { provider, sent } = r1Provider(owner)
+
+                const result = await quietly(() =>
+                    runDiamondUpgrade(hre, {
+                        diamond,
+                        facets: ['DidRegistryQueryFacet'],
+                        dryRun: false,
+                        allowRemove: false,
+                        skipVerification: false,
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        signatureProvider: provider as any,
+                    })
+                )
+
+                expect(result.verification?.ok).to.equal(true)
+                expect(
+                    sent.map((tx) => (tx.data as string).slice(0, 10))
+                ).to.deep.equal([
+                    '0x1f931c1c', // diamondCut
+                    '0xbc39e920', // interfaceCut
+                ])
+            })
+
+            it('keeps the deployed addresses when a later step fails', async function () {
+                const { other, diamond } = await loadFixture(
+                    deployGovernanceDiamondFixture
+                )
+                // `other` has no GOVERNANCE_MANAGER_ROLE: the simulation must fail
+                const { provider, sent } = r1Provider(other)
+                const saved: { name: string; address: string }[] = []
+                const before = await snapshot(diamond)
+
+                await expect(
+                    quietly(() =>
+                        runDiamondUpgrade(hre, {
+                            diamond,
+                            facets: ['DidRegistryQueryFacet'],
+                            dryRun: false,
+                            allowRemove: false,
+                            skipVerification: false,
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            signatureProvider: provider as any,
+                            onFacetsDeployed: (facets) => {
+                                saved.push(...facets)
+                            },
+                        })
+                    )
+                ).to.be.rejectedWith(
+                    'diamondCut would revert: AccountHasNoRole'
+                )
+
+                expect(saved.map((f) => f.name)).to.deep.equal([
+                    'DidRegistryQueryFacet',
+                ])
+                expect(sent).to.have.length(0)
+                expect(await snapshot(diamond)).to.deep.equal(before)
+            })
         })
 
         it('full replacement without --facets still installs every ISBE facet', async function () {

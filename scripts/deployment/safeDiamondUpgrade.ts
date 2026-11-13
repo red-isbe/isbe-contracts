@@ -877,6 +877,11 @@ export interface DiamondUpgradeOptions {
     allowRemove: boolean
     skipVerification: boolean
     signatureProvider?: ISignatureProvider
+    /**
+     * Called right after new facets are deployed, before any check or transaction
+     * that could fail, so the caller can keep their addresses (e.g. --save-addresses)
+     */
+    onFacetsDeployed?: (facets: FacetDeploymentResult[]) => Promise<void> | void
 }
 
 export interface DiamondUpgradeResult {
@@ -891,19 +896,112 @@ function isAddress(value: string): boolean {
     return /^0x[0-9a-fA-F]{40}$/.test(value)
 }
 
-async function sendAndWait(
-    send: () => Promise<ContractTransactionResponse>,
-    label: string
-): Promise<string> {
-    console.log(`📡 Sending ${label}...`)
-    const tx = await send()
-    // Same waiting strategy as the other diamond scripts (see getEvent)
-    const receipt = await tx.wait()
-    if (!receipt || receipt.status !== 1) {
-        throw new Error(`${label} transaction ${tx.hash} failed`)
+type CutMethod = 'diamondCut' | 'interfaceCut' | 'facetUpdates'
+
+interface DiamondCaller {
+    /** Runs the call with eth_call from the operator account; throws if it would revert */
+    simulate(method: CutMethod, args: unknown[]): Promise<void>
+    /** Sends the call and waits until it is mined; returns the transaction hash */
+    send(method: CutMethod, args: unknown[]): Promise<string>
+}
+
+function describeRevert(
+    iface: import('ethers').Interface,
+    error: unknown
+): string {
+    const data = (error as { data?: string })?.data
+    if (typeof data === 'string' && data.length >= 10) {
+        try {
+            const parsed = iface.parseError(data)
+            if (parsed) {
+                return `${parsed.name}(${parsed.args.map(String).join(', ')})`
+            }
+        } catch {
+            // Unknown error selector: fall back to the raw message
+        }
     }
-    console.log(`   ✅ ${label} mined: ${tx.hash}`)
-    return tx.hash
+    return error instanceof Error ? error.message : String(error)
+}
+
+/**
+ * Sends calls to the diamond's DiamondCut facet through the right path for the
+ * network curve. ethers' signer flow recovers signatures with secp256k1 math, so
+ * secp256r1 providers (local key or KMS) send raw transactions through
+ * `signatureProvider.sendTransaction`, as `deployFacet` already does for deployments.
+ */
+export async function createDiamondCaller(
+    hre: HardhatRuntimeEnvironment,
+    diamond: string,
+    signatureProvider: ISignatureProvider
+): Promise<DiamondCaller> {
+    const artifact = await hre.artifacts.readArtifact(
+        'DiamondCutAccessControlFacet'
+    )
+    const iface = new hre.ethers.Interface(artifact.abi)
+    const from = await signatureProvider.getAddress()
+
+    const simulate = async (
+        method: CutMethod,
+        args: unknown[]
+    ): Promise<void> => {
+        const data = iface.encodeFunctionData(method, args)
+        try {
+            await hre.ethers.provider.call({ from, to: diamond, data })
+        } catch (error: unknown) {
+            throw new Error(
+                `${method} would revert: ${describeRevert(iface, error)}. Nothing was sent.`
+            )
+        }
+    }
+
+    const send = async (
+        method: CutMethod,
+        args: unknown[]
+    ): Promise<string> => {
+        console.log(`📡 Sending ${method}...`)
+        let hash: string
+        let status: number | null | undefined
+
+        if (signatureProvider.getCurveType() === 'secp256r1') {
+            const data = iface.encodeFunctionData(method, args)
+            const estimate = await hre.ethers.provider.estimateGas({
+                from,
+                to: diamond,
+                data,
+            })
+            const tx = await signatureProvider.sendTransaction({
+                to: diamond,
+                data,
+                gasLimit: (estimate * 12n) / 10n,
+            })
+            hash = tx.hash
+            const receipt = await signatureProvider.waitForTransaction(hash)
+            status = receipt?.status
+        } else {
+            const signer = await signatureProvider.getSigner()
+            const cut = await hre.ethers.getContractAt(
+                'DiamondCutAccessControlFacet',
+                diamond,
+                signer
+            )
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const tx: ContractTransactionResponse = await (cut as any)[method](
+                ...args
+            )
+            hash = tx.hash
+            // Same waiting strategy as the other diamond scripts (see getEvent)
+            const receipt = await tx.wait()
+            status = receipt?.status
+        }
+
+        if (status !== 1) {
+            throw new Error(`${method} transaction ${hash} failed`)
+        }
+        console.log(`   ✅ ${method} mined: ${hash}`)
+        return hash
+    }
+
+    return { simulate, send }
 }
 
 /**
@@ -1054,6 +1152,9 @@ export async function runDiamondUpgrade(
             signatureProvider
         )
         deployed = result.facets
+        if (options.onFacetsDeployed) {
+            await options.onFacetsDeployed(deployed)
+        }
         finalCandidates = []
         for (let i = 0; i < names.length; i++) {
             const address = result.facetAddresses[i]
@@ -1079,12 +1180,7 @@ export async function runDiamondUpgrade(
     }
 
     // --- Simulate and send ---------------------------------------------
-    const signer = await signatureProvider.getSigner()
-    const cut = await hre.ethers.getContractAt(
-        'DiamondCutAccessControlFacet',
-        diamond,
-        signer
-    )
+    const caller = await createDiamondCaller(hre, diamond, signatureProvider)
     const zero = hre.ethers.ZeroAddress
     const transactionHashes: string[] = []
 
@@ -1092,26 +1188,20 @@ export async function runDiamondUpgrade(
         const { selectorCuts, interfaceCuts } = buildItemCuts(finalPlan)
         console.log('🧪 Simulating transactions...')
         if (selectorCuts.length > 0) {
-            await cut.diamondCut.staticCall(selectorCuts, zero, '0x')
+            await caller.simulate('diamondCut', [selectorCuts, zero, '0x'])
         }
         if (interfaceCuts.length > 0) {
-            await cut.interfaceCut.staticCall(interfaceCuts)
+            await caller.simulate('interfaceCut', [interfaceCuts])
         }
         if (selectorCuts.length > 0) {
             transactionHashes.push(
-                await sendAndWait(
-                    () => cut.diamondCut(selectorCuts, zero, '0x'),
-                    'diamondCut'
-                )
+                await caller.send('diamondCut', [selectorCuts, zero, '0x'])
             )
         }
         if (interfaceCuts.length > 0) {
             try {
                 transactionHashes.push(
-                    await sendAndWait(
-                        () => cut.interfaceCut(interfaceCuts),
-                        'interfaceCut'
-                    )
+                    await caller.send('interfaceCut', [interfaceCuts])
                 )
             } catch (error: unknown) {
                 const message =
@@ -1125,12 +1215,9 @@ export async function runDiamondUpgrade(
     } else {
         const addresses = finalCandidates.map((f) => f.address as string)
         console.log('🧪 Simulating facetUpdates...')
-        await cut.facetUpdates.staticCall(addresses, zero, '0x')
+        await caller.simulate('facetUpdates', [addresses, zero, '0x'])
         transactionHashes.push(
-            await sendAndWait(
-                () => cut.facetUpdates(addresses, zero, '0x'),
-                'facetUpdates'
-            )
+            await caller.send('facetUpdates', [addresses, zero, '0x'])
         )
     }
 
