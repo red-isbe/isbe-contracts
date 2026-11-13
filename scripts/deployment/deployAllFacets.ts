@@ -50,7 +50,6 @@ export const DEFAULT_FACETS = [
     'NetworkDirectoryFacet',
     'BesuNodeManagerFacet',
     'AnchoringCoreFacet',
-    'HashTimestampV2Facet',
 ] as const
 
 export type FacetName = (typeof DEFAULT_FACETS)[number]

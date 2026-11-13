@@ -126,9 +126,6 @@ export const FACET_RESOLVER_KEYS: Record<string, string> = {
         '0x32d893fe746ed6e72cf641731066f84e26611cdd03031f873957cb1a29071a5f',
     ERC165Facet:
         '0x0d211187337a25b55ba62c44fbaaff686007a4ff3d149631d418963345936a29',
-
-    HashTimestampV2Facet:
-        '0x798ec97da51506566f19dc4d3df52a19b9de52f59e46d12a45f964feb662bb8b',
 }
 
 /**
@@ -163,7 +160,6 @@ export const FACET_CODE_VERSIONS: Record<string, number> = {
     ERC3643ComplianceFacet: 1,
     OwnableFacet: 1,
     ERC165Facet: 1,
-    HashTimestampV2Facet: 1,
 }
 
 /**
