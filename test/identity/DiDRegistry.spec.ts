@@ -3068,20 +3068,12 @@ describe('DiDRegistry', function () {
             it.skip('GIVEN a K1 method with an invalid public key WHEN adding CapabilityInvocation THEN it fails', async () => {
                 const newVMethodId = randomDid()
                 const invalidPublicKey = '0x04' + '00'.repeat(64)
-                await didRegistry.addVerificationMethod(
-                    did,
-                    newVMethodId,
-                    invalidPublicKey,
-                    EllipticType.SECP_256_K1
-                )
-
                 await expect(
-                    didRegistry.addVerificationRelationship(
+                    didRegistry.addVerificationMethod(
                         did,
-                        CAPABILITY_INVOCATION_RELATIONSHIP,
                         newVMethodId,
-                        notBefore,
-                        notAfter
+                        invalidPublicKey,
+                        EllipticType.SECP_256_K1
                     )
                 ).to.be.reverted
             })
