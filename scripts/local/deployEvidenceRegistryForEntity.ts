@@ -14,18 +14,17 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 
 /**
- * LOCAL TEST NETWORKS ONLY (ISBECORE-285). Prepares the evidence registry (HashTimestamp
- * v2) on a network that was not deployed with deployAllClean:
- *   1. deploys the v2 business logic if missing or if the compiled facet changed,
+ * LOCAL TEST NETWORKS ONLY (ISBECORE-285). Prepares the evidence registry on a network that was not deployed with deployAllClean:
+ *   1. deploys the evidence registry business logic if missing or if the compiled facet changed,
  *   2. registers a configuration pinned to that explicit business logic version when the
  *      latest one is not (never 0 = "latest", which would follow future versions silently),
  *   3. deploys the use case proxy (or reuses the one already on that version),
- *   4. optionally grants HASH_TIMESTAMP_ROLE, in this v2 proxy, to the accounts in
- *      ROLE_ACCOUNTS: they register with timestampHashWithRoleV2 and need no DID. A role
- *      granted in the v1 proxy does not count here: roles are per proxy,
+ *   4. optionally grants HASH_TIMESTAMP_ROLE, in this evidence registry proxy, to the accounts in
+ *      ROLE_ACCOUNTS: they register with registerEvidenceWithRole and need no DID. A role
+ *      granted in the HashTimestamp (v1) proxy does not count here: roles are per proxy,
  *   5. optionally checks the gateway Service DID (active, controlled by ENTITY_DID) and
  *      funds its signing key so it can send transactions. The Service DID flow
- *      (timestampHashV2) needs no role: no onboarding of the entity DID is done.
+ *      (registerEvidence) needs no role: no onboarding of the entity DID is done.
  * The entity creates its DID and registers the gateway Service DID itself (did-gen + DID
  * API, or onboardEntityDid.ts locally). Refuses to run against an RPC that is not local.
  *
@@ -38,9 +37,9 @@ import { artifacts, ethers, network } from 'hardhat'
 import type { Contract } from 'ethers'
 
 const BUSINESS_ID =
-    '0x798ec97da51506566f19dc4d3df52a19b9de52f59e46d12a45f964feb662bb8b'
+    '0xb84a16ff9aa61d5a1a2bad20063e6d47a6aee28c520725df3ab67aeae341896e'
 const CONFIG_ID =
-    '0xe6b27c38d9af155e702d00c070c1cd2c981cce55d91a4464c16ecb4f98fe0187'
+    '0xcee7d53a561de6a5a6ff563b9b446fbd1d645a36626446642f77ce9c754656d4'
 const HASH_TIMESTAMP_ROLE =
     '0x3bb8341caefb6dc4800c130d6d6d2789f8c4e534bc168ff9a7eda2e2831a721f'
 const ROLES = {
@@ -107,9 +106,11 @@ async function main() {
             throw new Error(`Deployer lacks ${name}`)
     }
 
-    const { bytecode } = await ethers.getContractFactory('HashTimestampV2Facet')
+    const { bytecode } = await ethers.getContractFactory(
+        'EvidenceRegistryFacet'
+    )
     const { deployedBytecode } = await artifacts.readArtifact(
-        'HashTimestampV2Facet'
+        'EvidenceRegistryFacet'
     )
     const versions: string[] =
         await factory.getBusinessLogicVersions(BUSINESS_ID)
@@ -118,7 +119,7 @@ async function main() {
         latestLogic === undefined ||
         (await ethers.provider.getCode(latestLogic)) !== deployedBytecode
     ) {
-        console.log('Deploying HashTimestampV2Facet business logic...')
+        console.log('Deploying EvidenceRegistryFacet business logic...')
         await (await factory.deploy(BUSINESS_ID, bytecode)).wait()
     }
 
@@ -129,7 +130,7 @@ async function main() {
     const proxy = await ensureProxy(factory, version)
 
     const access = new ethers.Contract(proxy, PROXY_ABI, deployer)
-    // timestampHashWithRoleV2 only accepts the role granted to the address itself:
+    // registerEvidenceWithRole only accepts the role granted to the address itself:
     // hasRole would also report a role the address inherits from its DID.
     const holdsRoleDirectly = async (account: string): Promise<boolean> =>
         (
@@ -193,7 +194,7 @@ async function ensureConfiguration(
             return latest
     }
 
-    console.log('Registering the v2 configuration...')
+    console.log('Registering the evidence registry configuration...')
     const receipt = await (
         await factory.setConfiguration(CONFIG_ID, [
             { businessId: BUSINESS_ID, version: businessVersion },

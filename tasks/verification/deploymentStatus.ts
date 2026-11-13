@@ -599,8 +599,8 @@ async function analyzeBusinessLogicRegistry(
                 name: 'HashTimestampFacet',
             },
             {
-                key: '0x798ec97da51506566f19dc4d3df52a19b9de52f59e46d12a45f964feb662bb8b',
-                name: 'HashTimestampV2Facet',
+                key: '0xb84a16ff9aa61d5a1a2bad20063e6d47a6aee28c520725df3ab67aeae341896e',
+                name: 'EvidenceRegistryFacet',
             },
         ]
 

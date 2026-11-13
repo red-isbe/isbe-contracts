@@ -14,9 +14,10 @@ import { expect } from 'chai'
 import { DeploymentConfig } from '../tasks/deployment/config/DeploymentConfig'
 import { UTILITY_USE_CASE_CONFIGS } from '../tasks/deployment/constants/utility'
 
-describe('Deployment profiles (hash timestamp use cases)', () => {
+describe('Deployment profiles (hash timestamp and evidence registry use cases)', () => {
     const V1 = UTILITY_USE_CASE_CONFIGS.HASH_TIMESTAMP.description
-    const V2 = UTILITY_USE_CASE_CONFIGS.HASH_TIMESTAMP_V2.description
+    const EVIDENCE_REGISTRY =
+        UTILITY_USE_CASE_CONFIGS.EVIDENCE_REGISTRY.description
 
     function profile(name: string): string[] {
         return DeploymentConfig.load(name).useCases.map(
@@ -24,26 +25,26 @@ describe('Deployment profiles (hash timestamp use cases)', () => {
         )
     }
 
-    it('GIVEN the minimal profile WHEN loading it THEN neither hash timestamp version is deployed', () => {
+    it('GIVEN the minimal profile WHEN loading it THEN neither hash timestamp nor evidence registry is deployed', () => {
         const useCases = profile('minimal')
 
         expect(useCases).to.not.include(V1)
-        expect(useCases).to.not.include(V2)
+        expect(useCases).to.not.include(EVIDENCE_REGISTRY)
     })
 
-    it('GIVEN the essentials profile WHEN loading it THEN both hash timestamp versions are deployed', () => {
+    it('GIVEN the essentials profile WHEN loading it THEN both hash timestamp and evidence registry are deployed', () => {
         const useCases = profile('essentials')
 
         expect(useCases).to.include(V1)
-        expect(useCases).to.include(V2)
+        expect(useCases).to.include(EVIDENCE_REGISTRY)
     })
 
-    it('GIVEN the default configuration WHEN loading it THEN both hash timestamp versions are deployed', () => {
+    it('GIVEN the default configuration WHEN loading it THEN both hash timestamp and evidence registry are deployed', () => {
         const useCases = DeploymentConfig.getDefaultConfig().useCases.map(
             (useCase) => useCase.description
         )
 
         expect(useCases).to.include(V1)
-        expect(useCases).to.include(V2)
+        expect(useCases).to.include(EVIDENCE_REGISTRY)
     })
 })
