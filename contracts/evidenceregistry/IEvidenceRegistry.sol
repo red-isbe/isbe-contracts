@@ -15,13 +15,13 @@ limitations under the License.
 pragma solidity ^0.8.28;
 
 /**
- * @title IHashTimestampV2
+ * @title IEvidenceRegistry
  * @notice Evidence registry ("registro de evidencia", proof of existence). Every record
  *         belongs to exactly one identity, of one of two kinds that never mix:
  *         - an entity DID, when registered through one of its service DIDs
- *           (timestampHashV2), or
+ *           (registerEvidence), or
  *         - an account (EOA) holding HASH_TIMESTAMP_ROLE in this proxy, when registered
- *           with timestampHashWithRoleV2. The account needs no DID and the record is
+ *           with registerEvidenceWithRole. The account needs no DID and the record is
  *           attributed to the account itself, never to an organisation.
  * @dev Differences with the HashTimestamp template, per the functional specification:
  *      - Uniqueness per (hash, identity) instead of per hash, so several identities can
@@ -43,7 +43,7 @@ pragma solidity ^0.8.28;
  *      DID records and account records live in separate mappings and are read with
  *      separate functions, so an account is never reported as a DID nor vice versa.
  */
-interface IHashTimestampV2 {
+interface IEvidenceRegistry {
     /**
      * @notice Evidence record of one (hash, identity) pair, packed in two storage slots
      * @param signer Address that sent the registration: the service DID key (DID flow)
@@ -112,7 +112,7 @@ interface IHashTimestampV2 {
      * @return record The stored record (the existing one for a duplicate)
      * @return alreadyRegistered True when the pair was already registered
      */
-    function timestampHashV2(
+    function registerEvidence(
         bytes32 serviceDid,
         bytes32 hash,
         bytes32 parentHash
@@ -133,35 +133,35 @@ interface IHashTimestampV2 {
      * @return record The stored record (the existing one for a duplicate)
      * @return alreadyRegistered True when the pair was already registered
      */
-    function timestampHashWithRoleV2(
+    function registerEvidenceWithRole(
         bytes32 hash,
         bytes32 parentHash
     ) external returns (EvidenceRecord memory record, bool alreadyRegistered);
 
     /// @return exists_ True when the entity DID registered the hash
-    function existsV2(
+    function existsEvidence(
         bytes32 hash,
         bytes32 did
     ) external view returns (bool exists_);
 
     /// @return record The record of the (hash, DID) pair; blockNumber is zero when absent
-    function getTimestampV2(
+    function getEvidenceRecord(
         bytes32 hash,
         bytes32 did
     ) external view returns (EvidenceRecord memory record);
 
     /// @return count Number of entity DIDs that registered this hash (accounts excluded)
-    function getRecordsCountV2(
+    function getEvidenceRecordsCount(
         bytes32 hash
     ) external view returns (uint256 count);
 
     /**
      * @notice Records of a hash from any entity DID, in registration order (accounts
-     *         excluded: see getAccountRecordsV2)
+     *         excluded: see getAccountEvidenceRecords)
      * @param pageIndex Zero-based page
      * @param pageLength Records per page
      */
-    function getRecordsV2(
+    function getEvidenceRecords(
         bytes32 hash,
         uint256 pageIndex,
         uint256 pageLength
@@ -171,19 +171,19 @@ interface IHashTimestampV2 {
         returns (bytes32[] memory dids, EvidenceRecord[] memory records);
 
     /// @return exists_ True when the account registered the hash through its role
-    function existsByAccountV2(
+    function existsEvidenceByAccount(
         bytes32 hash,
         address account
     ) external view returns (bool exists_);
 
     /// @return record The record of the (hash, account) pair; blockNumber is zero when absent
-    function getTimestampByAccountV2(
+    function getEvidenceRecordByAccount(
         bytes32 hash,
         address account
     ) external view returns (EvidenceRecord memory record);
 
     /// @return count Number of accounts that registered this hash through their role
-    function getAccountRecordsCountV2(
+    function getAccountEvidenceRecordsCount(
         bytes32 hash
     ) external view returns (uint256 count);
 
@@ -192,7 +192,7 @@ interface IHashTimestampV2 {
      * @param pageIndex Zero-based page
      * @param pageLength Records per page
      */
-    function getAccountRecordsV2(
+    function getAccountEvidenceRecords(
         bytes32 hash,
         uint256 pageIndex,
         uint256 pageLength

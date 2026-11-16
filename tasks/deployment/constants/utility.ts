@@ -25,10 +25,10 @@ export const HASH_TIMESTAMP_CONFIGURATIONS = {
 }
 
 // Evidence registry attributed to entity DIDs (ISBECORE-285)
-export const HASH_TIMESTAMP_V2_CONFIGURATIONS = {
+export const EVIDENCE_REGISTRY_CONFIGURATIONS = {
     BASE: {
-        resolver_keys: [UTILITY_RESOLVER_KEYS.HASH_TIMESTAMP_V2],
-        id: CONFIGURATION_IDS.HASH_TIMESTAMP_V2,
+        resolver_keys: [UTILITY_RESOLVER_KEYS.EVIDENCE_REGISTRY],
+        id: CONFIGURATION_IDS.EVIDENCE_REGISTRY,
     },
 }
 
@@ -39,10 +39,10 @@ export const UTILITY_USE_CASE_CONFIGS = {
         'utility',
         'Hash Timestamp Service'
     ),
-    HASH_TIMESTAMP_V2: createTokenConfig(
-        HASH_TIMESTAMP_V2_CONFIGURATIONS.BASE,
+    EVIDENCE_REGISTRY: createTokenConfig(
+        EVIDENCE_REGISTRY_CONFIGURATIONS.BASE,
         'utility',
-        'Evidence Registry Service (Hash Timestamp v2)'
+        'Evidence Registry Service'
     ),
 }
 
@@ -85,10 +85,10 @@ export const UTILITY_DEFINITIONS = [
         artifactPath: ARTIFACT_PATHS.HASH_TIMESTAMP,
     },
     {
-        description: CONTRACT_NAMES.HASH_TIMESTAMP_V2,
-        key: UTILITY_RESOLVER_KEYS.HASH_TIMESTAMP_V2,
-        contractName: CONTRACT_NAMES.HASH_TIMESTAMP_V2,
-        artifactPath: ARTIFACT_PATHS.HASH_TIMESTAMP_V2,
+        description: CONTRACT_NAMES.EVIDENCE_REGISTRY,
+        key: UTILITY_RESOLVER_KEYS.EVIDENCE_REGISTRY,
+        contractName: CONTRACT_NAMES.EVIDENCE_REGISTRY,
+        artifactPath: ARTIFACT_PATHS.EVIDENCE_REGISTRY,
     },
     {
         description: CONTRACT_NAMES.OWNABLE,

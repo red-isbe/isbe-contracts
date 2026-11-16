@@ -24,9 +24,9 @@ export const CONFIGURATION_IDS = {
         '0x00000000000000000000000000000000000000004449445F5245474953545259',
     HASH_TIMESTAMP:
         '0x56209af0faa47cd136c87cbd8b739b3beb4ac51cbba6ec828e2ae8421365929e',
-    // keccak256('isbe.contracts.configuration.hash.timestamp.v2')
-    HASH_TIMESTAMP_V2:
-        '0xe6b27c38d9af155e702d00c070c1cd2c981cce55d91a4464c16ecb4f98fe0187',
+    // keccak256('isbe.contracts.configuration.evidence.registry')
+    EVIDENCE_REGISTRY:
+        '0xcee7d53a561de6a5a6ff563b9b446fbd1d645a36626446642f77ce9c754656d4',
     CLIENT_FILTERING:
         '0x0000000000000000000000000000000000436C69656E7446696C746572696E67',
     ENS_REGISTRY:
@@ -99,7 +99,7 @@ export const ARTIFACT_PATHS = {
 
     // Utility facets
     HASH_TIMESTAMP: 'contracts/hashtimestamp/HashTimestampFacet.sol',
-    HASH_TIMESTAMP_V2: 'contracts/hashtimestampv2/HashTimestampV2Facet.sol',
+    EVIDENCE_REGISTRY: 'contracts/evidenceregistry/EvidenceRegistryFacet.sol',
     OWNABLE: 'contracts/access/ownable/Ownable2StepFacet.sol',
 
     // DID Registry facets
@@ -171,7 +171,7 @@ export const CONTRACT_NAMES = {
 
     // Utility facets
     HASH_TIMESTAMP: 'HashTimestampFacet',
-    HASH_TIMESTAMP_V2: 'HashTimestampV2Facet',
+    EVIDENCE_REGISTRY: 'EvidenceRegistryFacet',
     OWNABLE: 'Ownable2StepFacet',
 
     // DID Registry facets

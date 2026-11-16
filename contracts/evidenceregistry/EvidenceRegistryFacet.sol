@@ -14,15 +14,15 @@ limitations under the License.
 ----------------------------------------------------------------------------------- */
 pragma solidity ^0.8.28;
 
-import {_HASH_TIMESTAMP_V2_RESOLVER_KEY} from '../constants/resolverKeys.sol';
-import {HashTimestampV2} from './HashTimestampV2.sol';
+import {_EVIDENCE_REGISTRY_RESOLVER_KEY} from '../constants/resolverKeys.sol';
+import {EvidenceRegistry} from './EvidenceRegistry.sol';
 import {
     IEIP2535Introspection
 } from '../proxies/eip2535/interfaces/IEIP2535Introspection.sol';
 
-/// @title HashTimestampV2Facet
+/// @title EvidenceRegistryFacet
 /// @notice Evidence registry facet attributed to entity DIDs or authorised accounts
-contract HashTimestampV2Facet is HashTimestampV2, IEIP2535Introspection {
+contract EvidenceRegistryFacet is EvidenceRegistry, IEIP2535Introspection {
     function interfacesIntrospection()
         external
         pure
@@ -37,7 +37,7 @@ contract HashTimestampV2Facet is HashTimestampV2, IEIP2535Introspection {
         override
         returns (bytes32 businessId_)
     {
-        businessId_ = _HASH_TIMESTAMP_V2_RESOLVER_KEY;
+        businessId_ = _EVIDENCE_REGISTRY_RESOLVER_KEY;
     }
 
     function selectorsIntrospection()
@@ -48,15 +48,19 @@ contract HashTimestampV2Facet is HashTimestampV2, IEIP2535Introspection {
     {
         uint256 selectorsLength = 10;
         selectors_ = new bytes4[](selectorsLength);
-        selectors_[--selectorsLength] = this.timestampHashV2.selector;
-        selectors_[--selectorsLength] = this.timestampHashWithRoleV2.selector;
-        selectors_[--selectorsLength] = this.existsByAccountV2.selector;
-        selectors_[--selectorsLength] = this.getTimestampByAccountV2.selector;
-        selectors_[--selectorsLength] = this.getAccountRecordsCountV2.selector;
-        selectors_[--selectorsLength] = this.getAccountRecordsV2.selector;
-        selectors_[--selectorsLength] = this.existsV2.selector;
-        selectors_[--selectorsLength] = this.getTimestampV2.selector;
-        selectors_[--selectorsLength] = this.getRecordsCountV2.selector;
-        selectors_[--selectorsLength] = this.getRecordsV2.selector;
+        selectors_[--selectorsLength] = this.registerEvidence.selector;
+        selectors_[--selectorsLength] = this.registerEvidenceWithRole.selector;
+        selectors_[--selectorsLength] = this.existsEvidenceByAccount.selector;
+        selectors_[--selectorsLength] = this
+            .getEvidenceRecordByAccount
+            .selector;
+        selectors_[--selectorsLength] = this
+            .getAccountEvidenceRecordsCount
+            .selector;
+        selectors_[--selectorsLength] = this.getAccountEvidenceRecords.selector;
+        selectors_[--selectorsLength] = this.existsEvidence.selector;
+        selectors_[--selectorsLength] = this.getEvidenceRecord.selector;
+        selectors_[--selectorsLength] = this.getEvidenceRecordsCount.selector;
+        selectors_[--selectorsLength] = this.getEvidenceRecords.selector;
     }
 }

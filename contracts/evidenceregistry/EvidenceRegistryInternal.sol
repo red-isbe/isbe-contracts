@@ -15,10 +15,10 @@ limitations under the License.
 pragma solidity ^0.8.28;
 
 import {
-    _HASH_TIMESTAMP_V2_STORAGE_POSITION
+    _EVIDENCE_REGISTRY_STORAGE_POSITION
 } from '../constants/storagePositions.sol';
 import {_HASH_TIMESTAMP_ROLE} from '../constants/roles.sol';
-import {IHashTimestampV2} from './IHashTimestampV2.sol';
+import {IEvidenceRegistry} from './IEvidenceRegistry.sol';
 import {IAccessControlEoa} from '../access/accessControl/IAccessControlEoa.sol';
 import {
     IServiceDidRegistry
@@ -27,16 +27,16 @@ import {
     ServiceDidRegistryInternal
 } from '../identity/servicedidregistry/ServiceDidRegistryInternal.sol';
 
-abstract contract HashTimestampV2Internal is ServiceDidRegistryInternal {
+abstract contract EvidenceRegistryInternal is ServiceDidRegistryInternal {
     /**
      * @dev DID records and account records are kept in separate mappings, so the two
      *      identity kinds share no key space and cannot collide. The account fields are
      *      appended after the original ones, keeping the existing layout.
      */
-    struct HashTimestampV2Storage {
-        mapping(bytes32 hash => mapping(bytes32 did => IHashTimestampV2.EvidenceRecord)) records;
+    struct EvidenceRegistryStorage {
+        mapping(bytes32 hash => mapping(bytes32 did => IEvidenceRegistry.EvidenceRecord)) records;
         mapping(bytes32 hash => bytes32[] dids) didsByHash;
-        mapping(bytes32 hash => mapping(address account => IHashTimestampV2.EvidenceRecord)) accountRecords;
+        mapping(bytes32 hash => mapping(address account => IEvidenceRegistry.EvidenceRecord)) accountRecords;
         mapping(bytes32 hash => address[] accounts) accountsByHash;
     }
 
@@ -44,7 +44,7 @@ abstract contract HashTimestampV2Internal is ServiceDidRegistryInternal {
      * @dev Authorization runs before the duplicate check, so only an authorized signer of
      *      the entity learns through a transaction that the pair already exists.
      */
-    function _timestampHash(
+    function _registerEvidence(
         bytes32 _serviceDid,
         bytes32 _hash,
         bytes32 _parentHash
@@ -52,26 +52,26 @@ abstract contract HashTimestampV2Internal is ServiceDidRegistryInternal {
         internal
         returns (
             bytes32 did_,
-            IHashTimestampV2.EvidenceRecord memory record_,
+            IEvidenceRegistry.EvidenceRecord memory record_,
             bool alreadyRegistered_
         )
     {
         address signer = _msgSender();
         did_ = _entityDidOf(_serviceDid, signer);
 
-        HashTimestampV2Storage storage $ = _hashTimestampV2Storage();
-        IHashTimestampV2.EvidenceRecord storage slot = $.records[_hash][did_];
+        EvidenceRegistryStorage storage $ = _evidenceRegistryStorage();
+        IEvidenceRegistry.EvidenceRecord storage slot = $.records[_hash][did_];
         if (_isRegistered(slot)) return (did_, slot, true);
         require(
             !_isNotEmptyBytes32(_parentHash) ||
                 _isRegistered($.records[_parentHash][did_]),
-            IHashTimestampV2.ParentNotRegistered(_parentHash, did_)
+            IEvidenceRegistry.ParentNotRegistered(_parentHash, did_)
         );
 
         record_ = _storeRecord(slot, signer, _parentHash);
         $.didsByHash[_hash].push(did_);
 
-        emit IHashTimestampV2.EvidenceRegistered(
+        emit IEvidenceRegistry.EvidenceRegistered(
             _hash,
             did_,
             signer,
@@ -88,13 +88,13 @@ abstract contract HashTimestampV2Internal is ServiceDidRegistryInternal {
      *      from a DID the address resolves to does not authorise it. Entities use the
      *      service DID flow instead.
      */
-    function _timestampHashWithRole(
+    function _registerEvidenceWithRole(
         bytes32 _hash,
         bytes32 _parentHash
     )
         internal
         returns (
-            IHashTimestampV2.EvidenceRecord memory record_,
+            IEvidenceRegistry.EvidenceRecord memory record_,
             bool alreadyRegistered_
         )
     {
@@ -104,21 +104,21 @@ abstract contract HashTimestampV2Internal is ServiceDidRegistryInternal {
             IAccessControlEoa.AccountHasNoRole(account, _HASH_TIMESTAMP_ROLE)
         );
 
-        HashTimestampV2Storage storage $ = _hashTimestampV2Storage();
-        IHashTimestampV2.EvidenceRecord storage slot = $.accountRecords[_hash][
+        EvidenceRegistryStorage storage $ = _evidenceRegistryStorage();
+        IEvidenceRegistry.EvidenceRecord storage slot = $.accountRecords[_hash][
             account
         ];
         if (_isRegistered(slot)) return (slot, true);
         require(
             !_isNotEmptyBytes32(_parentHash) ||
                 _isRegistered($.accountRecords[_parentHash][account]),
-            IHashTimestampV2.ParentNotRegisteredByAccount(_parentHash, account)
+            IEvidenceRegistry.ParentNotRegisteredByAccount(_parentHash, account)
         );
 
         record_ = _storeRecord(slot, account, _parentHash);
         $.accountsByHash[_hash].push(account);
 
-        emit IHashTimestampV2.EvidenceRegisteredByAccount(
+        emit IEvidenceRegistry.EvidenceRegisteredByAccount(
             _hash,
             account,
             _parentHash,
@@ -127,45 +127,50 @@ abstract contract HashTimestampV2Internal is ServiceDidRegistryInternal {
         );
     }
 
-    function _exists(bytes32 _hash, bytes32 _did) internal view returns (bool) {
-        return _isRegistered(_hashTimestampV2Storage().records[_hash][_did]);
+    function _existsEvidence(
+        bytes32 _hash,
+        bytes32 _did
+    ) internal view returns (bool) {
+        return _isRegistered(_evidenceRegistryStorage().records[_hash][_did]);
     }
 
-    function _existsByAccount(
+    function _existsEvidenceByAccount(
         bytes32 _hash,
         address _account
     ) internal view returns (bool) {
         return
             _isRegistered(
-                _hashTimestampV2Storage().accountRecords[_hash][_account]
+                _evidenceRegistryStorage().accountRecords[_hash][_account]
             );
     }
 
-    function _getTimestamp(
+    function _getEvidenceRecord(
         bytes32 _hash,
         bytes32 _did
-    ) internal view returns (IHashTimestampV2.EvidenceRecord memory) {
-        return _hashTimestampV2Storage().records[_hash][_did];
+    ) internal view returns (IEvidenceRegistry.EvidenceRecord memory) {
+        return _evidenceRegistryStorage().records[_hash][_did];
     }
 
-    function _getTimestampByAccount(
+    function _getEvidenceRecordByAccount(
         bytes32 _hash,
         address _account
-    ) internal view returns (IHashTimestampV2.EvidenceRecord memory) {
-        return _hashTimestampV2Storage().accountRecords[_hash][_account];
+    ) internal view returns (IEvidenceRegistry.EvidenceRecord memory) {
+        return _evidenceRegistryStorage().accountRecords[_hash][_account];
     }
 
-    function _getRecordsCount(bytes32 _hash) internal view returns (uint256) {
-        return _hashTimestampV2Storage().didsByHash[_hash].length;
-    }
-
-    function _getAccountRecordsCount(
+    function _getEvidenceRecordsCount(
         bytes32 _hash
     ) internal view returns (uint256) {
-        return _hashTimestampV2Storage().accountsByHash[_hash].length;
+        return _evidenceRegistryStorage().didsByHash[_hash].length;
     }
 
-    function _getRecords(
+    function _getAccountEvidenceRecordsCount(
+        bytes32 _hash
+    ) internal view returns (uint256) {
+        return _evidenceRegistryStorage().accountsByHash[_hash].length;
+    }
+
+    function _getEvidenceRecords(
         bytes32 _hash,
         uint256 _pageIndex,
         uint256 _pageLength
@@ -174,10 +179,10 @@ abstract contract HashTimestampV2Internal is ServiceDidRegistryInternal {
         view
         returns (
             bytes32[] memory dids_,
-            IHashTimestampV2.EvidenceRecord[] memory records_
+            IEvidenceRegistry.EvidenceRecord[] memory records_
         )
     {
-        HashTimestampV2Storage storage $ = _hashTimestampV2Storage();
+        EvidenceRegistryStorage storage $ = _evidenceRegistryStorage();
         bytes32[] storage all = $.didsByHash[_hash];
         (uint256 start, uint256 size) = _page(
             all.length,
@@ -186,7 +191,7 @@ abstract contract HashTimestampV2Internal is ServiceDidRegistryInternal {
         );
 
         dids_ = new bytes32[](size);
-        records_ = new IHashTimestampV2.EvidenceRecord[](size);
+        records_ = new IEvidenceRegistry.EvidenceRecord[](size);
         for (uint256 index; index < size; ) {
             bytes32 did = all[start + index];
             dids_[index] = did;
@@ -197,7 +202,7 @@ abstract contract HashTimestampV2Internal is ServiceDidRegistryInternal {
         }
     }
 
-    function _getAccountRecords(
+    function _getAccountEvidenceRecords(
         bytes32 _hash,
         uint256 _pageIndex,
         uint256 _pageLength
@@ -206,10 +211,10 @@ abstract contract HashTimestampV2Internal is ServiceDidRegistryInternal {
         view
         returns (
             address[] memory accounts_,
-            IHashTimestampV2.EvidenceRecord[] memory records_
+            IEvidenceRegistry.EvidenceRecord[] memory records_
         )
     {
-        HashTimestampV2Storage storage $ = _hashTimestampV2Storage();
+        EvidenceRegistryStorage storage $ = _evidenceRegistryStorage();
         address[] storage all = $.accountsByHash[_hash];
         (uint256 start, uint256 size) = _page(
             all.length,
@@ -218,7 +223,7 @@ abstract contract HashTimestampV2Internal is ServiceDidRegistryInternal {
         );
 
         accounts_ = new address[](size);
-        records_ = new IHashTimestampV2.EvidenceRecord[](size);
+        records_ = new IEvidenceRegistry.EvidenceRecord[](size);
         for (uint256 index; index < size; ) {
             address account = all[start + index];
             accounts_[index] = account;
@@ -264,19 +269,19 @@ abstract contract HashTimestampV2Internal is ServiceDidRegistryInternal {
             );
             require(
                 serviceDidRegistry.isServiceDidActive(_serviceDid),
-                IHashTimestampV2.ServiceDidNotActive(_serviceDid)
+                IEvidenceRegistry.ServiceDidNotActive(_serviceDid)
             );
             record = serviceDidRegistry.getServiceDid(_serviceDid);
         } else {
             require(
                 _isActiveServiceDid(_serviceDid),
-                IHashTimestampV2.ServiceDidNotActive(_serviceDid)
+                IEvidenceRegistry.ServiceDidNotActive(_serviceDid)
             );
             record = _getServiceDid(_serviceDid);
         }
         require(
             _signingKeyAddress(record.pubKeyX, record.pubKeyY) == _signer,
-            IHashTimestampV2.SignerNotServiceKey(_serviceDid, _signer)
+            IEvidenceRegistry.SignerNotServiceKey(_serviceDid, _signer)
         );
         did_ = record.controllerDid;
         require(
@@ -286,16 +291,16 @@ abstract contract HashTimestampV2Internal is ServiceDidRegistryInternal {
                         .serviceDidOf(_signer)
                 )
                 : _isOrganisationOperative(did_),
-            IHashTimestampV2.OrganisationNotOperative(did_)
+            IEvidenceRegistry.OrganisationNotOperative(did_)
         );
     }
 
-    function _hashTimestampV2Storage()
+    function _evidenceRegistryStorage()
         internal
         pure
-        returns (HashTimestampV2Storage storage storage_)
+        returns (EvidenceRegistryStorage storage storage_)
     {
-        bytes32 position = _HASH_TIMESTAMP_V2_STORAGE_POSITION;
+        bytes32 position = _EVIDENCE_REGISTRY_STORAGE_POSITION;
         // slither-disable-start assembly
         // solhint-disable-next-line no-inline-assembly
         assembly {
@@ -306,11 +311,11 @@ abstract contract HashTimestampV2Internal is ServiceDidRegistryInternal {
 
     /// @dev Shared by both flows: the record content never depends on the identity kind.
     function _storeRecord(
-        IHashTimestampV2.EvidenceRecord storage _slot,
+        IEvidenceRegistry.EvidenceRecord storage _slot,
         address _signer,
         bytes32 _parentHash
-    ) private returns (IHashTimestampV2.EvidenceRecord memory record_) {
-        record_ = IHashTimestampV2.EvidenceRecord({
+    ) private returns (IEvidenceRegistry.EvidenceRecord memory record_) {
+        record_ = IEvidenceRegistry.EvidenceRecord({
             signer: _signer,
             blockNumber: uint48(block.number),
             timestamp: uint48(_blockTimestamp()),
@@ -323,7 +328,7 @@ abstract contract HashTimestampV2Internal is ServiceDidRegistryInternal {
     }
 
     function _isRegistered(
-        IHashTimestampV2.EvidenceRecord storage _record
+        IEvidenceRegistry.EvidenceRecord storage _record
     ) private view returns (bool) {
         return _record.blockNumber != 0;
     }
