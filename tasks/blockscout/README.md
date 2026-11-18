@@ -16,7 +16,7 @@ La tarea es offline: no compila, no usa RPC, ni AWS KMS, ni la API de Blockscout
 | -------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `--contract`   | Sí          | Fully Qualified Name (`path/Contract.sol:Contract`, recomendado) o nombre de contrato si es único.                                                                             |
 | `--build-info` | No          | Compilación concreta a usar en lugar de la del artefacto actual: ruta a un archivo, `<id>` o `<id>.json` dentro de `artifacts/build-info`. Útil para compilaciones históricas. |
-| `--output`     | No          | Archivo de salida. Por defecto: `artifacts/verify/<Contract>.<buildInfoId>.standard-input.json`.                                                                               |
+| `--output`     | No          | Archivo de salida, fuera de `artifacts/`. Por defecto: `verify/<Contract>.<buildInfoId>.standard-input.json` en la raíz del proyecto.                                          |
 
 ### Cómo elige la compilación
 
@@ -38,6 +38,16 @@ Muestra el contrato, el `build-info` elegido, la versión real de `solc`, los
 ajustes del compilador (optimizer, `evmVersion`, `viaIR`, `metadata`,
 `libraries`, `remappings`) y la ruta del archivo generado.
 
+### Dónde se escribe el archivo
+
+La salida va a `verify/` en la raíz del proyecto (ignorado por git), **nunca**
+dentro de `artifacts/`. Hardhat trata cualquier `.json` de `artifacts/` como un
+artefacto de contrato: rompe las tareas que listan artefactos (por ejemplo
+`facets:report`) y lo borra en el siguiente `compile`, `test` o `run`. Por eso
+la tarea rechaza un `--output` dentro de `artifacts/`, también con rutas
+relativas como `verify/../artifacts/x.json` o a través de symlinks. Los
+archivos de `verify/` sobreviven a `compile` y a `npx hardhat clean`.
+
 ## Ejemplos
 
 ### `EvidenceRegistryFacet`
@@ -58,7 +68,7 @@ Optimizer:       {"enabled":true,"runs":1000}
 EVM version:     istanbul
 viaIR:           false
 ...
-✅ Written: .../artifacts/verify/EvidenceRegistryFacet.846e142bfe28d573a80973e823b80aa4.standard-input.json (1.66 MB)
+✅ Written: .../verify/EvidenceRegistryFacet.846e142bfe28d573a80973e823b80aa4.standard-input.json (1.66 MB)
 ```
 
 Es exactamente el `jq '.input'` del `build-info` con el que se verificó
@@ -69,7 +79,7 @@ Es exactamente el `jq '.input'` del `build-info` con el que se verificó
 ```bash
 npx hardhat blockscout:generate \
   --contract contracts/proxies/isbeproxy/IsbeProxy.sol:IsbeProxy \
-  --output artifacts/verify/IsbeProxy.json
+  --output verify/IsbeProxy.json
 ```
 
 ### Diamonds
@@ -145,7 +155,7 @@ Optimizer, `evmVersion`, etc. van dentro del JSON; no hay que copiarlos a mano.
 | Reconstruía el JSON: `compiler` y versión fijos, solo `optimizer`/`evmVersion`.                                    | Exporta `buildInfo.input` íntegro (incluye `outputSelection`, `metadata`, `remappings`, …).        |
 | Añadía `compilationTarget` con contratos de `find contracts`, aunque no estuvieran compilados en ese `build-info`. | No añade `compilationTarget`; valida que el contrato está en la compilación.                       |
 | Ejecutaba `find`/`grep` con `execSync`.                                                                            | Solo lee archivos de `artifacts/`.                                                                 |
-| Salida fija `artifacts/verify/ALL-FACETS-unified.json`.                                                            | `artifacts/verify/<Contract>.<buildInfoId>.standard-input.json` o `--output`.                      |
+| Salida fija `artifacts/verify/ALL-FACETS-unified.json`, dentro de `artifacts/`.                                    | `verify/<Contract>.<buildInfoId>.standard-input.json` (fuera de `artifacts/`) o `--output`.        |
 | No detectaba interfaces/abstractos ni nombres ambiguos.                                                            | Error claro en contratos abstractos, nombres ambiguos, artefactos ausentes y build-info inválidos. |
 
 `ALL-FACETS-unified.json` ya no se genera. Los scripts que lo esperen deben

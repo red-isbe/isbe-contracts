@@ -36,12 +36,17 @@ export interface GenerateStandardInputOptions {
     contract: string
     /** Optional build-info: file path, `<id>` or `<id>.json` under `<artifacts>/build-info` */
     buildInfo?: string
-    /** Optional output path. Default: `<artifacts>/verify/<Contract>.<buildId>.standard-input.json` */
+    /**
+     * Optional output path. Default: `<root>/verify/<Contract>.<buildId>.standard-input.json`.
+     * Must be outside the artifacts directory.
+     */
     output?: string
     /** Hardhat artifacts manager (`hre.artifacts`) */
     artifacts: Artifacts
     /** Hardhat artifacts directory (`hre.config.paths.artifacts`) */
     artifactsDir: string
+    /** Project root (`hre.config.paths.root`), base of the default output directory */
+    root: string
 }
 
 export interface CompilerSettingsSummary {
@@ -301,16 +306,70 @@ export function summarizeSettings(
     }
 }
 
+/** Default output directory, relative to the project root. */
+export const DEFAULT_OUTPUT_DIR = 'verify'
+
 export function defaultOutputPath(
-    artifactsDir: string,
+    root: string,
     contractName: string,
     buildInfoId: string
 ): string {
     return path.join(
-        artifactsDir,
-        'verify',
+        root,
+        DEFAULT_OUTPUT_DIR,
         `${contractName}.${buildInfoId}.standard-input.json`
     )
+}
+
+/**
+ * Absolute, normalized path with symlinks (and, on case-insensitive file
+ * systems, letter case) resolved for the deepest part that already exists.
+ */
+function canonicalPath(p: string): string {
+    let existing = path.resolve(p)
+    const rest: string[] = []
+    while (!fs.existsSync(existing)) {
+        const parent = path.dirname(existing)
+        if (parent === existing) break
+        rest.unshift(path.basename(existing))
+        existing = parent
+    }
+    let real = existing
+    try {
+        real = fs.realpathSync.native(existing)
+    } catch {
+        // keep the resolved path
+    }
+    return path.join(real, ...rest)
+}
+
+/** `true` if `target` is `dir` itself or anything below it. */
+export function isInsideDirectory(target: string, dir: string): boolean {
+    const rel = path.relative(canonicalPath(dir), canonicalPath(target))
+    return (
+        rel === '' ||
+        (rel !== '..' &&
+            !rel.startsWith(`..${path.sep}`) &&
+            !path.isAbsolute(rel))
+    )
+}
+
+/**
+ * Hardhat treats every `.json` under the artifacts directory as a contract
+ * artifact (breaking tasks that list artifacts) and deletes unknown ones on
+ * the next compile, so the verification JSON must live elsewhere.
+ */
+export function assertOutputOutsideArtifacts(
+    outputPath: string,
+    artifactsDir: string
+): void {
+    if (isInsideDirectory(outputPath, artifactsDir)) {
+        throw new BlockscoutGenerateError(
+            `Output ${path.resolve(outputPath)} is inside the Hardhat artifacts directory (${path.resolve(artifactsDir)}). ` +
+                'Hardhat would treat it as a contract artifact and delete it on the next compile. ' +
+                `Use a path outside it, e.g. ${DEFAULT_OUTPUT_DIR}/<file>.json.`
+        )
+    }
 }
 
 /** Serializes `input` exactly as it is (no reordering, no extra fields). */
@@ -322,6 +381,9 @@ export async function generateStandardInput(
     opts: GenerateStandardInputOptions
 ): Promise<GenerateStandardInputResult> {
     const { artifacts, artifactsDir } = opts
+    if (opts.output !== undefined) {
+        assertOutputOutsideArtifacts(opts.output, artifactsDir)
+    }
     const warnings: string[] = []
     let buildInfo: BuildInfo
     let buildInfoPath: string
@@ -399,9 +461,9 @@ export async function generateStandardInput(
 
     const { sourceName, contractName } = splitFullyQualifiedName(fqn)
     const outputPath = path.resolve(
-        opts.output ??
-            defaultOutputPath(artifactsDir, contractName, buildInfo.id)
+        opts.output ?? defaultOutputPath(opts.root, contractName, buildInfo.id)
     )
+    assertOutputOutsideArtifacts(outputPath, artifactsDir)
     const serialized = serializeStandardInput(buildInfo)
     fs.mkdirSync(path.dirname(outputPath), { recursive: true })
     fs.writeFileSync(outputPath, serialized)

@@ -138,6 +138,9 @@ node_modules
 /cache
 /artifacts
 
+# Blockscout verification JSON (npx hardhat blockscout:generate)
+/verify/
+
 # TypeChain files
 /typechain
 /typechain-types

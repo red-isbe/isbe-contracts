@@ -41,7 +41,7 @@ task(
     )
     .addOptionalParam(
         'output',
-        'Output file (default: artifacts/verify/<Contract>.<buildInfoId>.standard-input.json)'
+        'Output file, outside the artifacts directory (default: verify/<Contract>.<buildInfoId>.standard-input.json)'
     )
     .setAction(async (taskArgs, hre) => {
         const { contract, buildInfo, output } = taskArgs as {
@@ -56,6 +56,7 @@ task(
                 output,
                 artifacts: hre.artifacts,
                 artifactsDir: hre.config.paths.artifacts,
+                root: hre.config.paths.root,
             })
 
             console.log('=== Blockscout: Solidity Standard JSON Input ===\n')

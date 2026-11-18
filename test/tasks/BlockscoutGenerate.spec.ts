@@ -135,6 +135,7 @@ class Fixture {
         return {
             artifacts: new Artifacts(this.artifactsDir),
             artifactsDir: this.artifactsDir,
+            root: this.root,
             output: path.join(this.root, 'out', 'standard-input.json'),
             ...extra,
         }
@@ -281,18 +282,122 @@ describe('blockscout:generate (Standard JSON Input export)', function () {
             ).to.deep.equal(fx.buildInfos[ID_MAIN].input)
         })
 
-        it('defaults the output to artifacts/verify/<Contract>.<buildId>.standard-input.json', async function () {
+        it('defaults the output to <root>/verify/<Contract>.<buildId>.standard-input.json', async function () {
             const r = await generateStandardInput(
                 fx.opts({ contract: 'Bar', output: undefined })
             )
             expect(r.outputPath).to.equal(
                 path.resolve(
-                    fx.artifactsDir,
+                    fx.root,
                     'verify',
                     `Bar.${ID_MAIN}.standard-input.json`
                 )
             )
             expect(fs.existsSync(r.outputPath)).to.equal(true)
+            expect(
+                fs.existsSync(path.join(fx.artifactsDir, 'verify'))
+            ).to.equal(false)
+        })
+    })
+
+    describe('output location (outside the artifacts directory)', function () {
+        const insideArtifacts = (fx: Fixture) => [
+            path.join(fx.artifactsDir, 'verify', 'x.json'),
+            path.join(fx.artifactsDir, 'x.json'),
+            fx.artifactsDir,
+            // Not normalized: resolves into artifacts/
+            `${fx.root}${path.sep}verify${path.sep}..${path.sep}artifacts${path.sep}verify${path.sep}x.json`,
+            `${fx.artifactsDir}${path.sep}.${path.sep}build-info${path.sep}..${path.sep}x.json`,
+            // Relative to the current working directory
+            path.relative(
+                process.cwd(),
+                path.join(fx.artifactsDir, 'verify', 'x.json')
+            ),
+        ]
+
+        it('rejects --output inside the artifacts directory, including non-normalized and relative paths', async function () {
+            for (const output of insideArtifacts(fx)) {
+                await expectGenerateError(
+                    generateStandardInput(fx.opts({ contract: 'Bar', output })),
+                    /inside the Hardhat artifacts directory/
+                )
+            }
+            expect(
+                fs.existsSync(path.join(fx.artifactsDir, 'verify'))
+            ).to.equal(false)
+            expect(
+                fs.existsSync(path.join(fx.artifactsDir, 'x.json'))
+            ).to.equal(false)
+        })
+
+        it('rejects --output that reaches the artifacts directory through a symlink', async function () {
+            const link = path.join(fx.root, 'link-to-artifacts')
+            fs.symlinkSync(fx.artifactsDir, link, 'dir')
+            await expectGenerateError(
+                generateStandardInput(
+                    fx.opts({
+                        contract: 'Bar',
+                        output: path.join(link, 'x.json'),
+                    })
+                ),
+                /inside the Hardhat artifacts directory/
+            )
+        })
+
+        it('accepts --output next to the artifacts directory with a similar name', async function () {
+            const out = path.join(fx.root, 'artifacts-verify', 'x.json')
+            const r = await generateStandardInput(
+                fx.opts({ contract: 'Bar', output: out })
+            )
+            expect(r.outputPath).to.equal(out)
+            expect(fs.existsSync(out)).to.equal(true)
+        })
+
+        it('generated JSON is not discovered as a Hardhat contract artifact', async function () {
+            const before = await new Artifacts(
+                fx.artifactsDir
+            ).getAllFullyQualifiedNames()
+            await generateStandardInput(
+                fx.opts({ contract: 'Bar', output: undefined })
+            )
+            await generateStandardInput(
+                fx.opts({ contract: 'Zed', output: undefined })
+            )
+            const after = await new Artifacts(
+                fx.artifactsDir
+            ).getAllFullyQualifiedNames()
+            expect(after.sort()).to.deep.equal(before.sort())
+            expect(after.some((n) => n.includes('standard-input'))).to.equal(
+                false
+            )
+        })
+
+        it('generated JSON survives the obsolete-artifact cleanup run by every compile', async function () {
+            const r = await generateStandardInput(
+                fx.opts({ contract: 'Bar', output: undefined })
+            )
+            // Control: an unknown .json inside artifacts/ is what compile deletes
+            const strayInside = path.join(
+                fx.artifactsDir,
+                'verify',
+                'stray.json'
+            )
+            fs.mkdirSync(path.dirname(strayInside), { recursive: true })
+            fs.writeFileSync(strayInside, '{}')
+
+            const artifacts = new Artifacts(fx.artifactsDir)
+            artifacts.addValidArtifacts(
+                [FOO, BAR, BASE, LAST, DUP_A, DUP_B].map((c) => ({
+                    sourceName: c.source,
+                    artifacts: [c.name],
+                }))
+            )
+            await artifacts.removeObsoleteArtifacts()
+
+            expect(fs.existsSync(strayInside)).to.equal(false)
+            expect(fs.readFileSync(r.outputPath, 'utf-8')).to.equal(
+                JSON.stringify(fx.buildInfos[ID_MAIN].input)
+            )
         })
     })
 
@@ -466,6 +571,41 @@ describe('blockscout:generate (Standard JSON Input export)', function () {
             })
             const buildInfo = await hre.artifacts.getBuildInfo(FQN)
             expect(r.buildInfoId).to.equal(buildInfo!.id)
+            expect(fs.readFileSync(out, 'utf-8')).to.equal(
+                JSON.stringify(buildInfo!.input)
+            )
+        })
+
+        it('defaults the output to verify/ under the project root, outside hre.config.paths.artifacts', async function () {
+            const { root, artifacts } = hre.config.paths
+            expect(
+                path
+                    .resolve(root, 'verify')
+                    .startsWith(path.resolve(artifacts) + path.sep)
+            ).to.equal(false)
+            await expectGenerateError(
+                generateStandardInput({
+                    contract: FQN,
+                    output: path.join(artifacts, 'verify', 'x.json'),
+                    artifacts: hre.artifacts,
+                    artifactsDir: artifacts,
+                    root,
+                }),
+                /inside the Hardhat artifacts directory/
+            )
+        })
+
+        it('generated JSON is not an artifact and survives a real compile', async function () {
+            if (!(await hre.artifacts.artifactExists(FQN))) this.skip()
+            const out = path.join(fx.root, 'verify', 'erf.json')
+            const before = await hre.artifacts.getAllFullyQualifiedNames()
+            await hre.run('blockscout:generate', { contract: FQN, output: out })
+            const after = await hre.artifacts.getAllFullyQualifiedNames()
+            expect(after.sort()).to.deep.equal(before.sort())
+
+            await hre.run('compile', { quiet: true })
+
+            const buildInfo = await hre.artifacts.getBuildInfo(FQN)
             expect(fs.readFileSync(out, 'utf-8')).to.equal(
                 JSON.stringify(buildInfo!.input)
             )
