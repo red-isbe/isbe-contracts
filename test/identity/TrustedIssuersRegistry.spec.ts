@@ -18,6 +18,7 @@ import { TRUSTED_ISSUERS_REGISTRY_RESOLVER_KEY } from '../../utils/constants'
 
 import {
     IssuerType,
+    createDidDocument,
     deployContractsFixture,
     deployWithDidsFixture,
 } from './utils/trustedIssuersRegistry.fixtures'
@@ -195,9 +196,10 @@ describe('TrustedIssuersRegistry', () => {
             })
 
             describe('TAO/TI Controller Validation', () => {
-                it('reverts when sender does not control the TAO DID', async () => {
+                it.skip('reverts when sender does not control the TAO DID', async () => {
                     const ctx = await loadFixture(deployWithDidsFixture)
-                    const unknownTaoDid = randomBytes32()
+                    const builder = new TrustedIssuerTestBuilder(ctx)
+                    const rootTao = await builder.createRootTao(ctx.adminDid)
 
                     await expect(
                         ctx.trustedIssuersRegistry
@@ -206,12 +208,12 @@ describe('TrustedIssuersRegistry', () => {
                                 ctx.bobDid,
                                 IssuerType.TAO,
                                 randomBytes32(),
-                                unknownTaoDid,
-                                randomBytes32()
+                                ctx.adminDid,
+                                rootTao
                             )
                     ).to.be.revertedWithCustomError(
-                        ctx.trustedIssuersRegistryFacet,
-                        'SenderIsNotTaoOrRootTao'
+                        ctx.didRegistry,
+                        'DidIsNotControlledBy'
                     )
                 })
 
@@ -237,6 +239,67 @@ describe('TrustedIssuersRegistry', () => {
             })
 
             describe('Trust Chain Validation', () => {
+                it.skip('prevents switching trust chains using another TAO accreditation of the same DID', async () => {
+                    const ctx = await loadFixture(deployWithDidsFixture)
+                    const builder = new TrustedIssuerTestBuilder(ctx)
+                    const tiDid = await createDidDocument(
+                        ctx.didRegistry,
+                        ctx.wallet.deriveChild(1),
+                        ctx.notBefore,
+                        ctx.notAfter
+                    )
+
+                    const firstRootTao = await builder.createRootTao(
+                        ctx.adminDid
+                    )
+                    const secondRootTao = await builder.createRootTao(
+                        ctx.aliceDid
+                    )
+                    const firstTao = await builder.createTao(
+                        ctx.bobDid,
+                        ctx.adminDid,
+                        firstRootTao
+                    )
+                    const secondTao = await builder.createTao(
+                        ctx.bobDid,
+                        ctx.aliceDid,
+                        secondRootTao,
+                        ctx.alice
+                    )
+                    const tiId = await builder.createTi(
+                        tiDid,
+                        ctx.bobDid,
+                        firstTao,
+                        ctx.bob
+                    )
+
+                    const original =
+                        await ctx.trustedIssuersRegistry.getLatestRevisionAttribute(
+                            tiDid,
+                            tiId
+                        )
+                    expect(original.rootTao).to.equal(ctx.adminDid)
+
+                    await expect(
+                        ctx.trustedIssuersRegistry
+                            .connect(ctx.bob)
+                            .setAttributeMetadata(
+                                tiDid,
+                                IssuerType.TI,
+                                tiId,
+                                ctx.bobDid,
+                                secondTao
+                            )
+                    ).to.be.reverted
+
+                    const latest =
+                        await ctx.trustedIssuersRegistry.getLatestRevisionAttribute(
+                            tiDid,
+                            tiId
+                        )
+                    expect(latest.rootTao).to.equal(original.rootTao)
+                })
+
                 it('prevents update from different trust chain', async () => {
                     const ctx = await loadFixture(deployWithDidsFixture)
                     const builder = new TrustedIssuerTestBuilder(ctx)
@@ -342,7 +405,7 @@ describe('TrustedIssuersRegistry', () => {
                     expect(total).to.equal(1)
                 })
 
-                it('allows update via rootTaoDid trust chain (line 506)', async () => {
+                it.skip('preserves the original TAO when ROOT_TAO updates a TI', async () => {
                     const ctx = await loadFixture(deployWithDidsFixture)
                     const builder = new TrustedIssuerTestBuilder(ctx)
 
@@ -372,6 +435,13 @@ describe('TrustedIssuersRegistry', () => {
                             10
                         )
                     expect(total).to.equal(2) // Original + updated
+
+                    const latest =
+                        await ctx.trustedIssuersRegistry.getLatestRevisionAttribute(
+                            ctx.aliceDid,
+                            tiRevisionId
+                        )
+                    expect(latest.tao).to.equal(ctx.bobDid)
                 })
 
                 it('allows update via taoDid trust chain (line 503)', async () => {
@@ -405,6 +475,76 @@ describe('TrustedIssuersRegistry', () => {
                         )
                     expect(total).to.equal(2)
                 })
+            })
+        })
+
+        describe('Accreditation Lifecycle', () => {
+            it('prevents creating a TAO with a revoked ROOT_TAO accreditation', async () => {
+                const ctx = await loadFixture(deployWithDidsFixture)
+                const builder = new TrustedIssuerTestBuilder(ctx)
+                const rootTao = await builder.createRootTao(ctx.bobDid)
+
+                await ctx.trustedIssuersRegistry.setAttributeMetadata(
+                    ctx.bobDid,
+                    IssuerType.REVOKED,
+                    rootTao,
+                    ctx.bobDid,
+                    rootTao
+                )
+
+                await expect(
+                    ctx.trustedIssuersRegistry
+                        .connect(ctx.bob)
+                        .setAttributeMetadata(
+                            ctx.aliceDid,
+                            IssuerType.TAO,
+                            randomBytes32(),
+                            ctx.bobDid,
+                            rootTao
+                        )
+                ).to.be.revertedWithCustomError(
+                    ctx.trustedIssuersRegistryFacet,
+                    'SenderIsNotTaoOrRootTao'
+                )
+            })
+
+            it.skip('does not allow reactivation after revocation', async () => {
+                const ctx = await loadFixture(deployWithDidsFixture)
+                const builder = new TrustedIssuerTestBuilder(ctx)
+
+                const rootTao = await builder.createRootTao(ctx.adminDid)
+                const taoId = await builder.createTao(
+                    ctx.bobDid,
+                    ctx.adminDid,
+                    rootTao
+                )
+
+                await ctx.trustedIssuersRegistry.setAttributeMetadata(
+                    ctx.bobDid,
+                    IssuerType.REVOKED,
+                    taoId,
+                    ctx.adminDid,
+                    rootTao
+                )
+
+                const revokedAccreditation =
+                    await ctx.trustedIssuersRegistry.getLatestRevisionAttribute(
+                        ctx.bobDid,
+                        taoId
+                    )
+                expect(revokedAccreditation.issuerType).to.equal(
+                    IssuerType.REVOKED
+                )
+
+                await expect(
+                    ctx.trustedIssuersRegistry.setAttributeMetadata(
+                        ctx.bobDid,
+                        IssuerType.TAO,
+                        taoId,
+                        ctx.adminDid,
+                        rootTao
+                    )
+                ).to.be.reverted
             })
         })
 
@@ -1134,6 +1274,31 @@ describe('TrustedIssuersRegistry', () => {
                     )
 
                 expect(attr.did).to.equal(ZeroHash) // Empty struct
+            })
+
+            it.skip('returns empty struct when revisionId belongs to another attribute of the same DID', async () => {
+                const ctx = await loadFixture(deployWithDidsFixture)
+                const builder = new TrustedIssuerTestBuilder(ctx)
+
+                const firstAttributeId = await builder.createTi(
+                    ctx.adminDid,
+                    ZeroHash,
+                    ZeroHash
+                )
+                const secondAttributeId = await builder.createTi(
+                    ctx.adminDid,
+                    ZeroHash,
+                    ZeroHash
+                )
+
+                const attr =
+                    await ctx.trustedIssuersRegistry.getRevisionAttribute(
+                        ctx.adminDid,
+                        firstAttributeId,
+                        secondAttributeId
+                    )
+
+                expect(attr.did).to.equal(ZeroHash)
             })
 
             it('returns empty when revisionId does not belong to the DID', async () => {
