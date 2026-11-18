@@ -283,5 +283,5 @@ import './assign-roles'
 
 // Blockscout verification tasks
 
-// Blockscout unified facets generation task
-import './blockscout/generate-unified-facets'
+// Blockscout: per-contract Solidity Standard JSON Input export
+import './blockscout/generate'
