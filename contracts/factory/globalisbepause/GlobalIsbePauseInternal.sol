@@ -154,8 +154,9 @@ abstract contract GlobalIsbePauseInternal is
      *
      *      The word is decoded as `uint256` rather than `bool` on purpose: a
      *      target returning a non-canonical value (anything other than 0 or 1)
-     *      would make `abi.decode(..., (bool))` panic inside this facet. Any
-     *      non-zero value is treated as "paused".
+     *      would make `abi.decode(..., (bool))` panic inside this facet, which
+     *      is opaque to diagnose. Decoding the raw word lets that case be
+     *      rejected explicitly instead, with the offending payload attached.
      *
      *      Residual limitation: a contract can report `paused() == true` and
      *      still not guard its own write functions. That cannot be detected
@@ -183,7 +184,20 @@ abstract contract GlobalIsbePauseInternal is
             );
         }
 
-        if ((abi.decode(returnData, (uint256)) != 0) != _expectedPaused) {
+        uint256 rawState = abi.decode(returnData, (uint256));
+
+        // `IPause.paused()` returns a bool, so the only canonical words are 0
+        // and 1. Anything else means the target is not answering with a real
+        // bool and its state cannot be trusted either way.
+        if (rawState > 1) {
+            revert IGlobalIsbePause.PauseStateUnverifiable(
+                _target,
+                _selector,
+                returnData
+            );
+        }
+
+        if ((rawState == 1) != _expectedPaused) {
             revert IGlobalIsbePause.PauseNotEffective(
                 _target,
                 _selector,

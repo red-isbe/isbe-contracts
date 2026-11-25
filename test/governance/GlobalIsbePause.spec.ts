@@ -24,6 +24,7 @@ import {
     FallbackSilentMock,
     PauseIgnoredMock,
     PausedRevertMock,
+    PausedNonBooleanMock,
 } from '../../typechain-types'
 import { Signer } from 'ethers'
 import {
@@ -230,6 +231,22 @@ describe('GlobalIsbePause', function () {
                     .withArgs(addr, PAUSE_SELECTOR, anyValue)
             })
 
+            it('GIVEN a contract whose paused() returns a non-boolean word WHEN pauseIsbe is called THEN it reverts with PauseStateUnverifiable', async () => {
+                const nonBoolMock: PausedNonBooleanMock = await (
+                    await ethers.getContractFactory('PausedNonBooleanMock')
+                ).deploy()
+                const addr = await nonBoolMock.getAddress()
+
+                // paused() answers 32 bytes, but the word is 2. A non-canonical
+                // bool must not be read as "paused".
+                await expect(isbeFactory.connect(admin).pauseIsbe(addr))
+                    .to.be.revertedWithCustomError(
+                        globalIsbePauseFacet,
+                        'PauseStateUnverifiable'
+                    )
+                    .withArgs(addr, PAUSE_SELECTOR, anyValue)
+            })
+
             // ─── PauseNotEffective: the call is accepted but ignored ──────────
             it('GIVEN a contract that accepts pause() without changing state WHEN pauseIsbe is called THEN it reverts with PauseNotEffective', async () => {
                 const ignoredMock: PauseIgnoredMock = await (
@@ -418,6 +435,20 @@ describe('GlobalIsbePause', function () {
                     await ethers.getContractFactory('PausedRevertMock')
                 ).deploy()
                 const addr = await revertMock.getAddress()
+
+                await expect(isbeFactory.connect(admin).unpauseIsbe(addr))
+                    .to.be.revertedWithCustomError(
+                        globalIsbePauseFacet,
+                        'PauseStateUnverifiable'
+                    )
+                    .withArgs(addr, UNPAUSE_SELECTOR, anyValue)
+            })
+
+            it('GIVEN a contract whose paused() returns a non-boolean word WHEN unpauseIsbe is called THEN it reverts with PauseStateUnverifiable', async () => {
+                const nonBoolMock: PausedNonBooleanMock = await (
+                    await ethers.getContractFactory('PausedNonBooleanMock')
+                ).deploy()
+                const addr = await nonBoolMock.getAddress()
 
                 await expect(isbeFactory.connect(admin).unpauseIsbe(addr))
                     .to.be.revertedWithCustomError(
