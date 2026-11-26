@@ -29,6 +29,7 @@ limitations under the License.
   --notafter 1896058000 \
   --oldvmethodid 0x9999999999999999999999999999999999999999999999999999999999999999 \
   --duration 2592000 \
+  --proof 0x<EIP-712 KeyOwnershipProof signed with the new key, 65 bytes> \
   --diamond "0xAF3c2371B900A23AEc9Edf3693D5b6240867eC10"
  */
 
@@ -84,6 +85,12 @@ task(
         undefined,
         types.int
     )
+    .addOptionalParam(
+        'proof',
+        'Key ownership proof of the new key (hex): EIP-712 signature made with it over KeyOwnershipProof(did, vMethodId, publicKey) in the ISBE domain. Required for keys of the network curve',
+        '0x',
+        types.string
+    )
     .addParam('diamond', 'Diamond contract address', undefined, types.string)
     .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
         const {
@@ -95,6 +102,7 @@ task(
             notafter,
             oldvmethodid,
             duration,
+            proof,
             diamond,
         } = taskArgs
 
@@ -110,6 +118,7 @@ task(
             notafter,
             oldvmethodid,
             duration,
+            proof,
             diamond,
             signatureProvider
         )

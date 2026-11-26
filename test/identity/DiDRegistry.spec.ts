@@ -55,6 +55,8 @@ import {
     proofToDid,
     generateProof,
     generateEip191Proof,
+    generateKeyOwnershipProof,
+    isbeDomain,
     EMPTY_VALUES,
 } from '../support'
 import {
@@ -93,11 +95,95 @@ function walletOfFirstSigner(): HDNodeWallet {
 }
 
 function deriveWallet(wallet: HDNodeWallet, path: string): HDNodeWallet {
-    return wallet.derivePath(path)
+    return rememberWallet(wallet.derivePath(path))
+}
+
+// Wallets whose keys the tests add to DIDs, by address, so that addVM can sign
+// the key ownership proof with the right private key
+const knownWallets = new Map<string, HDNodeWallet>()
+
+function rememberWallet(wallet: HDNodeWallet): HDNodeWallet {
+    knownWallets.set(wallet.address.toLowerCase(), wallet)
+    return wallet
 }
 
 const walletToPublicKey = (wallet: HDNodeWallet): string => {
+    rememberWallet(wallet)
     return wallet.signingKey.publicKey
+}
+
+function addressOfPublicKey(publicKey: string): string | undefined {
+    try {
+        const bytes = ethers.getBytes(publicKey)
+        const full =
+            bytes.length === 64 ? ethers.concat(['0x04', publicKey]) : publicKey
+        return ethers.computeAddress(full).toLowerCase()
+    } catch {
+        return undefined
+    }
+}
+
+/**
+ * Key ownership proof for addVerificationMethod / rollVerificationMethod.
+ * Signs with the wallet of the key when the test knows it; otherwise returns
+ * empty bytes, which the contract rejects for network-curve keys.
+ */
+async function proofFor(
+    did: string,
+    vMethodId: string,
+    publicKey: string,
+    signer?: HDNodeWallet
+): Promise<string> {
+    const address = addressOfPublicKey(publicKey)
+    const wallet = signer ?? (address ? knownWallets.get(address) : undefined)
+    if (!wallet) return '0x'
+    const { chainId } = await ethers.provider.getNetwork()
+    return generateKeyOwnershipProof(
+        wallet,
+        did,
+        vMethodId,
+        publicKey,
+        isbeDomain(chainId, await didRegistry.getAddress())
+    )
+}
+
+type RollArgsInput = Omit<IDidVerificationMethod.RollArgsStruct, 'proof'> & {
+    proof?: string
+}
+
+/**
+ * Calls rollVerificationMethod adding a valid key ownership proof for the new key
+ * (when its wallet is known) unless the test passes its own proof
+ */
+async function rollVM(registry: IDidRegistry, args: RollArgsInput) {
+    const proof =
+        args.proof ??
+        (await proofFor(
+            args.did as string,
+            args.vMethodId as string,
+            args.publicKey as string
+        ))
+    return registry.rollVerificationMethod({ ...args, proof })
+}
+
+/**
+ * Calls addVerificationMethod with a valid key ownership proof (when the key's
+ * wallet is known), evaluating each argument only once
+ */
+async function addVM(
+    registry: IDidRegistry,
+    did: string,
+    vMethodId: string,
+    publicKey: string,
+    ellipticType: number | bigint
+) {
+    return registry.addVerificationMethod(
+        did,
+        vMethodId,
+        publicKey,
+        await proofFor(did, vMethodId, publicKey),
+        ellipticType
+    )
 }
 
 // publicKeyToDid removed — DID now derives from proof, not public key
@@ -1644,7 +1730,8 @@ describe('DiDRegistry', function () {
 
             it('GIVEN an inserted document WHEN try to add V.M. with empty did THEN it fails', async () => {
                 await expect(
-                    didRegistry.addVerificationMethod(
+                    addVM(
+                        didRegistry,
                         ZeroHash,
                         randomDid(),
                         publicKey64,
@@ -1657,7 +1744,8 @@ describe('DiDRegistry', function () {
             })
             it('GIVEN an inserted document WHEN try to add V.M. with empty vMethod THEN it fails', async () => {
                 await expect(
-                    didRegistry.addVerificationMethod(
+                    addVM(
+                        didRegistry,
                         randomDid(),
                         ZeroHash,
                         publicKey64,
@@ -1670,7 +1758,8 @@ describe('DiDRegistry', function () {
             })
             it('GIVEN an inserted document WHEN try to add V.M. with empty PK THEN it fails', async () => {
                 await expect(
-                    didRegistry.addVerificationMethod(
+                    addVM(
+                        didRegistry,
                         randomDid(),
                         randomDid(),
                         emptyBytes,
@@ -1683,7 +1772,8 @@ describe('DiDRegistry', function () {
             })
             it('GIVEN an inserted document WHEN try to add V.M. with empty elliptic type THEN it fails', async () => {
                 await expect(
-                    didRegistry.addVerificationMethod(
+                    addVM(
+                        didRegistry,
                         randomDid(),
                         randomDid(),
                         publicKey64,
@@ -1697,7 +1787,8 @@ describe('DiDRegistry', function () {
             it('GIVEN an inserted document WHEN try to add V.M. with not inserted did THEN it fails', async () => {
                 const newDid = randomDid()
                 await expect(
-                    didRegistry.addVerificationMethod(
+                    addVM(
+                        didRegistry,
                         newDid,
                         randomDid(),
                         publicKey64,
@@ -1712,7 +1803,8 @@ describe('DiDRegistry', function () {
             })
             it('GIVEN an inserted document WHEN try to add V.M. with inserted vMethodId THEN it fails', async () => {
                 await expect(
-                    didRegistry.addVerificationMethod(
+                    addVM(
+                        didRegistry,
                         did,
                         vMethodId,
                         publicKey64,
@@ -1728,7 +1820,8 @@ describe('DiDRegistry', function () {
             it('GIVEN an inserted document WHEN try to add V.M. with inserted PK THEN it fails', async () => {
                 const newVMethodId = randomDid()
                 await expect(
-                    didRegistry.addVerificationMethod(
+                    addVM(
+                        didRegistry,
                         did,
                         newVMethodId,
                         publicKey64,
@@ -1746,7 +1839,8 @@ describe('DiDRegistry', function () {
                 const newPublicKey = walletToPublicKey(newWallet)
                 const newVMethodId = randomDid()
 
-                await didRegistry.addVerificationMethod(
+                await addVM(
+                    didRegistry,
                     did,
                     newVMethodId,
                     newPublicKey,
@@ -1785,14 +1879,13 @@ describe('DiDRegistry', function () {
                 const { did: otherDid } = await insertSignerDocument(1)
 
                 await expect(
-                    didRegistry
-                        .connect(other)
-                        .addVerificationMethod(
-                            otherDid,
-                            randomDid(),
-                            publicKey65,
-                            EllipticType.SECP_256_K1
-                        )
+                    addVM(
+                        didRegistry.connect(other),
+                        otherDid,
+                        randomDid(),
+                        publicKey65,
+                        EllipticType.SECP_256_K1
+                    )
                 )
                     .to.be.revertedWithCustomError(
                         didVerificationMethodFacet,
@@ -1808,7 +1901,8 @@ describe('DiDRegistry', function () {
                 const assertionPublicKey = walletToPublicKey(
                     deriveWallet(wallet, '1')
                 )
-                await didRegistry.addVerificationMethod(
+                await addVM(
+                    didRegistry,
                     did,
                     randomDid(),
                     assertionPublicKey,
@@ -1817,14 +1911,13 @@ describe('DiDRegistry', function () {
                 const { did: otherDid } = await insertSignerDocument(1)
 
                 await expect(
-                    didRegistry
-                        .connect(other)
-                        .addVerificationMethod(
-                            otherDid,
-                            randomDid(),
-                            assertionPublicKey,
-                            EllipticType.SECP_256_K1
-                        )
+                    addVM(
+                        didRegistry.connect(other),
+                        otherDid,
+                        randomDid(),
+                        assertionPublicKey,
+                        EllipticType.SECP_256_K1
+                    )
                 )
                     .to.be.revertedWithCustomError(
                         didVerificationMethodFacet,
@@ -1835,14 +1928,13 @@ describe('DiDRegistry', function () {
             it('GIVEN an inserted document WHEN try to add V.M. with a non controller THEN it fails', async () => {
                 const newMethodId = randomDid()
                 await expect(
-                    didRegistry
-                        .connect(other)
-                        .addVerificationMethod(
-                            did,
-                            newMethodId,
-                            walletToPublicKey(deriveWallet(wallet, '1')),
-                            EllipticType.SECP_256_K1
-                        )
+                    addVM(
+                        didRegistry.connect(other),
+                        did,
+                        newMethodId,
+                        walletToPublicKey(deriveWallet(wallet, '1')),
+                        EllipticType.SECP_256_K1
+                    )
                 )
                     .to.be.revertedWithCustomError(
                         didVerificationMethodFacet,
@@ -1850,6 +1942,266 @@ describe('DiDRegistry', function () {
                     )
                     .withArgs(did, otherAddress)
             })
+            describe('key ownership proof (ISBECORE-435)', () => {
+                let keyWallet: HDNodeWallet
+                let keyPublicKey: string
+                let newVMethodId: string
+
+                beforeEach(() => {
+                    keyWallet = deriveWallet(wallet, '7')
+                    keyPublicKey = walletToPublicKey(keyWallet)
+                    newVMethodId = randomDid()
+                })
+
+                async function domain(chainId?: bigint, contract?: string) {
+                    const network = await ethers.provider.getNetwork()
+                    return isbeDomain(
+                        chainId ?? network.chainId,
+                        contract ?? (await didRegistry.getAddress())
+                    )
+                }
+
+                it('GIVEN a proof signed by the key for this DID WHEN adding a network-curve key THEN it is added', async () => {
+                    const proof = await generateKeyOwnershipProof(
+                        keyWallet,
+                        did,
+                        newVMethodId,
+                        keyPublicKey,
+                        await domain()
+                    )
+
+                    await expect(
+                        didRegistry.addVerificationMethod(
+                            did,
+                            newVMethodId,
+                            keyPublicKey,
+                            proof,
+                            EllipticType.SECP_256_K1
+                        )
+                    )
+                        .to.emit(didRegistry, 'VerificationMethodAdded')
+                        .withArgs(
+                            did,
+                            newVMethodId,
+                            keyPublicKey,
+                            EllipticType.SECP_256_K1
+                        )
+                })
+
+                it('GIVEN a proof signed by another key WHEN adding a network-curve key THEN it fails with InvalidSignature', async () => {
+                    const proof = await generateKeyOwnershipProof(
+                        deriveWallet(wallet, '8'),
+                        did,
+                        newVMethodId,
+                        keyPublicKey,
+                        await domain()
+                    )
+
+                    await expect(
+                        didRegistry.addVerificationMethod(
+                            did,
+                            newVMethodId,
+                            keyPublicKey,
+                            proof,
+                            EllipticType.SECP_256_K1
+                        )
+                    )
+                        .to.be.revertedWithCustomError(
+                            didVerificationMethodFacet,
+                            'InvalidSignature'
+                        )
+                        .withArgs(keyWallet.address)
+                })
+
+                it('GIVEN a proof made for another DID WHEN adding a network-curve key THEN it fails with InvalidSignature', async () => {
+                    const proof = await generateKeyOwnershipProof(
+                        keyWallet,
+                        randomDid(),
+                        newVMethodId,
+                        keyPublicKey,
+                        await domain()
+                    )
+
+                    await expect(
+                        didRegistry.addVerificationMethod(
+                            did,
+                            newVMethodId,
+                            keyPublicKey,
+                            proof,
+                            EllipticType.SECP_256_K1
+                        )
+                    )
+                        .to.be.revertedWithCustomError(
+                            didVerificationMethodFacet,
+                            'InvalidSignature'
+                        )
+                        .withArgs(keyWallet.address)
+                })
+
+                it('GIVEN a proof made for another verification method WHEN adding a network-curve key THEN it fails with InvalidSignature', async () => {
+                    const proof = await generateKeyOwnershipProof(
+                        keyWallet,
+                        did,
+                        randomDid(),
+                        keyPublicKey,
+                        await domain()
+                    )
+
+                    await expect(
+                        didRegistry.addVerificationMethod(
+                            did,
+                            newVMethodId,
+                            keyPublicKey,
+                            proof,
+                            EllipticType.SECP_256_K1
+                        )
+                    ).to.be.revertedWithCustomError(
+                        didVerificationMethodFacet,
+                        'InvalidSignature'
+                    )
+                })
+
+                it('GIVEN a proof made for another network WHEN adding a network-curve key THEN it fails with InvalidSignature', async () => {
+                    const proof = await generateKeyOwnershipProof(
+                        keyWallet,
+                        did,
+                        newVMethodId,
+                        keyPublicKey,
+                        await domain(999999n)
+                    )
+
+                    await expect(
+                        didRegistry.addVerificationMethod(
+                            did,
+                            newVMethodId,
+                            keyPublicKey,
+                            proof,
+                            EllipticType.SECP_256_K1
+                        )
+                    ).to.be.revertedWithCustomError(
+                        didVerificationMethodFacet,
+                        'InvalidSignature'
+                    )
+                })
+
+                it('GIVEN a proof made for another contract WHEN adding a network-curve key THEN it fails with InvalidSignature', async () => {
+                    const proof = await generateKeyOwnershipProof(
+                        keyWallet,
+                        did,
+                        newVMethodId,
+                        keyPublicKey,
+                        await domain(
+                            undefined,
+                            ethers.Wallet.createRandom().address
+                        )
+                    )
+
+                    await expect(
+                        didRegistry.addVerificationMethod(
+                            did,
+                            newVMethodId,
+                            keyPublicKey,
+                            proof,
+                            EllipticType.SECP_256_K1
+                        )
+                    ).to.be.revertedWithCustomError(
+                        didVerificationMethodFacet,
+                        'InvalidSignature'
+                    )
+                })
+
+                it('GIVEN a key ownership proof in the old format (signature over the public key hash) WHEN adding a network-curve key THEN it fails', async () => {
+                    await expect(
+                        didRegistry.addVerificationMethod(
+                            did,
+                            newVMethodId,
+                            keyPublicKey,
+                            generateProof(keyWallet),
+                            EllipticType.SECP_256_K1
+                        )
+                    ).to.be.revertedWithCustomError(
+                        didVerificationMethodFacet,
+                        'InvalidSignature'
+                    )
+                })
+
+                it('GIVEN no proof WHEN adding a network-curve key THEN it fails with WrongSignatureLength', async () => {
+                    await expect(
+                        didRegistry.addVerificationMethod(
+                            did,
+                            newVMethodId,
+                            keyPublicKey,
+                            '0x',
+                            EllipticType.SECP_256_K1
+                        )
+                    ).to.be.revertedWithCustomError(
+                        didVerificationMethodFacet,
+                        'WrongSignatureLength'
+                    )
+                })
+
+                it('GIVEN no proof WHEN adding a key of another curve THEN it is added', async () => {
+                    await expect(
+                        didRegistry.addVerificationMethod(
+                            did,
+                            newVMethodId,
+                            keyPublicKey,
+                            '0x',
+                            EllipticType.SECP_256_R1
+                        )
+                    ).to.emit(didRegistry, 'VerificationMethodAdded')
+                })
+
+                it('GIVEN the key of an entity that has no DID yet WHEN another entity adds it to its own DID without the key holder proof THEN it fails and the entity can still create its DID', async () => {
+                    const victim = rememberWallet(
+                        ethers.Wallet.createRandom() as unknown as HDNodeWallet
+                    )
+                    const victimPublicKey = victim.signingKey.publicKey
+                    // The attacker controls `did` and signs the proof with its own key
+                    const forgedProof = await generateKeyOwnershipProof(
+                        wallet,
+                        did,
+                        newVMethodId,
+                        victimPublicKey,
+                        await domain()
+                    )
+
+                    await expect(
+                        didRegistry.addVerificationMethod(
+                            did,
+                            newVMethodId,
+                            victimPublicKey,
+                            forgedProof,
+                            EllipticType.SECP_256_K1
+                        )
+                    )
+                        .to.be.revertedWithCustomError(
+                            didVerificationMethodFacet,
+                            'InvalidSignature'
+                        )
+                        .withArgs(victim.address)
+                    expect(await didRegistry.didOf(victim.address)).to.equal(
+                        ZeroHash
+                    )
+
+                    const victimProof = generateProof(victim)
+                    const victimDid = proofToDid(victimProof)
+                    await expect(
+                        didRegistry.insertFirstDidDocument(
+                            victimDid,
+                            randomBaseDocument(),
+                            randomDid(),
+                            victimProof,
+                            victimPublicKey,
+                            EllipticType.SECP_256_K1,
+                            notBefore,
+                            notAfter,
+                            ''
+                        )
+                    ).to.not.be.reverted
+                })
+            })
+
             it('GIVEN an inserted document WHEN try to add V.M. of same elliptic type than NW THEN it success', async () => {
                 const newVMethodId = randomDid()
                 const newPublicKey = walletToPublicKey(
@@ -1857,7 +2209,8 @@ describe('DiDRegistry', function () {
                 )
 
                 await expect(
-                    didRegistry.addVerificationMethod(
+                    addVM(
+                        didRegistry,
                         did,
                         newVMethodId,
                         newPublicKey,
@@ -2106,7 +2459,8 @@ describe('DiDRegistry', function () {
                 const newPublicKey = walletToPublicKey(
                     deriveWallet(wallet, '1')
                 )
-                await didRegistry.addVerificationMethod(
+                await addVM(
+                    didRegistry,
                     did,
                     newVMethodId,
                     newPublicKey,
@@ -2264,7 +2618,8 @@ describe('DiDRegistry', function () {
                 const newPublicKey = walletToPublicKey(
                     deriveWallet(wallet, '1')
                 )
-                await didRegistry.addVerificationMethod(
+                await addVM(
+                    didRegistry,
                     did,
                     newVMethodId,
                     newPublicKey,
@@ -2377,7 +2732,7 @@ describe('DiDRegistry', function () {
         describe('rollVerificationMethod', () => {
             let wallet: HDNodeWallet
             let rolledWallet: HDNodeWallet
-            let rollArgs: IDidVerificationMethod.RollArgsStruct
+            let rollArgs: RollArgsInput
 
             beforeEach(async () => {
                 const fixtures = await createStandardFixture()
@@ -2402,7 +2757,7 @@ describe('DiDRegistry', function () {
             it('GIVEN an inserted document WHEN try to roll V.M. with empty did THEN it fails', async () => {
                 rollArgs.did = ZeroHash
                 await expect(
-                    didRegistry.rollVerificationMethod(rollArgs)
+                    rollVM(didRegistry, rollArgs)
                 ).to.be.revertedWithCustomError(
                     didVerificationMethodFacet,
                     'EmptyBytes32'
@@ -2411,7 +2766,7 @@ describe('DiDRegistry', function () {
             it('GIVEN an inserted document WHEN try to roll V.M. with empty vMethod THEN it fails', async () => {
                 rollArgs.vMethodId = ZeroHash
                 await expect(
-                    didRegistry.rollVerificationMethod(rollArgs)
+                    rollVM(didRegistry, rollArgs)
                 ).to.be.revertedWithCustomError(
                     didVerificationMethodFacet,
                     'EmptyBytes32'
@@ -2420,7 +2775,7 @@ describe('DiDRegistry', function () {
             it('GIVEN an inserted document WHEN try to roll V.M. with empty ellipticType THEN it fails', async () => {
                 rollArgs.ellipticType = EllipticTypeTest.NONE
                 await expect(
-                    didRegistry.rollVerificationMethod(rollArgs)
+                    rollVM(didRegistry, rollArgs)
                 ).to.be.revertedWithCustomError(
                     didVerificationMethodFacet,
                     'InvalidEllipticCurve'
@@ -2429,7 +2784,7 @@ describe('DiDRegistry', function () {
             it('GIVEN an inserted document WHEN try to roll V.M. with empty publicKey THEN it fails', async () => {
                 rollArgs.publicKey = emptyBytes
                 await expect(
-                    didRegistry.rollVerificationMethod(rollArgs)
+                    rollVM(didRegistry, rollArgs)
                 ).to.be.revertedWithCustomError(
                     didVerificationMethodFacet,
                     'EmptyBytes'
@@ -2438,7 +2793,7 @@ describe('DiDRegistry', function () {
             it('GIVEN an inserted document WHEN try to roll V.M. with empty before THEN it fails', async () => {
                 rollArgs.notBefore = 0n
                 await expect(
-                    didRegistry.rollVerificationMethod(rollArgs)
+                    rollVM(didRegistry, rollArgs)
                 ).to.be.revertedWithCustomError(
                     didVerificationMethodFacet,
                     'EmptyUint'
@@ -2447,7 +2802,7 @@ describe('DiDRegistry', function () {
             it('GIVEN an inserted document WHEN try to roll V.M. with empty after THEN it fails', async () => {
                 rollArgs.notAfter = 0n
                 await expect(
-                    didRegistry.rollVerificationMethod(rollArgs)
+                    rollVM(didRegistry, rollArgs)
                 ).to.be.revertedWithCustomError(
                     didVerificationMethodFacet,
                     'EmptyUint'
@@ -2455,7 +2810,7 @@ describe('DiDRegistry', function () {
             })
             it('GIVEN an inserted document WHEN try to roll V.M. with after in past of before THEN it fails', async () => {
                 rollArgs.notAfter = 1n
-                await expect(didRegistry.rollVerificationMethod(rollArgs))
+                await expect(rollVM(didRegistry, rollArgs))
                     .to.be.revertedWithCustomError(
                         didVerificationMethodFacet,
                         'InvalidDates'
@@ -2465,7 +2820,7 @@ describe('DiDRegistry', function () {
             it('GIVEN an inserted document WHEN try to roll V.M. with empty oldVMethodId THEN it fails', async () => {
                 rollArgs.oldVMethodId = ZeroHash
                 await expect(
-                    didRegistry.rollVerificationMethod(rollArgs)
+                    rollVM(didRegistry, rollArgs)
                 ).to.be.revertedWithCustomError(
                     didVerificationMethodFacet,
                     'EmptyBytes32'
@@ -2474,7 +2829,7 @@ describe('DiDRegistry', function () {
             it('GIVEN an inserted document WHEN try to roll V.M. with empty duration THEN it fails', async () => {
                 rollArgs.duration = 0n
                 await expect(
-                    didRegistry.rollVerificationMethod(rollArgs)
+                    rollVM(didRegistry, rollArgs)
                 ).to.be.revertedWithCustomError(
                     didVerificationMethodFacet,
                     'EmptyUint'
@@ -2483,7 +2838,7 @@ describe('DiDRegistry', function () {
             it('GIVEN an inserted document WHEN try to roll V.M. with did non existent THEN it fails', async () => {
                 rollArgs.did = randomDid()
                 await expect(
-                    didRegistry.rollVerificationMethod(rollArgs)
+                    rollVM(didRegistry, rollArgs)
                 ).to.be.revertedWithCustomError(
                     didVerificationMethodFacet,
                     'ControllerNotAuthorized'
@@ -2491,7 +2846,7 @@ describe('DiDRegistry', function () {
             })
             it('GIVEN an inserted document WHEN try to roll V.M. with vMethod existent THEN it fails', async () => {
                 rollArgs.vMethodId = vMethodId
-                await expect(didRegistry.rollVerificationMethod(rollArgs))
+                await expect(rollVM(didRegistry, rollArgs))
                     .to.be.revertedWithCustomError(
                         didVerificationMethodFacet,
                         'VerificationMethodExists'
@@ -2500,15 +2855,101 @@ describe('DiDRegistry', function () {
             })
             it('GIVEN an inserted document WHEN try to roll V.M. with oldVMethodId non existent THEN it fails', async () => {
                 rollArgs.oldVMethodId = randomDid()
-                await expect(didRegistry.rollVerificationMethod(rollArgs))
+                await expect(rollVM(didRegistry, rollArgs))
                     .to.be.revertedWithCustomError(
                         didVerificationMethodFacet,
                         'VerificationMethodNotExists'
                     )
                     .withArgs(did, rollArgs.oldVMethodId)
             })
+            describe('key ownership proof (ISBECORE-435)', () => {
+                async function rollProof(
+                    signer: HDNodeWallet,
+                    overrides: { did?: string; chainId?: bigint } = {}
+                ) {
+                    const network = await ethers.provider.getNetwork()
+                    return generateKeyOwnershipProof(
+                        signer,
+                        overrides.did ?? (rollArgs.did as string),
+                        rollArgs.vMethodId as string,
+                        rollArgs.publicKey as string,
+                        isbeDomain(
+                            overrides.chainId ?? network.chainId,
+                            await didRegistry.getAddress()
+                        )
+                    )
+                }
+
+                it('GIVEN a proof signed by the new key WHEN rolling to it THEN it rolls', async () => {
+                    rollArgs.proof = await rollProof(rolledWallet)
+                    await expect(rollVM(didRegistry, rollArgs)).to.emit(
+                        didRegistry,
+                        'VerificationMethodRolled'
+                    )
+                })
+
+                it('GIVEN a proof signed by another key WHEN rolling THEN it fails with InvalidSignature', async () => {
+                    rollArgs.proof = await rollProof(wallet)
+                    await expect(rollVM(didRegistry, rollArgs))
+                        .to.be.revertedWithCustomError(
+                            didVerificationMethodFacet,
+                            'InvalidSignature'
+                        )
+                        .withArgs(rolledWallet.address)
+                })
+
+                it('GIVEN a proof made for another DID WHEN rolling THEN it fails with InvalidSignature', async () => {
+                    rollArgs.proof = await rollProof(rolledWallet, {
+                        did: randomDid(),
+                    })
+                    await expect(
+                        rollVM(didRegistry, rollArgs)
+                    ).to.be.revertedWithCustomError(
+                        didVerificationMethodFacet,
+                        'InvalidSignature'
+                    )
+                })
+
+                it('GIVEN a proof made for another network WHEN rolling THEN it fails with InvalidSignature', async () => {
+                    rollArgs.proof = await rollProof(rolledWallet, {
+                        chainId: 999999n,
+                    })
+                    await expect(
+                        rollVM(didRegistry, rollArgs)
+                    ).to.be.revertedWithCustomError(
+                        didVerificationMethodFacet,
+                        'InvalidSignature'
+                    )
+                })
+
+                it('GIVEN no proof WHEN rolling to a network-curve key THEN it fails with WrongSignatureLength', async () => {
+                    rollArgs.proof = '0x'
+                    await expect(
+                        rollVM(didRegistry, rollArgs)
+                    ).to.be.revertedWithCustomError(
+                        didVerificationMethodFacet,
+                        'WrongSignatureLength'
+                    )
+                })
+
+                it('GIVEN the key of an entity that has no DID yet WHEN a DID rolls to it without the key holder proof THEN it fails', async () => {
+                    const victim = ethers.Wallet.createRandom()
+                    rollArgs.publicKey = victim.signingKey.publicKey
+                    rollArgs.proof = await rollProof(wallet)
+                    await expect(rollVM(didRegistry, rollArgs))
+                        .to.be.revertedWithCustomError(
+                            didVerificationMethodFacet,
+                            'InvalidSignature'
+                        )
+                        .withArgs(victim.address)
+                    expect(await didRegistry.didOf(victim.address)).to.equal(
+                        ZeroHash
+                    )
+                })
+            })
+
             it('GIVEN an inserted document WHEN try to roll V.M. of same elliptic type than NW THEN it success', async () => {
-                await expect(didRegistry.rollVerificationMethod(rollArgs))
+                await expect(rollVM(didRegistry, rollArgs))
                     .to.emit(didRegistry, 'VerificationMethodRolled')
                     .withArgs(
                         rollArgs.did,
@@ -2554,7 +2995,7 @@ describe('DiDRegistry', function () {
                 // NOTE: This test now fails because the oldVMethodId has capabilityInvocation relationship
                 // and the new elliptic type doesn't match the network elliptic type
                 rollArgs.ellipticType = EllipticType.SECP_256_R1
-                await expect(didRegistry.rollVerificationMethod(rollArgs))
+                await expect(rollVM(didRegistry, rollArgs))
                     .to.be.revertedWithCustomError(
                         didVerificationMethodFacet,
                         'NewVMethodMustMatchNetworkEllipticType'
@@ -2564,7 +3005,8 @@ describe('DiDRegistry', function () {
             it('GIVEN an inserted document WHEN try to roll V.M. recently added THEN it success', async () => {
                 const newVMethodId = randomDid()
                 const vmWallet = deriveWallet(wallet, '1')
-                await didRegistry.addVerificationMethod(
+                await addVM(
+                    didRegistry,
                     did,
                     newVMethodId,
                     vmWallet.signingKey.publicKey,
@@ -2572,7 +3014,7 @@ describe('DiDRegistry', function () {
                 )
                 rollArgs.oldVMethodId = newVMethodId
                 rollArgs.ellipticType = EllipticType.SECP_256_R1
-                await expect(didRegistry.rollVerificationMethod(rollArgs))
+                await expect(rollVM(didRegistry, rollArgs))
                     .to.emit(didRegistry, 'VerificationMethodRolled')
                     .withArgs(
                         rollArgs.did,
@@ -2603,7 +3045,8 @@ describe('DiDRegistry', function () {
                 // GIVEN: Add a verification method and then revoke it
                 const revokedVMethodId = randomDid()
                 const revokedWallet = deriveWallet(wallet, '2')
-                await didRegistry.addVerificationMethod(
+                await addVM(
+                    didRegistry,
                     did,
                     revokedVMethodId,
                     walletToPublicKey(revokedWallet),
@@ -2621,7 +3064,7 @@ describe('DiDRegistry', function () {
                 rollArgs.oldVMethodId = revokedVMethodId
 
                 // THEN: Should fail with VerificationMethodIsRevoked error
-                await expect(didRegistry.rollVerificationMethod(rollArgs))
+                await expect(rollVM(didRegistry, rollArgs))
                     .to.be.revertedWithCustomError(
                         didVerificationRelationshipFacet,
                         'VerificationMethodIsRevoked'
@@ -2637,7 +3080,7 @@ describe('DiDRegistry', function () {
                 rollArgs.ellipticType = EllipticType.SECP_256_R1
 
                 // THEN: Should fail because oldVMethodId has capabilityInvocation and new elliptic type doesn't match network
-                await expect(didRegistry.rollVerificationMethod(rollArgs))
+                await expect(rollVM(didRegistry, rollArgs))
                     .to.be.revertedWithCustomError(
                         didVerificationMethodFacet,
                         'NewVMethodMustMatchNetworkEllipticType'
@@ -2647,7 +3090,7 @@ describe('DiDRegistry', function () {
 
             it('GIVEN a key already in the same DID WHEN try to roll to it THEN it fails', async () => {
                 rollArgs.publicKey = publicKey65
-                await expect(didRegistry.rollVerificationMethod(rollArgs))
+                await expect(rollVM(didRegistry, rollArgs))
                     .to.be.revertedWithCustomError(
                         didVerificationMethodFacet,
                         'PublicKeyAlreadyInUse'
@@ -2662,9 +3105,7 @@ describe('DiDRegistry', function () {
                 rollArgs.oldVMethodId = otherVMethodId
                 rollArgs.publicKey = publicKey65
 
-                await expect(
-                    didRegistry.connect(other).rollVerificationMethod(rollArgs)
-                )
+                await expect(rollVM(didRegistry.connect(other), rollArgs))
                     .to.be.revertedWithCustomError(
                         didVerificationMethodFacet,
                         'PublicKeyAlreadyInUse'
@@ -2734,14 +3175,13 @@ describe('DiDRegistry', function () {
                 withCapabilityInvocation: boolean
             ): Promise<string> {
                 const id = randomDid()
-                await didRegistry
-                    .connect(signer)
-                    .addVerificationMethod(
-                        didId,
-                        id,
-                        key,
-                        EllipticType.SECP_256_K1
-                    )
+                await addVM(
+                    didRegistry.connect(signer),
+                    didId,
+                    id,
+                    key,
+                    EllipticType.SECP_256_K1
+                )
                 if (withCapabilityInvocation) {
                     await didRegistry
                         .connect(signer)
@@ -2758,14 +3198,13 @@ describe('DiDRegistry', function () {
 
             async function expectKeyInUse(didId: string, signer: Signer) {
                 await expect(
-                    didRegistry
-                        .connect(signer)
-                        .addVerificationMethod(
-                            didId,
-                            randomDid(),
-                            key,
-                            EllipticType.SECP_256_K1
-                        )
+                    addVM(
+                        didRegistry.connect(signer),
+                        didId,
+                        randomDid(),
+                        key,
+                        EllipticType.SECP_256_K1
+                    )
                 )
                     .to.be.revertedWithCustomError(
                         didVerificationMethodFacet,
@@ -2819,7 +3258,7 @@ describe('DiDRegistry', function () {
 
                 await expectRevoked(did, oldId)
                 await expect(
-                    didRegistry.rollVerificationMethod({
+                    rollVM(didRegistry, {
                         did,
                         vMethodId: randomDid(),
                         publicKey: walletToPublicKey(deriveWallet(wallet, '3')),
@@ -2898,7 +3337,7 @@ describe('DiDRegistry', function () {
                 await mockTimestamp.setMockedTimestamp(now() + 100n)
                 const rolledWallet = deriveWallet(wallet, '3')
 
-                await didRegistry.rollVerificationMethod({
+                await rollVM(didRegistry, {
                     did,
                     vMethodId: randomDid(),
                     publicKey: walletToPublicKey(rolledWallet),
@@ -2926,7 +3365,7 @@ describe('DiDRegistry', function () {
                     otherDid
                 )
 
-                await didRegistry.rollVerificationMethod({
+                await rollVM(didRegistry, {
                     did,
                     vMethodId: randomDid(),
                     publicKey: walletToPublicKey(deriveWallet(wallet, '3')),
@@ -2974,7 +3413,7 @@ describe('DiDRegistry', function () {
                 await addKey(did, admin, true)
 
                 const snapshot = await ethers.provider.send('evm_snapshot', [])
-                await didRegistry.rollVerificationMethod({
+                await rollVM(didRegistry, {
                     did,
                     vMethodId: randomDid(),
                     publicKey: walletToPublicKey(deriveWallet(wallet, '3')),
@@ -3013,7 +3452,7 @@ describe('DiDRegistry', function () {
                 await addKey(did, admin, true)
                 await expectKeyInUse(otherDid, other)
                 await expect(
-                    didRegistry.connect(other).rollVerificationMethod({
+                    rollVM(didRegistry.connect(other), {
                         did: otherDid,
                         vMethodId: randomDid(),
                         publicKey: key,
@@ -3047,7 +3486,8 @@ describe('DiDRegistry', function () {
                 const r1PublicKey = ethers.hexlify(
                     createECDH('prime256v1').generateKeys()
                 )
-                await didRegistry.addVerificationMethod(
+                await addVM(
+                    didRegistry,
                     did,
                     newVMethodId,
                     r1PublicKey,
@@ -3069,7 +3509,8 @@ describe('DiDRegistry', function () {
                 const newVMethodId = randomDid()
                 const invalidPublicKey = '0x04' + '00'.repeat(64)
                 await expect(
-                    didRegistry.addVerificationMethod(
+                    addVM(
+                        didRegistry,
                         did,
                         newVMethodId,
                         invalidPublicKey,
@@ -3324,7 +3765,8 @@ describe('DiDRegistry', function () {
                 const revokedPublicKey = walletToPublicKey(
                     deriveWallet(wallet, '1')
                 )
-                await didRegistry.addVerificationMethod(
+                await addVM(
+                    didRegistry,
                     did,
                     revokedVMethodId,
                     revokedPublicKey,
@@ -3364,13 +3806,15 @@ describe('DiDRegistry', function () {
                 const wallet2 = deriveWallet(wallet, '2')
                 const wallet3 = deriveWallet(wallet, '3')
 
-                await didRegistry.addVerificationMethod(
+                await addVM(
+                    didRegistry,
                     did,
                     vMethod2Id,
                     wallet2.signingKey.publicKey,
                     EllipticType.SECP_256_K1
                 )
-                await didRegistry.addVerificationMethod(
+                await addVM(
+                    didRegistry,
                     did,
                     vMethod3Id,
                     wallet3.signingKey.publicKey,
@@ -4305,7 +4749,8 @@ describe('DiDRegistry', function () {
                 const publicKey3 = wallet3.signingKey.publicKey
                 const vMethodId3 = randomDid()
 
-                await didRegistry.addVerificationMethod(
+                await addVM(
+                    didRegistry,
                     did,
                     vMethodId3,
                     publicKey3,
@@ -4353,7 +4798,8 @@ describe('DiDRegistry', function () {
                 const publicKey4 = wallet4.signingKey.publicKey
                 const vMethodId4 = randomDid()
 
-                await didRegistry.addVerificationMethod(
+                await addVM(
+                    didRegistry,
                     did,
                     vMethodId4,
                     publicKey4,
@@ -4429,7 +4875,8 @@ describe('DiDRegistry', function () {
                     const publicKey2 = wallet2.signingKey.publicKey
                     const vMethodId2 = randomDid()
 
-                    await didRegistry.addVerificationMethod(
+                    await addVM(
+                        didRegistry,
                         did,
                         vMethodId2,
                         publicKey2,
@@ -4488,7 +4935,8 @@ describe('DiDRegistry', function () {
                     const publicKey3 = wallet3.signingKey.publicKey
                     const vMethodId3 = randomDid()
 
-                    await didRegistry.addVerificationMethod(
+                    await addVM(
+                        didRegistry,
                         did,
                         vMethodId3,
                         publicKey3,

@@ -11,6 +11,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ----------------------------------------------------------------------------------- */
 import { ethers } from 'hardhat'
+import type { TypedDataDomain, TypedDataField } from 'ethers'
 import { randomBytes32, randomString, randomInt } from '../generators'
 
 /**
@@ -81,6 +82,62 @@ export async function generateEip191Proof(wallet: {
         ethers.solidityPacked(['bytes'], [publicKey65])
     )
     return await wallet.signMessage(ethers.getBytes(message))
+}
+
+/**
+ * EIP-712 types of the key ownership proof that addVerificationMethod and
+ * rollVerificationMethod require for keys of the network curve.
+ * Must match _KEY_OWNERSHIP_PROOF_TYPEHASH in the DID registry.
+ */
+export const KEY_OWNERSHIP_PROOF_TYPES = {
+    KeyOwnershipProof: [
+        { name: 'did', type: 'bytes32' },
+        { name: 'vMethodId', type: 'bytes32' },
+        { name: 'publicKey', type: 'bytes' },
+    ],
+}
+
+/**
+ * EIP-712 domain of the ISBE diamond (same as the TSR): name '0x15BE', version '1'
+ * @param chainId - Chain where the proof will be used
+ * @param verifyingContract - Address of the diamond that hosts the DID registry
+ */
+export function isbeDomain(
+    chainId: bigint,
+    verifyingContract: string
+): TypedDataDomain {
+    return { name: '0x15BE', version: '1', chainId, verifyingContract }
+}
+
+/**
+ * Generate the proof that the holder of a key agrees to add it to a DID:
+ * an EIP-712 signature made with that key over KeyOwnershipProof(did, vMethodId, publicKey)
+ *
+ * @param wallet - Wallet that holds the private key of the key being added
+ * @param did - DID that receives the key (bytes32)
+ * @param vMethodId - Verification method identifier (bytes32)
+ * @param publicKey - Public key exactly as it is sent to the contract (64 or 65 bytes)
+ * @param domain - EIP-712 domain, see isbeDomain
+ * @returns proof hex string (65 bytes, 0x-prefixed)
+ */
+export async function generateKeyOwnershipProof(
+    wallet: {
+        signTypedData: (
+            domain: TypedDataDomain,
+            types: Record<string, TypedDataField[]>,
+            value: Record<string, unknown>
+        ) => Promise<string>
+    },
+    did: string,
+    vMethodId: string,
+    publicKey: string,
+    domain: TypedDataDomain
+): Promise<string> {
+    return await wallet.signTypedData(domain, KEY_OWNERSHIP_PROOF_TYPES, {
+        did,
+        vMethodId,
+        publicKey,
+    })
 }
 
 /**

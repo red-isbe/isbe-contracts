@@ -10,26 +10,44 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ----------------------------------------------------------------------------------- */
-import { task } from 'hardhat/config'
+import { task, types } from 'hardhat/config'
+import type { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 import { getFacetAddress } from '../../../scripts/diamond/loupe/getFacetAddress'
-import { getSigner } from '../../../scripts/utils/getSigner'
+import { SignatureProviderFactory } from '../../deployment/providers/SignatureProviderFactory'
 
 /**
+ npx hardhat getFacetAddress --network isbe \
+  --selector "0xe8aff049"
+
  npx hardhat getFacetAddress --network localhost \
   --diamond "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6" \
     --selector "0x34a23402"
+
+ The signer comes from SignatureProviderFactory, so it works with local keys
+ (secp256k1 / secp256r1) and with AWS KMS keys configured for the network.
  */
 
-task('getFacetAddress', 'Deploys business logic contract')
-    .addParam('diamond', 'The diamond contract address')
-    .addParam('selector', 'The selector bytes4')
-    .setAction(async (taskArgs, hre) => {
-        const { diamond, selector } = taskArgs
+task('getFacetAddress', 'Returns the facet address that implements a selector')
+    .addOptionalParam(
+        'diamond',
+        'The diamond contract address (default: 0x...15BE)',
+        '0x00000000000000000000000000000000000015BE',
+        types.string
+    )
+    .addParam('selector', 'The selector bytes4', undefined, types.string)
+    .setAction(
+        async (
+            taskArgs: { diamond: string; selector: string },
+            hre: HardhatRuntimeEnvironment
+        ) => {
+            const { diamond, selector } = taskArgs
 
-        const signer = await getSigner(hre)
+            const signatureProvider = SignatureProviderFactory.create(hre)
+            const signer = await signatureProvider.getSigner()
 
-        const result = await getFacetAddress(diamond, selector, signer)
+            const result = await getFacetAddress(diamond, selector, signer)
 
-        console.log('Facet address:', result)
-    })
+            console.log('Facet address:', result)
+        }
+    )
