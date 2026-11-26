@@ -55,6 +55,36 @@ interface IGlobalIsbePause {
     error PauseCallFailed(address target, bytes4 selector, bytes returnData);
 
     /**
+     * @notice Reverted when the target's pause state cannot be read back after the call.
+     * @dev A `pause()` / `unpause()` call that does not revert is NOT proof that the
+     *      target changed state: a proxy with a permissive `fallback` accepts any
+     *      selector, does nothing and returns successfully. After every call the
+     *      governance layer reads `paused()` back; this error is raised when that read
+     *      fails or does not return exactly one ABI word, which is the signature of a
+     *      contract that does not really implement `IPause`.
+     * @param target     The contract that was called.
+     * @param selector   The function selector that was invoked (`pause()` or `unpause()`).
+     * @param returnData The raw payload returned by `paused()`.
+     */
+    error PauseStateUnverifiable(
+        address target,
+        bytes4 selector,
+        bytes returnData
+    );
+
+    /**
+     * @notice Reverted when the call succeeded but the target did not change its state.
+     * @param target          The contract that was called.
+     * @param selector        The function selector that was invoked.
+     * @param expectedPaused  The state the target was required to report afterwards.
+     */
+    error PauseNotEffective(
+        address target,
+        bytes4 selector,
+        bool expectedPaused
+    );
+
+    /**
      * @notice Pauses a specific use-case proxy contract.
      * @dev This can only be called by an account with the appropriate role.
      * @param _proxyAddress The address of the proxy contract to pause.

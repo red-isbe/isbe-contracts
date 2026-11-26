@@ -21,6 +21,10 @@ import {
     Mod2PausableMock,
     NoPauseMock,
     FallbackRevertMock,
+    FallbackSilentMock,
+    PauseIgnoredMock,
+    PausedRevertMock,
+    PausedNonBooleanMock,
 } from '../../typechain-types'
 import { Signer } from 'ethers'
 import {
@@ -179,6 +183,85 @@ describe('GlobalIsbePause', function () {
                     .withArgs(addr, PAUSE_SELECTOR, anyValue)
             })
 
+            // ─── PauseStateUnverifiable: permissive fallback ──────────────────
+            // A fallback that accepts any selector makes the pause() call succeed
+            // without changing anything. The state read-back is what catches it.
+
+            it('GIVEN a contract with a permissive fallback WHEN pauseIsbe is called THEN it reverts with PauseStateUnverifiable', async () => {
+                const silentMock: FallbackSilentMock = await (
+                    await ethers.getContractFactory('FallbackSilentMock')
+                ).deploy()
+                const addr = await silentMock.getAddress()
+
+                await expect(isbeFactory.connect(admin).pauseIsbe(addr))
+                    .to.be.revertedWithCustomError(
+                        globalIsbePauseFacet,
+                        'PauseStateUnverifiable'
+                    )
+                    .withArgs(addr, PAUSE_SELECTOR, anyValue)
+            })
+
+            it('GIVEN a contract with a permissive fallback WHEN pauseIsbe reverts THEN the target is left untouched and still operational', async () => {
+                const silentMock: FallbackSilentMock = await (
+                    await ethers.getContractFactory('FallbackSilentMock')
+                ).deploy()
+                const addr = await silentMock.getAddress()
+
+                // The whole transaction reverts, so no IsbePaused is recorded.
+                await expect(isbeFactory.connect(admin).pauseIsbe(addr)).to.be
+                    .reverted
+
+                // The point of the guard: governance must not record a pause
+                // for a contract that keeps accepting writes.
+                await silentMock.operate()
+                expect(await silentMock.operations()).to.equal(1n)
+            })
+
+            it('GIVEN a contract whose paused() reverts WHEN pauseIsbe is called THEN it reverts with PauseStateUnverifiable', async () => {
+                const revertMock: PausedRevertMock = await (
+                    await ethers.getContractFactory('PausedRevertMock')
+                ).deploy()
+                const addr = await revertMock.getAddress()
+
+                await expect(isbeFactory.connect(admin).pauseIsbe(addr))
+                    .to.be.revertedWithCustomError(
+                        globalIsbePauseFacet,
+                        'PauseStateUnverifiable'
+                    )
+                    .withArgs(addr, PAUSE_SELECTOR, anyValue)
+            })
+
+            it('GIVEN a contract whose paused() returns a non-boolean word WHEN pauseIsbe is called THEN it reverts with PauseStateUnverifiable', async () => {
+                const nonBoolMock: PausedNonBooleanMock = await (
+                    await ethers.getContractFactory('PausedNonBooleanMock')
+                ).deploy()
+                const addr = await nonBoolMock.getAddress()
+
+                // paused() answers 32 bytes, but the word is 2. A non-canonical
+                // bool must not be read as "paused".
+                await expect(isbeFactory.connect(admin).pauseIsbe(addr))
+                    .to.be.revertedWithCustomError(
+                        globalIsbePauseFacet,
+                        'PauseStateUnverifiable'
+                    )
+                    .withArgs(addr, PAUSE_SELECTOR, anyValue)
+            })
+
+            // ─── PauseNotEffective: the call is accepted but ignored ──────────
+            it('GIVEN a contract that accepts pause() without changing state WHEN pauseIsbe is called THEN it reverts with PauseNotEffective', async () => {
+                const ignoredMock: PauseIgnoredMock = await (
+                    await ethers.getContractFactory('PauseIgnoredMock')
+                ).deploy(false)
+                const addr = await ignoredMock.getAddress()
+
+                await expect(isbeFactory.connect(admin).pauseIsbe(addr))
+                    .to.be.revertedWithCustomError(
+                        globalIsbePauseFacet,
+                        'PauseNotEffective'
+                    )
+                    .withArgs(addr, PAUSE_SELECTOR, true)
+            })
+
             it('GIVEN a mod-2 contract not authorizing governance WHEN pauseIsbe is called THEN it reverts with PauseCallFailed', async () => {
                 const mod2: Mod2PausableMock = await (
                     await ethers.getContractFactory('Mod2PausableMock')
@@ -331,6 +414,62 @@ describe('GlobalIsbePause', function () {
                         'PauseCallFailed'
                     )
                     .withArgs(addr, UNPAUSE_SELECTOR, anyValue)
+            })
+
+            it('GIVEN a contract with a permissive fallback WHEN unpauseIsbe is called THEN it reverts with PauseStateUnverifiable', async () => {
+                const silentMock: FallbackSilentMock = await (
+                    await ethers.getContractFactory('FallbackSilentMock')
+                ).deploy()
+                const addr = await silentMock.getAddress()
+
+                await expect(isbeFactory.connect(admin).unpauseIsbe(addr))
+                    .to.be.revertedWithCustomError(
+                        globalIsbePauseFacet,
+                        'PauseStateUnverifiable'
+                    )
+                    .withArgs(addr, UNPAUSE_SELECTOR, anyValue)
+            })
+
+            it('GIVEN a contract whose paused() reverts WHEN unpauseIsbe is called THEN it reverts with PauseStateUnverifiable', async () => {
+                const revertMock: PausedRevertMock = await (
+                    await ethers.getContractFactory('PausedRevertMock')
+                ).deploy()
+                const addr = await revertMock.getAddress()
+
+                await expect(isbeFactory.connect(admin).unpauseIsbe(addr))
+                    .to.be.revertedWithCustomError(
+                        globalIsbePauseFacet,
+                        'PauseStateUnverifiable'
+                    )
+                    .withArgs(addr, UNPAUSE_SELECTOR, anyValue)
+            })
+
+            it('GIVEN a contract whose paused() returns a non-boolean word WHEN unpauseIsbe is called THEN it reverts with PauseStateUnverifiable', async () => {
+                const nonBoolMock: PausedNonBooleanMock = await (
+                    await ethers.getContractFactory('PausedNonBooleanMock')
+                ).deploy()
+                const addr = await nonBoolMock.getAddress()
+
+                await expect(isbeFactory.connect(admin).unpauseIsbe(addr))
+                    .to.be.revertedWithCustomError(
+                        globalIsbePauseFacet,
+                        'PauseStateUnverifiable'
+                    )
+                    .withArgs(addr, UNPAUSE_SELECTOR, anyValue)
+            })
+
+            it('GIVEN a contract that accepts unpause() without changing state WHEN unpauseIsbe is called THEN it reverts with PauseNotEffective', async () => {
+                const ignoredMock: PauseIgnoredMock = await (
+                    await ethers.getContractFactory('PauseIgnoredMock')
+                ).deploy(true)
+                const addr = await ignoredMock.getAddress()
+
+                await expect(isbeFactory.connect(admin).unpauseIsbe(addr))
+                    .to.be.revertedWithCustomError(
+                        globalIsbePauseFacet,
+                        'PauseNotEffective'
+                    )
+                    .withArgs(addr, UNPAUSE_SELECTOR, false)
             })
 
             it('GIVEN an unpaused mod-2 contract WHEN unpauseIsbe is called THEN it reverts with PauseCallFailed', async () => {
