@@ -16,12 +16,18 @@ pragma solidity ^0.8.28;
 
 import {
     _AUTHENTICATION_RELATIONSHIP,
-    _CAPABILITY_INVOCATION_RELATIONSHIP
+    _CAPABILITY_INVOCATION_RELATIONSHIP,
+    _KEY_OWNERSHIP_PROOF_TYPEHASH
 } from './constants.sol';
 import {
     _recoverSigner,
+    _checkSignature,
     InvalidSignature
 } from '../../core/signatureVerification.sol';
+import {
+    _CONTRACT_NAME_ISBE,
+    _CONTRACT_VERSION_ISBE
+} from '../../constants/values.sol';
 import {Common} from '../../core/Common.sol';
 import {IDidDocumentDetailed} from './interfaces/IDidDocumentDetailed.sol';
 import {IDidVerificationMethod} from './interfaces/IDidVerificationMethod.sol';
@@ -119,12 +125,24 @@ abstract contract DidDocumentDetailedInternal is
         _;
     }
 
-    modifier onlyEmptyVMethodAndPublicKey(
+    /**
+     * @notice Groups the input checks of addVerificationMethod in a single modifier
+     * @dev Same checks, in the same order, as the former chain bytes32IsNotZero(did),
+     *      bytes32IsNotZero(vMethodId), emptyBytes(publicKey), validateEllipticType,
+     *      onlyDidExists and onlyEmptyVMethodAndPublicKey. Grouping them leaves room on the
+     *      stack for the key ownership proof.
+     */
+    modifier validateNewVerificationMethod(
         bytes32 _did,
         bytes32 _vMethodId,
         bytes memory _publicKey,
         IDidDocumentDetailed.EllipticType _ellipticType
     ) {
+        _checkBytes32IsNotZero(_did);
+        _checkBytes32IsNotZero(_vMethodId);
+        _checkEmptyBytes(_publicKey);
+        _checkNonEmptyEllipticType(_ellipticType);
+        _checkDidExists(_did);
         _checkEmptyVMethod(_did, _vMethodId);
         _checkPublicKeyNotAssigned(_did, _publicKey, _ellipticType);
         _;
@@ -820,6 +838,40 @@ abstract contract DidDocumentDetailedInternal is
      * @param _proof The signature proving ownership (65 bytes for ECDSA: r:32 + s:32 + v:1)
      * @param _publicKey The public key to validate against
      */
+    /**
+     * @notice Checks that whoever adds a network-curve key to a DID controls its private key
+     * @dev Keys of other curves are not checked. The proof is an EIP-712 signature, made with
+     *      the key being added, over KeyOwnershipProof(did, vMethodId, publicKey) in the ISBE
+     *      domain (name '0x15BE', version '1', chainId and this contract). Binding the DID and
+     *      the network stops a proof from being reused for another DID or on another chain.
+     *      Reverts with `InvalidSignature` when the signer is not the key's address.
+     */
+    function _checkKeyOwnershipProof(
+        bytes32 _did,
+        bytes32 _vMethodId,
+        bytes memory _publicKey,
+        IDidDocumentDetailed.EllipticType _ellipticType,
+        bytes memory _proof
+    ) internal view {
+        if (_ellipticType != _didDocumentsStorage().networkEllipticType) return;
+        _checkSignature(
+            _getAddress(_publicKey),
+            keccak256(
+                abi.encode(
+                    _KEY_OWNERSHIP_PROOF_TYPEHASH,
+                    _did,
+                    _vMethodId,
+                    keccak256(_publicKey)
+                )
+            ),
+            _proof,
+            _CONTRACT_NAME_ISBE,
+            _CONTRACT_VERSION_ISBE,
+            block.chainid,
+            address(this)
+        );
+    }
+
     function _validateProof(
         bytes32 _did,
         bytes memory _proof,

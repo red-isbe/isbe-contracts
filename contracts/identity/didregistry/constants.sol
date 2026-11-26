@@ -20,3 +20,7 @@ string constant _KEY_AGREEMENT_RELATIONSHIP = 'keyAgreement';
 string constant _CAPABILITY_INVOCATION_RELATIONSHIP = 'capabilityInvocation';
 string constant _CAPABILITY_DELEGATION_RELATIONSHIP = 'capabilityDelegation';
 uint256 constant _MAX_CONTROLLERS = 10;
+
+// keccak256('KeyOwnershipProof(bytes32 did,bytes32 vMethodId,bytes publicKey)')
+// solhint-disable-next-line max-line-length
+bytes32 constant _KEY_OWNERSHIP_PROOF_TYPEHASH = 0x00626fe3a73aed3e3139e058917974065f2db29bca7a510d6b9ecd5b089812dd;

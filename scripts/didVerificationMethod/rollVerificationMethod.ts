@@ -56,6 +56,7 @@ export async function rollVerificationMethod(
     notAfter: bigint | number,
     oldVMethodId: string,
     duration: bigint | number,
+    proof: string,
     diamond: string,
     signatureProvider: ISignatureProvider
 ): Promise<VerificationMethodRolledResult> {
@@ -76,6 +77,7 @@ export async function rollVerificationMethod(
         notAfter: notAfterBigInt,
         oldVMethodId,
         duration: durationBigInt,
+        proof,
     }
 
     if (signatureProvider.getCurveType() === 'secp256r1') {
@@ -216,6 +218,7 @@ async function rollVerificationMethodWithRawTransaction(
         notAfter: bigint
         oldVMethodId: string
         duration: bigint
+        proof: string
     },
     diamond: string,
     signatureProvider: ISignatureProvider

@@ -34,16 +34,12 @@ abstract contract DidVerificationMethod is
         bytes32 _did,
         bytes32 _vMethodId,
         bytes memory _publicKey,
+        bytes memory _proof,
         IDidDocumentDetailed.EllipticType _ellipticType
     )
         external
         override
-        bytes32IsNotZero(_did)
-        bytes32IsNotZero(_vMethodId)
-        emptyBytes(_publicKey)
-        validateEllipticType(_ellipticType)
-        onlyDidExists(_did)
-        onlyEmptyVMethodAndPublicKey(
+        validateNewVerificationMethod(
             _did,
             _vMethodId,
             _publicKey,
@@ -52,6 +48,13 @@ abstract contract DidVerificationMethod is
         onlyControllerOrAuth(_did)
         returns (bool success)
     {
+        _checkKeyOwnershipProof(
+            _did,
+            _vMethodId,
+            _publicKey,
+            _ellipticType,
+            _proof
+        );
         emit VerificationMethodAdded(
             _did,
             _vMethodId,
@@ -118,18 +121,24 @@ abstract contract DidVerificationMethod is
         onlyGoodRollArgs(args)
         returns (bool success)
     {
-        {
-            emit VerificationMethodRolled(
-                args.did,
-                args.vMethodId,
-                args.publicKey,
-                args.ellipticType,
-                args.notBefore,
-                args.notAfter,
-                args.oldVMethodId,
-                args.duration
-            );
-        }
+        _checkKeyOwnershipProof(
+            args.did,
+            args.vMethodId,
+            args.publicKey,
+            args.ellipticType,
+            args.proof
+        );
+
+        emit VerificationMethodRolled(
+            args.did,
+            args.vMethodId,
+            args.publicKey,
+            args.ellipticType,
+            args.notBefore,
+            args.notAfter,
+            args.oldVMethodId,
+            args.duration
+        );
         return _rollVerificationMethod(args);
     }
 }

@@ -24,6 +24,7 @@ limitations under the License.
   --did 0x5d1bbbbb79e76850812569e44716059dab426a5d2f7378881192c73d372331de \
   --vmethodid 0x9999999999999999999999999999999999999999999999999999999999999999 \
   --publickey 0x045f1e2d3c4b6a79880796a5b4c3d2e1f0a9b8c7d6e5f4123456789abcdef00112233445566778899aabbccddeeff1029384756a1b2c3d4e5f60718293a4b5c6d7 \
+  --proof 0x<EIP-712 KeyOwnershipProof signed with the key, 65 bytes> \
   --elliptictype 1 \
   --diamond "0xAF3c2371B900A23AEc9Edf3693D5b6240867eC10"
  */
@@ -47,6 +48,12 @@ task('addVerificationMethod', 'Adds a verification method to a DID')
         undefined,
         types.string
     )
+    .addOptionalParam(
+        'proof',
+        'Key ownership proof (hex): EIP-712 signature made with the key over KeyOwnershipProof(did, vMethodId, publicKey) in the ISBE domain. Required for keys of the network curve',
+        '0x',
+        types.string
+    )
     .addParam(
         'elliptictype',
         'Elliptic curve type (0=NONE, 1=SECP_256_K1, 2=SECP_256_R1)',
@@ -55,7 +62,8 @@ task('addVerificationMethod', 'Adds a verification method to a DID')
     )
     .addParam('diamond', 'Diamond contract address', undefined, types.string)
     .setAction(async (taskArgs, hre: HardhatRuntimeEnvironment) => {
-        const { did, vmethodid, publickey, elliptictype, diamond } = taskArgs
+        const { did, vmethodid, publickey, proof, elliptictype, diamond } =
+            taskArgs
         const signatureProvider = SignatureProviderFactory.create(hre)
 
         return addVerificationMethod(
@@ -63,6 +71,7 @@ task('addVerificationMethod', 'Adds a verification method to a DID')
             did,
             vmethodid,
             publickey,
+            proof,
             elliptictype,
             diamond,
             signatureProvider

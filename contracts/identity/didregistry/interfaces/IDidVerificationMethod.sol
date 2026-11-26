@@ -37,6 +37,8 @@ interface IDidVerificationMethod {
      * @param notAfter Unix timestamp when the new verification method expires
      * @param oldVMethodId The existing verification method identifier being replaced
      * @param duration The validity duration in seconds for the new verification method
+     * @param proof For network-curve keys, EIP-712 signature made with the new key over
+     *        KeyOwnershipProof(did, vMethodId, publicKey); ignored for other curves
      */
     struct RollArgs {
         bytes32 did;
@@ -47,6 +49,7 @@ interface IDidVerificationMethod {
         uint256 notAfter;
         bytes32 oldVMethodId;
         uint256 duration;
+        bytes proof;
     }
 
     /**
@@ -158,6 +161,8 @@ interface IDidVerificationMethod {
      * @param did The decentralised identifier to receive the verification method
      * @param vMethodId The unique identifier for the new verification method
      * @param publicKey The public key bytes for cryptographic verification operations
+     * @param proof For network-curve keys, EIP-712 signature made with that key over
+     *        KeyOwnershipProof(did, vMethodId, publicKey); ignored for other curves
      * @param ellipticType Cryptographic algorithm specification for signature verification
      * @return success Boolean indicating whether the operation completed successfully
      */
@@ -165,6 +170,7 @@ interface IDidVerificationMethod {
         bytes32 did,
         bytes32 vMethodId,
         bytes memory publicKey,
+        bytes memory proof,
         IDidDocumentDetailed.EllipticType ellipticType
     ) external returns (bool success);
 

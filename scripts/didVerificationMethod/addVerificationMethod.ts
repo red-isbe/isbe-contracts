@@ -47,6 +47,7 @@ export async function addVerificationMethod(
     did: string,
     vMethodId: string,
     publicKey: string,
+    proof: string,
     ellipticType: number,
     diamond: string,
     signatureProvider: ISignatureProvider
@@ -61,6 +62,7 @@ export async function addVerificationMethod(
             did,
             vMethodId,
             publicKey,
+            proof,
             ellipticType,
             diamond,
             signatureProvider
@@ -81,6 +83,7 @@ export async function addVerificationMethod(
             did,
             vMethodId,
             publicKey,
+            proof,
             ellipticType
         )
         console.log(`   🔗 Transaction submitted: ${tx.hash}`)
@@ -178,6 +181,7 @@ async function addVerificationMethodWithRawTransaction(
     did: string,
     vMethodId: string,
     publicKey: string,
+    proof: string,
     ellipticType: number,
     diamond: string,
     signatureProvider: ISignatureProvider
@@ -190,7 +194,7 @@ async function addVerificationMethodWithRawTransaction(
     // Encode the addVerificationMethod function call
     const functionData = contractInterface.encodeFunctionData(
         'addVerificationMethod',
-        [did, vMethodId, publicKey, ellipticType]
+        [did, vMethodId, publicKey, proof, ellipticType]
     )
 
     console.log('📡 Sending addVerificationMethod raw transaction...')

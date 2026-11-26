@@ -19,7 +19,12 @@ import { anyValue } from '@nomicfoundation/hardhat-chai-matchers/withArgs'
 import { HDNodeWallet, ZeroAddress, ZeroHash } from 'ethers'
 import { deployGovernance } from './fixtures/governance'
 import { EllipticType } from './types/identity'
-import { generateProof, proofToDid } from './support'
+import {
+    generateKeyOwnershipProof,
+    generateProof,
+    isbeDomain,
+    proofToDid,
+} from './support'
 import { CONFIGURATION_ID_ERC20, HASH_TIMESTAMP_ROLE } from '../utils/constants'
 import { getEvent } from '../scripts/utils/getEvent'
 import {
@@ -706,10 +711,19 @@ describe('EvidenceRegistry (evidence attributed to entity DIDs through service D
         it('GIVEN an entity that still holds one capabilityInvocation in force WHEN another one is revoked THEN its service keeps registering', async () => {
             const registry = await didRegistry()
             const secondKey = ethers.id(`${entityA.did}#second`)
+            const secondPublicKey = wallet(18).signingKey.publicKey
+            const { chainId } = await ethers.provider.getNetwork()
             await registry.addVerificationMethod(
                 entityA.did,
                 secondKey,
-                wallet(18).signingKey.publicKey,
+                secondPublicKey,
+                await generateKeyOwnershipProof(
+                    wallet(18),
+                    entityA.did,
+                    secondKey,
+                    secondPublicKey,
+                    isbeDomain(chainId, await registry.getAddress())
+                ),
                 EllipticType.SECP_256_K1
             )
             await registry.addVerificationRelationship(
